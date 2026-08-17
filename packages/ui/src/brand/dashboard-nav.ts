@@ -129,14 +129,12 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
 
   // My Library — the artist's own catalog and files.
   {
-    href: '/dashboard/archive',
-    label: 'Music',
-    icon: 'archive',
+    href: '/dashboard/upload',
+    label: 'Upload',
+    icon: 'upload',
     isRoute: true,
-    requiresChannel: true,
     group: 'My Library',
   },
-  { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
   { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
   {
     href: '/dashboard/releases',
@@ -164,6 +162,13 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     sectionKey: 'broadcast',
     requiresChannel: true,
     group: 'Broadcasting',
+  },
+  {
+    href: '/dashboard/archive',
+    label: 'Recordings',
+    icon: 'archive',
+    isRoute: true,
+    requiresChannel: true,
   },
   {
     href: '/dashboard/schedule',
