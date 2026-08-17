@@ -60,18 +60,25 @@ export default async function ReleasesPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [user, releasesPage] = await Promise.all([
+  const [user, releasesPage, storage] = await Promise.all([
     getDashboardUser(),
     apiFetch<{ releases: ReleaseSummary[] }>(apiUrl, cookie, '/api/me/releases?limit=100'),
+    apiFetch<{ quotaBytes: number; usedBytes: number }>(apiUrl, cookie, '/api/me/storage'),
   ])
   if (!user) redirect('/login')
   const releases = releasesPage?.releases ?? null
+  const storageUsedMB = storage ? Math.round(storage.usedBytes / (1024 * 1024)) : null
 
   return (
     <PageShell size="md">
       <div className="studio-page-header">
         <div>
           <Heading level={1}>Releases &amp; smart links</Heading>
+          {storageUsedMB !== null && (
+            <p className="studio-text-muted-sm studio-mt-xs">
+              {storageUsedMB} MB of long-term storage used
+            </p>
+          )}
         </div>
         <div className="studio-page-header__actions">
           <StudioHeaderActions

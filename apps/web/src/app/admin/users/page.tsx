@@ -17,6 +17,7 @@ interface UserRow {
   channelState: string | null
   memberSince: string | null
   engagementUnitsYtd: number
+  storageUsedMB: number
 }
 
 async function fetchUsers(searchParams: Record<string, string | undefined>) {
@@ -91,6 +92,7 @@ export default async function AdminUsersPage({
                 <th>Tier</th>
                 <th>Live</th>
                 <th>Units YTD</th>
+                <th>Storage</th>
                 <th />
               </tr>
             </thead>
@@ -109,6 +111,7 @@ export default async function AdminUsersPage({
                     {u.channelState ?? '—'}
                   </td>
                   <td>{u.engagementUnitsYtd}</td>
+                  <td>{u.storageUsedMB} MB</td>
                   <td>
                     <Link href={`/admin/users/${u.id}`}>View</Link>
                   </td>

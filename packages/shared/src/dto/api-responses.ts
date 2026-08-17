@@ -1540,6 +1540,8 @@ export const AdminUserListItemSchema = z.object({
   channelState: z.string().nullable(),
   memberSince: z.coerce.date().nullable(),
   engagementUnitsYtd: z.number().int().nonnegative(),
+  /** R2 long-term storage usage (release track originals), rounded to whole MB. */
+  storageUsedMB: z.number().nonnegative(),
 })
 
 export const AdminUserListResponseSchema = z.object({

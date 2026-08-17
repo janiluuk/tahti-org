@@ -145,6 +145,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             suspendedAt: true,
             memberSince: true,
             channel: { select: { state: true } },
+            storageQuota: { select: { usedBytes: true } },
           },
         }),
       ])
@@ -166,6 +167,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           channelState: u.channel?.state ?? null,
           memberSince: u.memberSince,
           engagementUnitsYtd: unitsMap.get(u.id) ?? 0,
+          storageUsedMB: Math.round(Number(u.storageQuota?.usedBytes ?? 0) / (1024 * 1024)),
         })),
       })
     },

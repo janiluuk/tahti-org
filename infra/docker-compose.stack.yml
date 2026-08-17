@@ -36,6 +36,13 @@ x-app-env: &app-env
   # pattern already used by INTERNAL_SECRET/DOCS_PASS/HCAPTCHA_SECRET above.
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
   MINIO_BUCKET: tahti
+  # Cloudflare R2 — long-term lossless mirror for release tracks (apps/worker/src/lib/r2.ts).
+  # Disabled (r2Enabled=false) until endpoint/access key/secret are all set — see
+  # infra/stack.env.vimage.example.
+  R2_ENDPOINT: ${R2_ENDPOINT:-}
+  R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+  R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+  R2_BUCKET: ${R2_BUCKET:-tahti-user-storage}
   CENTRIFUGO_API_URL: http://chat:8000/api
   CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev}
   CENTRIFUGO_JWT_SECRET: ${CENTRIFUGO_JWT_SECRET:-dev_secret_do_not_use_in_prod}
