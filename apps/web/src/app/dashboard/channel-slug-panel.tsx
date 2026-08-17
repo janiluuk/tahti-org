@@ -26,6 +26,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
   const [slug, setSlug] = useState(initialSlug)
   const [input, setInput] = useState(initialSlug)
   const [checking, setChecking] = useState(false)
+  const [checkFailed, setCheckFailed] = useState(false)
   const [availability, setAvailability] = useState<Availability>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,12 +43,19 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       setChecking(true)
+      setCheckFailed(false)
       fetch(`${API_BASE}/api/me/channel/slug-available?slug=${encodeURIComponent(trimmed)}`, {
         credentials: 'include',
       })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data: Availability) => setAvailability(data))
-        .catch(() => setAvailability(null))
+        .then((r) => {
+          if (!r.ok) throw new Error('check failed')
+          return r.json() as Promise<Availability>
+        })
+        .then((data) => setAvailability(data))
+        .catch(() => {
+          setAvailability(null)
+          setCheckFailed(true)
+        })
         .finally(() => setChecking(false))
     }, CHECK_DEBOUNCE_MS)
     return () => clearTimeout(debounceRef.current)
@@ -125,14 +133,16 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
                   ? '✗ That username is already taken'
                   : availability?.reason === 'recently_released'
                     ? '✗ That username was recently released by another artist and isn’t available yet'
-                    : null}
+                    : checkFailed
+                      ? '✗ Could not check availability — try again in a moment'
+                      : null}
         </p>
       )}
       {changed && availability?.available === true && (
         <p className="studio-text-muted-sm studio-mt-xs">
           Your current address, <strong>{slug}.tahti.live</strong>, and profile{' '}
-          <strong>/u/{slug}</strong> will redirect here for 30 days, then become available to other
-          artists.
+          <strong>/u/{slug}</strong> will redirect here for 3 months, then become available to other
+          artists. You can change your address up to 5 times a week.
         </p>
       )}
       {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}

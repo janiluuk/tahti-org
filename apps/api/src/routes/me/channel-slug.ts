@@ -19,7 +19,9 @@ import {
 } from '../../lib/ingest-credentials.js'
 
 const RESERVED_SET = new Set<string>(RESERVED_CHANNEL_SLUGS)
-const SLUG_REDIRECT_GRACE_MS = 30 * 24 * 60 * 60 * 1000
+const SLUG_REDIRECT_GRACE_MS = 90 * 24 * 60 * 60 * 1000
+const MAX_SLUG_CHANGES_PER_WEEK = 5
+const RATE_LIMIT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Self-service username + channel address (<slug>.tahti.live) rename.
  * User.username and Channel.slug stay locked together so @handle, /u/@handle,
@@ -121,6 +123,20 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
           rtmpStreamKey: '',
           previousSlugRedirectExpiresAt: null,
         })
+      }
+
+      const recentChanges = await fastify.prisma.channelSlugRedirect.count({
+        where: {
+          channelId: channel.id,
+          createdAt: { gt: new Date(Date.now() - RATE_LIMIT_WINDOW_MS) },
+        },
+      })
+      if (recentChanges >= MAX_SLUG_CHANGES_PER_WEEK) {
+        return reply
+          .status(429)
+          .send({
+            error: `You can only change your address ${MAX_SLUG_CHANGES_PER_WEEK} times a week — try again later.`,
+          })
       }
 
       const [clashChannel, clashUser] = await Promise.all([
