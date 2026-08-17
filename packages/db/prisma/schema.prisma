@@ -181,6 +181,7 @@ enum ArchiveItemSource {
   MIXCLOUD_RESCUE
   SPOTIFY_EMBED
   MIXCLOUD_EMBED
+  HEARTHIS
   URL_EMBED
   HEARTHIS_EMBED
 
@@ -578,6 +579,7 @@ enum CollectionTextLayerAlign {
 enum CloudImportSource {
   GOOGLE_DRIVE
   SOUNDCLOUD
+  HEARTHIS
 
   @@schema("core")
 }

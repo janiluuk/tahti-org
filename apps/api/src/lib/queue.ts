@@ -104,6 +104,18 @@ export async function enqueueCloudImportSoundcloud(cloudImportJobId: string): Pr
   )
 }
 
+export async function enqueueCloudImportHearthis(cloudImportJobId: string): Promise<void> {
+  await mediaQueue.add(
+    'cloud-import-hearthis',
+    { cloudImportJobId },
+    {
+      jobId: `cloud-import-hearthis-${cloudImportJobId}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 15_000 },
+    },
+  )
+}
+
 export interface RenderAnnouncementTrimJob {
   clipId: string
   sourceKey: string

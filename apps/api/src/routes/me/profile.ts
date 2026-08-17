@@ -11,6 +11,7 @@ import {
   parseAvatarTheme,
   parseLogoPlacement,
 } from '@tahti/shared'
+import { parseHearthisUsername } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
 import { recordMentions } from '../../lib/mentions.js'
 
@@ -157,7 +158,17 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
       if (body.defaultLocation !== undefined)
         data.defaultLocation = body.defaultLocation?.trim() || null
-      if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
+      if (body.socialLinks !== undefined) {
+        data.socialLinks = body.socialLinks
+        // The hearthis.at import feature reads User.hearthisUsername directly
+        // (apps/api/src/routes/imports/hearthis.ts) rather than re-parsing the
+        // social-links blob on every request — keep it in sync here, the one
+        // place that field gets written.
+        const hearthisAt = (body.socialLinks as Record<string, string> | undefined)?.hearthisAt
+        if (hearthisAt !== undefined) {
+          data.hearthisUsername = hearthisAt.trim() ? parseHearthisUsername(hearthisAt) : null
+        }
+      }
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
       if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate
       if (body.showFollowers !== undefined) data.showFollowers = body.showFollowers
