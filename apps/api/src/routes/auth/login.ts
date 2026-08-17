@@ -91,6 +91,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         sameSite: 'lax',
         maxAge: config.sessionMaxAgeSec,
         path: '/',
+        domain: config.sessionCookieDomain,
       })
 
       return reply.send({

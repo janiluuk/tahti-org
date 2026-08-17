@@ -84,6 +84,13 @@ export const config = {
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days
+  // Unset (host-only cookie) outside prod — localhost/lab hostnames don't
+  // have a shared parent domain to scope to. In prod, a leading dot lets the
+  // session cookie carry over from app.tahti.live to every artist's
+  // <slug>.tahti.live subdomain instead of being scoped to app.tahti.live only.
+  sessionCookieDomain:
+    process.env.SESSION_COOKIE_DOMAIN ??
+    (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined),
   email: {
     host: smtpHost,
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),

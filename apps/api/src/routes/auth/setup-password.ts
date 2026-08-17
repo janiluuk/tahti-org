@@ -129,6 +129,7 @@ const setupPasswordRoute: FastifyPluginAsync = async (fastify) => {
         sameSite: 'lax',
         path: '/',
         maxAge: config.sessionMaxAgeSec,
+        domain: config.sessionCookieDomain,
       })
 
       return reply.send({

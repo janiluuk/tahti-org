@@ -6,6 +6,9 @@
 import { cookies } from 'next/headers'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+const SESSION_COOKIE_DOMAIN =
+  process.env.SESSION_COOKIE_DOMAIN ??
+  (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined)
 
 export async function resetPassword(input: {
   token: string
@@ -34,6 +37,7 @@ export async function resetPassword(input: {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
+      domain: SESSION_COOKIE_DOMAIN,
     })
   }
 

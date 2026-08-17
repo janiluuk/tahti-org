@@ -21,6 +21,12 @@ interface RegisterInput {
   hcaptchaToken?: string
 }
 
+// Lets the session cookie carry over from app.tahti.live to every artist's
+// <slug>.tahti.live subdomain — unset locally, no shared parent domain there.
+const SESSION_COOKIE_DOMAIN =
+  process.env.SESSION_COOKIE_DOMAIN ??
+  (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined)
+
 function applySessionCookieFrom(response: Response) {
   const setCookieHeader = response.headers.get('set-cookie') ?? ''
   const match = setCookieHeader.match(/tahti_session=([^;]+)/)
@@ -33,6 +39,7 @@ function applySessionCookieFrom(response: Response) {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
+      domain: SESSION_COOKIE_DOMAIN,
     })
   }
 }

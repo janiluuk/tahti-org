@@ -21,7 +21,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
         await deleteSession(fastify.prisma, sessionId)
       }
 
-      reply.clearCookie(config.sessionCookieName, { path: '/' })
+      reply.clearCookie(config.sessionCookieName, { path: '/', domain: config.sessionCookieDomain })
       return reply.send({ message: 'Logged out' })
     },
   )
