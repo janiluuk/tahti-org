@@ -21,6 +21,7 @@ export const PatchBroadcastPreflightSchema = z.object({
   showType: BroadcastShowTypeSchema.optional(),
   visibility: BroadcastVisibilitySchema.optional(),
   autoArchive: z.boolean().optional(),
+  seriesId: z.string().optional(),
 })
 
 export type PatchBroadcastPreflightInput = z.infer<typeof PatchBroadcastPreflightSchema>
@@ -38,6 +39,17 @@ export const PlannedRadioShowSchema = z.object({
 
 export type PlannedRadioShow = z.infer<typeof PlannedRadioShowSchema>
 
+export const PlannedLiveShowSchema = z.object({
+  scheduledShowId: z.string(),
+  seriesId: z.string(),
+  startAt: z.string(),
+  episodeNumber: z.number().int().min(1).nullable(),
+  title: z.string(),
+  tagline: z.string().nullable(),
+  showType: BroadcastShowTypeSchema,
+  artworkUrl: z.string().nullable(),
+})
+
 export const BroadcastPreflightViewSchema = z.object({
   title: z.string().nullable(),
   visibility: BroadcastVisibilitySchema,
@@ -46,6 +58,7 @@ export const BroadcastPreflightViewSchema = z.object({
   episodeNumber: z.number().int().min(1).nullable(),
   tagline: z.string().nullable(),
   plannedRadioShow: PlannedRadioShowSchema.nullable(),
+  plannedLiveShow: PlannedLiveShowSchema.nullable(),
 })
 
 export type BroadcastPreflightView = z.infer<typeof BroadcastPreflightViewSchema>

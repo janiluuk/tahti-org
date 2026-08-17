@@ -52,7 +52,8 @@ describe('buildFingerprintIngestDockerCommand', () => {
       apiUrl: 'http://api:3001',
       internalSecret: 'dev-secret',
     })
-    expect(cmd).toContain('--network tahti-stack_default')
+    expect(cmd).toContain('--network')
+    expect(cmd).toContain('tahti-stack_default')
     expect(cmd).toContain('tahti-fp-demo-bc1')
     expect(cmd).toContain('alpine:3.20')
   })

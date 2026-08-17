@@ -1,13 +1,13 @@
 # Tahti for artists (members & studio)
 
-This guide is for **you** if you joined Tahti ry, have a **channel**, and want a profile, releases, fan support, and (optionally) live broadcasting. Broadcasting itself is in **[For streamers](for-streamers.md)**.
+This guide is for any artist account with a **channel**. Tahti ry membership adds membership benefits, but the free tier remains a complete artist product. Broadcasting itself is in **[For streamers](for-streamers.md)**. The complete inventory is in the [feature catalog](../features.md).
 
 ---
 
 ## Before you start
 
 1. **Sign up:** `/join` → verify email (`/verify` link in mail).
-2. **Pay membership:** €40/year on `/dashboard` when prompted (Tahti ry member — unlocks full studio and lossless rules for your listeners when you are a member).
+2. **Optional membership:** €40/year supports Tahti ry and adds membership benefits such as lossless artist delivery and unlimited storage display.
 3. **Log in anytime:** `/login` → `/dashboard`.
 
 You get one **channel** (slug) and one **username** for your public profile.
@@ -34,13 +34,17 @@ Open `/dashboard` after login.
 | Section | What it does |
 |---------|----------------|
 | **Tahti ry membership** | Pay €40/year or **Manage billing** (Stripe portal when enabled). |
-| **Your channel** | Live/offline status, link to public channel, broadcast time warnings. |
-| **Stream settings** | RTMP server, stream key, Icecast mount — for OBS/Mixxx ([streamers guide](for-streamers.md)). |
+| **Channel** | Live/offline status, transport, now playing, active playlist, and channel links. |
+| **24/7 playlist** | Add archive or release tracks, preview, remove, and drag the offline queue into order. |
+| **Broadcast** | RTMP/Icecast setup, OBS preset, test signal, pre-flight, recording, publishing, and Go Live. |
 | **Multistream** | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)). |
-| **Announcements** | Pinned notes at top of chat on your channel. |
+| **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices. |
 | **Fan subscriptions** | Stripe Connect + fan tiers + perk codes. |
 | **Releases** | Draft/publish releases + **DSP URLs** for smart links. |
-| **Archive** | Upload recordings; they appear on `/c/your-slug`. |
+| **Discography** | Upload and manage tracks, sets, mixes, and catalog metadata. |
+| **Recordings** | Review recorded live shows separately from the rest of the discography. |
+| **Audio editor** | Preview processing, edit waveforms, export, and retain numbered revisions. |
+| **Channel design** | Identity, backgrounds, visualizer, gallery, media, and press kit with live preview. |
 
 ---
 
@@ -107,7 +111,7 @@ They keep perks until the **billing period ends**, then about **7 days grace**. 
 
 ## Step-by-step: archive (not live)
 
-1. Dashboard → **Archive** → upload a file (WAV/MP3 etc. per current upload UI).
+1. Dashboard → **Upload** → choose Track or Set / Mix, then drop a WAV, FLAC, MP3, AAC, or supported audio file.
 2. Wait until processing finishes (worker transcodes).
 3. Item appears on `/c/your-slug` for playback and downloads.
 
@@ -129,14 +133,9 @@ Paid Tahti ry members can use `/governance` for motions and votes (cooperative d
 
 ---
 
-## What is still rough / API-only
+## Feature status
 
-Check [future-improvements.md](../future-improvements.md) for the live backlog. Notable today:
-
-- **Newsletter UI** on dashboard may be limited — drafts/sends exist in the API.
-- **Full release audio pipeline** (upload WAV → auto derivatives everywhere) is still growing; v1 focuses on metadata + smart links.
-- **DSP distribution** (automatic Spotify upload via Revelator, etc.) is not the same as smart-link buttons.
-- **Release ops (planned, M30):** MusicBrainz entry submission, ISRC/UPC, credits, and a release checklist — see [project-roadmap.md](../project-roadmap.md#phase-6b--release-ops--catalog-metadata-m30).
+Use the [feature catalog](../features.md) for implemented surfaces and required external services. Use [future-improvements.md](../future-improvements.md) for deferred work; smart links and DSP delivery are separate workflows.
 
 ---
 

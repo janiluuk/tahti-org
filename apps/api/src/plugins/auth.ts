@@ -7,6 +7,7 @@ import type { User } from '@tahti/db'
 import { validateSession } from '../lib/session.js'
 import { validateApiToken, TOKEN_PREFIX } from '../lib/api-token.js'
 import { config } from '../config.js'
+import { sessionCookieCandidates } from '../lib/session-cookie.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -43,12 +44,16 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
-    const sessionId = request.cookies[config.sessionCookieName]
-    if (!sessionId) return
-
-    const session = await validateSession(fastify.prisma, sessionId)
-    if (session) {
+    const sessionIds = sessionCookieCandidates(
+      request.headers.cookie,
+      config.sessionCookieName,
+      request.cookies[config.sessionCookieName],
+    )
+    for (const sessionId of sessionIds) {
+      const session = await validateSession(fastify.prisma, sessionId)
+      if (!session) continue
       request.sessionUser = session.user
+      break
     }
   })
 }

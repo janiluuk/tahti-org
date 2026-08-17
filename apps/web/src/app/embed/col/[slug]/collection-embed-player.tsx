@@ -5,12 +5,15 @@
 
 import { useState } from 'react'
 import { Link, Text } from '@tahti/ui'
+import { hearthisEmbedSrc } from '@tahti/shared'
 
 interface Track {
   id: string
   title: string
   durationSec: number | null
   hasStream: boolean
+  embedProvider: 'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | null
+  embedUri: string | null
 }
 
 interface CollectionEmbed {
@@ -61,7 +64,9 @@ export default function CollectionEmbedPlayer({ collection }: { collection: Coll
     }
   }
 
-  const playable = collection.tracks.filter((t) => t.hasStream)
+  const playable = collection.tracks.filter(
+    (track) => track.hasStream || (track.embedProvider === 'HEARTHIS' && track.embedUri),
+  )
 
   return (
     <div>
@@ -89,23 +94,37 @@ export default function CollectionEmbedPlayer({ collection }: { collection: Coll
         </Text>
       ) : (
         <ul className="embed-track-list">
-          {playable.map((t) => (
-            <li key={t.id} className="embed-track-item">
-              <button
-                type="button"
-                onClick={() => playTrack(t)}
-                disabled={loadingId === t.id}
-                aria-label={`Play ${t.title}`}
-                className={`embed-track-play${playingId === t.id ? ' embed-track-play--active' : ''}`}
-              >
-                {loadingId === t.id ? '…' : playingId === t.id ? '■' : '▶'}
-              </button>
-              <span className="embed-track-title">{t.title}</span>
-              {t.durationSec != null && (
-                <span className="embed-track-duration">{formatDuration(t.durationSec)}</span>
-              )}
-            </li>
-          ))}
+          {playable.map((t) =>
+            t.embedProvider === 'HEARTHIS' && t.embedUri ? (
+              <li key={t.id} className="embed-track-item">
+                <iframe
+                  title={t.title}
+                  src={hearthisEmbedSrc(t.embedUri)}
+                  width="100%"
+                  height="150"
+                  style={{ border: 0 }}
+                  allow="autoplay"
+                  loading="lazy"
+                />
+              </li>
+            ) : (
+              <li key={t.id} className="embed-track-item">
+                <button
+                  type="button"
+                  onClick={() => playTrack(t)}
+                  disabled={loadingId === t.id}
+                  aria-label={`Play ${t.title}`}
+                  className={`embed-track-play${playingId === t.id ? ' embed-track-play--active' : ''}`}
+                >
+                  {loadingId === t.id ? '…' : playingId === t.id ? '■' : '▶'}
+                </button>
+                <span className="embed-track-title">{t.title}</span>
+                {t.durationSec != null && (
+                  <span className="embed-track-duration">{formatDuration(t.durationSec)}</span>
+                )}
+              </li>
+            ),
+          )}
         </ul>
       )}
 

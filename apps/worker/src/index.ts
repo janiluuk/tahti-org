@@ -18,6 +18,7 @@ import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processCloudImportGoogleDriveJob } from './jobs/cloud-import-google-drive.js'
 import { processSoundcloudImportJob } from './jobs/soundcloud-import.js'
 import { processHearthisImportJob } from './jobs/hearthis-import.js'
+import { processHearthisEmbedLocalizationJob } from './jobs/hearthis-embed-localize.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
@@ -40,6 +41,7 @@ import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processRadioSlotSwitchoverJob } from './jobs/radio-slot-switchover.js'
+import { processChannelFallbackReconcilerJob } from './jobs/channel-fallback-reconciler.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
@@ -124,6 +126,8 @@ const worker = new Worker(
         await processSoundcloudImportJob(job)
       } else if (job.name === 'cloud-import-hearthis') {
         await processHearthisImportJob(job)
+      } else if (job.name === 'hearthis-embed-localize') {
+        await processHearthisEmbedLocalizationJob(job)
       } else if (job.name === 'newsletter-dispatch') {
         await processNewsletterDispatch(job)
       } else if (job.name === 'finalize-broadcast-recording') {
@@ -139,6 +143,11 @@ const worker = new Worker(
         const summary = await processRadioSlotSwitchoverJob(prisma, job)
         if (summary.switched) {
           console.log('[worker] radio-slot-switchover:', JSON.stringify(summary))
+        }
+      } else if (job.name === 'channel-fallback-reconciler') {
+        const summary = await processChannelFallbackReconcilerJob(prisma, job)
+        if (summary.started > 0) {
+          console.log('[worker] channel-fallback-reconciler:', JSON.stringify(summary))
         }
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)

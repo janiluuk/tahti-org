@@ -57,12 +57,13 @@ const channelFallbackCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const collections = await fastify.prisma.collection.findMany({
         where: { userId: channel.userId },
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, _count: { select: { items: true } } },
+        select: { id: true, slug: true, name: true, _count: { select: { items: true } } },
       })
 
       return reply.send(
         collections.map((c) => ({
           id: c.id,
+          slug: c.slug,
           name: c.name,
           trackCount: c._count.items,
           active: c.id === channel.activeFallbackCollectionId,

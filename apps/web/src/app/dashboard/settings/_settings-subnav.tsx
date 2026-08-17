@@ -17,7 +17,6 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
       { href: '/dashboard/settings/artist-info', label: 'Artist info' },
       { href: '/dashboard/settings/artist-info#members', label: 'Members' },
       { href: '/dashboard/settings/connections', label: 'Connections' },
-      { href: '/dashboard/settings/media', label: 'Media & Presskit' },
       { href: '/dashboard/settings/discovery', label: 'Discovery' },
       { href: '/dashboard/settings/domain', label: 'Username & domain' },
       { href: '/dashboard/settings/api', label: 'API tokens' },
@@ -36,7 +35,7 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
     label: 'Money',
     items: [
       { href: '/dashboard/settings/fan-subs', label: 'Fan subs' },
-      { href: '/dashboard/settings/notifications', label: 'Notifications' },
+      { href: '/dashboard/settings/notifications', label: 'Notifications & visibility' },
     ],
   },
 ]
@@ -55,7 +54,8 @@ export function SettingsSubnav() {
           <Fragment key={group.label}>
             <span className="settings-subnav__group">{group.label}</span>
             {group.items.map((item) => {
-              const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
+              const itemPath = item.href.split('#')[0]!
+              const active = pathname === itemPath || pathname?.startsWith(`${itemPath}/`)
               return (
                 <Link
                   key={item.href}

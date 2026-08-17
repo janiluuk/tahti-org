@@ -52,6 +52,7 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 
 | File | Purpose |
 |---|---|
+| [`docs/features.md`](docs/features.md) | Current implemented feature catalog and operational dependencies |
 | [`docs/guides/README.md`](docs/guides/README.md) | Index — who should read which guide |
 | [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md) | Listeners & fans: listen, chat, subscribe, smart links |
 | [`docs/guides/for-artists.md`](docs/guides/for-artists.md) | Members: dashboard, profile, releases, fan tiers |

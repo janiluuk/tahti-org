@@ -21,7 +21,59 @@ type BroadcastRow = {
   showType: BroadcastShowType
   episodeNumber: number | null
   tagline: string | null
+  artworkUrl: string | null
   radioSlotBookingId: string | null
+  scheduledLiveShowId: string | null
+}
+
+type ScheduledLiveShowRow = {
+  id: string
+  seriesId: string
+  startAt: Date
+  episodeNumber: number | null
+  title: string
+  description: string | null
+  tagline: string | null
+  showType: BroadcastShowType
+  visibility: 'PUBLIC' | 'FAN_ONLY'
+  autoArchive: boolean
+  artworkUrl: string | null
+}
+
+type LiveShowSeriesAttachRow = {
+  id: string
+  name: string
+  description: string | null
+  tagline: string | null
+  artworkUrl: string | null
+  showType: BroadcastShowType
+  visibility: 'PUBLIC' | 'FAN_ONLY'
+  autoArchive: boolean
+  episodeNumberEnabled: boolean
+  nextEpisodeNumber: number
+}
+
+function seriesAttachDb(client: unknown) {
+  return client as {
+    liveShowSeries: {
+      findFirst(args: object): Promise<LiveShowSeriesAttachRow | null>
+      update(args: object): Promise<unknown>
+    }
+    scheduledLiveShow: {
+      create(args: object): Promise<ScheduledLiveShowRow>
+    }
+    broadcast: {
+      update(args: object): Promise<BroadcastRow>
+    }
+  }
+}
+
+function scheduledShowDb(client: unknown) {
+  return client as {
+    scheduledLiveShow: {
+      findFirst(args: object): Promise<ScheduledLiveShowRow | null>
+    }
+  }
 }
 
 const broadcastSelect = {
@@ -33,6 +85,8 @@ const broadcastSelect = {
   episodeNumber: true,
   tagline: true,
   radioSlotBookingId: true,
+  scheduledLiveShowId: true,
+  artworkUrl: true,
 } as const
 
 function toView(
@@ -41,6 +95,7 @@ function toView(
     'title' | 'visibility' | 'autoArchive' | 'showType' | 'episodeNumber' | 'tagline'
   >,
   planned: BroadcastPreflightView['plannedRadioShow'],
+  plannedLiveShow: BroadcastPreflightView['plannedLiveShow'] = null,
 ): BroadcastPreflightView {
   return {
     title: broadcast.title,
@@ -50,10 +105,12 @@ function toView(
     episodeNumber: broadcast.episodeNumber,
     tagline: broadcast.tagline,
     plannedRadioShow: planned,
+    plannedLiveShow,
   }
 }
 
 const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
+  const showDb = scheduledShowDb(fastify.prisma)
   async function findPlannedBooking(channelId: string, now: Date) {
     const windowStart = new Date(now.getTime() + RADIO_SHOW_GO_LIVE_EARLY_MS)
     // Active window: startAt - 30m <= now < endAt  ⟺  startAt <= now+30m AND endAt > now
@@ -84,16 +141,85 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
   async function ensurePlannedShowFilled(
     channelId: string,
     broadcast: BroadcastRow,
-  ): Promise<{ broadcast: BroadcastRow; planned: BroadcastPreflightView['plannedRadioShow'] }> {
+  ): Promise<{
+    broadcast: BroadcastRow
+    planned: BroadcastPreflightView['plannedRadioShow']
+    plannedLiveShow: BroadcastPreflightView['plannedLiveShow']
+  }> {
     const planned = await findPlannedBooking(channelId, new Date())
     if (!planned) {
-      return { broadcast, planned: null }
+      const now = new Date()
+      const scheduled = await showDb.scheduledLiveShow.findFirst({
+        where: {
+          channelId,
+          canceledAt: null,
+          broadcast: null,
+          startAt: {
+            lte: new Date(now.getTime() + RADIO_SHOW_GO_LIVE_EARLY_MS),
+            gt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+          },
+        },
+        orderBy: { startAt: 'asc' },
+      })
+      if (!scheduled) return { broadcast, planned: null, plannedLiveShow: null }
+
+      const updated = broadcast.scheduledLiveShowId
+        ? broadcast
+        : ((await fastify.prisma.broadcast.update({
+            where: { id: broadcast.id },
+            data: {
+              scheduledLiveShowId: scheduled.id,
+              title: broadcast.title ?? scheduled.title,
+              description: scheduled.description,
+              episodeNumber: broadcast.episodeNumber ?? scheduled.episodeNumber,
+              tagline: broadcast.tagline ?? scheduled.tagline,
+              showType: scheduled.showType,
+              visibility: scheduled.visibility,
+              autoArchive: scheduled.autoArchive,
+              artworkUrl: scheduled.artworkUrl,
+            } as never,
+            select: broadcastSelect as never,
+          })) as unknown as BroadcastRow)
+
+      const next = await showDb.scheduledLiveShow.findFirst({
+        where: {
+          channelId,
+          canceledAt: null,
+          broadcast: null,
+          startAt: { gt: now },
+        },
+        orderBy: { startAt: 'asc' },
+        select: { startAt: true, title: true },
+      })
+      await fastify.prisma.channel.update({
+        where: { id: channelId },
+        data: {
+          nextBroadcastAt: next?.startAt ?? null,
+          nextBroadcastNote: next?.title ?? null,
+        },
+      })
+
+      return {
+        broadcast: updated,
+        planned: null,
+        plannedLiveShow: {
+          scheduledShowId: scheduled.id,
+          seriesId: scheduled.seriesId,
+          startAt: scheduled.startAt.toISOString(),
+          episodeNumber: scheduled.episodeNumber,
+          title: scheduled.title,
+          tagline: updated.tagline,
+          showType: updated.showType,
+          artworkUrl: updated.artworkUrl,
+        },
+      }
     }
 
     // Already linked to this (or any) booking — keep artist edits, just expose planned meta.
     if (broadcast.radioSlotBookingId) {
       return {
         broadcast,
+        plannedLiveShow: null,
         planned: {
           ...planned,
           tagline: broadcast.tagline ?? planned.tagline,
@@ -122,6 +248,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
 
     return {
       broadcast: updated,
+      plannedLiveShow: null,
       planned: {
         bookingId: planned.bookingId,
         startAt: planned.startAt,
@@ -172,12 +299,13 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
               tagline: planned?.tagline ?? null,
             },
             planned,
+            null,
           ),
         )
       }
 
       const filled = await ensurePlannedShowFilled(channel.id, broadcast)
-      return reply.send(toView(filled.broadcast, filled.planned))
+      return reply.send(toView(filled.broadcast, filled.planned, filled.plannedLiveShow))
     },
   )
 
@@ -209,12 +337,78 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      let broadcast = await fastify.prisma.broadcast.findFirst({
+      let broadcast = (await fastify.prisma.broadcast.findFirst({
         where: { channelId: channel.id, endedAt: null },
         orderBy: { startedAt: 'desc' },
-        select: broadcastSelect,
-      })
+        select: broadcastSelect as never,
+      })) as unknown as BroadcastRow | null
       if (!broadcast) return reply.status(409).send({ error: 'No active broadcast session' })
+
+      if (body.seriesId) {
+        if (broadcast.scheduledLiveShowId) {
+          return reply.status(409).send({ error: 'This broadcast is already assigned to a series' })
+        }
+        const attached = await fastify.prisma.$transaction(async (tx) => {
+          const transactionDb = seriesAttachDb(tx)
+          const series = await transactionDb.liveShowSeries.findFirst({
+            where: { id: body.seriesId, channelId: channel.id },
+          })
+          if (!series) return null
+          const episodeNumber = series.episodeNumberEnabled ? series.nextEpisodeNumber : null
+          const scheduled = await transactionDb.scheduledLiveShow.create({
+            data: {
+              channelId: channel.id,
+              seriesId: series.id,
+              startAt: new Date(),
+              episodeNumber,
+              title: series.episodeNumberEnabled
+                ? `${series.name} #${episodeNumber}`
+                : series.name,
+              description: series.description,
+              tagline: series.tagline,
+              showType: series.showType,
+              visibility: series.visibility,
+              autoArchive: series.autoArchive,
+              artworkUrl: series.artworkUrl,
+            },
+          })
+          if (series.episodeNumberEnabled) {
+            await transactionDb.liveShowSeries.update({
+              where: { id: series.id },
+              data: { nextEpisodeNumber: { increment: 1 } },
+            })
+          }
+          const updated = await transactionDb.broadcast.update({
+            where: { id: broadcast!.id },
+            data: {
+              scheduledLiveShowId: scheduled.id,
+              title: scheduled.title,
+              description: scheduled.description,
+              episodeNumber: scheduled.episodeNumber,
+              tagline: scheduled.tagline,
+              showType: scheduled.showType,
+              visibility: scheduled.visibility,
+              autoArchive: scheduled.autoArchive,
+              artworkUrl: scheduled.artworkUrl,
+            },
+            select: broadcastSelect,
+          })
+          return { updated, scheduled }
+        })
+        if (!attached) return reply.status(404).send({ error: 'Series not found' })
+        return reply.send(
+          toView(attached.updated, null, {
+            scheduledShowId: attached.scheduled.id,
+            seriesId: body.seriesId,
+            startAt: attached.scheduled.startAt.toISOString(),
+            episodeNumber: attached.scheduled.episodeNumber,
+            title: attached.scheduled.title,
+            tagline: attached.scheduled.tagline,
+            showType: attached.scheduled.showType,
+            artworkUrl: attached.scheduled.artworkUrl,
+          }),
+        )
+      }
 
       // Link planned show first so tagline edits persist against the booking.
       const filled = await ensurePlannedShowFilled(channel.id, broadcast)
@@ -246,11 +440,11 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.title !== undefined) data.title = body.title
 
-      const updated = await fastify.prisma.broadcast.update({
+      const updated = (await fastify.prisma.broadcast.update({
         where: { id: broadcast.id },
         data,
-        select: broadcastSelect,
-      })
+        select: broadcastSelect as never,
+      })) as unknown as BroadcastRow
 
       if (
         (body.tagline !== undefined || body.showType !== undefined) &&
@@ -274,7 +468,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
           }
         : null
 
-      return reply.send(toView(updated, planned))
+      return reply.send(toView(updated, planned, filled.plannedLiveShow))
     },
   )
 }

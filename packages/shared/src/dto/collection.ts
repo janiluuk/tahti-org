@@ -10,6 +10,7 @@ export const COLLECTION_STYLES = [
   'EP',
   'SINGLE',
   'DJ_SET_SERIES',
+  'PODCAST',
   'LIVE_ARCHIVE',
   'COMPILATION',
   'PLAYLIST',

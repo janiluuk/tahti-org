@@ -21,6 +21,7 @@ import {
   type OutputFormat,
 } from '@tahti/audio-edit'
 import { prisma, syncActiveVersionToItem } from '@tahti/db'
+import { pruneArchiveRevisions } from '../lib/archive-version-retention.js'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
 import { processTranscodeVersionJob } from './transcode-version.js'
@@ -329,6 +330,8 @@ export async function processRenderArchiveEditJob(job: Job): Promise<void> {
       ])
       await syncActiveVersionToItem(prisma, archiveItemId)
     }
+
+    await pruneArchiveRevisions(prisma, archiveItemId)
 
     await reportProgress({ pct: 1, phase: 'done' })
   } catch (err) {

@@ -3,11 +3,10 @@
 
 import { redirect } from 'next/navigation'
 import { PageShell, Text } from '@tahti/ui'
+import type { LiveShowSeriesView, ScheduledLiveShowView } from '@tahti/shared'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
-import { fetchChannelProgramme } from '../programme-actions'
 import ChannelSchedulePanel from '../channel-schedule-panel'
-import { RotationEditor } from './_rotation-editor'
 
 export default async function SchedulePage() {
   const sessionValue = dashboardSessionCookie()
@@ -24,9 +23,13 @@ export default async function SchedulePage() {
     nextBroadcastNote: null,
   }
 
-  const [user, { data }, channelSchedule] = await Promise.all([
+  const emptySeries: { series: LiveShowSeriesView[]; scheduledShows: ScheduledLiveShowView[] } = {
+    series: [],
+    scheduledShows: [],
+  }
+
+  const [user, channelSchedule, showSeries] = await Promise.all([
     getDashboardUser(),
-    fetchChannelProgramme(),
     fetch(`${apiUrl}/api/me/channel/schedule`, {
       headers: { Cookie: `tahti_session=${sessionValue}` },
       cache: 'no-store',
@@ -35,19 +38,21 @@ export default async function SchedulePage() {
         res.ok ? (res.json() as Promise<ChannelScheduleResponse>) : emptyChannelSchedule,
       )
       .catch(() => emptyChannelSchedule),
+    fetch(`${apiUrl}/api/me/channel/show-series`, {
+      headers: { Cookie: `tahti_session=${sessionValue}` },
+      cache: 'no-store',
+    })
+      .then((res) =>
+        res.ok
+          ? (res.json() as Promise<typeof emptySeries>)
+          : emptySeries,
+      )
+      .catch(() => emptySeries),
   ])
 
   if (!user) redirect('/login?next=/dashboard/schedule')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
-  const initial = data ?? {
-    fallbackMode: 'shuffle' as const,
-    fallbackEnabled: true,
-    fallbackAutoEnroll: true,
-    announcementsEnabled: true,
-    items: [],
-    library: [],
-  }
   const isLive = user.channel.state === 'LIVE'
 
   return (
@@ -56,8 +61,7 @@ export default async function SchedulePage() {
         <div>
           <h1 className="studio-page-title">Schedule</h1>
           <Text tone="muted" size="sm">
-            The 24/7 rotation that plays when you&apos;re offline — mix in archive sets and release
-            tracks.
+            Plan upcoming broadcasts and recurring live show series.
           </Text>
         </div>
         <div className="studio-page-header__actions">
@@ -75,10 +79,10 @@ export default async function SchedulePage() {
       <ChannelSchedulePanel
         initialAt={channelSchedule.nextBroadcastAt}
         initialNote={channelSchedule.nextBroadcastNote}
+        initialSeries={showSeries.series}
+        initialScheduledShows={showSeries.scheduledShows}
         isLive={isLive}
       />
-
-      <RotationEditor initial={initial} channelSlug={user.channel.slug} />
     </PageShell>
   )
 }

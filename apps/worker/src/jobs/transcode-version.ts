@@ -16,6 +16,7 @@ import {
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
+import { pruneArchiveRevisions } from '../lib/archive-version-retention.js'
 
 function ffprobeFormat(
   filePath: string,
@@ -137,6 +138,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
     if (version.isActive) {
       await syncActiveVersionToItem(prisma, itemId)
     }
+    await pruneArchiveRevisions(prisma, itemId)
   } catch (err) {
     await prisma.archiveItemVersion.update({
       where: { id: versionId },

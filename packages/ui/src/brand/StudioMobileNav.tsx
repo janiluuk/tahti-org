@@ -99,7 +99,7 @@ function IconCollections() {
 const MOBILE_NAV = [
   { href: '/dashboard', label: 'Channel', Icon: IconChannel, requiresChannel: true },
   { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, requiresChannel: true },
-  { href: '/dashboard/archive', label: 'Recordings', Icon: IconArchive, requiresChannel: true },
+  { href: '/dashboard/archive', label: 'Discography', Icon: IconArchive, requiresChannel: true },
   { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload, requiresChannel: true },
   {
     href: '/dashboard/collections',

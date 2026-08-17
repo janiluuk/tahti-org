@@ -76,6 +76,14 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send('weekly_cap')
       }
 
+      // A fallback-rotation placeholder (or an abnormally-terminated previous session)
+      // may still be open for this channel — close it out before starting a new one so
+      // go-live's unordered findFirst({ endedAt: null }) can't grab the wrong row.
+      await fastify.prisma.broadcast.updateMany({
+        where: { channelId: channel.id, endedAt: null },
+        data: { endedAt: new Date() },
+      })
+
       const broadcast = await fastify.prisma.broadcast.create({
         data: {
           channelId: channel.id,

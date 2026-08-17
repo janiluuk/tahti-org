@@ -8,6 +8,7 @@ import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import { ChannelHero } from './_channel-hero'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
+import { ChannelControlsPanel } from './channel-controls-panel'
 
 interface ArchiveItem {
   id: string
@@ -134,6 +135,8 @@ export function DashboardOverview({
         broadcastTitle={liveBroadcastTitle}
         lastBroadcast={channel.goneLiveAt ? null : lastBroadcast}
       />
+
+      <ChannelControlsPanel slug={channel.slug} />
 
       <BroadcastUsageBanner usage={broadcastUsage} />
 

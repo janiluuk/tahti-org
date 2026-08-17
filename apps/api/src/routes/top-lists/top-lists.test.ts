@@ -183,4 +183,18 @@ describe('/api/top-lists', () => {
       quietId,
     ])
   })
+
+  it('shows an artist only their own content under dashboard top lists', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/stats/top-lists?period=all_time&dimension=type&sort=desc',
+      headers: { cookie: plainCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const entries = res.json().buckets.flatMap((bucket: { entries: unknown[] }) => bucket.entries)
+    expect(entries.map((entry: { archiveItemId: string }) => entry.archiveItemId)).toEqual([
+      popularId,
+      quietId,
+    ])
+  })
 })

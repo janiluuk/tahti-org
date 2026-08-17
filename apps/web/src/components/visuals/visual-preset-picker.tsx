@@ -243,15 +243,18 @@ function PresetThumb({
     >
       {preset === 'MINIMAL' ? (
         <span className="visual-preset-picker__minimal-label">None</span>
-      ) : live ? (
-        <ChannelVisualizer
-          preset={preset}
-          colorSchemeJson={JSON.stringify(scheme)}
-          settings={settings ?? undefined}
-          className="visual-preset-picker__preview-canvas"
-        />
       ) : (
-        <StaticPresetThumbnail preset={preset} scheme={scheme} />
+        <>
+          <StaticPresetThumbnail preset={preset} scheme={scheme} />
+          {live ? (
+            <ChannelVisualizer
+              preset={preset}
+              colorSchemeJson={JSON.stringify(scheme)}
+              settings={settings ?? undefined}
+              className="visual-preset-picker__preview-canvas"
+            />
+          ) : null}
+        </>
       )}
     </div>
   )
@@ -308,7 +311,6 @@ export function VisualPresetPicker({
   }, [galleryOpen])
 
   const focusSettings = resolveVisualPresetSettings(settingsMap, focus)
-  const selectedSettings = resolveVisualPresetSettings(settingsMap, value)
 
   function updateFocusSetting(key: keyof VisualPresetSettings, raw: number) {
     if (!onSettingsChange) return
@@ -351,7 +353,7 @@ export function VisualPresetPicker({
                 preset={preset}
                 scheme={scheme}
                 live={showPreview && hoveredStripPreset === preset}
-                settings={selectedSettings}
+                settings={resolveVisualPresetSettings(settingsMap, preset)}
                 size="sm"
               />
               <span className="visual-preset-picker__strip-name">

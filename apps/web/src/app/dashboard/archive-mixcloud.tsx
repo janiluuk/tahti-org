@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { Button, ButtonIcon } from '@tahti/ui'
 import { fetchMixcloudUploadStatus, queueMixcloudUpload } from './mixcloud-actions'
 
 export function ArchiveMixcloudUpload({
@@ -22,6 +23,7 @@ export function ArchiveMixcloudUpload({
   const [uploadStatus, setUploadStatus] = useState<string | null>(null)
   const [mixcloudUrl, setMixcloudUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -48,32 +50,51 @@ export function ArchiveMixcloudUpload({
 
   return (
     <div className="studio-mt-md studio-text-sm">
-      <div className="studio-text-strong-sm studio-mb-sm">Mixcloud upload</div>
-      {mixcloudConfigured && !mixcloudConnected && (
-        <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
-          <a href={`${apiUrl}/api/me/mixcloud/oauth/start`}>Connect Mixcloud</a> to upload this mix.
-        </p>
-      )}
       {uploadStatus === 'DONE' && mixcloudUrl && (
         <p className="studio-m-0">
-          Uploaded —{' '}
+          Exported —{' '}
           <a href={mixcloudUrl} target="_blank" rel="noreferrer">
             View on Mixcloud
           </a>
         </p>
       )}
       {uploadStatus && uploadStatus !== 'DONE' && (
-        <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">Status: {uploadStatus}</p>
+        <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
+          Mixcloud export: {uploadStatus}
+        </p>
       )}
       {!uploadStatus && (
-        <button
-          type="button"
-          onClick={queue}
-          disabled={isPending || (mixcloudConfigured && !mixcloudConnected)}
-          className="studio-text-muted-sm"
-        >
-          {isPending ? 'Queueing…' : 'Upload to Mixcloud'}
-        </button>
+        <>
+          <Button type="button" variant="secondary" onClick={() => setOpen((value) => !value)}>
+            <ButtonIcon name="download" />
+            Export
+          </Button>
+          {open ? (
+            <div className="studio-export-menu studio-mt-sm">
+              {mixcloudConfigured && mixcloudConnected ? (
+                <div className="studio-export-menu__row">
+                  <div>
+                    <strong>Mixcloud</strong>
+                    <span>Publish this audio to your connected Mixcloud account.</span>
+                  </div>
+                  <Button type="button" size="sm" disabled={isPending} onClick={queue}>
+                    {isPending ? 'Queueing…' : 'Push'}
+                  </Button>
+                </div>
+              ) : (
+                <p className="studio-text-muted-sm studio-m-0">
+                  No export destinations configured.{' '}
+                  {mixcloudConfigured ? (
+                    <a href={`${apiUrl}/api/me/mixcloud/oauth/start`}>Connect Mixcloud</a>
+                  ) : (
+                    <a href="/dashboard/settings/connections#social">Open Connections</a>
+                  )}
+                  .
+                </p>
+              )}
+            </div>
+          ) : null}
+        </>
       )}
       {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
     </div>

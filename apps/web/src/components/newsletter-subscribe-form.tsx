@@ -30,7 +30,13 @@ type Status = 'idle' | 'loading' | 'sent' | 'subscribed' | 'error'
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 /** Logged-in viewer — subscribe/unsubscribe with one click using the account's own email. */
-function LoggedInToggle({ artistUsername }: { artistUsername: string }) {
+function LoggedInToggle({
+  artistUsername,
+  variant,
+}: {
+  artistUsername: string
+  variant: 'text' | 'icon'
+}) {
   const [subscribed, setSubscribed] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -69,20 +75,29 @@ function LoggedInToggle({ artistUsername }: { artistUsername: string }) {
   return (
     <button
       type="button"
-      className={`prof-newsletter-btn${subscribed ? ' prof-newsletter-btn--active' : ''}`}
+      className={
+        variant === 'icon'
+          ? 'prof-icon-btn'
+          : `prof-newsletter-btn${subscribed ? ' prof-newsletter-btn--active' : ''}`
+      }
       onClick={() => void toggle()}
       disabled={subscribed === null || busy}
       aria-pressed={subscribed ?? false}
       title={subscribed ? 'Subscribed to email updates' : 'Get email updates'}
+      aria-label={subscribed ? 'Subscribed to email updates' : 'Get email updates'}
     >
       <IconMail />
-      {subscribed ? 'Subscribed' : 'Email updates'}
+      {variant === 'text' ? (subscribed ? 'Subscribed' : 'Email updates') : null}
     </button>
   )
 }
 
 /** Anonymous visitor — collapsed button expands to the email-entry form. */
-function AnonymousForm({ artistUsername, artistDisplayName }: Omit<Props, 'isLoggedIn'>) {
+function AnonymousForm({
+  artistUsername,
+  artistDisplayName,
+  variant,
+}: Omit<Props, 'isLoggedIn'> & { variant: 'text' | 'icon' }) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
@@ -121,9 +136,15 @@ function AnonymousForm({ artistUsername, artistDisplayName }: Omit<Props, 'isLog
 
   if (!open) {
     return (
-      <button type="button" className="prof-newsletter-btn" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={variant === 'icon' ? 'prof-icon-btn' : 'prof-newsletter-btn'}
+        onClick={() => setOpen(true)}
+        title="Get email updates"
+        aria-label="Get email updates"
+      >
         <IconMail />
-        Email updates
+        {variant === 'text' ? 'Email updates' : null}
       </button>
     )
   }
@@ -175,10 +196,19 @@ function AnonymousForm({ artistUsername, artistDisplayName }: Omit<Props, 'isLog
   )
 }
 
-export function NewsletterSubscribeForm({ artistUsername, artistDisplayName, isLoggedIn }: Props) {
+export function NewsletterSubscribeForm({
+  artistUsername,
+  artistDisplayName,
+  isLoggedIn,
+  variant = 'text',
+}: Props & { variant?: 'text' | 'icon' }) {
   return isLoggedIn ? (
-    <LoggedInToggle artistUsername={artistUsername} />
+    <LoggedInToggle artistUsername={artistUsername} variant={variant} />
   ) : (
-    <AnonymousForm artistUsername={artistUsername} artistDisplayName={artistDisplayName} />
+    <AnonymousForm
+      artistUsername={artistUsername}
+      artistDisplayName={artistDisplayName}
+      variant={variant}
+    />
   )
 }

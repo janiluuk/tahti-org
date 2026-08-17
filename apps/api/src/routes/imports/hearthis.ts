@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { createHearthisClient, parseHearthisUsername, type HearthisTrack } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
+import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 
 // hearthis.at's read API (search, feed, profiles, tracks) is public — no key/secret required.
 // Mirrors imports/mixcloud-embed.ts: embed-only, we never fetch or re-host hearthis.at audio.
@@ -179,6 +180,13 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true },
       })
+
+      // A public download flag is explicit permission from the uploader to
+      // download this file. Localize those tracks in the background so Tahti
+      // can use its native player and preserve lossless originals when offered.
+      if (track.downloadable === '1' && track.download_url) {
+        await enqueueHearthisEmbedLocalization({ archiveItemId: archiveItem.id, trackUrl })
+      }
 
       return reply.status(201).send({
         archiveItemId: archiveItem.id,

@@ -151,7 +151,7 @@ interface PlayerContextValue extends PlayerState {
   shuffle: boolean
   toggleShuffle: () => void
   /** Appends to the queue — starts one from the current track if none exists yet. */
-  addToQueue: (track: PlayerTrack) => void
+  addToQueue: (track: PlayerTrack) => boolean
   removeFromQueue: (trackId: string) => void
   /** Drops every not-yet-played track, keeping only the one currently loaded. */
   clearQueue: () => void
@@ -677,10 +677,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const addToQueue = useCallback(
     (track: PlayerTrack) => {
       const base = queueRef.current ?? (state.track ? [state.track] : [])
-      if (base.some((t) => t.id === track.id)) return
+      if (base.some((t) => t.id === track.id)) return false
       const next = [...base, track]
       queueRef.current = next
       setQueue(next)
+      return true
     },
     [state.track],
   )

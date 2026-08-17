@@ -2,7 +2,7 @@
 
 This guide is for **broadcasting live audio** to your Tahti channel. If you only upload archive files and never go live, you can skip most of this.
 
-**You need:** Tahti account, verified email, active **Tahti ry membership** (€40/year support), and broadcasting software (OBS Studio is the usual choice).
+**You need:** A verified Tahti artist account with a channel and broadcasting software. Free-tier artists have a weekly live allowance; membership expands the available capacity and quality benefits.
 
 ---
 
@@ -16,8 +16,8 @@ Your app (OBS, Mixxx, …) sends audio to Tahti’s **RTMP** server using a **se
 
 ### 1. Get credentials
 
-1. Log in → `/dashboard`.
-2. Open **Stream settings** (or **Your channel** + stream block).
+1. Log in and open `/dashboard/broadcast`.
+2. Choose OBS/RTMP or DJ software/Icecast in **Setup**.
 3. Copy:
    - **RTMP server** (e.g. `rtmp://…/live`)
    - **Stream key** (long string — **never** share publicly)
@@ -46,13 +46,15 @@ See [obs-and-broadcasting-guides.md](../obs-and-broadcasting-guides.md) for scre
 
 1. In OBS, click **Start Streaming**.
 2. Wait ~5–15 seconds.
-3. Open `/c/your-slug` in another tab — status should show **Live**.
-4. Press play; you should hear yourself (with delay).
+3. Use the integrated **Test signal** and preview meters.
+4. Continue to **Pre-flight**, choose recording/publishing, then confirm **Go live**.
 
 ### 5. Stop
 
 1. OBS → **Stop Streaming**.
 2. Channel goes **Offline**; listeners may hear archive shuffle/fallback if configured.
+
+Manage that fallback queue under `/dashboard/channel/playlist`; items can be previewed, removed, and reordered with drag and drop.
 
 ---
 
@@ -76,8 +78,7 @@ Tahti tiers cap **live hours per week** (fair use on owned hardware):
 | Tier | Rough limit |
 |------|-------------|
 | FREE | 1 hour / week |
-| ARTIST (member) | More hours (see dashboard banner) |
-| STUDIO | Highest cap + multistream extras |
+| Member | Membership benefits shown by the dashboard |
 
 The dashboard shows **warnings** (e.g. 45 / 55 minutes) and may **stop** the stream when you hit the cap, with a short **grace** if you disconnect right at the limit.
 
@@ -104,7 +105,7 @@ Supported ingest URLs are configured for you (e.g. `rtmp://live.twitch.tv/app` +
 
 ## After the show: archive
 
-When auto-archive is enabled for your setup, ending a broadcast can create an **archive item** (processed in the background). It then appears on your channel for replay and downloads.
+When recording is enabled, ending a broadcast creates a processed **recorded show**. Automatic publishing can make it public immediately, or you can keep it private for editing. Find shows under Dashboard → **Recordings**.
 
 You can also **upload** files manually under Dashboard → **Archive**.
 

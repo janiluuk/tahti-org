@@ -3,9 +3,9 @@
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, FileDropzone, Panel } from '@tahti/ui'
 import {
   completeAnnouncementUpload,
   deleteAnnouncement,
@@ -29,7 +29,6 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
   const [error, setError] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function onTogglePreview(clip: AnnouncementClipRow) {
     if (previewId === clip.id) {
@@ -75,7 +74,6 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
       setClips((prev) => [clip, ...prev])
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -121,23 +119,22 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
       <p className="studio-text-muted-sm">
         Short audio clips (station IDs, shoutouts) that play occasionally in your 24/7 rotation.
         Toggle whether they play at all from{' '}
-        <a href="/dashboard/schedule" className="studio-link">
-          Schedule → 24/7 rotation
+        <a href="/dashboard/channel/playlist" className="studio-link">
+          24/7 channel playlist
         </a>
         . Ready clips can also loop as ambient music on your public artist page (muted while
         something else is playing).
       </p>
 
-      <input
-        ref={fileInputRef}
-        type="file"
+      <FileDropzone
         accept="audio/*"
         disabled={uploading}
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) void onFile(file)
-        }}
+        label={uploading ? 'Uploading…' : 'Drop announcement audio or click'}
+        hint="Short station ID, shoutout, or interstitial"
         className="studio-mt-md"
+        onFiles={(files) => {
+          if (files[0]) void onFile(files[0])
+        }}
       />
       {uploading && <p className="studio-text-muted-sm studio-mt-xs">Uploading…</p>}
       {error && <p className="studio-text-error studio-mt-xs">{error}</p>}

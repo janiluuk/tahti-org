@@ -130,6 +130,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [logoDragOver, setLogoDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
@@ -483,7 +484,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
                 <button
                   key={css}
                   type="button"
-                  role="listitem"
                   className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
                   style={{ background: css }}
                   title="Apply gradient"
@@ -537,7 +537,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
                     <button
                       key={css}
                       type="button"
-                      role="listitem"
                       className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
                       style={{ background: css }}
                       title="Apply gradient"
@@ -586,32 +585,55 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       <div className="studio-field--block">
         <span className="studio-label">Logo</span>
         <div className="studio-logo-picker">
-          <button
-            type="button"
-            className="studio-logo-picker__drop"
-            disabled={avatarBusy}
-            onClick={() => logoInputRef.current?.click()}
-            aria-label="Upload logo PNG or WebP"
+          <div
+            className={`studio-logo-picker__drop${logoDragOver ? ' studio-logo-picker__drop--drag' : ''}`}
+            onClick={() => !avatarBusy && logoInputRef.current?.click()}
+            onDragOver={(event) => {
+              event.preventDefault()
+              if (!avatarBusy) setLogoDragOver(true)
+            }}
+            onDragLeave={() => setLogoDragOver(false)}
+            onDrop={(event) => {
+              event.preventDefault()
+              setLogoDragOver(false)
+              if (avatarBusy) return
+              const file = event.dataTransfer.files?.[0]
+              if (file) onLogoFile(file)
+            }}
+            onKeyDown={(event) => {
+              if (!avatarBusy && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault()
+                logoInputRef.current?.click()
+              }
+            }}
+            role="button"
+            tabIndex={avatarBusy ? -1 : 0}
+            aria-disabled={avatarBusy}
+            aria-label="Drop a transparent PNG or WebP logo, or click to browse"
           >
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="" className="studio-logo-picker__img" />
             ) : (
-              <span className="studio-logo-picker__placeholder">PNG / WebP</span>
+              <span className="studio-logo-picker__placeholder">
+                <ButtonIcon name="import" />
+                <strong>{logoDragOver ? 'Drop logo' : 'Drop logo or click'}</strong>
+                <small>Transparent PNG or WebP</small>
+              </span>
             )}
-          </button>
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/png,image/webp"
-            disabled={avatarBusy}
-            className="studio-avatar-picker__file"
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) onLogoFile(f)
-              e.target.value = ''
-            }}
-          />
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/webp"
+              disabled={avatarBusy}
+              className="studio-avatar-picker__file"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) onLogoFile(f)
+                e.target.value = ''
+              }}
+            />
+          </div>
           <div className="studio-logo-picker__meta">
             <div
               className="studio-logo-picker__placements"

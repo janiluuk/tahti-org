@@ -107,10 +107,13 @@ export function ChannelLivePreview({
         )}
 
         <div className="ch-page-foreground">
-          {showMedia && backdrop.videoEmbedUrl && (
+          {showMedia && draft.visual.headerStyle === 'VIDEO_LOOP' && backdrop.videoEmbedUrl && (
             <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />
           )}
-          {showMedia && backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
+          {showMedia &&
+            draft.visual.headerStyle === 'VIDEO_LOOP' &&
+            backdrop.cssImageUrl &&
+            !backdrop.videoEmbedUrl && (
             <div
               className="ch-channel-backdrop"
               style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
@@ -185,8 +188,8 @@ export function ChannelLivePreview({
       </div>
       <Text size="sm" tone="muted" className="studio-channel-preview__caption">
         {mode === 'visual'
-          ? 'Live preview — visual style for your channel (gallery & text layer edit elsewhere)'
-          : 'Live preview — what listeners see at the top of your channel page'}
+          ? 'Live preview — visual style for your channel'
+          : 'Live preview — visualizer, header, backdrop, and gallery update as you edit'}
       </Text>
     </div>
   )

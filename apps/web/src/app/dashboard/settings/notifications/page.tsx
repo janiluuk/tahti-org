@@ -6,9 +6,11 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 import { CommentSettingsPanel } from '../../comment-settings-panel'
 import { MentionsPanel } from '../../mentions-panel'
 import { NotificationPreferencesPanel } from '../notification-preferences-panel'
-import { fetchMyAnnouncements } from '../announcements/actions'
-import { AnnouncementsPanel } from '../announcements/_announcements-panel'
 import { DashboardTabs } from '@/components/dashboard-tabs'
+import {
+  VisibilitySettingsPanel,
+  type VisibilitySettings,
+} from '../visibility-settings-panel'
 
 export default async function NotificationSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -19,8 +21,8 @@ export default async function NotificationSettingsPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [{ clips }, commentState] = await Promise.all([
-    fetchMyAnnouncements(),
+  const [visibility, commentState] = await Promise.all([
+    loadVisibilitySettings(apiUrl, sessionValue),
     loadCommentSettings(apiUrl, sessionValue),
   ])
 
@@ -28,9 +30,9 @@ export default async function NotificationSettingsPage() {
     <div className="studio-settings-stack">
       <div className="studio-page-header">
         <div>
-          <h1 className="studio-page-title">Notification settings</h1>
+          <h1 className="studio-page-title">Notifications &amp; visibility</h1>
           <p className="studio-text-muted-sm studio-mt-xs">
-            Comments, mentions, announcement clips, and how Tahti reaches you. MusicBrainz
+            Control profile visibility, comments, mentions, and how Tahti reaches you. MusicBrainz
             registration moved to{' '}
             <a href="/dashboard/settings/connections" className="studio-link">
               Connections
@@ -41,9 +43,14 @@ export default async function NotificationSettingsPage() {
       </div>
 
       <DashboardTabs
-        ariaLabel="Notification settings sections"
+        ariaLabel="Notification and visibility settings sections"
         tabs={[
           { id: 'alerts', label: 'Alerts', content: <NotificationPreferencesPanel /> },
+          {
+            id: 'visibility',
+            label: 'Visibility',
+            content: <VisibilitySettingsPanel initial={visibility} />,
+          },
           {
             id: 'comments',
             label: 'Comments',
@@ -56,15 +63,40 @@ export default async function NotificationSettingsPage() {
             ),
           },
           { id: 'mentions', label: 'Mentions', content: <MentionsPanel /> },
-          {
-            id: 'announcements',
-            label: 'Announcement clips',
-            content: <AnnouncementsPanel initialClips={clips} />,
-          },
         ]}
       />
     </div>
   )
+}
+
+async function loadVisibilitySettings(
+  apiUrl: string,
+  sessionValue: string,
+): Promise<VisibilitySettings> {
+  const fallback: VisibilitySettings = {
+    showJoinDate: true,
+    showFollowers: true,
+    showFollowing: true,
+    showDailyListeners: true,
+    chatEnabled: true,
+  }
+  try {
+    const response = await fetch(`${apiUrl}/api/me/profile`, {
+      headers: { Cookie: `tahti_session=${sessionValue}` },
+      cache: 'no-store',
+    })
+    if (!response.ok) return fallback
+    const profile = (await response.json()) as VisibilitySettings
+    return {
+      showJoinDate: profile.showJoinDate,
+      showFollowers: profile.showFollowers,
+      showFollowing: profile.showFollowing,
+      showDailyListeners: profile.showDailyListeners,
+      chatEnabled: profile.chatEnabled,
+    }
+  } catch {
+    return fallback
+  }
 }
 
 async function loadCommentSettings(apiUrl: string, sessionValue: string) {

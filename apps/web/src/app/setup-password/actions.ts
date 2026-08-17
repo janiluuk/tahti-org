@@ -3,12 +3,9 @@
 
 'use server'
 
-import { cookies } from 'next/headers'
+import { applySessionCookieFromResponse } from '@/lib/apply-session-cookie'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-const SESSION_COOKIE_DOMAIN =
-  process.env.SESSION_COOKIE_DOMAIN ??
-  (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined)
 
 export async function setupPassword(input: {
   token: string
@@ -26,20 +23,7 @@ export async function setupPassword(input: {
     return { error: (data as { error?: string }).error ?? 'Could not set password' }
   }
 
-  const setCookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = setCookieHeader.match(/tahti_session=([^;]+)/)
-  if (match) {
-    cookies().set({
-      name: 'tahti_session',
-      value: match[1],
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
-      path: '/',
-      domain: SESSION_COOKIE_DOMAIN,
-    })
-  }
+  applySessionCookieFromResponse(res)
 
   return { error: null }
 }

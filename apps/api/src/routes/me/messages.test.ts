@@ -61,6 +61,33 @@ describe('M38 — private messaging', () => {
     expect(body.some((u) => u.username === userA.username)).toBe(false)
   })
 
+  it('lists followers and followed artists once as message contacts', async () => {
+    await prisma.artistFollow.createMany({
+      data: [
+        { followerUserId: userA.id, artistUserId: userB.id },
+        { followerUserId: userB.id, artistUserId: userA.id },
+      ],
+      skipDuplicates: true,
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/messages/contacts',
+      headers: { cookie: cookieA },
+    })
+    expect(res.statusCode).toBe(200)
+    const contacts = res.json() as Array<{
+      username: string
+      followsYou: boolean
+      followedByYou: boolean
+    }>
+    expect(contacts.filter((contact) => contact.username === userB.username)).toHaveLength(1)
+    expect(contacts.find((contact) => contact.username === userB.username)).toMatchObject({
+      followsYou: true,
+      followedByYou: true,
+    })
+  })
+
   it('rejects starting a conversation with yourself', async () => {
     const res = await app.inject({
       method: 'POST',
@@ -197,6 +224,8 @@ describe('M38 — private messaging', () => {
   it('requires auth on every messaging route', async () => {
     const list = await app.inject({ method: 'GET', url: '/api/me/messages/conversations' })
     expect(list.statusCode).toBe(401)
+    const contacts = await app.inject({ method: 'GET', url: '/api/me/messages/contacts' })
+    expect(contacts.statusCode).toBe(401)
     const search = await app.inject({ method: 'GET', url: '/api/users/search?q=x' })
     expect(search.statusCode).toBe(401)
   })

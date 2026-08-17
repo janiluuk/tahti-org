@@ -31,6 +31,7 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
 import { auditLog } from '../../lib/audit.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 function slugify(title: string): string {
   return title
@@ -118,6 +119,8 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
                 genre: true,
                 genreCustom: true,
                 durationSec: true,
+                streamKey: true,
+                sourceKey: true,
                 credits: true,
                 fingerprintMatch: true,
               },
@@ -131,12 +134,24 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         limit,
         total,
         releases: await Promise.all(
-          releases.map(async (r) => ({
-            ...r,
-            artistName: user.displayName,
-            artworkUrl: await resolveReleaseArtworkUrl(r),
-            checklist: computeReleaseChecklist(r),
-          })),
+          releases.map(async (r) => {
+            const artworkUrl = await resolveReleaseArtworkUrl(r)
+            return {
+              ...r,
+              artistName: user.displayName,
+              artworkUrl,
+              tracks: await Promise.all(
+                r.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
+                  const key = streamKey ?? sourceKey
+                  return {
+                    ...track,
+                    audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+                  }
+                }),
+              ),
+              checklist: computeReleaseChecklist(r),
+            }
+          }),
         ),
       })
     },

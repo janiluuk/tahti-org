@@ -116,6 +116,10 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         ? `Talk — ${startedAt.toISOString().slice(0, 10)}`
         : `Live set — ${startedAt.toISOString().slice(0, 10)}`)
     const contentType = showType === 'TALK' ? 'PODCAST' : 'LIVE'
+    const scheduledDescription = (broadcast as typeof broadcast & { description?: string | null })
+      .description
+    const scheduledArtworkUrl = (broadcast as typeof broadcast & { artworkUrl?: string | null })
+      .artworkUrl
 
     const rotationCount = await prisma.archiveItem.count({
       where: { channelId: broadcast.channel.id, isFallback: true },
@@ -160,9 +164,11 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         fallbackOrder: rotationCount,
         useDetectedBpmKey: true,
         description:
-          showType === 'TALK'
+          scheduledDescription ??
+          (showType === 'TALK'
             ? `Auto-archived talk show from ${startedAt.toISOString()}`
-            : `Auto-archived live broadcast from ${startedAt.toISOString()}`,
+            : `Auto-archived live broadcast from ${startedAt.toISOString()}`),
+        bannerUrl: scheduledArtworkUrl,
         ...(tracklist ? { tracklist } : {}),
       },
     })

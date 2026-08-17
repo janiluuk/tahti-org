@@ -142,7 +142,7 @@ export function HearthisImportModal({ collectionId, collectionTitle, onClose, on
               Add hearthis.at track to &ldquo;{collectionTitle}&rdquo;
             </h2>
             <p className="spotify-import-modal__subline">
-              these will play via hearthis.at&rsquo;s embed · not Tahti&rsquo;s FLAC
+              Downloadable tracks are copied into Tahti&rsquo;s native player in the background.
             </p>
           </div>
           <button
@@ -156,9 +156,9 @@ export function HearthisImportModal({ collectionId, collectionTitle, onClose, on
         </div>
 
         <div className="spotify-import-modal__banner hearthis-import-modal__banner" role="note">
-          <strong>Honest about quality.</strong> hearthis.at tracks render as embedded players in
-          your collection, not Tahti&rsquo;s FLAC stream. Best for playlists, sets and DJ mixes you
-          want to reference — not for your own work you have masters of.
+          <strong>Best available quality.</strong> Download-enabled tracks become native Tahti
+          audio in the background, preserving the original file when HearThis provides it. Other
+          tracks keep the HearThis player.
         </div>
 
         <div className="spotify-import-modal__tabs" role="tablist">

@@ -116,6 +116,17 @@ export async function enqueueCloudImportHearthis(cloudImportJobId: string): Prom
   )
 }
 
+export async function enqueueHearthisEmbedLocalization(payload: {
+  archiveItemId: string
+  trackUrl: string
+}): Promise<void> {
+  await mediaQueue.add('hearthis-embed-localize', payload, {
+    jobId: `hearthis-embed-localize-${payload.archiveItemId}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 15_000 },
+  })
+}
+
 export interface RenderAnnouncementTrimJob {
   clipId: string
   sourceKey: string

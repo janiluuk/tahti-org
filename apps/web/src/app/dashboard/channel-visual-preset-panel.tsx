@@ -4,7 +4,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { resolveChannelUrl } from '@/lib/app-url'
 import {
   BRAND_ACCENT_PRESETS,
@@ -72,6 +72,9 @@ export default function ChannelVisualPresetPanel({
   onDraftChange,
 }: Props & { bare?: boolean; onDraftChange?: (draft: ChannelVisualDraft) => void }) {
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
+  const lastEnabledPreset = useRef<VisualPreset>(
+    initial.visualPreset === 'MINIMAL' ? 'REACTIVE_GRID' : initial.visualPreset,
+  )
   const parsed = parseOrNull(initial.colorSchemeJson)
   const [scheme, setScheme] = useState<ColorScheme>(parsed ?? DEFAULT_COLOR_SCHEME)
   const [useCustomScheme, setUseCustomScheme] = useState(!!parsed)
@@ -118,6 +121,20 @@ export default function ChannelVisualPresetPanel({
     setHeaderStyle(style)
   }
 
+  function setVisualizerEnabled(enabled: boolean) {
+    if (enabled) {
+      setPreset(lastEnabledPreset.current)
+      return
+    }
+    if (preset !== 'MINIMAL') lastEnabledPreset.current = preset
+    setPreset('MINIMAL')
+  }
+
+  function selectVisualizer(nextPreset: VisualPreset) {
+    if (nextPreset !== 'MINIMAL') lastEnabledPreset.current = nextPreset
+    setPreset(nextPreset)
+  }
+
   const form = (
     <>
       <div className="studio-field--block">
@@ -130,6 +147,7 @@ export default function ChannelVisualPresetPanel({
               className={`channel-accent-swatch${brandAccentPreset === accentPreset.id ? ' channel-accent-swatch--active' : ''}`}
               style={{ background: accentPreset.gradient }}
               aria-label={`Brand accent: ${accentPreset.id}`}
+              aria-pressed={brandAccentPreset === accentPreset.id}
               onClick={() => selectBrandAccent(accentPreset.id)}
             />
           ))}
@@ -147,6 +165,7 @@ export default function ChannelVisualPresetPanel({
                 type="button"
                 disabled={locked}
                 className={`channel-header-style-tile${headerStyle === style ? ' channel-header-style-tile--active' : ''}`}
+                aria-pressed={headerStyle === style}
                 onClick={() => selectHeaderStyle(style)}
               >
                 {CHANNEL_HEADER_STYLE_LABELS[style]}
@@ -157,34 +176,51 @@ export default function ChannelVisualPresetPanel({
         </div>
         {headerStyle === 'VIDEO_LOOP' && !hasVideoBackground ? (
           <p className="studio-text-muted-sm studio-mt-sm">
-            No backdrop video set yet —{' '}
-            <Link href="/dashboard/settings/media#gallery">
-              configure it in Media &amp; Presskit →
-            </Link>
+            Add the video URL in Background media below.
           </p>
         ) : null}
       </div>
 
       <div className="studio-field--block">
-        <span className="studio-label">Background visualizer</span>
-        <VisualPresetPicker
-          value={preset}
-          onChange={setPreset}
-          colorScheme={useCustomScheme ? scheme : undefined}
-          settingsMap={settingsMap}
-          onSettingsChange={setSettingsMap}
-          showPreview
-          colorSchemeEditor={{
-            enabled: useCustomScheme,
-            onEnabledChange: setUseCustomScheme,
-            scheme,
-            onSchemeChange: updateColor,
-          }}
-        />
-        <p className="studio-help studio-mt-xs">
-          Quick picks above — open Presets for full-size previews, per-visualizer settings, and a
-          custom color scheme.
-        </p>
+        <div className="channel-visualizer-toggle-row">
+          <div>
+            <span className="studio-label">Background visualizer</span>
+            <p className="studio-help">Add an animated, audio-reactive backdrop to your channel.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={preset !== 'MINIMAL'}
+            className="channel-visualizer-switch"
+            onClick={() => setVisualizerEnabled(preset === 'MINIMAL')}
+          >
+            <span className="channel-visualizer-switch__thumb" aria-hidden />
+            <span className="studio-sr-only">
+              {preset === 'MINIMAL' ? 'Enable visualizer' : 'Disable visualizer'}
+            </span>
+          </button>
+        </div>
+        {preset !== 'MINIMAL' ? (
+          <div className="channel-visualizer-selection studio-mt-sm">
+            <VisualPresetPicker
+              value={preset}
+              onChange={selectVisualizer}
+              colorScheme={useCustomScheme ? scheme : undefined}
+              settingsMap={settingsMap}
+              onSettingsChange={setSettingsMap}
+              showPreview
+              colorSchemeEditor={{
+                enabled: useCustomScheme,
+                onEnabledChange: setUseCustomScheme,
+                scheme,
+                onSchemeChange: updateColor,
+              }}
+            />
+            <p className="studio-help studio-mt-xs">
+              Quick picks above — open Presets for full-size previews and per-visualizer settings.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {!bare ? (

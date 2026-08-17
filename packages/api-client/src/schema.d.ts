@@ -1560,6 +1560,7 @@ export interface paths {
           content: {
             'application/json': {
               id: string
+              slug: string
               name: string
               trackCount: number
               active: boolean
@@ -7784,6 +7785,39 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/tahti-selects/reorder': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/tahti-selects/items/{id}/reorder': {
     parameters: {
       query?: never
@@ -7820,6 +7854,39 @@ export interface paths {
     trace?: never
   }
   '/api/admin/tahti-selects/stream/start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/tahti-selects/generate': {
     parameters: {
       query?: never
       header?: never
@@ -13562,6 +13629,9 @@ export interface paths {
                 title: string
                 durationSec: number | null
                 hasStream: boolean
+                /** @enum {string|null} */
+                embedProvider: 'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | null
+                embedUri: string | null
               }[]
             }
           }
@@ -17922,6 +17992,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/me/messages/contacts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description People the current user follows or who follow them, for the DM contact list */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              username: string
+              displayName: string
+              avatarUrl: string | null
+              /** @enum {string|null} */
+              channelRole?: 'owner' | 'moderator' | null
+              followsYou: boolean
+              followedByYou: boolean
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/messages/conversations/{id}': {
     parameters: {
       query?: never
@@ -19772,8 +19886,10 @@ export interface paths {
           }
           content: {
             'application/json': {
-              quotaBytes: number
+              quotaBytes: number | null
               usedBytes: number
+              /** @default false */
+              unlimited: boolean
             }
           }
         }
@@ -19914,8 +20030,10 @@ export interface paths {
           }
           content: {
             'application/json': {
-              quotaBytes: number
+              quotaBytes: number | null
               usedBytes: number
+              /** @default false */
+              unlimited: boolean
             }
           }
         }
@@ -20735,6 +20853,172 @@ export interface paths {
         }
       }
     }
+    trace?: never
+  }
+  '/api/me/channel/show-series': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              series: {
+                name: string
+                description: string | null
+                tagline: string | null
+                artworkUrl: string | null
+                /**
+                 * @default LIVE_SET
+                 * @enum {string}
+                 */
+                showType: 'LIVE_SET' | 'TALK'
+                /**
+                 * @default PUBLIC
+                 * @enum {string}
+                 */
+                visibility: 'PUBLIC' | 'FAN_ONLY'
+                /** @default true */
+                autoArchive: boolean
+                /** @default true */
+                episodeNumberEnabled: boolean
+                /** @default 1 */
+                nextEpisodeNumber: number
+                id: string
+                /** Format: date-time */
+                createdAt: string
+              }[]
+              scheduledShows: {
+                id: string
+                seriesId: string
+                /** Format: date-time */
+                startAt: string
+                episodeNumber: number | null
+                title: string
+                description: string | null
+                tagline: string | null
+                venue: string | null
+                location: string | null
+                artworkUrl: string | null
+                /** @enum {string} */
+                showType: 'LIVE_SET' | 'TALK'
+                /** @enum {string} */
+                visibility: 'PUBLIC' | 'FAN_ONLY'
+                autoArchive: boolean
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/show-series/{seriesId}/episodes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          seriesId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/scheduled-shows/{showId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          showId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/me/channel/provision': {
@@ -22004,6 +22288,7 @@ export interface paths {
               playsTotal: number
               downloadsToday: number
               downloadsTotal: number
+              followerCount: number
             }
           }
         }
@@ -22113,6 +22398,62 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/me/stats/top-lists': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Artist's own listening top lists, grouped by type or genre */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              period: 'week' | 'month' | 'half_year' | 'all_time'
+              /** @enum {string} */
+              dimension: 'type' | 'genre'
+              /** @enum {string} */
+              sort: 'desc' | 'asc'
+              buckets: {
+                bucket: string
+                entries: {
+                  archiveItemId: string
+                  listens: number
+                  title: string
+                  artistName: string
+                  channelSlug: string
+                  bannerUrl: string | null
+                  genre: string | null
+                  contentType: string
+                }[]
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/stats/top-countries': {
     parameters: {
       query?: never
@@ -22197,6 +22538,39 @@ export interface paths {
         }
       }
     }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/broadcasts/recent': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -22292,6 +22666,17 @@ export interface paths {
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
               } | null
+              plannedLiveShow: {
+                scheduledShowId: string
+                seriesId: string
+                startAt: string
+                episodeNumber: number | null
+                title: string
+                tagline: string | null
+                /** @enum {string} */
+                showType: 'LIVE_SET' | 'TALK'
+                artworkUrl: string | null
+              } | null
             }
           }
         }
@@ -22334,6 +22719,17 @@ export interface paths {
                 tagline: string | null
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
+              } | null
+              plannedLiveShow: {
+                scheduledShowId: string
+                seriesId: string
+                startAt: string
+                episodeNumber: number | null
+                title: string
+                tagline: string | null
+                /** @enum {string} */
+                showType: 'LIVE_SET' | 'TALK'
+                artworkUrl: string | null
               } | null
             }
           }

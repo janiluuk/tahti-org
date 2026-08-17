@@ -7,6 +7,7 @@ import {
   ConversationListSchema,
   IdParamSchema,
   MessageSchema,
+  MessageContactListSchema,
   SendMessageSchema,
   StartConversationResponseSchema,
   StartConversationSchema,
@@ -57,6 +58,62 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       return reply.send(await listConversations(fastify.prisma, user.id))
+    },
+  )
+
+  fastify.get(
+    '/api/me/messages/contacts',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'People the current user follows or who follow them, for the DM contact list',
+        response: openApiResponse(MessageContactListSchema, 'MessageContactList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const relationships = await fastify.prisma.artistFollow.findMany({
+        where: {
+          OR: [{ followerUserId: user.id }, { artistUserId: user.id }],
+        },
+        take: 400,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          followerUserId: true,
+          artistUserId: true,
+          follower: { select: { username: true, displayName: true, avatarUrl: true } },
+          artist: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      })
+
+      const contacts = new Map<
+        string,
+        {
+          username: string
+          displayName: string
+          avatarUrl: string | null
+          followsYou: boolean
+          followedByYou: boolean
+        }
+      >()
+
+      for (const relationship of relationships) {
+        const followedByYou = relationship.followerUserId === user.id
+        const person = followedByYou ? relationship.artist : relationship.follower
+        const existing = contacts.get(person.username)
+        contacts.set(person.username, {
+          ...person,
+          followsYou: existing?.followsYou || !followedByYou,
+          followedByYou: existing?.followedByYou || followedByYou,
+        })
+      }
+
+      return reply.send(
+        [...contacts.values()].sort((left, right) =>
+          left.displayName.localeCompare(right.displayName),
+        ),
+      )
     },
   )
 

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AuthMessageResponseSchema, openApiResponse } from '@tahti/shared'
 import { deleteSession } from '../../lib/session.js'
 import { config } from '../../config.js'
+import { sessionCookieCandidates } from '../../lib/session-cookie.js'
 
 const logoutRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -16,8 +17,12 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const sessionId = request.cookies[config.sessionCookieName]
-      if (sessionId) {
+      const sessionIds = sessionCookieCandidates(
+        request.headers.cookie,
+        config.sessionCookieName,
+        request.cookies[config.sessionCookieName],
+      )
+      for (const sessionId of sessionIds) {
         await deleteSession(fastify.prisma, sessionId)
       }
 

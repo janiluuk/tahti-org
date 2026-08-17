@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
@@ -25,12 +25,14 @@ import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
 import ArchiveVisualPanel from './archive-visual-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
+import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-visibility'
 
-type EditorTab = 'basics' | 'tracklist' | 'visuals' | 'sharing' | 'advanced'
+type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'sharing' | 'advanced'
 
 const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
   { id: 'basics', label: 'Basics', icon: '📝' },
   { id: 'tracklist', label: 'Tracklist', icon: '🎼' },
+  { id: 'audio', label: 'Audio', icon: '🎚️' },
   { id: 'visuals', label: 'Cover & visuals', icon: '🖼️' },
   { id: 'sharing', label: 'Sharing', icon: '🔗' },
   { id: 'advanced', label: 'Advanced', icon: '⚙️' },
@@ -90,6 +92,23 @@ export default function ArchiveEditor({
 
   const detectedBpm = item.bpmDetected as number | null | undefined
   const detectedKey = item.keyDetected as string | null | undefined
+  const showTracklist = shouldShowTracklist(
+    meta.contentType,
+    item.durationSec as number | null | undefined,
+  )
+  const showVenueLocation = shouldShowVenueLocation(
+    meta.contentType,
+    item.source as string | null | undefined,
+  )
+  const visibleTabs = useMemo(
+    () => EDITOR_TABS.filter((editorTab) => editorTab.id !== 'tracklist' || showTracklist),
+    [showTracklist],
+  )
+
+  useEffect(() => {
+    if (!visibleTabs.some((editorTab) => editorTab.id === tab)) setTab('basics')
+  }, [tab, visibleTabs])
+
   const isPublic = (item.isPublic as boolean | undefined) ?? true
   const isReady = item.status === 'READY'
   const [pinned, setPinned] = useState(Boolean(item.pinnedAt))
@@ -201,6 +220,15 @@ export default function ArchiveEditor({
               <ButtonIcon name="edit" />
               Edit
             </Button>
+            {!item.embedUri && (
+              <NextLink
+                href={`/dashboard/archive/${item.id}/editor`}
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+              >
+                <ButtonIcon name="edit" />
+                Audio editor
+              </NextLink>
+            )}
             <details className="studio-row-more">
               <summary className="studio-row-more__summary">More</summary>
               <div className="studio-row-more__menu">
@@ -235,10 +263,21 @@ export default function ArchiveEditor({
             </details>
           </div>
         ) : isReady ? (
-          <Button onClick={() => setOpen(true)} variant="primary" size="sm">
-            <ButtonIcon name="send" />
-            Polish &amp; publish →
-          </Button>
+          <div className="studio-row-actions">
+            {!item.embedUri && (
+              <NextLink
+                href={`/dashboard/archive/${item.id}/editor`}
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+              >
+                <ButtonIcon name="edit" />
+                Audio editor
+              </NextLink>
+            )}
+            <Button onClick={() => setOpen(true)} variant="primary" size="sm">
+              <ButtonIcon name="send" />
+              Polish &amp; publish →
+            </Button>
+          </div>
         ) : (
           <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
             Edit metadata
@@ -284,7 +323,7 @@ export default function ArchiveEditor({
           </label>
 
           <div className="studio-editor-tabs" role="tablist" aria-label="Track details">
-            {EDITOR_TABS.map((t) => (
+            {visibleTabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -307,6 +346,25 @@ export default function ArchiveEditor({
             )}
             {tab === 'tracklist' && (
               <ArchiveTracklistField state={meta} onChange={setMeta} disabled={isPending} />
+            )}
+            {tab === 'audio' && (
+              <>
+                <ArchiveVersionPanel
+                  itemId={item.id}
+                  itemStatus={item.status}
+                  embedUri={item.embedUri as string | null | undefined}
+                />
+                <ArchiveDownloadPanel itemId={item.id} />
+                {!item.embedUri && (
+                  <NextLink
+                    href={`/dashboard/archive/${item.id}/editor`}
+                    className="ui-btn ui-btn--ghost ui-btn--sm studio-mt-md"
+                  >
+                    <ButtonIcon name="edit" />
+                    Open audio editor
+                  </NextLink>
+                )}
+              </>
             )}
             {tab === 'visuals' && (
               <>
@@ -340,7 +398,6 @@ export default function ArchiveEditor({
                   repostToDownload={meta.repostToDownload}
                   followToDownload={meta.followToDownload}
                 />
-                <ArchiveDownloadPanel itemId={item.id} />
               </>
             )}
             {tab === 'advanced' && (
@@ -351,11 +408,7 @@ export default function ArchiveEditor({
                   disabled={isPending}
                   detectedBpm={detectedBpm ?? null}
                   detectedKey={detectedKey ?? null}
-                />
-                <ArchiveVersionPanel
-                  itemId={item.id}
-                  itemStatus={item.status}
-                  embedUri={item.embedUri as string | null | undefined}
+                  showVenueLocation={showVenueLocation}
                 />
                 <ArchiveMixcloudUpload
                   itemId={item.id}

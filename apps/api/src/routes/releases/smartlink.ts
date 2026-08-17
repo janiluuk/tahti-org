@@ -12,6 +12,7 @@ import { config } from '../../config.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -53,7 +54,16 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           galleryMode: true,
           tracks: {
             orderBy: { position: 'asc' },
-            select: { title: true, isrc: true, position: true, credits: true },
+            select: {
+              id: true,
+              title: true,
+              isrc: true,
+              position: true,
+              durationSec: true,
+              credits: true,
+              streamKey: true,
+              sourceKey: true,
+            },
           },
           user: {
             select: {
@@ -128,7 +138,15 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           upc: release.upc,
           pLine: release.pLine,
           cLine: release.cLine,
-          tracks: release.tracks,
+          tracks: await Promise.all(
+            release.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
+              const key = streamKey ?? sourceKey
+              return {
+                ...track,
+                audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+              }
+            }),
+          ),
           musicbrainzUrl,
           discogsUrl,
           colorSchemeJson: release.colorSchemeJson,

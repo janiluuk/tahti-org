@@ -10,6 +10,10 @@ import { StudioHeaderActions } from '../_studio-header-actions'
 import { StatsHero } from './_stats-hero'
 import { StatsTopThree } from './_stats-top-three'
 import { StatsWhatChanged } from './_stats-what-changed'
+import {
+  ArtistTopLists,
+  type ArtistTopListBucket,
+} from './_artist-top-lists'
 
 interface TopTrack {
   archiveItemId: string
@@ -27,6 +31,21 @@ interface PlaysPayload {
   totalPlays: number
   totalDownloads: number
   daily: Array<{ date: string; plays: number }>
+}
+
+interface StatsSummaryPayload {
+  followerCount: number
+}
+
+interface ChannelEgressPayload {
+  windowDays: number
+  liveHlsBytes: number
+  estimatedLiveHlsBytes: number
+}
+
+interface ChannelLiveStatsPayload {
+  windowDays: number
+  totalLiveSeconds: number
 }
 
 interface GrantEstimate {
@@ -73,17 +92,44 @@ const COMPARISON_LABEL: Record<string, string> = {
   '30': 'the previous 30 days',
 }
 
-export default async function StatsPage({ searchParams }: { searchParams: { range?: string } }) {
+export default async function StatsPage({
+  searchParams,
+}: {
+  searchParams: {
+    range?: string
+    tab?: string
+    period?: string
+    dimension?: string
+    sort?: string
+  }
+}) {
   const cookieStore = cookies()
   const sessionCookie = cookieStore.get('tahti_session')
   if (!sessionCookie) redirect('/login')
 
   const range = RANGES.some((r) => r.value === searchParams.range) ? searchParams.range! : '30'
+  const tab = searchParams.tab === 'top-lists' ? 'top-lists' : 'overview'
+  const topPeriod = ['month', 'half_year', 'all_time'].includes(searchParams.period ?? '')
+    ? searchParams.period!
+    : 'month'
+  const topDimension = searchParams.dimension === 'genre' ? 'genre' : 'type'
+  const topSort = searchParams.sort === 'asc' ? 'asc' : 'desc'
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, grantEstimate, allDaily, user] = await Promise.all([
+  const [
+    plays,
+    topTracks,
+    topCountries,
+    grantEstimate,
+    allDaily,
+    statsSummary,
+    channelEgress,
+    channelLiveStats,
+    artistTopLists,
+    user,
+  ] = await Promise.all([
     apiFetch<PlaysPayload>(apiUrl, cookie, `/api/me/stats/plays?range=${range}`),
     apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, `/api/me/stats/top-tracks?range=${range}`),
     apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, `/api/me/stats/top-countries?range=${range}`),
@@ -91,6 +137,16 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
     range === 'all'
       ? null
       : apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=all'),
+    apiFetch<StatsSummaryPayload>(apiUrl, cookie, '/api/me/stats/summary'),
+    apiFetch<ChannelEgressPayload>(apiUrl, cookie, '/api/me/channel-egress'),
+    apiFetch<ChannelLiveStatsPayload>(apiUrl, cookie, '/api/me/channel-live-stats'),
+    tab === 'top-lists'
+      ? apiFetch<{ buckets: ArtistTopListBucket[] }>(
+          apiUrl,
+          cookie,
+          `/api/me/stats/top-lists?period=${topPeriod}&dimension=${topDimension}&sort=${topSort}`,
+        )
+      : null,
     getDashboardUser(),
   ])
 
@@ -129,15 +185,60 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
   const hasEnoughHistory = periodDays != null && comparisonDaily.length >= periodDays * 2
 
   const hasData = totalPlays > 0 || tracks.length > 0 || countries.length > 0
+  const effectiveLiveBytes = channelEgress
+    ? channelEgress.liveHlsBytes || channelEgress.estimatedLiveHlsBytes
+    : 0
+  const estimatedMinutesListened = Math.round((effectiveLiveBytes * 8) / 192_000 / 60)
+  const minutesStreamed = Math.round((channelLiveStats?.totalLiveSeconds ?? 0) / 60)
+  const headlineMetrics = [
+    {
+      label: 'Minutes listened',
+      value: estimatedMinutesListened.toLocaleString(),
+      note: `Estimated from ${channelEgress?.windowDays ?? 30}d live delivery`,
+    },
+    {
+      label: 'Minutes streamed',
+      value: minutesStreamed.toLocaleString(),
+      note: `${channelLiveStats?.windowDays ?? 14}d broadcast time`,
+    },
+    {
+      label: 'Downloads',
+      value: (plays?.totalDownloads ?? 0).toLocaleString(),
+      note: PERIOD_LABEL[range] ?? 'This period',
+    },
+    {
+      label: 'Followers',
+      value: (statsSummary?.followerCount ?? 0).toLocaleString(),
+      note: 'Current audience',
+    },
+  ]
 
   return (
     <PageShell size="md">
       <div className="studio-page-header">
         <div>
           <Heading level={1}>Stats</Heading>
+          <div className="stats-view-tabs" role="tablist" aria-label="Stats sections">
+            <NextLink
+              href={`/dashboard/stats?range=${range}`}
+              className={`stats-view-tab${tab === 'overview' ? ' stats-view-tab--active' : ''}`}
+              role="tab"
+              aria-selected={tab === 'overview'}
+            >
+              Overview
+            </NextLink>
+            <NextLink
+              href="/dashboard/stats?tab=top-lists"
+              className={`stats-view-tab${tab === 'top-lists' ? ' stats-view-tab--active' : ''}`}
+              role="tab"
+              aria-selected={tab === 'top-lists'}
+            >
+              Top lists
+            </NextLink>
+          </div>
         </div>
         <div className="studio-page-header__actions">
-          <div className="stats-range-tabs" role="group" aria-label="Period">
+          {tab === 'overview' ? <div className="stats-range-tabs" role="group" aria-label="Period">
             {RANGES.map((r) => (
               <NextLink
                 key={r.value}
@@ -148,19 +249,22 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
                 {r.label}
               </NextLink>
             ))}
-          </div>
-          <NextLink href="/dashboard/stats/detail" className="ui-btn ui-btn--sm ui-btn--secondary">
+          </div> : null}
+          {tab === 'overview' ? <NextLink href="/dashboard/stats/detail" className="ui-btn ui-btn--sm ui-btn--secondary">
             Plays &amp; listeners →
-          </NextLink>
+          </NextLink> : null}
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
             isLive={user?.channel?.state === 'LIVE'}
             channelSlug={user?.channel?.slug}
             showBack
+            showChannelActions={false}
           />
         </div>
       </div>
 
+      {tab === 'overview' ? (
+        <>
       {!hasData ? (
         <div className="studio-empty-card studio-mb-md">
           <p className="studio-empty-card__text">No listener activity yet.</p>
@@ -187,6 +291,16 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
         periodLabel={PERIOD_LABEL[range] ?? 'this period'}
         comparisonLabel={COMPARISON_LABEL[range] ?? ''}
       />
+
+      <section className="stats-headline-metrics" aria-label="Key channel metrics">
+        {headlineMetrics.map((metric) => (
+          <div key={metric.label} className="stats-headline-metric">
+            <span className="stats-headline-metric__label">{metric.label}</span>
+            <strong className="stats-headline-metric__value">{metric.value}</strong>
+            <span className="stats-headline-metric__note">{metric.note}</span>
+          </div>
+        ))}
+      </section>
 
       <StatsWhatChanged daily={daily} busiestDay={busiestDay} />
 
@@ -225,6 +339,15 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
           </p>
         )}
       </div>
+        </>
+      ) : (
+        <ArtistTopLists
+          buckets={artistTopLists?.buckets ?? []}
+          period={topPeriod}
+          dimension={topDimension}
+          sort={topSort}
+        />
+      )}
     </PageShell>
   )
 }

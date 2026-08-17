@@ -5,6 +5,82 @@ import type { FastifyPluginAsync } from 'fastify'
 import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { spawnChannelLiquidsoap, stopOrchestratorChannel } from '../../lib/orchestrator.js'
+import { buildTopList } from '../../lib/top-lists.js'
+
+const AUTO_PLAYLIST_SIZE = 10
+
+async function selectTopPlayedArchiveIds(
+  prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
+  limit: number,
+  excludedIds: string[] = [],
+): Promise<string[]> {
+  const ranked = await buildTopList(prisma, { limit: 100 })
+  const rankedIds = ranked
+    .map((entry) => entry.archiveItemId)
+    .filter((id) => !excludedIds.includes(id))
+  const playableRanked = await prisma.archiveItem.findMany({
+    where: {
+      id: { in: rankedIds },
+      isPublic: true,
+      status: 'READY',
+      OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+    },
+    select: { id: true },
+  })
+  const playableSet = new Set(playableRanked.map((item) => item.id))
+  const selected = rankedIds.filter((id) => playableSet.has(id)).slice(0, limit)
+
+  if (selected.length < limit) {
+    const fallback = await prisma.archiveItem.findMany({
+      where: {
+        id: { notIn: [...excludedIds, ...selected] },
+        isPublic: true,
+        status: 'READY',
+        OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit - selected.length,
+      select: { id: true },
+    })
+    selected.push(...fallback.map((item) => item.id))
+  }
+
+  return selected
+}
+
+async function generateTopPlayedRotation(
+  prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
+  channelId: string,
+  addedById: string,
+  mode: 'add' | 'replace',
+) {
+  const current = await prisma.curatedRotationItem.findMany({
+    where: { channelId },
+    orderBy: { position: 'asc' },
+    select: { archiveItemId: true },
+  })
+  const retainedIds = mode === 'add' ? current.map((item) => item.archiveItemId) : []
+  const pickedIds = await selectTopPlayedArchiveIds(prisma, AUTO_PLAYLIST_SIZE, retainedIds)
+
+  await prisma.$transaction(async (transaction) => {
+    if (mode === 'replace') {
+      await transaction.curatedRotationItem.deleteMany({ where: { channelId } })
+    }
+    const startPosition = mode === 'add' ? current.length : 0
+    if (pickedIds.length > 0) {
+      await transaction.curatedRotationItem.createMany({
+        data: pickedIds.map((archiveItemId, index) => ({
+          channelId,
+          archiveItemId,
+          position: startPosition + index,
+          addedById,
+        })),
+      })
+    }
+  })
+
+  return pickedIds.length
+}
 
 async function getTahtiSelectsChannelId(
   prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
@@ -159,6 +235,33 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // PATCH /api/admin/tahti-selects/items/:id/reorder — { position }
+  fastify.put(
+    '/api/admin/tahti-selects/reorder',
+    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    async (request, reply) => {
+      const itemIds = (request.body as { itemIds?: unknown }).itemIds
+      if (!Array.isArray(itemIds) || itemIds.some((id) => typeof id !== 'string')) {
+        return reply.status(400).send({ error: 'itemIds array required' })
+      }
+      const channelId = await getTahtiSelectsChannelId(fastify.prisma)
+      if (!channelId) return reply.status(404).send({ error: 'Tahti Selects channel not found' })
+      const current = await fastify.prisma.curatedRotationItem.findMany({
+        where: { channelId },
+        select: { id: true },
+      })
+      const currentIds = new Set(current.map((item) => item.id))
+      if (itemIds.length !== currentIds.size || itemIds.some((id) => !currentIds.has(id))) {
+        return reply.status(400).send({ error: 'itemIds must match the current rotation' })
+      }
+      await fastify.prisma.$transaction(
+        itemIds.map((id, position) =>
+          fastify.prisma.curatedRotationItem.update({ where: { id }, data: { position } }),
+        ),
+      )
+      return reply.send({ ok: true as const })
+    },
+  )
+
   fastify.patch(
     '/api/admin/tahti-selects/items/:id/reorder',
     { preHandler: requireBoard, schema: { tags: ['admin'] } },
@@ -198,7 +301,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/admin/tahti-selects/stream/start',
     { preHandler: requireBoard, schema: { tags: ['admin'] } },
-    async (_request, reply) => {
+    async (request, reply) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: TAHTI_SELECTS_SLUG },
         select: { id: true, slug: true },
@@ -208,6 +311,23 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           error:
             'Tahti Selects channel not found — run scripts/seed-tahti-selects-content.ts first',
         })
+      }
+
+      const rotationCount = await fastify.prisma.curatedRotationItem.count({
+        where: { channelId: channel.id },
+      })
+      if (rotationCount === 0) {
+        const added = await generateTopPlayedRotation(
+          fastify.prisma,
+          channel.id,
+          request.sessionUser!.id,
+          'replace',
+        )
+        if (added === 0) {
+          return reply.status(409).send({
+            error: 'No playable public tracks are available for Tahti Selects',
+          })
+        }
       }
 
       // Rotation channels use a persistent placeholder broadcast (never ended) so the
@@ -232,6 +352,27 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.send({ ok: true as const, channelId: channel.id, broadcastId: broadcast.id })
+    },
+  )
+
+  fastify.post(
+    '/api/admin/tahti-selects/generate',
+    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    async (request, reply) => {
+      const mode = (request.body as { mode?: string }).mode
+      if (mode !== 'add' && mode !== 'replace') {
+        return reply.status(400).send({ error: 'mode must be add or replace' })
+      }
+      const channelId = await getTahtiSelectsChannelId(fastify.prisma)
+      if (!channelId) return reply.status(404).send({ error: 'Tahti Selects channel not found' })
+
+      const added = await generateTopPlayedRotation(
+        fastify.prisma,
+        channelId,
+        request.sessionUser!.id,
+        mode,
+      )
+      return reply.send({ ok: true as const, added, mode })
     },
   )
 

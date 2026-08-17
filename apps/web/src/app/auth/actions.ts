@@ -3,8 +3,8 @@
 
 'use server'
 
-import { cookies } from 'next/headers'
 import { LoginSchema, RegisterSchema } from '@tahti/shared'
+import { applySessionCookieFromResponse } from '@/lib/apply-session-cookie'
 
 interface LoginInput {
   email: string
@@ -19,29 +19,6 @@ interface RegisterInput {
   gender?: string | null
   countryCode?: string | null
   hcaptchaToken?: string
-}
-
-// Lets the session cookie carry over from app.tahti.live to every artist's
-// <slug>.tahti.live subdomain — unset locally, no shared parent domain there.
-const SESSION_COOKIE_DOMAIN =
-  process.env.SESSION_COOKIE_DOMAIN ??
-  (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined)
-
-function applySessionCookieFrom(response: Response) {
-  const setCookieHeader = response.headers.get('set-cookie') ?? ''
-  const match = setCookieHeader.match(/tahti_session=([^;]+)/)
-  if (match) {
-    cookies().set({
-      name: 'tahti_session',
-      value: match[1],
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
-      path: '/',
-      domain: SESSION_COOKIE_DOMAIN,
-    })
-  }
 }
 
 export async function login(
@@ -78,7 +55,7 @@ export async function login(
       return { error: null, requiresTotp: true, challengeId: data.challengeId }
     }
 
-    applySessionCookieFrom(response)
+    applySessionCookieFromResponse(response)
     return { error: null }
   } catch {
     return { error: 'Could not reach the server — please try again' }
@@ -103,7 +80,7 @@ export async function verifyTotp(input: {
       return { error: data.error ?? 'Invalid code' }
     }
 
-    applySessionCookieFrom(response)
+    applySessionCookieFromResponse(response)
     return { error: null }
   } catch {
     return { error: 'Could not reach the server — please try again' }

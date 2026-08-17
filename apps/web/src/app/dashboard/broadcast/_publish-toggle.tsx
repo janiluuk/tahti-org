@@ -6,10 +6,8 @@
 import { useEffect, useState } from 'react'
 import { updateAutoPublishBroadcast } from './publish-actions'
 
-/** Persistent per-channel default for whether a finished, recorded broadcast is
- * published (public) right away. Pairs with RecordingToggle — this only matters
- * when recording is on. Editing the archived audio afterward is unaffected
- * either way; this just decides the starting visibility. */
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 export function PublishToggle({ initialEnabled }: { initialEnabled: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled)
   const [pending, setPending] = useState(false)
@@ -28,29 +26,33 @@ export function PublishToggle({ initialEnabled }: { initialEnabled: boolean }) {
     if (res.error) {
       setEnabled(!next)
       setError(res.error)
+    } else {
+      const preflightResponse = await fetch(`${API_BASE}/api/me/channel/preflight`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ autoArchive: next }),
+      })
+      if (!preflightResponse.ok) {
+        setError('Publishing default saved, but this broadcast could not be updated.')
+      }
     }
     setPending(false)
   }
 
   return (
-    <div className="broadcast-studio__record">
+    <div className="broadcast-studio__toggle-control">
+      <span className="broadcast-studio__toggle-label">Publish automatically</span>
       <button
         type="button"
-        className={`broadcast-studio__record-btn${enabled ? ' is-armed' : ''}`}
+        className={`broadcast-studio__red-toggle${enabled ? ' is-active' : ''}`}
         aria-pressed={enabled}
+        aria-label={enabled ? 'Disable automatic publishing' : 'Enable automatic publishing'}
         disabled={pending}
         onClick={() => void onToggle()}
       >
-        <span className="broadcast-studio__record-btn__dot" aria-hidden />
-        <span className="broadcast-studio__record-btn__label">
-          {enabled ? 'Always publish' : 'Publish manually'}
-        </span>
+        <span aria-hidden />
       </button>
-      <p className="broadcast-studio__record-hint">
-        {enabled
-          ? "This show's archive goes public as soon as it's recorded — edit the audio anytime after, publishing doesn't lock it."
-          : "This show's archive stays private until you publish it yourself from the archive."}
-      </p>
       {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
     </div>
   )

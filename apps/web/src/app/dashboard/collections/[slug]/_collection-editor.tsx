@@ -10,6 +10,8 @@ import { ButtonIcon, Button, SortableList } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { useToast } from '@/contexts/toast-context'
 import {
   updateCollection,
   reorderCollectionItems,
@@ -47,6 +49,7 @@ const QUALITY_BADGE_CLASS: Record<ArchiveQualityBadge, string> = {
 interface CollectionItem {
   id: string
   position: number
+  audioUrl?: string | null
   archiveItem: {
     id: string
     title: string
@@ -95,9 +98,8 @@ const STYLE_OPTIONS = [
   'EP',
   'SINGLE',
   'DJ_SET_SERIES',
-  'LIVE_ARCHIVE',
+  'PODCAST',
   'COMPILATION',
-  'MIX_SERIES',
 ]
 
 function formatDuration(sec: number): string {
@@ -133,6 +135,8 @@ export function CollectionEditor({
   myReleases?: Array<{ id: string; title: string; state: string }>
 }) {
   const router = useRouter()
+  const { track, playing, load, togglePlay, addToQueue } = usePlayer()
+  const { showToast } = useToast()
   const [isPending, startTransition] = useTransition()
 
   // Settings state
@@ -238,6 +242,31 @@ export function CollectionEditor({
     return items
   }, [items, canManualReorder, initial.trackSortMode])
 
+  const playbackQueue = useMemo(
+    () => displayItems.flatMap((item) => (item.audioUrl ? [toPlayerTrack(item)] : [])),
+    [displayItems],
+  )
+
+  async function toggleItemPlayback(item: CollectionItem) {
+    if (!item.audioUrl) return
+    const playerTrack = toPlayerTrack(item)
+    if (track?.id === playerTrack.id) {
+      await togglePlay()
+      return
+    }
+    load(playerTrack, { autoplay: true, queue: playbackQueue })
+  }
+
+  function queueItem(item: CollectionItem) {
+    if (!item.audioUrl) return
+    const added = addToQueue(toPlayerTrack(item))
+    const title = itemTitle(item)
+    showToast(
+      added ? `Added “${title}” to the queue.` : `“${title}” is already in the queue.`,
+      added ? 'success' : 'info',
+    )
+  }
+
   const addFromLibrary = useCallback(async () => {
     if (!libraryPick) return
     setLibraryAdding(true)
@@ -287,6 +316,29 @@ export function CollectionEditor({
             <div className="collection-tracklist__thumb collection-tracklist__thumb--ph" />
           )}
           <span className="collection-tracklist__title">{title}</span>
+          {item.audioUrl ? (
+            <span className="collection-tracklist__playback">
+              <button
+                type="button"
+                onClick={() => void toggleItemPlayback(item)}
+                title={track?.id === toPlayerTrack(item).id && playing ? 'Pause' : 'Play'}
+                aria-label={track?.id === toPlayerTrack(item).id && playing ? `Pause ${title}` : `Play ${title}`}
+              >
+                {track?.id === toPlayerTrack(item).id && playing ? '❚❚' : '▶'}
+              </button>
+              <button
+                type="button"
+                onClick={() => queueItem(item)}
+                title="Add to queue"
+                aria-label={`Add ${title} to queue`}
+              >
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path d="M2.5 4h11M2.5 8h11M2.5 12h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M12 10.5v4M10 12.5h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              </button>
+            </span>
+          ) : null}
           {badgeLabel ? (
             <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>{badgeLabel}</span>
           ) : null}
@@ -299,7 +351,7 @@ export function CollectionEditor({
         </>
       )
     },
-    [reorderSaving],
+    [playing, reorderSaving, track],
   )
 
   const handleDelete = useCallback(async () => {
@@ -348,6 +400,16 @@ export function CollectionEditor({
               maxLength={100}
             />
           </div>
+
+          {(style === 'DJ_SET_SERIES' || style === 'PODCAST') && (
+            <Link
+              href={`/dashboard/schedule?seriesName=${encodeURIComponent(name)}&format=${style === 'PODCAST' ? 'TALK' : 'LIVE_SET'}${coverUrl ? `&artwork=${encodeURIComponent(coverUrl)}` : ''}`}
+              className="ui-btn ui-btn--secondary"
+            >
+              <ButtonIcon name="plus" />
+              Schedule next episode
+            </Link>
+          )}
 
           <div className="studio-field">
             <span className="studio-label">Style</span>
@@ -767,4 +829,14 @@ export function CollectionEditor({
       </div>
     </div>
   )
+}
+
+function toPlayerTrack(item: CollectionItem): PlayerTrack {
+  return {
+    id: item.archiveItem?.id ?? `collection-release-${item.release?.id ?? item.id}`,
+    kind: 'archive',
+    url: item.audioUrl!,
+    title: itemTitle(item),
+    artworkUrl: itemThumb(item),
+  }
 }

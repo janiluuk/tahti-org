@@ -66,12 +66,39 @@ const collectionItemInclude = {
       releaseDate: true,
       artworkUrl: true,
       description: true,
+      tracks: {
+        where: { status: 'READY' },
+        orderBy: { position: 'asc' },
+        take: 1,
+        select: { id: true, title: true, streamKey: true, sourceKey: true },
+      },
     },
   },
   addedBy: {
     select: { username: true, displayName: true },
   },
 } as const
+
+async function addManagementPlayback<T extends { items: Array<{
+  archiveItem: { mp3Key: string | null; flacKey: string | null } | null
+  release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
+}> }>(collection: T) {
+  return {
+    ...collection,
+    items: await Promise.all(
+      collection.items.map(async (item) => {
+        const archiveKey = item.archiveItem ? archivePlaybackKey(item.archiveItem) : null
+        const releaseTrack = item.release?.tracks[0]
+        const releaseKey = releaseTrack?.streamKey ?? releaseTrack?.sourceKey ?? null
+        const playbackKey = archiveKey ?? releaseKey
+        return {
+          ...item,
+          audioUrl: playbackKey ? await presignedGetUrl(playbackKey, 60 * 60) : null,
+        }
+      }),
+    ),
+  }
+}
 
 type SortableItem = {
   position: number
@@ -141,7 +168,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       },
     })
     if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send({ ...col, coverUrl: await resolveCollectionCoverUrl(col) })
+    return reply.send(
+      await addManagementPlayback({ ...col, coverUrl: await resolveCollectionCoverUrl(col) }),
+    )
   })
 
   // PUT /api/me/collections/reorder — reorder profile grid by slug order
@@ -208,7 +237,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           name: body.name,
           description: body.description?.trim() || null,
           type,
-          style: body.style,
+          style: body.style as never,
           isPublic: body.isPublic ?? true,
           coverUrl: body.coverUrl?.trim() || null,
         },

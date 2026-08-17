@@ -38,6 +38,11 @@ export interface ConversationDetail {
   messages: MessageView[]
 }
 
+export interface MessageContact extends ConversationParticipant {
+  followsYou: boolean
+  followedByYou: boolean
+}
+
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
 function sessionHeader() {
@@ -52,6 +57,15 @@ export async function fetchConversations(): Promise<ConversationSummary[]> {
   })
   if (!res.ok) return []
   return (await res.json()) as ConversationSummary[]
+}
+
+export async function fetchMessageContacts(): Promise<MessageContact[]> {
+  const res = await fetch(`${apiUrl}/api/me/messages/contacts`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  return (await res.json()) as MessageContact[]
 }
 
 export async function fetchConversation(id: string): Promise<ConversationDetail | null> {

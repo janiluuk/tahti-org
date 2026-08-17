@@ -67,6 +67,20 @@ function IconMore() {
   )
 }
 
+function IconTip() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M8 4.5v7M6.2 6.2h2.7a1.5 1.5 0 0 1 0 3H7"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 type ProfileCoverProps = {
   displayName: string
   avatarUrl: string | null
@@ -155,6 +169,10 @@ type ProfileHeroProps = {
   presskitUrl?: string | null
   /** Archive RSS feed — same top-row treatment as presskitUrl. */
   rssUrl?: string | null
+  /** Additional icon action rendered in the top overflow menu. */
+  moreActionSlot?: ReactNode
+  /** Lets the page render a labelled biography section in its main content. */
+  hideBio?: boolean
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -179,6 +197,8 @@ export function ProfileHero({
   messageSlot,
   presskitUrl,
   rssUrl,
+  moreActionSlot,
+  hideBio = false,
 }: ProfileHeroProps) {
   return (
     <>
@@ -222,7 +242,12 @@ export function ProfileHero({
               Support
             </Link>
           ) : null}
-          {(newsletterSlot || tipJarUrl || rssUrl || presskitUrl || messageSlot) && (
+          {(newsletterSlot ||
+            tipJarUrl ||
+            rssUrl ||
+            presskitUrl ||
+            messageSlot ||
+            moreActionSlot) && (
             <details className="prof-cta-more">
               <summary className="prof-icon-btn" title="More" aria-label="More actions">
                 <IconMore />
@@ -231,8 +256,14 @@ export function ProfileHero({
                 {messageSlot}
                 {newsletterSlot}
                 {tipJarUrl && (
-                  <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
-                    Tip ↗
+                  <a
+                    href={tipJarUrl}
+                    rel="noopener noreferrer"
+                    className="prof-icon-btn"
+                    title="Tip artist"
+                    aria-label="Tip artist"
+                  >
+                    <IconTip />
                   </a>
                 )}
                 {rssUrl && (
@@ -257,16 +288,17 @@ export function ProfileHero({
                     <IconDownload />
                   </a>
                 )}
+                {moreActionSlot}
               </div>
             </details>
           )}
         </div>
       </div>
 
-      {bioHtml ? (
+      {!hideBio && bioHtml ? (
         <div className="prof-bio prof-bio--rich" dangerouslySetInnerHTML={{ __html: bioHtml }} />
       ) : (
-        bio && <SafePlainText text={bio} className="prof-bio" linkMentions />
+        !hideBio && bio && <SafePlainText text={bio} className="prof-bio" linkMentions />
       )}
     </>
   )

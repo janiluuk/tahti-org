@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, Button, Panel } from '@tahti/ui'
+import { ButtonIcon, Button, FileDropzone, Panel } from '@tahti/ui'
 import type { ArtistPostView } from '@tahti/shared'
 import { completePostImageUpload, createPost, deletePost, preparePostImageUpload } from './actions'
 
@@ -219,20 +219,18 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
           placeholder="Share news, updates, or an announcement…"
         />
       </label>
-      <label className="studio-field studio-mt-sm">
+      <div className="studio-field studio-mt-sm">
         <span className="studio-label">Images (optional, up to {MAX_IMAGES})</span>
-        <input
-          type="file"
+        <FileDropzone
           accept={ACCEPTED_TYPES.join(',')}
           multiple
           disabled={pending}
-          className="studio-input"
-          onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))}
+          label="Drop images or click"
+          hint="JPEG, PNG, or WebP"
+          selectedText={files.length > 0 ? `${files.length} image(s) selected` : undefined}
+          onFiles={(nextFiles) => setFiles(nextFiles.slice(0, MAX_IMAGES))}
         />
-        {files.length > 0 && (
-          <p className="studio-text-muted-sm studio-mt-xs">{files.length} image(s) selected</p>
-        )}
-      </label>
+      </div>
       <label className="studio-field studio-mt-sm">
         <span className="studio-label">Link (optional)</span>
         <input

@@ -33,6 +33,12 @@ export const ConversationSummarySchema = z.object({
 })
 export const ConversationListSchema = z.array(ConversationSummarySchema)
 
+export const MessageContactSchema = ConversationParticipantSchema.extend({
+  followsYou: z.boolean(),
+  followedByYou: z.boolean(),
+})
+export const MessageContactListSchema = z.array(MessageContactSchema)
+
 export const MessageSchema = z.object({
   id: z.string(),
   senderUsername: z.string(),

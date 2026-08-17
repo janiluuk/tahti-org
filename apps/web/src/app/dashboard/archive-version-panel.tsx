@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, FileDropzone } from '@tahti/ui'
 import type { ArchiveVersionRow } from '@tahti/shared'
 import { useToast } from '@/contexts/toast-context'
 import { ArchiveTrimEditor } from './archive-trim-editor'
@@ -281,20 +281,15 @@ export function ArchiveVersionPanel({
           disabled={uploading}
           className="studio-input studio-input--grow"
         />
-        <label className={`studio-file-label${uploading ? ' studio-file-label--disabled' : ''}`}>
-          {uploading ? 'Uploading…' : 'Upload new version'}
-          <input
-            type="file"
-            accept="audio/*"
-            disabled={uploading}
-            className="studio-hidden-input"
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) void handleUpload(f)
-              e.target.value = ''
-            }}
-          />
-        </label>
+        <FileDropzone
+          accept="audio/*"
+          disabled={uploading}
+          label={uploading ? 'Uploading…' : 'Drop new version or click'}
+          hint="The original remains available"
+          onFiles={(files) => {
+            if (files[0]) void handleUpload(files[0])
+          }}
+        />
       </div>
 
       {error && (

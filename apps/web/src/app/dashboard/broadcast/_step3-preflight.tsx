@@ -25,6 +25,25 @@ interface PlannedRadioShow {
   showType: BroadcastShowType
 }
 
+interface PlannedLiveShow {
+  scheduledShowId: string
+  seriesId: string
+  startAt: string
+  episodeNumber: number | null
+  title: string
+  tagline: string | null
+  showType: BroadcastShowType
+  artworkUrl: string | null
+}
+
+interface ShowSeriesOption {
+  id: string
+  name: string
+  nextEpisodeNumber: number
+  episodeNumberEnabled: boolean
+  showType: BroadcastShowType
+}
+
 interface Preflight {
   title: string | null
   visibility: 'PUBLIC' | 'FAN_ONLY'
@@ -33,6 +52,7 @@ interface Preflight {
   episodeNumber: number | null
   tagline: string | null
   plannedRadioShow: PlannedRadioShow | null
+  plannedLiveShow: PlannedLiveShow | null
 }
 
 export function Step3Preflight() {
@@ -43,14 +63,16 @@ export function Step3Preflight() {
   const [pinText, setPinText] = useState('')
   const [pinning, setPinning] = useState(false)
   const [pinned, setPinned] = useState(false)
+  const [series, setSeries] = useState<ShowSeriesOption[]>([])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const [preflightRes, targetsRes] = await Promise.all([
+        const [preflightRes, targetsRes, seriesRes] = await Promise.all([
           fetch(`${API_BASE}/api/me/channel/preflight`, { credentials: 'include' }),
           fetch(`${API_BASE}/api/me/rtmp-targets`, { credentials: 'include' }),
+          fetch(`${API_BASE}/api/me/channel/show-series`, { credentials: 'include' }),
         ])
         if (!cancelled && preflightRes.ok) {
           const data = (await preflightRes.json()) as Preflight
@@ -60,6 +82,10 @@ export function Step3Preflight() {
         }
         if (!cancelled && targetsRes.ok) {
           setTargets((await targetsRes.json()) as RtmpTarget[])
+        }
+        if (!cancelled && seriesRes.ok) {
+          const data = (await seriesRes.json()) as { series: ShowSeriesOption[] }
+          setSeries(data.series)
         }
       } catch {
         // render with defaults
@@ -71,7 +97,9 @@ export function Step3Preflight() {
     }
   }, [])
 
-  async function patchPreflight(body: Partial<Preflight> & { tagline?: string | null }) {
+  async function patchPreflight(
+    body: Partial<Preflight> & { tagline?: string | null; seriesId?: string },
+  ) {
     const res = await fetch(`${API_BASE}/api/me/channel/preflight`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -124,12 +152,38 @@ export function Step3Preflight() {
   const showType = preflight.showType ?? 'LIVE_SET'
 
   return (
-    <div className="studio-card studio-mb-md">
-      <h4 className="broadcast-studio__card-title">Set up your broadcast</h4>
-
-      <div className="studio-field studio-mb-md">
-        <span className="studio-label studio-text-muted-sm">Show type</span>
-        <div className="studio-kind-toggle studio-mt-sm" role="radiogroup" aria-label="Show type">
+    <div className="broadcast-studio__preflight-form">
+      <div className="studio-grid studio-grid--2">
+        <div className="studio-field">
+          <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-show-name">
+            Show name
+          </label>
+          <input
+            id="broadcast-show-name"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => {
+              if (title.trim()) void patchPreflight({ title: title.trim() })
+            }}
+            placeholder={
+              episodeNumber != null
+                ? showType === 'TALK'
+                  ? `Talk #${episodeNumber}`
+                  : `Show #${episodeNumber}`
+                : showType === 'TALK'
+                  ? 'Studio talk — Live'
+                  : 'Moonrise Sessions — Live'
+            }
+            className="studio-input studio-mt-sm"
+          />
+        </div>
+        <div className="studio-field">
+          <span className="studio-label studio-text-muted-sm">Show type</span>
+          <div
+            className="studio-kind-toggle studio-kind-toggle--compact studio-mt-sm"
+            role="radiogroup"
+            aria-label="Show type"
+          >
           <label
             className={`studio-kind-toggle__option${showType === 'LIVE_SET' ? ' studio-kind-toggle__option--active' : ''}`}
           >
@@ -140,7 +194,6 @@ export function Step3Preflight() {
               onChange={() => void patchPreflight({ showType: 'LIVE_SET' })}
             />
             <span className="studio-kind-toggle__title">Live set</span>
-            <span className="studio-kind-toggle__hint">DJ / performance / music hour</span>
           </label>
           <label
             className={`studio-kind-toggle__option${showType === 'TALK' ? ' studio-kind-toggle__option--active' : ''}`}
@@ -152,10 +205,38 @@ export function Step3Preflight() {
               onChange={() => void patchPreflight({ showType: 'TALK' })}
             />
             <span className="studio-kind-toggle__title">Talk</span>
-            <span className="studio-kind-toggle__hint">Solo chat or guests on mic</span>
           </label>
+          </div>
         </div>
       </div>
+
+      {series.length > 0 ? (
+        <div className="studio-field">
+          <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-series">
+            Series episode
+          </label>
+          <select
+            id="broadcast-series"
+            className="studio-input studio-mt-sm"
+            value={preflight.plannedLiveShow?.seriesId ?? ''}
+            disabled={Boolean(preflight.plannedLiveShow)}
+            onChange={(event) => {
+              if (event.target.value) void patchPreflight({ seriesId: event.target.value })
+            }}
+          >
+            <option value="">One-off broadcast</option>
+            {series.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+                {item.episodeNumberEnabled ? ` — next #${item.nextEpisodeNumber}` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="studio-text-muted-sm studio-mt-xs">
+            Selecting a series fills its next episode number, name, metadata, and saved artwork.
+          </p>
+        </div>
+      ) : null}
 
       {planned && episodeNumber != null ? (
         <div className="broadcast-studio__planned-show studio-mb-md">
@@ -185,39 +266,13 @@ export function Step3Preflight() {
               className="studio-input studio-mt-sm"
               maxLength={200}
             />
-            <p className="studio-text-muted-sm studio-mt-xs">
-              Filled from your slot note — edit freely. Show name updates to match unless you
-              customize it below.
-            </p>
           </div>
         </div>
       ) : null}
 
-      <div className="studio-field studio-mb-md">
-        <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-show-name">
-          Show name
-        </label>
-        <input
-          id="broadcast-show-name"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => {
-            if (title.trim()) void patchPreflight({ title: title.trim() })
-          }}
-          placeholder={
-            episodeNumber != null
-              ? showType === 'TALK'
-                ? `Talk #${episodeNumber}`
-                : `Show #${episodeNumber}`
-              : showType === 'TALK'
-                ? 'Studio talk — Live'
-                : 'Moonrise Sessions — Live'
-          }
-          className="studio-input studio-mt-sm"
-        />
-      </div>
-
-      <div className="studio-grid studio-grid--2 studio-mb-md">
+      <details className="broadcast-studio__preflight-more">
+        <summary>More options</summary>
+        <div className="studio-grid studio-grid--2 studio-mt-md">
         <div className="studio-field">
           <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-visibility">
             Visibility
@@ -256,9 +311,9 @@ export function Step3Preflight() {
             )}
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className="studio-field">
+        <div className="studio-field studio-mt-md">
         <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-pin">
           Pin to chat (optional)
         </label>
@@ -279,16 +334,8 @@ export function Step3Preflight() {
             {pinned ? 'Pinned ✓' : pinning ? 'Pinning…' : 'Pin'}
           </Button>
         </div>
-      </div>
-
-      <label className="studio-label-row studio-text-sm studio-mt-md">
-        <input
-          type="checkbox"
-          checked={preflight.autoArchive}
-          onChange={(e) => void patchPreflight({ autoArchive: e.target.checked })}
-        />
-        Auto-archive this broadcast (you can edit later)
-      </label>
+        </div>
+      </details>
     </div>
   )
 }

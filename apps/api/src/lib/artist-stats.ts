@@ -191,34 +191,37 @@ export async function buildDashboardPlayDownloadCounters(prisma: PrismaClient, u
     Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()),
   )
 
-  const [downloadsToday, downloadsTotal, clicksToday, clicksTotal] = await Promise.all([
-    channel
-      ? prisma.download.count({
-          where: {
-            channelId: channel.id,
-            countedAt: { not: null },
-            createdAt: { gte: todayStart },
-          },
-        })
-      : 0,
-    channel
-      ? prisma.download.count({ where: { channelId: channel.id, countedAt: { not: null } } })
-      : 0,
-    releaseIds.length > 0
-      ? prisma.smartLinkClick.count({
-          where: { releaseId: { in: releaseIds }, createdAt: { gte: todayStart } },
-        })
-      : 0,
-    releaseIds.length > 0
-      ? prisma.smartLinkClick.count({ where: { releaseId: { in: releaseIds } } })
-      : 0,
-  ])
+  const [downloadsToday, downloadsTotal, clicksToday, clicksTotal, followerCount] =
+    await Promise.all([
+      channel
+        ? prisma.download.count({
+            where: {
+              channelId: channel.id,
+              countedAt: { not: null },
+              createdAt: { gte: todayStart },
+            },
+          })
+        : 0,
+      channel
+        ? prisma.download.count({ where: { channelId: channel.id, countedAt: { not: null } } })
+        : 0,
+      releaseIds.length > 0
+        ? prisma.smartLinkClick.count({
+            where: { releaseId: { in: releaseIds }, createdAt: { gte: todayStart } },
+          })
+        : 0,
+      releaseIds.length > 0
+        ? prisma.smartLinkClick.count({ where: { releaseId: { in: releaseIds } } })
+        : 0,
+      prisma.artistFollow.count({ where: { artistUserId: userId } }),
+    ])
 
   return {
     playsToday: downloadsToday + clicksToday,
     playsTotal: downloadsTotal + clicksTotal,
     downloadsToday,
     downloadsTotal,
+    followerCount,
   }
 }
 

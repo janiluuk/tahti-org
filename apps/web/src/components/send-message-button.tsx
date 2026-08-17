@@ -21,7 +21,13 @@ function IconMessage() {
 }
 
 /** Brand-surface compose sheet — starts (or resumes) a DM without dumping into Studio. */
-export function SendMessageButton({ artistUsername }: { artistUsername: string }) {
+export function SendMessageButton({
+  artistUsername,
+  variant = 'text',
+}: {
+  artistUsername: string
+  variant?: 'text' | 'icon'
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const titleId = useId()
@@ -91,14 +97,14 @@ export function SendMessageButton({ artistUsername }: { artistUsername: string }
     <>
       <button
         type="button"
-        className="prof-message-btn"
+        className={variant === 'icon' ? 'prof-icon-btn' : 'prof-message-btn'}
         onClick={() => void openComposer()}
         disabled={pending && !open}
         title="Send a message"
         aria-label="Send a message"
       >
         <IconMessage />
-        Message
+        {variant === 'text' ? 'Message' : null}
       </button>
       {error && !open && <p className="prof-message-btn__error">{error}</p>}
       {open && (

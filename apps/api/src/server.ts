@@ -191,6 +191,7 @@ import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
 import meStatsRoutes from './routes/me/stats.js'
 import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
+import meBroadcastRoutes from './routes/me/broadcasts.js'
 import meGoLiveRoutes from './routes/me/go-live.js'
 import meBroadcastPreflightRoutes from './routes/me/broadcast-preflight.js'
 import meGreenRoomDefaultsRoutes from './routes/me/green-room-defaults.js'
@@ -715,6 +716,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meChannelFunnelStatsRoutes)
   await fastify.register(meStatsRoutes)
   await fastify.register(meEndBroadcastRoutes)
+  await fastify.register(meBroadcastRoutes)
   await fastify.register(meGoLiveRoutes)
   await fastify.register(meBroadcastPreflightRoutes)
   await fastify.register(meGreenRoomDefaultsRoutes)

@@ -14,6 +14,29 @@ type StudioHeaderActionsProps = {
   showBack?: boolean
   backHref?: string
   backLabel?: string
+  showChannelActions?: boolean
+}
+
+export function ChannelManagementActions({
+  channelSlug,
+  channelDisplayName,
+}: {
+  channelSlug: string
+  channelDisplayName?: string
+}) {
+  return (
+    <>
+      <NextLink href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--ghost">
+        <SidebarNavIconSvg name="appearance" />
+        Design
+      </NextLink>
+      <NextLink href={resolveChannelUrl(channelSlug)} className="ui-btn ui-btn--sm ui-btn--ghost">
+        <SidebarNavIconSvg name="channel" />
+        View channel
+      </NextLink>
+      <ShareEmbedButton channelSlug={channelSlug} displayName={channelDisplayName ?? channelSlug} />
+    </>
+  )
 }
 
 /** Standard dashboard subpage header actions — upload, go live, optional back link. */
@@ -25,6 +48,7 @@ export function StudioHeaderActions({
   showBack = false,
   backHref = '/dashboard',
   backLabel = 'Dashboard',
+  showChannelActions = true,
 }: StudioHeaderActionsProps) {
   return (
     <div className="studio-header-actions">
@@ -50,24 +74,11 @@ export function StudioHeaderActions({
             />
             {isLive ? 'On air' : 'Go live'}
           </NextLink>
-          {channelSlug ? (
-            <>
-              <NextLink href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--ghost">
-                <SidebarNavIconSvg name="appearance" />
-                Design
-              </NextLink>
-              <NextLink
-                href={resolveChannelUrl(channelSlug)}
-                className="ui-btn ui-btn--sm ui-btn--ghost"
-              >
-                <SidebarNavIconSvg name="channel" />
-                View channel
-              </NextLink>
-              <ShareEmbedButton
-                channelSlug={channelSlug}
-                displayName={channelDisplayName ?? channelSlug}
-              />
-            </>
+          {channelSlug && showChannelActions ? (
+            <ChannelManagementActions
+              channelSlug={channelSlug}
+              channelDisplayName={channelDisplayName}
+            />
           ) : null}
         </>
       ) : (

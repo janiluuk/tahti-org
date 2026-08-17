@@ -19,15 +19,11 @@ export default function StoragePanel({
   usedBytes,
   unlimited = false,
 }: {
-  quotaBytes: number
+  quotaBytes: number | null
   usedBytes: number
   unlimited?: boolean
 }) {
-  const percent = quotaBytes > 0 ? (usedBytes / quotaBytes) * 100 : 0
-  const overSoftTarget = usedBytes > quotaBytes
-  const wayOverSoftTarget = quotaBytes > 0 && usedBytes > quotaBytes * 5
-
-  if (unlimited) {
+  if (unlimited || quotaBytes == null) {
     return (
       <Panel
         title="Storage"
@@ -38,6 +34,10 @@ export default function StoragePanel({
       </Panel>
     )
   }
+
+  const percent = quotaBytes > 0 ? (usedBytes / quotaBytes) * 100 : 0
+  const overSoftTarget = usedBytes > quotaBytes
+  const wayOverSoftTarget = quotaBytes > 0 && usedBytes > quotaBytes * 5
 
   return (
     <Panel

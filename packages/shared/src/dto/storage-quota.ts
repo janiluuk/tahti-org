@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 export const StorageQuotaViewSchema = z.object({
-  quotaBytes: z.number(),
+  quotaBytes: z.number().nullable(),
   usedBytes: z.number(),
   /** Members see usage with no target/limit at all — not even the soft one. */
   unlimited: z.boolean().default(false),

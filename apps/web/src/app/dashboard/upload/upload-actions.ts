@@ -71,7 +71,10 @@ export async function finaliseUpload(params: {
 
 export interface RecentBroadcast {
   id: string
+  title?: string | null
+  source?: string
   startedAt: string
+  endedAt?: string | null
   recordingKey: string | null
   archiveItemId: string | null
   archiveItemTitle?: string
@@ -79,8 +82,13 @@ export interface RecentBroadcast {
   durationSec?: number
 }
 
-export async function fetchRecentBroadcasts(limit = 5): Promise<RecentBroadcast[]> {
-  const res = await fetch(`${apiUrl}/api/me/broadcasts/recent?limit=${limit}&unpublished=true`, {
+export async function fetchRecentBroadcasts(
+  limit = 5,
+  unpublished = true,
+): Promise<RecentBroadcast[]> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (unpublished) params.set('unpublished', 'true')
+  const res = await fetch(`${apiUrl}/api/me/broadcasts/recent?${params}`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
   })

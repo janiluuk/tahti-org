@@ -8,6 +8,7 @@ import { DashboardOverview } from './_dashboard-overview'
 import { HeaderGoLiveAction } from './_header-go-live-action'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { ChannelManagementActions } from './_studio-header-actions'
 
 interface ModeratedChannel {
   slug: string
@@ -263,6 +264,10 @@ export default async function DashboardPage() {
               className={`db-go-live-btn${goLiveBtnClass}`}
               dotClassName={headerDotClass}
               label={goLiveBtnLabel}
+            />
+            <ChannelManagementActions
+              channelSlug={user.channel.slug}
+              channelDisplayName={user.displayName}
             />
           </div>
         ) : (

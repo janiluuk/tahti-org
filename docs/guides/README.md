@@ -10,6 +10,8 @@ These are **“for dummies”** walkthroughs: short steps, no jargon where we ca
 | **[For streamers](for-streamers.md)** | **Live broadcast** (subset of artist) — OBS, Mixxx, etc. | RTMP, stream key, going LIVE, limits |
 | **[Multistream / simulcast](multistream-simulcast.md)** | Mirror Tahti live to Twitch, YouTube, Kick, etc. | Paste each platform’s **stream key** in dashboard |
 
+For a current cross-role inventory, see the **[feature catalog](../features.md)**.
+
 **Quick URLs (replace with real host in production):**
 
 | What | URL pattern |
@@ -69,4 +71,4 @@ flowchart TD
 
 ---
 
-*Tahti ry is a Finnish member cooperative. Annual membership is €40/year for artists who broadcast and use the full studio. Fan money goes to artists; the org takes a small operational fee on fan subs, not a revenue cut.*
+*Tahti ry is a Finnish registered association. Annual membership is €40/year and supports the shared platform; the free artist tier remains complete. Fan money goes to artists, with only the documented operational fee.*

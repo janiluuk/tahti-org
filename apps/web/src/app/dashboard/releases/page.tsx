@@ -63,7 +63,11 @@ export default async function ReleasesPage() {
   const [user, releasesPage, storage] = await Promise.all([
     getDashboardUser(),
     apiFetch<{ releases: ReleaseSummary[] }>(apiUrl, cookie, '/api/me/releases?limit=100'),
-    apiFetch<{ quotaBytes: number; usedBytes: number }>(apiUrl, cookie, '/api/me/storage'),
+    apiFetch<{ quotaBytes: number | null; usedBytes: number; unlimited: boolean }>(
+      apiUrl,
+      cookie,
+      '/api/me/storage',
+    ),
   ])
   if (!user) redirect('/login')
   const releases = releasesPage?.releases ?? null

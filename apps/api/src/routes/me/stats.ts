@@ -8,6 +8,10 @@ import {
   StatsSummaryResponseSchema,
   StatsTopCountriesResponseSchema,
   StatsTopTracksResponseSchema,
+  TopListDimensionSchema,
+  TopListPeriodSchema,
+  TopListSortSchema,
+  TopListsByDimensionResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -17,6 +21,7 @@ import {
   buildTopCountriesStats,
   buildTopTracksStats,
 } from '../../lib/artist-stats.js'
+import { buildTopListsByDimension, periodSince } from '../../lib/top-lists.js'
 
 /** PLAT-030: artist dashboard stats (plays, top tracks, referer countries). */
 const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -71,6 +76,36 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       const range = parsed.success ? parsed.data : 'all'
       const user = request.sessionUser!
       return reply.send(await buildTopTracksStats(fastify.prisma, user.id, range))
+    },
+  )
+
+  fastify.get(
+    '/api/me/stats/top-lists',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: "Artist's own listening top lists, grouped by type or genre",
+        response: openApiResponse(TopListsByDimensionResponseSchema, 'ArtistTopLists'),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as Record<string, unknown>
+      const period = TopListPeriodSchema.safeParse(query.period ?? 'month')
+      const dimension = TopListDimensionSchema.safeParse(query.dimension ?? 'type')
+      const sort = TopListSortSchema.safeParse(query.sort ?? 'desc')
+      if (!period.success) return reply.status(400).send({ error: 'Invalid period' })
+      if (!dimension.success) return reply.status(400).send({ error: 'Invalid dimension' })
+      if (!sort.success) return reply.status(400).send({ error: 'Invalid sort' })
+
+      const user = request.sessionUser!
+      const buckets = await buildTopListsByDimension(fastify.prisma, {
+        since: periodSince(period.data),
+        dimension: dimension.data,
+        sort: sort.data,
+        userId: user.id,
+      })
+      return reply.send({ period: period.data, dimension: dimension.data, sort: sort.data, buckets })
     },
   )
 

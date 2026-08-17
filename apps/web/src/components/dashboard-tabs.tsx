@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 
 export interface DashboardTab {
@@ -24,6 +24,27 @@ export function DashboardTabs({ tabs, ariaLabel }: { tabs: DashboardTab[]; ariaL
   const [active, setActive] = useState(tabs[0]?.id)
   const panelRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
+  const selectTab = useCallback(
+    (tabId: string, updateHash = true) => {
+      if (!tabs.some((tab) => tab.id === tabId)) return
+      setActive(tabId)
+      if (updateHash && typeof window !== 'undefined') {
+        window.history.replaceState(null, '', `#${tabId}`)
+      }
+    },
+    [tabs],
+  )
+
+  useEffect(() => {
+    function selectFromHash() {
+      const tabId = window.location.hash.slice(1)
+      if (tabId) selectTab(tabId, false)
+    }
+    selectFromHash()
+    window.addEventListener('hashchange', selectFromHash)
+    return () => window.removeEventListener('hashchange', selectFromHash)
+  }, [selectTab])
+
   const helpSteps: HelpSpotlightStep[] = tabs
     .filter((t) => t.helpDescription)
     .map((t) => ({ id: t.id, label: t.label, description: t.helpDescription! }))
@@ -34,7 +55,7 @@ export function DashboardTabs({ tabs, ariaLabel }: { tabs: DashboardTab[]; ariaL
         <HelpSpotlight
           steps={helpSteps}
           activeId={active}
-          onNavigate={setActive}
+          onNavigate={selectTab}
           getTargetEl={(step) => panelRefs.current[step.id] ?? null}
         />
       )}
@@ -44,9 +65,11 @@ export function DashboardTabs({ tabs, ariaLabel }: { tabs: DashboardTab[]; ariaL
             key={tab.id}
             type="button"
             role="tab"
+            id={`dashboard-tab-${tab.id}`}
+            aria-controls={`dashboard-tabpanel-${tab.id}`}
             aria-selected={active === tab.id}
             className={`studio-tabs__trigger${active === tab.id ? ' studio-tabs__trigger--active' : ''}`}
-            onClick={() => setActive(tab.id)}
+            onClick={() => selectTab(tab.id)}
           >
             {tab.label}
           </button>
@@ -62,6 +85,8 @@ export function DashboardTabs({ tabs, ariaLabel }: { tabs: DashboardTab[]; ariaL
               }}
               className="studio-tabs__panel"
               role="tabpanel"
+              id={`dashboard-tabpanel-${tab.id}`}
+              aria-labelledby={`dashboard-tab-${tab.id}`}
             >
               {tab.content}
             </div>

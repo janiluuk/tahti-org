@@ -225,7 +225,15 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
             orderBy: { position: 'asc' },
             select: {
               archiveItem: {
-                select: { id: true, title: true, durationSec: true, mp3Key: true, flacKey: true },
+                select: {
+                  id: true,
+                  title: true,
+                  durationSec: true,
+                  mp3Key: true,
+                  flacKey: true,
+                  embedProvider: true,
+                  embedUri: true,
+                },
               },
             },
           },
@@ -250,6 +258,8 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
             title: i.archiveItem!.title,
             durationSec: i.archiveItem!.durationSec,
             hasStream: !!archivePlaybackKey(i.archiveItem!),
+            embedProvider: i.archiveItem!.embedProvider,
+            embedUri: i.archiveItem!.embedUri,
           })),
       })
     },

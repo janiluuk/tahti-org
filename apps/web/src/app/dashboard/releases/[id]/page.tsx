@@ -41,6 +41,8 @@ interface ReleaseSummary {
     title: string
     isrc: string | null
     status?: string
+    durationSec?: number | null
+    audioUrl?: string | null
     credits?: unknown
   }>
   checklist?: ReleaseChecklistItem[]

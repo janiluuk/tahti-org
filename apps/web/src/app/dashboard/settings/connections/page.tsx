@@ -71,16 +71,20 @@ export default async function ConnectionsSettingsPage() {
         </div>
       </div>
 
-      <ConnectionsForm initial={{ links, streamingLinks }} genresCsv={genres.join(', ')}>
+      <ConnectionsForm
+        initial={{ links, streamingLinks }}
+        genresCsv={genres.join(', ')}
+        musicbrainz={
+          <MusicbrainzSettingsPanel
+            initialConnected={musicbrainzState.connected}
+            initialUsername={musicbrainzState.username}
+            initialConfigured={musicbrainzState.configured}
+            initialDefault={musicbrainzState.defaultRegisterToMusicbrainz}
+          />
+        }
+      >
         <SocialConnectionsSection apiUrl={apiUrl} sessionValue={sessionValue} />
       </ConnectionsForm>
-
-      <MusicbrainzSettingsPanel
-        initialConnected={musicbrainzState.connected}
-        initialUsername={musicbrainzState.username}
-        initialConfigured={musicbrainzState.configured}
-        initialDefault={musicbrainzState.defaultRegisterToMusicbrainz}
-      />
     </div>
   )
 }

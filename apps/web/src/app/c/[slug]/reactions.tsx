@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
 
 const EMOJIS = ['💜', '🔥', '🎶', '🎵', '🌟', '👏']
 
@@ -43,8 +44,7 @@ export default function ReactionsOverlay({ slug }: { slug: string }) {
         return
       }
 
-      const wsUrl =
-        process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
+      const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
       try {
         ws = new WebSocket(wsUrl)
       } catch (e) {

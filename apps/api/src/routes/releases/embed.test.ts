@@ -158,6 +158,7 @@ describe('M14 — embed and oEmbed', () => {
   describe('collection/playlist embed', () => {
     let collectionSlug: string
     let collectionArchiveItemId: string
+    let hearthisArchiveItemId: string
 
     beforeAll(async () => {
       const artist = await prisma.user.findUniqueOrThrow({
@@ -174,6 +175,20 @@ describe('M14 — embed and oEmbed', () => {
       await prisma.collectionItem.create({
         data: { collectionId: collection.id, archiveItemId: item.id, position: 0 },
       })
+      const hearthisItem = await prisma.archiveItem.create({
+        data: {
+          channelId: artist.channel!.id,
+          title: 'HearThis embed track',
+          source: 'HEARTHIS_EMBED',
+          status: 'READY',
+          embedProvider: 'HEARTHIS',
+          embedUri: '123456',
+        },
+      })
+      hearthisArchiveItemId = hearthisItem.id
+      await prisma.collectionItem.create({
+        data: { collectionId: collection.id, archiveItemId: hearthisItem.id, position: 1 },
+      })
     })
 
     it('GET /api/v1/embed/col/:slug returns playlist metadata', async () => {
@@ -182,9 +197,26 @@ describe('M14 — embed and oEmbed', () => {
         url: `/api/v1/embed/col/${collectionSlug}`,
       })
       expect(res.statusCode).toBe(200)
-      const body = res.json() as { name: string; tracks: Array<{ title: string }> }
+      const body = res.json() as {
+        name: string
+        tracks: Array<{
+          id: string
+          title: string
+          hasStream: boolean
+          embedProvider: string | null
+          embedUri: string | null
+        }>
+      }
       expect(body.name).toBe('Embed test playlist')
       expect(body.tracks.map((t) => t.title)).toContain('Embed test track')
+      expect(body.tracks).toContainEqual(
+        expect.objectContaining({
+          id: hearthisArchiveItemId,
+          hasStream: false,
+          embedProvider: 'HEARTHIS',
+          embedUri: '123456',
+        }),
+      )
     })
 
     it('GET play endpoint returns a signed stream URL for a track in the collection', async () => {

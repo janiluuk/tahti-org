@@ -110,7 +110,7 @@ export default async function ArchivePage() {
     <PageShell size="lg">
       <div className="studio-page-header">
         <div>
-          <Heading level={1}>Music</Heading>
+          <Heading level={1}>Discography</Heading>
         </div>
         <div className="studio-page-header__actions">
           <StudioHeaderActions
@@ -124,7 +124,7 @@ export default async function ArchivePage() {
 
       {items.length === 0 && albums.length === 0 && collections.length === 0 ? (
         <Panel
-          title="Recordings"
+          title="Discography"
           headerTight
           description="Find a recording and do something with it — polish and publish, or re-edit."
         >

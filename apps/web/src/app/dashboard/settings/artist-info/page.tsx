@@ -27,11 +27,6 @@ export default async function ArtistInfoSettingsPage() {
       bio,
       countryCode,
       pronouns,
-      showJoinDate,
-      showFollowers,
-      showFollowing,
-      showDailyListeners,
-      chatEnabled,
       defaultLocation,
       genres,
       links,
@@ -51,12 +46,11 @@ export default async function ArtistInfoSettingsPage() {
         <div>
           <h1 className="studio-page-title">Artist info</h1>
           <p className="studio-text-muted-sm studio-mt-xs">
-            Your name, bio, and members — shown on your channel page. Streaming links and connected
-            accounts are under{' '}
+            Shape the essentials listeners see on your artist page. Links live under{' '}
             <a href="/dashboard/settings/connections" className="studio-link">
               Connections
             </a>
-            . For colors and layout, use{' '}
+            ; colors and layout under{' '}
             <a href="/dashboard/channel/edit" className="studio-link">
               Channel design
             </a>
@@ -75,11 +69,6 @@ export default async function ArtistInfoSettingsPage() {
           logoPlacement,
           countryCode,
           pronouns,
-          showJoinDate,
-          showFollowers,
-          showFollowing,
-          showDailyListeners,
-          chatEnabled,
           defaultLocation,
           genres,
           bio,

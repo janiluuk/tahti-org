@@ -15,6 +15,10 @@ import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
 import { ReleaseTrackCreditsPanel, parseTrackCredits } from '../../release-track-credits-panel'
 import ReleaseVisualPanel from '../../release-visual-panel'
 import { MusicbrainzRegisterPanel } from './_musicbrainz-register-panel'
+import {
+  CatalogPlaybackButtons,
+  type CatalogPlaybackTrack,
+} from '@/components/catalog-playback-buttons'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -59,6 +63,7 @@ interface ReleaseSummary {
     isrc: string | null
     status?: string
     durationSec?: number | null
+    audioUrl?: string | null
     credits?: unknown
     fingerprintMatch?: {
       acoustidId: string
@@ -133,6 +138,19 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
   const [releaseDate, setReleaseDate] = useState(r.releaseDate.slice(0, 10))
   const [dateSaving, setDateSaving] = useState(false)
   const [dateSaved, setDateSaved] = useState(false)
+  const playbackQueue: CatalogPlaybackTrack[] = (r.tracks ?? []).flatMap((track) =>
+    track.audioUrl
+      ? [
+          {
+            id: `release-track-${track.id}`,
+            title: track.title,
+            audioUrl: track.audioUrl,
+            subtitle: r.artistName,
+            artworkUrl: r.artworkUrl,
+          },
+        ]
+      : [],
+  )
 
   function publish() {
     startTransition(async () => {
@@ -235,6 +253,21 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
 
       {(r.tracks ?? []).map((t) => (
         <div key={t.id}>
+          {t.audioUrl ? (
+            <div className="studio-row studio-row--between studio-mb-sm">
+              <strong>{t.title}</strong>
+              <CatalogPlaybackButtons
+                item={{
+                  id: `release-track-${t.id}`,
+                  title: t.title,
+                  audioUrl: t.audioUrl,
+                  subtitle: r.artistName,
+                  artworkUrl: r.artworkUrl,
+                }}
+                queue={playbackQueue}
+              />
+            </div>
+          ) : null}
           <ReleaseTrackVersionPanel releaseId={r.id} trackId={t.id} trackTitle={t.title} />
           <FingerprintMatchNote status={t.status} match={t.fingerprintMatch} />
           <ReleaseTrackCreditsPanel

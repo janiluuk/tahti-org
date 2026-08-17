@@ -31,7 +31,7 @@ const meStorageRoutes: FastifyPluginAsync = async (fastify) => {
         computeUserStorageUsedBytes(fastify.prisma, request.sessionUser!.id),
       ])
       return reply.send({
-        quotaBytes: Number(user!.softTargetBytes),
+        quotaBytes: user!.isMember ? null : Number(user!.softTargetBytes),
         usedBytes: Number(usedBytes),
         // Members don't even get the soft-target nudge — just their usage.
         unlimited: user!.isMember,

@@ -14,9 +14,8 @@ const STYLE_OPTIONS = [
   { value: 'EP', label: 'EP' },
   { value: 'SINGLE', label: 'Single' },
   { value: 'DJ_SET_SERIES', label: 'DJ-set series' },
-  { value: 'LIVE_ARCHIVE', label: 'Live archive' },
+  { value: 'PODCAST', label: 'Podcast' },
   { value: 'COMPILATION', label: 'Compilation' },
-  { value: 'MIX_SERIES', label: 'Mix series' },
 ] as const
 
 const VISIBILITY_OPTIONS = [

@@ -5,7 +5,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { MAX_FALLBACK_ITEMS, type FallbackMode } from '@tahti/shared'
-import { Alert, Button, ButtonIcon, Field, Panel, Select, Text } from '@tahti/ui'
+import { Alert, Button, ButtonIcon, Field, Panel, Select, SortableList, Text } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { usePlayer } from '@/contexts/player-context'
 import {
@@ -97,7 +97,6 @@ export function RotationEditor({
   const [message, setMessage] = useState<string | null>(null)
   const [pickerTab, setPickerTab] = useState<'archive' | 'library'>('archive')
   const [promotingId, setPromotingId] = useState<string | null>(null)
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const inRotation = useMemo(() => items.filter((r) => r.isFallback), [items])
@@ -124,15 +123,12 @@ export function RotationEditor({
     setItems((prev) => prev.map((r) => (r.id === id ? { ...r, isFallback: false } : r)))
   }
 
-  function reorder(fromIdx: number, toIdx: number) {
+  function reorder(nextRotation: ProgrammeItemRow[]) {
     setItems((prev) => {
-      const rotation = prev.filter((r) => r.isFallback)
       const rest = prev.filter((r) => !r.isFallback)
-      const next = [...rotation]
-      const [moved] = next.splice(fromIdx, 1)
-      next.splice(toIdx, 0, moved!)
-      return [...next, ...rest]
+      return [...nextRotation, ...rest]
     })
+    setFallbackMode('ordered')
   }
 
   function save() {
@@ -242,8 +238,8 @@ export function RotationEditor({
         </div>
         <Text size="sm" tone="muted" className="studio-mt-xs">
           Manage your announcement clips from{' '}
-          <a href="/dashboard/settings/notifications#announcements" className="studio-link">
-            Settings → Announcements
+          <a href="/dashboard/settings/distribution" className="studio-link">
+            Settings → Radio &amp; announcements
           </a>
           . Tahti&apos;s own system announcements (if any) always play regardless of this toggle.
         </Text>
@@ -293,27 +289,26 @@ export function RotationEditor({
                 Nothing in rotation yet — add sets or tracks from the right.
               </Text>
             ) : (
-              <ul className="studio-list studio-mt-md schedule-rotation-list">
-                {inRotation.map((row, index) => (
+              <SortableList
+                as="ul"
+                className="studio-list studio-mt-md schedule-rotation-list"
+                items={inRotation}
+                itemId={(row) => row.id}
+                onReorder={reorder}
+                renderItem={(row, _index, sortable) => (
                   <li
                     key={row.id}
-                    className={`studio-programme-row schedule-rotation-row${
-                      fallbackMode === 'ordered' ? ' schedule-rotation-row--draggable' : ''
-                    }`}
-                    draggable={fallbackMode === 'ordered'}
-                    onDragStart={() => setDragIdx(index)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      if (dragIdx !== null && dragIdx !== index) reorder(dragIdx, index)
-                      setDragIdx(null)
-                    }}
+                    ref={sortable.ref}
+                    className={`studio-programme-row schedule-rotation-row schedule-rotation-row--draggable${sortable.isDragging ? ' is-dragging' : ''}`}
                   >
-                    {fallbackMode === 'ordered' && (
-                      <span className="schedule-rotation-row__handle" aria-hidden>
+                    <button
+                      ref={sortable.handleRef}
+                      type="button"
+                      className="schedule-rotation-row__handle"
+                      aria-label={`Move ${row.title}`}
+                    >
                         ⠿
-                      </span>
-                    )}
+                    </button>
                     <span className="studio-programme-label">
                       <span>{row.title}</span>
                       {row.durationSec != null && (
@@ -333,8 +328,8 @@ export function RotationEditor({
                       Remove
                     </Button>
                   </li>
-                ))}
-              </ul>
+                )}
+              />
             )}
           </Panel>
         </div>

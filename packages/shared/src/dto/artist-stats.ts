@@ -33,6 +33,7 @@ export const StatsSummaryResponseSchema = z.object({
   playsTotal: z.number().int().nonnegative(),
   downloadsToday: z.number().int().nonnegative(),
   downloadsTotal: z.number().int().nonnegative(),
+  followerCount: z.number().int().nonnegative(),
 })
 
 export const StatsTopTrackSchema = z.object({

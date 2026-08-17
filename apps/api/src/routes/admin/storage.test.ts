@@ -195,7 +195,7 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
       payload: { quotaBytes: 2_000_000_000 },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ quotaBytes: 2_000_000_000, usedBytes: 0 })
+    expect(res.json()).toEqual({ quotaBytes: 2_000_000_000, usedBytes: 0, unlimited: false })
 
     const row = await prisma.userStorageQuota.findUnique({ where: { userId: artistId } })
     expect(row?.quotaBytes).toBe(2_000_000_000n)

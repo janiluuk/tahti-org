@@ -6,6 +6,16 @@ of juggling Audacity, a DAW subscription, and a separate host.
 
 Spec for implementation: **M21** in `docs/AGENT.md` and `docs/project-roadmap.md` Phase 7.
 
+## Current integrated workflow
+
+- Open the editor from `/dashboard/editor` or from a discography item.
+- Preview waveform edits and reset zoom without leaving the workspace.
+- Preview the complete plugin chain before/after, or preview an individual plugin.
+- Disabled plugins are greyed out; active plugins show a green status indicator.
+- The filter panel renders its curve and highlights the selected icon-based mode.
+- Export sits beside Preview. Applying an effect preserves the original and creates a numbered revision.
+- Tahti retains the ten newest revisions and removes the oldest revision when an eleventh is created.
+
 ## Design principle
 
 - **Included for all artists** (free-tier and paying). Same editor, same feature set.

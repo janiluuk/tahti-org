@@ -23,7 +23,7 @@ interface MembershipInfo {
 }
 
 interface StorageInfo {
-  quotaBytes: number
+  quotaBytes: number | null
   usedBytes: number
   unlimited?: boolean
 }

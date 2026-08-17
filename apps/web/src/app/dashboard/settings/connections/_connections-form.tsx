@@ -9,6 +9,7 @@ import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelLinksPanel, { type ChannelLink } from '../../channel-links-panel'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import type { StreamingLinksDraft } from '../artist-info/_artist-info-form'
+import { DashboardTabs } from '@/components/dashboard-tabs'
 
 function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
   const map: Record<string, string> = {}
@@ -23,6 +24,7 @@ export function ConnectionsForm({
   initial,
   genresCsv,
   children,
+  musicbrainz,
 }: {
   initial: {
     links: ChannelLink[]
@@ -31,6 +33,7 @@ export function ConnectionsForm({
   /** Preserved on save — genres live under Artist info but share socialLinks. */
   genresCsv: string
   children?: ReactNode
+  musicbrainz?: ReactNode
 }) {
   const [links, setLinks] = useState<ChannelLink[]>(initial.links)
   const [streamingLinks, setStreamingLinks] = useState<StreamingLinksDraft>(initial.streamingLinks)
@@ -74,7 +77,13 @@ export function ConnectionsForm({
         </Button>
       </div>
 
-      <Panel
+      <DashboardTabs
+        ariaLabel="Connection sections"
+        tabs={[
+          {
+            id: 'streaming',
+            label: 'Streaming platforms',
+            content: <Panel
         title="Streaming platforms"
         description="Your channels on other platforms — shown in their own section on your profile."
       >
@@ -149,16 +158,24 @@ export function ConnectionsForm({
             />
           </div>
         </div>
-      </Panel>
-
-      <Panel
+      </Panel>,
+          },
+          {
+            id: 'links',
+            label: 'Profile links',
+            content: <Panel
         title="Links"
         description="Where else listeners can find you — shown on your channel page."
       >
         <ChannelLinksPanel initial={links} onDraftChange={setLinks} />
-      </Panel>
-
-      {children}
+      </Panel>,
+          },
+          ...(children ? [{ id: 'social', label: 'Social accounts', content: children }] : []),
+          ...(musicbrainz
+            ? [{ id: 'musicbrainz', label: 'MusicBrainz', content: musicbrainz }]
+            : []),
+        ]}
+      />
     </div>
   )
 }

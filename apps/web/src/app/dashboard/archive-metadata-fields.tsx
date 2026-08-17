@@ -22,6 +22,7 @@ import {
 import { TracklistEditor } from './tracklist-editor'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import { VenuePicker } from './venue-picker'
+import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-visibility'
 import {
   prepareArchiveBannerUpload,
   completeArchiveBannerUpload,
@@ -497,7 +498,12 @@ export function ArchiveAdvancedFields({
   disabled,
   detectedBpm,
   detectedKey,
-}: SectionProps & { detectedBpm?: number | null; detectedKey?: string | null }) {
+  showVenueLocation = shouldShowVenueLocation(state.contentType),
+}: SectionProps & {
+  detectedBpm?: number | null
+  detectedKey?: string | null
+  showVenueLocation?: boolean
+}) {
   const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
 
   return (
@@ -604,30 +610,32 @@ export function ArchiveAdvancedFields({
         </details>
       </div>
 
-      <div className="studio-field--block">
-        <span className="studio-label">Venue &amp; location</span>
-        <p className="studio-help studio-mt-xs studio-mb-sm">
-          Optional — only worth setting for a recording tied to a real show or venue.
-        </p>
-        <VenuePicker
-          venueId={state.venueId}
-          disabled={disabled}
-          onChange={(venueId) => set({ venueId })}
-        />
-        <label className="studio-field studio-mt-sm">
-          <span className="studio-label studio-label--secondary">
-            Extra location notes (optional)
-          </span>
-          <input
-            type="text"
-            placeholder="e.g. backstage, second stage — extra detail beyond the venue"
-            value={state.recordingLocation}
+      {showVenueLocation && (
+        <div className="studio-field--block">
+          <span className="studio-label">Venue &amp; location</span>
+          <p className="studio-help studio-mt-xs studio-mb-sm">
+            Optional — connect this show or recording to a real venue.
+          </p>
+          <VenuePicker
+            venueId={state.venueId}
             disabled={disabled}
-            onChange={(e) => set({ recordingLocation: e.target.value })}
-            className="studio-input"
+            onChange={(venueId) => set({ venueId })}
           />
-        </label>
-      </div>
+          <label className="studio-field studio-mt-sm">
+            <span className="studio-label studio-label--secondary">
+              Extra location notes (optional)
+            </span>
+            <input
+              type="text"
+              placeholder="e.g. backstage, second stage — extra detail beyond the venue"
+              value={state.recordingLocation}
+              disabled={disabled}
+              onChange={(e) => set({ recordingLocation: e.target.value })}
+              className="studio-input"
+            />
+          </label>
+        </div>
+      )}
 
       <div className="studio-grid studio-grid--3">
         <label className="studio-field">
@@ -795,12 +803,14 @@ export function ArchiveMetadataFields({
   return (
     <div className="studio-grid studio-mt-md">
       <ArchiveBasicsFields state={state} onChange={onChange} disabled={disabled} itemId={itemId} />
-      <details className="studio-details-block" open>
-        <summary className="studio-details-block__summary">Tracklist</summary>
-        <div className="studio-details-block__body">
-          <ArchiveTracklistField state={state} onChange={onChange} disabled={disabled} />
-        </div>
-      </details>
+      {shouldShowTracklist(state.contentType) && (
+        <details className="studio-details-block" open>
+          <summary className="studio-details-block__summary">Tracklist</summary>
+          <div className="studio-details-block__body">
+            <ArchiveTracklistField state={state} onChange={onChange} disabled={disabled} />
+          </div>
+        </details>
+      )}
       <details className="studio-details-block">
         <summary className="studio-details-block__summary">Cover &amp; visuals</summary>
         <div className="studio-details-block__body">

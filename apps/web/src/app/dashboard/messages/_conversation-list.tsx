@@ -7,7 +7,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@tahti/ui'
-import { searchUsers, startConversation, type ConversationSummary } from './actions'
+import {
+  searchUsers,
+  startConversation,
+  type ConversationSummary,
+  type MessageContact,
+} from './actions'
 
 type SearchResult = { username: string; displayName: string; avatarUrl: string | null }
 
@@ -91,11 +96,83 @@ function NewMessageBox() {
   )
 }
 
-export function ConversationList({ conversations }: { conversations: ConversationSummary[] }) {
+export function MessageContacts({ contacts }: { contacts: MessageContact[] }) {
+  const router = useRouter()
+  const [starting, setStarting] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function openContact(username: string) {
+    setStarting(username)
+    setError(null)
+    const result = await startConversation(username)
+    if (!result.conversationId) {
+      setError(result.error ?? 'Failed to open conversation')
+      setStarting(null)
+      return
+    }
+    router.push(`/dashboard/messages/${result.conversationId}`)
+  }
+
+  return (
+    <aside className="dm-contacts" aria-label="Message contacts">
+      <div className="dm-contacts__head">
+        <h2>Contacts</h2>
+        <span>{contacts.length}</span>
+      </div>
+      {contacts.length === 0 ? (
+        <p className="dm-contacts__empty">Follow artists to keep them close at hand.</p>
+      ) : (
+        <ul className="dm-contacts__list">
+          {contacts.map((contact) => (
+            <li key={contact.username}>
+              <button
+                type="button"
+                className="dm-contact"
+                disabled={starting !== null}
+                onClick={() => void openContact(contact.username)}
+              >
+                {contact.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={contact.avatarUrl} alt="" className="dm-contact__avatar" />
+                ) : (
+                  <span className="dm-contact__avatar dm-contact__avatar--ph" aria-hidden>
+                    {contact.displayName.trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="dm-contact__identity">
+                  <span className="dm-contact__name">{contact.displayName}</span>
+                  <span className="dm-contact__relation">
+                    {contact.followsYou && contact.followedByYou
+                      ? 'Mutual'
+                      : contact.followedByYou
+                        ? 'Following'
+                        : 'Follows you'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
+    </aside>
+  )
+}
+
+export function ConversationList({
+  conversations,
+  activeId,
+  className,
+}: {
+  conversations: ConversationSummary[]
+  /** Highlights the conversation currently open in the thread view, if any. */
+  activeId?: string
+  className?: string
+}) {
   const [showNew, setShowNew] = useState(false)
 
   return (
-    <div>
+    <div className={className ? `dm-inbox ${className}` : 'dm-inbox'}>
       <div className="studio-row studio-row--between studio-mb-sm">
         <span />
         <Button onClick={() => setShowNew((v) => !v)} variant="primary" size="sm">
@@ -113,7 +190,10 @@ export function ConversationList({ conversations }: { conversations: Conversatio
         <ul className="dm-conversation-list">
           {conversations.map((c) => (
             <li key={c.id}>
-              <Link href={`/dashboard/messages/${c.id}`} className="dm-conversation-row">
+              <Link
+                href={`/dashboard/messages/${c.id}`}
+                className={`dm-conversation-row${c.id === activeId ? ' dm-conversation-row--active' : ''}`}
+              >
                 {c.otherUser.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.otherUser.avatarUrl} alt="" className="dm-conversation-row__avatar" />

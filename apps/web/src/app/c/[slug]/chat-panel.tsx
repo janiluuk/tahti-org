@@ -14,6 +14,7 @@ import {
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { usePlayer } from '@/contexts/player-context'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
+import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
 
 interface Announcement {
   id: string
@@ -257,40 +258,52 @@ export default function ChatPanel({
 
   useEffect(() => {
     if (!connectionToken) return
-    const wsUrl =
-      process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
-    let ws: WebSocket
-    try {
-      ws = new WebSocket(wsUrl)
-    } catch (e) {
-      console.warn('[chat] WebSocket connect failed', e)
-      return
-    }
-    wsRef.current = ws
-    setStatus('connecting')
+    const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
+    let ws: WebSocket | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    let retryAttempt = 0
+    let cancelled = false
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ id: msgIdRef.current++, connect: { token: connectionToken } }))
-    }
+    function connect() {
+      setStatus('connecting')
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (connectError) {
+        console.warn('[chat] WebSocket connect failed', connectError)
+        scheduleReconnect()
+        return
+      }
+      wsRef.current = ws
 
-    ws.onmessage = (ev) => {
-      for (const line of (ev.data as string).split('\n')) {
-        if (!line.trim()) continue
-        try {
-          const data = JSON.parse(line) as {
-            connect?: { client: string }
-            push?: { pub?: { data: unknown } }
-          }
-          if (data.connect) {
-            ws.send(
-              JSON.stringify({
-                id: msgIdRef.current++,
-                subscribe: { channel: `channel:${slug}` },
-              }),
-            )
-            setStatus('connected')
-          }
-          if (data.push?.pub) {
+      ws.onopen = () => {
+        ws?.send(JSON.stringify({ id: msgIdRef.current++, connect: { token: connectionToken } }))
+      }
+
+      ws.onmessage = (ev) => {
+        for (const line of (ev.data as string).split('\n')) {
+          if (!line.trim()) continue
+          try {
+            const data = JSON.parse(line) as {
+              connect?: { client: string }
+              error?: { message?: string }
+              push?: { pub?: { data: unknown } }
+            }
+            if (data.error) {
+              setError(data.error.message ?? 'Could not connect to live chat.')
+              continue
+            }
+            if (data.connect) {
+              retryAttempt = 0
+              setError(null)
+              ws?.send(
+                JSON.stringify({
+                  id: msgIdRef.current++,
+                  subscribe: { channel: `channel:${slug}` },
+                }),
+              )
+              setStatus('connected')
+            }
+            if (!data.push?.pub) continue
             const msg = data.push.pub.data as {
               handle?: string
               text?: string
@@ -301,34 +314,54 @@ export default function ChatPanel({
               system?: boolean
               href?: string
             }
-            if (msg.text) {
-              setMessages((prev) =>
-                [
-                  ...prev,
-                  {
-                    id: `${Date.now()}-${Math.random()}`,
-                    handle: msg.handle ?? 'anon',
-                    text: msg.text!,
-                    ts: msg.ts ?? Date.now(),
-                    supporter: msg.supporter,
-                    channelRole: msg.channelRole ?? null,
-                    countryCode: msg.countryCode ?? null,
-                    system: msg.system,
-                    href: msg.href,
-                  },
-                ].slice(-100),
-              )
-            }
+            const messageText = msg.text
+            if (!messageText) continue
+            setMessages((prev) =>
+              [
+                ...prev,
+                {
+                  id: `${Date.now()}-${Math.random()}`,
+                  handle: msg.handle ?? 'anon',
+                  text: messageText,
+                  ts: msg.ts ?? Date.now(),
+                  supporter: msg.supporter,
+                  channelRole: msg.channelRole ?? null,
+                  countryCode: msg.countryCode ?? null,
+                  system: msg.system,
+                  href: msg.href,
+                },
+              ].slice(-100),
+            )
+          } catch {
+            // malformed message
           }
-        } catch {
-          // malformed message
         }
+      }
+
+      ws.onerror = () => ws?.close()
+      ws.onclose = () => {
+        if (wsRef.current === ws) wsRef.current = null
+        if (!cancelled) scheduleReconnect()
       }
     }
 
-    ws.onerror = () => setError('Connection error')
-    ws.onclose = () => setStatus('disconnected')
-    return () => ws.close()
+    function scheduleReconnect() {
+      if (cancelled || retryTimer) return
+      setStatus('connecting')
+      setError('Chat connection lost — reconnecting…')
+      const delay = Math.min(1000 * 2 ** retryAttempt++, 15_000)
+      retryTimer = setTimeout(() => {
+        retryTimer = null
+        connect()
+      }, delay)
+    }
+
+    connect()
+    return () => {
+      cancelled = true
+      if (retryTimer) clearTimeout(retryTimer)
+      ws?.close()
+    }
   }, [connectionToken, slug])
 
   useEffect(() => {

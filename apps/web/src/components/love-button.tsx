@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { LoginPromptModal } from './login-prompt-modal'
+import { useToast } from '@/contexts/toast-context'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -44,6 +45,7 @@ export function LoveButton({
   const [likeCount, setLikeCount] = useState(initialLikeCount)
   const [pending, setPending] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const { showToast } = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -65,6 +67,11 @@ export function LoveButton({
   async function toggle(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+    const previousLiked = liked
+    const previousLikeCount = likeCount
+    const nextLiked = !liked
+    setLiked(nextLiked)
+    setLikeCount((count) => Math.max(0, count + (nextLiked ? 1 : -1)))
     setPending(true)
     try {
       const res = await fetch(
@@ -72,13 +79,28 @@ export function LoveButton({
         { method: liked ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {
+        setLiked(previousLiked)
+        setLikeCount(previousLikeCount)
         setShowLogin(true)
         return
       }
-      if (!res.ok) return
+      if (!res.ok) {
+        setLiked(previousLiked)
+        setLikeCount(previousLikeCount)
+        showToast('Could not update this like. Please try again.', 'error')
+        return
+      }
       const data = (await res.json()) as { liked: boolean; likeCount: number }
       setLiked(data.liked)
       setLikeCount(data.likeCount)
+      showToast(
+        data.liked ? 'Added to your liked tracks.' : 'Removed from your liked tracks.',
+        'success',
+      )
+    } catch {
+      setLiked(previousLiked)
+      setLikeCount(previousLikeCount)
+      showToast('Could not update this like. Please try again.', 'error')
     } finally {
       setPending(false)
     }

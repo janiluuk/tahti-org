@@ -6,6 +6,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { StatusPill } from '@tahti/ui'
 import { RTMP_PROVIDERS } from '@/lib/rtmp-provider-help'
+import {
+  buildMetricBreakdown,
+  MANAGE_METRIC_KEYS,
+  type MetricBreakdown,
+} from './manage-metric-breakdown'
 
 export interface ManageStats {
   audioBitrateKbps: number | null
@@ -20,14 +25,77 @@ export interface ManageStats {
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 const REFRESH_MS = 15_000
 
-function formatDuration(sec: number | null): string {
-  if (sec == null) return '—'
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-  if (h > 0) return `${h}h ${m}m`
-  if (m > 0) return `${m}m ${s}s`
-  return `${s}s`
+function MetricDetailModal({
+  breakdown,
+  onClose,
+}: {
+  breakdown: MetricBreakdown
+  onClose: () => void
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="ch-metric-modal"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <section
+        className="ch-metric-modal__card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ch-metric-modal-title"
+      >
+        <header className="ch-metric-modal__header">
+          <div>
+            <span className="ch-metric-modal__demo">Demo breakdown</span>
+            <h2 id="ch-metric-modal-title">{breakdown.label}</h2>
+          </div>
+          <button
+            ref={closeRef}
+            type="button"
+            className="ch-metric-modal__close"
+            aria-label="Close metric details"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
+        <div className="ch-metric-modal__hero-value">{breakdown.value}</div>
+        <p className="ch-metric-modal__summary">{breakdown.summary}</p>
+        <dl className="ch-metric-modal__breakdown">
+          {breakdown.items.map((item) => (
+            <div key={item.label} className="ch-metric-modal__row">
+              <div>
+                <dt>{item.label}</dt>
+                <span>{item.note}</span>
+              </div>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="ch-metric-modal__footnote">
+          Supporting values are mock data for product demonstration.
+        </p>
+      </section>
+    </div>
+  )
 }
 
 type TransportAction = 'skip' | 'previous' | 'pause' | 'resume'
@@ -299,6 +367,7 @@ export function ManagePanel({ slug, initialStats }: { slug: string; initialStats
   const [stats, setStats] = useState(initialStats)
   const [pendingAction, setPendingAction] = useState<TransportAction | null>(null)
   const [transportError, setTransportError] = useState<string | null>(null)
+  const [selectedMetric, setSelectedMetric] = useState<MetricBreakdown | null>(null)
 
   useEffect(() => {
     const tick = async () => {
@@ -339,30 +408,26 @@ export function ManagePanel({ slug, initialStats }: { slug: string; initialStats
     }
   }
 
-  const rows: Array<{ label: string; value: string }> = [
-    {
-      label: 'Audio Bitrate',
-      value: stats.audioBitrateKbps != null ? `${stats.audioBitrateKbps} kbps` : 'Not live',
-    },
-    { label: 'Listeners', value: String(stats.listeners) },
-    { label: 'Listener Peak', value: String(stats.listenerPeak) },
-    { label: 'Plays', value: String(stats.plays) },
-    { label: 'Likes', value: String(stats.likes) },
-    { label: 'Reposts', value: String(stats.reposts) },
-    { label: 'Duration', value: formatDuration(stats.liveDurationSec) },
-  ]
+  const rows = MANAGE_METRIC_KEYS.map((key) => buildMetricBreakdown(stats, key))
 
   return (
     <section className="ch-manage-panel">
       <h2 className="ch-manage-panel__title">Manage</h2>
-      <dl className="ch-manage-stats">
+      <div className="ch-manage-stats">
         {rows.map((row) => (
-          <div key={row.label} className="ch-manage-stats__cell">
-            <dt className="ch-manage-stats__label">{row.label}</dt>
-            <dd className="ch-manage-stats__value">{row.value}</dd>
-          </div>
+          <button
+            key={row.key}
+            type="button"
+            className="ch-manage-stats__cell"
+            aria-label={`View ${row.label.toLowerCase()} breakdown`}
+            onClick={() => setSelectedMetric(row)}
+          >
+            <span className="ch-manage-stats__label">{row.label}</span>
+            <span className="ch-manage-stats__value">{row.value}</span>
+            <span className="ch-manage-stats__detail-hint">View details →</span>
+          </button>
         ))}
-      </dl>
+      </div>
       <div className="ch-manage-transport" role="group" aria-label="Playback controls">
         {TRANSPORT_BUTTONS.map(({ action, label, icon }) => (
           <button
@@ -381,6 +446,9 @@ export function ManagePanel({ slug, initialStats }: { slug: string; initialStats
       {transportError && <p className="ch-manage-transport__error">{transportError}</p>}
       <PlaylistSwitchDropdown slug={slug} />
       <MultistreamStatus slug={slug} />
+      {selectedMetric ? (
+        <MetricDetailModal breakdown={selectedMetric} onClose={() => setSelectedMetric(null)} />
+      ) : null}
     </section>
   )
 }

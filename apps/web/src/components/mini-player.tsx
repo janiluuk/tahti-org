@@ -11,6 +11,7 @@ import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
+import { fetchMyCollections, type MyCollectionSummary } from '@/app/dashboard/collection-actions'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -96,8 +97,12 @@ export function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function QueueItem({
+/** Thumbnail-only queue/history row — the redesigned queue panel shows
+ * artwork alone (title is available via the native `title` tooltip) so
+ * three columns (history / now playing / up next) fit side by side. */
+function QueueThumb({
   item,
+  active,
   onPlay,
   onRemove,
   draggable,
@@ -109,6 +114,7 @@ function QueueItem({
   onDragEnd,
 }: {
   item: PlayerTrack
+  active?: boolean
   onPlay: () => void
   onRemove?: () => void
   draggable?: boolean
@@ -121,48 +127,38 @@ function QueueItem({
 }) {
   return (
     <li
-      className={`mini-player-queue__item${dragged ? ' mini-player-queue__item--dragging' : ''}${dragOver ? ' mini-player-queue__item--drag-over' : ''}`}
+      className={`mini-player-queue__thumb-item${active ? ' mini-player-queue__thumb-item--active' : ''}${dragged ? ' mini-player-queue__thumb-item--dragging' : ''}${dragOver ? ' mini-player-queue__thumb-item--drag-over' : ''}`}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
-      {draggable && (
-        <span className="mini-player-queue__drag-handle" aria-hidden>
-          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
-            <circle cx="2.5" cy="2.5" r="1.4" />
-            <circle cx="7.5" cy="2.5" r="1.4" />
-            <circle cx="2.5" cy="8" r="1.4" />
-            <circle cx="7.5" cy="8" r="1.4" />
-            <circle cx="2.5" cy="13.5" r="1.4" />
-            <circle cx="7.5" cy="13.5" r="1.4" />
-          </svg>
-        </span>
-      )}
       <button
         type="button"
-        className="mini-player-queue__item-play"
+        className="mini-player-queue__thumb-play"
         onClick={onPlay}
-        aria-label={`Play ${item.title}`}
+        aria-label={active ? `${item.title} — now playing` : `Skip to ${item.title}`}
+        aria-current={active ? 'true' : undefined}
+        title={item.subtitle ? `${item.title} — ${item.subtitle}` : item.title}
       >
         {item.artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.artworkUrl} alt="" className="mini-player-queue__art" />
+          <img src={item.artworkUrl} alt="" className="mini-player-queue__thumb-art" />
         ) : (
-          <AvatarTile size="xs" name={item.title} className="mini-player-queue__art" />
+          <AvatarTile size="sm" name={item.title} className="mini-player-queue__thumb-art" />
         )}
-        <span className="mini-player-queue__meta">
-          <span className="mini-player-queue__title">{item.title}</span>
-          {item.subtitle && <span className="mini-player-queue__subtitle">{item.subtitle}</span>}
-        </span>
       </button>
       {onRemove && (
         <button
           type="button"
-          className="mini-player-queue__remove"
-          onClick={onRemove}
+          className="mini-player-queue__thumb-remove"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
           aria-label={`Remove ${item.title} from queue`}
+          title="Remove from queue"
         >
           ✕
         </button>
@@ -700,12 +696,13 @@ export function MiniPlayer() {
     toggleMute,
   } = usePlayer()
   const [queueOpen, setQueueOpen] = useState(false)
+  const [queueClosing, setQueueClosing] = useState(false)
   const [addToOpen, setAddToOpen] = useState(false)
-  const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [closingFullPlayer, setClosingFullPlayer] = useState(false)
+  const [collections, setCollections] = useState<MyCollectionSummary[] | null>(null)
 
   const closeFullPlayer = useCallback(() => {
     setClosingFullPlayer(true)
@@ -714,6 +711,29 @@ export function MiniPlayer() {
       setClosingFullPlayer(false)
     }, 280)
   }, [])
+
+  const closeQueue = useCallback(() => {
+    setQueueClosing(true)
+    window.setTimeout(() => {
+      setQueueOpen(false)
+      setQueueClosing(false)
+    }, 200)
+  }, [])
+
+  // Lazy-load "your collections" the first time the queue panel opens — a
+  // logged-out listener or one with no collections just gets an empty list
+  // back and the section stays hidden, no extra request on every page load.
+  useEffect(() => {
+    if (!queueOpen || collections !== null) return
+    let cancelled = false
+    void (async () => {
+      const { data } = await fetchMyCollections()
+      if (!cancelled && data) setCollections(data)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [queueOpen, collections])
 
   if (!track) return null
 
@@ -746,140 +766,193 @@ export function MiniPlayer() {
             onClose={() => setAddToOpen(false)}
           />
         )}
-        {queueOpen && (
-          <div className="mini-player-queue" role="region" aria-label="Play queue">
-            <div className="mini-player-queue__header">
-              <div className="mini-player-queue__tabs" role="tablist">
+        {(queueOpen || queueClosing) && (
+          <div
+            className={`mini-player-queue${queueClosing ? ' mini-player-queue--closing' : ''}`}
+            role="region"
+            aria-label="Play queue"
+          >
+            <div className="mini-player-queue__toolbar">
+              <div className="mini-player-queue__toolbar-group">
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={queueTab === 'queue'}
-                  className={`mini-player-queue__tab${queueTab === 'queue' ? ' mini-player-queue__tab--active' : ''}`}
-                  onClick={() => setQueueTab('queue')}
+                  className={`mini-player-queue__mode${shuffle ? ' mini-player-queue__mode--active' : ''}`}
+                  onClick={toggleShuffle}
+                  disabled={queue.length < 2}
+                  aria-pressed={shuffle}
+                  aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
+                  title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
                 >
-                  Queue{upNext.length > 0 ? ` · ${upNext.length}` : ''}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path
+                      d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </button>
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={queueTab === 'history'}
-                  className={`mini-player-queue__tab${queueTab === 'history' ? ' mini-player-queue__tab--active' : ''}`}
-                  onClick={() => setQueueTab('history')}
+                  className={`mini-player-queue__mode${repeat ? ' mini-player-queue__mode--active' : ''}`}
+                  onClick={toggleRepeat}
+                  disabled={queue.length < 2}
+                  aria-pressed={repeat}
+                  aria-label={repeat ? 'Loop: on' : 'Loop: off'}
+                  title={repeat ? 'Loop: on' : 'Loop: off'}
                 >
-                  History
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path
+                      d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M13 10a3 3 0 0 1-3 3H4M4 13l2 2m-2-2 2-2"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </button>
               </div>
-              {queueTab === 'queue' && (
-                <div className="mini-player-queue__header-actions">
-                  <button
-                    type="button"
-                    className={`mini-player-queue__mode${shuffle ? ' mini-player-queue__mode--active' : ''}`}
-                    onClick={toggleShuffle}
-                    disabled={queue.length < 2}
-                    aria-pressed={shuffle}
-                    aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
-                    title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className={`mini-player-queue__mode${repeat ? ' mini-player-queue__mode--active' : ''}`}
-                    onClick={toggleRepeat}
-                    disabled={queue.length < 2}
-                    aria-pressed={repeat}
-                    aria-label={repeat ? 'Loop: on' : 'Loop: off'}
-                    title={repeat ? 'Loop: on' : 'Loop: off'}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M13 10a3 3 0 0 1-3 3H4M4 13l2 2m-2-2 2-2"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="mini-player-queue__clear"
-                    onClick={clearQueue}
-                    disabled={upNext.length === 0}
-                    aria-label="Clear queue"
-                    title="Clear queue"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              )}
+              <span className="mini-player-queue__toolbar-title">Play queue</span>
+              <div className="mini-player-queue__toolbar-group">
+                <button
+                  type="button"
+                  className="mini-player-queue__clear"
+                  onClick={clearQueue}
+                  disabled={upNext.length === 0}
+                  aria-label="Clear queue"
+                  title="Clear queue"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path
+                      d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="mini-player-queue__collapse"
+                  onClick={closeQueue}
+                  aria-label="Collapse queue"
+                  title="Collapse queue"
+                >
+                  <svg width="12" height="12" viewBox="0 0 10 10" fill="none" aria-hidden>
+                    <path
+                      d="M2 6.5L5 3.5L8 6.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            {queueTab === 'queue' ? (
-              upNext.length === 0 ? (
-                <p className="mini-player-queue__empty">
-                  Nothing queued — add tracks to play next.
-                </p>
-              ) : (
-                <ul className="mini-player-queue__list">
-                  {upNext.map((item, i) => (
-                    <QueueItem
-                      key={item.id}
-                      item={item}
-                      onPlay={() => load(item, { autoplay: true })}
-                      onRemove={() => removeFromQueue(item.id)}
-                      draggable
-                      dragged={dragIndex === i}
-                      dragOver={dragOverIndex === i}
-                      onDragStart={() => setDragIndex(i)}
-                      onDragOver={(e) => {
-                        e.preventDefault()
-                        setDragOverIndex(i)
-                      }}
-                      onDrop={() => handleDrop(i)}
-                      onDragEnd={() => {
-                        setDragIndex(null)
-                        setDragOverIndex(null)
-                      }}
+            <div className="mini-player-queue__columns">
+              <div className="mini-player-queue__column mini-player-queue__column--history">
+                <span className="mini-player-queue__column-label">History</span>
+                {history.filter((item) => item.id !== track.id).length === 0 ? (
+                  <p className="mini-player-queue__empty">Nothing played yet.</p>
+                ) : (
+                  <ul className="mini-player-queue__thumbs">
+                    {history
+                      .filter((item) => item.id !== track.id)
+                      .map((item) => (
+                        <QueueThumb
+                          key={item.id}
+                          item={item}
+                          onPlay={() => load(item, { autoplay: true })}
+                        />
+                      ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="mini-player-queue__column mini-player-queue__column--current">
+                <span className="mini-player-queue__column-label">Now playing</span>
+                <div className="mini-player-queue__current" title={track.title}>
+                  {track.artworkUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={track.artworkUrl} alt="" className="mini-player-queue__current-art" />
+                  ) : (
+                    <AvatarTile
+                      size="md"
+                      name={track.title}
+                      className="mini-player-queue__current-art"
                     />
+                  )}
+                  <span className="mini-player-queue__current-title">{track.title}</span>
+                  {track.subtitle && (
+                    <span className="mini-player-queue__current-subtitle">{track.subtitle}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mini-player-queue__column mini-player-queue__column--upnext">
+                <span className="mini-player-queue__column-label">
+                  Queue{upNext.length > 0 ? ` · ${upNext.length}` : ''}
+                </span>
+                {upNext.length === 0 ? (
+                  <p className="mini-player-queue__empty">Nothing queued.</p>
+                ) : (
+                  <ul className="mini-player-queue__thumbs">
+                    {upNext.map((item, i) => (
+                      <QueueThumb
+                        key={item.id}
+                        item={item}
+                        onPlay={() => load(item, { autoplay: true })}
+                        onRemove={() => removeFromQueue(item.id)}
+                        draggable
+                        dragged={dragIndex === i}
+                        dragOver={dragOverIndex === i}
+                        onDragStart={() => setDragIndex(i)}
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          setDragOverIndex(i)
+                        }}
+                        onDrop={() => handleDrop(i)}
+                        onDragEnd={() => {
+                          setDragIndex(null)
+                          setDragOverIndex(null)
+                        }}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {collections !== null && collections.length > 0 && (
+              <div className="mini-player-queue__collections">
+                <span className="mini-player-queue__column-label">Your collections</span>
+                <ul className="mini-player-queue__collections-list">
+                  {collections.map((c) => (
+                    <li key={c.slug}>
+                      <Link
+                        href={`/dashboard/collections/${c.slug}`}
+                        className="mini-player-queue__collection-chip"
+                        onClick={closeQueue}
+                        title={c.name}
+                      >
+                        <AvatarTile size="xs" name={c.name} />
+                        <span className="mini-player-queue__collection-name">{c.name}</span>
+                      </Link>
+                    </li>
                   ))}
                 </ul>
-              )
-            ) : history.length === 0 ? (
-              <p className="mini-player-queue__empty">Nothing played yet.</p>
-            ) : (
-              <ul className="mini-player-queue__list">
-                {history.map((item) => (
-                  <QueueItem
-                    key={item.id}
-                    item={item}
-                    onPlay={() => load(item, { autoplay: true })}
-                  />
-                ))}
-              </ul>
+              </div>
             )}
           </div>
         )}
@@ -1004,7 +1077,7 @@ export function MiniPlayer() {
               type="button"
               className={`mini-player__add-to${addToOpen ? ' mini-player__add-to--active' : ''}`}
               onClick={() => {
-                setQueueOpen(false)
+                if (queueOpen) closeQueue()
                 setAddToOpen((v) => !v)
               }}
               aria-expanded={addToOpen}
@@ -1031,8 +1104,12 @@ export function MiniPlayer() {
             type="button"
             className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}`}
             onClick={() => {
-              setAddToOpen(false)
-              setQueueOpen((v) => !v)
+              if (queueOpen) {
+                closeQueue()
+              } else {
+                setAddToOpen(false)
+                setQueueOpen(true)
+              }
             }}
             aria-expanded={queueOpen}
             aria-label="Toggle play queue"

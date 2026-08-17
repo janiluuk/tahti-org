@@ -30,6 +30,7 @@ import { ProfileTabs } from './_profile-tabs'
 import { ProfileFeed } from './_profile-feed'
 import { TracksTab } from './_tracks-tab'
 import { ProfileBackgroundMusic } from './_profile-background-music'
+import { humanizeFutureDate } from './profile-upcoming'
 
 export const revalidate = 60
 
@@ -373,6 +374,43 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const themeBackground = avatarThemeCss(resolvedTheme)
   const logoUrl = artist.logoUrl ?? null
   const logoPlacement = artist.logoPlacement ?? null
+  const latestMusic = [
+    ...releases.map((release) => ({
+      id: `release-${release.id}`,
+      title: release.title,
+      subtitle: release.type.replace(/_/g, ' '),
+      coverUrl: release.artworkUrl,
+      href: `/r/${release.smartLinkSlug}`,
+      date: release.releaseDate,
+    })),
+    ...tracks.map((track) => ({
+      id: `track-${track.id}`,
+      title: track.title,
+      subtitle: track.artistName?.trim() || 'Track',
+      coverUrl: track.bannerUrl,
+      href: track.channelItemUrl,
+      date: track.createdAt,
+    })),
+  ]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 3)
+  const nextEvent = events[0]
+  const nextShow = upcomingShows[0]
+  const showIsNext =
+    nextShow && (!nextEvent || new Date(nextShow.startAt) < new Date(nextEvent.startAt))
+  const nextAppearance = showIsNext
+    ? {
+        text: `Next live show ${humanizeFutureDate(new Date(nextShow.startAt))} on Tahti Radio`,
+        href: '/radio',
+        linkLabel: 'Tune in →',
+      }
+    : nextEvent
+      ? {
+          text: `Next gig ${humanizeFutureDate(new Date(nextEvent.startAt))} at ${nextEvent.place || nextEvent.location}`,
+          href: nextEvent.eventUrl,
+          linkLabel: 'Event details ↗',
+        }
+      : null
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -429,6 +467,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             joinDateTitle={formatJoinDateTitle(artist.joinDate)}
             presskitUrl={links.presskit}
             rssUrl={links.feeds?.archive ?? null}
+            hideBio
             followSlot={
               user?.username !== artist.username ? (
                 <FollowButton artistUsername={artist.username} />
@@ -436,7 +475,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             }
             messageSlot={
               user?.username !== artist.username ? (
-                <SendMessageButton artistUsername={artist.username} />
+                <SendMessageButton artistUsername={artist.username} variant="icon" />
               ) : null
             }
             newsletterSlot={
@@ -444,7 +483,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 artistUsername={artist.username}
                 artistDisplayName={artist.displayName}
                 isLoggedIn={Boolean(user)}
+                variant="icon"
               />
+            }
+            moreActionSlot={
+              channel?.slug ? (
+                <ReportButton targetType="CHANNEL" targetId={channel.slug} variant="icon" />
+              ) : null
             }
           />
         }
@@ -461,48 +506,67 @@ export default async function ArtistProfilePage({ params }: { params: { username
             count={artist.followingCount ?? null}
           />
         </div>
+        {artist.bio && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Biography</div>
+            {bioHtml ? (
+              <div
+                className="prof-bio prof-bio--rich"
+                dangerouslySetInnerHTML={{ __html: bioHtml }}
+              />
+            ) : null}
+          </section>
+        )}
+        {nextAppearance && (
+          <section className="prof-section">
+            <div className="prof-main-upcoming">
+              <span>{nextAppearance.text}</span>
+              {nextAppearance.href && (
+                <Link href={nextAppearance.href}>{nextAppearance.linkLabel}</Link>
+              )}
+            </div>
+          </section>
+        )}
+        {latestMusic.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Latest music</div>
+            <ul className="prof-list prof-collection-list">
+              {latestMusic.map((item) => (
+                <li key={item.id}>
+                  {item.href ? (
+                    <Link href={item.href} className="prof-collection-row">
+                      <div className="prof-collection-cover">
+                        {item.coverUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.coverUrl} alt="" width={76} height={76} />
+                        ) : (
+                          <span className="prof-collection-cover-ph" aria-hidden />
+                        )}
+                      </div>
+                      <div>
+                        <div className="prof-collection-title">{item.title}</div>
+                        <div className="prof-list-meta prof-list-meta--strong">{item.subtitle}</div>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="prof-collection-row">
+                      <div className="prof-collection-cover">
+                        <span className="prof-collection-cover-ph" aria-hidden />
+                      </div>
+                      <div>
+                        <div className="prof-collection-title">{item.title}</div>
+                        <div className="prof-list-meta prof-list-meta--strong">{item.subtitle}</div>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <ProfileTabs
           stage={
             <>
-              {upcomingShows.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Live — upcoming shows</div>
-                  <ul className="ch-events-list">
-                    {upcomingShows.map((show) => (
-                      <li key={show.id} className="ch-events-list__item">
-                        <div className="ch-events-list__date">
-                          {new Date(show.startAt).toLocaleDateString(undefined, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                          {' · '}
-                          {new Date(show.startAt).toLocaleTimeString(undefined, {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </div>
-                        <div className="ch-events-list__body">
-                          <div className="ch-events-list__title">
-                            Live on Tahti Radio{show.note ? ` — ${show.note}` : ''}
-                          </div>
-                          <Link href="/radio" className="ch-events-list__link">
-                            Tune in →
-                          </Link>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {releases.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Latest releases</div>
-                  <ReleasesGrid releases={releases.slice(0, 3)} />
-                </section>
-              )}
-
               {pinnedItems.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label">Pinned</div>
@@ -554,40 +618,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 <section className="prof-section">
                   <div className="prof-sec-label">Press kit</div>
                   <PressKitGallery images={pressKitImages} />
-                </section>
-              )}
-
-              {events.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Events</div>
-                  <ul className="ch-events-list">
-                    {events.map((ev) => (
-                      <li key={ev.id} className="ch-events-list__item">
-                        <div className="ch-events-list__date">
-                          {new Date(ev.startAt).toLocaleDateString(undefined, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                        <div className="ch-events-list__body">
-                          <div className="ch-events-list__title">
-                            {ev.title} — {ev.place}, {ev.location}
-                          </div>
-                          {ev.eventUrl && (
-                            <a
-                              href={ev.eventUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ch-events-list__link"
-                            >
-                              Tickets / event link ↗
-                            </a>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
                 </section>
               )}
 
@@ -717,12 +747,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                     </>
                   )
                 })()}
-
-              {channel?.slug && (
-                <section className="prof-section">
-                  <ReportButton targetType="CHANNEL" targetId={channel.slug} />
-                </section>
-              )}
             </>
           }
           feed={

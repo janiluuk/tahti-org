@@ -45,10 +45,9 @@ function statusFromState(state: string | undefined): LiveStatus {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 const WIZARD_STEPS = [
-  { num: 1, label: 'Credentials' },
-  { num: 2, label: 'Test signal' },
-  { num: 3, label: 'Pre-flight' },
-  { num: 4, label: 'Go live' },
+  { num: 1, label: 'Setup' },
+  { num: 2, label: 'Pre-flight' },
+  { num: 3, label: 'Go live' },
 ] as const
 
 export function BroadcastStudio({
@@ -74,13 +73,15 @@ export function BroadcastStudio({
   const initialStatus = statusFromState(initialState)
   const [status, setStatus] = useState<LiveStatus>(initialStatus)
   const [signal, setSignal] = useState<SignalStatus | null>(null)
+  const [section, setSection] = useState<'setup' | 'help'>('setup')
+  const [streamType, setStreamType] = useState<'rtmp' | 'icecast'>('rtmp')
 
   const requestedStep = Number(searchParams.get('step'))
-  const activeStep = [1, 2, 3, 4].includes(requestedStep)
+  const activeStep = [1, 2, 3].includes(requestedStep)
     ? requestedStep
     : initialStatus === 'offline'
       ? 1
-      : 4
+      : 3
 
   function setActiveStep(step: number) {
     router.push(`/dashboard/broadcast?step=${step}`)
@@ -109,10 +110,10 @@ export function BroadcastStudio({
     return () => window.clearInterval(id)
   }, [status, activeStep, router])
 
-  // Steps 1-2 (credentials & test signal) poll Icecast's own status JSON for live
-  // confirmation; step 4 (go live) also polls so its audio-check panel stays fresh.
+  // Setup polls Icecast's status JSON for confirmation; Go live also polls so
+  // its audio-check panel stays fresh.
   useEffect(() => {
-    if (![1, 2, 4].includes(activeStep) || status === 'live') return
+    if (![1, 3].includes(activeStep) || status === 'live') return
     let cancelled = false
     async function poll() {
       try {
@@ -135,7 +136,7 @@ export function BroadcastStudio({
   const isLive = status === 'live'
   const isPreview = status === 'preview'
   const signalConfirmed = isLive || isPreview || Boolean(signal?.connected)
-  const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 3 : 2) : 4
+  const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 2 : 1) : 3
 
   function goToStep(step: number) {
     if (step <= maxUnlockedStep) setActiveStep(step)
@@ -175,6 +176,37 @@ export function BroadcastStudio({
 
       <BroadcastUsageBanner usage={broadcastUsage} />
 
+      <div className="broadcast-section-tabs" role="tablist" aria-label="Broadcast studio sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={section === 'setup'}
+          className={section === 'setup' ? 'is-active' : undefined}
+          onClick={() => setSection('setup')}
+        >
+          Go live
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={section === 'help'}
+          className={section === 'help' ? 'is-active' : undefined}
+          onClick={() => setSection('help')}
+        >
+          Help
+        </button>
+      </div>
+
+      {section === 'help' ? (
+        <Panel title="Broadcasting help" headerTight>
+          <div className="broadcast-help-links">
+            <Link href="/help/broadcast">Set up OBS, Mixxx, Traktor, or butt →</Link>
+            <Link href="/help/multistream">Multistream to YouTube or Twitch →</Link>
+          </div>
+        </Panel>
+      ) : (
+        <>
+
       <nav className="broadcast-wizard" aria-label="Broadcasting setup steps">
         <ol className="broadcast-wizard__list">
           {WIZARD_STEPS.map((step, index) => {
@@ -207,21 +239,15 @@ export function BroadcastStudio({
 
       {activeStep === 1 && (
         <>
-          <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
-          <div className="studio-actions">
-            <Button onClick={() => setActiveStep(2)} variant="primary">
-              <ButtonIcon name="arrowRight" />
-              Continue to test signal
-            </Button>
-          </div>
-        </>
-      )}
-
-      {activeStep === 2 && (
+          <StreamSettingsPanel
+            initial={streamSettings}
+            isLive={isLive || isPreview}
+            onStreamTypeChange={setStreamType}
+          />
         <Panel
           title="Test your signal"
           headerTight
-          description="Once you're streaming with the credentials from step 1, confirm it here before you go live."
+          description="Start your selected broadcasting software and confirm the signal here."
         >
           <div data-hero>
             <HlsPlayer
@@ -248,23 +274,21 @@ export function BroadcastStudio({
             </>
           ) : (
             <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-              Waiting for signal — start streaming in OBS, Mixxx, or Traktor with the credentials
-              from step 1.
+              Waiting for signal from{' '}
+              {streamType === 'rtmp' ? 'OBS / Streamlabs' : 'Mixxx / Traktor / butt'}.
             </Text>
           )}
           <div className="studio-actions">
-            <Button onClick={() => setActiveStep(1)} variant="ghost">
-              ← Back to credentials
-            </Button>
-            <Button disabled={!signalConfirmed} onClick={() => setActiveStep(3)} variant="primary">
+            <Button disabled={!signalConfirmed} onClick={() => setActiveStep(2)} variant="primary">
               <ButtonIcon name="arrowRight" />
               Continue to pre-flight
             </Button>
           </div>
         </Panel>
+        </>
       )}
 
-      {activeStep === 3 && (
+      {activeStep === 2 && (
         <Panel
           title="Pre-flight"
           headerTight
@@ -278,18 +302,21 @@ export function BroadcastStudio({
             <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
           </div>
           <Step3Preflight />
-          <GreenRoomPanel artistUsername={artistUsername} />
           {!isLive && (
             <div className="broadcast-studio__toggles">
               <RecordingToggle initialEnabled={autoRecordEnabled} />
               <PublishToggle initialEnabled={autoPublishBroadcast} />
             </div>
           )}
+          <details className="broadcast-studio__preflight-more studio-mt-md">
+            <summary>Green room</summary>
+            <GreenRoomPanel artistUsername={artistUsername} />
+          </details>
           <div className="studio-actions">
-            <Button onClick={() => setActiveStep(2)} variant="ghost">
-              ← Back to test signal
+            <Button onClick={() => setActiveStep(1)} variant="ghost">
+              ← Back to setup
             </Button>
-            <Button onClick={() => setActiveStep(4)} variant="primary">
+            <Button onClick={() => setActiveStep(3)} variant="primary">
               <ButtonIcon name="arrowRight" />
               Continue to go live
             </Button>
@@ -297,14 +324,8 @@ export function BroadcastStudio({
         </Panel>
       )}
 
-      {activeStep === 4 && (
+      {activeStep === 3 && (
         <Panel title="Go live" headerTight>
-          {!isLive && (
-            <div className="broadcast-studio__toggles">
-              <RecordingToggle initialEnabled={autoRecordEnabled} />
-              <PublishToggle initialEnabled={autoPublishBroadcast} />
-            </div>
-          )}
           {isLive ? (
             <Text as="p" tone="muted" size="sm">
               You are on air — this is exactly what listeners hear.
@@ -317,6 +338,8 @@ export function BroadcastStudio({
             </Text>
           )}
         </Panel>
+      )}
+        </>
       )}
     </div>
   )

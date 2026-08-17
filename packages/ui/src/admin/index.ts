@@ -21,6 +21,7 @@ export { Stack, Row, Divider, PageShell, Code, type PageSize, type StackGap } fr
 export { CopyRow, type CopyRowProps } from './copy-row'
 export { Link, type LinkProps } from './link'
 export { Knob, type KnobProps } from './knob'
+export { FileDropzone, type FileDropzoneProps } from './file-dropzone'
 
 import { tokens } from '../tokens'
 

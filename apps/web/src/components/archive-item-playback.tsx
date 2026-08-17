@@ -10,6 +10,7 @@ import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
 import { RepostButton } from '@/components/repost-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { useToast } from '@/contexts/toast-context'
 import { ArchiveDownloadButton } from './archive-download-button'
 import { resolveChannelUrl } from '@/lib/app-url'
 
@@ -49,6 +50,7 @@ export function ArchiveItemPlayback({
 }: Props) {
   const { track, playing, analyser, load, togglePlay, addToQueue, currentTime, duration, seek } =
     usePlayer()
+  const { showToast } = useToast()
   const isCurrent = track?.id === item.id
   const progress = isCurrent && duration > 0 ? currentTime / duration : 0
 
@@ -68,6 +70,14 @@ export function ArchiveItemPlayback({
       return
     }
     await togglePlay()
+  }
+
+  function handleAddToQueue() {
+    const added = addToQueue(playerTrack)
+    showToast(
+      added ? `Added “${item.title}” to the queue.` : `“${item.title}” is already in the queue.`,
+      added ? 'success' : 'info',
+    )
   }
 
   return (
@@ -105,7 +115,7 @@ export function ArchiveItemPlayback({
         <button
           type="button"
           className="ch-archive-controls__queue"
-          onClick={() => addToQueue(playerTrack)}
+          onClick={handleAddToQueue}
           title="Add to queue"
           aria-label="Add to queue"
         >

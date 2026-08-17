@@ -33,6 +33,7 @@ export type StudioTabsProps = {
   hashAliases?: Record<string, string>
   children: ReactNode
   className?: string
+  onTabChange?: (value: string) => void
 }
 
 export function StudioTabs({
@@ -41,6 +42,7 @@ export function StudioTabs({
   hashAliases,
   children,
   className,
+  onTabChange,
 }: StudioTabsProps) {
   const pathname = usePathname()
   const [active, setActiveState] = useState(defaultTab)
@@ -61,6 +63,7 @@ export function StudioTabs({
   const setActive = useCallback(
     (value: string) => {
       setActiveState(value)
+      onTabChange?.(value)
       if (syncHash && typeof window !== 'undefined') {
         const next = `#${value}`
         if (window.location.hash !== next) {
@@ -68,7 +71,7 @@ export function StudioTabs({
         }
       }
     },
-    [syncHash],
+    [syncHash, onTabChange],
   )
 
   useEffect(() => {

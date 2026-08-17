@@ -188,6 +188,33 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
+  it('closes a dangling open broadcast (e.g. a 24/7 fallback placeholder) before starting a new one', async () => {
+    const dangling = await prisma.broadcast.create({
+      data: { channelId, source: 'ICECAST' },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_publish',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+    expect(res.statusCode).toBe(200)
+
+    const closed = await prisma.broadcast.findUnique({ where: { id: dangling.id } })
+    expect(closed?.endedAt).toBeTruthy()
+
+    const open = await prisma.broadcast.findMany({ where: { channelId, endedAt: null } })
+    expect(open).toHaveLength(1)
+    expect(open[0]!.id).not.toBe(dangling.id)
+
+    await prisma.broadcast.deleteMany({ where: { channelId } })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { state: 'OFFLINE', goneLiveAt: null },
+    })
+  })
+
   it('go-live promotes a preview session to public LIVE and warms the archive cache', async () => {
     await app.inject({
       method: 'POST',

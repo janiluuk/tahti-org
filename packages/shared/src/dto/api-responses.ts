@@ -217,6 +217,7 @@ export const ChannelTransportOkResponseSchema = z.object({
 /** Channel page "Manage" tab — one entry in the searchable playlist-switch dropdown. */
 export const ChannelFallbackCollectionOptionSchema = z.object({
   id: z.string(),
+  slug: z.string(),
   name: z.string(),
   trackCount: z.number().int(),
   active: z.boolean(),
@@ -1440,6 +1441,8 @@ export const CollectionEmbedViewSchema = z.object({
       title: z.string(),
       durationSec: z.number().int().nullable(),
       hasStream: z.boolean(),
+      embedProvider: z.enum(['SPOTIFY', 'MIXCLOUD', 'HEARTHIS']).nullable(),
+      embedUri: z.string().nullable(),
     }),
   ),
 })

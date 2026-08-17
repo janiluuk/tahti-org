@@ -5,18 +5,23 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PageShell, Heading } from '@tahti/ui'
 import { dashboardSessionCookie } from '@/lib/dashboard-session'
-import { fetchConversation } from '../actions'
+import { fetchConversation, fetchConversations, fetchMessageContacts } from '../actions'
 import { ConversationThread } from './_conversation-thread'
+import { ConversationList, MessageContacts } from '../_conversation-list'
 
 export default async function ConversationPage({ params }: { params: { id: string } }) {
   const sessionValue = dashboardSessionCookie()
   if (!sessionValue) redirect('/login?next=/dashboard/messages')
 
-  const conversation = await fetchConversation(params.id)
+  const [conversation, conversations, contacts] = await Promise.all([
+    fetchConversation(params.id),
+    fetchConversations(),
+    fetchMessageContacts(),
+  ])
   if (!conversation) notFound()
 
   return (
-    <PageShell size="md">
+    <PageShell size="lg" className="dm-page">
       <div className="studio-page-header">
         <div>
           <Link href="/dashboard/messages" className="studio-text-muted-sm">
@@ -34,7 +39,15 @@ export default async function ConversationPage({ params }: { params: { id: strin
         </div>
       </div>
 
-      <ConversationThread conversationId={conversation.id} initial={conversation} />
+      <div className="dm-workspace dm-workspace--thread">
+        <ConversationList
+          conversations={conversations}
+          activeId={conversation.id}
+          className="dm-inbox--sidebar"
+        />
+        <ConversationThread conversationId={conversation.id} initial={conversation} />
+        <MessageContacts contacts={contacts} />
+      </div>
     </PageShell>
   )
 }

@@ -11,12 +11,18 @@ import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ReportButton } from '@/components/report-button'
+import {
+  CatalogPlaybackButtons,
+  type CatalogPlaybackTrack,
+} from '@/components/catalog-playback-buttons'
 
 interface SmartLinkTrack {
+  id: string
   title: string
   isrc: string | null
   position: number
   credits?: TrackCredit[] | null
+  audioUrl?: string | null
 }
 
 interface FeaturedCollection {
@@ -68,6 +74,19 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const year = new Date(data.release.releaseDate).getFullYear()
   const trackCount = data.release.tracks.length
   const hasTargets = Object.values(data.targets).some((url) => url?.trim())
+  const playbackQueue: CatalogPlaybackTrack[] = data.release.tracks.flatMap((track) =>
+    track.audioUrl
+      ? [
+          {
+            id: `release-track-${track.id}`,
+            title: track.title,
+            audioUrl: track.audioUrl,
+            subtitle: data.artist.displayName,
+            artworkUrl: data.release.artworkUrl,
+          },
+        ]
+      : [],
+  )
 
   return (
     <SmartLinkPageLayout
@@ -124,6 +143,17 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           </>
         }
       >
+        {playbackQueue.length > 0 ? (
+          <div className="smartlink-playable-tracks">
+            {playbackQueue.map((track, index) => (
+              <div key={track.id} className="smartlink-playable-tracks__row">
+                <span>{index + 1}</span>
+                <strong>{track.title}</strong>
+                <CatalogPlaybackButtons item={track} queue={playbackQueue} />
+              </div>
+            ))}
+          </div>
+        ) : null}
         <SmartLinkDspButtons smartLinkSlug={params.slug} targets={data.targets} />
         {!hasTargets ? (
           <div className="public-empty-card">

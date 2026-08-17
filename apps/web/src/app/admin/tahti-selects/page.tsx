@@ -4,24 +4,15 @@
 import { cookies } from 'next/headers'
 import {
   addToRotation,
-  removeFromRotation,
-  reorderItem,
   startRotationStream,
   stopRotationStream,
 } from './actions'
+import {
+  SelectsGenerateControls,
+  SelectsRotationList,
+  type RotationItem,
+} from './_rotation-controls'
 import { resolveChannelUrl } from '@/lib/app-url'
-
-interface RotationItem {
-  id: string
-  position: number
-  addedBy: string
-  archiveItemId: string
-  title: string
-  durationSec: number | null
-  license: string
-  artistName: string
-  channelSlug: string
-}
 
 interface BrowseItem {
   id: string
@@ -123,117 +114,8 @@ export default async function AdminTahtiSelectsPage({
         Current rotation
         <span className="admin-radio-count">{items.length}</span>
       </h2>
-      {items.length === 0 ? (
-        <p className="admin-stat-sub" style={{ marginBottom: '2rem' }}>
-          Nothing in rotation yet — add tracks below.
-        </p>
-      ) : (
-        <div className="admin-rotation-list" style={{ marginBottom: '2rem' }}>
-          {items.map((item, index) => (
-            <div key={item.id} className="admin-rotation-row">
-              <span className="admin-rotation-row__index">{index + 1}</span>
-              <span className="admin-rotation-row__art" aria-hidden>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M6 12.5a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5Z"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                  />
-                  <path d="M7.75 11V3.5L13 2.5v7" stroke="currentColor" strokeWidth="1.3" />
-                </svg>
-              </span>
-              <span className="admin-rotation-row__body">
-                <span className="admin-rotation-row__title">{item.title}</span>
-                <span className="admin-rotation-row__meta">
-                  <a
-                    href={resolveChannelUrl(item.channelSlug)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item.artistName} ↗
-                  </a>
-                  {' · '}
-                  {fmtDuration(item.durationSec)} · {fmtLicense(item.license)} · added by{' '}
-                  {item.addedBy}
-                </span>
-              </span>
-              <span className="admin-rotation-row__actions">
-                <form
-                  action={async () => {
-                    'use server'
-                    if (index > 0) await reorderItem(item.id, index - 1)
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="admin-rotation-row__move"
-                    disabled={index === 0}
-                    aria-label={`Move "${item.title}" up`}
-                    title="Move up"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M8 12V4M4 8l4-4 4 4"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </form>
-                <form
-                  action={async () => {
-                    'use server'
-                    if (index < items.length - 1) await reorderItem(item.id, index + 1)
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="admin-rotation-row__move"
-                    disabled={index === items.length - 1}
-                    aria-label={`Move "${item.title}" down`}
-                    title="Move down"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M8 4v8m4-4-4 4-4-4"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </form>
-                <form
-                  action={async () => {
-                    'use server'
-                    await removeFromRotation(item.id)
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="admin-rotation-row__remove"
-                    aria-label={`Remove "${item.title}" from rotation`}
-                    title="Remove from rotation"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M6 7.5v4M10 7.5v4M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </form>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <SelectsGenerateControls />
+      <SelectsRotationList initialItems={items} />
 
       <h2 className="admin-section-title" style={{ marginBottom: '0.5rem' }}>
         Add from artist archives

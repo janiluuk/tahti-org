@@ -33,9 +33,7 @@ describe('GET /api/me/storage', () => {
     expect(res.statusCode).toBe(401)
   })
 
-  // docs/storage-policy.md: same 500MB soft display target for every tier —
-  // not a hard cap, and not scaled by membership/tier.
-  it('reports the 500MB soft target with zero usage for a fresh account', async () => {
+  it('reports the 500MB soft target with zero usage for a free account', async () => {
     const owner = await createTestArtist(prisma, {
       email: `${PREFIX}owner@example.com`,
       username: `${PREFIX}owner`,
@@ -51,6 +49,23 @@ describe('GET /api/me/storage', () => {
     const body = res.json()
     expect(body.quotaBytes).toBe(DEFAULT_SOFT_TARGET_BYTES)
     expect(body.usedBytes).toBe(0)
+  })
+
+  it('reports unlimited storage for a member without exposing the 500MB target', async () => {
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}member@example.com`,
+      username: `${PREFIX}member`,
+      isMember: true,
+      tier: 'ARTIST',
+    })
+    const cookie = await sessionCookieFor(prisma, member.id)
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/storage',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ quotaBytes: null, unlimited: true, usedBytes: 0 })
   })
 
   it('reflects real archive usage, even well past the soft target — never blocked', async () => {

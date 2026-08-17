@@ -129,11 +129,24 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
 
   // My Library — the artist's own catalog and files.
   {
+    href: '/feed',
+    label: 'Artist feed',
+    icon: 'posts',
+    isRoute: true,
+    group: 'My Library',
+  },
+  {
     href: '/dashboard/upload',
     label: 'Upload',
     icon: 'upload',
     isRoute: true,
-    group: 'My Library',
+  },
+  {
+    href: '/dashboard/archive',
+    label: 'Discography',
+    icon: 'archive',
+    isRoute: true,
+    requiresChannel: true,
   },
   { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
   {
@@ -164,7 +177,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     group: 'Broadcasting',
   },
   {
-    href: '/dashboard/archive',
+    href: '/dashboard/recordings',
     label: 'Recordings',
     icon: 'archive',
     isRoute: true,
@@ -201,12 +214,19 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
 
   // Channel setup — appearance and account-level settings.
   {
+    href: '/dashboard/channel/playlist',
+    label: '24/7 playlist',
+    icon: 'collections',
+    isRoute: true,
+    requiresChannel: true,
+    group: 'Channel setup',
+  },
+  {
     href: '/dashboard/channel/edit',
     label: 'Design',
     icon: 'appearance',
     isRoute: true,
     requiresChannel: true,
-    group: 'Channel setup',
   },
   { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
 

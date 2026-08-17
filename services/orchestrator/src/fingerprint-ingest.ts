@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { exec } from 'node:child_process'
+import { exec, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { BroadcastSource } from '@tahti/db'
 import { DOCKER_NETWORK } from './docker-streaming.js'
 import { recorderInputUrl } from './recorder.js'
 
 const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 
 export const FINGERPRINT_IMAGE = process.env.FINGERPRINT_IMAGE ?? 'alpine:3.20'
 export const FINGERPRINT_INTERVAL_SEC = parseInt(process.env.FINGERPRINT_INTERVAL_SEC ?? '30', 10)
@@ -78,6 +79,36 @@ export function buildFingerprintIngestShell(opts: {
   ].join('\n')
 }
 
+// Real argv for docker run — passed straight to execFile, never re-parsed by a
+// shell, so the multi-line script and its embedded $VAR references reach the
+// container's own `sh -c` byte-for-byte instead of being mangled or expanded
+// by an intermediate host shell (both of which happened when this used to be
+// a single string handed to exec()).
+export function buildFingerprintIngestDockerArgs(opts: {
+  containerName: string
+  inputUrl: string
+  broadcastId: string
+  apiUrl: string
+  internalSecret: string
+}): string[] {
+  const shell = buildFingerprintIngestShell(opts)
+
+  return [
+    'run',
+    '-d',
+    '--name',
+    opts.containerName,
+    '--network',
+    DOCKER_NETWORK,
+    '--restart=no',
+    FINGERPRINT_IMAGE,
+    'sh',
+    '-c',
+    shell,
+  ]
+}
+
+// Human-readable rendering of the same command, for logs/tests only — never executed.
 export function buildFingerprintIngestDockerCommand(opts: {
   containerName: string
   inputUrl: string
@@ -85,18 +116,9 @@ export function buildFingerprintIngestDockerCommand(opts: {
   apiUrl: string
   internalSecret: string
 }): string {
-  const shell = buildFingerprintIngestShell(opts)
-
-  return [
-    'docker run -d',
-    `--name ${opts.containerName}`,
-    `--network ${DOCKER_NETWORK}`,
-    '--restart=no',
-    FINGERPRINT_IMAGE,
-    'sh',
-    '-c',
-    JSON.stringify(shell),
-  ].join(' ')
+  return ['docker', ...buildFingerprintIngestDockerArgs(opts).map((a) => JSON.stringify(a))].join(
+    ' ',
+  )
 }
 
 const activeFingerprintIngest = new Map<
@@ -130,14 +152,14 @@ export async function spawnFingerprintIngest(opts: {
   const containerName = fingerprintContainerName(opts.slug, opts.broadcastId)
   await removeContainer(containerName)
 
-  const cmd = buildFingerprintIngestDockerCommand({
+  const args = buildFingerprintIngestDockerArgs({
     containerName,
     inputUrl: recorderInputUrl(opts.source, opts.slug, opts.rtmpStreamKey),
     broadcastId: opts.broadcastId,
     apiUrl: opts.apiUrl,
     internalSecret: opts.internalSecret,
   })
-  await execAsync(cmd)
+  await execFileAsync('docker', args)
   activeFingerprintIngest.set(opts.broadcastId, {
     containerName,
     channelId: opts.channelId,

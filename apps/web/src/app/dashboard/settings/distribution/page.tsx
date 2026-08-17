@@ -5,13 +5,15 @@ import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { TahtiRadioPanel } from '../../tahti-radio-panel'
 import { RadioSubmitPanel } from '../../_radio-submit-panel'
-import AnnouncementsPanel from '../../announcements-panel'
+import ChatAnnouncementsPanel from '../../announcements-panel'
+import { fetchMyAnnouncements } from '../announcements/actions'
+import { AnnouncementsPanel as AnnouncementClipsPanel } from '../announcements/_announcements-panel'
 
 export default async function DistributionSettingsPage() {
   const sessionValue = dashboardSessionCookie()
   if (!sessionValue) redirect('/login?next=/dashboard/settings/distribution')
 
-  const user = await getDashboardUser()
+  const [user, { clips }] = await Promise.all([getDashboardUser(), fetchMyAnnouncements()])
   if (!user) redirect('/login?next=/dashboard/settings/distribution')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
@@ -38,7 +40,8 @@ export default async function DistributionSettingsPage() {
 
       <TahtiRadioPanel />
       <RadioSubmitPanel />
-      <AnnouncementsPanel initial={announcements} />
+      <AnnouncementClipsPanel initialClips={clips} />
+      <ChatAnnouncementsPanel initial={announcements} />
     </div>
   )
 }

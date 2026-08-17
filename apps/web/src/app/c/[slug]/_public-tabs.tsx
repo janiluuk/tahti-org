@@ -3,10 +3,11 @@
 
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
+import { channelTabForHash, type PublicChannelTab } from './channel-tab-routing'
 
-type Tab = 'live' | 'archive' | 'releases' | 'feed' | 'bio'
+type Tab = PublicChannelTab
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'live', label: 'Live' },
@@ -70,6 +71,24 @@ export function PublicChannelTabs({
     feed: null,
     bio: null,
   })
+
+  useEffect(() => {
+    function activateDeepLink() {
+      const targetTab = channelTabForHash(window.location.hash)
+      if (!targetTab) return
+      setActive(targetTab)
+      requestAnimationFrame(() => {
+        const target = document.getElementById(window.location.hash.slice(1))
+        const details = target?.querySelector('details')
+        if (details instanceof HTMLDetailsElement) details.open = true
+        target?.scrollIntoView({ block: 'start' })
+      })
+    }
+
+    activateDeepLink()
+    window.addEventListener('hashchange', activateDeepLink)
+    return () => window.removeEventListener('hashchange', activateDeepLink)
+  }, [])
 
   return (
     <div className="prof-tabs">

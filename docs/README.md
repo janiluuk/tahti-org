@@ -18,6 +18,7 @@ listen/studio client on the same API; public docs at `https://api.tahti.live/api
 | [design/README.md](./design/README.md) | Design ground truth map |
 | [e2e-screenshots/](./e2e-screenshots/) | Canonical web UI captures |
 | [project-roadmap.md](./project-roadmap.md) | Milestone status |
+| [features.md](./features.md) | Current product feature catalog |
 | [technical/](./technical/) | Streaming / infra specs |
 | [guides/](./guides/) | End-user guides |
 | [flows/](./flows/) | Persona navigation flows |

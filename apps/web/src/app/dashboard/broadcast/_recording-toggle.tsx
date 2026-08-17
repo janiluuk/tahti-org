@@ -6,8 +6,6 @@
 import { useEffect, useState } from 'react'
 import { updateAutoRecordEnabled } from './recording-actions'
 
-/** Moderately large Record control for pre-live. Persists `autoRecordEnabled`
- *  (last-used channel setting) so the next session starts with the same choice. */
 export function RecordingToggle({ initialEnabled }: { initialEnabled: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled)
   const [pending, setPending] = useState(false)
@@ -31,24 +29,18 @@ export function RecordingToggle({ initialEnabled }: { initialEnabled: boolean })
   }
 
   return (
-    <div className="broadcast-studio__record">
+    <div className="broadcast-studio__toggle-control">
+      <span className="broadcast-studio__toggle-label">Record show</span>
       <button
         type="button"
-        className={`broadcast-studio__record-btn${enabled ? ' is-armed' : ''}`}
+        className={`broadcast-studio__red-toggle${enabled ? ' is-active' : ''}`}
         aria-pressed={enabled}
+        aria-label={enabled ? 'Disable recording' : 'Enable recording'}
         disabled={pending}
         onClick={() => void onToggle()}
       >
-        <span className="broadcast-studio__record-btn__dot" aria-hidden />
-        <span className="broadcast-studio__record-btn__label">
-          {enabled ? 'Recording' : 'Record'}
-        </span>
+        <span aria-hidden />
       </button>
-      <p className="broadcast-studio__record-hint">
-        {enabled
-          ? 'This show will be saved to your archive after you go live (same setting as last time).'
-          : 'Arm recording to archive this show after you go live. Remembers your last choice.'}
-      </p>
       {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
     </div>
   )

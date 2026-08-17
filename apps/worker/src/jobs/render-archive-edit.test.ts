@@ -13,6 +13,7 @@ const {
   syncActiveVersionToItem,
   downloadSourceCached,
   uploadFile,
+  deleteObject,
   processTranscodeVersionJob,
   ffmpegFactory,
 } = vi.hoisted(() => {
@@ -34,14 +35,17 @@ const {
     prismaMock: {
       archiveItemVersion: {
         findUnique: vi.fn(),
+        findMany: vi.fn(),
         update: vi.fn(),
         updateMany: vi.fn(),
+        delete: vi.fn(),
       },
       $transaction: vi.fn(),
     },
     syncActiveVersionToItem: vi.fn(),
     downloadSourceCached: vi.fn(),
     uploadFile: vi.fn(),
+    deleteObject: vi.fn(),
     processTranscodeVersionJob: vi.fn(),
     ffmpegChain: chain,
     ffmpegFactory: vi.fn(() => {
@@ -55,7 +59,7 @@ vi.mock('node:fs/promises', () => ({ mkdtemp, rm, stat }))
 vi.mock('fluent-ffmpeg', () => ({ default: ffmpegFactory }))
 vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
 vi.mock('../lib/source-cache.js', () => ({ downloadSourceCached }))
-vi.mock('../lib/minio.js', () => ({ uploadFile }))
+vi.mock('../lib/minio.js', () => ({ uploadFile, deleteObject }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
 
 import {
@@ -77,8 +81,10 @@ describe('processRenderArchiveEditJob', () => {
     uploadFile.mockResolvedValue(undefined)
     processTranscodeVersionJob.mockResolvedValue(undefined)
     prismaMock.archiveItemVersion.findUnique.mockResolvedValue({ id: 'ver-1' })
+    prismaMock.archiveItemVersion.findMany.mockResolvedValue([])
     prismaMock.archiveItemVersion.update.mockResolvedValue({})
     prismaMock.archiveItemVersion.updateMany.mockResolvedValue({})
+    prismaMock.archiveItemVersion.delete.mockResolvedValue({})
     prismaMock.$transaction.mockResolvedValue([])
     syncActiveVersionToItem.mockResolvedValue(undefined)
   })

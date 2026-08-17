@@ -1,6 +1,6 @@
 # Tahti for viewers (listeners & fans)
 
-You do **not** need an account to listen or to use public chat. You only need an account if you want to **subscribe** to an artist, join **fan-only chat**, or get **supporter perks** (extra downloads, FLAC, etc.).
+You do **not** need an account to listen, download public files, or use public chat. Sign in for follows, likes, messages, fan subscriptions, fan-only chat, and supporter perks. See the [feature catalog](../features.md) for the full product surface.
 
 ---
 
@@ -11,7 +11,7 @@ You do **not** need an account to listen or to use public chat. You only need an
    - **Profile:** `https://tahti.live/u/artist-username`
    - **Release / smart link:** `https://tahti.live/r/release-slug`
 2. On the **channel** page you see the player, archive list, and chat on the side.
-3. On the **profile** you see releases and a link to their channel and subscribe page.
+3. On the **profile** you see biography, latest music, archive, collections, upcoming events, and the artist channel.
 
 **Tip:** Bookmark the channel URL if you come back often.
 
@@ -25,7 +25,7 @@ You do **not** need an account to listen or to use public chat. You only need an
 
 **Why is there a delay?** Live web audio is often 10–30 seconds behind the DJ’s room. That is normal.
 
-**Sound quality:** Free streams are MP3-class quality. Artists who are Tahti members can offer higher quality to supporters (see fan subscribe below).
+**Sound quality:** Free-tier artist channels use MP3 delivery. Tahti ry member artists can provide lossless-quality delivery to their listeners; this is an artist membership benefit, not a listener paywall.
 
 ---
 
@@ -99,7 +99,11 @@ You use those the same way as on Tahti — play audio in the iframe.
 
 ---
 
-## 8. Transparency (where the money goes)
+## 8. Follow, like, queue, and message
+
+When signed in, you can follow artists, like tracks, add playable items to your queue, and message artists you follow or who follow you. Queue actions confirm when an item is added.
+
+## 9. Transparency (where the money goes)
 
 Curious about the cooperative’s finances?
 

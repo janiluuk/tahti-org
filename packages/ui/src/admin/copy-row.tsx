@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button } from './button'
 import { Code } from './layout'
 
@@ -14,6 +14,8 @@ export interface CopyRowProps {
   copiedLabel?: string
   /** Mask the value until explicitly revealed. Use for stream keys/passwords — never render secrets in the DOM on first paint. */
   secret?: boolean
+  /** Optional compact action rendered beside reveal/copy (for example key rotation). */
+  action?: ReactNode
 }
 
 const MASK = '••••••••••••••••••••'
@@ -24,6 +26,7 @@ export function CopyRow({
   copyLabel = 'Copy',
   copiedLabel = 'Copied!',
   secret = false,
+  action,
 }: CopyRowProps) {
   const [copied, setCopied] = useState(false)
   const [revealed, setRevealed] = useState(!secret)
@@ -53,6 +56,7 @@ export function CopyRow({
       <Button type="button" variant="ghost" size="sm" onClick={copy}>
         {copied ? copiedLabel : copyLabel}
       </Button>
+      {action}
     </div>
   )
 }

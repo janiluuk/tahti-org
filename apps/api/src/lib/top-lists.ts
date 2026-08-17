@@ -113,9 +113,14 @@ export async function buildTopListsByDimension(
     dimension: 'type' | 'genre'
     limitPerBucket?: number
     sort?: 'desc' | 'asc'
+    userId?: string
   },
 ): Promise<TopListBucket[]> {
-  const ranked = await rankedEntriesSince(prisma, opts.since)
+  const ranked = await rankedEntriesSince(
+    prisma,
+    opts.since,
+    opts.userId ? { channel: { userId: opts.userId } } : {},
+  )
   if (opts.sort === 'asc') ranked.reverse()
   const buckets = new Map<string, TopListEntry[]>()
   for (const entry of ranked) {

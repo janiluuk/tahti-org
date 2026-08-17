@@ -514,6 +514,7 @@ enum CollectionStyle {
   EP
   SINGLE
   DJ_SET_SERIES
+  PODCAST
   LIVE_ARCHIVE
   COMPILATION
   PLAYLIST
@@ -1179,6 +1180,8 @@ model Channel {
 
   archiveItems      ArchiveItem[]
   broadcasts        Broadcast[]
+  liveShowSeries    LiveShowSeries[]
+  scheduledLiveShows ScheduledLiveShow[]
   announcements     ChannelAnnouncement[]
   chatBans          ChatBan[]
   chatMessages      ChatMessage[]
@@ -1313,15 +1316,20 @@ model Broadcast {
   archiveItemId String?             @unique
   /// Show name set in Broadcasting Setup step 3 (pre-flight). Falls back to a generated title if unset.
   title         String?
+  /// Description copied from a scheduled show series and later used by the archive item.
+  description   String?
   /// Live set vs talk show (solo or with guests).
   showType      BroadcastShowType   @default(LIVE_SET)
   /// Chronological Tahti Radio episode index when this session is for a booked slot.
   episodeNumber Int?
   /// Short editable line under the episode (seeded from RadioSlotBooking.note).
   tagline       String?
+  artworkUrl    String?
   /// Booked slot this session is linked to (set when going live in the T−30m window).
   radioSlotBookingId String?
   radioSlotBooking   RadioSlotBooking? @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
+  scheduledLiveShowId String?           @unique
+  scheduledLiveShow   ScheduledLiveShow? @relation(fields: [scheduledLiveShowId], references: [id], onDelete: SetNull)
   visibility    BroadcastVisibility @default(PUBLIC)
   autoArchive   Boolean             @default(true)
   /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
@@ -1331,6 +1339,57 @@ model Broadcast {
 
   @@index([channelId, startedAt(sort: Desc)])
   @@index([radioSlotBookingId])
+  @@schema("channel")
+}
+
+/// Reusable defaults for an artist's recurring live programme.
+model LiveShowSeries {
+  id                     String              @id @default(cuid())
+  channelId              String
+  channel                Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  name                   String
+  description            String?
+  tagline                String?
+  artworkUrl             String?
+  showType               BroadcastShowType   @default(LIVE_SET)
+  visibility             BroadcastVisibility @default(PUBLIC)
+  autoArchive            Boolean             @default(true)
+  episodeNumberEnabled   Boolean             @default(true)
+  nextEpisodeNumber      Int                 @default(1)
+  scheduledShows         ScheduledLiveShow[]
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+/// A concrete occurrence. Defaults are snapshotted so later series edits do not
+/// change an already announced show.
+model ScheduledLiveShow {
+  id            String              @id @default(cuid())
+  channelId     String
+  channel       Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  seriesId      String
+  series        LiveShowSeries      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  startAt       DateTime
+  episodeNumber Int?
+  title         String
+  description   String?
+  tagline       String?
+  venue         String?
+  location      String?
+  artworkUrl    String?
+  showType      BroadcastShowType
+  visibility    BroadcastVisibility
+  autoArchive   Boolean
+  canceledAt    DateTime?
+  broadcast     Broadcast?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([channelId, startAt])
+  @@index([seriesId, startAt])
   @@schema("channel")
 }
 

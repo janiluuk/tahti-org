@@ -10,72 +10,9 @@ import { ButtonIcon, SidebarNavIconSvg, Button } from '@tahti/ui'
 import type { CollectionOption } from '../upload-actions'
 import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
+import { extractUploadTags, type TaggedMeta } from './upload-metadata'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
-interface TaggedMeta {
-  title?: string
-  artist?: string
-  year?: number
-  genre?: string
-  coverDataUrl?: string
-  durationSec?: number
-  isLossless?: boolean
-  codec?: string
-  fromTag: Set<string>
-}
-
-async function extractTags(file: File): Promise<TaggedMeta> {
-  try {
-    const { parseBlob } = await import('music-metadata')
-    // Only read first 1 MB — tags are in the file header
-    const slice = file.slice(0, 1024 * 1024)
-    const sliceFile = new File([slice], file.name, { type: file.type })
-    const meta = await parseBlob(sliceFile, { skipCovers: false })
-
-    const fromTag = new Set<string>()
-    const result: TaggedMeta = { fromTag }
-
-    if (meta.common.title) {
-      result.title = meta.common.title
-      fromTag.add('title')
-    }
-    if (meta.common.artist) {
-      result.artist = meta.common.artist
-      fromTag.add('artist')
-    }
-    if (meta.common.year) {
-      result.year = meta.common.year
-      fromTag.add('year')
-    }
-    if (meta.common.genre?.[0]) {
-      result.genre = meta.common.genre[0]
-      fromTag.add('genre')
-    }
-    if (meta.format.duration) result.durationSec = Math.round(meta.format.duration)
-    if (meta.format.lossless !== undefined) result.isLossless = meta.format.lossless
-    if (meta.format.codec) result.codec = meta.format.codec
-
-    // Extract cover art — decode to thumbnail to avoid rendering huge jpegs
-    const pic = meta.common.picture?.[0]
-    if (pic) {
-      const blob = new Blob([pic.data as BlobPart], { type: pic.format })
-      const url = URL.createObjectURL(blob)
-      const img = await createImageBitmap(blob, { resizeWidth: 200, resizeHeight: 200 })
-      const canvas = document.createElement('canvas')
-      canvas.width = img.width
-      canvas.height = img.height
-      canvas.getContext('2d')!.drawImage(img, 0, 0)
-      img.close()
-      URL.revokeObjectURL(url)
-      result.coverDataUrl = canvas.toDataURL('image/jpeg', 0.85)
-    }
-
-    return result
-  } catch {
-    return { fromTag: new Set() }
-  }
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -104,11 +41,14 @@ export function UploadInProgress({
   const [tags, setTags] = useState<TaggedMeta | null>(null)
   const [tagsLoading, setTagsLoading] = useState(true)
 
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(
+    () => pending?.file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ') ?? '',
+  )
   const [artist, setArtist] = useState('')
   const [year, setYear] = useState('')
   const [genre, setGenre] = useState('')
   const [contentType, setContentType] = useState<ContentType>('track')
+  const contentTypeTouchedRef = useRef(false)
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [coverDataUrl, setCoverDataUrl] = useState<string | null>(null)
 
@@ -131,16 +71,20 @@ export function UploadInProgress({
   // edit made while the upload is in flight.
   const handleCompleteRef = useRef<(etag: string) => void>(() => {})
 
-  // Extract tags and start upload on mount
+  // Upload immediately. Tag extraction is optional enrichment and must never
+  // hold the audio transfer hostage (some WAV chunk layouts are expensive to parse).
   useEffect(() => {
     if (!pending) {
       setUploadState('no-file')
       setTagsLoading(false)
       return
     }
+
+    startUpload(pending.file, pending.uploadUrl)
+
     void (async () => {
       setTagsLoading(true)
-      const meta = await extractTags(pending.file)
+      const meta = await extractUploadTags(pending.file)
       setTags(meta)
       if (meta.title) setTitle(meta.title)
       if (meta.artist) setArtist(meta.artist)
@@ -148,13 +92,15 @@ export function UploadInProgress({
       if (meta.genre) setGenre(meta.genre)
       if (meta.coverDataUrl) setCoverDataUrl(meta.coverDataUrl)
       // Auto-detect content type: set if duration ≥ 20 min and no year tag
-      if (meta.durationSec && meta.durationSec >= 1200 && !meta.fromTag.has('year')) {
+      if (
+        !contentTypeTouchedRef.current &&
+        meta.durationSec &&
+        meta.durationSec >= 1200 &&
+        !meta.fromTag.has('year')
+      ) {
         setContentType('set')
       }
       setTagsLoading(false)
-
-      // Start upload immediately after tags extracted
-      startUpload(pending.file, pending.uploadUrl)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, [])
@@ -224,6 +170,7 @@ export function UploadInProgress({
         artist: artist || undefined,
         year: year ? Number(year) : undefined,
         genre: genre || undefined,
+        metadata: { contentType: contentType === 'set' ? 'LIVE' : 'STUDIO' },
         collectionSlugs: selectedCollections,
         source: pending?.source,
       })
@@ -260,7 +207,7 @@ export function UploadInProgress({
       }
       setUploadState('done') // timeout — assume done
     },
-    [uploadId, title, artist, year, genre, selectedCollections, pending?.source],
+    [uploadId, title, artist, year, genre, contentType, selectedCollections, pending?.source],
   )
 
   useEffect(() => {
@@ -472,16 +419,26 @@ export function UploadInProgress({
           </div>
 
           <div className="upload-progress__field">
-            <label className="upload-progress__label">Type</label>
-            <div className="upload-progress__seg" role="group">
+            <label className="upload-progress__label">What are you uploading?</label>
+            <div className="upload-progress__seg" role="radiogroup" aria-label="Upload type">
               {CONTENT_TYPES.map((t) => (
                 <button
                   key={t}
                   type="button"
+                  role="radio"
+                  aria-checked={contentType === t}
                   className={`upload-progress__seg-btn${contentType === t ? ' upload-progress__seg-btn--active' : ''}`}
-                  onClick={() => setContentType(t)}
+                  onClick={() => {
+                    contentTypeTouchedRef.current = true
+                    setContentType(t)
+                  }}
                 >
-                  {t === 'track' ? 'Track' : 'Set / Mix'}
+                  <strong>{t === 'track' ? 'Track' : 'Set / Mix'}</strong>
+                  <span>
+                    {t === 'track'
+                      ? 'A single song or production'
+                      : 'A DJ set, mix, or long-form recording'}
+                  </span>
                 </button>
               ))}
             </div>

@@ -220,6 +220,7 @@ function ChainTile({
     >
       <div className="plug__head">
         <span className="plug__name">
+          <span className={cx('plug__status-dot', enabled && 'plug__status-dot--enabled')} aria-hidden />
           {position} · {name}
         </span>
         <Switch checked={enabled} onChange={onToggle} label={`${name} enabled`} />
@@ -263,6 +264,11 @@ export function ProAudioEditor({
   const [focusedInstanceId, setFocusedInstanceId] = useState<string>(
     () => initialV2Ref.current.plugins[0]!.instanceId,
   )
+  const [pluginsExpanded, setPluginsExpanded] = useState(() =>
+    initialV2Ref.current.plugins.some((plugin) => plugin.enabled),
+  )
+  const [previewMode, setPreviewMode] = useState<'before' | 'after'>('after')
+  const [previewBypassedPluginId, setPreviewBypassedPluginId] = useState<string | null>(null)
 
   const [autosaveLabel, setAutosaveLabel] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -549,9 +555,26 @@ export function ProAudioEditor({
     const source = previewSourceRef.current
     if (!audio || !source) return
     previewRef.current?.disconnect()
-    previewRef.current = attachPreviewGraph(source, audio, v2ToV1(editList))
+    const previewSourceList = previewBypassedPluginId
+      ? {
+          ...editList,
+          plugins: editList.plugins.map((plugin) =>
+            plugin.instanceId === previewBypassedPluginId ? { ...plugin, enabled: false } : plugin,
+          ),
+        }
+      : editList
+    const previewEdit = v2ToV1(previewSourceList)
+    if (previewMode === 'before') {
+      previewEdit.gainDb = 0
+      previewEdit.loudnorm.enabled = false
+      previewEdit.eq.enabled = false
+      previewEdit.comp.enabled = false
+      previewEdit.limiter.enabled = false
+      previewEdit.filter.enabled = false
+    }
+    previewRef.current = attachPreviewGraph(source, audio, previewEdit)
     return () => previewRef.current?.disconnect()
-  }, [editList])
+  }, [editList, previewMode, previewBypassedPluginId])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -1092,9 +1115,6 @@ export function ProAudioEditor({
       <header className="pro-editor-topbar">
         <div className="pro-editor-topbar__left">
           <div className="pro-editor-topbar__title-row">
-            <Link href="/dashboard" className="pro-editor-exit">
-              ← Archive
-            </Link>
             <h1 className="pro-editor-title">{title}</h1>
             <span className="pro-editor-meta">{formatDuration(editList.sourceDuration)}</span>
             <span className="pro-editor-subline">
@@ -1141,13 +1161,6 @@ export function ProAudioEditor({
           >
             ⊙ {renderModePill}
           </span>
-          <Button onClick={openClipDialog} variant="ghost">
-            Create clip
-          </Button>
-          <Button onClick={() => setExportDialogOpen(true)} variant="primary">
-            <ButtonIcon name="download" />
-            Export →
-          </Button>
         </div>
       </header>
 
@@ -1230,7 +1243,8 @@ export function ProAudioEditor({
               <button
                 type="button"
                 className="pro-editor-tool-btn"
-                onClick={() => setSpan(span * 0.8)}
+                onClick={() => setSpan(span * 1.25)}
+                aria-label="Zoom out"
               >
                 −
               </button>
@@ -1246,7 +1260,8 @@ export function ProAudioEditor({
               <button
                 type="button"
                 className="pro-editor-tool-btn"
-                onClick={() => setSpan(span * 1.25)}
+                onClick={() => setSpan(span * 0.8)}
+                aria-label="Zoom in"
               >
                 +
               </button>
@@ -1255,11 +1270,12 @@ export function ProAudioEditor({
                 onClick={() => {
                   setViewStart(0)
                   setViewEnd(1)
+                  setSelection(null)
                 }}
                 variant="ghost"
                 size="sm"
               >
-                Fit
+                Reset zoom
               </Button>
               <Button
                 disabled={!selection}
@@ -1468,8 +1484,35 @@ export function ProAudioEditor({
             <span className="pro-editor-time">{formatDuration(currentTime)}</span>
             <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
             <span className="pro-editor-preview-note">
-              preview is approximate · render for final result
+              {previewMode === 'before' ? 'original chain bypassed' : 'effects preview'} · render
+              for final result
             </span>
+            <div className="pro-editor-preview-compare" role="group" aria-label="Plugin chain preview">
+              <button
+                type="button"
+                className={cx('pro-editor-preview-compare__btn', previewMode === 'before' && 'is-active')}
+                onClick={() => {
+                  setPreviewBypassedPluginId(null)
+                  setPreviewMode('before')
+                }}
+              >
+                Before
+              </button>
+              <button
+                type="button"
+                className={cx('pro-editor-preview-compare__btn', previewMode === 'after' && 'is-active')}
+                onClick={() => {
+                  setPreviewBypassedPluginId(null)
+                  setPreviewMode('after')
+                }}
+              >
+                After
+              </button>
+              <Button onClick={() => setExportDialogOpen(true)} variant="primary" size="sm">
+                <ButtonIcon name="download" />
+                Export
+              </Button>
+            </div>
             <div className="pro-editor-transport-right">
               <div className="pro-editor-out-meter">
                 <div className="pro-editor-out-meter__tp" style={{ left: '85%' }} />
@@ -1487,10 +1530,19 @@ export function ProAudioEditor({
           {/* ---- Plugin chain strip ---- */}
           <div className="pro-editor-chain">
             <div className="pro-editor-chain__header">
-              <span>PLUGIN CHAIN · SIGNAL FLOW →</span>
-              <span>click to focus · toggle to bypass</span>
+              <span>
+                PLUGIN CHAIN · {editList.plugins.filter((plugin) => plugin.enabled).length} ACTIVE
+              </span>
+              <button
+                type="button"
+                className="pro-editor-chain__collapse"
+                aria-expanded={pluginsExpanded}
+                onClick={() => setPluginsExpanded((expanded) => !expanded)}
+              >
+                {pluginsExpanded ? 'Collapse' : 'Open plugins'}
+              </button>
             </div>
-            <div className="pro-editor-chain__strip">
+            {pluginsExpanded ? <div className="pro-editor-chain__strip">
               {editList.plugins.map((plugin, i) => {
                 let summary = ''
                 if (plugin.pluginId === 'gain')
@@ -1532,16 +1584,34 @@ export function ProAudioEditor({
                         onFocus={() => setFocusedInstanceId(plugin.instanceId)}
                         onToggle={(v) => togglePlugin(plugin.instanceId, v)}
                       />
+                      <button
+                        type="button"
+                        className={cx(
+                          'pro-editor-plugin-preview',
+                          previewBypassedPluginId === plugin.instanceId && 'is-active',
+                        )}
+                        disabled={!plugin.enabled}
+                        onClick={() => {
+                          setPreviewMode('after')
+                          setPreviewBypassedPluginId((current) =>
+                            current === plugin.instanceId ? null : plugin.instanceId,
+                          )
+                        }}
+                      >
+                        {previewBypassedPluginId === plugin.instanceId
+                          ? 'Playing without this plugin'
+                          : 'Preview before / after'}
+                      </button>
                     </div>
                   </div>
                 )
               })}
-            </div>
+            </div> : <p className="pro-editor-chain__empty">No active effects. Open plugins to build a chain.</p>}
           </div>
 
           {/* ---- Focused plugin panel ---- */}
-          <div className="pro-editor-panel-area">
-            <div className="pro-editor-panel">
+          {pluginsExpanded ? <div className="pro-editor-panel-area">
+            <div className={cx('pro-editor-panel', !focusedPlugin.enabled && 'pro-editor-panel--disabled')}>
               <div className="pro-editor-panel__header">
                 <div className="pro-editor-panel__heading">
                   <h2 className="pro-editor-panel__title">
@@ -1626,7 +1696,7 @@ export function ProAudioEditor({
                 drag knob · double-click to type · ⌥drag = fine · scroll = step
               </p>
             </div>
-          </div>
+          </div> : null}
 
           {/* ---- Render summary bar ---- */}
           <div className="pro-editor-render-bar">
@@ -1732,7 +1802,7 @@ export function ProAudioEditor({
                   open clip editor
                 </Link>
                 {' · '}
-                <Link href="/dashboard/settings/notifications#announcements">announcements</Link>
+                <Link href="/dashboard/settings/distribution">announcements</Link>
               </p>
             )}
             <div className="pro-editor-dialog__actions">

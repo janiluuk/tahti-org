@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ButtonIcon, Button, Panel } from '@tahti/ui'
+import { AvatarTile, ButtonIcon, Button, Panel, StudioTabs } from '@tahti/ui'
 import type { ArtistKind, AvatarTheme, ChannelMemberView, LogoPlacement } from '@tahti/shared'
 import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelIdentityPanel, { type ChannelIdentityDraft } from '../../channel-identity-panel'
@@ -39,11 +39,6 @@ export interface ArtistInfoFormData {
   logoPlacement: LogoPlacement | null
   countryCode: string | null
   pronouns: string | null
-  showJoinDate: boolean
-  showFollowers: boolean
-  showFollowing: boolean
-  showDailyListeners: boolean
-  chatEnabled: boolean
   defaultLocation: string | null
   genres: string[]
   bio: string
@@ -72,11 +67,6 @@ export function ArtistInfoForm({
     genres: initial.genres,
   })
   const [bio, setBio] = useState(initial.bio)
-  const [showJoinDate, setShowJoinDate] = useState(initial.showJoinDate)
-  const [showFollowers, setShowFollowers] = useState(initial.showFollowers)
-  const [showFollowing, setShowFollowing] = useState(initial.showFollowing)
-  const [showDailyListeners, setShowDailyListeners] = useState(initial.showDailyListeners)
-  const [chatEnabled, setChatEnabled] = useState(initial.chatEnabled)
   const [artistKind, setArtistKind] = useState<ArtistKind>(initial.artistKind)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -97,11 +87,6 @@ export function ArtistInfoForm({
         logoPlacement: identity.logoPlacement,
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
-        showJoinDate,
-        showFollowers,
-        showFollowing,
-        showDailyListeners,
-        chatEnabled,
         defaultLocation: identity.defaultLocation,
         artistKind,
         socialLinks: {
@@ -123,7 +108,7 @@ export function ArtistInfoForm({
   }
 
   return (
-    <div className="studio-settings-stack">
+    <div className="artist-info-shell">
       <div className="studio-channel-editor__publish-bar">
         <div className="studio-channel-editor__publish-bar-notice">
           {error && <p className="studio-notice studio-notice--error">{error}</p>}
@@ -135,109 +120,90 @@ export function ArtistInfoForm({
         </Button>
       </div>
 
-      <Panel
-        title="Artist identity"
-        description="Who you are — shown at the top of your channel page."
-      >
-        <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
-      </Panel>
-
-      <Panel title="Act type" description="Are you a solo artist (e.g. DJ) or a collective / band?">
-        <div className="studio-kind-toggle" role="radiogroup" aria-label="Act type">
-          <label
-            className={`studio-kind-toggle__option${artistKind === 'SINGLE' ? ' studio-kind-toggle__option--active' : ''}`}
-          >
-            <input
-              type="radio"
-              name="artistKind"
-              value="SINGLE"
-              checked={artistKind === 'SINGLE'}
-              onChange={() => setArtistKind('SINGLE')}
-            />
-            <span className="studio-kind-toggle__title">Single artist</span>
-            <span className="studio-kind-toggle__hint">Solo DJ, producer, or performer</span>
-          </label>
-          <label
-            className={`studio-kind-toggle__option${artistKind === 'COLLECTIVE' ? ' studio-kind-toggle__option--active' : ''}`}
-          >
-            <input
-              type="radio"
-              name="artistKind"
-              value="COLLECTIVE"
-              checked={artistKind === 'COLLECTIVE'}
-              onChange={() => setArtistKind('COLLECTIVE')}
-            />
-            <span className="studio-kind-toggle__title">Collective</span>
-            <span className="studio-kind-toggle__hint">Band, duo, label, or crew</span>
-          </label>
+      <section className="artist-info-summary" aria-label="Artist profile preview">
+        <AvatarTile
+          size="lg"
+          name={identity.displayName || initial.displayName}
+          src={identity.avatarPosterUrl ?? identity.avatarUrl}
+          bordered
+        />
+        <div className="artist-info-summary__copy">
+          <span className="artist-info-summary__eyebrow">Public identity</span>
+          <h2>{identity.displayName || 'Untitled artist'}</h2>
+          <p>
+            {[identity.defaultLocation, ...identity.genres.slice(0, 3)].filter(Boolean).join(' · ') ||
+              'Add a location and a few genres to sharpen your profile.'}
+          </p>
         </div>
-      </Panel>
+        <span className="artist-info-summary__kind">
+          {artistKind === 'COLLECTIVE' ? 'Collective' : 'Solo artist'}
+        </span>
+      </section>
 
-      <div id="members">
-        <MembersPanel initialMembers={initialMembers} artistKind={artistKind} />
-      </div>
-
-      <Panel
-        title="Visibility"
-        description="What shows on your public profile — everything defaults to visible."
+      <StudioTabs
+        defaultTab="identity"
+        syncHash
+        hashAliases={{ members: 'people' }}
+        className="artist-info-tabs"
       >
-        <label className="studio-toggle-row">
-          <input
-            type="checkbox"
-            className="studio-toggle-checkbox"
-            checked={showJoinDate}
-            onChange={(e) => setShowJoinDate(e.target.checked)}
-          />
-          <span className="studio-toggle-label">Show join date on my profile</span>
-        </label>
-        <p className="studio-text-muted-sm studio-mt-xs">
-          Displays &ldquo;Member since {new Date().getFullYear()}&rdquo; on your public profile and
-          channel page.
-        </p>
-        <label className="studio-toggle-row studio-mt-sm">
-          <input
-            type="checkbox"
-            className="studio-toggle-checkbox"
-            checked={showFollowers}
-            onChange={(e) => setShowFollowers(e.target.checked)}
-          />
-          <span className="studio-toggle-label">Show my followers on my profile</span>
-        </label>
-        <label className="studio-toggle-row studio-mt-sm">
-          <input
-            type="checkbox"
-            className="studio-toggle-checkbox"
-            checked={showFollowing}
-            onChange={(e) => setShowFollowing(e.target.checked)}
-          />
-          <span className="studio-toggle-label">Show who I follow on my profile</span>
-        </label>
-        <label className="studio-toggle-row studio-mt-sm">
-          <input
-            type="checkbox"
-            className="studio-toggle-checkbox"
-            checked={showDailyListeners}
-            onChange={(e) => setShowDailyListeners(e.target.checked)}
-          />
-          <span className="studio-toggle-label">Show today’s listener count in my chat</span>
-        </label>
-        <label className="studio-toggle-row studio-mt-sm">
-          <input
-            type="checkbox"
-            className="studio-toggle-checkbox"
-            checked={chatEnabled}
-            onChange={(e) => setChatEnabled(e.target.checked)}
-          />
-          <span className="studio-toggle-label">Enable live chat on my channel</span>
-        </label>
-        <p className="studio-text-muted-sm studio-mt-xs">
-          Hides the chat panel from your channel page entirely. Turn it back on any time.
-        </p>
-      </Panel>
+        <StudioTabs.List aria-label="Artist info sections">
+          <StudioTabs.Trigger value="identity">Identity</StudioTabs.Trigger>
+          <StudioTabs.Trigger value="story">Story</StudioTabs.Trigger>
+          <StudioTabs.Trigger value="people">People</StudioTabs.Trigger>
+        </StudioTabs.List>
 
-      <Panel title="Bio">
-        <ChannelBioPanel initial={{ bio }} onDraftChange={setBio} />
-      </Panel>
+        <StudioTabs.Panel value="identity">
+          <Panel
+            title="Identity"
+            description="Name, image, logo, location, and the genres that define you."
+          >
+            <div className="artist-info-identity-fields">
+              <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
+            </div>
+          </Panel>
+        </StudioTabs.Panel>
+
+        <StudioTabs.Panel value="story">
+          <Panel
+            title="Biography"
+            description="Keep it memorable. Lead with what makes the project distinct."
+          >
+            <ChannelBioPanel initial={{ bio }} onDraftChange={setBio} />
+          </Panel>
+        </StudioTabs.Panel>
+
+        <StudioTabs.Panel value="people">
+          <Panel title="Project type" headerTight>
+            <div className="artist-info-kind" role="radiogroup" aria-label="Act type">
+              <label className={artistKind === 'SINGLE' ? 'is-active' : undefined}>
+                <input
+                  type="radio"
+                  name="artistKind"
+                  value="SINGLE"
+                  checked={artistKind === 'SINGLE'}
+                  onChange={() => setArtistKind('SINGLE')}
+                />
+                <span>Solo artist</span>
+                <small>DJ, producer, or performer</small>
+              </label>
+              <label className={artistKind === 'COLLECTIVE' ? 'is-active' : undefined}>
+                <input
+                  type="radio"
+                  name="artistKind"
+                  value="COLLECTIVE"
+                  checked={artistKind === 'COLLECTIVE'}
+                  onChange={() => setArtistKind('COLLECTIVE')}
+                />
+                <span>Collective</span>
+                <small>Band, duo, label, or crew</small>
+              </label>
+            </div>
+          </Panel>
+          <div id="members" className="artist-info-members">
+            <MembersPanel initialMembers={initialMembers} artistKind={artistKind} />
+          </div>
+        </StudioTabs.Panel>
+      </StudioTabs>
 
       <p className="studio-text-muted-sm">
         Streaming platforms, profile links, and connected accounts are under{' '}

@@ -45,6 +45,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'Switch Tahti Radio to a booked artist live source at slot boundaries',
   },
   {
+    name: 'channel-fallback-reconciler',
+    pattern: '* * * * *',
+    jobId: 'channel-fallback-reconciler-cron',
+    description: 'Bootstrap fallback-enabled artist channels into a running 24/7 container',
+  },
+  {
     name: 'hls-minio-sync',
     // A once-a-minute cadence left the public manifest (a ~16s sliding window —
     // segments=4 × segment_duration=4s in the Liquidsoap template) fully stale

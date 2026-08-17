@@ -11,7 +11,7 @@ import {
   fetchReleaseTrackVersions,
   prepareReleaseTrackVersionUpload,
 } from './release-actions'
-import { Button } from '@tahti/ui'
+import { Button, FileDropzone } from '@tahti/ui'
 
 export function ReleaseTrackVersionPanel({
   releaseId,
@@ -127,19 +127,15 @@ export function ReleaseTrackVersionPanel({
           onChange={(e) => setVersionLabel(e.target.value)}
           className="studio-input studio-flex-1"
         />
-        <label className="studio-text-muted-sm">
-          New audio
-          <input
-            type="file"
-            accept="audio/*"
-            disabled={uploading}
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) void handleUpload(f)
-            }}
-            className="studio-file-input"
-          />
-        </label>
+        <FileDropzone
+          accept="audio/*"
+          disabled={uploading}
+          label={uploading ? 'Uploading…' : 'Drop replacement audio or click'}
+          hint="WAV, FLAC, MP3, or supported audio"
+          onFiles={(files) => {
+            if (files[0]) void handleUpload(files[0])
+          }}
+        />
       </div>
       {error && <p className="studio-text-error">{error}</p>}
     </details>

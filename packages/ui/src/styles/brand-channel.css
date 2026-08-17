@@ -711,7 +711,8 @@
 }
 
 [data-tahti-ui='brand'] .ch-artist-header {
-  margin-bottom: 1.5rem;
+  margin: 0 0 2rem;
+  padding: clamp(20px, 3vw, 34px);
 }
 
 /* Owner/board-only Overview/Manage tab bar on the channel page. */
@@ -763,9 +764,28 @@
 }
 
 [data-tahti-ui='brand'] .ch-manage-stats__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 0.75rem;
+  border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--card2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats__cell:hover,
+[data-tahti-ui='brand'] .ch-manage-stats__cell:focus-visible {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+  transform: translateY(-1px);
 }
 
 [data-tahti-ui='brand'] .ch-manage-stats__label {
@@ -781,6 +801,136 @@
   color: var(--text);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats__detail-hint {
+  margin-top: 0.45rem;
+  color: var(--cyan);
+  font-size: var(--text-micro);
+  opacity: 0.78;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__card {
+  width: min(100%, 620px);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow-y: auto;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__header h2 {
+  margin: 0.35rem 0 0;
+  color: var(--text);
+  font-size: var(--text-xl);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__demo {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  color: var(--amber);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card2);
+  color: var(--text);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__hero-value {
+  margin-top: 1.5rem;
+  color: var(--cyan);
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__summary {
+  margin: 0.65rem 0 1.5rem;
+  color: var(--muted2);
+  line-height: 1.55;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__row dt {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__row span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: var(--text-micro);
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__row dd {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-metric-modal__footnote {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 560px) {
+  [data-tahti-ui='brand'] .ch-metric-modal__breakdown {
+    grid-template-columns: 1fr;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-manage-transport {
@@ -921,7 +1071,8 @@
 }
 
 [data-tahti-ui='brand'] .ch-artist-header-row {
-  margin-bottom: 0.5rem;
+  gap: clamp(14px, 2vw, 22px);
+  margin-bottom: 0.75rem;
 }
 
 [data-tahti-ui='brand'] .ch-artist-avatar {
@@ -1617,6 +1768,11 @@
   [data-tahti-ui='brand'] .ch-main {
     border-right: none;
     padding: 16px;
+  }
+
+  [data-tahti-ui='brand'] .ch-artist-header {
+    margin-bottom: 1.5rem;
+    padding: 18px 10px;
   }
 }
 
@@ -3888,15 +4044,34 @@
   top: calc(100% + 6px);
   z-index: 30;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
-  min-width: 10.5rem;
+  min-width: max-content;
   padding: 0.5rem;
   border-radius: var(--radius);
   border: 1px solid var(--border-hover);
   background: var(--card);
   box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-main-upcoming {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--amber) 8%, var(--card));
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .prof-main-upcoming a {
+  color: var(--amber);
+  white-space: nowrap;
 }
 
 [data-tahti-ui='brand'] .prof-cta-btn,
@@ -7734,4 +7909,36 @@ html.gpu-limited .bg-canvas--subtle {
 
 html.gpu-limited [data-tahti-ui='brand'] .ch-player-art-backdrop {
   filter: none;
+}
+[data-tahti-ui='brand'] .smartlink-playable-tracks {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+[data-tahti-ui='brand'] .smartlink-playable-tracks__row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .catalog-playback-buttons {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .catalog-playback-buttons button {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
 }

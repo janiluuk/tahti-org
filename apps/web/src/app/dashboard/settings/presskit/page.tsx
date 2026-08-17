@@ -4,5 +4,5 @@
 import { redirect } from 'next/navigation'
 
 export default function PressKitSettingsRedirect() {
-  redirect('/dashboard/settings/media#presskit')
+  redirect('/dashboard/channel/edit#presskit')
 }

@@ -27,7 +27,7 @@ export function HearthisEmbedRow({ title, embedUri }: Props) {
           title={title}
           src={hearthisEmbedSrc(embedUri)}
           width="100%"
-          height="120"
+          height="150"
           style={{ border: 0 }}
           allow="autoplay"
           loading="lazy"

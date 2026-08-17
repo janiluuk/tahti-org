@@ -24,6 +24,7 @@ export default function ChannelGalleryPanel({
   initial,
   bare = false,
   hideSave = false,
+  showVideoBackground = true,
   onDraftChange,
 }: {
   initial: {
@@ -34,6 +35,8 @@ export default function ChannelGalleryPanel({
   bare?: boolean
   /** When true, omit the save button (parent owns Publish). */
   hideSave?: boolean
+  /** Only relevant when the channel header uses the video-loop style. */
+  showVideoBackground?: boolean
   /** Fires on every edit (before save) so a live preview can mirror the draft. */
   onDraftChange?: (draft: {
     galleryMode: ChannelGalleryMode
@@ -123,7 +126,7 @@ export default function ChannelGalleryPanel({
         </p>
       )}
 
-      <label className="studio-field" htmlFor="video-background">
+      {showVideoBackground && <label className="studio-field" htmlFor="video-background">
         <span className="studio-label">Channel video backdrop (optional)</span>
         <span className="studio-text-muted-sm studio-mb-sm">
           HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page.
@@ -137,7 +140,7 @@ export default function ChannelGalleryPanel({
           onChange={(e) => setVideoBackgroundUrl(e.target.value)}
           className="studio-input"
         />
-      </label>
+      </label>}
 
       {galleryMode !== 'NONE' && (
         <label className="studio-field" htmlFor="gallery-images">

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { LiveChatPanel, type LiveChatMessage } from '@tahti/ui'
+import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
 
 interface ChatMessage {
   id: string
@@ -56,8 +57,7 @@ export default function FanChatPanel({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!token || !channel) return
-    const wsUrl =
-      process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
+    const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
     let ws: WebSocket
     try {
       ws = new WebSocket(wsUrl)
