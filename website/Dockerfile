@@ -3,7 +3,7 @@ ARG NGINX_IMAGE=nginx:1.27-alpine
 FROM ${NGINX_IMAGE}
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html pitch.html /usr/share/nginx/html/
+COPY index.html /usr/share/nginx/html/
 COPY og-image.png editor.png dashboard.png channel-design.png /usr/share/nginx/html/
 COPY bg-audio.mp3 output_vhs.mp4 /usr/share/nginx/html/
 
