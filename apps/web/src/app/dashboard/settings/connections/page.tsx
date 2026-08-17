@@ -5,7 +5,41 @@ import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { fetchChannelEditorData } from '../../channel/_channel-editor-data'
 import { SocialConnectionsSection } from '../artist-info/_social-connections'
+import { MusicbrainzSettingsPanel } from '../../musicbrainz-settings-panel'
 import { ConnectionsForm } from './_connections-form'
+
+async function loadMusicbrainzSettings(apiUrl: string, sessionValue: string) {
+  try {
+    const [statusRes, defaultRes] = await Promise.all([
+      fetch(`${apiUrl}/api/me/musicbrainz`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/me/musicbrainz/default`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+    ])
+    const status = statusRes.ok
+      ? ((await statusRes.json()) as {
+          connected: boolean
+          username: string | null
+          configured: boolean
+        })
+      : { connected: false, username: null, configured: false }
+    const defaults = defaultRes.ok
+      ? ((await defaultRes.json()) as { defaultRegisterToMusicbrainz: boolean | null })
+      : { defaultRegisterToMusicbrainz: null }
+    return { ...status, defaultRegisterToMusicbrainz: defaults.defaultRegisterToMusicbrainz }
+  } catch {
+    return {
+      connected: false,
+      username: null,
+      configured: false,
+      defaultRegisterToMusicbrainz: null,
+    }
+  }
+}
 
 export default async function ConnectionsSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -16,11 +50,10 @@ export default async function ConnectionsSettingsPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const { links, streamingLinks, genres } = await fetchChannelEditorData(
-    apiUrl,
-    sessionValue,
-    user.channel.slug,
-  )
+  const [{ links, streamingLinks, genres }, musicbrainzState] = await Promise.all([
+    fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug),
+    loadMusicbrainzSettings(apiUrl, sessionValue),
+  ])
 
   return (
     <div>
@@ -41,6 +74,13 @@ export default async function ConnectionsSettingsPage() {
       <ConnectionsForm initial={{ links, streamingLinks }} genresCsv={genres.join(', ')}>
         <SocialConnectionsSection apiUrl={apiUrl} sessionValue={sessionValue} />
       </ConnectionsForm>
+
+      <MusicbrainzSettingsPanel
+        initialConnected={musicbrainzState.connected}
+        initialUsername={musicbrainzState.username}
+        initialConfigured={musicbrainzState.configured}
+        initialDefault={musicbrainzState.defaultRegisterToMusicbrainz}
+      />
     </div>
   )
 }

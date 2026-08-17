@@ -4,11 +4,11 @@
 import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { CommentSettingsPanel } from '../../comment-settings-panel'
-import { MusicbrainzSettingsPanel } from '../../musicbrainz-settings-panel'
 import { MentionsPanel } from '../../mentions-panel'
 import { NotificationPreferencesPanel } from '../notification-preferences-panel'
 import { fetchMyAnnouncements } from '../announcements/actions'
 import { AnnouncementsPanel } from '../announcements/_announcements-panel'
+import { SettingsTabs } from '../_settings-tabs'
 
 export default async function NotificationSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -19,10 +19,9 @@ export default async function NotificationSettingsPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [{ clips }, commentState, musicbrainzState] = await Promise.all([
+  const [{ clips }, commentState] = await Promise.all([
     fetchMyAnnouncements(),
     loadCommentSettings(apiUrl, sessionValue),
-    loadMusicbrainzSettings(apiUrl, sessionValue),
   ])
 
   return (
@@ -31,74 +30,41 @@ export default async function NotificationSettingsPage() {
         <div>
           <h1 className="studio-page-title">Notification settings</h1>
           <p className="studio-text-muted-sm studio-mt-xs">
-            Comments, mentions, announcement clips, and how Tahti reaches you.
+            Comments, mentions, announcement clips, and how Tahti reaches you. MusicBrainz
+            registration moved to{' '}
+            <a href="/dashboard/settings/connections" className="studio-link">
+              Connections
+            </a>
+            .
           </p>
         </div>
       </div>
 
-      <div id="email">
-        <NotificationPreferencesPanel />
-      </div>
-
-      <div id="comments">
-        <CommentSettingsPanel
-          initialChannelCommentsEnabled={commentState.channelCommentsEnabled}
-          initialDefaultTrackCommentsEnabled={commentState.defaultTrackCommentsEnabled}
-          initialDefaultChannelCommentsEnabled={commentState.defaultChannelCommentsEnabled}
-        />
-      </div>
-
-      <div id="musicbrainz">
-        <MusicbrainzSettingsPanel
-          initialConnected={musicbrainzState.connected}
-          initialUsername={musicbrainzState.username}
-          initialConfigured={musicbrainzState.configured}
-          initialDefault={musicbrainzState.defaultRegisterToMusicbrainz}
-        />
-      </div>
-
-      <div id="mentions">
-        <MentionsPanel />
-      </div>
-
-      <div id="announcements">
-        <AnnouncementsPanel initialClips={clips} />
-      </div>
+      <SettingsTabs
+        ariaLabel="Notification settings sections"
+        tabs={[
+          { id: 'alerts', label: 'Alerts', content: <NotificationPreferencesPanel /> },
+          {
+            id: 'comments',
+            label: 'Comments',
+            content: (
+              <CommentSettingsPanel
+                initialChannelCommentsEnabled={commentState.channelCommentsEnabled}
+                initialDefaultTrackCommentsEnabled={commentState.defaultTrackCommentsEnabled}
+                initialDefaultChannelCommentsEnabled={commentState.defaultChannelCommentsEnabled}
+              />
+            ),
+          },
+          { id: 'mentions', label: 'Mentions', content: <MentionsPanel /> },
+          {
+            id: 'announcements',
+            label: 'Announcement clips',
+            content: <AnnouncementsPanel initialClips={clips} />,
+          },
+        ]}
+      />
     </div>
   )
-}
-
-async function loadMusicbrainzSettings(apiUrl: string, sessionValue: string) {
-  try {
-    const [statusRes, defaultRes] = await Promise.all([
-      fetch(`${apiUrl}/api/me/musicbrainz`, {
-        headers: { Cookie: `tahti_session=${sessionValue}` },
-        cache: 'no-store',
-      }),
-      fetch(`${apiUrl}/api/me/musicbrainz/default`, {
-        headers: { Cookie: `tahti_session=${sessionValue}` },
-        cache: 'no-store',
-      }),
-    ])
-    const status = statusRes.ok
-      ? ((await statusRes.json()) as {
-          connected: boolean
-          username: string | null
-          configured: boolean
-        })
-      : { connected: false, username: null, configured: false }
-    const defaults = defaultRes.ok
-      ? ((await defaultRes.json()) as { defaultRegisterToMusicbrainz: boolean | null })
-      : { defaultRegisterToMusicbrainz: null }
-    return { ...status, defaultRegisterToMusicbrainz: defaults.defaultRegisterToMusicbrainz }
-  } catch {
-    return {
-      connected: false,
-      username: null,
-      configured: false,
-      defaultRegisterToMusicbrainz: null,
-    }
-  }
 }
 
 async function loadCommentSettings(apiUrl: string, sessionValue: string) {
