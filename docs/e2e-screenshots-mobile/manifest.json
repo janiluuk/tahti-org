@@ -185,7 +185,7 @@
     "role": "artist",
     "id": "release-detail",
     "file": "artist/release-detail.png",
-    "url": "/dashboard/releases/cmsn5lltn0006107f71kyi7ly",
+    "url": "/dashboard/releases/cmsxi74t7000612tsv94b03l1",
     "label": "Release detail"
   },
   {
@@ -199,21 +199,21 @@
     "role": "artist",
     "id": "archive-item",
     "file": "artist/archive-item.png",
-    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89",
+    "url": "/dashboard/archive/cmsxi74tx000s12tsin4c1hz9",
     "label": "Archive item preview"
   },
   {
     "role": "artist",
     "id": "archive-item-editor",
     "file": "artist/archive-item-editor.png",
-    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89/editor",
+    "url": "/dashboard/archive/cmsxi74tx000s12tsin4c1hz9/editor",
     "label": "Archive item — audio editor"
   },
   {
     "role": "artist",
     "id": "editor-project",
     "file": "artist/editor-project.png",
-    "url": "/dashboard/editor/cmsn5llwy000u107f30cme89g",
+    "url": "/dashboard/editor/cmsxi74wl000u12ts0snh52vd",
     "label": "Editor project"
   },
   {
