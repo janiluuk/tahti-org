@@ -42,7 +42,7 @@ export default function StoragePanel({
         <Alert variant="info" className="studio-mt-sm">
           You&apos;ve used {formatBytes(usedBytes)}. That&apos;s well above the soft target — and
           that&apos;s fine. Storage is shared, so we appreciate members keeping their archives lean
-          where it's easy to.
+          where it&apos;s easy to.
         </Alert>
       ) : (
         overSoftTarget && (
