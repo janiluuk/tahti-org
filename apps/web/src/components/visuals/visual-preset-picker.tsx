@@ -223,14 +223,12 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
 function PresetThumb({
   preset,
   scheme,
-  active,
   live,
   size = 'sm',
   settings,
 }: {
   preset: VisualPreset
   scheme: ColorScheme
-  active?: boolean
   live?: boolean
   size?: 'sm' | 'lg'
   settings?: VisualPresetSettings | null
@@ -245,7 +243,7 @@ function PresetThumb({
     >
       {preset === 'MINIMAL' ? (
         <span className="visual-preset-picker__minimal-label">None</span>
-      ) : live && active ? (
+      ) : live ? (
         <ChannelVisualizer
           preset={preset}
           colorSchemeJson={JSON.stringify(scheme)}
@@ -290,6 +288,9 @@ export function VisualPresetPicker({
   const scheme = colorScheme ?? resolveColorScheme(colorSchemeJson ?? null, paletteJson ?? null)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [focus, setFocus] = useState<VisualPreset>(value)
+  // PERF-007 stays true — only ever one live instance among the strip cards,
+  // triggered by hover/focus rather than always-on for the selected preset.
+  const [hoveredStripPreset, setHoveredStripPreset] = useState<VisualPreset | null>(null)
   const titleId = useId()
   const strip = useMemo(() => stripPresets(value), [value])
 
@@ -341,12 +342,15 @@ export function VisualPresetPicker({
               title={VISUAL_PRESET_LABELS[preset]}
               className={`visual-preset-picker__strip-card${active ? ' visual-preset-picker__strip-card--active' : ''}`}
               onClick={() => onChange(preset)}
+              onMouseEnter={() => setHoveredStripPreset(preset)}
+              onMouseLeave={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
+              onFocus={() => setHoveredStripPreset(preset)}
+              onBlur={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
             >
               <PresetThumb
                 preset={preset}
                 scheme={scheme}
-                active={active}
-                live={showPreview && active}
+                live={showPreview && hoveredStripPreset === preset}
                 settings={selectedSettings}
                 size="sm"
               />
