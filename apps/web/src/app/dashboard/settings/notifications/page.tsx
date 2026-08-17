@@ -8,7 +8,7 @@ import { MentionsPanel } from '../../mentions-panel'
 import { NotificationPreferencesPanel } from '../notification-preferences-panel'
 import { fetchMyAnnouncements } from '../announcements/actions'
 import { AnnouncementsPanel } from '../announcements/_announcements-panel'
-import { SettingsTabs } from '../_settings-tabs'
+import { DashboardTabs } from '@/components/dashboard-tabs'
 
 export default async function NotificationSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -40,7 +40,7 @@ export default async function NotificationSettingsPage() {
         </div>
       </div>
 
-      <SettingsTabs
+      <DashboardTabs
         ariaLabel="Notification settings sections"
         tabs={[
           { id: 'alerts', label: 'Alerts', content: <NotificationPreferencesPanel /> },
