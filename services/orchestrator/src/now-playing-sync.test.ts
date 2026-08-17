@@ -2,11 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
+import { mkdtemp, mkdir, writeFile, utimes, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import {
   objectKeyFromUrl,
   trackUrlFromMetadata,
   trackSourceFromMetadata,
   playbackKeyFromMetadata,
+  hlsSegmentsAreStale,
 } from './now-playing-sync.js'
 
 describe('objectKeyFromUrl', () => {
@@ -78,5 +82,50 @@ describe('trackSourceFromMetadata / playbackKeyFromMetadata', () => {
   it('ignores liquidsoap decode temp files', () => {
     expect(trackSourceFromMetadata('/tmp/liq-processdcf67a.osb')).toBeNull()
     expect(playbackKeyFromMetadata('/tmp/liq-processdcf67a.osb')).toBeNull()
+  })
+})
+
+describe('hlsSegmentsAreStale', () => {
+  async function tempHlsRoot(): Promise<string> {
+    return mkdtemp(join(tmpdir(), 'hls-watchdog-'))
+  }
+
+  it('is not stale when a segment was just written', async () => {
+    const root = await tempHlsRoot()
+    const dir = join(root, 'chan-1')
+    await mkdir(dir)
+    await writeFile(join(dir, 'stream-mp3-192_1.ts'), 'x')
+
+    expect(await hlsSegmentsAreStale('chan-1', root)).toBe(false)
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('is stale when the newest segment is old', async () => {
+    const root = await tempHlsRoot()
+    const dir = join(root, 'chan-1')
+    await mkdir(dir)
+    const file = join(dir, 'stream-mp3-192_1.ts')
+    await writeFile(file, 'x')
+    const old = new Date(Date.now() - 60_000)
+    await utimes(file, old, old)
+
+    expect(await hlsSegmentsAreStale('chan-1', root)).toBe(true)
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('is not stale (unknown, not a failure) when the channel has no HLS dir yet', async () => {
+    const root = await tempHlsRoot()
+    expect(await hlsSegmentsAreStale('never-spawned', root)).toBe(false)
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('ignores non-.ts files in the directory', async () => {
+    const root = await tempHlsRoot()
+    const dir = join(root, 'chan-1')
+    await mkdir(dir)
+    await writeFile(join(dir, 'stream.m3u8'), 'x')
+
+    expect(await hlsSegmentsAreStale('chan-1', root)).toBe(false)
+    await rm(root, { recursive: true, force: true })
   })
 })
