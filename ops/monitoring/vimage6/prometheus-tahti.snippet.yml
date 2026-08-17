@@ -19,7 +19,7 @@
       - targets:
           - http://192.168.2.100:15011/health
           - http://192.168.2.100:17777/
-          - http://192.168.2.100:8090/health
+          - http://192.168.2.100:18080/health
           - http://192.168.2.100:18000/health
           - http://192.168.2.100:19000/minio/health/live
           - http://192.168.2.100:18100/status-json.xsl
@@ -43,7 +43,7 @@
         target_label: service
         replacement: web
       - source_labels: [__param_target]
-        regex: '.*:8090/.*'
+        regex: '.*:18080/.*'
         target_label: service
         replacement: website
       - source_labels: [__param_target]
