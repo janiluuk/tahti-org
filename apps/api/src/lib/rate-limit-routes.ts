@@ -6,6 +6,9 @@ const AUTH_ROUTES = [
   '/api/auth/login',
   '/api/auth/verify',
   '/api/auth/setup-password',
+  '/api/auth/resend-verification',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
 ]
 
 /** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */

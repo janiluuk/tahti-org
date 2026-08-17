@@ -29,6 +29,14 @@ export function passwordSetupExpiresAt(): Date {
   return d
 }
 
+/** Shorter than the invite-setup expiry: this token can take over an
+ * already-active account, so it needs a tighter window. */
+export function passwordResetExpiresAt(): Date {
+  const d = new Date()
+  d.setHours(d.getHours() + 1)
+  return d
+}
+
 export function generateTotpChallengeId(): string {
   return nanoid(40)
 }

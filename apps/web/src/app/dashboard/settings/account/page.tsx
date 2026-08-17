@@ -88,6 +88,7 @@ export default async function AccountSettingsPage() {
           memberNumber={membershipInfo.memberNumber}
           priceCents={membershipInfo.priceCents}
           emailVerified={membershipInfo.emailVerified}
+          userEmail={user.email}
           hasStripeSubscription={membershipInfo.hasStripeSubscription}
           renewalDueAt={membershipInfo.renewalDueAt}
           subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}

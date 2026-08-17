@@ -5,10 +5,21 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Text } from '@tahti/ui'
+import {
+  Alert,
+  BrandLogo,
+  Button,
+  ButtonIcon,
+  Field,
+  Heading,
+  Input,
+  Link,
+  Stack,
+  Text,
+} from '@tahti/ui'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { safeSignupRedirect } from '@/lib/signup'
-import { login, register, verifyTotp } from '../auth/actions'
+import { login, register, resendVerification, verifyTotp } from '../auth/actions'
 
 type AuthMode = 'login' | 'register' | 'totp'
 
@@ -24,6 +35,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [registerSuccess, setRegisterSuccess] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [resendPending, setResendPending] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
   const [nextPath, setNextPath] = useState('/dashboard')
   const [totpChallengeId, setTotpChallengeId] = useState<string | null>(null)
   const {
@@ -76,10 +90,13 @@ export default function LoginPage() {
     e.preventDefault()
     setPending(true)
     setError(null)
+    setResendMessage(null)
 
     const form = new FormData(e.currentTarget)
+    const email = form.get('email') as string
+    setLoginEmail(email)
     const result = await login({
-      email: form.get('email') as string,
+      email,
       password: form.get('password') as string,
     })
 
@@ -93,6 +110,15 @@ export default function LoginPage() {
     } else {
       completeLogin()
     }
+  }
+
+  async function handleResend() {
+    if (!loginEmail) return
+    setResendPending(true)
+    setResendMessage(null)
+    const result = await resendVerification(loginEmail)
+    setResendMessage(result.message)
+    setResendPending(false)
   }
 
   async function handleTotpSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -252,7 +278,23 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin}>
               <Stack gap={4}>
-                {error && <Alert variant="error">{error}</Alert>}
+                {error && (
+                  <Stack gap={2}>
+                    <Alert variant="error">{error}</Alert>
+                    {error.toLowerCase().includes('verify your email') && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleResend}
+                        disabled={resendPending}
+                      >
+                        {resendPending ? 'Sending…' : 'Resend verification email'}
+                      </Button>
+                    )}
+                  </Stack>
+                )}
+                {resendMessage && <Alert variant="success">{resendMessage}</Alert>}
 
                 <Field label="Email">
                   <Input name="email" type="email" required autoComplete="email" />
@@ -261,6 +303,10 @@ export default function LoginPage() {
                 <Field label="Password">
                   <Input name="password" type="password" required autoComplete="current-password" />
                 </Field>
+
+                <Text size="sm" tone="muted">
+                  <Link href="/forgot-password">Forgot password?</Link>
+                </Text>
 
                 <Button variant="primary" size="lg" type="submit" disabled={pending}>
                   <ButtonIcon name="check" />

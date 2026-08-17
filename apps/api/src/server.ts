@@ -118,6 +118,9 @@ import adminBetaRoutes from './routes/admin/beta.js'
 import adminIntegrationsRoutes from './routes/admin/integrations.js'
 import betaApplyRoutes from './routes/beta/apply.js'
 import setupPasswordRoute from './routes/auth/setup-password.js'
+import resendVerificationRoute from './routes/auth/resend-verification.js'
+import forgotPasswordRoute from './routes/auth/forgot-password.js'
+import resetPasswordRoute from './routes/auth/reset-password.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
 import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
@@ -495,6 +498,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(verifyRoute)
   await fastify.register(usernameAvailableRoute)
   await fastify.register(setupPasswordRoute)
+  await fastify.register(resendVerificationRoute)
+  await fastify.register(forgotPasswordRoute)
+  await fastify.register(resetPasswordRoute)
   await fastify.register(loginRoute)
   await fastify.register(loginTotpRoute)
   await fastify.register(logoutRoute)

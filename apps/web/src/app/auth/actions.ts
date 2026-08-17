@@ -103,6 +103,23 @@ export async function verifyTotp(input: {
   }
 }
 
+export async function resendVerification(email: string): Promise<{ message: string }> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const response = await fetch(`${apiUrl}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    const data = (await response.json()) as { message?: string; error?: string }
+    return {
+      message: data.message ?? data.error ?? 'If that account needs verifying, check your email.',
+    }
+  } catch {
+    return { message: 'Could not reach the server — please try again' }
+  }
+}
+
 export async function register(
   input: RegisterInput,
 ): Promise<{ error: string | null; userId?: string }> {

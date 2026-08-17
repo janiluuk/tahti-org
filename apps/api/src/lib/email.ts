@@ -150,3 +150,34 @@ export async function sendVerificationEmail(
     },
   })
 }
+
+export async function sendPasswordResetEmail(
+  to: string,
+  displayName: string,
+  resetUrl: string,
+): Promise<void> {
+  const text = [
+    `Hi ${displayName},`,
+    '',
+    'We received a request to reset your Tahti password. Click the link below to choose a new one:',
+    '',
+    resetUrl,
+    '',
+    "This link expires in 1 hour. If you didn't request this, you can ignore this email.",
+    '',
+    '— Tahti ry',
+  ].join('\n')
+
+  await sendMail({
+    to,
+    subject: 'Reset your Tahti password',
+    text,
+    html: `
+      <p>Hi ${displayName.replace(/</g, '&lt;')},</p>
+      <p>We received a request to reset your Tahti password. Click below to choose a new one:</p>
+      <p><a href="${resetUrl}">Reset your password</a></p>
+      <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
+      <p>— Tahti ry</p>
+    `,
+  })
+}

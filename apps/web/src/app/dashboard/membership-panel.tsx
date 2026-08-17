@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
+import { resendVerification } from '../auth/actions'
 
 export default function MembershipPanel({
   status,
@@ -14,6 +15,7 @@ export default function MembershipPanel({
   memberNumber,
   priceCents,
   emailVerified,
+  userEmail,
   hasStripeSubscription = false,
   renewalDueAt,
   subscriptionMigrationRequired = false,
@@ -23,6 +25,7 @@ export default function MembershipPanel({
   memberNumber: number | null
   priceCents: number
   emailVerified: boolean
+  userEmail?: string
   hasStripeSubscription?: boolean
   renewalDueAt?: string | null
   subscriptionMigrationRequired?: boolean
@@ -31,6 +34,18 @@ export default function MembershipPanel({
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [resendPending, setResendPending] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+
+  function resend() {
+    if (!userEmail) return
+    setResendPending(true)
+    setResendMessage(null)
+    resendVerification(userEmail).then((res) => {
+      setResendMessage(res.message)
+      setResendPending(false)
+    })
+  }
 
   function openPortal() {
     startTransition(async () => {
@@ -126,9 +141,17 @@ export default function MembershipPanel({
         </p>
       )}
       {status === 'PENDING_EMAIL' && (
-        <p className="studio-notice studio-notice--error studio-mb-sm">
-          Verify your email before completing membership checkout.
-        </p>
+        <div className="studio-mb-sm">
+          <p className="studio-notice studio-notice--error">
+            Verify your email before completing membership checkout.
+          </p>
+          {resendMessage && <p className="studio-notice studio-notice--success">{resendMessage}</p>}
+          {userEmail && (
+            <Button onClick={resend} disabled={resendPending} variant="ghost" size="sm">
+              {resendPending ? 'Sending…' : 'Resend verification email'}
+            </Button>
+          )}
+        </div>
       )}
       {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}
       {message && <p className="studio-notice studio-notice--success studio-mb-sm">{message}</p>}

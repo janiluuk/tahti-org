@@ -61,6 +61,48 @@ export const VerifyEmailSchema = z.object({
 
 export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>
 
+export const ResendVerificationSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  hcaptchaToken: z.string().optional(),
+})
+
+export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  hcaptchaToken: z.string().optional(),
+})
+
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>
+
+export const ResetPasswordQuerySchema = z.object({
+  token: z.string().min(1),
+})
+
+export const ResetPasswordInfoSchema = z.object({
+  email: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+})
+
+export const ResetPasswordBodySchema = z.object({
+  token: z.string().min(1),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password too long'),
+})
+
+export const ResetPasswordResponseSchema = z.object({
+  ok: z.literal(true),
+  user: z.object({
+    id: z.string(),
+    email: z.string(),
+    username: z.string(),
+    displayName: z.string(),
+  }),
+})
+
 export const UsernameAvailabilityQuerySchema = z.object({
   username: z
     .string()
