@@ -66,6 +66,16 @@ describe('STREAM-011 — Tahti Radio rotation preview', () => {
     await app.ready()
 
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    // Other test files (journey specs) also seed a TAHTI_RADIO_SLUG fixture via
+    // createTahtiRadioChannel() and leave it in place as a long-lived shared
+    // fixture — clean up any leftover before claiming the username ourselves.
+    const staleRadio = await prisma.user.findUnique({ where: { username: TAHTI_RADIO_SLUG } })
+    if (staleRadio) {
+      const emailPrefix = staleRadio.email.slice(0, staleRadio.email.indexOf('@') + 1)
+      await cleanupUsersByEmailPrefix(prisma, emailPrefix)
+    }
+
     const radioArtist = await createTestArtist(prisma, {
       email: `${PREFIX}radio@example.com`,
       username: TAHTI_RADIO_SLUG,
