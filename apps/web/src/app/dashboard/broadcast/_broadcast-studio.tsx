@@ -233,8 +233,7 @@ export function BroadcastStudio({
           {signal?.connected ? (
             <>
               <p className="studio-notice studio-notice--success">
-                ✓ Signal received — {signal.codec ?? 'unknown codec'}
-                {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
+                ✓ Signal received — {signal.codec ?? 'unknown codec'} · original quality
               </p>
               <SignalMeters
                 analyserL={analyserL}
@@ -271,7 +270,7 @@ export function BroadcastStudio({
           headerTight
           description={
             signal?.connected
-              ? `Listen to your own stream at full quality (${signal.codec ?? 'unknown codec'}${signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}), then double-check distribution before you go live.`
+              ? `Listen to your own stream at full quality (${signal.codec ?? 'unknown codec'} · original quality), then double-check distribution before you go live.`
               : 'Listen to your own stream at full quality, then double-check distribution before you go live.'
           }
         >
