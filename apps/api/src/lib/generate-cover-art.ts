@@ -50,3 +50,33 @@ export function generateCoverArtSvg(title: string, subtitle: string): string {
   <text x="36" y="420" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="rgba(255,255,255,0.78)">${s}</text>
 </svg>`
 }
+
+function initialsFor(name: string): string {
+  const parts = name
+    .replace(/\[.*?\]/g, '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
+}
+
+/** A 500×500 SVG avatar — gradient background keyed off the seed, large
+ * centered initials. Square + centered so it survives circular avatar
+ * cropping, unlike generateCoverArtSvg's corner-text layout. */
+export function generateAvatarSvg(seed: string, displayName: string): string {
+  const [c1, c2] = PALETTES[hashString(seed) % PALETTES.length]!
+  const initials = escapeXml(initialsFor(displayName))
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${c1}"/>
+      <stop offset="100%" stop-color="${c2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#g)"/>
+  <circle cx="250" cy="250" r="220" fill="rgba(255,255,255,0.06)"/>
+  <text x="250" y="278" font-family="Helvetica, Arial, sans-serif" font-size="180" font-weight="700" fill="#fff" text-anchor="middle">${initials}</text>
+</svg>`
+}
