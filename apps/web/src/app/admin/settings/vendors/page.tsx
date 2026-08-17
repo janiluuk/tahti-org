@@ -104,6 +104,14 @@ const INTEGRATION_VENDORS = [
     dpaNote: 'Review terms for artist data subprocessor obligations',
   },
   {
+    name: 'hearthis.at',
+    service: 'Import own DJ sets, playlists and tracks into the archive',
+    envVars: '(none — public API, no auth required)',
+    portalUrl: 'https://hearthis.at',
+    dpaRequired: false,
+    dpaNote: null,
+  },
+  {
     name: 'Twitter / X',
     service: 'Auto-post broadcast/release announcements',
     envVars: 'TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET',
