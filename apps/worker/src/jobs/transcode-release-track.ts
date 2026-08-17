@@ -5,12 +5,15 @@ import type { Job } from 'bullmq'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
-import { readFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma, Prisma } from '@tahti/db'
 import { lookupAcoustidFullTrack, type AcoustidFullMatch } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
+
+const execFileAsync = promisify(execFile)
 
 function ffprobeMetadata(
   filePath: string,
@@ -42,15 +45,18 @@ function transcodeOpus(inputPath: string, outputPath: string): Promise<void> {
   })
 }
 
-function generateChromaprintFingerprint(inputPath: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .format('chromaprint')
-      .outputOptions(['-fp_format', 'base64'])
-      .on('error', reject)
-      .on('end', () => resolve())
-      .save(outputPath)
-  })
+// Alpine's `ffmpeg` package (apps/worker/Dockerfile) isn't built with
+// chromaprint support, so ffmpeg's own chromaprint muxer isn't available in
+// this image — confirmed via `ffmpeg -muxers` on the deployed worker
+// container. Using the standalone `fpcalc` binary (Alpine package
+// `chromaprint`) instead, same underlying Chromaprint library.
+async function generateChromaprintFingerprint(
+  inputPath: string,
+): Promise<{ fingerprint: string; duration: number } | null> {
+  const { stdout } = await execFileAsync('fpcalc', ['-json', inputPath])
+  const parsed = JSON.parse(stdout) as { fingerprint?: string; duration?: number }
+  if (!parsed.fingerprint) return null
+  return { fingerprint: parsed.fingerprint, duration: parsed.duration ?? 0 }
 }
 
 /**
@@ -62,21 +68,20 @@ function generateChromaprintFingerprint(inputPath: string, outputPath: string): 
  */
 async function fingerprintAndIdentify(
   inputPath: string,
-  tmpDir: string,
   durationSec: number,
 ): Promise<{ fingerprint: string | null; match: AcoustidFullMatch | null }> {
   const apiKey = process.env.ACOUSTID_API_KEY?.trim() ?? ''
 
   try {
-    const fpPath = join(tmpDir, 'audio.fp')
-    await generateChromaprintFingerprint(inputPath, fpPath)
-    const fingerprint = (await readFile(fpPath, 'utf8')).trim()
-    if (!fingerprint) return { fingerprint: null, match: null }
+    const fp = await generateChromaprintFingerprint(inputPath)
+    if (!fp) return { fingerprint: null, match: null }
 
-    if (!apiKey) return { fingerprint, match: null }
+    if (!apiKey) return { fingerprint: fp.fingerprint, match: null }
 
-    const match = await lookupAcoustidFullTrack(fingerprint, durationSec, { apiKey })
-    return { fingerprint, match }
+    const match = await lookupAcoustidFullTrack(fp.fingerprint, fp.duration || durationSec, {
+      apiKey,
+    })
+    return { fingerprint: fp.fingerprint, match }
   } catch {
     return { fingerprint: null, match: null }
   }
@@ -162,7 +167,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       track.release.userId,
     )
 
-    const { fingerprint, match } = await fingerprintAndIdentify(srcPath, tmpDir, meta.duration)
+    const { fingerprint, match } = await fingerprintAndIdentify(srcPath, meta.duration)
 
     await prisma.releaseTrack.update({
       where: { id: trackId },
