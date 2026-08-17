@@ -454,7 +454,15 @@ async function main() {
   for (const ctx of roleContexts.values()) {
     await ctx.close()
   }
-  await writeFile(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
+  const manifestPath = join(OUT, 'manifest.json')
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2))
+  // Plain JSON.stringify output doesn't match the repo's prettier config —
+  // format in place so `pnpm format:check` never flags a freshly-captured
+  // manifest (see the api-client schema.d.ts generator for the same fix).
+  spawnSync('pnpm', ['exec', 'prettier', '--write', manifestPath], {
+    cwd: join(__dirname, '..'),
+    stdio: 'ignore',
+  })
   await browser.close()
   console.log(`\n${manifest.length} screenshots saved under ${OUT}`)
 }
