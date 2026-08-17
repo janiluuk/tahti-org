@@ -4,7 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { StorageQuotaViewSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { getOrCreateQuota } from '../../lib/storage-quota.js'
+import { computeUserStorageUsedBytes } from '../../lib/user-storage.js'
 
 const meStorageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -13,15 +13,26 @@ const meStorageRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Current user’s R2 storage quota + usage',
+        // docs/storage-policy.md: "quotaBytes" here is the soft *display*
+        // target (default 500MB, same for every tier — Tahti doesn't scale
+        // storage by plan), not an enforced cap. Nothing blocks uploads past
+        // it; see storage-quota.ts's now-unused hard-cap model for what NOT
+        // to wire this up to again.
+        description: "Current user's storage soft target + live usage (non-enforcing)",
         response: openApiResponse(StorageQuotaViewSchema, 'StorageQuota'),
       },
     },
     async (request, reply) => {
-      const quota = await getOrCreateQuota(fastify.prisma, request.sessionUser!.id)
+      const [user, usedBytes] = await Promise.all([
+        fastify.prisma.user.findUnique({
+          where: { id: request.sessionUser!.id },
+          select: { softTargetBytes: true },
+        }),
+        computeUserStorageUsedBytes(fastify.prisma, request.sessionUser!.id),
+      ])
       return reply.send({
-        quotaBytes: Number(quota.quotaBytes),
-        usedBytes: Number(quota.usedBytes),
+        quotaBytes: Number(user!.softTargetBytes),
+        usedBytes: Number(usedBytes),
       })
     },
   )
