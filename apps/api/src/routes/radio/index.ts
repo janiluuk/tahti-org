@@ -17,7 +17,6 @@ import {
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 
-const RADIO_URL = process.env.RADIO_SERVICE_URL ?? 'http://tahti-radio:3004'
 const RECENTLY_PLAYED_LIMIT = 10
 
 function slotColorScheme(
@@ -58,19 +57,28 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['radio'],
-        description: 'M16: Tahti Radio now-playing (proxied from tahti-radio service)',
+        description:
+          'M16: Tahti Radio now-playing — is a booked artist currently relaying live, ' +
+          'derived straight from RadioSlotBooking rather than a separate service',
         response: openApiResponse(RadioNowPlayingSchema, 'RadioNowPlaying'),
       },
     },
     async (_request, reply) => {
-      try {
-        const res = await fetch(`${RADIO_URL}/now-playing`, { signal: AbortSignal.timeout(2000) })
-        const data = (await res.json()) as unknown
-        return reply.send(data)
-      } catch {
-        // Radio service unreachable — return offline state rather than 500
-        return reply.send({ live: false, channel: null })
-      }
+      const now = new Date()
+      const liveBooking = await fastify.prisma.radioSlotBooking.findFirst({
+        where: { startAt: { lte: now }, endAt: { gt: now } },
+        select: { channel: { select: { slug: true, user: { select: { displayName: true } } } } },
+      })
+
+      if (!liveBooking) return reply.send({ live: false, channel: null })
+
+      return reply.send({
+        live: true,
+        channel: {
+          slug: liveBooking.channel.slug,
+          artistName: liveBooking.channel.user.displayName,
+        },
+      })
     },
   )
 
