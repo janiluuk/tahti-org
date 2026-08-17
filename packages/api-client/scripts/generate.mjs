@@ -29,16 +29,19 @@ execFileSync('pnpm', ['--filter', '@tahti/api', 'run', 'openapi:export'], {
 })
 
 console.log('[api-client] generating schema.d.ts...')
-execFileSync(
-  'pnpm',
-  [
-    'exec',
-    'openapi-typescript',
-    resolve(repoRoot, 'openapi.json'),
-    '-o',
-    resolve(here, '../src/schema.d.ts'),
-  ],
-  { cwd: repoRoot, stdio: 'inherit' },
-)
+const schemaPath = resolve(here, '../src/schema.d.ts')
+execFileSync('pnpm', ['exec', 'openapi-typescript', resolve(repoRoot, 'openapi.json'), '-o', schemaPath], {
+  cwd: repoRoot,
+  stdio: 'inherit',
+})
+
+// openapi-typescript's raw output doesn't match the repo's prettier config
+// (singleQuote/no-semi/2-space) — format it in place so this file never
+// drifts against `pnpm format:check` on the next regeneration.
+console.log('[api-client] formatting schema.d.ts...')
+execFileSync('pnpm', ['exec', 'prettier', '--write', schemaPath], {
+  cwd: repoRoot,
+  stdio: 'inherit',
+})
 
 console.log('[api-client] done.')
