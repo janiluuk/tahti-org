@@ -26,8 +26,7 @@ export default async function ApiTokensSettingsPage() {
             <a href="https://api.tahti.live/api" target="_blank" rel="noreferrer">
               api.tahti.live/api
             </a>{' '}
-            for the full reference. Each token is shown once at creation; store it somewhere
-            safe.
+            for the full reference. Each token is shown once at creation; store it somewhere safe.
           </p>
         </div>
       </div>

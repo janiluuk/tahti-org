@@ -51,7 +51,11 @@ vi.mock('@tahti/hearthis', () => ({
 
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'hearthis-import-test-'
 

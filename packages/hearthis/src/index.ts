@@ -83,7 +83,13 @@ export interface HearthisTrack {
   waveform_url?: string
   waveform_data_json?: string
   user: HearthisUserRef
-  counts?: { plays: number; downloads: number; favoritings: number; reshares: number; comments: number }
+  counts?: {
+    plays: number
+    downloads: number
+    favoritings: number
+    reshares: number
+    comments: number
+  }
   stream_url: string
   preview_url?: string
   download_url?: string
@@ -149,7 +155,10 @@ export interface HearthisClient {
   search(query: string, params?: HearthisSearchParams): Promise<HearthisTrack[]>
   /** VERIFIED — GET /{permalink}/?type=tracks (NOT /{permalink}/tracks/, which 404s as
    * `{"status":"error","message":"Content Gone"}` — confirmed live against hearthis.at/yaniho). */
-  getUserTracks(permalink: string, params?: { page?: number; count?: number }): Promise<HearthisTrack[]>
+  getUserTracks(
+    permalink: string,
+    params?: { page?: number; count?: number },
+  ): Promise<HearthisTrack[]>
 }
 
 export function createHearthisClient(options: HearthisClientOptions = {}): HearthisClient {
@@ -166,7 +175,10 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
     return url
   }
 
-  async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
+  async function get<T>(
+    path: string,
+    params?: Record<string, string | number | undefined>,
+  ): Promise<T> {
     const res = await doFetch(buildUrl(path, params).toString())
     if (!res.ok) throw new Error(`hearthis.at API request failed (${res.status}): ${path}`)
     const data = (await res.json()) as
@@ -202,7 +214,9 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
     getUser: (permalink) => get<HearthisUserProfile>(`/${encodeURIComponent(permalink)}/`),
 
     getTrack: (userPermalink, trackPermalink) =>
-      get<HearthisTrack>(`/${encodeURIComponent(userPermalink)}/${encodeURIComponent(trackPermalink)}/`),
+      get<HearthisTrack>(
+        `/${encodeURIComponent(userPermalink)}/${encodeURIComponent(trackPermalink)}/`,
+      ),
 
     getTrackByUrl(trackUrl) {
       const parsed = parseHearthisTrackUrl(trackUrl)

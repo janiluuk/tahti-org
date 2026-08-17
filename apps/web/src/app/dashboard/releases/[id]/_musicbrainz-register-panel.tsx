@@ -52,7 +52,12 @@ export function MusicbrainzRegisterPanel({ release }: { release: MusicbrainzSeed
   if (pref === true) {
     return (
       <div className="studio-notice studio-mt-sm">
-        <a href={seedUrl} target="_blank" rel="noreferrer" className="ui-btn ui-btn--sm ui-btn--primary">
+        <a
+          href={seedUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="ui-btn ui-btn--sm ui-btn--primary"
+        >
           Register with MusicBrainz →
         </a>
         <span className="studio-text-muted-sm studio-ml-xs">
@@ -66,11 +71,16 @@ export function MusicbrainzRegisterPanel({ release }: { release: MusicbrainzSeed
   return (
     <div className="studio-notice studio-mt-sm">
       <p className="studio-text-sm">
-        Register this release with MusicBrainz? Opens their Add Release form pre-filled — you
-        review and submit it yourself{status.username ? ` as ${status.username}` : ''}.
+        Register this release with MusicBrainz? Opens their Add Release form pre-filled — you review
+        and submit it yourself{status.username ? ` as ${status.username}` : ''}.
       </p>
       <div className="studio-actions studio-actions--sm studio-mt-xs">
-        <a href={seedUrl} target="_blank" rel="noreferrer" className="ui-btn ui-btn--sm ui-btn--primary">
+        <a
+          href={seedUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="ui-btn ui-btn--sm ui-btn--primary"
+        >
           Register →
         </a>
         <button

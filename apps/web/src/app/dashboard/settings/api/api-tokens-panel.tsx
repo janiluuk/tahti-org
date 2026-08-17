@@ -21,16 +21,14 @@ const COLUMNS = '1.2fr auto auto auto auto'
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return '—'
-  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(value).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
-export function ApiTokensPanel({
-  initial,
-  apiBase,
-}: {
-  initial: ApiTokenView[]
-  apiBase: string
-}) {
+export function ApiTokensPanel({ initial, apiBase }: { initial: ApiTokenView[]; apiBase: string }) {
   const api = createTahtiClient({ baseUrl: apiBase, credentials: 'include' })
 
   const [tokens, setTokens] = useState(initial)
@@ -155,8 +153,15 @@ export function ApiTokensPanel({
               className="studio-input studio-mt-sm"
             />
           </div>
-          <label className="studio-text-muted-sm studio-mt-sm" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input type="checkbox" checked={canWrite} onChange={(e) => setCanWrite(e.target.checked)} />
+          <label
+            className="studio-text-muted-sm studio-mt-sm"
+            style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+          >
+            <input
+              type="checkbox"
+              checked={canWrite}
+              onChange={(e) => setCanWrite(e.target.checked)}
+            />
             Allow write access (create/update/delete) — leave off for read-only
           </label>
           <div className="studio-mt-md" style={{ display: 'flex', gap: '0.5rem' }}>

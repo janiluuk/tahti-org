@@ -226,8 +226,8 @@ export function HearthisImportModal({ collectionId, collectionTitle, onClose, on
 
         {tab === 'mine' && !loading && myUsername == null ? (
           <p className="studio-text-muted-sm spotify-import-modal__hint">
-            We don&rsquo;t have your hearthis.at handle yet — paste your own hearthis.at profile
-            URL in &ldquo;By profile URL&rdquo; for now.
+            We don&rsquo;t have your hearthis.at handle yet — paste your own hearthis.at profile URL
+            in &ldquo;By profile URL&rdquo; for now.
           </p>
         ) : null}
 

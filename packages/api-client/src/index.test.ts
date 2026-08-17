@@ -9,7 +9,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '@tahti/api/server'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '@tahti/api/test/helpers'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '@tahti/api/test/helpers'
 import { createTahtiClient } from './index.js'
 
 const PREFIX = 'sdk-connectivity-test-'

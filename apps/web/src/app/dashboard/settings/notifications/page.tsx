@@ -92,7 +92,12 @@ async function loadMusicbrainzSettings(apiUrl: string, sessionValue: string) {
       : { defaultRegisterToMusicbrainz: null }
     return { ...status, defaultRegisterToMusicbrainz: defaults.defaultRegisterToMusicbrainz }
   } catch {
-    return { connected: false, username: null, configured: false, defaultRegisterToMusicbrainz: null }
+    return {
+      connected: false,
+      username: null,
+      configured: false,
+      defaultRegisterToMusicbrainz: null,
+    }
   }
 }
 

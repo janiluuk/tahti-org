@@ -134,8 +134,10 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.statusCode).toBe(200)
 
     const row = await prisma.chatMessage.findFirst({
-      where: { channelId: (await prisma.channel.findUniqueOrThrow({ where: { slug } })).id,
-        text: 'signed in, no captcha needed' },
+      where: {
+        channelId: (await prisma.channel.findUniqueOrThrow({ where: { slug } })).id,
+        text: 'signed in, no captcha needed',
+      },
     })
     expect(row).not.toBeNull()
   })

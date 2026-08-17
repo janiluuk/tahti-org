@@ -77,11 +77,7 @@ export function AdminMobileNav() {
         {primary.map(({ href, label, icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`)
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`db-mobile-nav-item${active ? ' active' : ''}`}
-            >
+            <Link key={href} href={href} className={`db-mobile-nav-item${active ? ' active' : ''}`}>
               {icon}
               <span>{label}</span>
             </Link>

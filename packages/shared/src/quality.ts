@@ -21,7 +21,13 @@ export type ArchiveItemSource =
 
 export type ArchiveQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
 
-export type ArchiveEmbedProvider = 'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
+export type ArchiveEmbedProvider =
+  | 'SPOTIFY'
+  | 'MIXCLOUD'
+  | 'HEARTHIS'
+  | 'YOUTUBE'
+  | 'APPLE'
+  | 'GENERIC'
 
 const EMBED_ONLY_SOURCES: ReadonlySet<ArchiveItemSource> = new Set([
   'SPOTIFY_EMBED',

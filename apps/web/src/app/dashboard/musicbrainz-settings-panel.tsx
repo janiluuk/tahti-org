@@ -65,9 +65,7 @@ export function MusicbrainzSettingsPanel({
     >
       {connected ? (
         <div className="studio-row--between studio-gap-xs">
-          <span className="studio-text-sm">
-            Connected{username ? ` as ${username}` : ''}.
-          </span>
+          <span className="studio-text-sm">Connected{username ? ` as ${username}` : ''}.</span>
           <Button onClick={disconnect} disabled={isPending} variant="ghost" size="sm">
             Disconnect
           </Button>

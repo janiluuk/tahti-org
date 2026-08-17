@@ -83,14 +83,23 @@ describe('GET /api/v1/search', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.artists).toHaveLength(1)
-    expect(body.artists[0]).toMatchObject({ username: 'search-test-moonrise', displayName: 'DJ Moonrise' })
+    expect(body.artists[0]).toMatchObject({
+      username: 'search-test-moonrise',
+      displayName: 'DJ Moonrise',
+    })
   })
 
   it('scopes to tracks-only or artists-only via type', async () => {
-    const tracksOnly = await app.inject({ method: 'GET', url: '/api/v1/search?q=moonrise&type=tracks' })
+    const tracksOnly = await app.inject({
+      method: 'GET',
+      url: '/api/v1/search?q=moonrise&type=tracks',
+    })
     expect(tracksOnly.json().artists).toEqual([])
 
-    const artistsOnly = await app.inject({ method: 'GET', url: '/api/v1/search?q=midnight&type=artists' })
+    const artistsOnly = await app.inject({
+      method: 'GET',
+      url: '/api/v1/search?q=midnight&type=artists',
+    })
     expect(artistsOnly.json().tracks).toEqual([])
   })
 

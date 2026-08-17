@@ -170,7 +170,9 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
         body.defaultRegisterToMusicbrainz !== null &&
         typeof body.defaultRegisterToMusicbrainz !== 'boolean'
       ) {
-        return reply.status(400).send({ error: 'defaultRegisterToMusicbrainz must be boolean or null' })
+        return reply
+          .status(400)
+          .send({ error: 'defaultRegisterToMusicbrainz must be boolean or null' })
       }
       const user = request.sessionUser!
       const updated = await fastify.prisma.user.update({

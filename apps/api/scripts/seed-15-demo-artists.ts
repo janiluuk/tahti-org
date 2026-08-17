@@ -68,10 +68,13 @@ interface Manifest {
 
 const EMAIL_DOMAIN = 'demo.tahti.live'
 
-async function ensurePersona(p: ManifestPersona): Promise<{ userId: string; channelId: string; created: boolean }> {
+async function ensurePersona(
+  p: ManifestPersona,
+): Promise<{ userId: string; channelId: string; created: boolean }> {
   const email = `${p.slug}@${EMAIL_DOMAIN}`
   const existing = await prisma.user.findUnique({ where: { email }, include: { channel: true } })
-  if (existing?.channel) return { userId: existing.id, channelId: existing.channel.id, created: false }
+  if (existing?.channel)
+    return { userId: existing.id, channelId: existing.channel.id, created: false }
 
   const liveSourcePass = randomBytes(16).toString('hex')
   const rtmpStreamKey = randomBytes(16).toString('hex')
@@ -107,7 +110,12 @@ async function ensurePersona(p: ManifestPersona): Promise<{ userId: string; chan
 async function uploadAudio(audioDir: string, file: string, key: string): Promise<number> {
   const buf = await readFile(path.join(audioDir, file))
   await s3.send(
-    new PutObjectCommand({ Bucket: config.minio.bucket, Key: key, Body: buf, ContentType: 'audio/mpeg' }),
+    new PutObjectCommand({
+      Bucket: config.minio.bucket,
+      Key: key,
+      Body: buf,
+      ContentType: 'audio/mpeg',
+    }),
   )
   return buf.length
 }
@@ -223,9 +231,17 @@ async function main() {
   const audioDir = process.env.AUDIO_DIR
   if (!audioDir) throw new Error('Set AUDIO_DIR to the prepared audio directory')
 
-  const manifest = JSON.parse(await readFile(path.join(audioDir, 'manifest.json'), 'utf8')) as Manifest
+  const manifest = JSON.parse(
+    await readFile(path.join(audioDir, 'manifest.json'), 'utf8'),
+  ) as Manifest
 
-  const results: Array<{ slug: string; created: boolean; djSets: number; release: boolean; recoveredSingle: boolean }> = []
+  const results: Array<{
+    slug: string
+    created: boolean
+    djSets: number
+    release: boolean
+    recoveredSingle: boolean
+  }> = []
 
   for (const p of manifest.personas) {
     const { userId, channelId, created } = await ensurePersona(p)
@@ -258,7 +274,13 @@ async function main() {
         {
           title: `${p.displayName} — Legacy Session`,
           type: 'SINGLE',
-          tracks: [{ title: `${p.displayName} — Legacy Session`, file: recovered.file, durationSec: recovered.durationSec }],
+          tracks: [
+            {
+              title: `${p.displayName} — Legacy Session`,
+              file: recovered.file,
+              durationSec: recovered.durationSec,
+            },
+          ],
         },
         p.genre,
         '[DEMO] Recovered audio — originally a CC0-licensed Tahti Selects track. The original ' +

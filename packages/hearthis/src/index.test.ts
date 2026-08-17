@@ -77,7 +77,7 @@ describe('@tahti/hearthis client', () => {
     const client = createHearthisClient({ fetch: fetchMock })
     const track = await client.getTrack('candana-dj', 'credo')
     expect(track.id).toBe('14624101')
-    expect((fetchMock.mock.calls[0]?.[0] as string)).toContain('/candana-dj/credo/')
+    expect(fetchMock.mock.calls[0]?.[0] as string).toContain('/candana-dj/credo/')
   })
 
   it('resolves a pasted hearthis.at track URL end to end', async () => {
@@ -105,14 +105,14 @@ describe('@tahti/hearthis client', () => {
     expect(calledUrl).toContain('type=track')
   })
 
-  it('lists a user\'s tracks (empty array — different data shape than a populated one)', async () => {
+  it("lists a user's tracks (empty array — different data shape than a populated one)", async () => {
     const fetchMock = mockFetch(200, [])
     const client = createHearthisClient({ fetch: fetchMock })
     const tracks = await client.getUserTracks('nobody-yet')
     expect(tracks).toEqual([])
   })
 
-  it('lists a user\'s tracks via ?type=tracks on the profile path, not /tracks/', async () => {
+  it("lists a user's tracks via ?type=tracks on the profile path, not /tracks/", async () => {
     // Regression test: /{permalink}/tracks/ 404s live as {"status":"error","message":"Content Gone"} —
     // confirmed against hearthis.at/yaniho. The real listing is /{permalink}/?type=tracks.
     const fetchMock = mockFetch(200, [SAMPLE_TRACK])

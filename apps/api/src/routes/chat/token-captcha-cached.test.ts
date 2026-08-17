@@ -19,10 +19,7 @@ vi.mock('../../lib/chat-captcha.js', () => ({
 
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import {
-  cleanupUsersByEmailPrefix,
-  createTestArtist,
-} from '../../test/helpers.js'
+import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 
 const PREFIX = 'chat-token-captcha-cached-'
 
