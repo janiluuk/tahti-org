@@ -14,6 +14,7 @@ export type ArchiveItemSource =
   | 'SOUNDCLOUD'
   | 'GOOGLE_DRIVE'
   | 'MIXCLOUD_RESCUE'
+  | 'HEARTHIS'
   | 'SPOTIFY_EMBED'
   | 'MIXCLOUD_EMBED'
   | 'HEARTHIS_EMBED'

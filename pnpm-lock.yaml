@@ -268,6 +268,9 @@ importers:
       '@tahti/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@tahti/hearthis':
+        specifier: workspace:*
+        version: link:../../packages/hearthis
       '@tahti/ledger':
         specifier: workspace:*
         version: link:../../packages/ledger
