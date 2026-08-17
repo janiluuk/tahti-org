@@ -5,7 +5,7 @@ import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import type { User } from '@tahti/db'
 import { validateSession } from '../lib/session.js'
-import { validateApiToken } from '../lib/api-token.js'
+import { validateApiToken, TOKEN_PREFIX } from '../lib/api-token.js'
 import { config } from '../config.js'
 
 declare module 'fastify' {
@@ -25,7 +25,10 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
 
   fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const authHeader = request.headers.authorization
-    if (authHeader?.startsWith('Bearer ')) {
+    // Only claim Bearer tokens that look like personal API tokens (`tahti_...`).
+    // Other Bearer schemes — e.g. internal service-to-service secrets checked by
+    // individual routes — must fall through untouched rather than getting 401'd here.
+    if (authHeader?.startsWith(`Bearer ${TOKEN_PREFIX}`)) {
       const rawToken = authHeader.slice('Bearer '.length).trim()
       const result = await validateApiToken(fastify.prisma, rawToken)
       if (!result) {

@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { nanoid } from 'nanoid'
 import type { PrismaClient, User, ApiToken } from '@tahti/db'
 
-const TOKEN_PREFIX = 'tahti_'
+export const TOKEN_PREFIX = 'tahti_'
 /** Chars shown back to the user in lists so they can tell tokens apart without re-revealing the secret. */
 const DISPLAY_PREFIX_LEN = TOKEN_PREFIX.length + 8
 
