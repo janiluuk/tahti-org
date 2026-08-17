@@ -58,16 +58,16 @@ export default async function MultistreamSettingsPage() {
         </>
       ) : (
         <div className="studio-empty-card studio-mt-xl">
-          <p className="studio-empty-card__text">Multistream is a Tahti membership feature.</p>
+          <p className="studio-empty-card__text">Multistream is a Tahti Studio-plan feature.</p>
           <p className="studio-empty-card__hint">
-            Upgrade to mirror your live broadcast to YouTube, Twitch, Kick, and more.
+            Upgrade to Studio to mirror your live broadcast to YouTube, Twitch, Kick, and more.
           </p>
           <NextLink
             href="/dashboard/settings/account"
             className="ui-btn ui-btn--primary studio-mt-sm"
           >
             <ButtonIcon name="link" />
-            View membership →
+            View plans →
           </NextLink>
         </div>
       )}
