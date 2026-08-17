@@ -751,6 +751,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [x] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
 | [x] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (`hls-player.tsx`) | M3 |
 | [x] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | API + dashboard schedule panel + public `/c/:slug` banner | M5 |
+| [ ] | **STREAM-011** Playback is lossy by default even when a lossless source exists — `archivePlaybackKey()` picks `mp3Key` over `flacKey` for on-demand playback, and the live/24-7 HLS pipeline is hard-capped at `stream-mp3-192` (the `stream-flac` variant STREAM-002 already produces is unplayable from browsers — FLAC-in-MPEG-TS isn't supported by any MSE implementation). Listener should hear the track as uploaded; only fall back to 192k under real bandwidth pressure, and always disclose which is playing (existing `ch-player-card` badge). See scoping note below. | not started | TBD |
 
 ### MEDIUM — affects operations and cost attribution
 
@@ -771,6 +772,53 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [x] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Dashboard polls archive status after upload with transcoding progress (`upload-form.tsx`) | M2 |
 | [x] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | `tahti_chat_handle` cookie + localStorage sync on load | M5 |
 | [x] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | API preview + board UI on `/governance` | M9 |
+
+### STREAM-011 scoping note — lossless-by-default playback
+
+Two independent fixes, different risk levels:
+
+**A. On-demand archive/track playback (small, low-risk).** `packages/shared/src/archive-playback.ts`'s
+`archivePlaybackKey()` currently returns `item.mp3Key ?? item.flacKey` — flip the
+preference to `flacKey ?? mp3Key`. Direct-file FLAC playback already works today (see
+`isDirectFlacFile` in `apps/web/src/app/c/[slug]/hls-player.tsx`) and is natively
+supported by every current major browser (Chrome/Firefox/Edge since ~2017, Safari 11+)
+via a plain `<audio src>` — no HLS involved, so no MSE/container constraint applies
+here. Needs: the callers of `archivePlaybackKey()` to surface the format honestly in
+the UI (reuse the existing FLAC/MP3 badge pattern) and a check that download/bandwidth
+UX (progress, file size shown) accounts for FLAC being much larger than MP3.
+
+**B. Live / 24-7 channel HLS (bigger — needs a spike before committing).** The blocker
+isn't policy, it's the HLS spec: browsers' MSE only reliably decodes AAC or MP3 out of
+an MPEG-TS or fMP4 segment; FLAC-in-MPEG-TS is confirmed broken (see the incident
+documented in `apps/api/src/lib/stream-quality.ts`). The fix is **not** "switch the
+live encode to FLAC" — it's adding a genuine multi-bitrate HLS ladder and letting the
+player's existing ABR logic (hls.js, already in `player-context.tsx`) choose:
+  1. Spike: confirm whether Liquidsoap 2.2.5's `output.file.hls` can emit fMP4/CMAF
+     segments with a lossless codec (FLAC or ALAC) that hls.js/Safari-native-HLS can
+     actually decode — this needs real browser testing, not just spec-reading, given
+     STREAM-002's FLAC-in-TS attempt already burned the team once.
+  2. If that holds up: add a `stream-lossless` (or high-bitrate AAC/MP3, e.g. 320k, as
+     a fallback if true lossless-in-browser doesn't pan out) rendition alongside the
+     existing `stream-mp3-192` in `infra/liquidsoap-channel.liq.template` /
+     `liquidsoap-rotation.liq.template`, and publish a **master playlist**
+     (`#EXT-X-STREAM-INF`) instead of today's single fixed-variant manifest —
+     `apps/api/src/lib/stream-quality.ts`'s `liveHlsManifestPath()` currently returns
+     one hardcoded leaf path per listener; it needs to return the master playlist path
+     instead so the player picks.
+  3. The "switch everyone to 192k under bandwidth pressure" requirement is exactly
+     what HLS ABR already does per-listener (hls.js downgrades automatically when
+     measured throughput drops) — no custom server-side kill-switch needed for that
+     part. A separate *operator* override (force the whole platform to 192k-only
+     during a real egress-cost emergency) would be a small, independent addition: a
+     config flag the master-playlist endpoint checks before including the
+     lossless variant.
+  4. Keep the existing quality badge (`hls-player.tsx`) as the disclosure mechanism —
+     it already reports the real measured `hls.js` level bitrate, so this slots in
+     without new UI work.
+
+Sequencing: ship (A) first — it's contained and low-risk. Scope (B)'s step 1 spike
+before promising real lossless-live-playback dates; it may land on "very high bitrate
+AAC/MP3" rather than true lossless if browser fMP4-FLAC support doesn't hold up.
 
 ---
 
