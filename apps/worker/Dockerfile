@@ -19,6 +19,7 @@ COPY packages/mixcloud/package.json   ./packages/mixcloud/
 COPY packages/revelator/package.json  ./packages/revelator/
 COPY packages/shared/package.json     ./packages/shared/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
+COPY packages/hearthis/package.json    ./packages/hearthis/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
@@ -34,6 +35,7 @@ COPY packages/mixcloud/src ./packages/mixcloud/src
 COPY packages/revelator/src ./packages/revelator/src
 COPY packages/shared/src   ./packages/shared/src
 COPY packages/audio-edit/src ./packages/audio-edit/src
+COPY packages/hearthis/src   ./packages/hearthis/src
 COPY apps/worker/src     ./apps/worker/src
 
 RUN pnpm --filter @tahti/db db:generate
