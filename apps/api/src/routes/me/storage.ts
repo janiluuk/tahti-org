@@ -26,13 +26,15 @@ const meStorageRoutes: FastifyPluginAsync = async (fastify) => {
       const [user, usedBytes] = await Promise.all([
         fastify.prisma.user.findUnique({
           where: { id: request.sessionUser!.id },
-          select: { softTargetBytes: true },
+          select: { softTargetBytes: true, isMember: true },
         }),
         computeUserStorageUsedBytes(fastify.prisma, request.sessionUser!.id),
       ])
       return reply.send({
         quotaBytes: Number(user!.softTargetBytes),
         usedBytes: Number(usedBytes),
+        // Members don't even get the soft-target nudge — just their usage.
+        unlimited: user!.isMember,
       })
     },
   )

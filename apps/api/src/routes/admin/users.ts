@@ -298,7 +298,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.user.findUnique({
         where: { id },
-        select: { isBoard: true },
+        select: { isBoard: true, isMember: true, memberSince: true },
       })
       if (!existing) return reply.status(404).send({ error: 'User not found' })
 
@@ -312,7 +312,14 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      await fastify.prisma.user.update({ where: { id }, data })
+      // Board members are always members — a board seat implies the €40/year
+      // yhdistys membership, never the other way around.
+      if (data.isBoard === true && !existing.isMember) {
+        data.isMember = true
+      }
+      const memberSince = data.isMember && !existing.memberSince ? { memberSince: new Date() } : {}
+
+      await fastify.prisma.user.update({ where: { id }, data: { ...data, ...memberSince } })
 
       const detail = await fetchUserDetail(fastify.prisma, id)
       return reply.send(detail)

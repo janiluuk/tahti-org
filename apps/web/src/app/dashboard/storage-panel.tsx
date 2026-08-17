@@ -17,13 +17,27 @@ function formatBytes(bytes: number): string {
 export default function StoragePanel({
   quotaBytes,
   usedBytes,
+  unlimited = false,
 }: {
   quotaBytes: number
   usedBytes: number
+  unlimited?: boolean
 }) {
   const percent = quotaBytes > 0 ? (usedBytes / quotaBytes) * 100 : 0
   const overSoftTarget = usedBytes > quotaBytes
   const wayOverSoftTarget = quotaBytes > 0 && usedBytes > quotaBytes * 5
+
+  if (unlimited) {
+    return (
+      <Panel
+        title="Storage"
+        headerTight
+        description="Your lossless masters are mirrored long-term to Tahti's storage. As a member, there's no storage limit on your account."
+      >
+        <p className="studio-text-lg">{formatBytes(usedBytes)} used</p>
+      </Panel>
+    )
+  }
 
   return (
     <Panel

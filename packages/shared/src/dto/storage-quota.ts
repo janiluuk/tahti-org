@@ -6,6 +6,8 @@ import { z } from 'zod'
 export const StorageQuotaViewSchema = z.object({
   quotaBytes: z.number(),
   usedBytes: z.number(),
+  /** Members see usage with no target/limit at all — not even the soft one. */
+  unlimited: z.boolean().default(false),
 })
 
 export const AdminStorageUsageRowSchema = z.object({

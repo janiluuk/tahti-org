@@ -25,6 +25,7 @@ interface MembershipInfo {
 interface StorageInfo {
   quotaBytes: number
   usedBytes: number
+  unlimited?: boolean
 }
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -98,7 +99,11 @@ export default async function AccountSettingsPage() {
       <TwoFactorPanel />
 
       {storageInfo && (
-        <StoragePanel quotaBytes={storageInfo.quotaBytes} usedBytes={storageInfo.usedBytes} />
+        <StoragePanel
+          quotaBytes={storageInfo.quotaBytes}
+          usedBytes={storageInfo.usedBytes}
+          unlimited={storageInfo.unlimited}
+        />
       )}
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
