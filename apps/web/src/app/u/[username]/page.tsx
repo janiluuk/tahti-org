@@ -582,7 +582,11 @@ export default async function ArtistProfilePage({ params }: { params: { username
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={p.coverUrl} alt="" width={76} height={76} />
                               ) : (
-                                <span className="prof-collection-cover-ph" aria-hidden />
+                                <span
+                                  className="prof-collection-cover-ph"
+                                  style={{ background: themeBackground }}
+                                  aria-hidden
+                                />
                               )}
                             </div>
                             <div>
@@ -599,7 +603,11 @@ export default async function ArtistProfilePage({ params }: { params: { username
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={p.coverUrl} alt="" width={76} height={76} />
                               ) : (
-                                <span className="prof-collection-cover-ph" aria-hidden />
+                                <span
+                                  className="prof-collection-cover-ph"
+                                  style={{ background: themeBackground }}
+                                  aria-hidden
+                                />
                               )}
                             </div>
                             <div>
