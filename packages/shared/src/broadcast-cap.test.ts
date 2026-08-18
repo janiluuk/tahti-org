@@ -10,6 +10,7 @@ import {
   FREE_WEEKLY_LIVE_GRACE_SEC,
   canAcceptSourceConnect,
   broadcastWarningLevel,
+  isFallbackOnlyLiveSession,
 } from './broadcast-cap.js'
 
 describe('broadcast-cap', () => {
@@ -60,5 +61,12 @@ describe('broadcast-cap', () => {
     expect(canAcceptSourceConnect(cap, 'OFFLINE')).toBe(false)
     expect(canAcceptSourceConnect(cap, 'LIVE')).toBe(true)
     expect(canAcceptSourceConnect(cap, 'PREVIEW')).toBe(true)
+  })
+
+  it('isFallbackOnlyLiveSession is true for 24/7 archive placeholder broadcasts', () => {
+    expect(isFallbackOnlyLiveSession('LIVE', { wentLiveAt: null })).toBe(true)
+    expect(isFallbackOnlyLiveSession('LIVE', { wentLiveAt: new Date() })).toBe(false)
+    expect(isFallbackOnlyLiveSession('PREVIEW', { wentLiveAt: null })).toBe(false)
+    expect(isFallbackOnlyLiveSession('LIVE', null)).toBe(false)
   })
 })

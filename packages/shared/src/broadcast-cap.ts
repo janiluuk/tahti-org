@@ -119,14 +119,34 @@ export function canAcceptSourceConnect(cap: BroadcastCapResult, channelState: st
   return true
 }
 
-/** Increment live seconds for all FREE-tier users on currently LIVE channels. */
+/** True when the channel is airing 24/7 archive fallback, not an artist live show.
+ * Fallback reconciler keeps state LIVE with a placeholder broadcast that never
+ * gets wentLiveAt — only real go-live / ingest sessions set that field. */
+export function isFallbackOnlyLiveSession(
+  channelState: string,
+  openBroadcast: { wentLiveAt: Date | null } | null | undefined,
+): boolean {
+  if (channelState !== 'LIVE') return false
+  if (!openBroadcast) return false
+  return openBroadcast.wentLiveAt === null
+}
+
+/** Increment live seconds for FREE-tier users actively broadcasting (preview or public live).
+ * 24/7 archive fallback channels stay LIVE but never went live — they are excluded. */
 export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<number> {
   const liveChannels = await prisma.channel.findMany({
-    where: { state: 'LIVE' },
+    where: { state: { in: ['LIVE', 'PREVIEW'] } },
     select: {
       slug: true,
+      state: true,
       userId: true,
       user: { select: { tier: true, weeklyLiveResetAt: true } },
+      broadcasts: {
+        where: { endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        take: 1,
+        select: { wentLiveAt: true },
+      },
     },
   })
 
@@ -134,6 +154,11 @@ export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<numbe
   for (const ch of liveChannels) {
     if (SYSTEM_ALWAYS_ON_SLUGS.has(ch.slug)) continue
     if (isUnlimitedLiveTier(ch.user.tier)) continue
+
+    const openBroadcast = ch.broadcasts[0]
+    if (isFallbackOnlyLiveSession(ch.state, openBroadcast)) continue
+    if (ch.state === 'PREVIEW' && !openBroadcast) continue
+
     await ensureWeeklyReset(prisma, ch.userId, ch.user.weeklyLiveResetAt)
     await prisma.user.update({
       where: { id: ch.userId },
@@ -168,6 +193,8 @@ export async function enforceWeeklyCapDisconnects(prisma: PrismaClient): Promise
       where: { channelId: u.channel.id, endedAt: null },
       orderBy: { startedAt: 'desc' },
     })
+    // Cap applies to live shows only — leave 24/7 fallback rotation running.
+    if (isFallbackOnlyLiveSession(u.channel.state, broadcast)) continue
     if (broadcast) {
       await prisma.broadcast.update({
         where: { id: broadcast.id },
