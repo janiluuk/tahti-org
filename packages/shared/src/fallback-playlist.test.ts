@@ -14,6 +14,13 @@ import {
   interleaveAnnouncements,
   type AnnouncementPlaybackRow,
   type FallbackPlaybackRow,
+  computeFallbackRotationPosition,
+  applyFallbackRotationSync,
+  rotateFallbackRowsToPosition,
+  fallbackRotationSeekM3uTag,
+  effectiveFallbackTrackDurationSec,
+  FALLBACK_TRACK_DURATION_GUESS_SEC,
+  type FallbackRotationPosition,
 } from './fallback-playlist.js'
 
 const base = {
@@ -202,6 +209,60 @@ describe('renderFallbackM3u', () => {
 describe('channelArchiveCacheDir', () => {
   it('joins root and channel id without trailing slash on root', () => {
     expect(channelArchiveCacheDir('/archive-cache/', 'ch-1')).toBe('/archive-cache/ch-1')
+  })
+})
+
+describe('fallback rotation wall-clock sync', () => {
+  const track = (id: string, durationSec: number): FallbackPlaybackRow => ({
+    id,
+    title: id,
+    playbackKey: `mp3/${id}.mp3`,
+    durationSec,
+  })
+
+  it('computes track index and offset from anchor time', () => {
+    const rows = [track('a', 100), track('b', 200), track('c', 300)]
+    const anchor = Date.parse('2026-01-01T00:00:00Z')
+    const pos = computeFallbackRotationPosition(rows, anchor, anchor + 250_000)
+    expect(pos).toEqual({ trackIndex: 1, offsetSec: 150, cycleDurationSec: 600 })
+  })
+
+  it('wraps elapsed time across full playlist cycles', () => {
+    const rows = [track('a', 60), track('b', 60)]
+    const pos = computeFallbackRotationPosition(rows, 0, 90_000)
+    expect(pos).toEqual({ trackIndex: 1, offsetSec: 30, cycleDurationSec: 120 })
+  })
+
+  it('guesses duration when missing', () => {
+    expect(effectiveFallbackTrackDurationSec(null)).toBe(FALLBACK_TRACK_DURATION_GUESS_SEC)
+    expect(effectiveFallbackTrackDurationSec(0)).toBe(FALLBACK_TRACK_DURATION_GUESS_SEC)
+    expect(effectiveFallbackTrackDurationSec(42)).toBe(42)
+  })
+
+  it('rotates rows so current track is first', () => {
+    const rows = [track('a', 100), track('b', 200), track('c', 300)]
+    const position: FallbackRotationPosition = {
+      trackIndex: 1,
+      offsetSec: 50,
+      cycleDurationSec: 600,
+    }
+    expect(rotateFallbackRowsToPosition(rows, position).map((r) => r.id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('applyFallbackRotationSync rotates and preserves offset', () => {
+    const rows = [track('a', 100), track('b', 200)]
+    const { rows: synced, position } = applyFallbackRotationSync(rows, 0, 130_000)
+    expect(synced.map((r) => r.id)).toEqual(['b', 'a'])
+    expect(position?.offsetSec).toBe(30)
+  })
+
+  it('emits seek tag and annotate prefix on first entry when offset > 0', () => {
+    const body = renderFallbackM3u(
+      [{ title: 'Set A', durationSec: 90, url: 's3get:https://example.com/a.mp3' }],
+      45,
+    )
+    expect(body).toContain(fallbackRotationSeekM3uTag(45))
+    expect(body).toContain('annotate:liq_start="45.":s3get:https://example.com/a.mp3')
   })
 })
 

@@ -11,6 +11,7 @@ import {
   interleaveAnnouncements,
   localCacheBasename,
   renderLocalFallbackM3u,
+  applyFallbackRotationSync,
   TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
 } from '@tahti/shared'
@@ -117,6 +118,7 @@ export async function syncChannelArchiveFallbackCache(
 
   const isTahtiRadio = channel.slug === TAHTI_RADIO_SLUG
   let baseRows: FallbackPlaybackRow[] = []
+  let playlistOrderStable = false
 
   if (channel.fallbackEnabled || isTahtiRadio) {
     // Prefer curated rotation (Tahti Selects / Radio) — same order as the remote
@@ -125,6 +127,7 @@ export async function syncChannelArchiveFallbackCache(
     const curated = await curatedPlaybackRows(prisma, channelId)
     if (curated.length > 0) {
       baseRows = curated
+      playlistOrderStable = true
     } else {
       const items = channel.fallbackEnabled
         ? await prisma.archiveItem.findMany({
@@ -147,6 +150,7 @@ export async function syncChannelArchiveFallbackCache(
           })
         : []
       baseRows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+      playlistOrderStable = channel.fallbackMode !== 'shuffle'
     }
 
     if (baseRows.length === 0 && isTahtiRadio) {
@@ -156,11 +160,26 @@ export async function syncChannelArchiveFallbackCache(
       })
       if (selects) {
         baseRows = await curatedPlaybackRows(prisma, selects.id)
+        if (baseRows.length > 0) playlistOrderStable = true
       }
     }
   }
 
   baseRows = baseRows.slice(0, maxItems)
+
+  const broadcast = await prisma.broadcast.findFirst({
+    where: { channelId, endedAt: null },
+    orderBy: { startedAt: 'desc' },
+    select: { startedAt: true, wentLiveAt: true },
+  })
+
+  let seekOffsetSec: number | undefined
+  if (broadcast && broadcast.wentLiveAt == null && baseRows.length > 0 && playlistOrderStable) {
+    const synced = applyFallbackRotationSync(baseRows, broadcast.startedAt.getTime(), Date.now())
+    baseRows = synced.rows
+    seekOffsetSec = synced.position?.offsetSec
+  }
+
   const [systemAnnouncements, ownAnnouncements] = await Promise.all([
     systemAnnouncementRows(prisma),
     channel.announcementsEnabled ? ownAnnouncementRows(prisma, channelId) : [],
@@ -207,7 +226,7 @@ export async function syncChannelArchiveFallbackCache(
     summary.pruned++
   }
 
-  const m3u = renderLocalFallbackM3u(rows, channelDir)
+  const m3u = renderLocalFallbackM3u(rows, channelDir, seekOffsetSec)
   await writeFile(join(channelDir, 'fallback.m3u'), m3u, 'utf8')
 
   return summary

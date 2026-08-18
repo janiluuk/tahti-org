@@ -83,6 +83,81 @@ export function buildFallbackPlaybackRows(
   return rows
 }
 
+/** Fallback when durationSec is missing from the DB (EXTINF:-1 breaks position math). */
+export const FALLBACK_TRACK_DURATION_GUESS_SEC = 180
+
+export function effectiveFallbackTrackDurationSec(durationSec: number | null | undefined): number {
+  return durationSec != null && durationSec > 0 ? durationSec : FALLBACK_TRACK_DURATION_GUESS_SEC
+}
+
+export type FallbackRotationPosition = {
+  trackIndex: number
+  offsetSec: number
+  cycleDurationSec: number
+}
+
+/** Where a 24/7 rotation should be right now, from a fixed playlist and anchor time.
+ *  Recompute on every fallback.m3u fetch / Liquidsoap restart so listeners stay
+ *  on the virtual timeline instead of rewinding to track 1. */
+export function computeFallbackRotationPosition(
+  rows: FallbackPlaybackRow[],
+  anchorMs: number,
+  nowMs: number,
+): FallbackRotationPosition | null {
+  if (rows.length === 0) return null
+
+  const durations = rows.map((row) => effectiveFallbackTrackDurationSec(row.durationSec))
+  const cycleDurationSec = durations.reduce((sum, d) => sum + d, 0)
+  if (cycleDurationSec <= 0) return null
+
+  let elapsedSec = Math.floor((nowMs - anchorMs) / 1000) % cycleDurationSec
+  if (elapsedSec < 0) elapsedSec += cycleDurationSec
+
+  for (let i = 0; i < rows.length; i++) {
+    const trackDuration = durations[i]!
+    if (elapsedSec < trackDuration) {
+      return { trackIndex: i, offsetSec: elapsedSec, cycleDurationSec }
+    }
+    elapsedSec -= trackDuration
+  }
+
+  return { trackIndex: 0, offsetSec: 0, cycleDurationSec }
+}
+
+/** Put the track that should be playing now at index 0 (Liquidsoap starts at file start). */
+export function rotateFallbackRowsToPosition(
+  rows: FallbackPlaybackRow[],
+  position: FallbackRotationPosition,
+): FallbackPlaybackRow[] {
+  const { trackIndex } = position
+  if (trackIndex <= 0 || trackIndex >= rows.length) return rows
+  return [...rows.slice(trackIndex), ...rows.slice(0, trackIndex)]
+}
+
+/** M3U comment for debugging / future consumers (Liquidsoap uses annotate: on the URL). */
+export function fallbackRotationSeekM3uTag(offsetSec: number): string {
+  return `#TAHTI-SEEK-SEC:${Math.max(0, Math.floor(offsetSec))}`
+}
+
+function fallbackFirstEntryUrl(url: string, seekOffsetSec?: number): string {
+  if (seekOffsetSec == null || seekOffsetSec <= 0) return url
+  const sec = Math.max(0, Math.floor(seekOffsetSec))
+  return `annotate:liq_start="${sec}.":${url}`
+}
+
+export function applyFallbackRotationSync(
+  rows: FallbackPlaybackRow[],
+  anchorMs: number,
+  nowMs: number,
+): { rows: FallbackPlaybackRow[]; position: FallbackRotationPosition | null } {
+  const position = computeFallbackRotationPosition(rows, anchorMs, nowMs)
+  if (!position) return { rows, position: null }
+  return {
+    rows: rotateFallbackRowsToPosition(rows, position),
+    position,
+  }
+}
+
 export type FallbackM3uEntry = {
   title: string
   durationSec: number | null
@@ -92,15 +167,19 @@ export type FallbackM3uEntry = {
 // The tahti/mp3 prefix is not publicly readable (unlike covers/avatars/archive
 // banners — mp3/flac audio may be gated catalog content), so each entry's URL is
 // caller-supplied (a presigned GET) rather than built from a public endpoint here.
-export function renderFallbackM3u(entries: FallbackM3uEntry[]): string {
+export function renderFallbackM3u(entries: FallbackM3uEntry[], seekOffsetSec?: number): string {
   if (entries.length === 0) {
     return '#EXTM3U\n# no items yet\n'
   }
   const lines: string[] = ['#EXTM3U']
-  for (const entry of entries) {
+  if (seekOffsetSec != null && seekOffsetSec > 0) {
+    lines.push(fallbackRotationSeekM3uTag(seekOffsetSec))
+  }
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]!
     const duration = entry.durationSec ?? -1
     lines.push(`#EXTINF:${duration},${entry.title}`)
-    lines.push(entry.url)
+    lines.push(fallbackFirstEntryUrl(entry.url, i === 0 ? seekOffsetSec : undefined))
   }
   return lines.join('\n') + '\n'
 }
@@ -190,16 +269,22 @@ export function channelArchiveCacheDir(cacheRoot: string, channelId: string): st
 export function renderLocalFallbackM3u(
   rows: FallbackPlaybackRow[],
   channelCacheDir: string,
+  seekOffsetSec?: number,
 ): string {
   if (rows.length === 0) {
     return '#EXTM3U\n# no items yet\n'
   }
   const dir = channelCacheDir.replace(/\/$/, '')
   const lines: string[] = ['#EXTM3U']
-  for (const row of rows) {
+  if (seekOffsetSec != null && seekOffsetSec > 0) {
+    lines.push(fallbackRotationSeekM3uTag(seekOffsetSec))
+  }
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]!
     const duration = row.durationSec ?? -1
     lines.push(`#EXTINF:${duration},${row.title}`)
-    lines.push(`${dir}/${localCacheBasename(row.playbackKey)}`)
+    const path = `${dir}/${localCacheBasename(row.playbackKey)}`
+    lines.push(fallbackFirstEntryUrl(path, i === 0 ? seekOffsetSec : undefined))
   }
   return lines.join('\n') + '\n'
 }

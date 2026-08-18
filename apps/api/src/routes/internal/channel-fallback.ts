@@ -17,6 +17,7 @@ import {
   buildFallbackPlaybackRows,
   interleaveAnnouncements,
   renderFallbackM3u,
+  applyFallbackRotationSync,
   TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
 } from '@tahti/shared'
@@ -204,6 +205,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       const isTahtiRadio = channel.slug === TAHTI_RADIO_SLUG
 
       let rows: FallbackPlaybackRow[] = []
+      let playlistOrderStable = false
 
       if (!channel.fallbackEnabled && !isTahtiRadio) {
         // No rotation at all — nothing to interleave announcements into either.
@@ -217,13 +219,17 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       const curated = await curatedRows(fastify.prisma, channelId)
       if (curated.length > 0) {
         rows = curated
+        playlistOrderStable = true
       } else if (channel.activeFallbackCollectionId) {
         // Manage panel playlist switch: repoints the rotation at a chosen Collection
         // instead of the default isFallback set. An empty collection (or one with no
         // playable archive-item entries) falls through to the default rotation below
         // rather than going silent.
         const chosen = await collectionRows(fastify.prisma, channel.activeFallbackCollectionId)
-        rows = chosen
+        if (chosen.length > 0) {
+          rows = chosen
+          playlistOrderStable = true
+        }
       }
 
       if (rows.length === 0) {
@@ -248,6 +254,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
             })
           : []
         rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+        playlistOrderStable = channel.fallbackMode !== 'shuffle'
       }
 
       // Tahti Radio has no archive of its own — when nobody's booked a live slot and
@@ -261,7 +268,25 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         })
         if (selects) {
           rows = await curatedRows(fastify.prisma, selects.id)
+          if (rows.length > 0) playlistOrderStable = true
         }
+      }
+
+      const broadcast = await fastify.prisma.broadcast.findFirst({
+        where: { channelId, endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        select: { startedAt: true, wentLiveAt: true },
+      })
+
+      // 24/7 placeholder broadcasts never get wentLiveAt — wall-clock sync keeps
+      // rotation continuous across Liquidsoap restarts. Position math uses tracks
+      // only; announcements are spliced in afterward (random spacing would break
+      // deterministic sync). Skip shuffle pools: order shifts between rebuilds.
+      let seekOffsetSec: number | undefined
+      if (broadcast && broadcast.wentLiveAt == null && rows.length > 0 && playlistOrderStable) {
+        const synced = applyFallbackRotationSync(rows, broadcast.startedAt.getTime(), Date.now())
+        rows = synced.rows
+        seekOffsetSec = synced.position?.offsetSec
       }
 
       const [systemAnnouncements, ownAnnouncements] = await Promise.all([
@@ -270,7 +295,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       ])
       rows = interleaveAnnouncements(rows, systemAnnouncements, ownAnnouncements)
 
-      const body = renderFallbackM3u(await toM3uEntries(rows))
+      const body = renderFallbackM3u(await toM3uEntries(rows), seekOffsetSec)
 
       return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
     },
