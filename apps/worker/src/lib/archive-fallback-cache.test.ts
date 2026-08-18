@@ -21,6 +21,7 @@ const prismaMock = {
   curatedRotationItem: { findMany: vi.fn() },
   announcementSettings: { findUnique: vi.fn() },
   announcementClip: { findMany: vi.fn() },
+  broadcast: { findFirst: vi.fn() },
 }
 
 describe('syncChannelArchiveFallbackCache', () => {
@@ -39,6 +40,7 @@ describe('syncChannelArchiveFallbackCache', () => {
     prismaMock.announcementSettings.findUnique.mockResolvedValue(null)
     prismaMock.announcementClip.findMany.mockResolvedValue([])
     prismaMock.curatedRotationItem.findMany.mockResolvedValue([])
+    prismaMock.broadcast.findFirst.mockResolvedValue(null)
     prismaMock.archiveItem.findMany.mockResolvedValue([
       {
         id: 'item-1',
