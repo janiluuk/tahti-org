@@ -415,35 +415,32 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               </header>
 
+              {/* Ambient decoration (text layer + slideshow/gallery) — the
+                  artist's own configured backdrop, not tied to whether
+                  there's an active program. Shows on every tab, including
+                  Bio, so "no program playing" doesn't mean a blank page. */}
+              <ChannelTextLayerView
+                mode={channel.textLayerMode}
+                text={channel.textLayerText}
+                align={channel.textLayerAlign}
+              />
+
+              {channel.galleryMode === 'STATIC_SLIDESHOW' && channel.slideshowImages.length > 0 ? (
+                <ChannelSlideshow
+                  images={channel.slideshowImages}
+                  preset={(channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset}
+                  intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
+                  transitionMs={channel.slideshowTransitionMs ?? 600}
+                  autoplay={channel.slideshowAutoplay ?? true}
+                />
+              ) : (
+                <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
+              )}
+
               <PublicChannelTabs
                 live={
                   showLiveTab ? (
                   <>
-                    <ChannelTextLayerView
-                      mode={channel.textLayerMode}
-                      text={channel.textLayerText}
-                      align={channel.textLayerAlign}
-                    />
-
-                    {channel.galleryMode === 'STATIC_SLIDESHOW' &&
-                    channel.slideshowImages.length > 0 ? (
-                      <ChannelSlideshow
-                        images={channel.slideshowImages}
-                        preset={
-                          (channel.slideshowPreset ??
-                            'FADE') as import('@tahti/shared').SlideshowPreset
-                        }
-                        intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
-                        transitionMs={channel.slideshowTransitionMs ?? 600}
-                        autoplay={channel.slideshowAutoplay ?? true}
-                      />
-                    ) : (
-                      <ChannelGalleryView
-                        mode={channel.galleryMode}
-                        images={channel.slideshowImages}
-                      />
-                    )}
-
                     {hlsUrl && (
                       <LivePlayerSection
                         url={hlsUrl}
