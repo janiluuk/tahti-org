@@ -42,7 +42,7 @@ export default function NewMotionForm() {
   if (!open) {
     return (
       <div className="brand-section">
-        <Button variant="ghost" onClick={() => setOpen(true)}>
+        <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
           + Submit motion
         </Button>
       </div>
@@ -88,13 +88,14 @@ export default function NewMotionForm() {
         <Row gap={2}>
           <Button
             variant="primary"
+            size="sm"
             onClick={submit}
             disabled={pending || !title.trim() || !description.trim()}
           >
             <ButtonIcon name="plus" />
             {pending ? 'Saving…' : 'Create draft'}
           </Button>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
             Cancel
           </Button>
         </Row>

@@ -33,6 +33,25 @@
 
 [data-tahti-ui='brand'].brand-public-shell {
   background: transparent;
+  /* Same --tahti-* remap as .brand-channel above — without it, admin-styled
+   * components (Button, Input, Textarea, Field, Alert — used throughout
+   * governance and other PublicBrandShell pages) fall back to admin-tokens.css's
+   * light theme (white surfaces, blue primary) instead of the dark brand
+   * palette, which is why they render in the wrong color here. */
+  --tahti-bg: var(--bg);
+  --tahti-surface: var(--card);
+  --tahti-surface-muted: var(--card2);
+  --tahti-border: var(--border);
+  --tahti-border-strong: color-mix(in srgb, var(--muted) 40%, transparent);
+  --tahti-text: var(--text);
+  --tahti-text-secondary: var(--muted);
+  --tahti-text-muted: var(--muted);
+  --tahti-primary: var(--cyan);
+  --tahti-primary-hover: color-mix(in srgb, var(--cyan) 85%, white);
+  --tahti-success-bg: color-mix(in srgb, var(--green) 12%, var(--card));
+  --tahti-warning-bg: color-mix(in srgb, var(--amber) 12%, var(--card));
+  --tahti-error-bg: color-mix(in srgb, var(--coral) 12%, var(--card));
+  --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
 }
 
 /* Three.js gateway background (BgCanvas, mounted once in the root layout — see
