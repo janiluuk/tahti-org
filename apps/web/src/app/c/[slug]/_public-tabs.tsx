@@ -9,12 +9,12 @@ import { channelTabForHash, type PublicChannelTab } from './channel-tab-routing'
 
 type Tab = PublicChannelTab
 
-const TABS: Array<{ id: Tab; label: string }> = [
+const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'live', label: 'Live' },
+  { id: 'bio', label: 'Bio' },
   { id: 'archive', label: 'Archive' },
   { id: 'releases', label: 'Releases' },
   { id: 'feed', label: 'Feed' },
-  { id: 'bio', label: 'Bio' },
 ]
 
 const HELP_STEPS: HelpSpotlightStep[] = [
@@ -57,13 +57,19 @@ export function PublicChannelTabs({
   feed,
   bio,
 }: {
-  live: ReactNode
+  /** Omit when the channel isn't currently live — the Live tab (and its
+   * player) only appears while there's actually something to show, rather
+   * than sitting in the bar permanently empty. Bio (with a latest-releases
+   * preview) is the landing tab the rest of the time. */
+  live?: ReactNode
   archive: ReactNode
   releases: ReactNode
   feed: ReactNode
   bio: ReactNode
 }) {
-  const [active, setActive] = useState<Tab>('live')
+  const hasLive = live != null
+  const TABS = hasLive ? ALL_TABS : ALL_TABS.filter((tab) => tab.id !== 'live')
+  const [active, setActive] = useState<Tab>(hasLive ? 'live' : 'bio')
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
     live: null,
     archive: null,
@@ -93,7 +99,7 @@ export function PublicChannelTabs({
   return (
     <div className="prof-tabs">
       <HelpSpotlight
-        steps={HELP_STEPS}
+        steps={hasLive ? HELP_STEPS : HELP_STEPS.filter((step) => step.id !== 'live')}
         activeId={active}
         onNavigate={(id) => setActive(id as Tab)}
         getTargetEl={(step) => panelRefs.current[step.id as Tab]}
@@ -112,15 +118,17 @@ export function PublicChannelTabs({
           </button>
         ))}
       </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'live'}
-        ref={(el) => {
-          panelRefs.current.live = el
-        }}
-      >
-        {live}
-      </div>
+      {hasLive && (
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'live'}
+          ref={(el) => {
+            panelRefs.current.live = el
+          }}
+        >
+          {live}
+        </div>
+      )}
       <div
         className="prof-tabs__panel"
         hidden={active !== 'archive'}

@@ -5,6 +5,7 @@ import NextLink from 'next/link'
 import { SidebarNavIconSvg } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { ShareEmbedButton } from './share-embed-button'
+import { DesignNavLink } from './_design-nav-link'
 
 type StudioHeaderActionsProps = {
   hasChannel?: boolean
@@ -26,10 +27,7 @@ export function ChannelManagementActions({
 }) {
   return (
     <>
-      <NextLink href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--ghost">
-        <SidebarNavIconSvg name="appearance" />
-        Design
-      </NextLink>
+      <DesignNavLink />
       <NextLink href={resolveChannelUrl(channelSlug)} className="ui-btn ui-btn--sm ui-btn--ghost">
         <SidebarNavIconSvg name="channel" />
         View channel

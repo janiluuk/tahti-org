@@ -106,8 +106,12 @@
   background: color-mix(in srgb, var(--card) 92%, transparent);
   /* No backdrop-filter — this is sticky above scrolling content and (on
    * radio/channel) canvases. Sampling a live backdrop every scroll frame is
-   * a known compositor tax; a slightly more opaque solid reads the same. */
-  contain: layout style paint;
+   * a known compositor tax; a slightly more opaque solid reads the same.
+   * `contain` is layout+style only, NOT paint — paint containment clips
+   * descendants to this box, which silently hid the user-menu dropdown
+   * (.ch-header__menu) since it's an absolutely-positioned child meant to
+   * overflow below the 52px header bar. */
+  contain: layout style;
   padding: 0 24px;
   height: 52px;
   display: flex;

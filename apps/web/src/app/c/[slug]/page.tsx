@@ -252,6 +252,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   }
 
   const hlsUrl = channel.hlsUrl
+  // Only show the Live tab when there's actually a stream to show — otherwise
+  // it sits in the tab bar permanently empty. Bio (with a latest-releases
+  // preview) is the landing tab the rest of the time (see PublicChannelTabs).
+  const showLiveTab = Boolean(hlsUrl)
   // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
   // actually broadcasting — channel.state is still 'LIVE' while they run, but
   // "LIVE NOW" is misleading here; show the currently-rotating track instead.
@@ -411,6 +415,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
               <PublicChannelTabs
                 live={
+                  showLiveTab ? (
                   <>
                     <ChannelTextLayerView
                       mode={channel.textLayerMode}
@@ -478,6 +483,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
                     {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
                   </>
+                  ) : undefined
                 }
                 archive={
                   <>
@@ -853,6 +859,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <div className="public-empty-card">
                         <p className="public-empty-card__text">No bio yet.</p>
                       </div>
+                    )}
+                    {releases.length > 0 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Latest releases</h2>
+                        </div>
+                        <ReleasesGrid releases={releases.slice(0, 4)} />
+                      </section>
                     )}
                     {tags.length > 0 && (
                       <div className="prof-tags">

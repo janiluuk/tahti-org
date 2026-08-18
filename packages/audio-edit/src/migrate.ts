@@ -70,7 +70,18 @@ export function migrateV1toV2(v1: EditList): EditListV2 {
       enabled: v1.filter?.enabled ?? false,
       params: filterParams,
     },
-    { instanceId: uuid(), pluginId: 'gain', enabled: true, params: gainParams },
+    {
+      instanceId: uuid(),
+      pluginId: 'gain',
+      // Unlike the other plugins, v1 never had its own "gain enabled" toggle —
+      // the dB trim always applied. Derive v2's enabled flag from whether v1
+      // actually did anything (non-zero trim or loudnorm on), so migrating a
+      // real saved edit preserves its exact audio output, while a genuinely
+      // fresh/default edit (0 dB, normalize off) shows bypassed like every
+      // other plugin instead of misleadingly green with nothing configured.
+      enabled: v1.gainDb !== 0 || v1.loudnorm.enabled,
+      params: gainParams,
+    },
     { instanceId: uuid(), pluginId: 'eq', enabled: v1.eq.enabled, params: eqParams },
     { instanceId: uuid(), pluginId: 'comp', enabled: v1.comp.enabled, params: compParams },
     {

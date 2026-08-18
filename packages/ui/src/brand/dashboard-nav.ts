@@ -127,19 +127,15 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   },
   { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
 
-  // My Library — the artist's own catalog and files.
-  {
-    href: '/feed',
-    label: 'Artist feed',
-    icon: 'posts',
-    isRoute: true,
-    group: 'My Library',
-  },
+  // My Library — the artist's own catalog and files. (Artist feed moved to
+  // the dashboard main page — see _artist-feed-section.tsx — so it no longer
+  // needs its own nav entry.)
   {
     href: '/dashboard/upload',
     label: 'Upload',
     icon: 'upload',
     isRoute: true,
+    group: 'My Library',
   },
   {
     href: '/dashboard/archive',
@@ -148,7 +144,8 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
     requiresChannel: true,
   },
-  { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
+  // Collections lives under Discography → Collections tab (_music-browser.tsx)
+  // now — no separate nav entry.
   {
     href: '/dashboard/releases',
     label: 'Smart Links',

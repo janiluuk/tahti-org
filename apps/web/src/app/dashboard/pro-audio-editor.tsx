@@ -212,11 +212,23 @@ function ChainTile({
   onFocus: () => void
   onToggle: (v: boolean) => void
 }) {
+  // A plain <button> wrapper here would nest the Switch's own <button> inside
+  // it — invalid HTML that breaks the toggle's click handling (the browser's
+  // parser can't nest interactive controls, so the switch never receives its
+  // own clicks). Use a div with button semantics for the focus target instead,
+  // so the toggle stays a real, independently-clickable button inside it.
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       className={cx('plug', focused && 'plug--focused', !enabled && 'plug--bypassed')}
       onClick={onFocus}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onFocus()
+        }
+      }}
     >
       <div className="plug__head">
         <span className="plug__name">
@@ -226,7 +238,7 @@ function ChainTile({
         <Switch checked={enabled} onChange={onToggle} label={`${name} enabled`} />
       </div>
       <div className="plug__summary plug__mono-summary">{summary}</div>
-    </button>
+    </div>
   )
 }
 

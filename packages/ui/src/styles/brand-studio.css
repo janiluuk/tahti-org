@@ -1443,6 +1443,15 @@
   background: color-mix(in srgb, var(--card2) 55%, transparent);
 }
 
+/* Header quick-links (e.g. the "Design" button) that mark themselves current
+ * when their target is the page you're already on — same cyan accent as the
+ * sidebar's own .db-nav-item.active. */
+[data-tahti-ui='studio'] .ui-btn--ghost.is-active {
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+  color: var(--cyan);
+}
+
 [data-tahti-ui='studio'] .ui-btn--danger {
   background: transparent;
   color: var(--coral);
