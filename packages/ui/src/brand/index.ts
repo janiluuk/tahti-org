@@ -151,3 +151,6 @@ export {
 } from './AdminPrimitives'
 export { fanSubBreakdownLines } from './fan-sub-breakdown'
 export { SortableList, type SortableListProps, type SortableItemHandle } from './SortableList'
+export { GuidedTour, type TourStep } from './GuidedTour'
+export { HelpTourButton } from './HelpTourButton'
+export { getStudioTourSteps, getPublicTourSteps } from './tour-steps'

@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { SidebarNavIconSvg } from './SidebarNav'
 import { NotificationBell, type NotificationBellItem } from './NotificationBell'
+import { HelpTourButton } from './HelpTourButton'
+import { getStudioTourSteps } from './tour-steps'
 
 type StudioTopNavProps = {
   displayName?: string
@@ -222,6 +224,10 @@ export function StudioTopNav({
             markAllRead={markNotificationsRead}
           />
         )}
+        <HelpTourButton
+          steps={getStudioTourSteps(pathname ?? '/dashboard')}
+          className="studio-top-nav__icon-btn"
+        />
         {displayName && (
           <div className="studio-top-nav__user-menu" ref={menuRef}>
             <button

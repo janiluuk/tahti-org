@@ -9,6 +9,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WatcherCount } from './WatcherCount'
 import { NotificationBell, type NotificationBellItem } from './NotificationBell'
 import { MessagesBell, type MessagesBellConversation } from './MessagesBell'
+import { HelpTourButton } from './HelpTourButton'
+import { getPublicTourSteps } from './tour-steps'
 
 // ChannelHeader is mounted from many different public-page layouts across
 // apps/web (marketing pages, channel, profile, smart links) — reading the API
@@ -201,6 +203,12 @@ export function ChannelHeader({
           <NotificationBell
             fetchNotifications={fetchNotifications}
             markAllRead={markNotificationsRead}
+          />
+        )}
+        {!channelLiveMode && (
+          <HelpTourButton
+            steps={getPublicTourSteps(pathname ?? '/')}
+            className="studio-top-nav__notif-btn"
           />
         )}
         {!channelLiveMode &&
