@@ -32,12 +32,9 @@ export default async function FeatureRequestsPage() {
 
   if (!me.isMember) {
     return (
-      <PublicPageHeader
-        title="Feature requests"
-        back={{ href: '/governance', label: '← Governance' }}
-      >
-        This board is for Tahti ry members. Activate your membership to suggest and vote on
-        features.
+      <PublicPageHeader title="Topics" back={{ href: '/governance', label: '← Governance' }}>
+        This board is for paying Tahti ry members. Activate your membership to post topics and
+        vote.
       </PublicPageHeader>
     )
   }
@@ -50,12 +47,10 @@ export default async function FeatureRequestsPage() {
 
   return (
     <>
-      <PublicPageHeader
-        title="Feature requests"
-        back={{ href: '/governance', label: '← Governance' }}
-      >
-        Suggest features for Tahti and vote on what other members have proposed. The board reviews
-        this board every quarter and marks what&apos;s planned, in progress, or declined.
+      <PublicPageHeader title="Topics" back={{ href: '/governance', label: '← Governance' }}>
+        Post ideas for Tahti, discuss them, and vote on what other members have proposed. The
+        board reviews this board every quarter and marks what&apos;s planned, in progress, or
+        declined — see the quarterly reports on the Governance page.
       </PublicPageHeader>
 
       <section className="brand-section">

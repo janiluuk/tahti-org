@@ -40,7 +40,7 @@ function NewFeatureRequestForm({ onCreated }: { onCreated: (r: FeatureRequestRef
   if (!open) {
     return (
       <Button variant="primary" size="sm" onClick={() => setOpen(true)}>
-        Suggest a feature
+        + Post a topic
       </Button>
     )
   }
@@ -48,7 +48,7 @@ function NewFeatureRequestForm({ onCreated }: { onCreated: (r: FeatureRequestRef
   return (
     <div className="gov-motion-card__comment-form">
       <Input
-        placeholder="Feature title"
+        placeholder="Topic title"
         maxLength={150}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -92,8 +92,8 @@ export default function FeatureRequestsList({
 
       {requests.length === 0 ? (
         <div className="public-empty-card">
-          <p className="public-empty-card__text">No feature requests yet.</p>
-          <p className="public-empty-card__hint">Be the first to suggest one.</p>
+          <p className="public-empty-card__text">No topics yet.</p>
+          <p className="public-empty-card__hint">Be the first to post one.</p>
         </div>
       ) : (
         requests.map((r) => <FeatureRequestCard key={r.id} request={r} />)

@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Link, PublicPageHeader, Text } from '@tahti/ui'
+import { Link, PublicPageHeader, StatCard, StatCardGrid, Text } from '@tahti/ui'
 import { type MotionComment, type MotionSummary } from './motion-card'
 import MotionsList from './motions-list'
 import NewMotionForm from './new-motion-form'
@@ -24,6 +24,25 @@ interface Member {
   memberSince: string | null
   isBoard: boolean
   channelSlug: string | null
+}
+
+interface BoardResolution {
+  id: string
+  title: string
+  votedAt: string
+  outcome: 'PASSED' | 'FAILED' | 'DEFERRED'
+  voteFor: number
+  voteAgainst: number
+  voteAbstain: number
+}
+
+interface QuarterlyReport {
+  id: string
+  year: number
+  quarter: number
+  generatedAt: string
+  generatedByDisplayName: string
+  downloadUrl: string | null
 }
 
 export default async function GovernancePage() {
@@ -59,12 +78,17 @@ export default async function GovernancePage() {
     )
   }
 
-  const [motionsRes, membersRes] = await Promise.all([
+  const [motionsRes, membersRes, resolutionsRes, quarterlyReportsRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/governance/motions`, {
       headers: { Cookie: cookie },
       cache: 'no-store',
     }),
     fetch(`${apiUrl}/api/v1/governance/members`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    }),
+    fetch(`${apiUrl}/api/v1/transparency/resolutions`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/v1/governance/quarterly-reports`, {
       headers: { Cookie: cookie },
       cache: 'no-store',
     }),
@@ -74,6 +98,27 @@ export default async function GovernancePage() {
     ? ((await motionsRes.json()) as MotionSummary[])
     : []
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
+  const resolutions: BoardResolution[] = resolutionsRes.ok
+    ? ((await resolutionsRes.json()) as BoardResolution[])
+    : []
+  const quarterlyReports: QuarterlyReport[] = quarterlyReportsRes.ok
+    ? ((await quarterlyReportsRes.json()) as QuarterlyReport[])
+    : []
+
+  // Motion vote-outcome aggregate — computed here rather than a dedicated
+  // endpoint since `motions` (closed ones carry a revealed `tally`) is already
+  // fetched in full on this page.
+  const closedMotions = motions.filter((m) => m.state === 'CLOSED' && m.tally)
+  const decidedCount = closedMotions.length
+  const passedCount = closedMotions.filter((m) => (m.tally!.YES ?? 0) > (m.tally!.NO ?? 0)).length
+  const totalVotesCast = closedMotions.reduce(
+    (sum, m) => sum + m.tally!.YES + m.tally!.NO + m.tally!.ABSTAIN,
+    0,
+  )
+  const avgTurnoutPct =
+    decidedCount > 0 && members.length > 0
+      ? Math.round((totalVotesCast / (decidedCount * members.length)) * 100)
+      : 0
 
   // Governance data volume is small (motions capped at 100, a handful open at
   // once in practice) — fetching every motion's discussion thread up front on
@@ -104,9 +149,17 @@ export default async function GovernancePage() {
         binding decisions are confirmed at a live AGM until the bylaws authorize electronic voting.
       </PublicPageHeader>
 
-      <Text size="sm">
-        <Link href="/governance/feature-requests">Suggest and vote on feature requests →</Link>
-      </Text>
+      <section className="brand-section gov-topics-card">
+        <h2 className="brand-section__title brand-section-heading">Topics</h2>
+        <Text size="sm" tone="muted">
+          Post ideas for Tahti, discuss them with other members, and vote on what&apos;s already
+          been proposed. The board reviews open topics every quarter — see the quarterly reports
+          below for what got planned, merged, or declined.
+        </Text>
+        <Link href="/governance/feature-requests" className="ui-btn ui-btn--primary ui-btn--sm">
+          Open Topics →
+        </Link>
+      </section>
 
       {me.isBoard && <NewMotionForm />}
 
@@ -134,6 +187,78 @@ export default async function GovernancePage() {
             isBoard={me.isBoard}
           />
         )}
+      </section>
+
+      <section className="brand-section">
+        <h2 className="brand-section__title brand-section-heading">Statistics</h2>
+
+        <StatCardGrid cols={3} aria-label="Motion voting statistics">
+          <StatCard variant="neutral" value={String(decidedCount)} label="Motions decided" />
+          <StatCard
+            variant="fans"
+            value={String(passedCount)}
+            label="Passed"
+            subtitle={decidedCount > 0 ? `of ${decidedCount}` : undefined}
+          />
+          <StatCard variant="neutral" value={`${avgTurnoutPct}%`} label="Avg. member turnout" />
+        </StatCardGrid>
+
+        <div className="gov-stats-columns">
+          <div>
+            <h3 className="gov-stats-columns__title">
+              Board resolutions ({new Date().getFullYear()})
+            </h3>
+            {resolutions.length === 0 ? (
+              <Text size="sm" tone="muted">
+                No resolutions published for this year yet.
+              </Text>
+            ) : (
+              <ul className="gov-stats-list">
+                {resolutions.slice(0, 8).map((r) => (
+                  <li key={r.id} className="gov-stats-list__item">
+                    <span>{r.title}</span>
+                    <span className="brand-muted">
+                      {r.outcome === 'PASSED'
+                        ? `Passed · ${r.voteFor}–${r.voteAgainst}`
+                        : r.outcome === 'FAILED'
+                          ? `Failed · ${r.voteFor}–${r.voteAgainst}`
+                          : 'Deferred'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Text size="sm">
+              <Link href="/transparency">Full resolution history →</Link>
+            </Text>
+          </div>
+
+          <div>
+            <h3 className="gov-stats-columns__title">Quarterly topic reports</h3>
+            {quarterlyReports.length === 0 ? (
+              <Text size="sm" tone="muted">
+                No quarterly reports published yet.
+              </Text>
+            ) : (
+              <ul className="gov-stats-list">
+                {quarterlyReports.map((r) => (
+                  <li key={r.id} className="gov-stats-list__item">
+                    <span>
+                      Q{r.quarter} {r.year}
+                    </span>
+                    {r.downloadUrl ? (
+                      <a href={r.downloadUrl} className="brand-muted">
+                        Download →
+                      </a>
+                    ) : (
+                      <span className="brand-empty">unavailable</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="brand-section">

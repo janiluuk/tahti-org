@@ -227,6 +227,17 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   },
   { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
 
+  // Member governance — motions, topics, and voting stats. Visible to every
+  // artist (not gated on requiresChannel/paid membership here); the page
+  // itself shows an upgrade prompt for anyone who isn't a paying member yet.
+  {
+    href: '/governance',
+    label: 'Governance',
+    icon: 'governance',
+    isRoute: true,
+    group: 'Community',
+  },
+
   { href: '/admin', label: 'Admin', icon: 'admin', isRoute: true, adminOnly: true },
 ]
 

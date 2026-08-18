@@ -22,6 +22,7 @@ export type SidebarNavIcon =
   | 'venues'
   | 'posts'
   | 'embeds'
+  | 'governance'
 
 export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
   switch (name) {
@@ -266,6 +267,25 @@ export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
             strokeLinejoin="round"
           />
           <circle cx="8" cy="6.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      )
+    case 'governance':
+      return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M8 2v12M4 4.5h8M2.5 4.5 1 8h3l-1.5-3.5ZM13.5 4.5 12 8h3l-1.5-3.5Z"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M1 8a2 2 0 0 0 4 0M12 8a2 2 0 0 0 4 0"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path d="M5.5 14h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
       )
     case 'posts':

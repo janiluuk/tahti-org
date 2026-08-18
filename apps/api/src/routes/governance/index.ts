@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateMotionSchema,
+  FeatureRequestQuarterlyReportListSchema,
   GovernanceMemberListSchema,
   IdParamSchema,
   MotionCommentListSchema,
@@ -21,6 +22,7 @@ import {
 } from '@tahti/shared'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 // M10 — Member governance.
 //
@@ -425,6 +427,48 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         authorDisplayName: comment.author?.displayName ?? null,
         createdAt: comment.createdAt,
       })
+    },
+  )
+
+  // GET /api/v1/governance/quarterly-reports — read-only member view of the
+  // board's quarterly feature-request review reports (see
+  // FeatureRequestQuarterlyReport + /api/admin/feature-requests/reports,
+  // which stays board-only for *generating* them). Members can already vote
+  // on and discuss feature requests as they happen — this is the "what
+  // actually got decided" summary after the fact, mirroring the transparency
+  // page's public board-resolutions list but scoped to feature requests.
+  fastify.get(
+    '/api/v1/governance/quarterly-reports',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(
+          FeatureRequestQuarterlyReportListSchema,
+          'GovernanceQuarterlyReportList',
+        ),
+      },
+    },
+    async (_request, reply) => {
+      const rows = await fastify.prisma.featureRequestQuarterlyReport.findMany({
+        orderBy: [{ year: 'desc' }, { quarter: 'desc' }],
+        take: 12,
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+
+      const reports = await Promise.all(
+        rows.map(async (r) => ({
+          id: r.id.toString(),
+          year: r.year,
+          quarter: r.quarter,
+          storageKey: r.storageKey,
+          generatedAt: r.generatedAt,
+          generatedByDisplayName: r.generatedBy.displayName,
+          downloadUrl: await presignedGetUrl(r.storageKey, 3600).catch(() => null),
+        })),
+      )
+
+      return reply.send(reports)
     },
   )
 }
