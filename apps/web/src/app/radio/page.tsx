@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { AvatarTile, ChannelPageShell, Heading, Row, SafePlainText, Text } from '@tahti/ui'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { getSessionUser } from '@/lib/session'
+import { logout } from '@/app/auth/actions'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
@@ -169,6 +170,7 @@ export default async function RadioPage() {
       activeNav="radio"
       showLiveBadge={!!liveSlot}
       user={user}
+      logoutAction={logout}
       main={
         <div className="ch-page-content">
           <div className="ch-page-foreground">

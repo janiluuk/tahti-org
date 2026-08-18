@@ -4,6 +4,7 @@
 import { notFound } from 'next/navigation'
 import { ProfilePageLayout } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
+import { logout } from '@/app/auth/actions'
 import { GreenRoomGuestView } from './_green-room-guest-view'
 
 export const revalidate = 0
@@ -32,6 +33,7 @@ export default async function GreenRoomPage({ params }: { params: Promise<{ user
       narrow
       activeNav="discover"
       user={user}
+      logoutAction={logout}
       contextLink={{
         href: `/u/${profile.username}`,
         label: `← ${profile.displayName}`,

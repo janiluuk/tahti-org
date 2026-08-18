@@ -43,6 +43,7 @@ import {
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
+import { logout } from '@/app/auth/actions'
 import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
@@ -321,6 +322,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       artistHandle={channel.user.username}
       listenerCount={listenerCount}
       user={user}
+      logoutAction={logout}
       main={
         <ChannelTabs
           isOwnerOrAdmin={isOwnerOrAdmin}

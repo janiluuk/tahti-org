@@ -20,6 +20,7 @@ type StudioShellProps = {
   }>
   markNotificationsRead?: () => Promise<void>
   onGoLiveClick?: () => void
+  logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
 /** Production v8 dashboard layout (studio surface). Playground preview: DashboardShell. */
@@ -33,6 +34,7 @@ export function StudioShell({
   fetchNotifications,
   markNotificationsRead,
   onGoLiveClick,
+  logoutAction,
 }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio">
@@ -45,6 +47,7 @@ export function StudioShell({
         fetchNotifications={fetchNotifications}
         markNotificationsRead={markNotificationsRead}
         onGoLiveClick={onGoLiveClick}
+        logoutAction={logoutAction}
       />
       <div className="db-layout shell-app">
         <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />

@@ -8,6 +8,7 @@ import '@tahti/ui/src/styles/brand-studio.css'
 import '@tahti/ui/src/styles/shells.css'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { logout } from '@/app/auth/actions'
 import { fetchMyNotifications, markAllNotificationsRead } from './notification-actions'
 import { StudioShellClient } from './_studio-shell-client'
 
@@ -30,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       channelSlug={user?.channel?.slug}
       fetchNotifications={fetchMyNotifications}
       markNotificationsRead={markAllNotificationsRead}
+      logoutAction={logout}
     >
       {children}
     </StudioShellClient>

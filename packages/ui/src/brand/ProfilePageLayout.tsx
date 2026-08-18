@@ -321,6 +321,7 @@ type ProfilePageLayoutProps = {
   narrow?: boolean
   /** Logged-in viewer — shows their name/avatar instead of "Sign in" in the header. */
   user?: { username: string; displayName: string; hasChannel?: boolean } | null
+  logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
 /** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */
@@ -333,10 +334,17 @@ export function ProfilePageLayout({
   children,
   narrow,
   user,
+  logoutAction,
 }: ProfilePageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} contextLink={contextLink} activeNav={activeNav} user={user} />
+      <ChannelHeader
+        isLive={isLive}
+        contextLink={contextLink}
+        activeNav={activeNav}
+        user={user}
+        logoutAction={logoutAction}
+      />
       {cover}
       <div className={`prof-page${narrow ? ' prof-page--narrow shell-narrow' : ''}`}>
         {hero}

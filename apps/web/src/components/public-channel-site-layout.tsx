@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { ChannelHeader, PublicFooter, type SiteNavId } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
+import { logout } from '@/app/auth/actions'
 
 type PublicChannelSiteLayoutProps = {
   children: ReactNode
@@ -23,7 +24,7 @@ export async function PublicChannelSiteLayout({
 
   return (
     <div data-tahti-ui="brand" className="brand-channel shell-public">
-      <ChannelHeader activeNav={activeNav} user={user} />
+      <ChannelHeader activeNav={activeNav} user={user} logoutAction={logout} />
       <div className="shell-public__inner">{children}</div>
       <PublicFooter statusUrl={statusPageUrl()} />
     </div>

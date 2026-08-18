@@ -23,6 +23,10 @@ type StudioTopNavProps = {
   /** When set and the channel is live, clicking the go-live icon opens the
    * stream manager instead of navigating to /dashboard/broadcast. */
   onGoLiveClick?: () => void
+  /** Server action for the "Log out" form. The old hardcoded
+   * action="/api/auth/logout" posted to a path that only exists on the API
+   * host, not this app — every logout attempt 404'd. */
+  logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
 function IconLogout() {
@@ -125,6 +129,7 @@ export function StudioTopNav({
   fetchNotifications,
   markNotificationsRead,
   onGoLiveClick,
+  logoutAction,
 }: StudioTopNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
@@ -153,7 +158,11 @@ export function StudioTopNav({
 
   return (
     <header className="studio-top-nav">
-      <Link href="/" className="studio-top-nav__logo">
+      {/* Artists always have a channel, so a bare "/" would immediately
+       * redirect back to /dashboard (see (marketing)/page.tsx) — this never
+       * actually left the studio. ?home=1 tells that redirect to stand down,
+       * same escape hatch ChannelHeader's resolveHomeHref() already uses. */}
+      <Link href="/?home=1" className="studio-top-nav__logo">
         TAHTI
       </Link>
       <div className="studio-top-nav__actions">
@@ -257,7 +266,7 @@ export function StudioTopNav({
                   Settings
                 </Link>
                 <div className="studio-top-nav__menu-divider" role="separator" />
-                <form action="/api/auth/logout" method="POST" className="studio-top-nav__menu-form">
+                <form action={logoutAction} className="studio-top-nav__menu-form">
                   <button
                     type="submit"
                     className="studio-top-nav__menu-item studio-top-nav__menu-item--danger"

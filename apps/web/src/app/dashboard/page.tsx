@@ -295,6 +295,7 @@ export default async function DashboardPage() {
         channel={user.channel}
         liveBroadcastTitle={liveBroadcastTitle}
         username={user.username}
+        displayName={user.displayName}
         isMember={user.isMember}
         memberNumber={membershipInfo?.memberNumber ?? null}
         broadcastUsage={broadcastUsage}

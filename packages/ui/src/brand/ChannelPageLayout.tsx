@@ -64,6 +64,10 @@ type ChannelHeaderProps = {
   /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
   showLiveBadge?: boolean
   user?: HeaderUser | null
+  /** Server action for the "Log out" form. The old hardcoded
+   * action="/api/auth/logout" posted to a path that only exists on the API
+   * host, not this app — every logout attempt 404'd. */
+  logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
 const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
@@ -120,6 +124,7 @@ export function ChannelHeader({
   activeNav,
   showLiveBadge,
   user,
+  logoutAction,
 }: ChannelHeaderProps) {
   const pathname = usePathname()
   const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
@@ -304,7 +309,7 @@ export function ChannelHeader({
                     </>
                   )}
                   <div className="ch-header__menu-divider" role="separator" />
-                  <form action="/api/auth/logout" method="POST" className="ch-header__menu-form">
+                  <form action={logoutAction} className="ch-header__menu-form">
                     <button
                       type="submit"
                       className="ch-header__menu-item ch-header__menu-item--danger"
@@ -333,6 +338,7 @@ type ChannelPageLayoutProps = {
   activeNav?: SiteNavId
   showLiveBadge?: boolean
   user?: HeaderUser | null
+  logoutAction?: (formData: FormData) => void | Promise<void>
   main: ReactNode
   sidebar: ReactNode
 }
@@ -345,6 +351,7 @@ export function ChannelPageLayout({
   activeNav,
   showLiveBadge,
   user,
+  logoutAction,
   main,
   sidebar,
 }: ChannelPageLayoutProps) {
@@ -362,6 +369,7 @@ export function ChannelPageLayout({
         activeNav={activeNav}
         showLiveBadge={showLiveBadge}
         user={user}
+        logoutAction={logoutAction}
       />
       <div className={`ch-body shell-channel${chatCollapsed ? ' ch-body--chat-collapsed' : ''}`}>
         <div className="ch-main">{main}</div>

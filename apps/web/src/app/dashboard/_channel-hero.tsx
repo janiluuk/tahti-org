@@ -6,9 +6,8 @@
 import { useEffect, useState } from 'react'
 import NextLink from 'next/link'
 import { BrandButton } from '@tahti/ui'
-import { resolveChannelUrl } from '@/lib/app-url'
-import { EndBroadcastBtn } from './end-broadcast-btn'
 import { GoLiveBtn } from './go-live-btn'
+import { StreamManagerPanel } from './_stream-manager-panel'
 
 type LastBroadcast = { title: string; ago: string }
 
@@ -18,6 +17,7 @@ type Props = {
   goneLiveAt: string | null
   broadcastTitle: string | null
   lastBroadcast: LastBroadcast | null
+  displayName?: string
 }
 
 function formatElapsed(totalSec: number): string {
@@ -34,8 +34,14 @@ function elapsedSecondsSince(goneLiveAt: string): number {
 }
 
 /** Channel home hero — giant Go live CTA when offline, live status + ticking clock when on air. */
-export function ChannelHero({ slug, state, goneLiveAt, broadcastTitle, lastBroadcast }: Props) {
-  const [listeners, setListeners] = useState<number | null>(null)
+export function ChannelHero({
+  slug,
+  state,
+  goneLiveAt,
+  broadcastTitle,
+  lastBroadcast,
+  displayName,
+}: Props) {
   const [elapsedSec, setElapsedSec] = useState(() =>
     goneLiveAt ? elapsedSecondsSince(goneLiveAt) : 0,
   )
@@ -46,46 +52,15 @@ export function ChannelHero({ slug, state, goneLiveAt, broadcastTitle, lastBroad
     return () => clearInterval(id)
   }, [goneLiveAt])
 
-  useEffect(() => {
-    if (!goneLiveAt) return
-    let cancelled = false
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-    const poll = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/channels/${slug}/presence`)
-        if (!res.ok || cancelled) return
-        const data = (await res.json()) as { numClients: number }
-        setListeners(data.numClients)
-      } catch {
-        // ignore — listener count is best-effort
-      }
-    }
-    void poll()
-    const id = setInterval(poll, 30_000)
-    return () => {
-      cancelled = true
-      clearInterval(id)
-    }
-  }, [slug, goneLiveAt])
-
   if (goneLiveAt) {
     return (
       <div className="db-hero db-hero--live" data-hero>
         <div className="db-hero__live-status">
           <span className="signal-dot db-hero__pulse-dot" aria-hidden />
-          <span className="db-hero__live-label">LIVE NOW</span>
-        </div>
-        <div className="db-hero__live-meta">
-          {listeners != null ? `${listeners} listener${listeners === 1 ? '' : 's'} · ` : ''}
-          {formatElapsed(elapsedSec)}
+          <span className="db-hero__live-label">LIVE NOW · {formatElapsed(elapsedSec)}</span>
         </div>
         {broadcastTitle ? <div className="db-hero__show-name">{broadcastTitle}</div> : null}
-        <div className="db-hero__actions">
-          <EndBroadcastBtn mode="live" />
-          <NextLink href={resolveChannelUrl(slug)} className="db-hero__secondary-link">
-            View channel →
-          </NextLink>
-        </div>
+        <StreamManagerPanel slug={slug} displayName={displayName} />
       </div>
     )
   }

@@ -73,7 +73,6 @@ export function BroadcastStudio({
   const initialStatus = statusFromState(initialState)
   const [status, setStatus] = useState<LiveStatus>(initialStatus)
   const [signal, setSignal] = useState<SignalStatus | null>(null)
-  const [section, setSection] = useState<'setup' | 'help'>('setup')
   const [streamType, setStreamType] = useState<'rtmp' | 'icecast'>('rtmp')
 
   const requestedStep = Number(searchParams.get('step'))
@@ -175,37 +174,6 @@ export function BroadcastStudio({
       </div>
 
       <BroadcastUsageBanner usage={broadcastUsage} />
-
-      <div className="broadcast-section-tabs" role="tablist" aria-label="Broadcast studio sections">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={section === 'setup'}
-          className={section === 'setup' ? 'is-active' : undefined}
-          onClick={() => setSection('setup')}
-        >
-          Go live
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={section === 'help'}
-          className={section === 'help' ? 'is-active' : undefined}
-          onClick={() => setSection('help')}
-        >
-          Help
-        </button>
-      </div>
-
-      {section === 'help' ? (
-        <Panel title="Broadcasting help" headerTight>
-          <div className="broadcast-help-links">
-            <Link href="/help/broadcast">Set up OBS, Mixxx, Traktor, or butt →</Link>
-            <Link href="/help/multistream">Multistream to YouTube or Twitch →</Link>
-          </div>
-        </Panel>
-      ) : (
-        <>
 
       <nav className="broadcast-wizard" aria-label="Broadcasting setup steps">
         <ol className="broadcast-wizard__list">
@@ -338,8 +306,6 @@ export function BroadcastStudio({
             </Text>
           )}
         </Panel>
-      )}
-        </>
       )}
     </div>
   )

@@ -26,6 +26,7 @@ export type DashboardOverviewProps = {
   channel: { slug: string; state: string; goneLiveAt: string | null } | null
   liveBroadcastTitle: string | null
   username: string
+  displayName?: string
   isMember: boolean
   memberNumber: number | null
   broadcastUsage: BroadcastUsage | null
@@ -71,6 +72,7 @@ export function DashboardOverview({
   channel,
   liveBroadcastTitle,
   username,
+  displayName,
   isMember,
   memberNumber,
   broadcastUsage,
@@ -134,6 +136,7 @@ export function DashboardOverview({
         goneLiveAt={channel.goneLiveAt}
         broadcastTitle={liveBroadcastTitle}
         lastBroadcast={channel.goneLiveAt ? null : lastBroadcast}
+        displayName={displayName}
       />
 
       <ChannelControlsPanel slug={channel.slug} />

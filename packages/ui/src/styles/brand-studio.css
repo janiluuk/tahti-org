@@ -2928,7 +2928,54 @@
   position: relative;
 }
 
-/* ── Stream manager modal (top-nav go-live icon, once live) ─────────────── */
+/* ── Stream manager panel (status/listeners/chat/end-stream) — shared body
+   for the top-nav modal and the dashboard home hero's inline live view ──── */
+[data-tahti-ui='studio'] .stream-mgr-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__meta {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__meta a {
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__meta a:hover {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-panel__chat {
+  flex: 1;
+  min-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* ── Stream manager modal — chrome around the panel above, opened from the
+   top-nav go-live icon ──────────────────────────────────────────────────── */
 [data-tahti-ui='studio'] .stream-mgr-modal {
   position: fixed;
   inset: 0;
@@ -2941,9 +2988,9 @@
 }
 
 [data-tahti-ui='studio'] .stream-mgr-modal__card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
   padding: var(--space-5);
   background: var(--card2);
   border: 1px solid var(--border);
@@ -2953,37 +3000,10 @@
   max-height: min(720px, 90vh);
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-[data-tahti-ui='studio'] .stream-mgr-modal__title {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
-}
-
-[data-tahti-ui='studio'] .stream-mgr-modal__meta {
-  margin: 4px 0 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-[data-tahti-ui='studio'] .stream-mgr-modal__meta a {
-  color: var(--muted);
-}
-
-[data-tahti-ui='studio'] .stream-mgr-modal__meta a:hover {
-  color: var(--text);
-}
-
 [data-tahti-ui='studio'] .stream-mgr-modal__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
   flex-shrink: 0;
   width: 28px;
   height: 28px;
@@ -3001,17 +3021,16 @@
   background: color-mix(in srgb, var(--muted) 10%, transparent);
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__chat {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+/* Inline, on the dashboard home hero once live — no card chrome of its own,
+ * it already sits inside .db-hero--live. */
+[data-tahti-ui='studio'] .db-hero--live .stream-mgr-panel {
+  width: 100%;
+  margin-top: var(--space-3);
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__footer {
-  display: flex;
-  justify-content: flex-end;
+[data-tahti-ui='studio'] .db-hero--live .stream-mgr-panel__chat {
+  min-height: 360px;
+  max-height: 480px;
 }
 
 /* ── Mobile bottom nav (≤768px) ──────────────────────────────────────────── */

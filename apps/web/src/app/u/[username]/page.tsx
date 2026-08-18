@@ -20,6 +20,7 @@ import { renderBio } from '@/lib/render-bio'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
+import { logout } from '@/app/auth/actions'
 import { ReportButton } from '@/components/report-button'
 import { ReleasesGrid } from '@/components/releases-grid'
 import { PressKitGallery } from '@/components/press-kit-gallery'
@@ -436,6 +437,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
       <ProfilePageLayout
         isLive={isLive}
         activeNav="discover"
+        logoutAction={logout}
         user={user}
         cover={
           <ProfileCover

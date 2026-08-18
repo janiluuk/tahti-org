@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { AvatarTile, ChannelHeader, Heading, Row, SafePlainText, Text } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
+import { logout } from '@/app/auth/actions'
 import { fetchRadioShow, type RadioShowEpisode } from '../../actions'
 import { formatShowTime } from '../../upcoming-shows'
 import { ShowOwnerGoLiveCta } from './_owner-go-live-cta'
@@ -60,7 +61,7 @@ export default async function RadioShowPage({
 
   return (
     <>
-      <ChannelHeader activeNav="radio" user={user} />
+      <ChannelHeader activeNav="radio" user={user} logoutAction={logout} />
       <div className="ch-body shell-channel">
         <div className="ch-main">
           <div className="ch-page-content">

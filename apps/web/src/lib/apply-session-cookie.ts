@@ -36,3 +36,20 @@ export function applySessionCookieFromResponse(response: Response): void {
     domain: SESSION_COOKIE_DOMAIN,
   })
 }
+
+/** Must clear with the same Domain attribute the cookie was set with
+ * (.tahti.live in prod) — a Set-Cookie without it clears a host-only cookie
+ * that was never there, leaving the real domain-scoped session cookie alive
+ * and the user still logged in. */
+export function clearSessionCookie(): void {
+  cookies().set({
+    name: SESSION_COOKIE_NAME,
+    value: '',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+    domain: SESSION_COOKIE_DOMAIN,
+  })
+}

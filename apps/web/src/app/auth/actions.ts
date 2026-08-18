@@ -3,8 +3,10 @@
 
 'use server'
 
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { LoginSchema, RegisterSchema } from '@tahti/shared'
-import { applySessionCookieFromResponse } from '@/lib/apply-session-cookie'
+import { applySessionCookieFromResponse, clearSessionCookie } from '@/lib/apply-session-cookie'
 
 interface LoginInput {
   email: string
@@ -60,6 +62,24 @@ export async function login(
   } catch {
     return { error: 'Could not reach the server — please try again' }
   }
+}
+
+/** The old <form action="/api/auth/logout"> posted straight to a relative
+ * path — there's no such route on the web app (the real logout endpoint
+ * lives on api.tahti.live), so it 404'd and never actually logged anyone
+ * out. Use this as a form action instead: forwards to the API to delete the
+ * session server-side, clears the browser cookie, then sends the user home. */
+export async function logout(): Promise<void> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const sessionCookie = cookies().get('tahti_session')
+  if (sessionCookie) {
+    await fetch(`${apiUrl}/api/auth/logout`, {
+      method: 'POST',
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+    }).catch(() => undefined)
+  }
+  clearSessionCookie()
+  redirect('/')
 }
 
 export async function verifyTotp(input: {
