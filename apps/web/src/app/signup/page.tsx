@@ -8,10 +8,10 @@ import { isSignupOpen } from '@/lib/signup'
 import { SignupForm } from './signup-form'
 
 export const metadata: Metadata = {
-  title: isSignupOpen() ? 'Create artist account — Tahti' : 'Open beta — 1 August 2026 — Tahti',
+  title: isSignupOpen() ? 'Create artist account — Tahti' : 'Registration closed — Tahti',
   description: isSignupOpen()
     ? 'Create your Tahti artist account — broadcast, archive, and connect with listeners.'
-    : 'Tahti opens publicly on 1 August 2026. Private beta is now closed.',
+    : 'Tahti registration is temporarily closed.',
 }
 
 function SignupClosed() {
@@ -20,13 +20,13 @@ function SignupClosed() {
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />
-          <Heading level={1}>Private beta is closed</Heading>
+          <Heading level={1}>Registration is temporarily closed</Heading>
           <Text tone="muted">
-            We ran a private beta with a small group of artists. The platform opens publicly on{' '}
-            <strong>1 August 2026</strong>.
+            We&apos;re not accepting new sign-ups right now while we complete some
+            infrastructure work. Existing accounts aren&apos;t affected.
           </Text>
           <Text tone="muted">
-            To be notified when registration opens, email{' '}
+            To be notified when registration reopens, email{' '}
             <a href="mailto:hello@tahti.live" className="ui-link">
               hello@tahti.live
             </a>

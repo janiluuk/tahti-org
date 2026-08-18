@@ -81,9 +81,7 @@ export default function ForArtistsPage() {
             About the org →
           </a>
         </div>
-        <p className="for-artists-hero__open-beta">
-          Open beta launches <strong>1 August 2026</strong>
-        </p>
+        <p className="for-artists-hero__open-beta">Registration is temporarily closed</p>
       </div>
 
       <div className="for-artists-carousel">
