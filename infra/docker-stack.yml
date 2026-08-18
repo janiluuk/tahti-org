@@ -334,9 +334,7 @@ services:
   # ───────────────────────────────────────────────────────────────────────────
   worker-media:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
-    # Lane name, not individual job names — see packages/shared/src/worker-job-lanes.ts
-    # for the full job-name mapping (kept there so it can't drift out of sync with
-    # the worker's actual dispatch table the way the old per-job list here had).
+    # Streaming-stack lane — HLS sync, watchdog, recordings finalize (needs local volumes).
     command: ["node", "dist/index.js", "--queues=media"]
     networks: [internal]
     environment:
@@ -349,18 +347,40 @@ services:
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
       ARCHIVE_CACHE_ROOT: /archive-cache
-      ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
-      RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
-      GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
-      GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
-      # ffmpeg jobs are CPU-bound — 2 concurrent per replica keeps 2 replicas x
-      # 4 CPU each from oversubscribing.
-      WORKER_CONCURRENCY: "2"
-    secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret, minio_root_password]
+      RECORDINGS_ROOT: /recordings
+      ORCHESTRATOR_URL: http://orchestrator:3003
+      WORKER_CONCURRENCY: "4"
+    secrets: [pg_password, minio_root_password]
     volumes:
       - recordings_shared:/recordings:ro
       - hls_shared:/hls:ro
       - archive_cache_shared:/archive-cache
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == worker]
+      resources:
+        limits: { cpus: "2", memory: 2G }
+
+  worker-transcode:
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
+    # ffmpeg archive/release transcodes — CPU-heavy; can run on a remote GPU/CPU box
+    # (see infra/docker-compose.worker-remote.yml for lab vimage7).
+    command: ["node", "dist/index.js", "--queues=transcode"]
+    networks: [internal]
+    environment:
+      <<: *db-pool-env
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: tahti
+      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+      STEM_SEPARATOR_URL: http://stem-separator:8090
+      ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
+      RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
+      GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
+      GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
+      WORKER_CONCURRENCY: "3"
+    secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret, minio_root_password]
     deploy:
       replicas: 2
       placement:

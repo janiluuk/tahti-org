@@ -12,7 +12,8 @@
  * lane filtering is enabled — when adding a new job type, add it here too.
  */
 export const WORKER_JOB_LANES = {
-  media: [
+  /** ffmpeg-heavy jobs — safe on a remote worker with Redis/Postgres/MinIO only. */
+  transcode: [
     'transcode-archive',
     'transcode-archive-version',
     'transcode-release-track',
@@ -27,13 +28,17 @@ export const WORKER_JOB_LANES = {
     'cloud-import-soundcloud',
     'cloud-import-hearthis',
     'hearthis-embed-localize',
-    'finalize-broadcast-recording',
     'archive-broadcast',
+  ],
+  /** Streaming stack jobs — need local HLS / recordings / archive-cache volumes on the ingest host. */
+  media: [
+    'finalize-broadcast-recording',
     'warm-archive-fallback-cache',
     'archive-fallback-cache-sync',
     'hls-minio-sync',
     'channel-watchdog',
     'channel-fallback-reconciler',
+    'radio-slot-switchover',
   ],
   dist: ['mixcloud-upload', 'revelator-deliver', 'revelator-royalty-sync', 'social-post-dispatch'],
   light: [

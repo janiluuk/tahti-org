@@ -74,10 +74,16 @@ export function chooseLossyOutputBitrateKbps(sourceBitrateKbps: number | null | 
   return LOSSY_BITRATE_LADDER[LOSSY_BITRATE_LADDER.length - 1]
 }
 
-/** Object key for playback, RSS, and default downloads (MP3 when present, else FLAC). */
+/** Object key for playback, RSS, and default downloads (STREAM-011: FLAC when
+ * present — the listener hears the track as uploaded — else MP3). Native browser
+ * FLAC playback (no HLS/MSE involved for on-demand files) has been supported since
+ * ~2017 in every major engine, so this is safe for direct-file playback; it is NOT
+ * used for the live/24-7 HLS pipeline, which still hard-codes stream-mp3-192 for a
+ * real MSE-compatibility reason (see stream-quality.ts). Callers that show a format
+ * badge should reflect the FLAC/MP3 choice this makes, not assume MP3. */
 export function archivePlaybackKey(item: {
   mp3Key: string | null
   flacKey: string | null
 }): string | null {
-  return item.mp3Key ?? item.flacKey
+  return item.flacKey ?? item.mp3Key
 }

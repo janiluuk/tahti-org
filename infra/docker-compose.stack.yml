@@ -344,9 +344,12 @@ services:
     build:
       context: ..
       dockerfile: apps/worker/Dockerfile
+    command: ['tsx', 'apps/worker/src/index.ts', '--queues=media,light,dist']
     environment:
       <<: *app-env
       RECORDINGS_ROOT: /recordings
+      HLS_SEGMENT_ROOT: /hls
+      ARCHIVE_CACHE_ROOT: /archive-cache
       # hls-minio-sync must tick every ~4s or the public ~16s HLS window runs
       # dry (listeners buffer). With concurrency 1, the once-a-minute
       # channel-watchdog (and other crons) blocked that tick for ~40s —
@@ -371,6 +374,8 @@ services:
       context: ..
       dockerfile: services/stem-separator/Dockerfile
     restart: unless-stopped
+    ports:
+      - '${STEM_SEPARATOR_PORT:-8090}:8090'
 
   orchestrator:
     build:

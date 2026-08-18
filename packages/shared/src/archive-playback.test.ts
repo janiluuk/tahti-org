@@ -79,12 +79,12 @@ describe('chooseLossyOutputBitrateKbps', () => {
 })
 
 describe('archivePlaybackKey', () => {
-  it('prefers mp3 when both exist', () => {
-    expect(archivePlaybackKey({ mp3Key: 'a.mp3', flacKey: 'a.flac' })).toBe('a.mp3')
+  it('prefers flac when both exist (STREAM-011: lossless by default)', () => {
+    expect(archivePlaybackKey({ mp3Key: 'a.mp3', flacKey: 'a.flac' })).toBe('a.flac')
   })
 
-  it('uses flac when mp3 is absent', () => {
-    expect(archivePlaybackKey({ mp3Key: null, flacKey: 'a.flac' })).toBe('a.flac')
+  it('uses mp3 when flac is absent', () => {
+    expect(archivePlaybackKey({ mp3Key: 'a.mp3', flacKey: null })).toBe('a.mp3')
   })
 
   it('returns null when neither exists', () => {
