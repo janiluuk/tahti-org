@@ -307,7 +307,7 @@ export function RotationEditor({
                       className="schedule-rotation-row__handle"
                       aria-label={`Move ${row.title}`}
                     >
-                        ⠿
+                      ⠿
                     </button>
                     <span className="studio-programme-label">
                       <span>{row.title}</span>

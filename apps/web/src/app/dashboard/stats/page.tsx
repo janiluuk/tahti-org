@@ -10,10 +10,7 @@ import { StudioHeaderActions } from '../_studio-header-actions'
 import { StatsHero } from './_stats-hero'
 import { StatsTopThree } from './_stats-top-three'
 import { StatsWhatChanged } from './_stats-what-changed'
-import {
-  ArtistTopLists,
-  type ArtistTopListBucket,
-} from './_artist-top-lists'
+import { ArtistTopLists, type ArtistTopListBucket } from './_artist-top-lists'
 
 interface TopTrack {
   archiveItemId: string
@@ -238,21 +235,28 @@ export default async function StatsPage({
           </div>
         </div>
         <div className="studio-page-header__actions">
-          {tab === 'overview' ? <div className="stats-range-tabs" role="group" aria-label="Period">
-            {RANGES.map((r) => (
-              <NextLink
-                key={r.value}
-                href={`/dashboard/stats?range=${r.value}`}
-                className={`stats-range-tab${range === r.value ? ' stats-range-tab--active' : ''}`}
-                aria-current={range === r.value ? 'true' : undefined}
-              >
-                {r.label}
-              </NextLink>
-            ))}
-          </div> : null}
-          {tab === 'overview' ? <NextLink href="/dashboard/stats/detail" className="ui-btn ui-btn--sm ui-btn--secondary">
-            Plays &amp; listeners →
-          </NextLink> : null}
+          {tab === 'overview' ? (
+            <div className="stats-range-tabs" role="group" aria-label="Period">
+              {RANGES.map((r) => (
+                <NextLink
+                  key={r.value}
+                  href={`/dashboard/stats?range=${r.value}`}
+                  className={`stats-range-tab${range === r.value ? ' stats-range-tab--active' : ''}`}
+                  aria-current={range === r.value ? 'true' : undefined}
+                >
+                  {r.label}
+                </NextLink>
+              ))}
+            </div>
+          ) : null}
+          {tab === 'overview' ? (
+            <NextLink
+              href="/dashboard/stats/detail"
+              className="ui-btn ui-btn--sm ui-btn--secondary"
+            >
+              Plays &amp; listeners →
+            </NextLink>
+          ) : null}
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
             isLive={user?.channel?.state === 'LIVE'}
@@ -265,80 +269,85 @@ export default async function StatsPage({
 
       {tab === 'overview' ? (
         <>
-      {!hasData ? (
-        <div className="studio-empty-card studio-mb-md">
-          <p className="studio-empty-card__text">No listener activity yet.</p>
-          <p className="studio-empty-card__hint">
-            Stats appear once listeners play tracks, download sets, or use your smart links.
-          </p>
-          <div className="db-quick-actions db-quick-actions--centered studio-mt-md">
-            <NextLink href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
-              <SidebarNavIconSvg name="upload" />
-              Upload a set
-            </NextLink>
-            <NextLink href="/dashboard/broadcast" className="db-quick-action">
-              <SidebarNavIconSvg name="distribution" />
-              Go live
-            </NextLink>
-          </div>
-        </div>
-      ) : null}
-
-      <StatsHero
-        periodPlays={periodPlays}
-        prevPeriodPlays={prevPeriodPlays}
-        hasEnoughHistory={hasEnoughHistory}
-        periodLabel={PERIOD_LABEL[range] ?? 'this period'}
-        comparisonLabel={COMPARISON_LABEL[range] ?? ''}
-      />
-
-      <section className="stats-headline-metrics" aria-label="Key channel metrics">
-        {headlineMetrics.map((metric) => (
-          <div key={metric.label} className="stats-headline-metric">
-            <span className="stats-headline-metric__label">{metric.label}</span>
-            <strong className="stats-headline-metric__value">{metric.value}</strong>
-            <span className="stats-headline-metric__note">{metric.note}</span>
-          </div>
-        ))}
-      </section>
-
-      <StatsWhatChanged daily={daily} busiestDay={busiestDay} />
-
-      <StatsTopThree
-        bestTrack={tracks[0] ? { title: tracks[0].title, plays: tracks[0].plays } : null}
-        bestCountry={
-          countries[0] ? { country: countries[0].country, count: countries[0].count } : null
-        }
-        busiestDay={busiestDay}
-      />
-
-      <div className="stats-panel">
-        <div className="stats-panel-header">
-          <span className="stats-section-label">ENGAGEMENT UNITS · {grantEstimate?.year}</span>
-          <span className="stats-eng-total">{totalUnits}</span>
-        </div>
-        <div className="stats-engagement-rows">
-          {engagementUnits.map((row) => (
-            <div key={row.label} className="stats-eng-row">
-              <span className="stats-eng-label">{row.label}</span>
-              <span className="stats-eng-bar-wrap">
-                <span
-                  className={`stats-eng-bar stats-eng-bar--${row.color}`}
-                  style={{ ['--w' as string]: `${Math.round((row.value / maxEng) * 100)}%` }}
-                />
-              </span>
-              <span className={`stats-eng-value stats-top-value--${row.color}`}>{row.value}</span>
+          {!hasData ? (
+            <div className="studio-empty-card studio-mb-md">
+              <p className="studio-empty-card__text">No listener activity yet.</p>
+              <p className="studio-empty-card__hint">
+                Stats appear once listeners play tracks, download sets, or use your smart links.
+              </p>
+              <div className="db-quick-actions db-quick-actions--centered studio-mt-md">
+                <NextLink
+                  href="/dashboard/upload"
+                  className="db-quick-action db-quick-action--primary"
+                >
+                  <SidebarNavIconSvg name="upload" />
+                  Upload a set
+                </NextLink>
+                <NextLink href="/dashboard/broadcast" className="db-quick-action">
+                  <SidebarNavIconSvg name="distribution" />
+                  Go live
+                </NextLink>
+              </div>
             </div>
-          ))}
-        </div>
-        {grantEstimate && (
-          <p className="stats-eng-grant-note">
-            {grantEstimate.eligible
-              ? `At this rate, your estimated share of the ${grantEstimate.year} grant pool is ~${eur(grantEstimate.estimateCents)}.`
-              : `Keep going — you need more engagement units to qualify for the ${grantEstimate.year} grant pool.`}
-          </p>
-        )}
-      </div>
+          ) : null}
+
+          <StatsHero
+            periodPlays={periodPlays}
+            prevPeriodPlays={prevPeriodPlays}
+            hasEnoughHistory={hasEnoughHistory}
+            periodLabel={PERIOD_LABEL[range] ?? 'this period'}
+            comparisonLabel={COMPARISON_LABEL[range] ?? ''}
+          />
+
+          <section className="stats-headline-metrics" aria-label="Key channel metrics">
+            {headlineMetrics.map((metric) => (
+              <div key={metric.label} className="stats-headline-metric">
+                <span className="stats-headline-metric__label">{metric.label}</span>
+                <strong className="stats-headline-metric__value">{metric.value}</strong>
+                <span className="stats-headline-metric__note">{metric.note}</span>
+              </div>
+            ))}
+          </section>
+
+          <StatsWhatChanged daily={daily} busiestDay={busiestDay} />
+
+          <StatsTopThree
+            bestTrack={tracks[0] ? { title: tracks[0].title, plays: tracks[0].plays } : null}
+            bestCountry={
+              countries[0] ? { country: countries[0].country, count: countries[0].count } : null
+            }
+            busiestDay={busiestDay}
+          />
+
+          <div className="stats-panel">
+            <div className="stats-panel-header">
+              <span className="stats-section-label">ENGAGEMENT UNITS · {grantEstimate?.year}</span>
+              <span className="stats-eng-total">{totalUnits}</span>
+            </div>
+            <div className="stats-engagement-rows">
+              {engagementUnits.map((row) => (
+                <div key={row.label} className="stats-eng-row">
+                  <span className="stats-eng-label">{row.label}</span>
+                  <span className="stats-eng-bar-wrap">
+                    <span
+                      className={`stats-eng-bar stats-eng-bar--${row.color}`}
+                      style={{ ['--w' as string]: `${Math.round((row.value / maxEng) * 100)}%` }}
+                    />
+                  </span>
+                  <span className={`stats-eng-value stats-top-value--${row.color}`}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {grantEstimate && (
+              <p className="stats-eng-grant-note">
+                {grantEstimate.eligible
+                  ? `At this rate, your estimated share of the ${grantEstimate.year} grant pool is ~${eur(grantEstimate.estimateCents)}.`
+                  : `Keep going — you need more engagement units to qualify for the ${grantEstimate.year} grant pool.`}
+              </p>
+            )}
+          </div>
         </>
       ) : (
         <ArtistTopLists

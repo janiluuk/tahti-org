@@ -7,10 +7,7 @@ import { CommentSettingsPanel } from '../../comment-settings-panel'
 import { MentionsPanel } from '../../mentions-panel'
 import { NotificationPreferencesPanel } from '../notification-preferences-panel'
 import { DashboardTabs } from '@/components/dashboard-tabs'
-import {
-  VisibilitySettingsPanel,
-  type VisibilitySettings,
-} from '../visibility-settings-panel'
+import { VisibilitySettingsPanel, type VisibilitySettings } from '../visibility-settings-panel'
 
 export default async function NotificationSettingsPage() {
   const sessionValue = dashboardSessionCookie()

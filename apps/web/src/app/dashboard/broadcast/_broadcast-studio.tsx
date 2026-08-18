@@ -212,47 +212,51 @@ export function BroadcastStudio({
             isLive={isLive || isPreview}
             onStreamTypeChange={setStreamType}
           />
-        <Panel
-          title="Test your signal"
-          headerTight
-          description="Start your selected broadcasting software and confirm the signal here."
-        >
-          <div data-hero>
-            <HlsPlayer
-              url={streamSettings.hlsUrl}
-              title="Studio preview"
-              waitingForSignal={!signal?.connected}
-            />
-          </div>
-          {signal?.connected ? (
-            <>
-              <p className="studio-notice studio-notice--success">
-                ✓ Signal received — {signal.codec ?? 'unknown codec'} · original quality
-              </p>
-              <SignalMeters
-                analyserL={analyserL}
-                analyserR={analyserR}
-                active={track?.id === streamSettings.hlsUrl && playing}
+          <Panel
+            title="Test your signal"
+            headerTight
+            description="Start your selected broadcasting software and confirm the signal here."
+          >
+            <div data-hero>
+              <HlsPlayer
+                url={streamSettings.hlsUrl}
+                title="Studio preview"
+                waitingForSignal={!signal?.connected}
               />
-              {!(track?.id === streamSettings.hlsUrl && playing) && (
-                <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-                  Press play on the preview above to see input levels.
-                </Text>
-              )}
-            </>
-          ) : (
-            <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-              Waiting for signal from{' '}
-              {streamType === 'rtmp' ? 'OBS / Streamlabs' : 'Mixxx / Traktor / butt'}.
-            </Text>
-          )}
-          <div className="studio-actions">
-            <Button disabled={!signalConfirmed} onClick={() => setActiveStep(2)} variant="primary">
-              <ButtonIcon name="arrowRight" />
-              Continue to pre-flight
-            </Button>
-          </div>
-        </Panel>
+            </div>
+            {signal?.connected ? (
+              <>
+                <p className="studio-notice studio-notice--success">
+                  ✓ Signal received — {signal.codec ?? 'unknown codec'} · original quality
+                </p>
+                <SignalMeters
+                  analyserL={analyserL}
+                  analyserR={analyserR}
+                  active={track?.id === streamSettings.hlsUrl && playing}
+                />
+                {!(track?.id === streamSettings.hlsUrl && playing) && (
+                  <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                    Press play on the preview above to see input levels.
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                Waiting for signal from{' '}
+                {streamType === 'rtmp' ? 'OBS / Streamlabs' : 'Mixxx / Traktor / butt'}.
+              </Text>
+            )}
+            <div className="studio-actions">
+              <Button
+                disabled={!signalConfirmed}
+                onClick={() => setActiveStep(2)}
+                variant="primary"
+              >
+                <ButtonIcon name="arrowRight" />
+                Continue to pre-flight
+              </Button>
+            </div>
+          </Panel>
         </>
       )}
 

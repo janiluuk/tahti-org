@@ -79,7 +79,13 @@ export function SelectsGenerateControls() {
         onClick={() => void generate()}
       >
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="m4 20 11-11m-8-3 2 2m7-5 1.1 2.9L20 7l-2.9 1.1L16 11l-1.1-2.9L12 7l2.9-1.1L16 3ZM5 3l.7 1.8L7.5 5.5l-1.8.7L5 8l-.7-1.8-1.8-.7 1.8-.7L5 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="m4 20 11-11m-8-3 2 2m7-5 1.1 2.9L20 7l-2.9 1.1L16 11l-1.1-2.9L12 7l2.9-1.1L16 3ZM5 3l.7 1.8L7.5 5.5l-1.8.7L5 8l-.7-1.8-1.8-.7 1.8-.7L5 3Z"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
       {message ? <span className="admin-stat-sub">{message}</span> : null}
@@ -165,7 +171,11 @@ export function SelectsRotationList({ initialItems }: { initialItems: RotationIt
             <span className="admin-rotation-row__body">
               <span className="admin-rotation-row__title">{item.title}</span>
               <span className="admin-rotation-row__meta">
-                <a href={resolveChannelUrl(item.channelSlug)} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={resolveChannelUrl(item.channelSlug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {item.artistName} ↗
                 </a>{' '}
                 · {formatDuration(item.durationSec)} · {item.license.replace(/_/g, ' ')} · added by{' '}
@@ -181,7 +191,13 @@ export function SelectsRotationList({ initialItems }: { initialItems: RotationIt
               onClick={() => void remove(item)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M6 7.5v4M10 7.5v4M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M6 7.5v4M10 7.5v4M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>

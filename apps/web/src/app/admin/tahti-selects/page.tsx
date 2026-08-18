@@ -2,11 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
-import {
-  addToRotation,
-  startRotationStream,
-  stopRotationStream,
-} from './actions'
+import { addToRotation, startRotationStream, stopRotationStream } from './actions'
 import {
   SelectsGenerateControls,
   SelectsRotationList,

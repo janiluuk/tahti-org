@@ -30,7 +30,11 @@ import { BRAND_ACCENT_PRESETS } from '@tahti/shared'
 const DEFAULT_BG = '#0A0E1C'
 const DEFAULT_COLORS = { bg: DEFAULT_BG, accent: '#22D3EE', highlight: '#A78BFA' }
 
-function colorsForPreset(brandAccentPreset: string | null): { bg: string; accent: string; highlight: string } {
+function colorsForPreset(brandAccentPreset: string | null): {
+  bg: string
+  accent: string
+  highlight: string
+} {
   const preset = BRAND_ACCENT_PRESETS.find((p) => p.id === brandAccentPreset)
   if (!preset) return DEFAULT_COLORS
   return { bg: DEFAULT_BG, accent: preset.accent, highlight: preset.highlight }
@@ -108,7 +112,10 @@ async function main() {
     await putObjectText(bannerKey, bannerSvg, 'image/svg+xml')
     const bannerUrl = publicMediaUrl(bannerKey)
     if (bannerUrl && channel.videoBackgroundUrl !== bannerUrl) {
-      await prisma.channel.update({ where: { id: channel.id }, data: { videoBackgroundUrl: bannerUrl } })
+      await prisma.channel.update({
+        where: { id: channel.id },
+        data: { videoBackgroundUrl: bannerUrl },
+      })
     }
 
     results.push({

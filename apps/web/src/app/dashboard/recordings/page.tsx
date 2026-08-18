@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
 import Link from 'next/link'
 import { Heading, PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'

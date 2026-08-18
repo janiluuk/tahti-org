@@ -22,8 +22,8 @@ function SignupClosed() {
           <BrandLogo />
           <Heading level={1}>Registration is temporarily closed</Heading>
           <Text tone="muted">
-            We&apos;re not accepting new sign-ups right now while we complete some
-            infrastructure work. Existing accounts aren&apos;t affected.
+            We&apos;re not accepting new sign-ups right now while we complete some infrastructure
+            work. Existing accounts aren&apos;t affected.
           </Text>
           <Text tone="muted">
             To be notified when registration reopens, email{' '}

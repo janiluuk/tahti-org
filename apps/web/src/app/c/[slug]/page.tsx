@@ -433,7 +433,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               {channel.galleryMode === 'STATIC_SLIDESHOW' && channel.slideshowImages.length > 0 ? (
                 <ChannelSlideshow
                   images={channel.slideshowImages}
-                  preset={(channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset}
+                  preset={
+                    (channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset
+                  }
                   intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
                   transitionMs={channel.slideshowTransitionMs ?? 600}
                   autoplay={channel.slideshowAutoplay ?? true}
@@ -445,48 +447,48 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <PublicChannelTabs
                 live={
                   showLiveTab ? (
-                  <>
-                    {hlsUrl && (
-                      <LivePlayerSection
-                        url={hlsUrl}
-                        slug={slug}
-                        title={
-                          isRotationChannel
-                            ? (channel.nowPlaying?.title ?? channel.user.displayName)
-                            : channel.user.displayName
-                        }
-                        subtitle={
-                          isRotationChannel && channel.nowPlaying
-                            ? channel.nowPlaying.artistName
-                            : undefined
-                        }
-                        subtitleHref={
-                          isRotationChannel && channel.nowPlaying?.artistUsername
-                            ? `/u/${channel.nowPlaying.artistUsername}`
-                            : undefined
-                        }
-                        artworkUrl={
-                          isRotationChannel
-                            ? channel.nowPlaying?.artworkUrl
-                            : channel.user.avatarUrl
-                        }
-                        isReplay={isRotationChannel}
-                        nextUpLabel={
-                          isRotationChannel && channel.nowPlayingNext
-                            ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
-                            : undefined
-                        }
-                        isRotationChannel={isRotationChannel}
-                        colorSchemeJson={channel.colorSchemeJson}
-                        visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
-                        visualSettingsJson={channel.visualSettingsJson}
-                        initialNowPlaying={channel.nowPlaying}
-                        initialNowPlayingNext={channel.nowPlayingNext}
-                      />
-                    )}
+                    <>
+                      {hlsUrl && (
+                        <LivePlayerSection
+                          url={hlsUrl}
+                          slug={slug}
+                          title={
+                            isRotationChannel
+                              ? (channel.nowPlaying?.title ?? channel.user.displayName)
+                              : channel.user.displayName
+                          }
+                          subtitle={
+                            isRotationChannel && channel.nowPlaying
+                              ? channel.nowPlaying.artistName
+                              : undefined
+                          }
+                          subtitleHref={
+                            isRotationChannel && channel.nowPlaying?.artistUsername
+                              ? `/u/${channel.nowPlaying.artistUsername}`
+                              : undefined
+                          }
+                          artworkUrl={
+                            isRotationChannel
+                              ? channel.nowPlaying?.artworkUrl
+                              : channel.user.avatarUrl
+                          }
+                          isReplay={isRotationChannel}
+                          nextUpLabel={
+                            isRotationChannel && channel.nowPlayingNext
+                              ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
+                              : undefined
+                          }
+                          isRotationChannel={isRotationChannel}
+                          colorSchemeJson={channel.colorSchemeJson}
+                          visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+                          visualSettingsJson={channel.visualSettingsJson}
+                          initialNowPlaying={channel.nowPlaying}
+                          initialNowPlayingNext={channel.nowPlayingNext}
+                        />
+                      )}
 
-                    {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-                  </>
+                      {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
+                    </>
                   ) : undefined
                 }
                 archive={

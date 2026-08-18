@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
 import { describe, expect, it } from 'vitest'
 import { humanizeFutureDate } from './profile-upcoming.js'
 

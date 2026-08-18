@@ -95,7 +95,11 @@ export interface AlbumArtColors {
   highlight: string
 }
 
-const DEFAULT_ART_COLORS: AlbumArtColors = { bg: '#0A0E1C', accent: '#22D3EE', highlight: '#A78BFA' }
+const DEFAULT_ART_COLORS: AlbumArtColors = {
+  bg: '#0A0E1C',
+  accent: '#22D3EE',
+  highlight: '#A78BFA',
+}
 
 /** Motif body only (no background/text) — shared by the square cover and the
  * widescreen banner, each of which wraps this in its own frame + typography. */

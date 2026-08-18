@@ -13,7 +13,8 @@ import { SidebarNavIconSvg } from '@tahti/ui'
  * main sidebar highlights its own active section. */
 export function DesignNavLink() {
   const pathname = usePathname()
-  const active = pathname === '/dashboard/channel/edit' || pathname?.startsWith('/dashboard/channel/edit/')
+  const active =
+    pathname === '/dashboard/channel/edit' || pathname?.startsWith('/dashboard/channel/edit/')
 
   return (
     <NextLink

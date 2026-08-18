@@ -98,12 +98,7 @@ export default function StreamSettingsPanel({
       description="Pick the tool you're broadcasting from — only that tool's settings show below."
     >
       <div className="stream-settings__top-action">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={downloadObsPreset}
-          disabled={obsPresetLoading}
-        >
+        <Button variant="primary" size="sm" onClick={downloadObsPreset} disabled={obsPresetLoading}>
           {obsPresetLoading ? 'Building…' : 'Download OBS preset'}
         </Button>
         <span>Import a ready-made Tahti scene collection into OBS.</span>
@@ -201,7 +196,6 @@ export default function StreamSettingsPanel({
           </Stack>
         </StudioTabs.Panel>
       </StudioTabs>
-
     </Panel>
   )
 }

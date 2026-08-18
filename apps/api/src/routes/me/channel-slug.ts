@@ -132,11 +132,9 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       if (recentChanges >= MAX_SLUG_CHANGES_PER_WEEK) {
-        return reply
-          .status(429)
-          .send({
-            error: `You can only change your address ${MAX_SLUG_CHANGES_PER_WEEK} times a week — try again later.`,
-          })
+        return reply.status(429).send({
+          error: `You can only change your address ${MAX_SLUG_CHANGES_PER_WEEK} times a week — try again later.`,
+        })
       }
 
       const [clashChannel, clashUser] = await Promise.all([

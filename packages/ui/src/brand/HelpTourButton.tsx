@@ -24,13 +24,7 @@ function IconHelp() {
 
 /** Top-bar help icon — starts a GuidedTour over the page's essential elements.
  * `steps` should already be scoped to the current page (see tour-steps.ts). */
-export function HelpTourButton({
-  steps,
-  className,
-}: {
-  steps: TourStep[]
-  className?: string
-}) {
+export function HelpTourButton({ steps, className }: { steps: TourStep[]; className?: string }) {
   const [open, setOpen] = useState(false)
 
   return (

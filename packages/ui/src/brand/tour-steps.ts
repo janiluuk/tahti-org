@@ -225,7 +225,8 @@ const PUBLIC_TOP_BAR: TourStep[] = [
     body: 'Discover artists, tune in to Tahti Radio, or browse upcoming venues and events.',
   },
   {
-    selector: '.studio-top-nav__notif-btn[aria-label="Messages"], .ch-header .studio-top-nav__notif-btn[aria-label="Messages"]',
+    selector:
+      '.studio-top-nav__notif-btn[aria-label="Messages"], .ch-header .studio-top-nav__notif-btn[aria-label="Messages"]',
     title: 'Messages',
     body: 'Direct messages between you and artists you follow.',
   },

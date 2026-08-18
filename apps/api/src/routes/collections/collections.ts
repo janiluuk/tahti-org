@@ -79,10 +79,14 @@ const collectionItemInclude = {
   },
 } as const
 
-async function addManagementPlayback<T extends { items: Array<{
-  archiveItem: { mp3Key: string | null; flacKey: string | null } | null
-  release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
-}> }>(collection: T) {
+async function addManagementPlayback<
+  T extends {
+    items: Array<{
+      archiveItem: { mp3Key: string | null; flacKey: string | null } | null
+      release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
+    }>
+  },
+>(collection: T) {
   return {
     ...collection,
     items: await Promise.all(

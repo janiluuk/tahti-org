@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
 const DAY_MS = 86_400_000
 
 export function humanizeFutureDate(date: Date, now = new Date()): string {

@@ -95,7 +95,10 @@ export function GuidedTour({ steps, onClose }: { steps: TourStep[]; onClose: () 
   if (!step) {
     return (
       <div className="guided-tour__scrim" role="dialog" aria-modal="true" aria-label="Help">
-        <div className="guided-tour__card guided-tour__card--empty" style={{ maxWidth: CARD_WIDTH }}>
+        <div
+          className="guided-tour__card guided-tour__card--empty"
+          style={{ maxWidth: CARD_WIDTH }}
+        >
           <button
             type="button"
             className="guided-tour__close"

@@ -361,9 +361,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
               seriesId: series.id,
               startAt: new Date(),
               episodeNumber,
-              title: series.episodeNumberEnabled
-                ? `${series.name} #${episodeNumber}`
-                : series.name,
+              title: series.episodeNumberEnabled ? `${series.name} #${episodeNumber}` : series.name,
               description: series.description,
               tagline: series.tagline,
               showType: series.showType,

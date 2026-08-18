@@ -156,9 +156,9 @@ export function HearthisImportModal({ collectionId, collectionTitle, onClose, on
         </div>
 
         <div className="spotify-import-modal__banner hearthis-import-modal__banner" role="note">
-          <strong>Best available quality.</strong> Download-enabled tracks become native Tahti
-          audio in the background, preserving the original file when HearThis provides it. Other
-          tracks keep the HearThis player.
+          <strong>Best available quality.</strong> Download-enabled tracks become native Tahti audio
+          in the background, preserving the original file when HearThis provides it. Other tracks
+          keep the HearThis player.
         </div>
 
         <div className="spotify-import-modal__tabs" role="tablist">

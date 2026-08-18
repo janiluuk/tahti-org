@@ -51,12 +51,17 @@ function FilterCurve({ params }: { params: FilterParams }) {
   return (
     <div className="plug-filter-curve" aria-label={`Filter response at ${params.freq} Hz`}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img">
-        <path className="plug-filter-curve__grid" d="M0 25H100 M0 50H100 M0 75H100 M25 0V100 M50 0V100 M75 0V100" />
+        <path
+          className="plug-filter-curve__grid"
+          d="M0 25H100 M0 50H100 M0 75H100 M25 0V100 M50 0V100 M75 0V100"
+        />
         <path className="plug-filter-curve__area" d={`${path} L 100 100 L 0 100 Z`} />
         <path className="plug-filter-curve__line" d={path} />
         <line className="plug-filter-curve__cutoff" x1={cutoff} x2={cutoff} y1="0" y2="100" />
       </svg>
-      <span>{params.freq >= 1000 ? `${(params.freq / 1000).toFixed(1)} kHz` : `${params.freq} Hz`}</span>
+      <span>
+        {params.freq >= 1000 ? `${(params.freq / 1000).toFixed(1)} kHz` : `${params.freq} Hz`}
+      </span>
     </div>
   )
 }

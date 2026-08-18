@@ -105,7 +105,12 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
         sort: sort.data,
         userId: user.id,
       })
-      return reply.send({ period: period.data, dimension: dimension.data, sort: sort.data, buckets })
+      return reply.send({
+        period: period.data,
+        dimension: dimension.data,
+        sort: sort.data,
+        buckets,
+      })
     },
   )
 

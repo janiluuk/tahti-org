@@ -126,21 +126,23 @@ export default function ChannelGalleryPanel({
         </p>
       )}
 
-      {showVideoBackground && <label className="studio-field" htmlFor="video-background">
-        <span className="studio-label">Channel video backdrop (optional)</span>
-        <span className="studio-text-muted-sm studio-mb-sm">
-          HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page.
-        </span>
-        <input
-          id="video-background"
-          type="url"
-          value={videoBackgroundUrl}
-          disabled={isPending}
-          placeholder="https://www.youtube.com/watch?v=…"
-          onChange={(e) => setVideoBackgroundUrl(e.target.value)}
-          className="studio-input"
-        />
-      </label>}
+      {showVideoBackground && (
+        <label className="studio-field" htmlFor="video-background">
+          <span className="studio-label">Channel video backdrop (optional)</span>
+          <span className="studio-text-muted-sm studio-mb-sm">
+            HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page.
+          </span>
+          <input
+            id="video-background"
+            type="url"
+            value={videoBackgroundUrl}
+            disabled={isPending}
+            placeholder="https://www.youtube.com/watch?v=…"
+            onChange={(e) => setVideoBackgroundUrl(e.target.value)}
+            className="studio-input"
+          />
+        </label>
+      )}
 
       {galleryMode !== 'NONE' && (
         <label className="studio-field" htmlFor="gallery-images">

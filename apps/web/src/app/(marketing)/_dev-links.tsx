@@ -42,12 +42,7 @@ export function DevLinks() {
         <GitHubMark />
         Source on GitHub
       </a>
-      <a
-        href={API_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="home-dev-links__item"
-      >
+      <a href={API_URL} target="_blank" rel="noopener noreferrer" className="home-dev-links__item">
         <ApiDocsMark />
         API documentation
       </a>

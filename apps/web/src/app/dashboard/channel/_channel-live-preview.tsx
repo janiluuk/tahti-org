@@ -114,11 +114,11 @@ export function ChannelLivePreview({
             draft.visual.headerStyle === 'VIDEO_LOOP' &&
             backdrop.cssImageUrl &&
             !backdrop.videoEmbedUrl && (
-            <div
-              className="ch-channel-backdrop"
-              style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
-            />
-          )}
+              <div
+                className="ch-channel-backdrop"
+                style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
+              />
+            )}
 
           {bannerStyle && <div className="ch-header-banner" style={bannerStyle} aria-hidden />}
 

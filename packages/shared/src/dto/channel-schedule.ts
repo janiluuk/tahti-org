@@ -63,9 +63,6 @@ export type CreateLiveShowSeries = z.infer<typeof CreateLiveShowSeriesSchema>
 export type LiveShowSeriesView = z.infer<typeof LiveShowSeriesViewSchema>
 export type ScheduledLiveShowView = z.infer<typeof ScheduledLiveShowViewSchema>
 
-export function liveShowEpisodeTitle(
-  seriesName: string,
-  episodeNumber: number | null,
-): string {
+export function liveShowEpisodeTitle(seriesName: string, episodeNumber: number | null): string {
   return episodeNumber == null ? seriesName : `${seriesName} #${episodeNumber}`
 }

@@ -131,8 +131,9 @@ export function ArtistInfoForm({
           <span className="artist-info-summary__eyebrow">Public identity</span>
           <h2>{identity.displayName || 'Untitled artist'}</h2>
           <p>
-            {[identity.defaultLocation, ...identity.genres.slice(0, 3)].filter(Boolean).join(' · ') ||
-              'Add a location and a few genres to sharpen your profile.'}
+            {[identity.defaultLocation, ...identity.genres.slice(0, 3)]
+              .filter(Boolean)
+              .join(' · ') || 'Add a location and a few genres to sharpen your profile.'}
           </p>
         </div>
         <span className="artist-info-summary__kind">

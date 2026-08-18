@@ -184,28 +184,28 @@ export function Step3Preflight() {
             role="radiogroup"
             aria-label="Show type"
           >
-          <label
-            className={`studio-kind-toggle__option${showType === 'LIVE_SET' ? ' studio-kind-toggle__option--active' : ''}`}
-          >
-            <input
-              type="radio"
-              name="broadcast-show-type"
-              checked={showType === 'LIVE_SET'}
-              onChange={() => void patchPreflight({ showType: 'LIVE_SET' })}
-            />
-            <span className="studio-kind-toggle__title">Live set</span>
-          </label>
-          <label
-            className={`studio-kind-toggle__option${showType === 'TALK' ? ' studio-kind-toggle__option--active' : ''}`}
-          >
-            <input
-              type="radio"
-              name="broadcast-show-type"
-              checked={showType === 'TALK'}
-              onChange={() => void patchPreflight({ showType: 'TALK' })}
-            />
-            <span className="studio-kind-toggle__title">Talk</span>
-          </label>
+            <label
+              className={`studio-kind-toggle__option${showType === 'LIVE_SET' ? ' studio-kind-toggle__option--active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="broadcast-show-type"
+                checked={showType === 'LIVE_SET'}
+                onChange={() => void patchPreflight({ showType: 'LIVE_SET' })}
+              />
+              <span className="studio-kind-toggle__title">Live set</span>
+            </label>
+            <label
+              className={`studio-kind-toggle__option${showType === 'TALK' ? ' studio-kind-toggle__option--active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="broadcast-show-type"
+                checked={showType === 'TALK'}
+                onChange={() => void patchPreflight({ showType: 'TALK' })}
+              />
+              <span className="studio-kind-toggle__title">Talk</span>
+            </label>
           </div>
         </div>
       </div>
@@ -273,67 +273,67 @@ export function Step3Preflight() {
       <details className="broadcast-studio__preflight-more">
         <summary>More options</summary>
         <div className="studio-grid studio-grid--2 studio-mt-md">
-        <div className="studio-field">
-          <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-visibility">
-            Visibility
-          </label>
-          <select
-            id="broadcast-visibility"
-            value={preflight.visibility}
-            onChange={(e) =>
-              void patchPreflight({ visibility: e.target.value as Preflight['visibility'] })
-            }
-            className="studio-input studio-mt-sm"
-          >
-            <option value="PUBLIC">Public — anyone can listen</option>
-            <option value="FAN_ONLY">Fan-subscribers only</option>
-          </select>
-        </div>
-
-        <div className="studio-field">
-          <span className="studio-label studio-text-muted-sm">Simulcast</span>
-          <div className="broadcast-studio__targets studio-mt-sm">
-            {targets === null ? null : targets.length === 0 ? (
-              <a href="/dashboard/settings/multistream" className="studio-link">
-                Set up a simulcast target →
-              </a>
-            ) : (
-              targets.map((t) => (
-                <label key={t.id} className="studio-label-row studio-text-sm">
-                  <input
-                    type="checkbox"
-                    checked={t.enabled}
-                    onChange={(e) => void toggleTarget(t.id, e.target.checked)}
-                  />
-                  {t.label}
-                </label>
-              ))
-            )}
+          <div className="studio-field">
+            <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-visibility">
+              Visibility
+            </label>
+            <select
+              id="broadcast-visibility"
+              value={preflight.visibility}
+              onChange={(e) =>
+                void patchPreflight({ visibility: e.target.value as Preflight['visibility'] })
+              }
+              className="studio-input studio-mt-sm"
+            >
+              <option value="PUBLIC">Public — anyone can listen</option>
+              <option value="FAN_ONLY">Fan-subscribers only</option>
+            </select>
           </div>
-        </div>
+
+          <div className="studio-field">
+            <span className="studio-label studio-text-muted-sm">Simulcast</span>
+            <div className="broadcast-studio__targets studio-mt-sm">
+              {targets === null ? null : targets.length === 0 ? (
+                <a href="/dashboard/settings/multistream" className="studio-link">
+                  Set up a simulcast target →
+                </a>
+              ) : (
+                targets.map((t) => (
+                  <label key={t.id} className="studio-label-row studio-text-sm">
+                    <input
+                      type="checkbox"
+                      checked={t.enabled}
+                      onChange={(e) => void toggleTarget(t.id, e.target.checked)}
+                    />
+                    {t.label}
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="studio-field studio-mt-md">
-        <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-pin">
-          Pin to chat (optional)
-        </label>
-        <div className="broadcast-studio__pin-row studio-mt-sm">
-          <input
-            id="broadcast-pin"
-            value={pinText}
-            onChange={(e) => setPinText(e.target.value)}
-            placeholder="e.g. 'three new originals tonight, requests open at 23:00'"
-            className="studio-input"
-          />
-          <Button
-            disabled={pinning || !pinText.trim()}
-            onClick={() => void pinToChat()}
-            variant="secondary"
-            size="sm"
-          >
-            {pinned ? 'Pinned ✓' : pinning ? 'Pinning…' : 'Pin'}
-          </Button>
-        </div>
+          <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-pin">
+            Pin to chat (optional)
+          </label>
+          <div className="broadcast-studio__pin-row studio-mt-sm">
+            <input
+              id="broadcast-pin"
+              value={pinText}
+              onChange={(e) => setPinText(e.target.value)}
+              placeholder="e.g. 'three new originals tonight, requests open at 23:00'"
+              className="studio-input"
+            />
+            <Button
+              disabled={pinning || !pinText.trim()}
+              onClick={() => void pinToChat()}
+              variant="secondary"
+              size="sm"
+            >
+              {pinned ? 'Pinned ✓' : pinning ? 'Pinning…' : 'Pin'}
+            </Button>
+          </div>
         </div>
       </details>
     </div>

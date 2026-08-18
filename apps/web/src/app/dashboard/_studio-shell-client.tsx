@@ -18,7 +18,10 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
  * so it self-corrects within a few seconds regardless of how you went live. */
 const LIVE_POLL_MS = 5000
 
-type StudioShellClientProps = Omit<ComponentProps<typeof StudioShell>, 'children' | 'onGoLiveClick'> & {
+type StudioShellClientProps = Omit<
+  ComponentProps<typeof StudioShell>,
+  'children' | 'onGoLiveClick'
+> & {
   children: ReactNode
   channelSlug?: string
 }

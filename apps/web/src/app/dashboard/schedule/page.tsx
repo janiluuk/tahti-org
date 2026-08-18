@@ -42,11 +42,7 @@ export default async function SchedulePage() {
       headers: { Cookie: `tahti_session=${sessionValue}` },
       cache: 'no-store',
     })
-      .then((res) =>
-        res.ok
-          ? (res.json() as Promise<typeof emptySeries>)
-          : emptySeries,
-      )
+      .then((res) => (res.ok ? (res.json() as Promise<typeof emptySeries>) : emptySeries))
       .catch(() => emptySeries),
   ])
 

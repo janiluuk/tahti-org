@@ -177,105 +177,262 @@ export default function ChannelSchedulePanel({
 
   return (
     <div className="studio-settings-stack studio-mt-lg">
-    <Panel title="Live show series" description="Save the details once, then schedule each episode in a few clicks.">
-      <div className="studio-show-series-grid">
-        <label className="studio-schedule-row__field studio-flex-1">
-          <span className="studio-label-sm">Series name</span>
-          <input className="studio-input" value={seriesName} onChange={(event) => setSeriesName(event.target.value)} placeholder="e.g. Midnight Signals" disabled={isPending} />
-        </label>
-        <label className="studio-schedule-row__field">
-          <span className="studio-label-sm">Format</span>
-          <select className="studio-input" value={showType} onChange={(event) => setShowType(event.target.value as 'LIVE_SET' | 'TALK')} disabled={isPending}>
-            <option value="LIVE_SET">DJ set series</option>
-            <option value="TALK">Podcast</option>
-          </select>
-        </label>
-        <label className="studio-schedule-row__field">
-          <span className="studio-label-sm">Visibility</span>
-          <select className="studio-input" value={visibility} onChange={(event) => setVisibility(event.target.value as 'PUBLIC' | 'FAN_ONLY')} disabled={isPending}>
-            <option value="PUBLIC">Public</option>
-            <option value="FAN_ONLY">Fans only</option>
-          </select>
-        </label>
-        <label className="studio-schedule-row__field studio-flex-1">
-          <span className="studio-label-sm">Default tagline</span>
-          <input className="studio-input" value={tagline} onChange={(event) => setTagline(event.target.value)} placeholder="Optional subtitle" disabled={isPending} />
-        </label>
-        <label className="studio-schedule-row__field studio-show-series-grid__wide">
-          <span className="studio-label-sm">Archive description</span>
-          <textarea className="studio-input" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Copied to every recording; tracklists can be completed later." disabled={isPending} rows={2} />
-        </label>
-        <label className="studio-schedule-row__field studio-show-series-grid__wide">
-          <span className="studio-label-sm">Show artwork URL</span>
-          <input className="studio-input" type="url" value={artworkUrl} onChange={(event) => setArtworkUrl(event.target.value)} placeholder="Keeps this artwork for every episode" disabled={isPending} />
-        </label>
-      </div>
-      <div className="studio-schedule-row studio-mt-sm">
-        <label className="studio-checkbox-label">
-          <input type="checkbox" checked={episodeNumberEnabled} onChange={(event) => setEpisodeNumberEnabled(event.target.checked)} disabled={isPending} />
-          Increment episode number automatically
-        </label>
-        {episodeNumberEnabled && <label className="studio-schedule-row__field"><span className="studio-label-sm">Start at</span><input type="number" min={1} className="studio-input studio-input--narrow" value={nextEpisodeNumber} onChange={(event) => setNextEpisodeNumber(Number(event.target.value))} disabled={isPending} /></label>}
-        <label className="studio-checkbox-label"><input type="checkbox" checked={autoArchive} onChange={(event) => setAutoArchive(event.target.checked)} disabled={isPending} />Publish recording automatically</label>
-        <Button onClick={createSeries} disabled={isPending || !seriesName.trim()} variant="primary"><ButtonIcon name="plus" />Create series</Button>
-      </div>
-    </Panel>
+      <Panel
+        title="Live show series"
+        description="Save the details once, then schedule each episode in a few clicks."
+      >
+        <div className="studio-show-series-grid">
+          <label className="studio-schedule-row__field studio-flex-1">
+            <span className="studio-label-sm">Series name</span>
+            <input
+              className="studio-input"
+              value={seriesName}
+              onChange={(event) => setSeriesName(event.target.value)}
+              placeholder="e.g. Midnight Signals"
+              disabled={isPending}
+            />
+          </label>
+          <label className="studio-schedule-row__field">
+            <span className="studio-label-sm">Format</span>
+            <select
+              className="studio-input"
+              value={showType}
+              onChange={(event) => setShowType(event.target.value as 'LIVE_SET' | 'TALK')}
+              disabled={isPending}
+            >
+              <option value="LIVE_SET">DJ set series</option>
+              <option value="TALK">Podcast</option>
+            </select>
+          </label>
+          <label className="studio-schedule-row__field">
+            <span className="studio-label-sm">Visibility</span>
+            <select
+              className="studio-input"
+              value={visibility}
+              onChange={(event) => setVisibility(event.target.value as 'PUBLIC' | 'FAN_ONLY')}
+              disabled={isPending}
+            >
+              <option value="PUBLIC">Public</option>
+              <option value="FAN_ONLY">Fans only</option>
+            </select>
+          </label>
+          <label className="studio-schedule-row__field studio-flex-1">
+            <span className="studio-label-sm">Default tagline</span>
+            <input
+              className="studio-input"
+              value={tagline}
+              onChange={(event) => setTagline(event.target.value)}
+              placeholder="Optional subtitle"
+              disabled={isPending}
+            />
+          </label>
+          <label className="studio-schedule-row__field studio-show-series-grid__wide">
+            <span className="studio-label-sm">Archive description</span>
+            <textarea
+              className="studio-input"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Copied to every recording; tracklists can be completed later."
+              disabled={isPending}
+              rows={2}
+            />
+          </label>
+          <label className="studio-schedule-row__field studio-show-series-grid__wide">
+            <span className="studio-label-sm">Show artwork URL</span>
+            <input
+              className="studio-input"
+              type="url"
+              value={artworkUrl}
+              onChange={(event) => setArtworkUrl(event.target.value)}
+              placeholder="Keeps this artwork for every episode"
+              disabled={isPending}
+            />
+          </label>
+        </div>
+        <div className="studio-schedule-row studio-mt-sm">
+          <label className="studio-checkbox-label">
+            <input
+              type="checkbox"
+              checked={episodeNumberEnabled}
+              onChange={(event) => setEpisodeNumberEnabled(event.target.checked)}
+              disabled={isPending}
+            />
+            Increment episode number automatically
+          </label>
+          {episodeNumberEnabled && (
+            <label className="studio-schedule-row__field">
+              <span className="studio-label-sm">Start at</span>
+              <input
+                type="number"
+                min={1}
+                className="studio-input studio-input--narrow"
+                value={nextEpisodeNumber}
+                onChange={(event) => setNextEpisodeNumber(Number(event.target.value))}
+                disabled={isPending}
+              />
+            </label>
+          )}
+          <label className="studio-checkbox-label">
+            <input
+              type="checkbox"
+              checked={autoArchive}
+              onChange={(event) => setAutoArchive(event.target.checked)}
+              disabled={isPending}
+            />
+            Publish recording automatically
+          </label>
+          <Button
+            onClick={createSeries}
+            disabled={isPending || !seriesName.trim()}
+            variant="primary"
+          >
+            <ButtonIcon name="plus" />
+            Create series
+          </Button>
+        </div>
+      </Panel>
 
-    <Panel title="Schedule an episode" description="The title and all saved series data will be filled automatically when you go live.">
-      {series.length === 0 ? <p className="studio-text-muted-sm">Create a show series first.</p> : <div className="studio-schedule-row studio-row--wrap">
-        <label className="studio-schedule-row__field studio-flex-1"><span className="studio-label-sm">Series</span><select className="studio-input" value={selectedSeriesId} onChange={(event) => setSelectedSeriesId(event.target.value)} disabled={isPending}>{series.map((item) => <option key={item.id} value={item.id}>{item.name}{item.episodeNumberEnabled ? ` — next #${item.nextEpisodeNumber}` : ''}</option>)}</select></label>
-        <label className="studio-schedule-row__field"><span className="studio-label-sm">Date &amp; time</span><input type="datetime-local" className="studio-input" value={episodeAt} onChange={(event) => setEpisodeAt(event.target.value)} disabled={isPending} /></label>
-        <label className="studio-schedule-row__field"><span className="studio-label-sm">Venue</span><input className="studio-input" value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="Optional venue" disabled={isPending} /></label>
-        <label className="studio-schedule-row__field"><span className="studio-label-sm">Location</span><input className="studio-input" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="City, country, or online" disabled={isPending} /></label>
-        <label className="studio-schedule-row__field studio-flex-1"><span className="studio-label-sm">Different artwork for this episode</span><input type="url" className="studio-input" value={episodeArtworkUrl} onChange={(event) => setEpisodeArtworkUrl(event.target.value)} placeholder="Leave blank to keep the series artwork" disabled={isPending} /></label>
-        <Button onClick={scheduleEpisode} disabled={isPending || !episodeAt} variant="primary"><ButtonIcon name="plus" />Schedule show</Button>
-      </div>}
-      {scheduledShows.length > 0 && <div className="studio-show-series-list studio-mt-md">{scheduledShows.map((show) => <div className="studio-show-series-list__item" key={show.id}><div><strong>{show.title}</strong><p className="studio-text-muted-sm">{new Date(show.startAt).toLocaleString()} · {show.showType === 'TALK' ? 'Podcast' : 'DJ set'}{show.venue ? ` · ${show.venue}` : ''}{show.location ? `, ${show.location}` : ''}</p></div><Button onClick={() => cancelEpisode(show.id)} disabled={isPending} variant="ghost" size="sm">Cancel</Button></div>)}</div>}
-    </Panel>
+      <Panel
+        title="Schedule an episode"
+        description="The title and all saved series data will be filled automatically when you go live."
+      >
+        {series.length === 0 ? (
+          <p className="studio-text-muted-sm">Create a show series first.</p>
+        ) : (
+          <div className="studio-schedule-row studio-row--wrap">
+            <label className="studio-schedule-row__field studio-flex-1">
+              <span className="studio-label-sm">Series</span>
+              <select
+                className="studio-input"
+                value={selectedSeriesId}
+                onChange={(event) => setSelectedSeriesId(event.target.value)}
+                disabled={isPending}
+              >
+                {series.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                    {item.episodeNumberEnabled ? ` — next #${item.nextEpisodeNumber}` : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="studio-schedule-row__field">
+              <span className="studio-label-sm">Date &amp; time</span>
+              <input
+                type="datetime-local"
+                className="studio-input"
+                value={episodeAt}
+                onChange={(event) => setEpisodeAt(event.target.value)}
+                disabled={isPending}
+              />
+            </label>
+            <label className="studio-schedule-row__field">
+              <span className="studio-label-sm">Venue</span>
+              <input
+                className="studio-input"
+                value={venue}
+                onChange={(event) => setVenue(event.target.value)}
+                placeholder="Optional venue"
+                disabled={isPending}
+              />
+            </label>
+            <label className="studio-schedule-row__field">
+              <span className="studio-label-sm">Location</span>
+              <input
+                className="studio-input"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="City, country, or online"
+                disabled={isPending}
+              />
+            </label>
+            <label className="studio-schedule-row__field studio-flex-1">
+              <span className="studio-label-sm">Different artwork for this episode</span>
+              <input
+                type="url"
+                className="studio-input"
+                value={episodeArtworkUrl}
+                onChange={(event) => setEpisodeArtworkUrl(event.target.value)}
+                placeholder="Leave blank to keep the series artwork"
+                disabled={isPending}
+              />
+            </label>
+            <Button onClick={scheduleEpisode} disabled={isPending || !episodeAt} variant="primary">
+              <ButtonIcon name="plus" />
+              Schedule show
+            </Button>
+          </div>
+        )}
+        {scheduledShows.length > 0 && (
+          <div className="studio-show-series-list studio-mt-md">
+            {scheduledShows.map((show) => (
+              <div className="studio-show-series-list__item" key={show.id}>
+                <div>
+                  <strong>{show.title}</strong>
+                  <p className="studio-text-muted-sm">
+                    {new Date(show.startAt).toLocaleString()} ·{' '}
+                    {show.showType === 'TALK' ? 'Podcast' : 'DJ set'}
+                    {show.venue ? ` · ${show.venue}` : ''}
+                    {show.location ? `, ${show.location}` : ''}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => cancelEpisode(show.id)}
+                  disabled={isPending}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
 
-    <Panel
-      title="Next broadcast"
-      headerTight
-      description="One-off announcement shown to listeners when you're offline. Series episodes update this automatically."
-    >
-      <div className="studio-schedule-row">
-        <label className="studio-schedule-row__field">
-          <span className="studio-label-sm">Date &amp; time</span>
-          <input
-            type="datetime-local"
-            value={at}
-            onChange={(e) => setAt(e.target.value)}
-            disabled={isPending}
-            className="studio-input"
-          />
-        </label>
-        <label className="studio-schedule-row__field studio-flex-1">
-          <span className="studio-label-sm">Note</span>
-          <input
-            type="text"
-            value={note}
-            placeholder="e.g. Weekly — Thursdays 22:00 EET"
-            onChange={(e) => setNote(e.target.value)}
-            disabled={isPending}
-            className="studio-input"
-          />
-        </label>
-        <Button onClick={save} disabled={isPending} variant="primary">
-          <ButtonIcon name="save" />
-          {isPending ? 'Saving…' : 'Save'}
-        </Button>
-        <Button onClick={clear} disabled={isPending} variant="ghost" size="sm">
-          Clear
-        </Button>
-      </div>
-      {error && <p className="studio-text-error studio-mt-xs">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success studio-mt-sm">{message}</p>}
-      {!isLive && previewLabel && (
-        <p className="studio-text-muted-sm studio-mt-sm" aria-live="polite">
-          Listener preview: {previewLabel}
-        </p>
-      )}
-    </Panel>
+      <Panel
+        title="Next broadcast"
+        headerTight
+        description="One-off announcement shown to listeners when you're offline. Series episodes update this automatically."
+      >
+        <div className="studio-schedule-row">
+          <label className="studio-schedule-row__field">
+            <span className="studio-label-sm">Date &amp; time</span>
+            <input
+              type="datetime-local"
+              value={at}
+              onChange={(e) => setAt(e.target.value)}
+              disabled={isPending}
+              className="studio-input"
+            />
+          </label>
+          <label className="studio-schedule-row__field studio-flex-1">
+            <span className="studio-label-sm">Note</span>
+            <input
+              type="text"
+              value={note}
+              placeholder="e.g. Weekly — Thursdays 22:00 EET"
+              onChange={(e) => setNote(e.target.value)}
+              disabled={isPending}
+              className="studio-input"
+            />
+          </label>
+          <Button onClick={save} disabled={isPending} variant="primary">
+            <ButtonIcon name="save" />
+            {isPending ? 'Saving…' : 'Save'}
+          </Button>
+          <Button onClick={clear} disabled={isPending} variant="ghost" size="sm">
+            Clear
+          </Button>
+        </div>
+        {error && <p className="studio-text-error studio-mt-xs">{error}</p>}
+        {message && <p className="studio-notice studio-notice--success studio-mt-sm">{message}</p>}
+        {!isLive && previewLabel && (
+          <p className="studio-text-muted-sm studio-mt-sm" aria-live="polite">
+            Listener preview: {previewLabel}
+          </p>
+        )}
+      </Panel>
     </div>
   )
 }

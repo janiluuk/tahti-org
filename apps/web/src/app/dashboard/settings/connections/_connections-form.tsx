@@ -83,92 +83,102 @@ export function ConnectionsForm({
           {
             id: 'streaming',
             label: 'Streaming platforms',
-            content: <Panel
-        title="Streaming platforms"
-        description="Your channels on other platforms — shown in their own section on your profile."
-      >
-        <div className="studio-field--block">
-          <div className="studio-row studio-row--wrap studio-mb-sm">
-            <span className="studio-link-row__icon">
-              <SocialLinkIcon label="YouTube" url={streamingLinks.youtube} />
-            </span>
-            <input
-              type="url"
-              placeholder="YouTube channel URL"
-              value={streamingLinks.youtube}
-              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, youtube: e.target.value }))}
-              className="studio-input studio-input--grow"
-              maxLength={2000}
-            />
-          </div>
-          <div className="studio-row studio-row--wrap studio-mb-sm">
-            <span className="studio-link-row__icon">
-              <SocialLinkIcon label="hearthis.at" url={streamingLinks.hearthisAt} />
-            </span>
-            <input
-              type="url"
-              placeholder="hearthis.at profile URL"
-              value={streamingLinks.hearthisAt}
-              onChange={(e) =>
-                setStreamingLinks((prev) => ({ ...prev, hearthisAt: e.target.value }))
-              }
-              className="studio-input studio-input--grow"
-              maxLength={2000}
-            />
-          </div>
-          <div className="studio-row studio-row--wrap studio-mb-sm">
-            <span className="studio-link-row__icon">
-              <SocialLinkIcon label="Twitch" url={streamingLinks.twitch} />
-            </span>
-            <input
-              type="url"
-              placeholder="Twitch channel URL"
-              value={streamingLinks.twitch}
-              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, twitch: e.target.value }))}
-              className="studio-input studio-input--grow"
-              maxLength={2000}
-            />
-          </div>
-          <div className="studio-row studio-row--wrap studio-mb-sm">
-            <span className="studio-link-row__icon">
-              <SocialLinkIcon label="SoundCloud" url={streamingLinks.soundcloud} />
-            </span>
-            <input
-              type="url"
-              placeholder="SoundCloud profile URL"
-              value={streamingLinks.soundcloud}
-              onChange={(e) =>
-                setStreamingLinks((prev) => ({ ...prev, soundcloud: e.target.value }))
-              }
-              className="studio-input studio-input--grow"
-              maxLength={2000}
-            />
-          </div>
-          <div className="studio-row studio-row--wrap studio-mb-sm">
-            <span className="studio-link-row__icon">
-              <SocialLinkIcon label="Kick" url={streamingLinks.kick} />
-            </span>
-            <input
-              type="url"
-              placeholder="Kick channel URL"
-              value={streamingLinks.kick}
-              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, kick: e.target.value }))}
-              className="studio-input studio-input--grow"
-              maxLength={2000}
-            />
-          </div>
-        </div>
-      </Panel>,
+            content: (
+              <Panel
+                title="Streaming platforms"
+                description="Your channels on other platforms — shown in their own section on your profile."
+              >
+                <div className="studio-field--block">
+                  <div className="studio-row studio-row--wrap studio-mb-sm">
+                    <span className="studio-link-row__icon">
+                      <SocialLinkIcon label="YouTube" url={streamingLinks.youtube} />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="YouTube channel URL"
+                      value={streamingLinks.youtube}
+                      onChange={(e) =>
+                        setStreamingLinks((prev) => ({ ...prev, youtube: e.target.value }))
+                      }
+                      className="studio-input studio-input--grow"
+                      maxLength={2000}
+                    />
+                  </div>
+                  <div className="studio-row studio-row--wrap studio-mb-sm">
+                    <span className="studio-link-row__icon">
+                      <SocialLinkIcon label="hearthis.at" url={streamingLinks.hearthisAt} />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="hearthis.at profile URL"
+                      value={streamingLinks.hearthisAt}
+                      onChange={(e) =>
+                        setStreamingLinks((prev) => ({ ...prev, hearthisAt: e.target.value }))
+                      }
+                      className="studio-input studio-input--grow"
+                      maxLength={2000}
+                    />
+                  </div>
+                  <div className="studio-row studio-row--wrap studio-mb-sm">
+                    <span className="studio-link-row__icon">
+                      <SocialLinkIcon label="Twitch" url={streamingLinks.twitch} />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="Twitch channel URL"
+                      value={streamingLinks.twitch}
+                      onChange={(e) =>
+                        setStreamingLinks((prev) => ({ ...prev, twitch: e.target.value }))
+                      }
+                      className="studio-input studio-input--grow"
+                      maxLength={2000}
+                    />
+                  </div>
+                  <div className="studio-row studio-row--wrap studio-mb-sm">
+                    <span className="studio-link-row__icon">
+                      <SocialLinkIcon label="SoundCloud" url={streamingLinks.soundcloud} />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="SoundCloud profile URL"
+                      value={streamingLinks.soundcloud}
+                      onChange={(e) =>
+                        setStreamingLinks((prev) => ({ ...prev, soundcloud: e.target.value }))
+                      }
+                      className="studio-input studio-input--grow"
+                      maxLength={2000}
+                    />
+                  </div>
+                  <div className="studio-row studio-row--wrap studio-mb-sm">
+                    <span className="studio-link-row__icon">
+                      <SocialLinkIcon label="Kick" url={streamingLinks.kick} />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="Kick channel URL"
+                      value={streamingLinks.kick}
+                      onChange={(e) =>
+                        setStreamingLinks((prev) => ({ ...prev, kick: e.target.value }))
+                      }
+                      className="studio-input studio-input--grow"
+                      maxLength={2000}
+                    />
+                  </div>
+                </div>
+              </Panel>
+            ),
           },
           {
             id: 'links',
             label: 'Profile links',
-            content: <Panel
-        title="Links"
-        description="Where else listeners can find you — shown on your channel page."
-      >
-        <ChannelLinksPanel initial={links} onDraftChange={setLinks} />
-      </Panel>,
+            content: (
+              <Panel
+                title="Links"
+                description="Where else listeners can find you — shown on your channel page."
+              >
+                <ChannelLinksPanel initial={links} onDraftChange={setLinks} />
+              </Panel>
+            ),
           },
           ...(children ? [{ id: 'social', label: 'Social accounts', content: children }] : []),
           ...(musicbrainz

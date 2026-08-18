@@ -144,10 +144,13 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
     setError(null)
     setMessage(null)
     try {
-      const response = await fetch(`${API_URL}/api/channels/${encodeURIComponent(slug)}/${action}`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      const response = await fetch(
+        `${API_URL}/api/channels/${encodeURIComponent(slug)}/${action}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      )
       if (!response.ok) throw new Error()
       setMessage(action === 'skip' ? 'Playing the next track.' : 'Playing the previous track.')
     } catch {
@@ -180,7 +183,9 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
       setProgramme((await programmeResponse.json()) as Programme)
       setMessage(enabled ? 'Channel rotation started.' : 'Channel rotation stopped.')
       if (!transportResponse.ok && transportResponse.status !== 409) {
-        setMessage(enabled ? 'Rotation enabled; it will start with the channel.' : 'Rotation disabled.')
+        setMessage(
+          enabled ? 'Rotation enabled; it will start with the channel.' : 'Rotation disabled.',
+        )
       }
     } catch {
       setError('Could not update the channel state')
@@ -371,7 +376,11 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
               ref={sortable.ref}
               className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
             >
-              <button ref={sortable.handleRef} type="button" aria-label={`Reorder ${itemTitle(item)}`}>
+              <button
+                ref={sortable.handleRef}
+                type="button"
+                aria-label={`Reorder ${itemTitle(item)}`}
+              >
                 ⠿
               </button>
               <span>{index + 1}</span>

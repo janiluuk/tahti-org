@@ -212,27 +212,31 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.post('/api/me/channel/show-series', { preHandler: requireAuth }, async (request, reply) => {
-    const parsed = CreateLiveShowSeriesSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-    const channel = await findChannel(request.sessionUser!.id)
-    if (!channel) return reply.status(404).send({ error: 'No channel' })
+  fastify.post(
+    '/api/me/channel/show-series',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const parsed = CreateLiveShowSeriesSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
 
-    const series = await showDb.liveShowSeries.create({
-      data: {
-        channelId: channel.id,
-        ...parsed.data,
-        description: parsed.data.description || null,
-        tagline: parsed.data.tagline || null,
-      },
-    })
-    return reply.status(201).send({
-      ...series,
-      createdAt: series.createdAt.toISOString(),
-      updatedAt: undefined,
-      channelId: undefined,
-    })
-  })
+      const series = await showDb.liveShowSeries.create({
+        data: {
+          channelId: channel.id,
+          ...parsed.data,
+          description: parsed.data.description || null,
+          tagline: parsed.data.tagline || null,
+        },
+      })
+      return reply.status(201).send({
+        ...series,
+        createdAt: series.createdAt.toISOString(),
+        updatedAt: undefined,
+        channelId: undefined,
+      })
+    },
+  )
 
   fastify.post(
     '/api/me/channel/show-series/:seriesId/episodes',

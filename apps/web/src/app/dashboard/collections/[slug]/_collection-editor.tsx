@@ -322,7 +322,11 @@ export function CollectionEditor({
                 type="button"
                 onClick={() => void toggleItemPlayback(item)}
                 title={track?.id === toPlayerTrack(item).id && playing ? 'Pause' : 'Play'}
-                aria-label={track?.id === toPlayerTrack(item).id && playing ? `Pause ${title}` : `Play ${title}`}
+                aria-label={
+                  track?.id === toPlayerTrack(item).id && playing
+                    ? `Pause ${title}`
+                    : `Play ${title}`
+                }
               >
                 {track?.id === toPlayerTrack(item).id && playing ? '❚❚' : '▶'}
               </button>
@@ -333,8 +337,18 @@ export function CollectionEditor({
                 aria-label={`Add ${title} to queue`}
               >
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
-                  <path d="M2.5 4h11M2.5 8h11M2.5 12h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                  <path d="M12 10.5v4M10 12.5h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <path
+                    d="M2.5 4h11M2.5 8h11M2.5 12h7"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 10.5v4M10 12.5h4"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </span>

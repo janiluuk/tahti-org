@@ -232,7 +232,10 @@ function ChainTile({
     >
       <div className="plug__head">
         <span className="plug__name">
-          <span className={cx('plug__status-dot', enabled && 'plug__status-dot--enabled')} aria-hidden />
+          <span
+            className={cx('plug__status-dot', enabled && 'plug__status-dot--enabled')}
+            aria-hidden
+          />
           {position} · {name}
         </span>
         <Switch checked={enabled} onChange={onToggle} label={`${name} enabled`} />
@@ -1499,10 +1502,17 @@ export function ProAudioEditor({
               {previewMode === 'before' ? 'original chain bypassed' : 'effects preview'} · render
               for final result
             </span>
-            <div className="pro-editor-preview-compare" role="group" aria-label="Plugin chain preview">
+            <div
+              className="pro-editor-preview-compare"
+              role="group"
+              aria-label="Plugin chain preview"
+            >
               <button
                 type="button"
-                className={cx('pro-editor-preview-compare__btn', previewMode === 'before' && 'is-active')}
+                className={cx(
+                  'pro-editor-preview-compare__btn',
+                  previewMode === 'before' && 'is-active',
+                )}
                 onClick={() => {
                   setPreviewBypassedPluginId(null)
                   setPreviewMode('before')
@@ -1512,7 +1522,10 @@ export function ProAudioEditor({
               </button>
               <button
                 type="button"
-                className={cx('pro-editor-preview-compare__btn', previewMode === 'after' && 'is-active')}
+                className={cx(
+                  'pro-editor-preview-compare__btn',
+                  previewMode === 'after' && 'is-active',
+                )}
                 onClick={() => {
                   setPreviewBypassedPluginId(null)
                   setPreviewMode('after')
@@ -1554,161 +1567,174 @@ export function ProAudioEditor({
                 {pluginsExpanded ? 'Collapse' : 'Open plugins'}
               </button>
             </div>
-            {pluginsExpanded ? <div className="pro-editor-chain__strip">
-              {editList.plugins.map((plugin, i) => {
-                let summary = ''
-                if (plugin.pluginId === 'gain')
-                  summary = gainChainSummary(plugin.params as GainParams, plugin.enabled)
-                else if (plugin.pluginId === 'eq')
-                  summary = eqChainSummary(plugin.params as EqParams, plugin.enabled)
-                else if (plugin.pluginId === 'comp')
-                  summary = compChainSummary(plugin.params as CompParams, plugin.enabled)
-                else if (plugin.pluginId === 'limiter')
-                  summary = limiterChainSummary(plugin.params as LimiterParams, plugin.enabled)
-                else if (plugin.pluginId === 'filter')
-                  summary = filterChainSummary(plugin.params as FilterParams, plugin.enabled)
+            {pluginsExpanded ? (
+              <div className="pro-editor-chain__strip">
+                {editList.plugins.map((plugin, i) => {
+                  let summary = ''
+                  if (plugin.pluginId === 'gain')
+                    summary = gainChainSummary(plugin.params as GainParams, plugin.enabled)
+                  else if (plugin.pluginId === 'eq')
+                    summary = eqChainSummary(plugin.params as EqParams, plugin.enabled)
+                  else if (plugin.pluginId === 'comp')
+                    summary = compChainSummary(plugin.params as CompParams, plugin.enabled)
+                  else if (plugin.pluginId === 'limiter')
+                    summary = limiterChainSummary(plugin.params as LimiterParams, plugin.enabled)
+                  else if (plugin.pluginId === 'filter')
+                    summary = filterChainSummary(plugin.params as FilterParams, plugin.enabled)
 
-                const pluginName =
-                  plugin.pluginId === 'gain'
-                    ? 'Gain'
-                    : plugin.pluginId === 'eq'
-                      ? 'EQ'
-                      : plugin.pluginId === 'comp'
-                        ? 'Comp'
-                        : plugin.pluginId === 'limiter'
-                          ? 'Limiter'
-                          : 'Filter'
+                  const pluginName =
+                    plugin.pluginId === 'gain'
+                      ? 'Gain'
+                      : plugin.pluginId === 'eq'
+                        ? 'EQ'
+                        : plugin.pluginId === 'comp'
+                          ? 'Comp'
+                          : plugin.pluginId === 'limiter'
+                            ? 'Limiter'
+                            : 'Filter'
 
-                return (
-                  <div key={plugin.instanceId} className="pro-editor-chain__cell">
-                    {i > 0 && (
-                      <span className="pro-editor-chain__arrow" aria-hidden>
-                        →
-                      </span>
-                    )}
-                    <div className="pro-editor-chain__tile">
-                      <ChainTile
-                        position={i + 1}
-                        name={pluginName}
-                        summary={summary}
-                        enabled={plugin.enabled}
-                        focused={plugin.instanceId === focusedInstanceId}
-                        onFocus={() => setFocusedInstanceId(plugin.instanceId)}
-                        onToggle={(v) => togglePlugin(plugin.instanceId, v)}
-                      />
-                      <button
-                        type="button"
-                        className={cx(
-                          'pro-editor-plugin-preview',
-                          previewBypassedPluginId === plugin.instanceId && 'is-active',
-                        )}
-                        disabled={!plugin.enabled}
-                        onClick={() => {
-                          setPreviewMode('after')
-                          setPreviewBypassedPluginId((current) =>
-                            current === plugin.instanceId ? null : plugin.instanceId,
-                          )
-                        }}
-                      >
-                        {previewBypassedPluginId === plugin.instanceId
-                          ? 'Playing without this plugin'
-                          : 'Preview before / after'}
-                      </button>
+                  return (
+                    <div key={plugin.instanceId} className="pro-editor-chain__cell">
+                      {i > 0 && (
+                        <span className="pro-editor-chain__arrow" aria-hidden>
+                          →
+                        </span>
+                      )}
+                      <div className="pro-editor-chain__tile">
+                        <ChainTile
+                          position={i + 1}
+                          name={pluginName}
+                          summary={summary}
+                          enabled={plugin.enabled}
+                          focused={plugin.instanceId === focusedInstanceId}
+                          onFocus={() => setFocusedInstanceId(plugin.instanceId)}
+                          onToggle={(v) => togglePlugin(plugin.instanceId, v)}
+                        />
+                        <button
+                          type="button"
+                          className={cx(
+                            'pro-editor-plugin-preview',
+                            previewBypassedPluginId === plugin.instanceId && 'is-active',
+                          )}
+                          disabled={!plugin.enabled}
+                          onClick={() => {
+                            setPreviewMode('after')
+                            setPreviewBypassedPluginId((current) =>
+                              current === plugin.instanceId ? null : plugin.instanceId,
+                            )
+                          }}
+                        >
+                          {previewBypassedPluginId === plugin.instanceId
+                            ? 'Playing without this plugin'
+                            : 'Preview before / after'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div> : <p className="pro-editor-chain__empty">No active effects. Open plugins to build a chain.</p>}
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="pro-editor-chain__empty">
+                No active effects. Open plugins to build a chain.
+              </p>
+            )}
           </div>
 
           {/* ---- Focused plugin panel ---- */}
-          {pluginsExpanded ? <div className="pro-editor-panel-area">
-            <div className={cx('pro-editor-panel', !focusedPlugin.enabled && 'pro-editor-panel--disabled')}>
-              <div className="pro-editor-panel__header">
-                <div className="pro-editor-panel__heading">
-                  <h2 className="pro-editor-panel__title">
-                    {focusedPlugin.pluginId === 'gain'
-                      ? 'Gain & Normalize'
-                      : focusedPlugin.pluginId === 'eq'
-                        ? 'EQ — 3 band parametric'
-                        : focusedPlugin.pluginId === 'comp'
-                          ? 'Compressor'
-                          : focusedPlugin.pluginId === 'limiter'
-                            ? 'Limiter'
-                            : 'Filter'}
-                  </h2>
-                  <span className="pro-editor-panel__pill">
-                    POSITION {pluginPosition(focusedPlugin.instanceId)} ·{' '}
-                    {focusedPlugin.enabled ? 'ENABLED' : 'BYPASSED'}
-                  </span>
+          {pluginsExpanded ? (
+            <div className="pro-editor-panel-area">
+              <div
+                className={cx(
+                  'pro-editor-panel',
+                  !focusedPlugin.enabled && 'pro-editor-panel--disabled',
+                )}
+              >
+                <div className="pro-editor-panel__header">
+                  <div className="pro-editor-panel__heading">
+                    <h2 className="pro-editor-panel__title">
+                      {focusedPlugin.pluginId === 'gain'
+                        ? 'Gain & Normalize'
+                        : focusedPlugin.pluginId === 'eq'
+                          ? 'EQ — 3 band parametric'
+                          : focusedPlugin.pluginId === 'comp'
+                            ? 'Compressor'
+                            : focusedPlugin.pluginId === 'limiter'
+                              ? 'Limiter'
+                              : 'Filter'}
+                    </h2>
+                    <span className="pro-editor-panel__pill">
+                      POSITION {pluginPosition(focusedPlugin.instanceId)} ·{' '}
+                      {focusedPlugin.enabled ? 'ENABLED' : 'BYPASSED'}
+                    </span>
+                  </div>
+                  <div className="pro-editor-panel__actions">
+                    <Button
+                      onClick={() => {
+                        const defaults =
+                          focusedPlugin.pluginId === 'gain'
+                            ? { ...DEFAULT_GAIN_PARAMS }
+                            : focusedPlugin.pluginId === 'eq'
+                              ? { ...DEFAULT_EQ_PARAMS }
+                              : focusedPlugin.pluginId === 'comp'
+                                ? { ...DEFAULT_COMP_PARAMS }
+                                : focusedPlugin.pluginId === 'limiter'
+                                  ? { ...DEFAULT_LIMITER_PARAMS }
+                                  : { ...DEFAULT_FILTER_PARAMS }
+                        patchPlugin(focusedPlugin.instanceId, defaults)
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Reset
+                    </Button>
+                    <Switch
+                      checked={focusedPlugin.enabled}
+                      onChange={(v) => togglePlugin(focusedPlugin.instanceId, v)}
+                      label={`${focusedPlugin.pluginId} enabled`}
+                    />
+                  </div>
                 </div>
-                <div className="pro-editor-panel__actions">
-                  <Button
-                    onClick={() => {
-                      const defaults =
-                        focusedPlugin.pluginId === 'gain'
-                          ? { ...DEFAULT_GAIN_PARAMS }
-                          : focusedPlugin.pluginId === 'eq'
-                            ? { ...DEFAULT_EQ_PARAMS }
-                            : focusedPlugin.pluginId === 'comp'
-                              ? { ...DEFAULT_COMP_PARAMS }
-                              : focusedPlugin.pluginId === 'limiter'
-                                ? { ...DEFAULT_LIMITER_PARAMS }
-                                : { ...DEFAULT_FILTER_PARAMS }
-                      patchPlugin(focusedPlugin.instanceId, defaults)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                  >
-                    Reset
-                  </Button>
-                  <Switch
-                    checked={focusedPlugin.enabled}
-                    onChange={(v) => togglePlugin(focusedPlugin.instanceId, v)}
-                    label={`${focusedPlugin.pluginId} enabled`}
-                  />
+                <div onPointerDown={beginKnobDrag}>
+                  {focusedPlugin.pluginId === 'gain' && gainPlugin && gainParams && (
+                    <GainPanel
+                      params={gainParams}
+                      onChange={(p) => patchPlugin(gainPlugin.instanceId, p)}
+                      measured={gainParams.measured}
+                      onMeasure={() => void handleMeasure()}
+                      measuring={measuring}
+                    />
+                  )}
+                  {focusedPlugin.pluginId === 'eq' && eqPlugin && eqParams && (
+                    <EqPanel
+                      params={eqParams}
+                      onChange={(p) => patchPlugin(eqPlugin.instanceId, p)}
+                    />
+                  )}
+                  {focusedPlugin.pluginId === 'comp' && compPlugin && compParams && (
+                    <CompPanel
+                      params={compParams}
+                      onChange={(p) => patchPlugin(compPlugin.instanceId, p)}
+                    />
+                  )}
+                  {focusedPlugin.pluginId === 'limiter' && limiterPlugin && limiterParams && (
+                    <LimiterPanel
+                      params={limiterParams}
+                      onChange={(p) => patchPlugin(limiterPlugin.instanceId, p)}
+                    />
+                  )}
+                  {focusedPlugin.pluginId === 'filter' && filterPlugin && filterParams && (
+                    <FilterPanel
+                      params={filterParams}
+                      onChange={(p) => patchPlugin(filterPlugin.instanceId, p)}
+                    />
+                  )}
                 </div>
+                <p className="pro-editor-panel__hint">
+                  drag knob · double-click to type · ⌥drag = fine · scroll = step
+                </p>
               </div>
-              <div onPointerDown={beginKnobDrag}>
-                {focusedPlugin.pluginId === 'gain' && gainPlugin && gainParams && (
-                  <GainPanel
-                    params={gainParams}
-                    onChange={(p) => patchPlugin(gainPlugin.instanceId, p)}
-                    measured={gainParams.measured}
-                    onMeasure={() => void handleMeasure()}
-                    measuring={measuring}
-                  />
-                )}
-                {focusedPlugin.pluginId === 'eq' && eqPlugin && eqParams && (
-                  <EqPanel
-                    params={eqParams}
-                    onChange={(p) => patchPlugin(eqPlugin.instanceId, p)}
-                  />
-                )}
-                {focusedPlugin.pluginId === 'comp' && compPlugin && compParams && (
-                  <CompPanel
-                    params={compParams}
-                    onChange={(p) => patchPlugin(compPlugin.instanceId, p)}
-                  />
-                )}
-                {focusedPlugin.pluginId === 'limiter' && limiterPlugin && limiterParams && (
-                  <LimiterPanel
-                    params={limiterParams}
-                    onChange={(p) => patchPlugin(limiterPlugin.instanceId, p)}
-                  />
-                )}
-                {focusedPlugin.pluginId === 'filter' && filterPlugin && filterParams && (
-                  <FilterPanel
-                    params={filterParams}
-                    onChange={(p) => patchPlugin(filterPlugin.instanceId, p)}
-                  />
-                )}
-              </div>
-              <p className="pro-editor-panel__hint">
-                drag knob · double-click to type · ⌥drag = fine · scroll = step
-              </p>
             </div>
-          </div> : null}
+          ) : null}
 
           {/* ---- Render summary bar ---- */}
           <div className="pro-editor-render-bar">

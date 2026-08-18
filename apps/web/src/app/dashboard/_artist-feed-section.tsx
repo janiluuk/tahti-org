@@ -28,7 +28,6 @@ export function ArtistFeedSection({
 }) {
   return (
     <section className="feed-page feed-page--embedded">
-
       {items.length === 0 ? (
         <div className="public-empty-card">
           <p className="public-empty-card__text">
