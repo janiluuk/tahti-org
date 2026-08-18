@@ -11,6 +11,7 @@ import {
   type VisualPreset,
 } from '@tahti/shared'
 import { HelpTourButton, getPublicTourSteps } from '@tahti/ui'
+import { GalleryPhotosButton } from './_gallery-photos-button'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
@@ -413,6 +414,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
                     Profile
                   </Link>
+                  <GalleryPhotosButton images={channel.slideshowImages} />
                   <HelpTourButton
                     steps={getPublicTourSteps(`/c/${params.slug}`)}
                     className="studio-top-nav__notif-btn"

@@ -16,6 +16,7 @@ import {
 } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { updateChannelGallery } from './channel-gallery-actions'
+import { ZoomableLightbox } from '@/components/zoomable-lightbox'
 
 const WEBGL_MODES = CHANNEL_GALLERY_MODES.filter((m) => m !== 'NONE' && m !== 'STATIC_SLIDESHOW')
 const SIMPLE_MODES = CHANNEL_GALLERY_MODES.filter((m) => m === 'NONE' || m === 'STATIC_SLIDESHOW')
@@ -51,6 +52,8 @@ export default function ChannelGalleryPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const previewImages = parseGalleryImageLines(imageLines)
 
   useEffect(() => {
     onDraftChange?.({
@@ -159,6 +162,22 @@ export default function ChannelGalleryPanel({
             onChange={(e) => setImageLines(e.target.value)}
             className="studio-textarea"
           />
+          {previewImages.length > 0 && (
+            <div className="gallery-preview-grid">
+              {previewImages.map((url, i) => (
+                <button
+                  type="button"
+                  key={`${url}-${i}`}
+                  className="gallery-preview-thumb"
+                  onClick={() => setPreviewIndex(i)}
+                  aria-label={`Preview image ${i + 1}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )}
         </label>
       )}
 
@@ -170,6 +189,15 @@ export default function ChannelGalleryPanel({
           <ButtonIcon name="send" />
           {isPending ? 'Publishing…' : 'Publish changes'}
         </Button>
+      )}
+
+      {previewIndex !== null && previewIndex < previewImages.length && (
+        <ZoomableLightbox
+          images={previewImages.map((url) => ({ url }))}
+          index={previewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={setPreviewIndex}
+        />
       )}
     </>
   )

@@ -261,6 +261,11 @@ const CHANNEL_LIVE_STEPS: TourStep[] = [
     title: 'Artist info',
     body: 'Who you’re listening to — follow, support, or open their full profile from here.',
   },
+  {
+    selector: '[aria-label^="View photos"]',
+    title: 'Photos',
+    body: 'Browse this artist’s gallery images full-size — zoom in and step through them like a slideshow.',
+  },
 ]
 
 const COLLECTION_STEPS: TourStep[] = [
