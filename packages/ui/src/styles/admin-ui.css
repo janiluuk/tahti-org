@@ -882,6 +882,50 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Attract-mode idle hint (_idle-auto-scroll.tsx) — a quiet cue that the page
+ * is about to auto-advance, not a call to action. Stays out of the way
+ * (opacity 0, no pointer-events) until the idle timer fires. */
+.home-idle-hint {
+  position: fixed;
+  left: 50%;
+  bottom: var(--tahti-space-6);
+  transform: translateX(-50%);
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.home-idle-hint--visible {
+  opacity: 1;
+}
+
+.home-idle-hint__chevron {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  animation: home-idle-hint-bob 1.4s ease-in-out infinite;
+}
+
+@keyframes home-idle-hint-bob {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(45deg) translate(4px, 4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-idle-hint__chevron {
+    animation: none;
+  }
+}
+
 .home-live-section {
   display: flex;
   flex-direction: column;
@@ -991,6 +1035,30 @@
 
 .home-footer__sep {
   opacity: 0.4;
+}
+
+/* Front-page-only "built in the open" strip — source repo + public API docs.
+ * Subtler than the primary CTAs, sits just above the shared PublicFooter. */
+.home-dev-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tahti-space-5);
+  flex-wrap: wrap;
+}
+
+.home-dev-links__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--tahti-text-xs);
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.home-dev-links__item:hover {
+  color: var(--text);
 }
 
 .auth-card--dark .ui-heading--1 {

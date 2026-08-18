@@ -8,6 +8,8 @@ import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { isSignupOpen } from '@/lib/signup'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { IdleAutoScroll } from './_idle-auto-scroll'
+import { DevLinks } from './_dev-links'
 
 interface PlatformStats {
   activeArtists: number
@@ -101,7 +103,8 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
 
   return (
     <div className="home-shell">
-      <section className="home-hero">
+      <IdleAutoScroll />
+      <section className="home-hero" data-scroll-section>
         <BrandLogo />
         <h1 className="home-title">
           Broadcasting for
@@ -129,10 +132,13 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
               Artist panel
             </Link>
           )}
+          <Link href="/about" className="ui-btn ui-btn--secondary ui-btn--lg">
+            About Tahti
+          </Link>
         </div>
       </section>
 
-      <section className="home-live-section">
+      <section className="home-live-section" data-scroll-section>
         <div className="home-section-label">
           <span className="listen-live-dot" aria-hidden />
           On air right now
@@ -163,7 +169,11 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
       </section>
 
       {news.length > 0 && (
-        <section className="home-news-section" aria-labelledby="home-news-heading">
+        <section
+          className="home-news-section"
+          aria-labelledby="home-news-heading"
+          data-scroll-section
+        >
           <div className="home-section-label" id="home-news-heading">
             News
           </div>
@@ -181,27 +191,31 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
       )}
 
       {stats && hasMeaningfulPlatformStats(stats) && (
-        <StatCardStrip aria-label="Platform stats">
-          <StatCard
-            layout="inline"
-            variant="neutral"
-            value={String(stats.activeArtists)}
-            label="active artists"
-          />
-          <StatCard
-            layout="inline"
-            variant="neutral"
-            value={String(stats.broadcastsThisMonth)}
-            label="broadcasts this month"
-          />
-          <StatCard
-            layout="inline"
-            variant="neutral"
-            value={`${formatHours(stats.totalHours)} h`}
-            label="broadcast in total"
-          />
-        </StatCardStrip>
+        <div data-scroll-section>
+          <StatCardStrip aria-label="Platform stats">
+            <StatCard
+              layout="inline"
+              variant="neutral"
+              value={String(stats.activeArtists)}
+              label="active artists"
+            />
+            <StatCard
+              layout="inline"
+              variant="neutral"
+              value={String(stats.broadcastsThisMonth)}
+              label="broadcasts this month"
+            />
+            <StatCard
+              layout="inline"
+              variant="neutral"
+              value={`${formatHours(stats.totalHours)} h`}
+              label="broadcast in total"
+            />
+          </StatCardStrip>
+        </div>
       )}
+
+      <DevLinks />
     </div>
   )
 }

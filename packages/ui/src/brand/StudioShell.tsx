@@ -19,6 +19,7 @@ type StudioShellProps = {
     unreadCount: number
   }>
   markNotificationsRead?: () => Promise<void>
+  onGoLiveClick?: () => void
 }
 
 /** Production v8 dashboard layout (studio surface). Playground preview: DashboardShell. */
@@ -31,6 +32,7 @@ export function StudioShell({
   channelUrl,
   fetchNotifications,
   markNotificationsRead,
+  onGoLiveClick,
 }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio">
@@ -42,6 +44,7 @@ export function StudioShell({
         channelUrl={channelUrl}
         fetchNotifications={fetchNotifications}
         markNotificationsRead={markNotificationsRead}
+        onGoLiveClick={onGoLiveClick}
       />
       <div className="db-layout shell-app">
         <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />

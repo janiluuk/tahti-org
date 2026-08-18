@@ -242,6 +242,31 @@
   background: color-mix(in srgb, var(--muted) 8%, transparent);
 }
 
+/* Go-live icon reads red ("not on air, click to start") until the channel
+ * actually goes live, then flips to green ("on air, click to manage"). */
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn {
+  color: var(--coral);
+  border-color: color-mix(in srgb, var(--coral) 30%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn:hover {
+  color: var(--coral);
+  border-color: color-mix(in srgb, var(--coral) 55%, transparent);
+  background: color-mix(in srgb, var(--coral) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn--live {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 30%, transparent);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn--live:hover {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 55%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__notif {
   position: relative;
 }
@@ -2901,6 +2926,92 @@
 
 [data-tahti-ui='studio'] .studio-relative {
   position: relative;
+}
+
+/* ── Stream manager modal (top-nav go-live icon, once live) ─────────────── */
+[data-tahti-ui='studio'] .stream-mgr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 480px;
+  max-height: min(720px, 90vh);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__meta {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__meta a {
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__meta a:hover {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__close:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__chat {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+[data-tahti-ui='studio'] .stream-mgr-modal__footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* ── Mobile bottom nav (≤768px) ──────────────────────────────────────────── */

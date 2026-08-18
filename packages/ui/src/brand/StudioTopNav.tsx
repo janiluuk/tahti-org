@@ -20,6 +20,9 @@ type StudioTopNavProps = {
     unreadCount: number
   }>
   markNotificationsRead?: () => Promise<void>
+  /** When set and the channel is live, clicking the go-live icon opens the
+   * stream manager instead of navigating to /dashboard/broadcast. */
+  onGoLiveClick?: () => void
 }
 
 function IconLogout() {
@@ -121,6 +124,7 @@ export function StudioTopNav({
   channelUrl,
   fetchNotifications,
   markNotificationsRead,
+  onGoLiveClick,
 }: StudioTopNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
@@ -161,16 +165,28 @@ export function StudioTopNav({
             </Link>
           )}
         </div>
-        {displayName && hasChannel && (
-          <Link
-            href="/dashboard/broadcast"
-            className="studio-top-nav__icon-btn"
-            aria-label="Go live"
-            title="Go live"
-          >
-            <IconGoLive />
-          </Link>
-        )}
+        {displayName &&
+          hasChannel &&
+          (isLive && onGoLiveClick ? (
+            <button
+              type="button"
+              className="studio-top-nav__icon-btn studio-top-nav__golive-btn studio-top-nav__golive-btn--live"
+              aria-label="Stream manager"
+              title="Stream manager"
+              onClick={onGoLiveClick}
+            >
+              <IconGoLive />
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/broadcast"
+              className="studio-top-nav__icon-btn studio-top-nav__golive-btn"
+              aria-label="Go live"
+              title="Go live"
+            >
+              <IconGoLive />
+            </Link>
+          ))}
         {displayName && hasChannel && (
           <Link
             href="/dashboard/upload"
