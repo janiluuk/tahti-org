@@ -317,6 +317,7 @@ export function ProAudioEditor({
   const [activeTool, setActiveTool] = useState<ToolId>('select')
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [playing, setPlaying] = useState(false)
+  const [previewingSelection, setPreviewingSelection] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [measuring, setMeasuring] = useState(false)
   const [activeTab, setActiveTab] = useState<EditorTab>('waveform')
@@ -658,10 +659,23 @@ export function ProAudioEditor({
     const onTime = () => {
       setCurrentTime(audio.currentTime)
       redraw()
+      if (previewingSelection && selection && audio.currentTime >= selection.end) {
+        audio.pause()
+        audio.currentTime = selection.start
+        setPreviewingSelection(false)
+      }
     }
     audio.addEventListener('timeupdate', onTime)
     return () => audio.removeEventListener('timeupdate', onTime)
-  }, [redraw])
+  }, [redraw, previewingSelection, selection])
+
+  function handlePreviewSelection() {
+    const audio = audioRef.current
+    if (!audio || !selection || selection.end - selection.start <= 0) return
+    audio.currentTime = selection.start
+    setPreviewingSelection(true)
+    void audio.play()
+  }
 
   const segments = useMemo(
     () => computeKeepSegments(editList.sourceDuration, mergeCuts(editList.cuts)),
@@ -797,6 +811,7 @@ export function ProAudioEditor({
     (sec: number) => {
       const clamped = Math.max(0, Math.min(editList.sourceDuration, sec))
       if (audioRef.current) audioRef.current.currentTime = clamped
+      setPreviewingSelection(false)
       const center = clamped / editList.sourceDuration
       const half = span / 2
       let ns = center - half
@@ -1050,8 +1065,10 @@ export function ProAudioEditor({
         e.preventDefault()
         const audio = audioRef.current
         if (!audio) return
-        if (audio.paused) void audio.play()
-        else audio.pause()
+        if (audio.paused) {
+          setPreviewingSelection(false)
+          void audio.play()
+        } else audio.pause()
         return
       }
 
@@ -1394,6 +1411,7 @@ export function ProAudioEditor({
                       seekToSec(sec)
                       return
                     }
+                    setPreviewingSelection(false)
                     setSelection({ start: sec, end: sec })
                   }}
                   onPointerMove={(e) => {
@@ -1417,6 +1435,12 @@ export function ProAudioEditor({
                   }}
                   onWheel={(e) => {
                     if (!peaks) return
+                    // Plain scroll (trackpad/wheel) passes through as normal page
+                    // scroll — only Ctrl/Cmd+scroll (and trackpad pinch, which
+                    // browsers report as a ctrlKey wheel event) zooms the
+                    // waveform, matching Figma/Maps convention instead of
+                    // hijacking every scroll gesture over the canvas.
+                    if (!(e.ctrlKey || e.metaKey)) return
                     e.preventDefault()
                     const rect = e.currentTarget.getBoundingClientRect()
                     const cursorFrac = (e.clientX - rect.left) / rect.width
@@ -1490,12 +1514,26 @@ export function ProAudioEditor({
               onClick={() => {
                 const audio = audioRef.current
                 if (!audio) return
-                if (audio.paused) void audio.play()
-                else audio.pause()
+                if (audio.paused) {
+                  setPreviewingSelection(false)
+                  void audio.play()
+                } else audio.pause()
               }}
             >
               {playing ? '⏸' : '▶'}
             </button>
+            {selection && selection.end - selection.start > 0 && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handlePreviewSelection}
+                disabled={previewingSelection && playing}
+              >
+                <ButtonIcon name="play" />
+                {previewingSelection && playing ? 'Previewing…' : 'Preview selection'}
+              </Button>
+            )}
             <span className="pro-editor-time">{formatDuration(currentTime)}</span>
             <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
             <span className="pro-editor-preview-note">
