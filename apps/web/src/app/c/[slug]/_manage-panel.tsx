@@ -14,6 +14,7 @@ import {
 
 export interface ManageStats {
   audioBitrateKbps: number | null
+  signalConnected: boolean
   listeners: number
   listenerPeak: number
   plays: number

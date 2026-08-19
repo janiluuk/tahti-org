@@ -70,6 +70,7 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         audioBitrateKbps: signal?.bitrateKbps ?? null,
+        signalConnected: signal?.connected ?? false,
         listeners: (presenceRes as { numClients: number }).numClients,
         listenerPeak: channel.listenerPeak,
         plays: channel.totalPlays,

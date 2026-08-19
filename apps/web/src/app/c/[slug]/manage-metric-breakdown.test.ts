@@ -6,6 +6,7 @@ import { buildMetricBreakdown, MANAGE_METRIC_KEYS } from './manage-metric-breakd
 
 const stats = {
   audioBitrateKbps: 320,
+  signalConnected: true,
   listeners: 12,
   listenerPeak: 28,
   plays: 142,

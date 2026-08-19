@@ -197,6 +197,10 @@ export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)
 export const ChannelManageStatsSchema = z.object({
   /** Live encoder bitrate, from Icecast — null whenever not currently broadcasting. */
   audioBitrateKbps: z.number().int().nullable(),
+  /** Whether Icecast currently has a live source connected on this channel's
+   * mount — false while offline, and also false if the channel is marked LIVE
+   * in the DB but the encoder connection has actually dropped. */
+  signalConnected: z.boolean(),
   /** Current listeners (Centrifugo presence — same count shown publicly). */
   listeners: z.number().int(),
   /** All-time highest concurrent-listener count observed. */

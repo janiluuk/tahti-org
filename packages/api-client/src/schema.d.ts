@@ -1304,6 +1304,7 @@ export interface paths {
           content: {
             'application/json': {
               audioBitrateKbps: number | null
+              signalConnected: boolean
               listeners: number
               listenerPeak: number
               plays: number
