@@ -179,6 +179,104 @@ const NEWSLETTER_STEPS: TourStep[] = [
   },
 ]
 
+const SMART_LINKS_STEPS: TourStep[] = [
+  {
+    selector: '.import-page__panel',
+    title: 'Your releases',
+    body: 'Every release gets its own smart link page — one URL that routes fans to Spotify, Apple Music, and wherever else you’re distributed.',
+  },
+  {
+    selector: '.studio-release-card',
+    title: 'Release card',
+    body: 'Edit metadata, swap cover art, or copy the smart link straight from here.',
+  },
+]
+
+const DISTRIBUTION_STEPS: TourStep[] = [
+  {
+    selector: '.studio-mixcloud-box, .import-connect',
+    title: 'Spotify artist profile',
+    body: 'Link your Spotify for Artists profile so streaming stats can show up alongside your Tahti stats.',
+  },
+  {
+    selector: '.ui-panel.studio-mt-md',
+    title: 'DSP delivery',
+    body: 'Submit releases to streaming platforms and track UPC/ISRC/MusicBrainz identifiers for each one.',
+  },
+]
+
+const STASH_STEPS: TourStep[] = [
+  {
+    selector: '.stash-upload-btn',
+    title: 'Private stash',
+    body: 'Upload work-in-progress files here — nothing in your stash is public until you move it to a release.',
+  },
+]
+
+const RECORDINGS_STEPS: TourStep[] = [
+  {
+    selector: '.import-page__broadcast-list, .studio-empty-card',
+    title: 'Recorded shows',
+    body: 'Every past live broadcast is recorded automatically — publish one to your archive or download it here.',
+  },
+]
+
+const SCHEDULE_STEPS: TourStep[] = [
+  {
+    selector: '.studio-show-series-grid',
+    title: 'Show series',
+    body: 'Set up a recurring show — fans see the next scheduled time on your channel page.',
+  },
+]
+
+const VENUES_STEPS: TourStep[] = [
+  {
+    selector: '.venue-manager, .studio-empty-card',
+    title: 'Your venues',
+    body: 'Venues you’ve claimed or registered — board-verified venues can host your scheduled events.',
+  },
+]
+
+const EVENTS_STEPS: TourStep[] = [
+  {
+    selector: '.studio-grid.studio-grid--2',
+    title: 'Add an event',
+    body: 'List an upcoming gig with a date, place, and ticket link — it shows on your profile as your next appearance.',
+  },
+]
+
+const RADIO_SLOT_STEPS: TourStep[] = [
+  {
+    selector: '.studio-radio-calendar',
+    title: 'Book a slot',
+    body: 'Pick an open hour on the shared Tahti Radio schedule — click and drag to select, then choose live set or talk.',
+  },
+]
+
+const EMBEDS_STEPS: TourStep[] = [
+  {
+    selector: '.studio-field',
+    title: 'Add an embed',
+    body: 'Pull in a SoundCloud, Mixcloud, or Hearthis track to show alongside your own uploads.',
+  },
+]
+
+const POSTS_STEPS: TourStep[] = [
+  {
+    selector: '.studio-field',
+    title: 'New post',
+    body: 'Share a text update with photos to your followers — shows up in their feed and on your profile.',
+  },
+]
+
+const SETTINGS_STEPS: TourStep[] = [
+  {
+    selector: '.settings-subnav',
+    title: 'Settings sections',
+    body: 'Account, artist info, connections, notifications, and everything else that configures your channel lives here.',
+  },
+]
+
 const STUDIO_ROUTES: RouteEntry[] = [
   { test: (p) => p === '/dashboard', steps: bySteps(STUDIO_SHARED, DASHBOARD_HOME) },
   {
@@ -200,6 +298,35 @@ const STUDIO_ROUTES: RouteEntry[] = [
   {
     test: (p) => p.startsWith('/dashboard/newsletter'),
     steps: bySteps(STUDIO_SHARED, NEWSLETTER_STEPS),
+  },
+  {
+    test: (p) => p.startsWith('/dashboard/releases'),
+    steps: bySteps(STUDIO_SHARED, SMART_LINKS_STEPS),
+  },
+  {
+    test: (p) => p.startsWith('/dashboard/distribution'),
+    steps: bySteps(STUDIO_SHARED, DISTRIBUTION_STEPS),
+  },
+  { test: (p) => p.startsWith('/dashboard/stash'), steps: bySteps(STUDIO_SHARED, STASH_STEPS) },
+  {
+    test: (p) => p.startsWith('/dashboard/recordings'),
+    steps: bySteps(STUDIO_SHARED, RECORDINGS_STEPS),
+  },
+  {
+    test: (p) => p.startsWith('/dashboard/schedule'),
+    steps: bySteps(STUDIO_SHARED, SCHEDULE_STEPS),
+  },
+  { test: (p) => p.startsWith('/dashboard/venues'), steps: bySteps(STUDIO_SHARED, VENUES_STEPS) },
+  { test: (p) => p.startsWith('/dashboard/events'), steps: bySteps(STUDIO_SHARED, EVENTS_STEPS) },
+  {
+    test: (p) => p.startsWith('/dashboard/tahti-radio-slots'),
+    steps: bySteps(STUDIO_SHARED, RADIO_SLOT_STEPS),
+  },
+  { test: (p) => p.startsWith('/dashboard/embeds'), steps: bySteps(STUDIO_SHARED, EMBEDS_STEPS) },
+  { test: (p) => p.startsWith('/dashboard/posts'), steps: bySteps(STUDIO_SHARED, POSTS_STEPS) },
+  {
+    test: (p) => p.startsWith('/dashboard/settings'),
+    steps: bySteps(STUDIO_SHARED, SETTINGS_STEPS),
   },
   { test: () => true, steps: STUDIO_SHARED },
 ]
