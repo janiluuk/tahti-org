@@ -9,6 +9,7 @@ import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
 import { ActiveTrackStage } from '@/components/active-track-stage'
 import type { VisualPreset } from '@tahti/shared'
+import { CollectionCoverButton } from './_collection-gallery'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -99,14 +100,12 @@ export function ArchiveTrackRow({
         >
           {isCurrent && playing ? '❚❚' : '▶'}
         </button>
-        <div className="prof-collection-cover prof-collection-cover--item">
-          {thumbUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={thumbUrl} alt="" width={40} height={40} />
-          ) : (
-            <span className="prof-collection-cover-ph" aria-hidden />
-          )}
-        </div>
+        <CollectionCoverButton
+          url={thumbUrl}
+          className="prof-collection-cover prof-collection-cover--item"
+          imgWidth={40}
+          imgHeight={40}
+        />
         <div className="prof-collection-item-body">
           <div className="prof-collection-title">{title}</div>
           {durationLabel && <span className="prof-list-meta">{durationLabel}</span>}

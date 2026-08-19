@@ -6099,6 +6099,16 @@
   background: linear-gradient(135deg, var(--card2), var(--border));
 }
 
+[data-tahti-ui='brand'] button.prof-collection-cover--zoomable,
+[data-tahti-ui='brand'] button.prof-collection-hero-cover {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: zoom-in;
+}
+
 [data-tahti-ui='brand'] .prof-collection-hero-row {
   display: flex;
   align-items: flex-end;

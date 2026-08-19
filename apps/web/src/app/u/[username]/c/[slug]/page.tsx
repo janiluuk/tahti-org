@@ -28,6 +28,7 @@ import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
 import { SubscribeButton } from './_subscribe-button'
+import { CollectionGalleryProvider, CollectionCoverButton } from './_collection-gallery'
 
 function IconRss() {
   return (
@@ -148,182 +149,190 @@ export default async function CollectionPage({
       subtitle: `@${data.user.username}`,
     }))
 
+  // Browsable/zoomable gallery: hero cover first, then every item's own art,
+  // deduped by URL so re-used artwork (e.g. an EP's tracks sharing one cover)
+  // doesn't create duplicate slideshow stops.
+  const galleryUrls = [
+    data.coverUrl,
+    ...data.items.map((item) => item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null),
+  ].filter((url, i, arr): url is string => Boolean(url) && arr.indexOf(url) === i)
+  const galleryImages = galleryUrls.map((url) => ({ url }))
+
   return (
-    <ProfilePageLayout
-      activeNav="discover"
-      hero={
-        <>
-          {data.coverUrl && (
-            <div
-              className="prof-collection-ambient-bg"
-              style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}
-              aria-hidden
-            />
-          )}
-          <div className="prof-collection-open-veil" aria-hidden />
-          {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
-          {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
-            <div
-              className="ch-channel-backdrop"
-              style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
-            />
-          )}
-          <div className="prof-collection-top-row">
-            <Link href={`/u/${data.user.username}`} className="prof-back-link">
-              ← {data.user.displayName}
-            </Link>
-            <div className="prof-collection-top-row__actions">
-              <SubscribeButton slug={params.slug} />
-              {data.collaborative && <AddTrackButton slug={params.slug} />}
-              <CollectionEmbedButton slug={params.slug} />
-              <a href={rssUrl} className="prof-embed-btn" title="RSS feed" aria-label="RSS feed">
-                <IconRss />
-                RSS
-              </a>
-            </div>
-          </div>
-          {data.collaborative && (
-            <p className="prof-list-meta prof-collaborative-hint">
-              🤝 Collaborative playlist — anyone can add a track
-            </p>
-          )}
-          <div className="prof-collection-hero-row">
-            {data.coverUrl && (
-              <div className="prof-collection-hero-cover">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={data.coverUrl} alt="" />
-              </div>
-            )}
-            <div className="prof-collection-hero-info">
-              <h1 className="prof-page-title prof-page-title--collection">{data.name}</h1>
-              <p className="prof-list-meta">
-                {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
-              </p>
-              {data.description && (
-                <SafePlainText text={data.description} className="prof-list-meta--spaced" />
-              )}
-            </div>
-          </div>
-        </>
-      }
-    >
-      <ChannelTextLayerView
-        mode={data.textLayerMode ?? 'NONE'}
-        text={data.textLayerText ?? ''}
-        align={data.textLayerAlign ?? 'CENTER'}
-      />
-
-      <ChannelGalleryView mode={data.galleryMode ?? 'NONE'} images={data.slideshowImages ?? []} />
-
-      <section className="prof-section">
-        {data.items.length === 0 ? (
-          <div className="public-empty-card">
-            <p className="public-empty-card__text">This collection is empty.</p>
-            <p className="public-empty-card__hint">Items appear here when the artist adds them.</p>
-          </div>
-        ) : (
+    <CollectionGalleryProvider images={galleryImages}>
+      <ProfilePageLayout
+        activeNav="discover"
+        hero={
           <>
-            {queue.length > 0 && <PlaylistControls queue={queue} />}
-            <ol className="prof-list prof-collection-items">
-              {data.items.map((item) => {
-                if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
-                  return (
-                    <SpotifyEmbedRow
-                      key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
-                    />
-                  )
-                }
-                if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
-                  return (
-                    <MixcloudEmbedRow
-                      key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
-                    />
-                  )
-                }
-                if (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri) {
-                  return (
-                    <HearthisEmbedRow
-                      key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
-                    />
-                  )
-                }
-                const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
-                if (item.archiveItem?.audioUrl) {
-                  return (
-                    <ArchiveTrackRow
-                      key={item.id}
-                      id={item.archiveItem.id}
-                      title={item.archiveItem.title}
-                      audioUrl={item.archiveItem.audioUrl}
-                      artistUsername={data.user.username}
-                      channelSlug={item.archiveItem.channel?.slug ?? null}
-                      thumbUrl={thumbUrl}
-                      durationLabel={
-                        item.archiveItem.durationSec != null
-                          ? formatDuration(item.archiveItem.durationSec)
-                          : null
-                      }
-                      addedByDisplayName={
-                        item.addedBy && item.addedBy.username !== data.user.username
-                          ? item.addedBy.displayName
-                          : null
-                      }
-                      addNote={item.addNote}
-                      queue={queue}
-                    />
-                  )
-                }
-                return (
-                  <li key={item.id} className="prof-collection-item-row">
-                    <div className="prof-collection-cover prof-collection-cover--item">
-                      {thumbUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumbUrl} alt="" width={40} height={40} />
-                      ) : (
-                        <span className="prof-collection-cover-ph" aria-hidden />
-                      )}
-                    </div>
-                    <div className="prof-collection-item-body">
-                      {item.archiveItem && (
-                        <>
-                          <div className="prof-collection-title">{item.archiveItem.title}</div>
-                          {item.archiveItem.durationSec != null && (
-                            <span className="prof-list-meta">
-                              {formatDuration(item.archiveItem.durationSec)}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {item.release && (
-                        <>
-                          <Link href={`/r/${item.release.smartLinkSlug}`}>
-                            {item.release.title}
-                          </Link>
-                          <span className="prof-list-meta">
-                            {' '}
-                            · {item.release.type} ·{' '}
-                            {new Date(item.release.releaseDate).toLocaleDateString()}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
+            {data.coverUrl && (
+              <div
+                className="prof-collection-ambient-bg"
+                style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}
+                aria-hidden
+              />
+            )}
+            <div className="prof-collection-open-veil" aria-hidden />
+            {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
+            {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
+              <div
+                className="ch-channel-backdrop"
+                style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
+              />
+            )}
+            <div className="prof-collection-top-row">
+              <Link href={`/u/${data.user.username}`} className="prof-back-link">
+                ← {data.user.displayName}
+              </Link>
+              <div className="prof-collection-top-row__actions">
+                <SubscribeButton slug={params.slug} />
+                {data.collaborative && <AddTrackButton slug={params.slug} />}
+                <CollectionEmbedButton slug={params.slug} />
+                <a href={rssUrl} className="prof-embed-btn" title="RSS feed" aria-label="RSS feed">
+                  <IconRss />
+                  RSS
+                </a>
+              </div>
+            </div>
+            {data.collaborative && (
+              <p className="prof-list-meta prof-collaborative-hint">
+                🤝 Collaborative playlist — anyone can add a track
+              </p>
+            )}
+            <div className="prof-collection-hero-row">
+              {data.coverUrl && (
+                <CollectionCoverButton url={data.coverUrl} className="prof-collection-hero-cover" />
+              )}
+              <div className="prof-collection-hero-info">
+                <h1 className="prof-page-title prof-page-title--collection">{data.name}</h1>
+                <p className="prof-list-meta">
+                  {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
+                </p>
+                {data.description && (
+                  <SafePlainText text={data.description} className="prof-list-meta--spaced" />
+                )}
+              </div>
+            </div>
           </>
-        )}
-      </section>
+        }
+      >
+        <ChannelTextLayerView
+          mode={data.textLayerMode ?? 'NONE'}
+          text={data.textLayerText ?? ''}
+          align={data.textLayerAlign ?? 'CENTER'}
+        />
 
-      <section className="prof-section">
-        <ReportButton targetType="COLLECTION" targetId={params.slug} />
-      </section>
-    </ProfilePageLayout>
+        <ChannelGalleryView mode={data.galleryMode ?? 'NONE'} images={data.slideshowImages ?? []} />
+
+        <section className="prof-section">
+          {data.items.length === 0 ? (
+            <div className="public-empty-card">
+              <p className="public-empty-card__text">This collection is empty.</p>
+              <p className="public-empty-card__hint">
+                Items appear here when the artist adds them.
+              </p>
+            </div>
+          ) : (
+            <>
+              {queue.length > 0 && <PlaylistControls queue={queue} />}
+              <ol className="prof-list prof-collection-items">
+                {data.items.map((item) => {
+                  if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
+                    return (
+                      <SpotifyEmbedRow
+                        key={item.id}
+                        title={item.archiveItem.title}
+                        embedUri={item.archiveItem.embedUri}
+                      />
+                    )
+                  }
+                  if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
+                    return (
+                      <MixcloudEmbedRow
+                        key={item.id}
+                        title={item.archiveItem.title}
+                        embedUri={item.archiveItem.embedUri}
+                      />
+                    )
+                  }
+                  if (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri) {
+                    return (
+                      <HearthisEmbedRow
+                        key={item.id}
+                        title={item.archiveItem.title}
+                        embedUri={item.archiveItem.embedUri}
+                      />
+                    )
+                  }
+                  const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
+                  if (item.archiveItem?.audioUrl) {
+                    return (
+                      <ArchiveTrackRow
+                        key={item.id}
+                        id={item.archiveItem.id}
+                        title={item.archiveItem.title}
+                        audioUrl={item.archiveItem.audioUrl}
+                        artistUsername={data.user.username}
+                        channelSlug={item.archiveItem.channel?.slug ?? null}
+                        thumbUrl={thumbUrl}
+                        durationLabel={
+                          item.archiveItem.durationSec != null
+                            ? formatDuration(item.archiveItem.durationSec)
+                            : null
+                        }
+                        addedByDisplayName={
+                          item.addedBy && item.addedBy.username !== data.user.username
+                            ? item.addedBy.displayName
+                            : null
+                        }
+                        addNote={item.addNote}
+                        queue={queue}
+                      />
+                    )
+                  }
+                  return (
+                    <li key={item.id} className="prof-collection-item-row">
+                      <CollectionCoverButton
+                        url={thumbUrl}
+                        className="prof-collection-cover prof-collection-cover--item"
+                        imgWidth={40}
+                        imgHeight={40}
+                      />
+                      <div className="prof-collection-item-body">
+                        {item.archiveItem && (
+                          <>
+                            <div className="prof-collection-title">{item.archiveItem.title}</div>
+                            {item.archiveItem.durationSec != null && (
+                              <span className="prof-list-meta">
+                                {formatDuration(item.archiveItem.durationSec)}
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {item.release && (
+                          <>
+                            <Link href={`/r/${item.release.smartLinkSlug}`}>
+                              {item.release.title}
+                            </Link>
+                            <span className="prof-list-meta">
+                              {' '}
+                              · {item.release.type} ·{' '}
+                              {new Date(item.release.releaseDate).toLocaleDateString()}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ol>
+            </>
+          )}
+        </section>
+
+        <section className="prof-section">
+          <ReportButton targetType="COLLECTION" targetId={params.slug} />
+        </section>
+      </ProfilePageLayout>
+    </CollectionGalleryProvider>
   )
 }
