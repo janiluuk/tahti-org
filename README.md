@@ -1,10 +1,22 @@
-# Tahti ry — implementation package
+# Tahti
 
-A Finnish nonprofit, open-source, channel-first broadcasting platform for independent artists.
+A nonprofit broadcasting platform owned and governed by its artist members.
 
-Tahti is built so artists can go live, publish archive and releases, and earn directly from fans — without a corporate intermediary taking the creative cut. This monorepo is the **implementation package**: constitution and strategy docs, the production API/worker/web stack, ops, and guides.
+**[About Tahti](docs/about.md)** — same text as [tahti.live/about](https://tahti.live/about).
+
+Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians — with no shareholders, no advertising, and no exit.
+
+The platform exists for one purpose: to be the best broadcasting platform for independent artists. Quality is a constitutional obligation, not an aspiration.
+
+Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units. Fan subscriptions go directly to the artist, minus a 2% platform fee that rolls into the next grant pool — Tahti takes no cut of fan-sub revenue for itself.
+
+Every artist member has a vote. The board is elected by the membership. The entire platform is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Artists retain full copyright over everything they upload and broadcast.
+
+This monorepo is the **implementation package**: constitution and strategy docs, the production API/worker/web stack, ops, and guides.
 
 ## Read first
+
+**[`docs/about.md`](docs/about.md)** — mission, money, governance, AGPL, and what we do not do (mirrors the public About page).
 
 **[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules that govern every other document in this repository:
 
@@ -41,7 +53,8 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 
 | File | Purpose |
 |---|---|
-| [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | **Start here.** The three rules. Constitutional. |
+| [`docs/about.md`](docs/about.md) | Public About page text — mission, money, governance, AGPL |
+| [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | **Start here for rules.** The three rules. Constitutional. |
 | [`docs/business-evaluation.md`](docs/business-evaluation.md) | Honest "is this worth doing" memo for founder, board, grant officers |
 | [`docs/strategy-and-product.md`](docs/strategy-and-product.md) | Positioning, competitive critique (SoundCloud/Mixcloud/Spotify/Bandcamp), retention thesis |
 | [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md) | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36) |
