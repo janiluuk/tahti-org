@@ -21,7 +21,7 @@ export default function AboutPage() {
         <h2>Our mission</h2>
         <p>
           Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put
-          money, audience, and infrastructure in the hands of independent musicians — with no
+          money, audience, and infrastructure in the hands of independent musicians - with no
           shareholders, no advertising, and no exit.
         </p>
         <p>
@@ -32,7 +32,7 @@ export default function AboutPage() {
         <h2>How the money works</h2>
         <p>
           Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is
-          distributed annually to artists as grants based on engagement units — a fair formula
+          distributed annually to artists as grants based on engagement units - a fair formula
           combining plays, downloads, and direct fan support. The remaining 10% builds a reserve
           (capped at 6 months of costs). Surplus above the cap goes back to artists.
         </p>
@@ -42,7 +42,7 @@ export default function AboutPage() {
           for itself.
         </p>
         <p>
-          The full financial picture — every euro in and out — is published on the{' '}
+          The full financial picture - every euro in and out - is published on the{' '}
           <a href="/transparency">transparency page</a>.
         </p>
 
@@ -50,7 +50,7 @@ export default function AboutPage() {
         <p>
           Every artist member has a vote. The board is elected by the membership. From Year 4, a
           majority of board seats are reserved for elected artist representatives. The director is a
-          hired role with a published description and a succession plan — not a founder who runs it
+          hired role with a published description and a succession plan - not a founder who runs it
           forever.
         </p>
         <p>
@@ -96,7 +96,7 @@ export default function AboutPage() {
             returns to a funder.
           </li>
           <li>
-            Listener counts as headline artist metrics — the constitution prohibits vanity numbers
+            Listener counts as headline artist metrics - the constitution prohibits vanity numbers
             in prominent positions.
           </li>
         </ul>

@@ -2,11 +2,11 @@
 
 A nonprofit broadcasting platform owned and governed by its artist members.
 
-Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians — with no shareholders, no advertising, and no exit.
+Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians - with no shareholders, no advertising, and no exit.
 
 The platform exists for one purpose: to be the best broadcasting platform for independent artists. Quality is a constitutional obligation, not an aspiration.
 
-Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units. Fan subscriptions go directly to the artist, minus a 2% platform fee that rolls into the next grant pool — Tahti takes no cut of fan-sub revenue for itself.
+Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units. Fan subscriptions go directly to the artist, minus a 2% platform fee that rolls into the next grant pool - Tahti takes no cut of fan-sub revenue for itself.
 
 Every artist member has a vote. The board is elected by the membership. The entire platform is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Artists retain full copyright over everything they upload and broadcast.
 
@@ -16,10 +16,10 @@ This monorepo is the **implementation package**: constitution and strategy docs,
 
 **[`docs/about.md`](docs/about.md)** - About our mission, money, governance, AGPL, and what we do not do.
 
-**[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules that govern every other document in this repository:
+**[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** - the three rules that govern every other document in this repository:
 
 1. This is for artists, not for corporate. Administration paid fairly. No profit motive.
-2. Highest quality, useful, community-driven platform — by design.
+2. Highest quality, useful, community-driven platform - by design.
 3. The artist shines brightest. We don't rip off anyone in the chain.
 
 These rules are constitutional. They are not changeable by management decision. Everything else in `docs/` implements them.
@@ -40,8 +40,8 @@ Tahti ships a **channel-first** product: listeners discover and play artist chan
 
 | Client | Role |
 |--------|------|
-| **`apps/web`** (this repo) | Production Next.js listen + studio + admin — `app.tahti.live` / `tahti.live` |
-| **Nuclear `tahti-web`** (separate repo) | Next listen + studio SPA on Nuclear UI — live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
+| **`apps/web`** (this repo) | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live` |
+| **Nuclear `tahti-web`** (separate repo) | Next listen + studio SPA on Nuclear UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
 
 Both clients talk to the same API, chat, and media stack. Prefer the Nuclear beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
 
@@ -51,12 +51,12 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 
 | File | Purpose |
 |---|---|
-| [`docs/about.md`](docs/about.md) | Public About page text — mission, money, governance, AGPL |
+| [`docs/about.md`](docs/about.md) | Public About page text - mission, money, governance, AGPL |
 | [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | **Start here for rules.** The three rules. Constitutional. |
 | [`docs/business-evaluation.md`](docs/business-evaluation.md) | Honest "is this worth doing" memo for founder, board, grant officers |
 | [`docs/strategy-and-product.md`](docs/strategy-and-product.md) | Positioning, competitive critique (SoundCloud/Mixcloud/Spotify/Bandcamp), retention thesis |
 | [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md) | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36) |
-| [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model — revenue, cost, surplus, grant pool |
+| [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model - revenue, cost, surplus, grant pool |
 | [`docs/budget-detailed.md`](docs/budget-detailed.md) | Line-item monthly budget + break-even sensitivity analysis |
 
 ### User guides (plain language)
@@ -64,7 +64,7 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 | File | Purpose |
 |---|---|
 | [`docs/features.md`](docs/features.md) | Current implemented feature catalog and operational dependencies |
-| [`docs/guides/README.md`](docs/guides/README.md) | Index — who should read which guide |
+| [`docs/guides/README.md`](docs/guides/README.md) | Index - who should read which guide |
 | [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md) | Listeners & fans: listen, chat, subscribe, smart links |
 | [`docs/guides/for-artists.md`](docs/guides/for-artists.md) | Members: dashboard, profile, releases, fan tiers |
 | [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md) | Going live: OBS, RTMP, limits, multistream |
@@ -74,8 +74,8 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 
 | File | Purpose |
 |---|---|
-| [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief — repo, milestones M0-M20, data model, anti-patterns |
-| [`docs/design/README.md`](docs/design/README.md) | Design docs index — constitution, v8 mockups, reference HTML pack, active briefs |
+| [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief - repo, milestones M0-M20, data model, anti-patterns |
+| [`docs/design/README.md`](docs/design/README.md) | Design docs index - constitution, v8 mockups, reference HTML pack, active briefs |
 | [`docs/project-roadmap.md`](docs/project-roadmap.md) | Build audit, phase checklist, milestone status |
 | [`docs/future-improvements.md`](docs/future-improvements.md) | Deferred milestones + engineering efficiency backlog |
 | [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |
@@ -101,8 +101,8 @@ Both clients talk to the same API, chat, and media stack. Prefer the Nuclear bet
 
 | File | Purpose |
 |---|---|
-| [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck — for founding-cohort recruitment + scene press |
-| [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx) | Governance + sustainability deck — for board candidates, grant officers, auditors |
+| [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck - for founding-cohort recruitment + scene press |
+| [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx) | Governance + sustainability deck - for board candidates, grant officers, auditors |
 
 ## Running tests
 
@@ -122,7 +122,7 @@ Run the same lint, format, and typecheck gates as CI locally:
 pnpm ci:check
 ```
 
-Full app stack in Docker (API, web, worker, postgres, redis, minio — ports **3010** / **3011**):
+Full app stack in Docker (API, web, worker, postgres, redis, minio - ports **3010** / **3011**):
 
 ```bash
 make stack-up          # or ./scripts/stack-up.sh --seed for demo fixtures
@@ -169,7 +169,7 @@ Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows
 
 | | Y1 | Y2 | Y3 | 3-yr cum. |
 |---|---|---|---|---|
-| Members | 200 | 1,200 | 4,000 | — |
+| Members | 200 | 1,200 | 4,000 | - |
 | Total org revenue | €35,426 | €107,700 | €290,872 | €433,998 |
 | Total costs (incl. director salary) | €54,572 | €86,092 | €148,220 | €288,884 |
 | **Org surplus** | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
@@ -203,10 +203,10 @@ This package is the seventh major iteration of a multi-session design process. T
 
 5. **Director salary is real and modest.** €30-45k cumulative €115k. This is the founder's three-year compensation; there is no equity upside downstream.
 
-6. **No CDN is a trade.** UpCloud Helsinki handles spillover. Y3 requires a 10 Gbps business fiber pipe (~€18k/yr). If fiber pricing changes materially, revisit the CDN decision at AGM — but [...]
+6. **No CDN is a trade.** UpCloud Helsinki handles spillover. Y3 requires a 10 Gbps business fiber pipe (~€18k/yr). If fiber pricing changes materially, revisit the CDN decision at AGM - but [...]
 
 7. **Listener-hours are vanity metrics only.** Grant share comes from engagement units. The constitution forbids designing around listener metrics.
 
 8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's members stream FLAC to a[...]
 
-— Generated 2026-05-17
+- Generated 2026-05-17
