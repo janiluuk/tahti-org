@@ -14,9 +14,7 @@ This monorepo is the **implementation package**: constitution and strategy docs,
 
 ## Read first
 
-**[About Tahti](docs/about.md)** — same text as [tahti.live/about](https://tahti.live/about).
-
-**[`docs/about.md`](docs/about.md)** — mission, money, governance, AGPL, and what we do not do (mirrors the public About page).
+**[`docs/about.md`](docs/about.md)** - About our mission, money, governance, AGPL, and what we do not do.
 
 **[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules that govern every other document in this repository:
 
