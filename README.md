@@ -2,8 +2,6 @@
 
 A nonprofit broadcasting platform owned and governed by its artist members.
 
-**[About Tahti](docs/about.md)** — same text as [tahti.live/about](https://tahti.live/about).
-
 Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians — with no shareholders, no advertising, and no exit.
 
 The platform exists for one purpose: to be the best broadcasting platform for independent artists. Quality is a constitutional obligation, not an aspiration.
@@ -15,6 +13,8 @@ Every artist member has a vote. The board is elected by the membership. The enti
 This monorepo is the **implementation package**: constitution and strategy docs, the production API/worker/web stack, ops, and guides.
 
 ## Read first
+
+**[About Tahti](docs/about.md)** — same text as [tahti.live/about](https://tahti.live/about).
 
 **[`docs/about.md`](docs/about.md)** — mission, money, governance, AGPL, and what we do not do (mirrors the public About page).
 
