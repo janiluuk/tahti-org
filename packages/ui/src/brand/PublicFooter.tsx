@@ -14,6 +14,7 @@ const FOOTER_LINKS: { href: string; label: string }[] = [
   { href: '/help', label: 'Help' },
   { href: '/about', label: 'About' },
   { href: '/venues', label: 'Venues' },
+  { href: '/pitch.html', label: 'Pitch' },
   { href: '/governance', label: 'Governance' },
   { href: '/transparency', label: 'Transparency' },
   { href: '/privacy', label: 'Privacy' },

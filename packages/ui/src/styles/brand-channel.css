@@ -1587,8 +1587,9 @@
 }
 
 /* Per-set waveform visualisation (static, server-extracted peaks) with a
- * playback-progress overlay: a second, full-opacity copy of the bars is
- * absolutely positioned and clipped to the played fraction of the track. */
+ * playback-progress overlay: a second, higher-opacity (but not fully solid)
+ * copy of the bars is absolutely positioned and clipped to the played
+ * fraction of the track. */
 [data-tahti-ui='brand'] .ch-archive-waveform {
   position: relative;
   height: 56px;
@@ -1631,7 +1632,11 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-wf-progress .ch-archive-wf-bar {
-  opacity: 1;
+  /* Semi-transparent rather than solid — the played portion sits directly over
+   * the ChannelVisualizer backdrop in ActiveTrackStage, and full opacity blotted
+   * it out entirely; this keeps the waveform legible while letting the
+   * visualization show through. */
+  opacity: 0.8;
 }
 
 [data-tahti-ui='brand'] .ch-archive-waveform--large {
