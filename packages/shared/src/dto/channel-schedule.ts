@@ -21,7 +21,12 @@ export const CreateLiveShowSeriesSchema = z.object({
   autoArchive: z.boolean().default(true),
   episodeNumberEnabled: z.boolean().default(true),
   nextEpisodeNumber: z.number().int().min(1).max(100_000).default(1),
+  /// Preferred length for this show's radio-slot bookings, hours.
+  intervalHours: z.union([z.literal(1), z.literal(2)]).default(1),
+  scheduleNote: z.string().trim().max(200).nullable().optional(),
 })
+
+export const PatchLiveShowSeriesSchema = CreateLiveShowSeriesSchema.partial()
 
 export const ScheduleLiveShowSchema = z.object({
   startAt: z.string().datetime(),
@@ -35,7 +40,51 @@ export const LiveShowSeriesViewSchema = CreateLiveShowSeriesSchema.extend({
   description: z.string().nullable(),
   tagline: z.string().nullable(),
   artworkUrl: z.string().nullable(),
+  scheduleNote: z.string().nullable(),
   createdAt: z.string().datetime(),
+})
+
+export const LiveShowEpisodeSourceSchema = z.enum(['UPLOAD', 'BROADCAST'])
+export const LiveShowEpisodeStatusSchema = z.enum([
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'APPROVED',
+  'SCHEDULED',
+  'LIVE',
+])
+
+export const CreateLiveShowEpisodeSchema = z.object({
+  source: LiveShowEpisodeSourceSchema,
+  title: z.string().trim().max(200).optional(),
+  archiveItemId: z.string().nullable().optional(),
+  radioSlotBookingId: z.string().nullable().optional(),
+})
+
+export const PatchLiveShowEpisodeSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().max(2_000).nullable().optional(),
+  artworkUrl: z.string().url().max(2_000).nullable().optional(),
+  status: LiveShowEpisodeStatusSchema.optional(),
+  archiveItemId: z.string().nullable().optional(),
+  radioSlotBookingId: z.string().nullable().optional(),
+})
+
+export const LiveShowEpisodeViewSchema = z.object({
+  id: z.string(),
+  seriesId: z.string(),
+  episodeNumber: z.number().int().nullable(),
+  title: z.string(),
+  description: z.string().nullable(),
+  artworkUrl: z.string().nullable(),
+  status: LiveShowEpisodeStatusSchema,
+  source: LiveShowEpisodeSourceSchema,
+  archiveItemId: z.string().nullable(),
+  radioSlotBookingId: z.string().nullable(),
+  createdAt: z.string().datetime(),
+})
+
+export const LiveShowEpisodeListSchema = z.object({
+  episodes: z.array(LiveShowEpisodeViewSchema),
 })
 
 export const ScheduledLiveShowViewSchema = z.object({
@@ -60,8 +109,12 @@ export const LiveShowSeriesListSchema = z.object({
 })
 
 export type CreateLiveShowSeries = z.infer<typeof CreateLiveShowSeriesSchema>
+export type PatchLiveShowSeries = z.infer<typeof PatchLiveShowSeriesSchema>
 export type LiveShowSeriesView = z.infer<typeof LiveShowSeriesViewSchema>
 export type ScheduledLiveShowView = z.infer<typeof ScheduledLiveShowViewSchema>
+export type CreateLiveShowEpisode = z.infer<typeof CreateLiveShowEpisodeSchema>
+export type PatchLiveShowEpisode = z.infer<typeof PatchLiveShowEpisodeSchema>
+export type LiveShowEpisodeView = z.infer<typeof LiveShowEpisodeViewSchema>
 
 export function liveShowEpisodeTitle(seriesName: string, episodeNumber: number | null): string {
   return episodeNumber == null ? seriesName : `${seriesName} #${episodeNumber}`

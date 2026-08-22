@@ -5,11 +5,18 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ChannelSchedulePatchSchema,
   ChannelScheduleViewSchema,
+  CreateLiveShowEpisodeSchema,
   CreateLiveShowSeriesSchema,
+  IdParamSchema,
+  LiveShowEpisodeListSchema,
+  LiveShowEpisodeViewSchema,
   LiveShowSeriesListSchema,
+  PatchLiveShowEpisodeSchema,
+  PatchLiveShowSeriesSchema,
   ScheduleLiveShowSchema,
   liveShowEpisodeTitle,
   openApiResponse,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
@@ -25,6 +32,24 @@ type LiveShowSeriesDbRow = {
   autoArchive: boolean
   episodeNumberEnabled: boolean
   nextEpisodeNumber: number
+  intervalHours: number
+  scheduleNote: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+type LiveShowEpisodeDbRow = {
+  id: string
+  channelId: string
+  seriesId: string
+  episodeNumber: number | null
+  title: string
+  description: string | null
+  artworkUrl: string | null
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
+  source: 'UPLOAD' | 'BROADCAST'
+  archiveItemId: string | null
+  radioSlotBookingId: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -61,6 +86,12 @@ type ShowScheduleDelegates = {
     findFirst(args: object): Promise<ScheduledLiveShowDbRow | null>
     create(args: object): Promise<ScheduledLiveShowDbRow>
     updateMany(args: object): Promise<{ count: number }>
+  }
+  liveShowEpisode: {
+    findMany(args: object): Promise<LiveShowEpisodeDbRow[]>
+    findFirst(args: object): Promise<LiveShowEpisodeDbRow | null>
+    create(args: object): Promise<LiveShowEpisodeDbRow>
+    update(args: object): Promise<LiveShowEpisodeDbRow>
   }
 }
 
@@ -227,9 +258,43 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
           ...parsed.data,
           description: parsed.data.description || null,
           tagline: parsed.data.tagline || null,
+          scheduleNote: parsed.data.scheduleNote || null,
         },
       })
       return reply.status(201).send({
+        ...series,
+        createdAt: series.createdAt.toISOString(),
+        updatedAt: undefined,
+        channelId: undefined,
+      })
+    },
+  )
+
+  fastify.patch(
+    '/api/me/channel/show-series/:seriesId',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const parsed = PatchLiveShowSeriesSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+      const { seriesId } = request.params as { seriesId: string }
+
+      const existing = await showDb.liveShowSeries.findFirst({
+        where: { id: seriesId, channelId: channel.id },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Series not found' })
+
+      const data: Record<string, unknown> = { ...parsed.data }
+      if ('description' in data) data.description = parsed.data.description || null
+      if ('tagline' in data) data.tagline = parsed.data.tagline || null
+      if ('scheduleNote' in data) data.scheduleNote = parsed.data.scheduleNote || null
+
+      const series = await showDb.liveShowSeries.update({
+        where: { id: existing.id },
+        data,
+      })
+      return reply.send({
         ...series,
         createdAt: series.createdAt.toISOString(),
         updatedAt: undefined,
@@ -314,6 +379,177 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       if (updated.count === 0) return reply.status(404).send({ error: 'Scheduled show not found' })
       await syncNextBroadcast(channel.id)
       return reply.status(204).send()
+    },
+  )
+
+  function serializeEpisode(episode: LiveShowEpisodeDbRow) {
+    return {
+      ...episode,
+      createdAt: episode.createdAt.toISOString(),
+      updatedAt: undefined,
+      channelId: undefined,
+    }
+  }
+
+  /** Validates archiveItemId/radioSlotBookingId belong to the caller's own channel. */
+  async function validateEpisodeRefs(
+    channelId: string,
+    refs: { archiveItemId?: string | null; radioSlotBookingId?: string | null },
+  ): Promise<string | null> {
+    if (refs.archiveItemId) {
+      const owned = await fastify.prisma.archiveItem.findFirst({
+        where: { id: refs.archiveItemId, channelId },
+        select: { id: true },
+      })
+      if (!owned) return 'Archive item not found'
+    }
+    if (refs.radioSlotBookingId) {
+      const owned = await fastify.prisma.radioSlotBooking.findFirst({
+        where: { id: refs.radioSlotBookingId, channelId },
+        select: { id: true },
+      })
+      if (!owned) return 'Radio slot booking not found'
+    }
+    return null
+  }
+
+  // GET /api/me/channel/show-series/:seriesId/live-show-episodes
+  fastify.get(
+    '/api/me/channel/show-series/:seriesId/live-show-episodes',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(LiveShowEpisodeListSchema, 'LiveShowEpisodeList') },
+    },
+    async (request, reply) => {
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+      const { seriesId } = request.params as { seriesId: string }
+
+      const series = await showDb.liveShowSeries.findFirst({
+        where: { id: seriesId, channelId: channel.id },
+      })
+      if (!series) return reply.status(404).send({ error: 'Series not found' })
+
+      const episodes = await showDb.liveShowEpisode.findMany({
+        where: { seriesId },
+        orderBy: { episodeNumber: 'desc' },
+      })
+      return reply.send({ episodes: episodes.map(serializeEpisode) })
+    },
+  )
+
+  // POST /api/me/channel/show-series/:seriesId/live-show-episodes — create a
+  // draft (upload) or pending-approval (broadcast) episode; episode numbering
+  // follows the same series.nextEpisodeNumber convention as scheduled shows.
+  fastify.post(
+    '/api/me/channel/show-series/:seriesId/live-show-episodes',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(LiveShowEpisodeViewSchema, 'LiveShowEpisodeView') },
+    },
+    async (request, reply) => {
+      const parsed = CreateLiveShowEpisodeSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+      const { seriesId } = request.params as { seriesId: string }
+
+      const refError = await validateEpisodeRefs(channel.id, parsed.data)
+      if (refError) return reply.status(400).send({ error: refError })
+
+      const episode = await fastify.prisma.$transaction(async (tx) => {
+        const transactionDb = showScheduleDb(tx)
+        const series = await transactionDb.liveShowSeries.findFirst({
+          where: { id: seriesId, channelId: channel.id },
+        })
+        if (!series) return null
+
+        const episodeNumber = series.episodeNumberEnabled ? series.nextEpisodeNumber : null
+        const created = await transactionDb.liveShowEpisode.create({
+          data: {
+            channelId: channel.id,
+            seriesId: series.id,
+            episodeNumber,
+            title: parsed.data.title?.trim() || liveShowEpisodeTitle(series.name, episodeNumber),
+            description: series.description,
+            artworkUrl: series.artworkUrl,
+            status: parsed.data.source === 'BROADCAST' ? 'PENDING_APPROVAL' : 'DRAFT',
+            source: parsed.data.source,
+            archiveItemId: parsed.data.archiveItemId ?? null,
+            radioSlotBookingId: parsed.data.radioSlotBookingId ?? null,
+          },
+        })
+        if (series.episodeNumberEnabled) {
+          await transactionDb.liveShowSeries.update({
+            where: { id: series.id },
+            data: { nextEpisodeNumber: { increment: 1 } },
+          })
+        }
+        return created
+      })
+
+      if (!episode) return reply.status(404).send({ error: 'Series not found' })
+      return reply.status(201).send(serializeEpisode(episode))
+    },
+  )
+
+  // GET /api/me/channel/live-show-episodes/:id
+  fastify.get(
+    '/api/me/channel/live-show-episodes/:id',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(LiveShowEpisodeViewSchema, 'LiveShowEpisodeView') },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+
+      const episode = await showDb.liveShowEpisode.findFirst({
+        where: { id: routeParams.id, channelId: channel.id },
+      })
+      if (!episode) return reply.status(404).send({ error: 'Episode not found' })
+      return reply.send(serializeEpisode(episode))
+    },
+  )
+
+  // PATCH /api/me/channel/live-show-episodes/:id — also how an episode is approved
+  // (patch { status: 'APPROVED' }); no separate approve endpoint.
+  fastify.patch(
+    '/api/me/channel/live-show-episodes/:id',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(LiveShowEpisodeViewSchema, 'LiveShowEpisodeView') },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = PatchLiveShowEpisodeSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const channel = await findChannel(request.sessionUser!.id)
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+
+      const existing = await showDb.liveShowEpisode.findFirst({
+        where: { id: routeParams.id, channelId: channel.id },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Episode not found' })
+
+      const refError = await validateEpisodeRefs(channel.id, parsed.data)
+      if (refError) return reply.status(400).send({ error: refError })
+
+      const data: Record<string, unknown> = { ...parsed.data }
+      if ('description' in data) data.description = parsed.data.description || null
+      if ('archiveItemId' in data) data.archiveItemId = parsed.data.archiveItemId ?? null
+      if ('radioSlotBookingId' in data) {
+        data.radioSlotBookingId = parsed.data.radioSlotBookingId ?? null
+      }
+
+      const episode = await showDb.liveShowEpisode.update({
+        where: { id: existing.id },
+        data,
+      })
+      return reply.send(serializeEpisode(episode))
     },
   )
 }

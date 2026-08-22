@@ -1194,6 +1194,7 @@ model Channel {
   comments          Comment[]
   pressKitImages    PressKitImage[]
   radioSlotBookings RadioSlotBooking[]
+  liveShowEpisodes LiveShowEpisode[]
   members           ChannelMember[]
   slugRedirects     ChannelSlugRedirect[]
 
@@ -1266,6 +1267,7 @@ model RadioSlotBooking {
   showType  BroadcastShowType @default(LIVE_SET)
   createdAt DateTime          @default(now())
   broadcasts Broadcast[]
+  episodes  LiveShowEpisode[]
 
   @@index([startAt, endAt])
   @@index([channelId, startAt])
@@ -1356,10 +1358,55 @@ model LiveShowSeries {
   autoArchive            Boolean             @default(true)
   episodeNumberEnabled   Boolean             @default(true)
   nextEpisodeNumber      Int                 @default(1)
+  /// Preferred length for this show's radio-slot bookings (RadioSlotBooking), hours.
+  intervalHours          Int                 @default(1)
+  /// Freeform recurring cadence hint (e.g. "Fridays 20:00") — display only, not scheduling logic.
+  scheduleNote           String?
   scheduledShows         ScheduledLiveShow[]
+  episodes               LiveShowEpisode[]
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
+  @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+enum LiveShowEpisodeStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SCHEDULED
+  LIVE
+
+  @@schema("channel")
+}
+
+/// A show-franchise installment — distinct from ScheduledLiveShow (which announces
+/// exactly when the artist's own next live broadcast is). An episode can originate
+/// from an upload (never goes live at all) or be recorded from a broadcast, goes
+/// through an editorial approval step, and optionally airs via a RadioSlotBooking
+/// on the shared community rotation.
+model LiveShowEpisode {
+  id                 String                 @id @default(cuid())
+  channelId          String
+  channel            Channel                @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  seriesId           String
+  series             LiveShowSeries         @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  episodeNumber      Int?
+  title              String
+  description        String?
+  artworkUrl         String?
+  status             LiveShowEpisodeStatus  @default(DRAFT)
+  /// Only UPLOAD / BROADCAST are valid here — narrower than ArchiveItemSource's full range.
+  source             ArchiveItemSource      @default(UPLOAD)
+  archiveItemId      String?
+  archiveItem        ArchiveItem?           @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  radioSlotBookingId String?
+  radioSlotBooking   RadioSlotBooking?      @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([seriesId, episodeNumber(sort: Desc)])
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
 }
@@ -1530,6 +1577,7 @@ model ArchiveItem {
   listenEvents    ListenEvent[]
   radioPlayLogs   RadioPlayLog[]
   stemJobs        ArchiveItemStemJob[]
+  liveShowEpisodes LiveShowEpisode[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
