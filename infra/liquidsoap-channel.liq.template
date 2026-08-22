@@ -91,6 +91,20 @@ live_source = mksafe(live_icecast)
 # STREAM-009: prefer local cache synced from MinIO; remote M3U until first warm completes.
 archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
 archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"
+# The `if file.exists(...)` below is evaluated once, at script start — a
+# channel spawned before its local cache first warms up (STREAM-009's sync job
+# runs every 10 minutes, independent of channel spawn timing) is permanently
+# locked onto the archive_remote_url branch for that container's entire
+# lifetime, since Liquidsoap never re-checks which branch to take. That branch
+# serves presigned MinIO URLs with a 24h TTL (FALLBACK_URL_TTL_SEC in
+# apps/api/src/routes/internal/channel-fallback.ts); reload_mode="rounds" only
+# re-fetches the M3U every 300 passes through the playlist, which for a small
+# rotation (e.g. 2 tracks) is days, not hours — so the baked-in URLs expire
+# long before Liquidsoap ever asks for new ones, and every fetch then 404s
+# forever with no self-recovery (confirmed in production: yaniho's channel ran
+# silent for 37h this way). reload_mode="seconds" below re-fetches on a wall
+# clock instead, comfortably inside the 24h TTL regardless of rotation size or
+# track length.
 archive = if file.exists(archive_local_path) then
   playlist(
     # The API already orders the M3U entries per the channel's fallbackMode
@@ -104,8 +118,8 @@ archive = if file.exists(archive_local_path) then
     # computed server-side.
     id="archive",
     mode="normal",
-    reload=300,
-    reload_mode="rounds",
+    reload=1800,
+    reload_mode="seconds",
     archive_local_path
   )
 else
@@ -121,8 +135,8 @@ else
     # computed server-side.
     id="archive",
     mode="normal",
-    reload=300,
-    reload_mode="rounds",
+    reload=1800,
+    reload_mode="seconds",
     archive_remote_url
   )
 end
