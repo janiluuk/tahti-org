@@ -15,6 +15,7 @@ import {
   updateReleasePinned,
 } from './release-actions'
 import { ReleaseBulkDrop } from './_release-bulk-drop'
+import { ReleaseEmbedButton } from './releases-embed-button'
 
 interface ReleaseSummary {
   id: string
@@ -165,6 +166,7 @@ export default function ReleasesPanel({
                         : ''}
                     </Link>
                   )}
+                  {r.state === 'PUBLISHED' && <ReleaseEmbedButton releaseId={r.id} />}
                   {r.state === 'DRAFT' && (
                     <Button
                       onClick={() => publish(r.id)}

@@ -22,6 +22,7 @@ import {
   fetchCollectionCoverFromUrl,
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
+import { CollectionEmbedButton } from '../_collection-embed-button'
 import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
 import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
 import { HearthisImportModal } from './_hearthis-import-modal'
@@ -390,6 +391,9 @@ export function CollectionEditor({
         <h1 className="collection-editor__title">{name || initial.name}</h1>
         <span className={`collections-pill ${STYLE_COLOR[style] ?? 'collections-pill--neutral'}`}>
           {STYLE_LABEL[style] ?? style}
+        </span>
+        <span style={{ marginLeft: 'auto' }}>
+          <CollectionEmbedButton slug={initial.slug} />
         </span>
       </div>
 

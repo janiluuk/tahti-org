@@ -14,6 +14,7 @@ import { ReleaseArtworkUpload } from '../../release-artwork-upload'
 import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
 import { ReleaseTrackCreditsPanel, parseTrackCredits } from '../../release-track-credits-panel'
 import ReleaseVisualPanel from '../../release-visual-panel'
+import { ReleaseEmbedButton } from '../../releases-embed-button'
 import { MusicbrainzRegisterPanel } from './_musicbrainz-register-panel'
 import {
   CatalogPlaybackButtons,
@@ -200,12 +201,15 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
           </div>
           <div className="studio-actions studio-actions--sm">
             {r.state === 'PUBLISHED' ? (
-              <Link href={`/r/${r.smartLinkSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
-                Smart link
-                {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
-                  ? ` (${r.smartLinkViewCount})`
-                  : ''}
-              </Link>
+              <>
+                <Link href={`/r/${r.smartLinkSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+                  Smart link
+                  {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
+                    ? ` (${r.smartLinkViewCount})`
+                    : ''}
+                </Link>
+                <ReleaseEmbedButton releaseId={r.id} />
+              </>
             ) : (
               <Button onClick={publish} disabled={isPending} variant="primary" size="sm">
                 <ButtonIcon name="send" />
