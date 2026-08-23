@@ -19,6 +19,7 @@ export interface DashboardUser {
     slug: string
     state: string
     goneLiveAt: string | null
+    nextBroadcastAt: string | null
     customDomain: string | null
     customDomainVerified: boolean
   } | null

@@ -30,6 +30,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
           slug: true,
           state: true,
           goneLiveAt: true,
+          nextBroadcastAt: true,
           customDomain: true,
           customDomainVerified: true,
         },

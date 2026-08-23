@@ -3533,6 +3533,25 @@ html.gpu-limited .nav {
   justify-content: center;
 }
 
+.guided-tour__help-center {
+  display: block;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-decoration: none;
+  text-align: center;
+}
+
+.guided-tour__help-center:hover {
+  color: var(--cyan);
+}
+
+.guided-tour__card--empty .guided-tour__help-center {
+  margin-top: 0.9rem;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    ZOOMABLE LIGHTBOX — shared photo slideshow with zoom/pan (zoomable-lightbox.tsx)
    Scope-agnostic: used from both brand (press kit, channel gallery) and

@@ -10,6 +10,7 @@ import { getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { logout } from '@/app/auth/actions'
 import { fetchMyNotifications, markAllNotificationsRead } from './notification-actions'
+import { fetchConversations } from './messages/actions'
 import { StudioShellClient } from './_studio-shell-client'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
@@ -31,12 +32,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       displayName={displayName}
       isLive={isOnline}
       isReallyLive={isReallyLive}
+      goneLiveAt={user?.channel?.goneLiveAt ?? null}
+      nextBroadcastAt={user?.channel?.nextBroadcastAt ?? null}
       isBoard={isBoard}
       hasChannel={hasChannel}
       channelUrl={channelUrl}
       channelSlug={user?.channel?.slug}
       fetchNotifications={fetchMyNotifications}
       markNotificationsRead={markAllNotificationsRead}
+      fetchConversations={fetchConversations}
       logoutAction={logout}
     >
       {children}

@@ -6,11 +6,17 @@ import { StudioSidebar } from './StudioSidebar'
 import { StudioTopNav } from './StudioTopNav'
 import { StudioMobileNav } from './StudioMobileNav'
 import type { NotificationBellItem } from './NotificationBell'
+import type { MessagesBellConversation } from './MessagesBell'
 
 type StudioShellProps = {
   children: ReactNode
   displayName?: string
   isLive?: boolean
+  /** True only for a real broadcast (Channel.goneLiveAt set) — see the
+   * comment on the same prop in StudioTopNavProps. */
+  isReallyLive?: boolean
+  goneLiveAt?: string | null
+  nextBroadcastAt?: string | null
   isBoard?: boolean
   hasChannel?: boolean
   channelUrl?: string
@@ -19,6 +25,7 @@ type StudioShellProps = {
     unreadCount: number
   }>
   markNotificationsRead?: () => Promise<void>
+  fetchConversations?: () => Promise<MessagesBellConversation[]>
   onGoLiveClick?: () => void
   logoutAction?: (formData: FormData) => void | Promise<void>
 }
@@ -28,11 +35,15 @@ export function StudioShell({
   children,
   displayName,
   isLive,
+  isReallyLive,
+  goneLiveAt,
+  nextBroadcastAt,
   isBoard,
   hasChannel = true,
   channelUrl,
   fetchNotifications,
   markNotificationsRead,
+  fetchConversations,
   onGoLiveClick,
   logoutAction,
 }: StudioShellProps) {
@@ -41,11 +52,15 @@ export function StudioShell({
       <StudioTopNav
         displayName={displayName}
         isLive={isLive}
+        isReallyLive={isReallyLive}
+        goneLiveAt={goneLiveAt}
+        nextBroadcastAt={nextBroadcastAt}
         isBoard={isBoard}
         hasChannel={hasChannel}
         channelUrl={channelUrl}
         fetchNotifications={fetchNotifications}
         markNotificationsRead={markNotificationsRead}
+        fetchConversations={fetchConversations}
         onGoLiveClick={onGoLiveClick}
         logoutAction={logoutAction}
       />
