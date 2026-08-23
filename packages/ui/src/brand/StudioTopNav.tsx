@@ -22,8 +22,9 @@ type StudioTopNavProps = {
     unreadCount: number
   }>
   markNotificationsRead?: () => Promise<void>
-  /** When set and the channel is live, clicking the go-live icon opens the
-   * stream manager instead of navigating to /dashboard/broadcast. */
+  /** When set, clicking the go-live icon always opens the stream manager
+   * instead of navigating to /dashboard/broadcast — the modal itself
+   * branches between live stats and rotation/playlist controls. */
   onGoLiveClick?: () => void
   /** Server action for the "Log out" form. The old hardcoded
    * action="/api/auth/logout" posted to a path that only exists on the API
@@ -178,10 +179,12 @@ export function StudioTopNav({
         </div>
         {displayName &&
           hasChannel &&
-          (isLive && onGoLiveClick ? (
+          (onGoLiveClick ? (
             <button
               type="button"
-              className="studio-top-nav__icon-btn studio-top-nav__golive-btn studio-top-nav__golive-btn--live"
+              className={`studio-top-nav__icon-btn studio-top-nav__golive-btn${
+                isLive ? ' studio-top-nav__golive-btn--live' : ''
+              }`}
               aria-label="Stream manager"
               title="Stream manager"
               onClick={onGoLiveClick}

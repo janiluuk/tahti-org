@@ -3051,6 +3051,10 @@
   width: 100%;
   max-width: 480px;
   max-height: min(720px, 90vh);
+  /* ChannelControlsPanel's rotation queue can run long — the live-stats
+   * panel this card was originally sized for didn't need this since its
+   * chat list scrolls on its own. */
+  overflow-y: auto;
 }
 
 [data-tahti-ui='studio'] .stream-mgr-modal__close {

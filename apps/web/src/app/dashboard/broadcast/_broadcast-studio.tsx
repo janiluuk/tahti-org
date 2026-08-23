@@ -300,7 +300,7 @@ export function BroadcastStudio({
         <Panel title="Go live" headerTight>
           {isLive ? (
             <Text as="p" tone="muted" size="sm">
-              You are on air — this is exactly what listeners hear.
+              Manage your stream from the stream manager icon in the top bar.
             </Text>
           ) : isPreview ? (
             <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} />

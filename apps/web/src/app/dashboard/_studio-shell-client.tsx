@@ -24,6 +24,11 @@ type StudioShellClientProps = Omit<
 > & {
   children: ReactNode
   channelSlug?: string
+  /** True only for a real broadcast (Broadcast.wentLiveAt/Channel.goneLiveAt
+   * set) — distinct from `isLive`, which the 24/7 rotation also satisfies
+   * (see the comment in dashboard/layout.tsx). Decides what the stream
+   * manager modal shows: live stats+chat, or rotation/playlist controls. */
+  isReallyLive?: boolean
 }
 
 /** Client wrapper so the top-nav go-live icon (packages/ui, no data access of
@@ -32,14 +37,20 @@ type StudioShellClientProps = Omit<
 export function StudioShellClient({
   channelSlug,
   isLive: initialIsLive,
+  isReallyLive: initialIsReallyLive,
   ...shellProps
 }: StudioShellClientProps) {
   const [streamManagerOpen, setStreamManagerOpen] = useState(false)
   const [isLive, setIsLive] = useState(Boolean(initialIsLive))
+  const [isReallyLive, setIsReallyLive] = useState(Boolean(initialIsReallyLive))
 
   useEffect(() => {
     setIsLive(Boolean(initialIsLive))
   }, [initialIsLive])
+
+  useEffect(() => {
+    setIsReallyLive(Boolean(initialIsReallyLive))
+  }, [initialIsReallyLive])
 
   useEffect(() => {
     if (!channelSlug) return
@@ -48,8 +59,11 @@ export function StudioShellClient({
       try {
         const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
         if (!res.ok || cancelled) return
-        const me = (await res.json()) as { channel?: { state?: string } }
-        setIsLive(me.channel?.state === 'LIVE')
+        const me = (await res.json()) as {
+          channel?: { state?: string; goneLiveAt?: string | null }
+        }
+        setIsLive(Boolean(me.channel) && me.channel?.state !== 'OFFLINE')
+        setIsReallyLive(Boolean(me.channel?.goneLiveAt))
       } catch {
         // ignore polling errors — keep showing the last known state
       }
@@ -72,6 +86,7 @@ export function StudioShellClient({
           displayName={shellProps.displayName}
           open={streamManagerOpen}
           onClose={() => setStreamManagerOpen(false)}
+          isReallyLive={isReallyLive}
         />
       )}
     </StreamManagerContext.Provider>

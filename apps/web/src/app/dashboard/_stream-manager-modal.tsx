@@ -5,22 +5,26 @@
 
 import { useEffect } from 'react'
 import { StreamManagerPanel } from './_stream-manager-panel'
+import { ChannelControlsPanel } from './channel-controls-panel'
 
-/** Modal chrome around StreamManagerPanel — opened from the top-nav go-live
- * icon once you're on air, so you don't have to leave whatever dashboard
- * page you're on to check in. The dashboard home page shows the same panel
- * inline instead (see _channel-hero.tsx) since it's already the natural
- * home for it there. */
+/** Modal opened from the top-nav go-live icon, whatever the channel's state —
+ * so you never have to leave the dashboard page you're on to check in. Shows
+ * live stats+chat for a real broadcast, or rotation/playlist controls
+ * (skip, drag-and-drop reorder, start/stop) otherwise. The dashboard home
+ * page shows StreamManagerPanel inline for the live case instead (see
+ * _channel-hero.tsx) since it's already the natural home for it there. */
 export function StreamManagerModal({
   slug,
   displayName,
   open,
   onClose,
+  isReallyLive,
 }: {
   slug: string
   displayName?: string
   open: boolean
   onClose: () => void
+  isReallyLive?: boolean
 }) {
   useEffect(() => {
     if (!open) return
@@ -55,7 +59,11 @@ export function StreamManagerModal({
         >
           ×
         </button>
-        <StreamManagerPanel slug={slug} displayName={displayName} onEnded={onClose} />
+        {isReallyLive ? (
+          <StreamManagerPanel slug={slug} displayName={displayName} onEnded={onClose} />
+        ) : (
+          <ChannelControlsPanel slug={slug} />
+        )}
       </div>
     </div>
   )

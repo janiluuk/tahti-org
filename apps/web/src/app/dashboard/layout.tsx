@@ -16,7 +16,12 @@ import { StudioShellClient } from './_studio-shell-client'
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getDashboardUser()
   const displayName = user?.displayName
-  const isLive = user?.channel?.state === 'LIVE'
+  // "Online" (top-nav icon color) is broader than "really live": the 24/7
+  // rotation flips Channel.state to LIVE too (see channel-fallback-reconciler),
+  // so state alone can't tell a real broadcast from the archive just looping.
+  // goneLiveAt is only ever set by the actual go-live route.
+  const isOnline = Boolean(user?.channel) && user?.channel?.state !== 'OFFLINE'
+  const isReallyLive = Boolean(user?.channel?.goneLiveAt)
   const isBoard = user?.isBoard ?? false
   const hasChannel = Boolean(user?.channel)
   const channelUrl = user?.channel ? resolveChannelUrl(user.channel.slug) : undefined
@@ -24,7 +29,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <StudioShellClient
       displayName={displayName}
-      isLive={isLive}
+      isLive={isOnline}
+      isReallyLive={isReallyLive}
       isBoard={isBoard}
       hasChannel={hasChannel}
       channelUrl={channelUrl}
