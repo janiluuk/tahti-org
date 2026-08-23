@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  FingerprintResultSchema,
   IdParamSchema,
   MeReleaseTrackDownloadQuerySchema,
   ReleaseTrackCreditsPatchSchema,
@@ -20,7 +21,7 @@ import {
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
-import { mediaQueue } from '../../lib/queue.js'
+import { mediaQueue, runFingerprintReleaseTrack } from '../../lib/queue.js'
 
 const PRESIGN_TTL_SEC = 900
 const ACCEPTED_FORMATS = ['audio/wav', 'audio/flac', 'audio/mpeg', 'audio/aac', 'audio/x-aiff']
@@ -163,6 +164,92 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
       await mediaQueue.add('transcode-release-track', { trackId })
 
       return reply.send({ trackId, status: 'scanning' })
+    },
+  )
+
+  type OwnedReadyTrackResult =
+    | { ok: false; error: string; status: number }
+    | { ok: true }
+
+  async function ownedReadyTrack(
+    userId: string,
+    releaseId: string,
+    trackId: string,
+  ): Promise<OwnedReadyTrackResult> {
+    const release = await fastify.prisma.release.findFirst({
+      where: { id: releaseId, userId },
+    })
+    if (!release) return { ok: false, error: 'Release not found', status: 404 }
+
+    const track = await fastify.prisma.releaseTrack.findFirst({
+      where: { id: trackId, releaseId },
+    })
+    if (!track) return { ok: false, error: 'Track not found', status: 404 }
+    if (!track.sourceKey) {
+      return { ok: false, error: 'No source audio uploaded for this track', status: 400 }
+    }
+    if (track.status !== 'READY') {
+      return { ok: false, error: 'Track is still processing — try again shortly', status: 409 }
+    }
+    return { ok: true }
+  }
+
+  // POST /api/me/releases/:id/tracks/:trackId/fingerprint — re-run the
+  // Chromaprint fingerprint + AcoustID lookup and store the result, same
+  // computation the upload pipeline already runs automatically once.
+  fastify.post(
+    '/api/me/releases/:id/tracks/:trackId/fingerprint',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(FingerprintResultSchema, 'FingerprintResult') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
+
+      const owned = await ownedReadyTrack(user.id, releaseId, trackId)
+      if (!owned.ok) return reply.status(owned.status).send({ error: owned.error })
+
+      try {
+        const result = await runFingerprintReleaseTrack(trackId, true)
+        return reply.send(result)
+      } catch {
+        return reply
+          .status(503)
+          .send({ error: 'Fingerprinting is taking longer than expected — try again shortly' })
+      }
+    },
+  )
+
+  // POST /api/me/releases/:id/tracks/:trackId/fingerprint/check — same
+  // computation, but never writes `fingerprint`/`fingerprintMatch` — a
+  // preview for a listener who wants to see a candidate match without
+  // replacing whatever's already stored.
+  fastify.post(
+    '/api/me/releases/:id/tracks/:trackId/fingerprint/check',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(FingerprintResultSchema, 'FingerprintResult') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
+
+      const owned = await ownedReadyTrack(user.id, releaseId, trackId)
+      if (!owned.ok) return reply.status(owned.status).send({ error: owned.error })
+
+      try {
+        const result = await runFingerprintReleaseTrack(trackId, false)
+        return reply.send(result)
+      } catch {
+        return reply
+          .status(503)
+          .send({ error: 'Fingerprinting is taking longer than expected — try again shortly' })
+      }
     },
   )
 

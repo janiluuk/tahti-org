@@ -64,6 +64,26 @@ export const ReleaseTrackCreditsPatchSchema = z.object({
 
 export type ReleaseTrackCreditsPatch = z.infer<typeof ReleaseTrackCreditsPatchSchema>
 
+// Manual fingerprinting from the Studio track editor (distinct from the
+// automatic pass on upload) — see AcoustidFullMatch in ../acoustid.ts, kept
+// as a plain zod mirror here rather than importing that type, since dto/
+// files stay independent of the acoustid client module.
+export const FingerprintMatchSchema = z.object({
+  acoustidId: z.string(),
+  score: z.number(),
+  recordingId: z.string().optional(),
+  title: z.string().optional(),
+  artist: z.string().optional(),
+})
+
+export const FingerprintResultSchema = z.object({
+  fingerprint: z.string().nullable(),
+  match: FingerprintMatchSchema.nullable(),
+  persisted: z.boolean(),
+})
+
+export type FingerprintResult = z.infer<typeof FingerprintResultSchema>
+
 export const ReleaseCatalogPatchSchema = z
   .object({
     upc: z.string().max(20).nullable().optional(),

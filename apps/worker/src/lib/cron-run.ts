@@ -6,11 +6,13 @@ import { WORKER_CRON_JOBS } from '@tahti/shared'
 
 const CRON_JOB_NAMES = new Set(WORKER_CRON_JOBS.map((j) => j.name))
 
-/** Wrap repeatable cron handlers with CronRun persistence for the admin dashboard. */
-export async function runWithCronLog(jobName: string, fn: () => Promise<void>): Promise<void> {
+/** Wrap repeatable cron handlers with CronRun persistence for the admin
+ * dashboard. Returns whatever `fn` returns, so a non-cron job's result (e.g.
+ * one a caller awaits via BullMQ's `waitUntilFinished`) still reaches the
+ * queue's `job.returnvalue`. */
+export async function runWithCronLog<T>(jobName: string, fn: () => Promise<T>): Promise<T> {
   if (!CRON_JOB_NAMES.has(jobName)) {
-    await fn()
-    return
+    return fn()
   }
 
   const run = await prisma.cronRun.create({
@@ -18,11 +20,12 @@ export async function runWithCronLog(jobName: string, fn: () => Promise<void>): 
   })
 
   try {
-    await fn()
+    const result = await fn()
     await prisma.cronRun.update({
       where: { id: run.id },
       data: { finishedAt: new Date(), outcome: 'SUCCESS' },
     })
+    return result
   } catch (err) {
     await prisma.cronRun.update({
       where: { id: run.id },

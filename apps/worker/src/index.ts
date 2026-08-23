@@ -13,6 +13,7 @@ import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
+import { processFingerprintReleaseTrackJob } from './jobs/fingerprint-release-track.js'
 import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processCloudImportGoogleDriveJob } from './jobs/cloud-import-google-drive.js'
@@ -92,7 +93,7 @@ const worker = new Worker(
       // worker whose --queues covers this job name picks it up instead.
       throw new Error(`lane-mismatch: ${job.name} is not handled by this worker's --queues`)
     }
-    await runWithCronLog(job.name, async () => {
+    return await runWithCronLog(job.name, async () => {
       if (job.name === 'transcode-archive') {
         await processTranscodeJob(job)
       } else if (job.name === 'transcode-archive-version') {
@@ -119,6 +120,8 @@ const worker = new Worker(
         await processTranscodeReleaseTrackJob(job)
       } else if (job.name === 'transcode-release-track-version') {
         await processTranscodeReleaseTrackVersionJob(job)
+      } else if (job.name === 'fingerprint-release-track') {
+        return await processFingerprintReleaseTrackJob(job)
       } else if (job.name === 'mixcloud-upload') {
         await processMixcloudUploadJob(job)
       } else if (job.name === 'cloud-import-google-drive') {

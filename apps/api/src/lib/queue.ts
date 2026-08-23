@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Queue } from 'bullmq'
+import { Queue, QueueEvents } from 'bullmq'
 import type { EditList } from '@tahti/audio-edit'
 import { config } from '../config.js'
 
@@ -17,6 +17,11 @@ const connection = {
 const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
 
 export const mediaQueue = new Queue('media', { connection, defaultJobOptions })
+
+// Shared listener connection for routes that await a job's result inline
+// (e.g. the fingerprint check below) via `job.waitUntilFinished`, rather than
+// firing-and-polling like the rest of this file's enqueue helpers.
+export const mediaQueueEvents = new QueueEvents('media', { connection })
 
 export async function enqueueTranscode(itemId: string): Promise<void> {
   await mediaQueue.add('transcode-archive', { itemId })
@@ -64,6 +69,40 @@ export async function getMediaJob(jobId: string) {
 
 export async function enqueueReleaseTrackVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-release-track-version', { versionId })
+}
+
+export interface FingerprintReleaseTrackResult {
+  fingerprint: string | null
+  match: {
+    acoustidId: string
+    score: number
+    recordingId?: string
+    title?: string
+    artist?: string
+  } | null
+  persisted: boolean
+}
+
+const FINGERPRINT_JOB_TIMEOUT_MS = 30_000
+
+/** Runs a manual (re-)fingerprint for a release track and waits for the
+ * worker's result — fpcalc + one AcoustID lookup for a single track is
+ * seconds, not minutes, so a blocking request is simpler here than adding a
+ * status-polling endpoint just for this one action. `persist: false` runs
+ * the exact same check without writing `fingerprint`/`fingerprintMatch`. */
+export async function runFingerprintReleaseTrack(
+  trackId: string,
+  persist: boolean,
+): Promise<FingerprintReleaseTrackResult> {
+  const job = await mediaQueue.add(
+    'fingerprint-release-track',
+    { trackId, persist },
+    { attempts: 1 },
+  )
+  return (await job.waitUntilFinished(
+    mediaQueueEvents,
+    FINGERPRINT_JOB_TIMEOUT_MS,
+  )) as FingerprintReleaseTrackResult
 }
 
 /** ARTIST-001: scan Liquidsoap WAV on shared volume, upload to MinIO, then archive. */
