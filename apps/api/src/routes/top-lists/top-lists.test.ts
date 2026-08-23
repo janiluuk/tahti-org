@@ -119,6 +119,40 @@ describe('/api/top-lists', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('supports asc sort for a least-played list', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/top-lists?period=all_time&sort=asc',
+    })
+    expect(res.statusCode).toBe(200)
+    const ids = res.json().entries.map((e: { archiveItemId: string }) => e.archiveItemId)
+    expect(ids.indexOf(quietId)).toBeLessThan(ids.indexOf(popularId))
+  })
+
+  it('returns 400 for an invalid sort', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/top-lists?period=all_time&sort=nonsense',
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('filters by genre', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/top-lists?period=all_time&genre=Techno',
+    })
+    expect(res.statusCode).toBe(200)
+    const ids = res.json().entries.map((e: { archiveItemId: string }) => e.archiveItemId)
+    expect(ids).toEqual(expect.arrayContaining([popularId, quietId]))
+
+    const noneRes = await app.inject({
+      method: 'GET',
+      url: '/api/top-lists?period=all_time&genre=Ambient',
+    })
+    expect(noneRes.json().entries).toEqual([])
+  })
+
   it('rank lookup returns the best rank for tracks that place', async () => {
     const res = await app.inject({
       method: 'GET',

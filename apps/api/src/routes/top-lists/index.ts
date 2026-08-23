@@ -6,6 +6,7 @@ import {
   TopListPeriodSchema,
   TopListRanksResponseSchema,
   TopListResponseSchema,
+  TopListSortSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { buildTopList, periodSince, rankLookup } from '../../lib/top-lists.js'
@@ -21,7 +22,7 @@ const VALID_CONTENT_TYPES = [
 ]
 
 const topListsRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /api/top-lists?period=week|month&contentTypes=DJ_MIX,RADIO_SHOW
+  // GET /api/top-lists?period=week|month&contentTypes=DJ_MIX,RADIO_SHOW&sort=asc&genre=Techno
   fastify.get(
     '/api/top-lists',
     { schema: { response: openApiResponse(TopListResponseSchema, 'TopList') } },
@@ -29,6 +30,9 @@ const topListsRoutes: FastifyPluginAsync = async (fastify) => {
       const query = request.query as Record<string, unknown>
       const period = TopListPeriodSchema.safeParse(query.period)
       if (!period.success) return reply.status(400).send({ error: 'Invalid period' })
+
+      const sort = TopListSortSchema.safeParse(query.sort ?? 'desc')
+      if (!sort.success) return reply.status(400).send({ error: 'Invalid sort' })
 
       let contentTypes: string[] | undefined
       if (typeof query.contentTypes === 'string' && query.contentTypes.length > 0) {
@@ -38,9 +42,13 @@ const topListsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      const genre = typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
+
       const entries = await buildTopList(fastify.prisma, {
         since: periodSince(period.data),
         contentTypes,
+        genre,
+        sort: sort.data,
         limit: 20,
       })
 
