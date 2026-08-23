@@ -50,7 +50,11 @@ fi
 echo "── Building images (first run may take several minutes) ──"
 BUILD_ARGS=()
 [[ "$NO_CACHE" == true ]] && BUILD_ARGS+=(--no-cache)
-"${COMPOSE[@]}" build "${BUILD_ARGS[@]}" api web worker orchestrator db-push
+# ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} rather than a bare "${BUILD_ARGS[@]}" —
+# macOS ships bash 3.2 as /bin/bash, which treats expanding an *empty* array
+# under `set -u` as an unbound-variable error (fixed in bash 4.4+); this
+# guards the expansion instead of requiring a newer bash on PATH.
+"${COMPOSE[@]}" build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} api web worker orchestrator db-push
 
 echo "── Starting stack ──"
 "${COMPOSE[@]}" up -d postgres pgbouncer redis minio mailhog chat icecast rtmp-ingest

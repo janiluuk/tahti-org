@@ -22,6 +22,18 @@ const API = process.env.API_URL ?? 'http://localhost:3001'
 
 /** @typedef {'public' | 'free' | 'member' | 'artist' | 'admin'} AuthRole */
 
+/** Channel/radio pages default to the chat rail open (ChannelPageLayout) — click
+ * the existing "Hide chat" toggle (.ch-chat-collapse-toggle) so the capture shows
+ * the actual page content instead of an open chat log + input, matching what a
+ * fresh visitor with no chat history sees most of the time anyway. */
+async function collapseChat(tab) {
+  const toggle = tab.locator('.ch-chat-collapse-toggle')
+  if ((await toggle.count()) > 0) {
+    await toggle.first().click({ trial: false }).catch(() => {})
+    await tab.waitForTimeout(400)
+  }
+}
+
 /**
  * @param {object} seed
  * @returns {{ role: AuthRole, id: string, path: string, label: string, waitMs?: number }[]}
@@ -48,7 +60,7 @@ function buildPages(seed) {
     },
     { role: 'public', id: 'status', path: '/status', label: 'Platform status' },
     { role: 'public', id: 'listen', path: '/listen', label: 'Listen hub' },
-    { role: 'public', id: 'radio', path: '/radio', label: 'Tahti Radio' },
+    { role: 'public', id: 'radio', path: '/radio', label: 'Tahti Radio', prepare: collapseChat },
     { role: 'public', id: 'venues', path: '/venues', label: 'Venues calendar' },
     { role: 'public', id: 'apply', path: '/apply', label: 'Beta apply' },
     { role: 'public', id: 'transparency', path: '/transparency', label: 'Transparency dashboard' },
@@ -64,6 +76,7 @@ function buildPages(seed) {
       path: `/c/${artist}`,
       label: 'Channel page',
       waitMs: 2000,
+      prepare: collapseChat,
     },
     { role: 'public', id: 'profile', path: `/u/${artist}`, label: 'Artist profile' },
     {
