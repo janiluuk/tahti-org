@@ -9,7 +9,7 @@ import { PublicPageHeader } from '@tahti/ui'
 export const metadata: Metadata = {
   title: 'About Tahti',
   description:
-    'Tahti ry is a Finnish nonprofit broadcasting platform for independent artists. AGPL-licensed, member-governed, and built to put money and audience in artists hands.',
+    'Tahti is a home for music and live shows: a nonprofit broadcasting platform with a real release system, direct fan support, and artist governance.',
 }
 
 // Inlined via srcDoc rather than a src="/about-pitch.html" fetch — the site
@@ -19,26 +19,26 @@ export const metadata: Metadata = {
 // something fixable from this repo). That header only applies to a framed
 // document's own HTTP response; an iframe using srcDoc has no such response
 // (it's rendered from the about:srcdoc pseudo-origin), so it isn't affected.
-const pitchDeckHtml = readFileSync(join(process.cwd(), 'public/about-pitch.html'), 'utf8')
+const aboutPageHtml = readFileSync(join(process.cwd(), 'public/about-pitch.html'), 'utf8')
 
 export default function AboutPage() {
   return (
     <div className="brand-public">
       <PublicPageHeader title="About Tahti">
-        A nonprofit broadcasting platform owned and governed by its artist members.
+        A home for your music, your live shows, and the audience you build around them.
       </PublicPageHeader>
 
       <div className="brand-prose">
         <p>
           <a href="/about-pitch.html" target="_blank" rel="noopener noreferrer">
-            Open the pitch deck full-screen ↗
+            Open in full page ↗
           </a>
         </p>
       </div>
 
       <iframe
-        srcDoc={pitchDeckHtml}
-        title="Tahti pitch deck"
+        srcDoc={aboutPageHtml}
+        title="About Tahti"
         style={{
           width: '100%',
           height: '80vh',

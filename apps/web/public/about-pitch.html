@@ -1,508 +1,787 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>tahti.live — pitch deck</title>
+<title>Tahti - About</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0A0E1A; --panel:#151B2E; --panel2:#1E2640; --line:#2A3352;
-    --text:#F5F7FC; --muted:#9AA3BA; --faint:#6C7590;
-    --amber:#FFB020; --teal:#35D6C4; --coral:#FF6B5A; --violet:#8AA0FF;
+    --bg:#08111f;
+    --panel:#101a2c;
+    --panel-2:#16233b;
+    --line:rgba(255,255,255,.08);
+    --text:#eef3ff;
+    --muted:#9ba8c3;
+    --faint:#6f7d98;
+    --amber:#f5b13b;
+    --cyan:#4fd1c5;
+    --violet:#9aa9ff;
+    --green:#5be38c;
+    --coral:#ff7a66;
     --disp:"Space Grotesk",system-ui,sans-serif;
     --body:"Inter",system-ui,sans-serif;
-    --mono:"IBM Plex Mono",ui-monospace,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
+  html{scroll-behavior:smooth}
   body{
-    background:var(--ink); color:var(--text); font-family:var(--body);
-    overflow:hidden; -webkit-font-smoothing:antialiased;
-  }
-  /* subtle vignette + grain-free depth */
-  body::before{
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
     background:
-      radial-gradient(1200px 700px at 78% -10%, rgba(53,214,196,.10), transparent 60%),
-      radial-gradient(900px 600px at 0% 110%, rgba(138,160,255,.10), transparent 55%);
+      radial-gradient(900px 500px at 10% -10%, rgba(79,209,197,.12), transparent 60%),
+      radial-gradient(800px 480px at 100% 0%, rgba(154,169,255,.10), transparent 58%),
+      linear-gradient(180deg,#07101d 0%,#08111f 100%);
+    color:var(--text);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
   }
-  .deck{position:relative; height:100vh; width:100vw; z-index:1}
-  .slide{
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    justify-content:center; padding:6vh 8vw 9vh;
-    opacity:0; visibility:hidden; transform:translateY(14px);
-    transition:opacity .45s ease, transform .45s ease, visibility 0s linear .45s;
+  a{color:inherit}
+  .page{max-width:1180px;margin:0 auto;padding:32px 24px 72px}
+  .hero{
+    padding:44px 0 24px;
+    display:grid;
+    grid-template-columns:1.25fr .75fr;
+    gap:24px;
+    align-items:end;
   }
-  .slide.active{opacity:1; visibility:visible; transform:none; transition:opacity .5s ease, transform .5s ease}
-  .slide.active .rise{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
-  .slide.active .rise:nth-child(2){animation-delay:.06s}
-  .slide.active .rise:nth-child(3){animation-delay:.12s}
-  .slide.active .rise:nth-child(4){animation-delay:.18s}
-  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-
-  .eyebrow{font-family:var(--mono); font-size:.78rem; letter-spacing:.22em; text-transform:uppercase; color:var(--faint); margin-bottom:1.1rem}
-  h1{font-family:var(--disp); font-weight:700; line-height:1.02; letter-spacing:-.02em}
-  h2{font-family:var(--disp); font-weight:600; line-height:1.06; letter-spacing:-.01em; font-size:clamp(1.9rem,4.4vw,3.3rem)}
-  .lede{font-size:clamp(1.05rem,1.7vw,1.4rem); color:var(--muted); max-width:52ch; line-height:1.5; margin-top:1.4rem}
-  .kicker{color:var(--amber)} .t-teal{color:var(--teal)} .t-coral{color:var(--coral)} .t-violet{color:var(--violet)} .t-amber{color:var(--amber)}
-  strong{color:var(--text); font-weight:600}
-
-  /* ON AIR badge */
-  .onair{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono);
-    font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--coral);
-    border:1px solid rgba(255,107,90,.4); border-radius:999px; padding:.35rem .7rem; background:rgba(255,107,90,.08)}
-  .onair .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--coral); box-shadow:0 0 0 0 rgba(255,107,90,.6); animation:pulse 1.8s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,90,.55)}70%{box-shadow:0 0 0 10px rgba(255,107,90,0)}100%{box-shadow:0 0 0 0 rgba(255,107,90,0)}}
-
-  /* waveform */
-  .wave{display:flex; align-items:flex-end; gap:4px; height:64px}
-  .wave i{width:5px; background:linear-gradient(var(--teal),var(--violet)); border-radius:3px; height:20%; animation:eq 1.1s ease-in-out infinite}
-  @keyframes eq{0%,100%{height:22%}50%{height:100%}}
-
-  /* wordmark */
-  .wordmark{font-family:var(--disp); font-weight:700; letter-spacing:-.02em; font-size:clamp(3rem,9vw,6.4rem); line-height:1}
-  .wordmark .dot{color:var(--teal)}
-
-  /* generic cards */
-  .grid{display:grid; gap:1rem}
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:1.3rem 1.4rem}
-  .card h3{font-family:var(--disp); font-weight:600; font-size:1.12rem; margin-bottom:.4rem}
-  .card p{color:var(--muted); font-size:.96rem; line-height:1.5}
-  .card.amber{border-color:rgba(255,176,32,.4); background:rgba(255,176,32,.06)}
-  .card.teal{border-color:rgba(53,214,196,.35); background:rgba(53,214,196,.05)}
-
-  .two{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:center}
-  .thesis{display:grid; grid-template-columns:1fr auto 1fr; gap:1.6rem; align-items:center; margin-top:2.2rem}
-  .thesis .plus{font-family:var(--disp); font-size:2.2rem; color:var(--faint)}
-  .thesis .col{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:1.6rem; min-height:150px; display:flex; flex-direction:column; justify-content:center}
-  .thesis .col .lab{font-family:var(--mono); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin-bottom:.6rem}
-  .thesis .col .big{font-family:var(--disp); font-weight:600; font-size:1.4rem; line-height:1.15}
-
-  /* flow chips */
-  .flow{display:flex; align-items:center; gap:.9rem; flex-wrap:wrap; margin-top:2rem}
-  .chipset{display:flex; flex-direction:column; gap:.5rem}
-  .chip{font-family:var(--mono); font-size:.86rem; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:.5rem .8rem; color:var(--text)}
-  .arrow{color:var(--faint); font-size:1.4rem}
-  .node{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1rem 1.2rem; text-align:center}
-  .node .t{font-family:var(--disp); font-weight:600; font-size:1.05rem}
-  .node .s{color:var(--muted); font-size:.82rem; margin-top:.2rem}
-  .node.radio{border-color:rgba(255,107,90,.4); background:rgba(255,107,90,.06)}
-
-  .pull{font-family:var(--disp); font-weight:500; font-size:clamp(1.2rem,2.4vw,1.9rem); line-height:1.25; color:var(--text); max-width:26ch; margin-top:2.2rem}
-  .pull .q{color:var(--faint)}
-
-  /* stars */
-  .stars-row{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:1.2rem; padding:1rem 0; border-bottom:1px solid var(--line)}
-  .stars-row:last-child{border-bottom:0}
-  .stars-row .name{font-family:var(--disp); font-weight:600; font-size:1.1rem}
-  .stars-row .name small{display:block; color:var(--muted); font-weight:400; font-size:.82rem; font-family:var(--body)}
-  .stars{display:flex; gap:.25rem; font-size:1.3rem; color:var(--amber)}
-  .stars .off{color:var(--line)}
-  .verdict{font-family:var(--mono); font-size:.82rem; letter-spacing:.05em; color:var(--muted); text-align:right; white-space:nowrap}
-
-  /* escape hatch */
-  .hatch{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.8rem}
-  .pair{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.2rem}
-  .pair .if{font-family:var(--mono); font-size:.74rem; letter-spacing:.14em; text-transform:uppercase; color:var(--coral)}
-  .pair .then{font-family:var(--disp); font-weight:600; font-size:1.06rem; margin-top:.35rem}
-  .pair .then::before{content:"→ "; color:var(--amber)}
-
-  /* plans */
-  .plans{display:grid; grid-template-columns:1fr 1.1fr; gap:1.4rem; margin-top:1.8rem}
-  .plan{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:1.6rem}
-  .plan.paid{border-color:rgba(53,214,196,.4); background:rgba(53,214,196,.05)}
-  .plan .tier{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--faint)}
-  .plan .price{font-family:var(--disp); font-weight:700; font-size:2.1rem; margin:.3rem 0 1rem}
-  .plan ul{list-style:none; display:flex; flex-direction:column; gap:.55rem}
-  .plan li{color:var(--muted); font-size:.95rem; padding-left:1.4rem; position:relative; line-height:1.4}
-  .plan li::before{content:"✓"; position:absolute; left:0; color:var(--teal); font-weight:700}
-  .plan .foot{margin-top:1rem; font-size:.82rem; color:var(--faint)}
-
-  /* donut */
-  .donut{width:190px;height:190px;border-radius:50%;
-    background:conic-gradient(var(--teal) 0 90%, var(--panel2) 90% 100%);
-    display:grid; place-items:center; position:relative}
-  .donut::after{content:""; position:absolute; inset:26px; border-radius:50%; background:var(--ink)}
-  .donut .val{position:relative; z-index:1; text-align:center}
-  .donut .val b{font-family:var(--disp); font-size:2rem; display:block}
-  .donut .val span{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; color:var(--muted)}
-
-  /* timeline */
-  .timeline{display:flex; align-items:flex-start; gap:0; margin-top:2.4rem; position:relative}
-  .tstep{flex:1; text-align:center; position:relative; padding-top:2.2rem}
-  .tstep::before{content:""; position:absolute; top:8px; left:0; right:0; height:2px; background:var(--line)}
-  .tstep:first-child::before{left:50%} .tstep:last-child::before{right:50%}
-  .tstep .pt{position:absolute; top:2px; left:50%; transform:translateX(-50%); width:14px;height:14px;border-radius:50%;background:var(--panel2); border:2px solid var(--faint)}
-  .tstep.now .pt{background:var(--coral); border-color:var(--coral); box-shadow:0 0 0 6px rgba(255,107,90,.15)}
-  .tstep .when{font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--faint)}
-  .tstep .what{font-family:var(--disp); font-weight:600; font-size:1.02rem; margin-top:.2rem}
-  .tstep.now .what{color:var(--coral)}
-
-  .risks{display:grid; grid-template-columns:repeat(5,1fr); gap:.9rem; margin-top:1.8rem}
-  .risk .h{font-family:var(--disp); font-weight:600; font-size:1rem; margin-bottom:.4rem}
-  .risk .p{color:var(--muted); font-size:.86rem; line-height:1.4}
-
-  .biglist{display:flex; flex-direction:column; gap:.9rem; margin-top:1.6rem; max-width:62ch}
-  .biglist .row{display:flex; gap:.9rem; align-items:baseline}
-  .biglist .k{font-family:var(--mono); color:var(--teal); font-size:.9rem; min-width:1.4rem}
-  .biglist .v{color:var(--muted); font-size:1.02rem; line-height:1.45}
-  .biglist .v b{color:var(--text)}
-
-  .center{align-items:center; text-align:center}
-  .center .lede{margin-left:auto;margin-right:auto}
-
-  /* chrome */
-  .chrome{position:fixed; z-index:5; left:0; right:0; bottom:0; height:9vh; min-height:52px;
-    display:flex; align-items:center; justify-content:space-between; padding:0 2rem;
-    font-family:var(--mono); font-size:.72rem; color:var(--faint)}
-  .brand{letter-spacing:.02em; color:var(--muted)} .brand b{color:var(--text); font-weight:600}
-  .brand .dot{color:var(--teal)}
-  .dots{display:flex; gap:6px}
-  .dots button{width:8px;height:8px;border-radius:50%;border:0;background:var(--line); cursor:pointer; padding:0; transition:background .2s, transform .2s}
-  .dots button.on{background:var(--teal); transform:scale(1.35)}
-  .count{letter-spacing:.1em}
-  .progress{position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--teal),var(--violet)); z-index:6; width:0; transition:width .4s ease}
-  .nav{position:fixed; z-index:5; bottom:9vh; right:1.5rem; display:flex; gap:.5rem}
-  .nav button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:1.1rem; cursor:pointer; transition:border-color .2s, background .2s}
-  .nav button:hover{border-color:var(--teal); background:var(--panel2)}
-  .kbd{position:fixed; bottom:9vh; left:1.5rem; z-index:5; font-family:var(--mono); font-size:.68rem; color:var(--faint)}
-  .kbd span{border:1px solid var(--line); border-radius:5px; padding:.1rem .35rem; margin:0 .15rem}
-
-  @media (max-width:820px){
-    .slide{padding:7vh 6vw 12vh}
-    .thesis,.two,.plans{grid-template-columns:1fr; gap:1rem}
-    .thesis .plus{justify-self:center}
-    .hatch{grid-template-columns:1fr}
-    .risks{grid-template-columns:1fr 1fr}
-    .flow{gap:.6rem}.arrow{transform:rotate(90deg)}
-    .nav{bottom:10vh}.kbd{display:none}
+  .eyebrow{
+    font-size:.78rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--faint);
+    margin-bottom:14px;
+    font-family:var(--disp);
   }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important; transition:opacity .2s ease!important}
-    .wave i{height:60%}
+  h1,h2,h3{
+    font-family:var(--disp);
+    letter-spacing:-.03em;
+    line-height:1.08;
+  }
+  h1{font-size:clamp(2.8rem,7vw,5.4rem);max-width:12ch}
+  .lede{
+    margin-top:18px;
+    max-width:64ch;
+    color:var(--muted);
+    font-size:clamp(1.05rem,1.5vw,1.2rem);
+  }
+  .hero-card{
+    background:linear-gradient(180deg,rgba(22,35,59,.88),rgba(16,26,44,.95));
+    border:1px solid rgba(245,177,59,.18);
+    border-radius:22px;
+    padding:24px;
+    box-shadow:0 24px 80px rgba(0,0,0,.26);
+  }
+  .hero-card .k{font-size:.76rem;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);font-family:var(--disp)}
+  .hero-card .v{font-family:var(--disp);font-size:1.55rem;line-height:1.18;margin-top:10px}
+  .hero-card p{color:var(--muted);margin-top:12px}
+  .callouts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  .callout{
+    background:rgba(16,26,44,.9);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px 18px;
+  }
+  .callout .label{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-family:var(--disp);margin-bottom:8px}
+  .callout .value{font-family:var(--disp);font-size:1.05rem}
+  .callout p{color:var(--muted);margin-top:8px;font-size:.95rem}
+  section{padding:28px 0}
+  .section-head{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:16px;
+    align-items:end;
+    margin-bottom:18px;
+  }
+  .section-head h2{font-size:clamp(1.8rem,4vw,3.1rem)}
+  .section-head p{max-width:58ch;color:var(--muted)}
+  .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .card{
+    background:linear-gradient(180deg,rgba(22,35,59,.95),rgba(16,26,44,.95));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 18px 46px rgba(0,0,0,.18);
+  }
+  .card h3{font-size:1.05rem;margin-bottom:8px}
+  .card p{color:var(--muted)}
+  .accent-amber{border-color:rgba(245,177,59,.25)}
+  .accent-cyan{border-color:rgba(79,209,197,.25)}
+  .accent-violet{border-color:rgba(154,169,255,.25)}
+  .accent-green{border-color:rgba(91,227,140,.25)}
+  .accent-coral{border-color:rgba(255,122,102,.25)}
+  .eyeline{
+    font-size:.72rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--faint);
+    margin-bottom:10px;
+    font-family:var(--disp);
+  }
+  .flow{
+    display:grid;
+    grid-template-columns:1fr auto 1fr auto 1.2fr;
+    gap:12px;
+    align-items:center;
+  }
+  .arrow{
+    color:var(--faint);
+    font-size:1.6rem;
+    text-align:center;
+  }
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.86rem;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--line);
+    color:var(--text);
+  }
+  .pill b{color:var(--amber);font-weight:600}
+  .list{display:grid;gap:10px;margin-top:10px}
+  .list .row{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .list .k{
+    font-family:var(--disp);
+    color:var(--amber);
+    min-width:18px;
+  }
+  .list .v{color:var(--muted)}
+  .quote{
+    margin-top:16px;
+    padding:18px 20px;
+    border-left:3px solid var(--amber);
+    background:rgba(245,177,59,.06);
+    border-radius:0 14px 14px 0;
+    color:var(--text);
+    font-family:var(--disp);
+    font-size:1.15rem;
+    line-height:1.35;
+  }
+  .metric{
+    display:flex;flex-direction:column;gap:4px;
+    padding-top:6px;
+  }
+  .metric .num{
+    font-family:var(--disp);
+    font-size:2rem;
+    color:var(--amber);
+    line-height:1;
+  }
+  .metric .label{color:var(--muted);font-size:.94rem}
+  .footer-note{
+    margin-top:24px;
+    color:var(--faint);
+    font-size:.9rem;
+  }
+  .tight p{margin-top:8px}
+  @media (max-width: 980px){
+    .hero,.section-head,.grid-2,.grid-3,.grid-4,.callouts,.flow{grid-template-columns:1fr}
+    h1{max-width:none}
+    .arrow{display:none}
   }
 </style>
 
-<div class="progress" id="prog"></div>
-<div class="deck" id="deck">
-
-  <!-- 1 TITLE -->
-  <section class="slide center active">
-    <div class="rise"><span class="onair"><span class="dot"></span>On air · beta live</span></div>
-    <div class="rise wordmark" style="margin:1.6rem 0 .4rem">tahti<span class="dot">.</span>live</div>
-    <div class="rise" style="margin:.4rem 0 1.4rem"><div class="wave" style="justify-content:center">
-      <i style="animation-delay:0s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.05s"></i><i style="animation-delay:.25s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.08s"></i><i style="animation-delay:.22s"></i><i style="animation-delay:.12s"></i><i style="animation-delay:.28s"></i><i style="animation-delay:.02s"></i>
-    </div></div>
-    <h1 class="rise" style="font-size:clamp(1.4rem,3vw,2.2rem); font-weight:500">A home for your music, and your live shows.</h1>
-    <p class="rise lede">Nonprofit broadcasting for independent artists — built to support artists, not algorithms.</p>
-  </section>
-
-  <!-- 2 THESIS -->
-  <section class="slide">
-    <div class="rise eyebrow">What we are</div>
-    <h2 class="rise">Two things at once.</h2>
-    <div class="rise thesis">
-      <div class="col"><div class="lab">Release system</div><div class="big t-teal">A real discography &amp; release engine</div></div>
-      <div class="plus">+</div>
-      <div class="col"><div class="lab">Broadcast</div><div class="big t-violet">A proper live platform for performers</div></div>
-    </div>
-    <p class="rise lede">You make the music. <strong>We take care of the rest</strong> — the tedious, mechanical work automated, drawn from two decades in streaming.</p>
-  </section>
-
-  <!-- 3 BROADCASTING -->
-  <section class="slide">
-    <div class="rise eyebrow">Built for broadcasters</div>
-    <h2 class="rise">Live is the heart of it.</h2>
-    <div class="rise flow">
-      <div class="chipset">
-        <span class="chip">OBS</span><span class="chip">Mixxx</span><span class="chip">Traktor</span><span class="chip">butt</span><span class="chip">browser</span>
-      </div>
-      <span class="arrow">→</span>
-      <div class="node"><div class="t">Connect &amp; go live</div><div class="s">exact server + key, set before air</div></div>
-      <span class="arrow">→</span>
-      <div class="node radio"><div class="t t-coral">Tahti Radio</div><div class="s">24/7 meta-stream, slots back-to-back</div></div>
-    </div>
-    <p class="rise lede">We get you connected in minutes — and we let you restream the same show to <strong>Twitch, YouTube or Kick</strong> at once.</p>
-    <div class="rise pull"><span class="q">“</span>No DJ ever walks off stage because someone in the crowd checked their phone.<span class="q">”</span></div>
-  </section>
-
-  <!-- 4 QUALITY -->
-  <section class="slide">
-    <div class="rise eyebrow">For listeners</div>
-    <h2 class="rise">Free listeners hear the real thing.</h2>
-    <div class="rise" style="margin:2rem 0 .5rem"><div class="wave" style="height:90px">
-      <i style="animation-delay:0s"></i><i style="animation-delay:.12s"></i><i style="animation-delay:.24s"></i><i style="animation-delay:.06s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.18s"></i><i style="animation-delay:.36s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.26s"></i><i style="animation-delay:.14s"></i><i style="animation-delay:.32s"></i><i style="animation-delay:.04s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.28s"></i><i style="animation-delay:.16s"></i><i style="animation-delay:.08s"></i>
-    </div></div>
-    <p class="rise lede">A free listener on a member's channel hears the same <strong class="t-teal">lossless FLAC</strong> the artist streams. No pay-to-hear-it-properly. <span style="color:var(--faint)">(Free-tier artists broadcast at 192 kbps MP3 — still cleaner than most platforms give away.)</span></p>
-  </section>
-
-  <!-- 5 PUBLISHING -->
-  <section class="slide">
-    <div class="rise eyebrow">Publishing &amp; releases</div>
-    <h2 class="rise">One upload, everywhere it should be.</h2>
-    <div class="rise flow">
-      <div class="node"><div class="t">Your library</div><div class="s">you choose who sees it</div></div>
-      <span class="arrow">→</span>
-      <div class="node"><div class="t t-amber">Release</div><div class="s">one smart link</div></div>
-      <span class="arrow">→</span>
-      <div class="chipset">
-        <span class="chip">Spotify · Apple · Bandcamp</span>
-        <span class="chip">Stores via distributor</span>
-        <span class="chip">Direct to Mixcloud</span>
-      </div>
-    </div>
-    <p class="rise lede">The distributor charges its own delivery fee — and that's the only cost in the chain. <strong>We take no cut of any of it.</strong></p>
-  </section>
-
-  <!-- 6 MONEY FLOW -->
-  <section class="slide">
-    <div class="rise eyebrow">Where the money goes</div>
-    <h2 class="rise">It's tipped your way — by design.</h2>
-    <div class="rise grid" style="grid-template-columns:1fr; gap:1.4rem; margin-top:1.8rem; max-width:70ch">
-      <div class="two" style="gap:1rem">
-        <div class="node" style="text-align:left"><div class="t">A fan sends €1</div><div class="s">subscriptions €1–€100/mo</div></div>
-        <div style="display:flex; gap:.8rem; align-items:stretch">
-          <div class="card teal" style="flex:1; padding:1rem 1.1rem"><h3 class="t-teal" style="font-size:1.6rem">98¢</h3><p>goes to you</p></div>
-          <div class="card" style="width:38%; padding:1rem 1.1rem"><h3 style="font-size:1.2rem; color:var(--faint)">2¢</h3><p style="font-size:.85rem">card + running costs; surplus rolls back to artists</p></div>
+<div class="page">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">About tahti.live</div>
+      <h1>A home for your music, and your live shows.</h1>
+      <p class="lede">
+        We built Tahti on one belief: artists should spend their time making art. So we automate the tedious,
+        mechanical work drawn from two decades in streaming, and leave you free to do what you are actually good at.
+      </p>
+      <div class="callouts">
+        <div class="callout">
+          <div class="label">Release system</div>
+          <div class="value">A real discography, publishing workflow, and distribution path.</div>
         </div>
-      </div>
-      <div class="two" style="gap:1rem">
-        <div class="node" style="text-align:left"><div class="t">Our yearly surplus</div><div class="s">subs + support + grants</div></div>
-        <div style="display:flex; gap:.8rem; align-items:stretch">
-          <div class="card amber" style="flex:1; padding:1rem 1.1rem"><h3 class="t-amber" style="font-size:1.6rem">90%</h3><p>back to artists as grants</p></div>
-          <div class="card" style="width:38%; padding:1rem 1.1rem"><h3 style="font-size:1.2rem; color:var(--faint)">Reserve</h3><p style="font-size:.85rem">capped 6 months — overflow returns to artists</p></div>
+        <div class="callout">
+          <div class="label">Broadcast platform</div>
+          <div class="value">A proper live stack for performers, DJs, podcasters, and collectives.</div>
+        </div>
+        <div class="callout">
+          <div class="label">Quality</div>
+          <div class="value">Lossless sound for listeners, without turning it into a premium paywall.</div>
         </div>
       </div>
     </div>
-  </section>
+    <aside class="hero-card">
+      <div class="k">Time back for your art</div>
+      <div class="v">We handle the busywork: metadata, numbering, delivery, platform reach, and the rest of the mechanical load.</div>
+      <p>You make the music. We take care of the rest.</p>
+    </aside>
+  </header>
 
-  <!-- 7 STARS -->
-  <section class="slide">
-    <div class="rise eyebrow">How you get paid</div>
-    <h2 class="rise">Count your stars.</h2>
-    <div class="rise" style="margin-top:1.6rem; max-width:64ch">
-      <div class="stars-row">
-        <div class="name">Fan-sub euro<small>a real person, paying you</small></div>
-        <div class="stars">★★★★★</div>
-        <div class="verdict">weighted heaviest</div>
-      </div>
-      <div class="stars-row">
-        <div class="name">A download<small>a deliberate act, once per account</small></div>
-        <div class="stars">★<span class="off">★★★★</span></div>
-        <div class="verdict">counts</div>
-      </div>
-      <div class="stars-row">
-        <div class="name">Background play<small>music left running</small></div>
-        <div class="stars"><span class="off">★★★★★</span></div>
-        <div class="verdict">counts for nothing</div>
-      </div>
-    </div>
-    <p class="rise lede">Give it away or sell it — both win. Only doing nothing earns nothing. <span style="color:var(--faint)">Early on the pool is small; it grows with the membership.</span></p>
-  </section>
-
-  <!-- 8 HONEST -->
-  <section class="slide">
-    <div class="rise eyebrow">Keeping it honest</div>
-    <h2 class="rise">Hard to game, by construction.</h2>
-    <div class="rise grid" style="grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.8rem; max-width:74ch">
-      <div class="card"><h3>Passive earns nothing</h3><p>The classic bot-farm trick — streams left running — simply doesn't pay here.</p></div>
-      <div class="card"><h3>Counted once</h3><p>Downloads count once per account, with rate limits.</p></div>
-      <div class="card"><h3>Pattern detection <span class="t-amber">(building)</span></h3><p>Real fandom is messy; fake activity is too tidy.</p></div>
-      <div class="card teal"><h3 class="t-teal">Always a human</h3><p>Nothing docked silently. We flag, we tell the artist, and there's a right of appeal.</p></div>
-    </div>
-  </section>
-
-  <!-- 9 OPEN -->
-  <section class="slide">
-    <div class="rise eyebrow">Open by design</div>
-    <h2 class="rise">Open source, all of it.</h2>
-    <div class="rise biglist">
-      <div class="row"><span class="k">01</span><span class="v"><b>The code we run is public</b> — under AGPL, and every page links to its own source.</span></div>
-      <div class="row"><span class="k">02</span><span class="v"><b>We welcome forks</b> — not just tolerate them.</span></div>
-      <div class="row"><span class="k">03</span><span class="v"><b>No lock-in.</b> Your releases, archive and fan records export any time.</span></div>
-    </div>
-    <p class="rise lede">You stay because we're good — not because leaving would cost you everything you've built.</p>
-  </section>
-
-  <!-- 10 GUARANTEE -->
-  <section class="slide">
-    <div class="rise eyebrow">The guarantee</div>
-    <h2 class="rise">It can never be turned against you.</h2>
-    <div class="rise hatch">
-      <div class="pair"><div class="if">If prices ever crept up</div><div class="then">fork it and run it your way</div></div>
-      <div class="pair"><div class="if">If ads or data-selling slipped in</div><div class="then">the constitution forbids it — public source can't hide it</div></div>
-      <div class="pair"><div class="if">If we were sold, or folded</div><div class="then">the platform lives on; export everything</div></div>
-      <div class="pair"><div class="if">If a feature you rely on was removed</div><div class="then">keep it alive in a fork</div></div>
-    </div>
-    <p class="rise lede t-amber" style="font-style:italic">There is no version of this where you're trapped.</p>
-  </section>
-
-  <!-- 11 HELSINKI -->
-  <section class="slide">
-    <div class="rise eyebrow">Rooted in Helsinki</div>
-    <h2 class="rise">Finnish nonprofit, Finnish infrastructure.</h2>
-    <div class="rise grid" style="grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.8rem; max-width:74ch">
-      <div class="card"><h3>Our own hardware</h3><p>In Helsinki, with UpCloud's Helsinki region for overflow — and no third-party CDN.</p></div>
-      <div class="card"><h3>No account to listen</h3><p>No analytics cookies; identifiers hashed and rotated daily.</p></div>
-      <div class="card"><h3>No data to sell</h3><p>We don't collect it in a form that would let us.</p></div>
-      <div class="card"><h3>No vanity metrics</h3><p>Our constitution bars listener-hours as a headline number.</p></div>
-    </div>
-  </section>
-
-  <!-- 12 PLANS -->
-  <section class="slide">
-    <div class="rise eyebrow">Plans</div>
-    <h2 class="rise">Free to listen. €40 a year to be an artist.</h2>
-    <div class="rise plans">
-      <div class="plan">
-        <div class="tier">Free · everyone</div>
-        <div class="price">€0</div>
-        <ul>
-          <li>Full lossless on member channels</li>
-          <li>Follow, live chat, support artists</li>
-          <li>Start a channel — ~1 hr/week live @ 192 kbps</li>
-        </ul>
-      </div>
-      <div class="plan paid">
-        <div class="tier t-teal">Artist membership</div>
-        <div class="price">€40<span style="font-size:1rem;color:var(--muted)"> / year</span></div>
-        <ul>
-          <li>Lossless FLAC broadcast — you <em>and</em> your listeners</li>
-          <li>No weekly airtime cap</li>
-          <li>Full release + distribution, own space &amp; design</li>
-          <li>Newsletter, DMs, storage</li>
-          <li>A vote at the AGM</li>
-        </ul>
-        <div class="foot">The €40 funds the grant pool and keeps the lights on — it isn't a premium tier.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 13 FUNDING -->
-  <section class="slide">
-    <div class="rise eyebrow">How we're funded</div>
-    <h2 class="rise">The cleanest possible money.</h2>
-    <div class="rise two" style="margin-top:1.8rem">
-      <div style="display:flex; align-items:center; gap:1.6rem">
-        <div class="donut"><div class="val"><b class="t-teal">90%</b><span>surplus → artists</span></div></div>
-        <div style="color:var(--muted); font-size:.95rem; line-height:1.5">
-          Reserve capped at <b style="color:var(--text)">6 months</b>; overflow returns to artists.<br><br>
-          <b style="color:var(--text)">No VC, no equity, no exit</b> — written into the constitution.
-        </div>
-      </div>
+  <section id="what">
+    <div class="section-head">
       <div>
-        <div class="card"><h3>Grant pipeline</h3><p>Finnish Cultural Foundation · Kone Foundation · Creative Europe.<br><span style="color:var(--faint); font-size:.85rem">Confirm applied-vs-awarded before the room; Tempo &amp; the Music Foundation are still a yes/no.</span></p></div>
-        <p style="color:var(--faint); font-size:.86rem; margin-top:.9rem; line-height:1.4">Honest: year one runs at a planned deficit on a founding grant, and the first pool to artists is small.</p>
+        <div class="eyeline">What we are</div>
+        <h2>Two things at once.</h2>
+      </div>
+      <p>
+        Tahti is both a discography and release system, and a live broadcasting platform built for performers.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card accent-cyan">
+        <h3>A real discography</h3>
+        <p>
+          Upload once, keep control of the library, and publish from there. Releases, archive, and fan records stay
+          with you.
+        </p>
+      </div>
+      <div class="card accent-violet">
+        <h3>A proper broadcasting platform</h3>
+        <p>
+          Run weekly shows or daily ones. Enter a name and description, and we handle the episode structure so the
+          show can keep moving.
+        </p>
       </div>
     </div>
   </section>
 
-  <!-- 14 GOVERNANCE -->
-  <section class="slide">
-    <div class="rise eyebrow">Governance</div>
-    <h2 class="rise">Not a company you upload to — an association you own.</h2>
-    <div class="rise biglist">
-      <div class="row"><span class="k">✦</span><span class="v"><b>One member, one vote.</b> Proposals run continuously; formal decisions at the AGM.</span></div>
-      <div class="row"><span class="k">✦</span><span class="v"><b>Core promises locked</b> — no cut of fan support, no data sold, no ads — changeable only by a two-thirds vote, 60 days' notice.</span></div>
-      <div class="row"><span class="k">✦</span><span class="v"><b>No exit, no shareholders.</b> Surplus flows to artists; the board becomes artist-majority as it matures.</span></div>
+  <section id="broadcast">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Built for broadcasters</div>
+        <h2>Live performance sits at the heart of it.</h2>
+      </div>
+      <p>
+        We get you connected in minutes, not an evening lost in forums, whatever you broadcast with.
+      </p>
     </div>
-    <p class="rise lede">You make the music, and you steer the ship.</p>
-  </section>
-
-  <!-- 15 TRANSPARENCY -->
-  <section class="slide">
-    <div class="rise eyebrow">Transparency</div>
-    <h2 class="rise">The books are open.</h2>
-    <div class="rise grid" style="grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.8rem; max-width:70ch">
-      <div class="card"><h3>Public bylaws</h3><p>The rules aren't buried — they're published.</p></div>
-      <div class="card teal"><h3 class="t-teal">Monthly ledger</h3><p>Append-only and audited — not a once-a-year PDF.</p></div>
-      <div class="card"><h3>Salaries public</h3><p>What we pay the people running it is on the record.</p></div>
-      <div class="card"><h3>Grant pool in the open</h3><p>Runs on the same public ledger.</p></div>
+    <div class="grid-3">
+      <div class="card accent-amber">
+        <h3>Guided setup</h3>
+        <p>
+          OBS, Mixxx, Traktor, butt, or straight from the browser. You get the exact server and stream key you need,
+          plus a connect step before you go on air.
+        </p>
+      </div>
+      <div class="card accent-cyan">
+        <h3>Multistreaming</h3>
+        <p>
+          Restream the same live show to Twitch, YouTube, or Kick at once so you can reach the audience already
+          watching elsewhere without splitting your effort.
+        </p>
+      </div>
+      <div class="card accent-violet">
+        <h3>Tahti Radio</h3>
+        <p>
+          A 24/7 meta-stream where artists book slots and go on air in one continuous broadcast, scheduled
+          back-to-back.
+        </p>
+      </div>
     </div>
-    <p class="rise lede">You don't have to take our word for it — you can just look.</p>
-  </section>
-
-  <!-- 16 TIMELINE -->
-  <section class="slide">
-    <div class="rise eyebrow">Roadmap</div>
-    <h2 class="rise">Already running — not a someday project.</h2>
-    <div class="rise timeline">
-      <div class="tstep now"><span class="pt"></span><div class="when">NOW</div><div class="what">Beta live</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">WEEKS</div><div class="what">New interface</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">NEXT</div><div class="what">Invite round</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">END SEPT</div><div class="what">Public launch</div></div>
+    <div class="quote">
+      The music never stops because someone clicked a menu.
     </div>
-    <p class="rise lede">Still coming, so you hear it from us: a <strong>deeper editor with stems</strong>, the next <strong>anti-gaming</strong> layer, and more distribution options.</p>
   </section>
 
-  <!-- 17 RISKS -->
-  <section class="slide">
-    <div class="rise eyebrow">Honest risks</div>
-    <h2 class="rise">What could go wrong — and our answer.</h2>
-    <div class="rise risks">
-      <div class="risk card"><div class="h">Stay small</div><div class="p">Why we start with real communities, not the void.</div></div>
-      <div class="risk card"><div class="h">Funding timing</div><div class="p">Break-even ≈ 600; year one a deficit on a founding grant.</div></div>
-      <div class="risk card"><div class="h">Small team</div><div class="p">Succession &amp; artist-majority board written in from day one.</div></div>
-      <div class="risk card"><div class="h">We'll err</div><div class="p">You hear it from us first — and vote on the fix.</div></div>
-      <div class="risk card"><div class="h">Infrastructure</div><div class="p">Fibre upgrade arrives with the growth that pays for it.</div></div>
+  <section id="listeners">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Listeners hear the real thing</div>
+        <h2>No watered-down version.</h2>
+      </div>
+      <p>
+        We do not gate quality at the listener tier.
+      </p>
     </div>
-    <p class="rise lede">The promise isn't perfection — it's that the promises are constitutional.</p>
+    <div class="grid-2">
+      <div class="card accent-green">
+        <h3>Member channels</h3>
+        <p>
+          A free listener hears the same lossless FLAC the artist streams. We do not charge people extra to hear it
+          properly.
+        </p>
+      </div>
+      <div class="card accent-amber">
+        <h3>Free-tier artists</h3>
+        <p>
+          Artists on the free tier broadcast at 192 kbps MP3. It is still cleaner than most platforms give free
+          listeners at all.
+        </p>
+      </div>
+    </div>
   </section>
 
-  <!-- 18 CLOSE -->
-  <section class="slide center">
-    <div class="rise"><span class="onair"><span class="dot"></span>Invite round opens soon</span></div>
-    <h2 class="rise" style="font-size:clamp(2.2rem,6vw,4rem); margin-top:1.4rem">Don't imagine it.<br><span class="t-teal">Come through our door.</span></h2>
-    <p class="rise lede">The beta is running now. Join the first wave of artists — set up a channel, run a show, and help steer what we build next.</p>
-    <div class="rise wordmark" style="font-size:clamp(1.8rem,5vw,3rem); margin-top:2rem">tahti<span class="dot">.</span>live</div>
+  <section id="for">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Who it is for</div>
+        <h2>Anyone who wants a real home for their work.</h2>
+      </div>
+      <p>
+        Not a profile on someone else’s platform, but a stage and a discography of your own.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>The DJ</h3>
+        <p>Weekly show, same set, too many uploads, too many destinations.</p>
+      </div>
+      <div class="card">
+        <h3>The producer</h3>
+        <p>A deep catalogue that deserves better than a compressed stream.</p>
+      </div>
+      <div class="card">
+        <h3>The experimental artist</h3>
+        <p>Sound that arrives exactly as it left the studio.</p>
+      </div>
+      <div class="card">
+        <h3>The talk-radio host</h3>
+        <p>Broadcasting that is structured, reliable, and easy to keep moving.</p>
+      </div>
+      <div class="card">
+        <h3>The podcaster</h3>
+        <p>Clear publishing, clean delivery, and an audience that can follow along.</p>
+      </div>
+      <div class="card">
+        <h3>The collective</h3>
+        <p>A shared channel, moderators, and a space to build together.</p>
+      </div>
+    </div>
   </section>
 
+  <section id="release">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Publishing and releases</div>
+        <h2>One upload, then choose how far it goes.</h2>
+      </div>
+      <p>
+        Your library stays first in the chain. You decide who sees it: specific fans, subscribers, or the world.
+      </p>
+    </div>
+    <div class="flow">
+      <div class="card">
+        <h3>Your library</h3>
+        <p>You control the source copy, the discography, and the audience boundary.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="card">
+        <h3>Release</h3>
+        <p>A smart link that points fans to Spotify, Apple Music, Bandcamp, and more.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="card">
+        <h3>Distribution</h3>
+        <p>Built-in metadata delivery, store delivery, and direct publishing to Mixcloud.</p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card accent-amber">
+        <h3>No platform cut</h3>
+        <p>The distributor charges its own delivery fee. That is the only cost in the chain.</p>
+      </div>
+      <div class="card accent-cyan">
+        <h3>Release mechanics handled</h3>
+        <p>Episode numbering, metadata, delivery, and platform reach are the parts we automate.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="catalogue">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Bring your catalogue in and take it out</div>
+        <h2>Movement in both directions.</h2>
+      </div>
+      <p>
+        We work with your existing archive, and we do not trap it here.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Import</h3>
+        <p>Pull a catalogue in from SoundCloud, Bandcamp, or Mixcloud, or link Google Drive to publish as you go.</p>
+      </div>
+      <div class="card">
+        <h3>Export</h3>
+        <p>Your releases, archive, and fan records can be exported whenever you want.</p>
+      </div>
+      <div class="card accent-green">
+        <h3>Storage</h3>
+        <p>Generous storage, no quota meter in your face, and soft safeguards against abuse behind the scenes.</p>
+      </div>
+      <div class="card accent-violet">
+        <h3>Ownership</h3>
+        <p>If you built it here, it is still yours when you leave.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="studio">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Your studio</div>
+        <h2>The control room for everything you run.</h2>
+      </div>
+      <p>
+        Not a generic dashboard. A working desk for broadcasting and releasing.
+      </p>
+    </div>
+    <div class="grid-4">
+      <div class="card"><h3>Go live</h3><p>Manage broadcasts from preflight to on-air.</p></div>
+      <div class="card"><h3>Manage library</h3><p>Keep releases, archive, and metadata in one place.</p></div>
+      <div class="card"><h3>Cut releases</h3><p>Build release pages and smart links quickly.</p></div>
+      <div class="card"><h3>See stats</h3><p>Track the numbers that matter, including revenue.</p></div>
+      <div class="card"><h3>Design your channel</h3><p>Control the look and structure of your public space.</p></div>
+      <div class="card"><h3>Set your schedule</h3><p>Plan live shows and recurring slots.</p></div>
+      <div class="card"><h3>Audio touch-ups</h3><p>Trim and normalize the basics without leaving the flow.</p></div>
+      <div class="card"><h3>Direct support</h3><p>Keep fan support close to the work and the audience.</p></div>
+    </div>
+  </section>
+
+  <section id="space">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Your own space</div>
+        <h2>A home on the web that you shape.</h2>
+      </div>
+      <p>
+        Your-name.tahti.live, your design, your audience.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card accent-cyan">
+        <h3>Design control</h3>
+        <p>Presets to get moving quickly, or a custom look down to individual releases and shows.</p>
+      </div>
+      <div class="card accent-violet">
+        <h3>Audience tools</h3>
+        <p>Live chat, newsletter, direct messages, and a press kit and gallery for your channel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="support">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Direct fan support</div>
+        <h2>Fans can back you directly.</h2>
+      </div>
+      <p>
+        Subscriptions from a euro up to a hundred a month. You set the price.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card accent-green">
+        <div class="metric">
+          <div class="num">98%</div>
+          <div class="label">Kept by the artist</div>
+        </div>
+        <p style="margin-top:12px">We take 2% only to cover card processing and running costs.</p>
+      </div>
+      <div class="card accent-amber">
+        <h3>A direct relationship</h3>
+        <p>Fans back you, not a middleman. The relationship stays yours, not ours.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="paid">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">How you get paid</div>
+        <h2>Two paths, both tipped your way.</h2>
+      </div>
+      <p>
+        We keep the model simple: direct support plus a yearly share of surplus.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Direct fan money</h3>
+        <p>When a fan sends a euro, you keep 98 cents. We take 2% for bank and running costs.</p>
+      </div>
+      <div class="card">
+        <h3>Shared grant pot</h3>
+        <p>Each year we share our surplus with artists as grants. The more real engagement you gather, the bigger your slice.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>What counts</h3>
+      <div class="pill-row">
+        <span class="pill"><b>Counts:</b> downloads</span>
+        <span class="pill"><b>Counts:</b> fan-sub money</span>
+        <span class="pill"><b>Does not count:</b> passive background streams</span>
+      </div>
+      <p class="footer-note">
+        The system is built so the classic bot-farm trick does not pay. We count deliberate actions, not idle play
+        counts.
+      </p>
+    </div>
+  </section>
+
+  <section id="trust">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Keeping it honest</div>
+        <h2>Built to resist gaming, and built to be accountable.</h2>
+      </div>
+      <p>
+        We flag anomalies for humans, tell the artist, and give a right of appeal.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Structural defense</h3>
+        <p>Passive listening earns nothing. Downloads are counted once per account, with rate limits.</p>
+      </div>
+      <div class="card">
+        <h3>Pattern detection</h3>
+        <p>We are building tools that look for the tidy shape of fake activity, not the messy shape of real fandom.</p>
+      </div>
+      <div class="card">
+        <h3>Human review</h3>
+        <p>No silent algorithmic punishment. We would rather miss something than penalize someone who did nothing wrong.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="mixes">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Original work and mixes</div>
+        <h2>We treat them differently.</h2>
+      </div>
+      <p>
+        That distinction matters if the release system is going to mean anything.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card accent-coral">
+        <h3>Original work</h3>
+        <p>Tracks and releases are yours. Claiming work that is not yours breaks the rules and gets acted on.</p>
+      </div>
+      <div class="card accent-cyan">
+        <h3>Mixes and sets</h3>
+        <p>We welcome them. We ask for a tracklist, and where an artist is on Tahti, you can link straight to their channel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="open">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Open by design</div>
+        <h2>You are never locked in.</h2>
+      </div>
+      <p>
+        The code is open, every page links to its source, and your data can come with you.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>AGPL all the way down</h3>
+        <p>Anyone running the code, us included, must publish the exact source they run.</p>
+      </div>
+      <div class="card">
+        <h3>Forkable by default</h3>
+        <p>We welcome forks. If you want out, your releases, archive, and fan records can go with you.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>What that means in practice</h3>
+      <div class="grid-2 tight" style="margin-top:6px">
+        <p>If prices crept up, the community could fork the platform and run it their way.</p>
+        <p>If ads or data-selling ever slipped in, the public source would not hide it.</p>
+        <p>If the platform were ever sold or folded, the code and the data would still be there.</p>
+        <p>If a feature you rely on disappeared, a fork could keep it alive.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="helsinki">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Rooted in Helsinki</div>
+        <h2>Finnish nonprofit on Finnish infrastructure.</h2>
+      </div>
+      <p>
+        We run on our own hardware in Helsinki, with UpCloud's Helsinki region for overflow and no third-party CDN.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card accent-cyan">
+        <h3>Privacy</h3>
+        <p>You do not need an account to listen. We set no analytics cookies.</p>
+      </div>
+      <div class="card accent-violet">
+        <h3>Low-knowledge identifiers</h3>
+        <p>The identifiers we do handle are hashed and rotated daily, so we genuinely cannot tell the same listener came back yesterday.</p>
+      </div>
+      <div class="card accent-green">
+        <h3>Constitutional limits</h3>
+        <p>We do not sell data, and we do not chase vanity metrics like listener-hours as a headline number.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="people">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">The people behind it</div>
+        <h2>Built to outlast any one person.</h2>
+      </div>
+      <p>
+        Founder included.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Founding team</h3>
+        <p>
+          Founded by Jani, who has been building software and streaming since the early 2000s, alongside a senior UX
+          designer focused on making the capability usable.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Governance shape</h3>
+        <p>
+          A paid director on a modest nonprofit salary, a real hiring process, and a documented succession plan. The
+          board gains an elected artist representative in year two and becomes artist-majority by year four.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="plans">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Plans</div>
+        <h2>Free to listen, one artist membership, no upsell maze.</h2>
+      </div>
+      <p>
+        Listening stays free. Artist membership is the single paid tier.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Free</h3>
+        <p>Listen in full lossless on member channels, follow artists, join live chat, and support the artists you love.</p>
+        <p style="margin-top:10px">You can also start a channel and try broadcasting, up to about an hour a week at 192 kbps.</p>
+      </div>
+      <div class="card accent-cyan">
+        <h3>Artist Membership - 40 EUR a year</h3>
+        <p>Broadcast live in lossless FLAC with no weekly airtime cap, plus release tools, your own space, live chat, newsletter, direct messages, storage, and a vote at the AGM.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="funding">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">How we are funded</div>
+        <h2>Clean money only.</h2>
+      </div>
+      <p>
+        Member subscriptions, direct fan support, and cultural grants. No venture capital, no equity, no outside owner.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Surplus policy</h3>
+        <p>90% of any surplus goes back to artists as grants. The rest holds a small reserve capped at six months of costs.</p>
+      </div>
+      <div class="card">
+        <h3>Early reality</h3>
+        <p>The first year is planned to run at a deficit, covered by a founding grant. The first grant pool is small and grows with the membership.</p>
+      </div>
+    </div>
+    <div class="footer-note">
+      Target funders include the Finnish Cultural Foundation, Kone Foundation, and Creative Europe. Applied-to versus awarded should be kept distinct in public copy.
+    </div>
+  </section>
+
+  <section id="governance">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Governance</div>
+        <h2>You own it.</h2>
+      </div>
+      <p>
+        We are an association, not a platform that you merely rent space on.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>One member, one vote</h3>
+        <p>Artist members are real members. Proposals and feedback run continuously, and formal decisions happen at the AGM.</p>
+      </div>
+      <div class="card">
+        <h3>Locked promises</h3>
+        <p>Never taking a cut of fan support, never selling listener data, and never running ads are embedded in the constitution.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="transparency">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Transparency</div>
+        <h2>The books are open.</h2>
+      </div>
+      <p>
+        Bylaws public. Finances public. Pay public. Grants public.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card"><h3>Monthly ledger</h3><p>Append-only, not a once-a-year PDF.</p></div>
+      <div class="card"><h3>Independent audit</h3><p>The public numbers are checkable.</p></div>
+      <div class="card"><h3>Public compensation</h3><p>What we pay the people running it is visible.</p></div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Roadmap and timeline</div>
+        <h2>This is already running.</h2>
+      </div>
+      <p>
+        The beta is live now, and the machinery underneath works on real data.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Near term</h3>
+        <p>Finish the new interface, keep the invite round moving, and smooth the rough edges surfaced by real use.</p>
+      </div>
+      <div class="card">
+        <h3>Next up</h3>
+        <p>Deeper audio editing, multitrack and stem tools, stronger anti-gaming detection, and more distribution and integration options.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="risks">
+    <div class="section-head">
+      <div>
+        <div class="eyeline">Honest risks</div>
+        <h2>What could go wrong, and what we are doing about it.</h2>
+      </div>
+      <p>
+        We are not promising perfection. We are promising clarity, and that you will hear it from us first.
+      </p>
+    </div>
+    <div class="grid-4">
+      <div class="card"><h3>We could stay small</h3><p>We are starting with communities, not shouting into the void.</p></div>
+      <div class="card"><h3>Funding timing</h3><p>If grants arrive slower, development slows, but the promises do not change.</p></div>
+      <div class="card"><h3>A small team</h3><p>Succession and artist-majority governance are in from the start.</p></div>
+      <div class="card"><h3>Infrastructure growth</h3><p>Current capacity covers the early member base, with upgrades arriving as the membership pays for them.</p></div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    Tahti is built so the people making the work keep the time, the audience, and the ownership.
+  </div>
 </div>
-
-<div class="chrome">
-  <div class="brand"><b>tahti<span class="dot">.</span>live</b> — the pitch</div>
-  <div class="dots" id="dots"></div>
-  <div class="count"><span id="cur">1</span> / <span id="tot">18</span></div>
-</div>
-<div class="kbd">← → <span>space</span> to move · <span>F</span> fullscreen</div>
-<div class="nav">
-  <button id="prev" aria-label="Previous">‹</button>
-  <button id="next" aria-label="Next">›</button>
-</div>
-
-<script>
-  const slides=[...document.querySelectorAll('.slide')];
-  const dotsWrap=document.getElementById('dots');
-  const prog=document.getElementById('prog');
-  const cur=document.getElementById('cur');
-  document.getElementById('tot').textContent=slides.length;
-  let i=0;
-  slides.forEach((_,n)=>{
-    const b=document.createElement('button');
-    b.setAttribute('aria-label','Slide '+(n+1));
-    b.onclick=()=>go(n); dotsWrap.appendChild(b);
-  });
-  const dots=[...dotsWrap.children];
-  function go(n){
-    i=Math.max(0,Math.min(slides.length-1,n));
-    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
-    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
-    prog.style.width=((i)/(slides.length-1)*100)+'%';
-    cur.textContent=i+1;
-  }
-  function next(){go(i+1)} function prev(){go(i-1)}
-  document.getElementById('next').onclick=next;
-  document.getElementById('prev').onclick=prev;
-  addEventListener('keydown',e=>{
-    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next()}
-    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev()}
-    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(slides.length-1)}
-    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()} else {document.exitFullscreen&&document.exitFullscreen()} }
-  });
-  // click right/left thirds to navigate (ignore clicks on buttons/links)
-  document.getElementById('deck').addEventListener('click',e=>{
-    if(e.target.closest('button,a')) return;
-    (e.clientX > innerWidth*0.5) ? next() : prev();
-  });
-  go(0);
-</script>
