@@ -1231,6 +1231,17 @@ body:has(.mini-player) {
   width: min(78vw, 340px);
   aspect-ratio: 1;
   margin: var(--space-3) 0 var(--space-5);
+  /* The AvatarTile placeholder fallback (no per-track artwork) carries its own
+   * fixed-size .avatar-tile--full rule (280x280px, packages/ui/components.css)
+   * that wins the cascade over this wrap's .full-player__art (width/height:
+   * 100%) whenever components.css loads after globals.css — which every nested
+   * layout that renders this player does. Centering here makes the wrap
+   * self-correct regardless of which rule wins, instead of the placeholder
+   * sitting left-aligned while the transport row below stays centered. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .full-player__art {
