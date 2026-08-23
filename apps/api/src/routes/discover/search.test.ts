@@ -48,10 +48,19 @@ describe('GET /api/v1/search', () => {
         fileSizeBytes: BigInt(1000),
       },
     })
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'search-test-moonlight-mixes',
+        name: 'Moonlight Mixes',
+        isPublic: true,
+      },
+    })
   })
 
   afterAll(async () => {
     await prisma.archiveItem.deleteMany({ where: { channelId } })
+    await prisma.collection.deleteMany({ where: { slug: 'search-test-moonlight-mixes' } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })
@@ -89,6 +98,19 @@ describe('GET /api/v1/search', () => {
     })
   })
 
+  it('finds a public collection by name', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?q=moonlight+mixes' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.collections).toHaveLength(1)
+    expect(body.collections[0]).toMatchObject({
+      slug: 'search-test-moonlight-mixes',
+      name: 'Moonlight Mixes',
+      ownerUsername: 'search-test-moonrise',
+      ownerDisplayName: 'DJ Moonrise',
+    })
+  })
+
   it('scopes to tracks-only or artists-only via type', async () => {
     const tracksOnly = await app.inject({
       method: 'GET',
@@ -105,6 +127,6 @@ describe('GET /api/v1/search', () => {
 
   it('returns empty results for no match (different data shape: empty arrays)', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/search?q=zzz-no-such-thing-zzz' })
-    expect(res.json()).toEqual({ tracks: [], artists: [] })
+    expect(res.json()).toEqual({ tracks: [], artists: [], collections: [] })
   })
 })
