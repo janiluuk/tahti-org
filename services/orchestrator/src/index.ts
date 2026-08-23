@@ -17,6 +17,7 @@ import {
 import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
 import { startNowPlayingSync } from './now-playing-sync.js'
+import { cleanupOrphanedSidecars } from './sidecar-cleanup.js'
 import {
   LIQUIDSOAP_SKIP_COMMAND,
   LIQUIDSOAP_PAUSE_COMMAND,
@@ -165,6 +166,14 @@ fastify.post('/resume', async (request, reply) => {
   })
   if (early !== undefined) return early
   return reply.send({ ok: true })
+})
+
+// Sweep orphaned recorder/fingerprint sidecar containers — see sidecar-cleanup.ts
+// for why the in-memory activeRecorders/activeFingerprintIngest maps alone
+// can't be trusted to catch these. Called by the worker's sidecar-cleanup cron.
+fastify.post('/cleanup-sidecars', async (_request, reply) => {
+  const result = await cleanupOrphanedSidecars(prisma)
+  return reply.send({ ok: true, ...result })
 })
 
 // Manage panel multistream status — log-scan based, see getRtmpTargetStatuses.

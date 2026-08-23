@@ -54,6 +54,22 @@ export async function restartChannelLiquidsoap(
   await orchestratorPost('/restart', { channelId, slug, broadcastId, template })
 }
 
+/** Every 10 minutes via the sidecar-cleanup cron — see
+ * services/orchestrator/src/sidecar-cleanup.ts for why this sweep exists
+ * independent of the orchestrator's own in-memory sidecar tracking. */
+export async function cleanupOrphanedSidecars(): Promise<{ checked: number; removed: string[] }> {
+  const res = await fetch(`${ORCHESTRATOR_URL}/cleanup-sidecars`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${INTERNAL_SECRET}`,
+    },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) throw new Error(`Orchestrator /cleanup-sidecars returned ${res.status}`)
+  return (await res.json()) as { checked: number; removed: string[] }
+}
+
 /** Idempotent — orchestrator no-ops if this channel's container is already tracked
  * (or already running under a different orchestrator process — see the Docker
  * reconciliation check in spawnLiquidsoapContainer). Returns whether the channel

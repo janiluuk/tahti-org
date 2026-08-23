@@ -51,6 +51,13 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'Bootstrap fallback-enabled artist channels into a running 24/7 container',
   },
   {
+    name: 'sidecar-cleanup',
+    pattern: '*/10 * * * *',
+    jobId: 'sidecar-cleanup-cron',
+    description:
+      'Remove orphaned recorder/fingerprint sidecar containers left behind when a broadcast ends (no --rm, no broadcast-end hook — see services/orchestrator/src/sidecar-cleanup.ts)',
+  },
+  {
     name: 'hls-minio-sync',
     // A once-a-minute cadence left the public manifest (a ~16s sliding window —
     // segments=4 × segment_duration=4s in the Liquidsoap template) fully stale

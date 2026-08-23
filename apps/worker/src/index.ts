@@ -42,6 +42,7 @@ import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processRadioSlotSwitchoverJob } from './jobs/radio-slot-switchover.js'
 import { processChannelFallbackReconcilerJob } from './jobs/channel-fallback-reconciler.js'
+import { processSidecarCleanupJob } from './jobs/sidecar-cleanup.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
@@ -148,6 +149,11 @@ const worker = new Worker(
         const summary = await processChannelFallbackReconcilerJob(prisma, job)
         if (summary.started > 0) {
           console.log('[worker] channel-fallback-reconciler:', JSON.stringify(summary))
+        }
+      } else if (job.name === 'sidecar-cleanup') {
+        const summary = await processSidecarCleanupJob(job)
+        if (summary.removed.length > 0) {
+          console.log('[worker] sidecar-cleanup:', JSON.stringify(summary))
         }
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)
