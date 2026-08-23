@@ -751,6 +751,48 @@ export const ArchiveItemRecentSchema = z.array(
 /** Public channel archive list (includes presigned audioUrl and full metadata). */
 export const ChannelArchiveItemsResponseSchema = z.array(z.record(z.string(), z.unknown()))
 
+/** GET /api/tracks/:id — public single-track detail page. Unlike
+ * ChannelArchiveItemsResponseSchema (a list scoped to an already-known
+ * channel) or TahtiSelectsGalleryItemSchema (gallery-tile summary), this is
+ * the full-detail payload for a standalone track page reached only by
+ * track id — includes the real waveform `peaks` buckets and the owning
+ * channel/artist so the page never needs a second request. */
+export const PublicTrackDetailSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    artistName: z.string(),
+    channelSlug: z.string(),
+    channel: z.object({
+      username: z.string(),
+      displayName: z.string(),
+      avatarUrl: z.string().nullable(),
+    }),
+    durationSec: z.number().int().nullable(),
+    audioUrl: z.string().nullable(),
+    bannerUrl: z.string().nullable(),
+    genre: z.string().nullable(),
+    subGenres: z.array(z.string()),
+    contentType: z.string(),
+    mixVersion: z.string().nullable(),
+    description: z.string().nullable(),
+    commentary: z.string().nullable(),
+    tracklist: z.unknown().nullable(),
+    credits: z.unknown().nullable(),
+    license: z.string(),
+    releasedAt: z.string(),
+    effectiveBpm: z.number().nullable(),
+    effectiveKey: z.string().nullable(),
+    /** [0..255] amplitude buckets for the real waveform — null for tracks
+     * ingested before M27 or without a decodable audio file. */
+    peaks: z.array(z.number()).nullable(),
+    commentCount: z.number().int(),
+    downloadCount: z.number().int(),
+  })
+  .passthrough()
+
+export type PublicTrackDetail = z.infer<typeof PublicTrackDetailSchema>
+
 /** One row in a profile's followers/following list modal. */
 export const ArtistFollowUserSchema = z.object({
   username: z.string(),

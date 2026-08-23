@@ -27,6 +27,7 @@ import completeUploadRoute from './routes/uploads/complete.js'
 import channelGetRoute from './routes/channels/get.js'
 import channelSlugRedirectRoute from './routes/channels/slug-redirect.js'
 import channelItemsRoute from './routes/channels/items.js'
+import trackGetRoute from './routes/tracks/get.js'
 import channelListRoute from './routes/channels/list.js'
 import channelDirectoryRoute from './routes/channels/directory.js'
 import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js'
@@ -525,6 +526,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelFallbackCollectionRoutes)
   await fastify.register(customDomainRoutes)
   await fastify.register(channelItemsRoute)
+  await fastify.register(trackGetRoute)
   await fastify.register(liveFingerprintsRoute)
   await fastify.register(itemReadyRoute)
 
