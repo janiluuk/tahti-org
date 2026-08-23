@@ -13,7 +13,10 @@ import {
 } from '@tahti/shared'
 import { parseHearthisUsername } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
+import { generateAvatarSvg } from '../../lib/generate-cover-art.js'
 import { recordMentions } from '../../lib/mentions.js'
+import { putObjectText } from '../../lib/minio.js'
+import { publicMediaUrl } from '../../lib/public-media-url.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -187,6 +190,23 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
               where: { id: user.id },
               select: profileSelect,
             })
+
+      // The display name changed but the avatar wasn't touched in this
+      // request -- if that avatar is still one of our own generated
+      // placeholders (initials baked in at whatever name was current when
+      // it was generated), regenerate it so the letters match today's name
+      // instead of a stale one from before a rename. Never touches a real
+      // uploaded avatar.
+      if (body.displayName !== undefined && body.avatarUrl === undefined) {
+        const expectedKey = `avatars/${updated.username}/generated-cover.svg`
+        if (updated.avatarUrl === publicMediaUrl(expectedKey)) {
+          await putObjectText(
+            expectedKey,
+            generateAvatarSvg(updated.username, updated.displayName),
+            'image/svg+xml',
+          )
+        }
+      }
 
       let artistKind: 'SINGLE' | 'COLLECTIVE' = 'SINGLE'
       if (body.artistKind !== undefined) {

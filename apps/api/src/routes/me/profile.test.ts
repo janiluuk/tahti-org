@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -9,6 +9,13 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
+import { publicMediaUrl } from '../../lib/public-media-url.js'
+
+vi.mock('../../lib/minio.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/minio.js')>()
+  return { ...actual, putObjectText: vi.fn().mockResolvedValue(undefined) }
+})
+import { putObjectText } from '../../lib/minio.js'
 
 const PREFIX = 'profile-test-'
 
@@ -75,6 +82,54 @@ describe('M12 — artist profile API', () => {
     expect(empty.statusCode).toBe(400)
 
     void target
+  })
+
+  it('PATCH /api/me/profile regenerates a stale generated placeholder avatar on rename', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}placeholder@example.com`,
+      username: 'profile-placeholder',
+      displayName: 'Old Name',
+    })
+    const key = `avatars/${artist.username}/generated-cover.svg`
+    await prisma.user.update({
+      where: { id: artist.id },
+      data: { avatarUrl: publicMediaUrl(key) },
+    })
+    const artistCookie = await sessionCookieFor(prisma, artist.id)
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie: artistCookie },
+      payload: { displayName: 'New Name' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(putObjectText).toHaveBeenCalledWith(
+      key,
+      expect.stringContaining('NN'),
+      'image/svg+xml',
+    )
+  })
+
+  it('PATCH /api/me/profile leaves a real uploaded avatar untouched on rename', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}realavatar@example.com`,
+      username: 'profile-realavatar',
+      displayName: 'Old Name',
+    })
+    const realAvatarUrl = publicMediaUrl(`avatars/${artist.username}/avatar-abc12345.jpg`)
+    await prisma.user.update({ where: { id: artist.id }, data: { avatarUrl: realAvatarUrl } })
+    const artistCookie = await sessionCookieFor(prisma, artist.id)
+
+    vi.mocked(putObjectText).mockClear()
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie: artistCookie },
+      payload: { displayName: 'New Name' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(putObjectText).not.toHaveBeenCalled()
   })
 
   it('PATCH /api/me/channel/meta-stream toggles opt-out', async () => {
