@@ -45,6 +45,15 @@ Tahti ships a **channel-first** product: listeners discover and play artist chan
 
 Both clients talk to the same API, chat, and media stack. Prefer the Nuclear beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Channel page](docs/e2e-screenshots/public/channel.png) Channel page - archive rotation, releases, live chat | ![Artist dashboard](docs/e2e-screenshots/artist/dashboard.png) Artist dashboard |
+| ![Governance](docs/e2e-screenshots/artist/governance.png) Member governance - motions, voting, topics, all from the dashboard | ![Collections](docs/e2e-screenshots/artist/collections.png) Collections, each with one-click embed |
+
+More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
+
 ## Package structure
 
 ### Foundation documents (read these to understand the project)
