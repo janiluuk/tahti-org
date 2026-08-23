@@ -30,13 +30,14 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
           take: 500,
           select: {
             slug: true,
-            user: { select: { displayName: true, avatarUrl: true, socialLinks: true } },
+            user: { select: { username: true, displayName: true, avatarUrl: true, socialLinks: true } },
           },
         })
 
         return {
           items: channels.map((ch) => ({
             slug: ch.slug,
+            username: ch.user.username,
             displayName: ch.user.displayName,
             avatarUrl: ch.user.avatarUrl,
             genres: parseSocialLinksGenres(ch.user.socialLinks),

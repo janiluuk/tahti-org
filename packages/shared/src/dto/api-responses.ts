@@ -662,6 +662,7 @@ export type ChannelListResponse = z.infer<typeof ChannelListResponseSchema>
  * currently live/recent ones. */
 export const ChannelDirectoryEntrySchema = z.object({
   slug: z.string(),
+  username: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   genres: z.array(z.string()),

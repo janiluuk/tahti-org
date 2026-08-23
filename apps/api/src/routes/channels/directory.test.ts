@@ -69,8 +69,8 @@ describe('GET /api/v1/channels/directory', () => {
   it('includes an active artist with a public archive item', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/channels/directory' })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { items: Array<{ slug: string }> }
-    expect(body.items.some((i) => i.slug === artistSlug)).toBe(true)
+    const body = res.json() as { items: Array<{ slug: string; username: string }> }
+    expect(body.items.some((item) => item.slug === artistSlug && item.username === `${PREFIX}artist`)).toBe(true)
   })
 
   it('excludes a deleted user’s channel', async () => {
