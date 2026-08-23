@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=NdSp_W1hHsD08Jn1p_UhUSO9-Dmy7aKe",
+    "url": "/verify?token=tIz28nrCxSLPLuQPPZ9hU2bH7jC3_ayW",
     "label": "Verify email (with token)"
   },
   {
@@ -227,7 +227,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmsxi74t7000612tsv94b03l1",
+    "url": "/embed/r/cmt5cdcji0006pmq9cwsz6b24",
     "label": "Embed release player"
   },
   {
@@ -365,6 +365,27 @@
   },
   {
     "role": "artist",
+    "id": "governance",
+    "file": "artist/governance.png",
+    "url": "/dashboard/governance",
+    "label": "Governance (dashboard)"
+  },
+  {
+    "role": "artist",
+    "id": "governance-motions",
+    "file": "artist/governance-motions.png",
+    "url": "/dashboard/governance/motions",
+    "label": "Governance — motions (dashboard)"
+  },
+  {
+    "role": "artist",
+    "id": "governance-feature-requests",
+    "file": "artist/governance-feature-requests.png",
+    "url": "/dashboard/governance/feature-requests",
+    "label": "Governance — topics (dashboard)"
+  },
+  {
+    "role": "artist",
     "id": "settings-account",
     "file": "artist/settings-account.png",
     "url": "/dashboard/settings/account",
@@ -437,7 +458,7 @@
     "role": "artist",
     "id": "release-detail",
     "file": "artist/release-detail.png",
-    "url": "/dashboard/releases/cmsxi74t7000612tsv94b03l1",
+    "url": "/dashboard/releases/cmt5cdcji0006pmq9cwsz6b24",
     "label": "Release detail"
   },
   {
@@ -451,21 +472,21 @@
     "role": "artist",
     "id": "archive-item",
     "file": "artist/archive-item.png",
-    "url": "/dashboard/archive/cmsxi74tx000s12tsin4c1hz9",
+    "url": "/dashboard/archive/cmt5cdck6000spmq924thwdys",
     "label": "Archive item preview"
   },
   {
     "role": "artist",
     "id": "archive-item-editor",
     "file": "artist/archive-item-editor.png",
-    "url": "/dashboard/archive/cmsxi74tx000s12tsin4c1hz9/editor",
+    "url": "/dashboard/archive/cmt5cdck6000spmq924thwdys/editor",
     "label": "Archive item — audio editor"
   },
   {
     "role": "artist",
     "id": "editor-project",
     "file": "artist/editor-project.png",
-    "url": "/dashboard/editor/cmsxi74wl000u12ts0snh52vd",
+    "url": "/dashboard/editor/cmt5cdcmj000upmq9tcihqefo",
     "label": "Editor project"
   },
   {
