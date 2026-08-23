@@ -231,7 +231,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   // artist (not gated on requiresChannel/paid membership here); the page
   // itself shows an upgrade prompt for anyone who isn't a paying member yet.
   {
-    href: '/governance',
+    href: '/dashboard/governance',
     label: 'Governance',
     icon: 'governance',
     isRoute: true,
