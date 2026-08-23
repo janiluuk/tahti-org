@@ -13,6 +13,7 @@ const stats = {
   likes: 18,
   reposts: 4,
   liveDurationSec: 5420,
+  rotationTrackCount: 6,
 }
 
 describe('buildMetricBreakdown', () => {

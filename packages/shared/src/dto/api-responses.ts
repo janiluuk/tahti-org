@@ -211,6 +211,9 @@ export const ChannelManageStatsSchema = z.object({
   reposts: z.number().int(),
   /** Seconds since the current live broadcast started; null when not live. */
   liveDurationSec: z.number().int().nullable(),
+  /** How many archive tracks are flagged for the 24/7 fallback rotation —
+   * 0 means there's nothing to play when the channel isn't actually live. */
+  rotationTrackCount: z.number().int(),
 })
 
 /** Channel page "Manage" tab — transport control acknowledgement (skip/previous/pause/resume). */

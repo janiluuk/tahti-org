@@ -16,6 +16,7 @@ import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
+import { LiveTabContent } from './_live-tab-content'
 import { ChannelGalleryView } from './channel-gallery'
 import { ArchiveItemGallery } from './archive-item-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
@@ -238,6 +239,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : []
 
   const isOwnerOrAdmin = !!user && (user.username === channel.user.username || user.isBoard)
+  // Stricter than isOwnerOrAdmin on purpose — the Stream manager sub-tab reuses
+  // dashboard panels that act on the *session's own* channel (not the slug in
+  // the URL), so it's only safe for the actual owner, not a board admin
+  // viewing someone else's page. See _live-tab-content.tsx.
+  const isTrueOwner = !!user && user.username === channel.user.username
   let manageStats: ManageStats | null = null
   if (isOwnerOrAdmin) {
     const sessionCookie = cookies().get('tahti_session')
@@ -258,7 +264,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   // Only show the Live tab when there's actually a stream to show — otherwise
   // it sits in the tab bar permanently empty. Bio (with a latest-releases
   // preview) is the landing tab the rest of the time (see PublicChannelTabs).
-  const showLiveTab = Boolean(hlsUrl)
+  // The true owner always gets it though, so they can reach Stream manager
+  // (skip/reorder the 24/7 rotation, or check live stats) even while offline.
+  const showLiveTab = Boolean(hlsUrl) || isTrueOwner
   // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
   // actually broadcasting — channel.state is still 'LIVE' while they run, but
   // "LIVE NOW" is misleading here; show the currently-rotating track instead.
@@ -449,48 +457,56 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <PublicChannelTabs
                 live={
                   showLiveTab ? (
-                    <>
-                      {hlsUrl && (
-                        <LivePlayerSection
-                          url={hlsUrl}
-                          slug={slug}
-                          title={
-                            isRotationChannel
-                              ? (channel.nowPlaying?.title ?? channel.user.displayName)
-                              : channel.user.displayName
-                          }
-                          subtitle={
-                            isRotationChannel && channel.nowPlaying
-                              ? channel.nowPlaying.artistName
-                              : undefined
-                          }
-                          subtitleHref={
-                            isRotationChannel && channel.nowPlaying?.artistUsername
-                              ? `/u/${channel.nowPlaying.artistUsername}`
-                              : undefined
-                          }
-                          artworkUrl={
-                            isRotationChannel
-                              ? channel.nowPlaying?.artworkUrl
-                              : channel.user.avatarUrl
-                          }
-                          isReplay={isRotationChannel}
-                          nextUpLabel={
-                            isRotationChannel && channel.nowPlayingNext
-                              ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
-                              : undefined
-                          }
-                          isRotationChannel={isRotationChannel}
-                          colorSchemeJson={channel.colorSchemeJson}
-                          visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
-                          visualSettingsJson={channel.visualSettingsJson}
-                          initialNowPlaying={channel.nowPlaying}
-                          initialNowPlayingNext={channel.nowPlayingNext}
-                        />
-                      )}
-
-                      {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-                    </>
+                    <LiveTabContent
+                      isOwner={isTrueOwner}
+                      slug={slug}
+                      displayName={channel.user.displayName}
+                      isReallyLive={manageStats?.liveDurationSec != null}
+                      rotationTrackCount={manageStats?.rotationTrackCount ?? 0}
+                      listenContent={
+                        hlsUrl ? (
+                          <>
+                            <LivePlayerSection
+                              url={hlsUrl}
+                              slug={slug}
+                              title={
+                                isRotationChannel
+                                  ? (channel.nowPlaying?.title ?? channel.user.displayName)
+                                  : channel.user.displayName
+                              }
+                              subtitle={
+                                isRotationChannel && channel.nowPlaying
+                                  ? channel.nowPlaying.artistName
+                                  : undefined
+                              }
+                              subtitleHref={
+                                isRotationChannel && channel.nowPlaying?.artistUsername
+                                  ? `/u/${channel.nowPlaying.artistUsername}`
+                                  : undefined
+                              }
+                              artworkUrl={
+                                isRotationChannel
+                                  ? channel.nowPlaying?.artworkUrl
+                                  : channel.user.avatarUrl
+                              }
+                              isReplay={isRotationChannel}
+                              nextUpLabel={
+                                isRotationChannel && channel.nowPlayingNext
+                                  ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
+                                  : undefined
+                              }
+                              isRotationChannel={isRotationChannel}
+                              colorSchemeJson={channel.colorSchemeJson}
+                              visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+                              visualSettingsJson={channel.visualSettingsJson}
+                              initialNowPlaying={channel.nowPlaying}
+                              initialNowPlayingNext={channel.nowPlayingNext}
+                            />
+                            {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
+                          </>
+                        ) : null
+                      }
+                    />
                   ) : undefined
                 }
                 archive={
