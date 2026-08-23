@@ -213,6 +213,24 @@ function buildPages(seed) {
     { role: 'artist', id: 'archive', path: '/dashboard/archive', label: 'Archive history' },
     {
       role: 'artist',
+      id: 'governance',
+      path: '/dashboard/governance',
+      label: 'Governance (dashboard)',
+    },
+    {
+      role: 'artist',
+      id: 'governance-motions',
+      path: '/dashboard/governance/motions',
+      label: 'Governance — motions (dashboard)',
+    },
+    {
+      role: 'artist',
+      id: 'governance-feature-requests',
+      path: '/dashboard/governance/feature-requests',
+      label: 'Governance — topics (dashboard)',
+    },
+    {
+      role: 'artist',
       id: 'settings-account',
       path: '/dashboard/settings/account',
       label: 'Settings — account',
