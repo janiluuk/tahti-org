@@ -10,6 +10,7 @@ import { SidebarNavIconSvg } from './SidebarNav'
 import { NotificationBell, type NotificationBellItem } from './NotificationBell'
 import { MessagesBell, type MessagesBellConversation } from './MessagesBell'
 import { GoLiveStatus } from './GoLiveStatus'
+import { UpcomingShowNotice, type UpcomingShowInfo } from './UpcomingShowNotice'
 import { HelpTourButton } from './HelpTourButton'
 import { getStudioTourSteps } from './tour-steps'
 
@@ -24,6 +25,9 @@ type StudioTopNavProps = {
   /** Artist-set "next broadcast" hint — shown as a countdown in the go-live
    * popover when set and still in the future. */
   nextBroadcastAt?: string | null
+  /** Soonest booked-but-not-live show — a Tahti Radio slot or an episode on
+   * the artist's own channel schedule, whichever comes first. */
+  nextUpcomingShow?: UpcomingShowInfo | null
   isBoard?: boolean
   hasChannel?: boolean
   channelUrl?: string
@@ -113,6 +117,7 @@ export function StudioTopNav({
   isReallyLive,
   goneLiveAt,
   nextBroadcastAt,
+  nextUpcomingShow,
   isBoard,
   hasChannel,
   channelUrl,
@@ -164,6 +169,7 @@ export function StudioTopNav({
       </div>
       <div className="studio-top-nav__actions">
         <div className="studio-top-nav__scroll-links">
+          {displayName && nextUpcomingShow && <UpcomingShowNotice show={nextUpcomingShow} />}
           {isBoard && (
             <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
               <IconSwitch />

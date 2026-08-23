@@ -11,6 +11,7 @@ import { resolveChannelUrl } from '@/lib/app-url'
 import { logout } from '@/app/auth/actions'
 import { fetchMyNotifications, markAllNotificationsRead } from './notification-actions'
 import { fetchConversations } from './messages/actions'
+import { fetchNextUpcomingShow } from './_upcoming-show-actions'
 import { StudioShellClient } from './_studio-shell-client'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
@@ -26,6 +27,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isBoard = user?.isBoard ?? false
   const hasChannel = Boolean(user?.channel)
   const channelUrl = user?.channel ? resolveChannelUrl(user.channel.slug) : undefined
+  // Both possible sources (a Tahti Radio slot, an episode on your own
+  // schedule) require a channel to have booked anything in the first place.
+  const nextUpcomingShow = hasChannel ? await fetchNextUpcomingShow() : null
 
   return (
     <StudioShellClient
@@ -34,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       isReallyLive={isReallyLive}
       goneLiveAt={user?.channel?.goneLiveAt ?? null}
       nextBroadcastAt={user?.channel?.nextBroadcastAt ?? null}
+      nextUpcomingShow={nextUpcomingShow}
       isBoard={isBoard}
       hasChannel={hasChannel}
       channelUrl={channelUrl}

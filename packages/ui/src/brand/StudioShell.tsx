@@ -7,6 +7,7 @@ import { StudioTopNav } from './StudioTopNav'
 import { StudioMobileNav } from './StudioMobileNav'
 import type { NotificationBellItem } from './NotificationBell'
 import type { MessagesBellConversation } from './MessagesBell'
+import type { UpcomingShowInfo } from './UpcomingShowNotice'
 
 type StudioShellProps = {
   children: ReactNode
@@ -17,6 +18,7 @@ type StudioShellProps = {
   isReallyLive?: boolean
   goneLiveAt?: string | null
   nextBroadcastAt?: string | null
+  nextUpcomingShow?: UpcomingShowInfo | null
   isBoard?: boolean
   hasChannel?: boolean
   channelUrl?: string
@@ -38,6 +40,7 @@ export function StudioShell({
   isReallyLive,
   goneLiveAt,
   nextBroadcastAt,
+  nextUpcomingShow,
   isBoard,
   hasChannel = true,
   channelUrl,
@@ -55,6 +58,7 @@ export function StudioShell({
         isReallyLive={isReallyLive}
         goneLiveAt={goneLiveAt}
         nextBroadcastAt={nextBroadcastAt}
+        nextUpcomingShow={nextUpcomingShow}
         isBoard={isBoard}
         hasChannel={hasChannel}
         channelUrl={channelUrl}
