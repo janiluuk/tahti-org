@@ -104,9 +104,13 @@ async function uploadBlob(
 interface Props {
   initial: ChannelIdentityDraft
   onDraftChange?: (draft: ChannelIdentityDraft) => void
+  /** Switches the name field's label to "Collective name" — defaults to the
+   * solo-artist label when the caller doesn't pass this (e.g. older callers
+   * that predate the act-type selector). */
+  artistKind?: 'SINGLE' | 'COLLECTIVE'
 }
 
-export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) {
+export default function ChannelIdentityPanel({ initial, onDraftChange, artistKind }: Props) {
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
   const [avatarPosterUrl, setAvatarPosterUrl] = useState(initial.avatarPosterUrl ?? '')
@@ -351,7 +355,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     <>
       <div className="studio-field--block">
         <label className="studio-label" htmlFor="identity-display-name">
-          Artist name
+          {artistKind === 'COLLECTIVE' ? 'Collective name' : 'Artist name'}
         </label>
         <input
           id="identity-display-name"

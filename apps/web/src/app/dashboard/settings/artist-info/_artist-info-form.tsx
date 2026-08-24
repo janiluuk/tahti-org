@@ -159,7 +159,11 @@ export function ArtistInfoForm({
             description="Name, image, logo, location, and the genres that define you."
           >
             <div className="artist-info-identity-fields">
-              <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
+              <ChannelIdentityPanel
+                initial={identity}
+                onDraftChange={setIdentity}
+                artistKind={artistKind}
+              />
             </div>
           </Panel>
         </StudioTabs.Panel>
