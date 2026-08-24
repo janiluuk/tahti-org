@@ -346,30 +346,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const otherCollections = collections.filter(
     (c) => c.style !== 'DJ_SET_SERIES' && c.style !== 'PLAYLIST',
   )
-  const pinnedItems = [
-    ...releases
-      .filter((r) => r.pinned)
-      .map((r) => ({
-        kind: 'release' as const,
-        id: r.id,
-        title: r.title,
-        subtitle: r.type,
-        coverUrl: r.artworkUrl,
-        href: `/r/${r.smartLinkSlug}`,
-        pinnedAt: r.pinnedAt ?? null,
-      })),
-    ...tracks
-      .filter((t) => t.pinned)
-      .map((t) => ({
-        kind: 'track' as const,
-        id: t.id,
-        title: t.title,
-        subtitle: 'Track',
-        coverUrl: t.bannerUrl,
-        href: t.channelItemUrl,
-        pinnedAt: t.pinnedAt,
-      })),
-  ].sort((a, b) => (b.pinnedAt ?? '').localeCompare(a.pinnedAt ?? ''))
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
@@ -406,26 +382,27 @@ export default async function ArtistProfilePage({ params }: { params: { username
           ),
       ]
     : []
-  const latestMusic = [
-    ...releases.map((release) => ({
-      id: `release-${release.id}`,
-      title: release.title,
-      subtitle: release.type.replace(/_/g, ' '),
-      coverUrl: release.artworkUrl,
-      href: `/r/${release.smartLinkSlug}`,
-      date: release.releaseDate,
-    })),
-    ...tracks.map((track) => ({
-      id: `track-${track.id}`,
-      title: track.title,
-      subtitle: track.artistName?.trim() || 'Track',
-      coverUrl: track.bannerUrl,
-      href: track.channelItemUrl,
-      date: track.createdAt,
-    })),
+  // Music tab: pinned releases get their own (non-playable — a release isn't
+  // a single stream) card row; pinned + most-recent individual tracks reuse
+  // TracksTab as-is so they're playable exactly like the Releases tab's full
+  // list, instead of the old plain-link cards this used to be.
+  const pinnedReleases = releases.filter((r) => r.pinned)
+  const pinnedTracks = tracks.filter((t) => t.pinned)
+  const latestTracks = [...tracks]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 5)
+  const musicTabTracks = [
+    ...pinnedTracks,
+    ...latestTracks.filter((t) => !t.pinned),
   ]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 3)
+  // Tahti Releases first, then everything else — same items as before, the
+  // formal-release section just leads instead of trailing behind DJ mixes/
+  // playlists/collections/individual tracks.
+  const hasOtherReleaseContent =
+    tracks.length > 0 ||
+    djMixCollections.length > 0 ||
+    playlistCollections.length > 0 ||
+    otherCollections.length > 0
   const nextEvent = events[0]
   const nextShow = upcomingShows[0]
   const showIsNext =
@@ -556,6 +533,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
             count={artist.followingCount ?? null}
           />
         </div>
+        {/* Default view — always visible, not tab-gated: bio, then feed
+            right below it, per the profile redesign. */}
         {artist.bio && (
           <section className="prof-section">
             <div className="prof-sec-label">Biography</div>
@@ -567,6 +546,10 @@ export default async function ArtistProfilePage({ params }: { params: { username
             ) : null}
           </section>
         )}
+        <section className="prof-section">
+          <div className="prof-sec-label">Feed</div>
+          <ProfileFeed posts={posts} releases={releases} />
+        </section>
         {nextAppearance && (
           <section className="prof-section">
             <div className="prof-main-upcoming">
@@ -577,244 +560,134 @@ export default async function ArtistProfilePage({ params }: { params: { username
             </div>
           </section>
         )}
-        {latestMusic.length > 0 && (
+        {pressKitImages.length > 0 && (
           <section className="prof-section">
-            <div className="prof-sec-label">Latest music</div>
-            <ul className="prof-list prof-collection-list">
-              {latestMusic.map((item) => (
-                <li key={item.id}>
-                  {item.href ? (
-                    <Link href={item.href} className="prof-collection-row">
-                      <div className="prof-collection-cover">
-                        {item.coverUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.coverUrl} alt="" width={76} height={76} />
-                        ) : (
-                          <span className="prof-collection-cover-ph" aria-hidden />
-                        )}
-                      </div>
-                      <div>
-                        <div className="prof-collection-title">{item.title}</div>
-                        <div className="prof-list-meta prof-list-meta--strong">{item.subtitle}</div>
-                      </div>
-                    </Link>
+            <div className="prof-sec-label">Press kit</div>
+            <PressKitGallery images={pressKitImages} />
+          </section>
+        )}
+        {discoWidgets.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Widgets</div>
+            {discoWidgets.map((w) => (
+              <DiscoWidgetFrame
+                key={w.installId}
+                sandboxUrl={w.sandboxUrl}
+                name={w.name}
+                context={w.context}
+                config={w.config}
+              />
+            ))}
+          </section>
+        )}
+        {members.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">
+              {channel?.artistKind === 'COLLECTIVE' ? 'Members' : 'Credits'}
+            </div>
+            <ul className="prof-members-list">
+              {members.map((m) => (
+                <li key={m.id} className="prof-members-list__item">
+                  {m.pictureUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.pictureUrl} alt="" className="prof-members-list__picture" />
                   ) : (
-                    <div className="prof-collection-row">
-                      <div className="prof-collection-cover">
-                        <span className="prof-collection-cover-ph" aria-hidden />
-                      </div>
-                      <div>
-                        <div className="prof-collection-title">{item.title}</div>
-                        <div className="prof-list-meta prof-list-meta--strong">{item.subtitle}</div>
-                      </div>
+                    <div
+                      className="prof-members-list__picture prof-members-list__picture--ph"
+                      aria-hidden
+                    >
+                      {m.name.trim().charAt(0).toUpperCase()}
                     </div>
                   )}
+                  <div className="prof-members-list__name">{m.name}</div>
+                  <div className="prof-members-list__role">{m.role}</div>
                 </li>
               ))}
             </ul>
           </section>
         )}
-        <ProfileTabs
-          stage={
-            <>
-              {pinnedItems.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Pinned</div>
-                  <ul className="prof-list prof-collection-list">
-                    {pinnedItems.map((p) => (
-                      <li key={`${p.kind}-${p.id}`}>
-                        {p.href ? (
-                          <Link href={p.href} className="prof-collection-row">
-                            <div className="prof-collection-cover">
-                              {p.coverUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={p.coverUrl} alt="" width={76} height={76} />
-                              ) : (
-                                <span
-                                  className="prof-collection-cover-ph"
-                                  style={{ background: themeBackground }}
-                                  aria-hidden
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <div className="prof-collection-title">{p.title}</div>
-                              <div className="prof-list-meta prof-list-meta--strong">
-                                {p.subtitle}
-                              </div>
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="prof-collection-row">
-                            <div className="prof-collection-cover">
-                              {p.coverUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={p.coverUrl} alt="" width={76} height={76} />
-                              ) : (
-                                <span
-                                  className="prof-collection-cover-ph"
-                                  style={{ background: themeBackground }}
-                                  aria-hidden
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <div className="prof-collection-title">{p.title}</div>
-                              <div className="prof-list-meta prof-list-meta--strong">
-                                {p.subtitle}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {pressKitImages.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Press kit</div>
-                  <PressKitGallery images={pressKitImages} />
-                </section>
-              )}
-
-              {discoWidgets.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Widgets</div>
-                  {discoWidgets.map((w) => (
-                    <DiscoWidgetFrame
-                      key={w.installId}
-                      sandboxUrl={w.sandboxUrl}
-                      name={w.name}
-                      context={w.context}
-                      config={w.config}
-                    />
-                  ))}
-                </section>
-              )}
-
-              {members.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">
-                    {channel?.artistKind === 'COLLECTIVE' ? 'Members' : 'Credits'}
-                  </div>
-                  <ul className="prof-members-list">
-                    {members.map((m) => (
-                      <li key={m.id} className="prof-members-list__item">
-                        {m.pictureUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={m.pictureUrl} alt="" className="prof-members-list__picture" />
-                        ) : (
-                          <div
-                            className="prof-members-list__picture prof-members-list__picture--ph"
-                            aria-hidden
-                          >
-                            {m.name.trim().charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="prof-members-list__name">{m.name}</div>
-                        <div className="prof-members-list__role">{m.role}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {embeds.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Listen on SoundCloud</div>
-                  <div className="ch-embeds-list">
-                    {embeds.map((e) => (
-                      <iframe
-                        key={e.id}
-                        title={e.title ?? 'SoundCloud track'}
-                        className="ch-embeds-list__frame"
-                        scrolling="no"
-                        frameBorder="no"
-                        allow="autoplay"
-                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {(() => {
-                const kickUrl = artist.socialLinks?.kick
-                const kickUsername = kickUrl ? kickUsernameFromUrl(kickUrl) : null
-                if (!kickUsername) return null
-                return (
-                  <section className="prof-section">
-                    <div className="prof-sec-label">Live on Kick</div>
-                    <div className="ch-embeds-list">
-                      <iframe
-                        title="Kick channel"
-                        className="ch-embeds-list__frame ch-embeds-list__frame--kick"
-                        frameBorder="no"
-                        allowFullScreen
-                        src={`https://player.kick.com/${kickUsername}`}
-                      />
-                    </div>
-                  </section>
-                )
-              })()}
-
-            </>
-          }
-          feed={
+        {embeds.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Listen on SoundCloud</div>
+            <div className="ch-embeds-list">
+              {embeds.map((e) => (
+                <iframe
+                  key={e.id}
+                  title={e.title ?? 'SoundCloud track'}
+                  className="ch-embeds-list__frame"
+                  scrolling="no"
+                  frameBorder="no"
+                  allow="autoplay"
+                  src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+        {(() => {
+          const kickUrl = artist.socialLinks?.kick
+          const kickUsername = kickUrl ? kickUsernameFromUrl(kickUrl) : null
+          if (!kickUsername) return null
+          return (
             <section className="prof-section">
-              <div className="prof-sec-label">Feed</div>
-              <ProfileFeed posts={posts} releases={releases} />
+              <div className="prof-sec-label">Live on Kick</div>
+              <div className="ch-embeds-list">
+                <iframe
+                  title="Kick channel"
+                  className="ch-embeds-list__frame ch-embeds-list__frame--kick"
+                  frameBorder="no"
+                  allowFullScreen
+                  src={`https://player.kick.com/${kickUsername}`}
+                />
+              </div>
             </section>
-          }
-          tracks={
+          )
+        })()}
+        {/* Tabs sit right below the always-visible intro above. */}
+        <ProfileTabs
+          music={
             <>
-              {djMixCollections.length > 0 && (
+              {pinnedReleases.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">DJ mixes</div>
-                    <div className="prof-sec-count">{djMixCollections.length} total</div>
+                    <div className="prof-sec-label">Pinned</div>
                   </div>
-                  <CollectionRowList items={djMixCollections} />
-                </section>
-              )}
-              {playlistCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Playlists</div>
-                    <div className="prof-sec-count">{playlistCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={playlistCollections} />
-                </section>
-              )}
-              {otherCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Collections</div>
-                    <div className="prof-sec-count">{otherCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={otherCollections} />
+                  <ReleasesGrid releases={pinnedReleases} />
                 </section>
               )}
               <section className="prof-section">
-                <TracksTab
-                  tracks={tracks}
-                  isOwner={isOwner}
-                  channelSlug={channel?.slug ?? null}
-                  username={artist.username}
-                />
+                <div className="prof-sec-label-row">
+                  <div className="prof-sec-label">
+                    {pinnedTracks.length > 0 ? 'Pinned & latest tracks' : 'Latest tracks'}
+                  </div>
+                </div>
+                {musicTabTracks.length === 0 ? (
+                  <div className="public-empty-card">
+                    <p className="public-empty-card__text">No tracks yet.</p>
+                  </div>
+                ) : (
+                  <TracksTab
+                    tracks={musicTabTracks}
+                    isOwner={isOwner}
+                    channelSlug={channel?.slug ?? null}
+                    username={artist.username}
+                  />
+                )}
               </section>
-              {/* Only formal multi-track Release albums/EPs belong here — an artist
-                  with individual uploaded tracks (shown in TracksTab above) but no
-                  formal Release isn't "missing" anything, so skip the discouraging
-                  "No published releases yet" card once there's already content on
-                  this tab. It only appears when the tab would otherwise be empty. */}
-              {(releases.length > 0 ||
-                (tracks.length === 0 &&
-                  djMixCollections.length === 0 &&
-                  playlistCollections.length === 0 &&
-                  otherCollections.length === 0)) && (
+            </>
+          }
+          releases={
+            <>
+              {/* Tahti Releases leads — formal albums/EPs first, then
+                  everything else (DJ mixes, playlists, collections,
+                  individual tracks). Only formal multi-track Release
+                  albums/EPs belong in this first section — an artist with
+                  individual uploaded tracks (shown in TracksTab below) but no
+                  formal Release isn't "missing" anything, so skip the
+                  discouraging "No published releases yet" card once there's
+                  already content further down this tab. It only appears when
+                  the tab would otherwise be entirely empty. */}
+              {(releases.length > 0 || !hasOtherReleaseContent) && (
                 <section className="prof-section">
                   <div className="prof-sec-label-row">
                     <div className="prof-sec-label">Tahti Releases</div>
@@ -853,6 +726,43 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   ) : (
                     <ReleasesGrid releases={releases} />
                   )}
+                </section>
+              )}
+              {djMixCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">DJ mixes</div>
+                    <div className="prof-sec-count">{djMixCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={djMixCollections} />
+                </section>
+              )}
+              {playlistCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Playlists</div>
+                    <div className="prof-sec-count">{playlistCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={playlistCollections} />
+                </section>
+              )}
+              {otherCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Collections</div>
+                    <div className="prof-sec-count">{otherCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={otherCollections} />
+                </section>
+              )}
+              {tracks.length > 0 && (
+                <section className="prof-section">
+                  <TracksTab
+                    tracks={tracks}
+                    isOwner={isOwner}
+                    channelSlug={channel?.slug ?? null}
+                    username={artist.username}
+                  />
                 </section>
               )}
             </>

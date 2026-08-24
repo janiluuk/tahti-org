@@ -7,54 +7,37 @@ import { useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { ProfileTabSwitchProvider } from './_profile-tab-context'
 
-type Tab = 'stage' | 'feed' | 'tracks'
+type Tab = 'music' | 'releases'
 
 const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'stage', label: 'Home' },
-  { id: 'feed', label: 'Feed' },
-  { id: 'tracks', label: 'Releases' },
+  { id: 'music', label: 'Music' },
+  { id: 'releases', label: 'Releases' },
 ]
 
 const HELP_STEPS: HelpSpotlightStep[] = [
   {
-    id: 'stage',
-    label: 'Home',
-    description:
-      'The artist’s bio, latest releases, upcoming shows and events, pinned highlights, press kit, band members, and links to other platforms — everything that introduces who they are, in one scroll.',
+    id: 'music',
+    label: 'Music',
+    description: 'Pinned highlights and the artist’s most recently published music.',
   },
   {
-    id: 'feed',
-    label: 'Feed',
-    description:
-      'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements about new music or shows.',
-  },
-  {
-    id: 'tracks',
+    id: 'releases',
     label: 'Releases',
     description:
       'Every release, DJ mix, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
   },
 ]
 
-export function ProfileTabs({
-  stage,
-  feed,
-  tracks,
-}: {
-  stage: ReactNode
-  feed: ReactNode
-  tracks: ReactNode
-}) {
-  const [active, setActiveState] = useState<Tab>('tracks')
+export function ProfileTabs({ music, releases }: { music: ReactNode; releases: ReactNode }) {
+  const [active, setActiveState] = useState<Tab>('music')
 
   function setActive(tab: Tab) {
     setActiveState(tab)
   }
 
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
-    stage: null,
-    feed: null,
-    tracks: null,
+    music: null,
+    releases: null,
   })
 
   return (
@@ -82,30 +65,21 @@ export function ProfileTabs({
         </div>
         <div
           className="prof-tabs__panel"
-          hidden={active !== 'stage'}
+          hidden={active !== 'music'}
           ref={(el) => {
-            panelRefs.current.stage = el
+            panelRefs.current.music = el
           }}
         >
-          {stage}
+          {music}
         </div>
         <div
           className="prof-tabs__panel"
-          hidden={active !== 'feed'}
+          hidden={active !== 'releases'}
           ref={(el) => {
-            panelRefs.current.feed = el
+            panelRefs.current.releases = el
           }}
         >
-          {feed}
-        </div>
-        <div
-          className="prof-tabs__panel"
-          hidden={active !== 'tracks'}
-          ref={(el) => {
-            panelRefs.current.tracks = el
-          }}
-        >
-          {tracks}
+          {releases}
         </div>
       </ProfileTabSwitchProvider>
     </div>

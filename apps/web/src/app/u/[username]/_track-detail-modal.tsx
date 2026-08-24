@@ -87,10 +87,9 @@ export function TrackDetailModal({
   }, [onClose])
 
   function viewArtistBio() {
-    if (switchTab) {
-      switchTab('stage')
-      onClose()
-    }
+    // Bio is always visible on the page now (not tab-gated) — just close the
+    // modal so it's right there behind it.
+    onClose()
   }
 
   return (
