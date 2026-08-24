@@ -163,6 +163,13 @@
 .ui-field {
   display: block;
   margin-bottom: var(--tahti-space-4);
+  /* Grid/flex items default to min-width:auto (their content's min-content
+   * width) unless overridden — a long hint string (e.g. the handle field's
+   * "your-handle.tahti.live" URL preview) can then force a 2-column grid row
+   * (.signup-password-row and similar) wider than its container instead of
+   * wrapping. Firefox enforces this intrinsic sizing more consistently than
+   * Chromium, which is why this only visibly overflows there. */
+  min-width: 0;
 }
 
 .ui-label {
@@ -2392,6 +2399,8 @@
     border-color 0.15s,
     background 0.15s;
   position: relative;
+  /* grid item — see .ui-field for why this must not be the min-width:auto default */
+  min-width: 0;
 }
 
 .signup-tier-card:hover {
