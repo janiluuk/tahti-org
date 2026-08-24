@@ -2,13 +2,28 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { NotificationListSchema, openApiResponse } from '@tahti/shared'
+import { IdParamSchema, NotificationListSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const NOTIFICATION_LIMIT = 30
 
+const NOTIFICATION_SELECT = {
+  id: true,
+  type: true,
+  title: true,
+  body: true,
+  url: true,
+  readAt: true,
+  sticky: true,
+  createdAt: true,
+  actor: { select: { username: true, displayName: true, avatarUrl: true } },
+} as const
+
 const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /api/me/notifications — most recent notifications + unread count
+  // GET /api/me/notifications — most recent notifications + unread count.
+  // ?stickyOnly=true returns unread sticky notifications only (unbounded by
+  // NOTIFICATION_LIMIT — see StickyNotificationBanner), for the dashboard's
+  // must-dismiss banner, kept separate from the ordinary bell's list.
   fastify.get(
     '/api/me/notifications',
     {
@@ -21,21 +36,16 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const stickyOnly = (request.query as { stickyOnly?: string })?.stickyOnly === 'true'
+
       const [notifications, unreadCount] = await Promise.all([
         fastify.prisma.notification.findMany({
-          where: { userId: user.id },
+          where: stickyOnly
+            ? { userId: user.id, sticky: true, readAt: null }
+            : { userId: user.id },
           orderBy: { createdAt: 'desc' },
-          take: NOTIFICATION_LIMIT,
-          select: {
-            id: true,
-            type: true,
-            title: true,
-            body: true,
-            url: true,
-            readAt: true,
-            createdAt: true,
-            actor: { select: { username: true, displayName: true, avatarUrl: true } },
-          },
+          ...(stickyOnly ? {} : { take: NOTIFICATION_LIMIT }),
+          select: NOTIFICATION_SELECT,
         }),
         fastify.prisma.notification.count({ where: { userId: user.id, readAt: null } }),
       ])
@@ -61,6 +71,25 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
         where: { userId: user.id, readAt: null },
         data: { readAt: new Date() },
       })
+      return reply.status(204).send()
+    },
+  )
+
+  // PATCH /api/me/notifications/:id/read — dismiss exactly one notification.
+  // Needed for sticky notifications: opening the bell marks everything read,
+  // which would silently clear a sticky banner nobody actually dismissed.
+  fastify.patch(
+    '/api/me/notifications/:id/read',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const { count } = await fastify.prisma.notification.updateMany({
+        where: { id: routeParams.id, userId: request.sessionUser!.id },
+        data: { readAt: new Date() },
+      })
+      if (count === 0) return reply.status(404).send({ error: 'Notification not found' })
       return reply.status(204).send()
     },
   )

@@ -9,8 +9,13 @@ import '@tahti/ui/src/styles/shells.css'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { logout } from '@/app/auth/actions'
-import { fetchMyNotifications, markAllNotificationsRead } from './notification-actions'
+import {
+  fetchMyNotifications,
+  fetchMyStickyNotifications,
+  markAllNotificationsRead,
+} from './notification-actions'
 import { StudioShellClient } from './_studio-shell-client'
+import { StickyNotificationBanner } from './_sticky-notification-banner'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -25,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isBoard = user?.isBoard ?? false
   const hasChannel = Boolean(user?.channel)
   const channelUrl = user?.channel ? resolveChannelUrl(user.channel.slug) : undefined
+  const stickyNotifications = user ? await fetchMyStickyNotifications() : []
 
   return (
     <StudioShellClient
@@ -39,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       markNotificationsRead={markAllNotificationsRead}
       logoutAction={logout}
     >
+      <StickyNotificationBanner initial={stickyNotifications} />
       {children}
     </StudioShellClient>
   )

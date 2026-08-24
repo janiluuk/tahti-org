@@ -63,3 +63,22 @@ export async function deleteNewsPost(id: string): Promise<{ error: string | null
   revalidatePath('/admin/news')
   return { error: null }
 }
+
+export async function sendTestNotification(params: {
+  targetUsername: string
+  title: string
+  body?: string
+  url?: string
+}): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/notifications/test`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Send failed' }
+  }
+  return { error: null }
+}

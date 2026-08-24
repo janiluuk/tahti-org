@@ -8,6 +8,7 @@ import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
 import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-trim.js'
+import { processOpenThemePullRequestJob } from './jobs/open-theme-pull-request.js'
 import { processSeparateStemsJob } from './jobs/separate-stems.js'
 import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
@@ -102,6 +103,8 @@ const worker = new Worker(
         await processRenderArchiveEditJob(job)
       } else if (job.name === 'render-announcement-trim') {
         await processRenderAnnouncementTrimJob(job)
+      } else if (job.name === 'open-theme-pull-request') {
+        await processOpenThemePullRequestJob(job)
       } else if (job.name === 'separate-stems') {
         await processSeparateStemsJob(job)
       } else if (job.name === 'sweep-expired-stems') {

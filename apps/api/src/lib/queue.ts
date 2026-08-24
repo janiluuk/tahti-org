@@ -212,3 +212,17 @@ export async function enqueueWarmArchiveFallbackCache(channelId: string): Promis
     },
   )
 }
+
+export interface OpenThemePullRequestJob {
+  themeId: string
+}
+
+export async function enqueueOpenThemePullRequest(
+  payload: OpenThemePullRequestJob,
+): Promise<void> {
+  await mediaQueue.add('open-theme-pull-request', payload, {
+    jobId: `open-theme-pull-request-${payload.themeId}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 10_000 },
+  })
+}

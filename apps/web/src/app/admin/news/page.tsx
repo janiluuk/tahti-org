@@ -3,6 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { NewsPanel, type AdminNewsPostRow } from './news-panel'
+import { NewsTabs } from './_news-tabs'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -24,7 +25,7 @@ export default async function AdminNewsPage() {
         Posts shown on the homepage news feed. Every post carries a byline of who wrote it — drafts
         stay hidden from the public feed until published.
       </p>
-      <NewsPanel posts={posts} />
+      <NewsTabs newsPanel={<NewsPanel posts={posts} />} />
     </>
   )
 }

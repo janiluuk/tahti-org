@@ -32,3 +32,23 @@ export async function markAllNotificationsRead(): Promise<void> {
     cache: 'no-store',
   })
 }
+
+/** Unread sticky notifications only — a separate must-dismiss banner from
+ * the ordinary bell dropdown, which never marks these read just by opening. */
+export async function fetchMyStickyNotifications(): Promise<NotificationView[]> {
+  const res = await fetch(`${apiUrl}/api/me/notifications?stickyOnly=true`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  const data = (await res.json()) as { notifications: NotificationView[] }
+  return data.notifications
+}
+
+export async function dismissNotification(id: string): Promise<void> {
+  await fetch(`${apiUrl}/api/me/notifications/${id}/read`, {
+    method: 'PATCH',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+}
