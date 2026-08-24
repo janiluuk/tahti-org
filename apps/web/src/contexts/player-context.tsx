@@ -152,6 +152,10 @@ interface PlayerContextValue extends PlayerState {
   toggleShuffle: () => void
   /** Appends to the queue — starts one from the current track if none exists yet. */
   addToQueue: (track: PlayerTrack) => boolean
+  /** Bumps by 1 every time addToQueue actually adds something (not on a no-op
+   * duplicate) — the queue-toggle button in mini-player.tsx watches this to
+   * flash regardless of which page/button triggered the add. */
+  queueFlashSignal: number
   removeFromQueue: (trackId: string) => void
   /** Drops every not-yet-played track, keeping only the one currently loaded. */
   clearQueue: () => void
@@ -212,6 +216,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, volume: readStoredVolume(), muted: readStoredMuted() }))
   }, [])
   const [queue, setQueue] = useState<PlayerTrack[]>([])
+  const [queueFlashSignal, setQueueFlashSignal] = useState(0)
   const [history, setHistory] = useState<PlayerTrack[]>([])
   const [repeat, setRepeat] = useState(false)
   const [shuffle, setShuffle] = useState(false)
@@ -681,6 +686,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const next = [...base, track]
       queueRef.current = next
       setQueue(next)
+      setQueueFlashSignal((n) => n + 1)
       return true
     },
     [state.track],
@@ -801,6 +807,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       shuffle,
       toggleShuffle,
       addToQueue,
+      queueFlashSignal,
       removeFromQueue,
       clearQueue,
       reorderUpNext,
@@ -828,6 +835,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       shuffle,
       toggleShuffle,
       addToQueue,
+      queueFlashSignal,
       removeFromQueue,
       clearQueue,
       reorderUpNext,

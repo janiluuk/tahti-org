@@ -12140,6 +12140,12 @@
   cursor: pointer;
 }
 
+[data-tahti-ui='studio'] .catalog-playback-buttons button:disabled {
+  opacity: 0.45;
+  color: var(--muted);
+  cursor: default;
+}
+
 [data-tahti-ui='studio'] .stats-view-tabs {
   display: flex;
   gap: var(--space-4);

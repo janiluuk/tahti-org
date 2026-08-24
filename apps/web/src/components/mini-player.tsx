@@ -694,9 +694,20 @@ export function MiniPlayer() {
     load,
     setVolume,
     toggleMute,
+    queueFlashSignal,
   } = usePlayer()
   const [queueOpen, setQueueOpen] = useState(false)
   const [queueClosing, setQueueClosing] = useState(false)
+  const [queueFlash, setQueueFlash] = useState(false)
+
+  // Pulse the queue-toggle button whenever anything is added to the queue —
+  // from this component or from any other page's "add to queue" button.
+  useEffect(() => {
+    if (queueFlashSignal === 0) return
+    setQueueFlash(true)
+    const timer = setTimeout(() => setQueueFlash(false), 700)
+    return () => clearTimeout(timer)
+  }, [queueFlashSignal])
   const [addToOpen, setAddToOpen] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -1102,7 +1113,7 @@ export function MiniPlayer() {
           )}
           <button
             type="button"
-            className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}`}
+            className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}${queueFlash ? ' mini-player__queue-toggle--flash' : ''}`}
             onClick={() => {
               if (queueOpen) {
                 closeQueue()

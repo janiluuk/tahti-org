@@ -1337,6 +1337,14 @@
   border-color: color-mix(in srgb, var(--cyan) 65%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-archive-controls__queue--pulsing {
+  opacity: 0.45;
+  background: var(--card2);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+}
+
 [data-tahti-ui='brand'] .ch-archive-more {
   position: relative;
   margin-left: auto;
@@ -7902,4 +7910,10 @@ html.gpu-limited [data-tahti-ui='brand'] .ch-player-art-backdrop {
   background: transparent;
   color: var(--text);
   cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .catalog-playback-buttons button:disabled {
+  opacity: 0.45;
+  color: var(--muted);
+  cursor: default;
 }

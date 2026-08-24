@@ -5,6 +5,7 @@
 
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { useToast } from '@/contexts/toast-context'
+import { useMomentaryPulse } from '@/lib/use-momentary-pulse'
 
 export type CatalogPlaybackTrack = {
   id: string
@@ -24,6 +25,7 @@ export function CatalogPlaybackButtons({
 }) {
   const { track, playing, load, togglePlay, addToQueue } = usePlayer()
   const { showToast } = useToast()
+  const [queuePulsing, pulseQueue] = useMomentaryPulse()
   const playerTrack = toPlayerTrack(item)
   const isCurrent = track?.id === playerTrack.id
 
@@ -39,6 +41,7 @@ export function CatalogPlaybackButtons({
   }
 
   function enqueue() {
+    pulseQueue()
     const added = addToQueue(playerTrack)
     showToast(
       added ? `Added “${item.title}” to the queue.` : `“${item.title}” is already in the queue.`,
@@ -59,6 +62,7 @@ export function CatalogPlaybackButtons({
       <button
         type="button"
         onClick={enqueue}
+        disabled={queuePulsing}
         title="Add to queue"
         aria-label={`Add ${item.title} to queue`}
       >
