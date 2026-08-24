@@ -5480,6 +5480,89 @@
   background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
 }
 
+/* Each tier is its own clearly separated card, not a row in a dense list —
+ * a per-tier accent color (cycled in the component, not meaning-bound to
+ * any one tier) instead of one uniform gray gives the page some life. */
+[data-tahti-ui='studio'] .fan-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-tahti-ui='studio'] .fan-tier-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--tier-accent, var(--purple));
+  background: var(--card);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card--inactive {
+  opacity: 0.6;
+}
+
+[data-tahti-ui='studio'] .fan-tier-card--purple {
+  --tier-accent: var(--purple);
+}
+[data-tahti-ui='studio'] .fan-tier-card--cyan {
+  --tier-accent: var(--cyan);
+}
+[data-tahti-ui='studio'] .fan-tier-card--amber {
+  --tier-accent: var(--amber);
+}
+[data-tahti-ui='studio'] .fan-tier-card--green {
+  --tier-accent: var(--green);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__name {
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__price {
+  font-size: var(--text-sm);
+  color: var(--tier-accent, var(--purple));
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__side {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__status {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .fan-tier-card__status--active {
+  color: var(--green);
+}
+
 [data-tahti-ui='studio'] .account-hero {
   display: flex;
   align-items: center;

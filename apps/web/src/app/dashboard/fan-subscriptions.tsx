@@ -30,6 +30,10 @@ function eur(cents: number): string {
   return `€${(cents / 100).toFixed(2)}`
 }
 
+// Cycled per tier, in list order — a little visual variety instead of every
+// tier card looking identical, while staying inside the brand palette.
+const TIER_ACCENTS = ['purple', 'cyan', 'amber', 'green'] as const
+
 export default function FanSubscriptionsPanel({
   initial,
   username,
@@ -228,26 +232,34 @@ export default function FanSubscriptionsPanel({
             {initial.length === 0 && <p className="studio-empty">No fan tiers yet.</p>}
 
             {initial.length > 0 && (
-              <ul className="studio-list studio-mt-md">
-                {initial.map((t) => (
+              <ul className="fan-tier-list studio-mt-md">
+                {initial.map((t, i) => (
                   <li
                     key={t.id}
-                    className={`studio-row--between studio-item-row${t.active ? '' : ' studio-tier-inactive'}`}
+                    className={`fan-tier-card fan-tier-card--${TIER_ACCENTS[i % TIER_ACCENTS.length]}${t.active ? '' : ' fan-tier-card--inactive'}`}
                   >
-                    <span>
-                      <strong>{t.name}</strong> · {eur(t.amountCents)}/mo
+                    <div className="fan-tier-card__main">
+                      <span className="fan-tier-card__name">{t.name}</span>
+                      <span className="fan-tier-card__price">{eur(t.amountCents)}/mo</span>
                       {t.description && (
-                        <span className="studio-text-muted-sm"> — {t.description}</span>
+                        <span className="fan-tier-card__desc">{t.description}</span>
                       )}
-                    </span>
-                    <Button
-                      onClick={() => toggle(t.id, !t.active)}
-                      disabled={isPending}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      {t.active ? 'Disable' : 'Enable'}
-                    </Button>
+                    </div>
+                    <div className="fan-tier-card__side">
+                      <span
+                        className={`fan-tier-card__status${t.active ? ' fan-tier-card__status--active' : ''}`}
+                      >
+                        {t.active ? 'Active' : 'Inactive'}
+                      </span>
+                      <Button
+                        onClick={() => toggle(t.id, !t.active)}
+                        disabled={isPending}
+                        variant={t.active ? 'ghost' : 'primary'}
+                        size="sm"
+                      >
+                        {t.active ? 'Disable' : 'Enable'}
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -40,11 +40,12 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
     ],
   },
   {
+    label: 'Audience',
+    items: [{ href: '/dashboard/settings/fan-subs', label: 'Fan subs' }],
+  },
+  {
     label: 'Money',
-    items: [
-      { href: '/dashboard/settings/fan-subs', label: 'Fan subs' },
-      { href: '/dashboard/settings/notifications', label: 'Notifications & visibility' },
-    ],
+    items: [{ href: '/dashboard/settings/notifications', label: 'Notifications & visibility' }],
   },
 ]
 
