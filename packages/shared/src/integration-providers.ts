@@ -63,7 +63,7 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
     description: 'Connect your SoundCloud account to import your own tracks.',
     scope: 'IMPORT',
     authKind: 'OAUTH',
-    oauthConnectPath: '/api/me/soundcloud/connect',
+    oauthConnectPath: '/api/me/soundcloud/oauth/start',
     oauthStatusField: 'soundcloudAccessTokenEnc',
   },
   {
@@ -72,7 +72,7 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
     description: 'Connect Google Drive to import audio files from your own storage.',
     scope: 'IMPORT',
     authKind: 'OAUTH',
-    oauthConnectPath: '/api/me/google-drive/connect',
+    oauthConnectPath: '/api/me/google-drive/oauth/start',
     oauthStatusField: 'googleDriveAccessTokenEnc',
   },
   {

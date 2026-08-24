@@ -20,6 +20,7 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
       { href: '/dashboard/settings/discovery', label: 'Discovery' },
       { href: '/dashboard/settings/disco-widgets', label: 'Disco-widgets' },
       { href: '/dashboard/settings/internet-radio', label: 'Internet radio' },
+      { href: '/dashboard/settings/integrations', label: 'Integrations' },
       { href: '/dashboard/settings/themes', label: 'Themes' },
       { href: '/dashboard/settings/domain', label: 'Username & domain' },
       { href: '/dashboard/settings/api', label: 'API tokens' },

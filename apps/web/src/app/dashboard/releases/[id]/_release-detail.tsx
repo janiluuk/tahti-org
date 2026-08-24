@@ -3,12 +3,13 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem, ChannelGalleryMode } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { publishRelease, updateReleaseDate, updateReleaseSmartLinks } from '../../release-actions'
+import { listMyIntegrations } from '../../integrations-actions'
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
 import { ReleaseArtworkUpload } from '../../release-artwork-upload'
 import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
@@ -139,6 +140,20 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
   const [releaseDate, setReleaseDate] = useState(r.releaseDate.slice(0, 10))
   const [dateSaving, setDateSaving] = useState(false)
   const [dateSaved, setDateSaved] = useState(false)
+  const [acoustidInstalled, setAcoustidInstalled] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void listMyIntegrations().then((result) => {
+      if (cancelled) return
+      setAcoustidInstalled(
+        result.integrations.find((i) => i.slug === 'acoustid')?.installed ?? false,
+      )
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const playbackQueue: CatalogPlaybackTrack[] = (r.tracks ?? []).flatMap((track) =>
     track.audioUrl
       ? [
@@ -254,6 +269,14 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
       </Panel>
 
       <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
+
+      {acoustidInstalled === false && (r.tracks ?? []).length > 0 && (
+        <p className="studio-text-muted-sm studio-mb-sm">
+          Fingerprint checks below use the platform&apos;s shared AcoustID key. Install your own in{' '}
+          <Link href="/dashboard/settings/integrations">Settings → Integrations</Link> for your own
+          quota.
+        </p>
+      )}
 
       {(r.tracks ?? []).map((t) => (
         <div key={t.id}>

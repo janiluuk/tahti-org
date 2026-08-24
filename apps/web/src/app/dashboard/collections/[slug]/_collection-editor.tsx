@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useCallback, useMemo, useTransition } from 'react'
+import { useState, useCallback, useEffect, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ButtonIcon, Button, SortableList } from '@tahti/ui'
@@ -26,6 +26,7 @@ import { CollectionEmbedButton } from '../_collection-embed-button'
 import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
 import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
 import { HearthisImportModal } from './_hearthis-import-modal'
+import { listMyIntegrations } from '../../integrations-actions'
 
 const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
   SPOTIFY_EMBED: 'SPOTIFY EMBED',
@@ -161,6 +162,26 @@ export function CollectionEditor({
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
   const [hearthisModalOpen, setHearthisModalOpen] = useState(false)
+  // null = still loading — fail open so the buttons aren't stuck disabled if this is slow.
+  const [installedProviders, setInstalledProviders] = useState<Record<string, boolean> | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void listMyIntegrations().then((result) => {
+      if (cancelled) return
+      const map: Record<string, boolean> = {}
+      for (const i of result.integrations) map[i.slug] = i.installed || i.connected
+      setInstalledProviders(map)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const isProviderReady = useCallback(
+    (slug: string) => installedProviders === null || (installedProviders[slug] ?? true),
+    [installedProviders],
+  )
   const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
   const [libraryPick, setLibraryPick] = useState('')
   const [libraryAdding, setLibraryAdding] = useState(false)
@@ -635,6 +656,12 @@ export function CollectionEditor({
                 variant="ghost"
                 size="sm"
                 className="collection-editor__add-btn--spotify"
+                disabled={!isProviderReady('spotify')}
+                title={
+                  isProviderReady('spotify')
+                    ? undefined
+                    : 'Install the Spotify integration in Settings → Integrations first'
+                }
               >
                 + Spotify
               </Button>
@@ -643,6 +670,12 @@ export function CollectionEditor({
                 variant="ghost"
                 size="sm"
                 className="collection-editor__add-btn--mixcloud"
+                disabled={!isProviderReady('mixcloud-import')}
+                title={
+                  isProviderReady('mixcloud-import')
+                    ? undefined
+                    : 'Install the Mixcloud integration in Settings → Integrations first'
+                }
               >
                 + Mixcloud
               </Button>
@@ -651,10 +684,24 @@ export function CollectionEditor({
                 variant="ghost"
                 size="sm"
                 className="collection-editor__add-btn--hearthis"
+                disabled={!isProviderReady('hearthis-import')}
+                title={
+                  isProviderReady('hearthis-import')
+                    ? undefined
+                    : 'Install the hearthis.at integration in Settings → Integrations first'
+                }
               >
                 + hearthis.at
               </Button>
             </div>
+            {(!isProviderReady('spotify') ||
+              !isProviderReady('mixcloud-import') ||
+              !isProviderReady('hearthis-import')) && (
+              <p className="studio-text-muted-sm studio-mt-xs">
+                Some import sources need installing first —{' '}
+                <Link href="/dashboard/settings/integrations">Settings → Integrations</Link>.
+              </p>
+            )}
           </div>
 
           {libraryPickerOpen ? (
