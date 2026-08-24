@@ -173,6 +173,11 @@ type ProfileHeroProps = {
   moreActionSlot?: ReactNode
   /** Lets the page render a labelled biography section in its main content. */
   hideBio?: boolean
+  /** Compact row of social/streaming-platform icon links (apps/web builds
+   * these from Channel.socialLinks) — rendered right under the name/meta
+   * line, next to the rest of the profile info, instead of buried further
+   * down the Home tab. */
+  socialLinksSlot?: ReactNode
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -199,6 +204,7 @@ export function ProfileHero({
   rssUrl,
   moreActionSlot,
   hideBio = false,
+  socialLinksSlot,
 }: ProfileHeroProps) {
   return (
     <>
@@ -227,6 +233,7 @@ export function ProfileHero({
               </span>
             )}
           </div>
+          {socialLinksSlot && <div className="prof-header-social-links">{socialLinksSlot}</div>}
         </div>
         <div className="prof-cta-row">
           {channelHref && isLive ? (

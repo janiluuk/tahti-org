@@ -6977,6 +6977,38 @@
   color: var(--cyan);
 }
 
+/* Icon-only row right under the name/meta line, next to the rest of the
+ * profile info — compact enough not to compete with the CTA row. */
+[data-tahti-ui='brand'] .prof-header-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-header-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--muted) 22%, transparent);
+  background: var(--card);
+  color: var(--muted);
+  transition:
+    border-color 0.12s,
+    background 0.12s,
+    color 0.12s;
+}
+
+[data-tahti-ui='brand'] .prof-header-social-link:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+  background: color-mix(in srgb, var(--cyan) 5%, var(--card));
+  color: var(--cyan);
+}
+
 /* ---- Brand form (venue register on dark shell) ---- */
 [data-tahti-ui='brand'].brand-channel .brand-form {
   display: flex;

@@ -383,6 +383,29 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const themeBackground = avatarThemeCss(resolvedTheme)
   const logoUrl = artist.logoUrl ?? null
   const logoPlacement = artist.logoPlacement ?? null
+  // Streaming platforms first (in this fixed order), then whatever else the
+  // artist added — same combined order the old "Streaming platforms" +
+  // "Find me elsewhere" sections used, just as one compact icon row next to
+  // the profile info instead of two labeled sections further down the page.
+  const STREAMING_LINK_LABELS: Record<string, string> = {
+    youtube: 'YouTube',
+    hearthisAt: 'hearthis.at',
+    twitch: 'Twitch',
+    soundcloud: 'SoundCloud',
+    kick: 'Kick',
+  }
+  const socialLinkEntries: Array<readonly [string, string]> = artist.socialLinks
+    ? [
+        ...Object.entries(STREAMING_LINK_LABELS)
+          .map(([key, label]) => [label, artist.socialLinks![key]] as const)
+          .filter(([, url]) => !!url),
+        ...Object.entries(artist.socialLinks)
+          .filter(([key, url]) => !!url && key !== 'genres' && !(key in STREAMING_LINK_LABELS))
+          .map(
+            ([key, url]) => [key.charAt(0).toUpperCase() + key.slice(1), url] as const,
+          ),
+      ]
+    : []
   const latestMusic = [
     ...releases.map((release) => ({
       id: `release-${release.id}`,
@@ -500,6 +523,23 @@ export default async function ArtistProfilePage({ params }: { params: { username
               channel?.slug ? (
                 <ReportButton targetType="CHANNEL" targetId={channel.slug} variant="icon" />
               ) : null
+            }
+            socialLinksSlot={
+              socialLinkEntries.length > 0
+                ? socialLinkEntries.map(([label, url]) => (
+                    <a
+                      key={label}
+                      href={url}
+                      rel="noopener noreferrer"
+                      target={url.startsWith('mailto:') ? undefined : '_blank'}
+                      className="prof-header-social-link"
+                      title={label}
+                      aria-label={label}
+                    >
+                      <SocialLinkIcon label={label} url={url} />
+                    </a>
+                  ))
+                : undefined
             }
           />
         }
@@ -720,66 +760,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 )
               })()}
 
-              {artist.socialLinks &&
-                (() => {
-                  const STREAMING_LINK_LABELS: Record<string, string> = {
-                    youtube: 'YouTube',
-                    hearthisAt: 'hearthis.at',
-                    twitch: 'Twitch',
-                    soundcloud: 'SoundCloud',
-                    kick: 'Kick',
-                  }
-                  const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
-                    .map(([key, label]) => [label, artist.socialLinks![key]] as const)
-                    .filter(([, url]) => !!url)
-                  const otherLinkEntries = Object.entries(artist.socialLinks).filter(
-                    ([key, url]) => !!url && key !== 'genres' && !(key in STREAMING_LINK_LABELS),
-                  )
-                  return (
-                    <>
-                      {streamingLinkEntries.length > 0 && (
-                        <section className="prof-section">
-                          <div className="prof-sec-label">Streaming platforms</div>
-                          <div className="prof-streaming-links">
-                            {streamingLinkEntries.map(([label, url]) => (
-                              <a
-                                key={label}
-                                href={url}
-                                rel="noopener noreferrer"
-                                target="_blank"
-                                className="prof-social-link"
-                              >
-                                <SocialLinkIcon label={label} url={url} /> {label} ↗
-                              </a>
-                            ))}
-                          </div>
-                        </section>
-                      )}
-                      {otherLinkEntries.length > 0 && (
-                        <section className="prof-section">
-                          <div className="prof-sec-label">Find me elsewhere</div>
-                          <div className="prof-social-links">
-                            {otherLinkEntries.map(([key, url]) => {
-                              const label = key.charAt(0).toUpperCase() + key.slice(1)
-                              const isEmail = url.startsWith('mailto:')
-                              return (
-                                <a
-                                  key={key}
-                                  href={url}
-                                  rel="noopener noreferrer"
-                                  target={isEmail ? undefined : '_blank'}
-                                  className="prof-social-link"
-                                >
-                                  <SocialLinkIcon label={label} url={url} /> {label} ↗
-                                </a>
-                              )
-                            })}
-                          </div>
-                        </section>
-                      )}
-                    </>
-                  )
-                })()}
             </>
           }
           feed={
