@@ -13,6 +13,7 @@ import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
 import ChannelGalleryPanel from '../channel-gallery-panel'
 import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import { PressKitBuilder } from '../settings/presskit/_press-kit-builder'
+import { ChannelDiscoWidgetsPanel } from '../channel-disco-widgets-panel'
 import type { ChannelLink } from '../channel-links-panel'
 import { ChannelEditorSection } from './_channel-editor-section'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
@@ -24,6 +25,8 @@ import type {
   SlideshowPreset,
   VisualPreset,
   PressKitImageItem,
+  DiscoWidgetInstallView,
+  DiscoWidgetStoreItem,
 } from '@tahti/shared'
 
 export type ChannelEditorData = {
@@ -63,6 +66,10 @@ export type ChannelEditorData = {
     username: string
     apiUrl: string
   }
+  discoWidgets: {
+    widgets: DiscoWidgetStoreItem[]
+    installs: DiscoWidgetInstallView[]
+  }
 }
 
 /** Full-page channel customization studio — live preview beside identity, visual, and link controls. */
@@ -80,6 +87,7 @@ export function ChannelEditorSections({
   channelTextLayer,
   channelVisual,
   pressKit,
+  discoWidgets,
 }: ChannelEditorData) {
   const [draft, setDraft] = useState<ChannelPreviewDraft>({
     displayName,
@@ -229,6 +237,18 @@ export function ChannelEditorSections({
           displayName={displayName}
           bio={bio}
           apiUrl={pressKit.apiUrl}
+        />
+      </section>
+
+      <section className="studio-designer-presskit" id="disco-widgets">
+        <div className="studio-designer-section-heading">
+          <span className="studio-kicker">Discovery</span>
+          <h2>Disco-widgets</h2>
+          <p>Browse the widget store and add widgets to your public channel page.</p>
+        </div>
+        <ChannelDiscoWidgetsPanel
+          initialWidgets={discoWidgets.widgets}
+          initialInstalls={discoWidgets.installs}
         />
       </section>
     </div>

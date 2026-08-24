@@ -7,6 +7,7 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 import { StudioHeaderActions } from '../../_studio-header-actions'
 import { ChannelEditorSections } from '../_channel-editor-sections'
 import { fetchChannelEditorData } from '../_channel-editor-data'
+import { fetchDiscoWidgetInstalls, fetchDiscoWidgetStore } from '@/lib/disco-widgets-client'
 import type { PressKitImageItem } from '@tahti/shared'
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -30,19 +31,22 @@ export default async function ChannelDesignPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [editorData, pressKitImages, gallerySettings] = await Promise.all([
-    fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug),
-    apiFetch<PressKitImageItem[]>(
-      apiUrl,
-      `tahti_session=${sessionValue}`,
-      '/api/me/press-kit/images',
-    ),
-    apiFetch<{ pressKitGalleryPublic: boolean }>(
-      apiUrl,
-      `tahti_session=${sessionValue}`,
-      '/api/me/press-kit/gallery-settings',
-    ),
-  ])
+  const [editorData, pressKitImages, gallerySettings, discoWidgetStore, discoWidgetInstalls] =
+    await Promise.all([
+      fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug),
+      apiFetch<PressKitImageItem[]>(
+        apiUrl,
+        `tahti_session=${sessionValue}`,
+        '/api/me/press-kit/images',
+      ),
+      apiFetch<{ pressKitGalleryPublic: boolean }>(
+        apiUrl,
+        `tahti_session=${sessionValue}`,
+        '/api/me/press-kit/gallery-settings',
+      ),
+      fetchDiscoWidgetStore('ARTIST'),
+      fetchDiscoWidgetInstalls('/api/me/channel/disco-widgets/installs'),
+    ])
   const {
     channelGallery,
     channelTextLayer,
@@ -96,6 +100,10 @@ export default async function ChannelDesignPage() {
           galleryPublic: gallerySettings?.pressKitGalleryPublic ?? false,
           username: user.username,
           apiUrl,
+        }}
+        discoWidgets={{
+          widgets: discoWidgetStore.widgets,
+          installs: discoWidgetInstalls.installs,
         }}
       />
     </PageShell>

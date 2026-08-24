@@ -26,7 +26,8 @@ import { ReleasesGrid } from '@/components/releases-grid'
 import { PressKitGallery } from '@/components/press-kit-gallery'
 import { FollowersSection } from '@/components/followers-section'
 import { resolveChannelUrl } from '@/lib/app-url'
-import type { PublicPressKitImage } from '@tahti/shared'
+import type { PublicPressKitImage, DiscoWidgetRenderItem } from '@tahti/shared'
+import { DiscoWidgetFrame } from '@/components/disco-widgets/disco-widget-frame'
 import { ProfileTabs } from './_profile-tabs'
 import { ProfileFeed } from './_profile-feed'
 import { TracksTab } from './_tracks-tab'
@@ -294,9 +295,11 @@ async function fetchPressKitImages(username: string): Promise<PublicPressKitImag
 }
 
 async function fetchChannelExtras(slug: string | undefined) {
-  if (!slug) return { events: [], posts: [], embeds: [], members: [], upcomingShows: [] }
+  if (!slug) {
+    return { events: [], posts: [], embeds: [], members: [], upcomingShows: [], discoWidgets: [] }
+  }
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [eventsRes, postsRes, embedsRes, membersRes, showRes] = await Promise.all([
+  const [eventsRes, postsRes, embedsRes, membersRes, showRes, discoWidgetsRes] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
@@ -304,6 +307,7 @@ async function fetchChannelExtras(slug: string | undefined) {
     // Upcoming Tahti Radio guest slots this artist has booked — same "show"
     // concept as the radio page's calendar (RadioSlotBooking), not a venue event.
     fetch(`${apiUrl}/api/v1/radio/show/${slug}`, { next: { revalidate: 60 } }),
+    fetch(`${apiUrl}/api/v1/channels/${slug}/disco-widgets`, { next: { revalidate: 60 } }),
   ])
   const events: ArtistEventItem[] = eventsRes.ok ? await eventsRes.json() : []
   const posts: ArtistPostItem[] = postsRes.ok ? await postsRes.json() : []
@@ -312,7 +316,10 @@ async function fetchChannelExtras(slug: string | undefined) {
   const upcomingShows: ArtistUpcomingShow[] = showRes.ok
     ? ((await showRes.json()) as { upcomingEpisodes: ArtistUpcomingShow[] }).upcomingEpisodes
     : []
-  return { events, posts, embeds, members, upcomingShows }
+  const discoWidgets: DiscoWidgetRenderItem[] = discoWidgetsRes.ok
+    ? ((await discoWidgetsRes.json()) as { widgets: DiscoWidgetRenderItem[] }).widgets
+    : []
+  return { events, posts, embeds, members, upcomingShows, discoWidgets }
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
@@ -363,10 +370,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
-  const [{ events, posts, embeds, members, upcomingShows }, pressKitImages] = await Promise.all([
-    fetchChannelExtras(channel?.slug),
-    fetchPressKitImages(artist.username),
-  ])
+  const [{ events, posts, embeds, members, upcomingShows, discoWidgets }, pressKitImages] =
+    await Promise.all([fetchChannelExtras(channel?.slug), fetchPressKitImages(artist.username)])
   const profileUrl = resolveChannelUrl(artist.username)
   const theme = resolveAvatarTheme(JSON.stringify(artist.avatarTheme ?? null), artist.username)
   // resolveAvatarTheme expects JSON string of stored theme; when artist.avatarTheme
@@ -628,6 +633,21 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 <section className="prof-section">
                   <div className="prof-sec-label">Press kit</div>
                   <PressKitGallery images={pressKitImages} />
+                </section>
+              )}
+
+              {discoWidgets.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Widgets</div>
+                  {discoWidgets.map((w) => (
+                    <DiscoWidgetFrame
+                      key={w.installId}
+                      sandboxUrl={w.sandboxUrl}
+                      name={w.name}
+                      context={w.context}
+                      config={w.config}
+                    />
+                  ))}
                 </section>
               )}
 

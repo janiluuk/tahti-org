@@ -175,6 +175,17 @@ import meProgrammeRoutes from './routes/me/programme.js'
 import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
 import adminAnnouncementsRoutes from './routes/admin/announcements.js'
+import meDiscoWidgetsRoutes from './routes/me/disco-widgets.js'
+import adminDiscoWidgetsRoutes from './routes/admin/disco-widgets.js'
+import discoWidgetStoreRoutes from './routes/disco-widgets/store.js'
+import discoWidgetPublicRoutes from './routes/disco-widgets/public.js'
+import internetRadioPresetsRoute from './routes/internet-radio/presets.js'
+import meInternetRadioRoutes from './routes/me/internet-radio.js'
+import adminInternetRadioRoutes from './routes/admin/internet-radio.js'
+import meThemesRoutes from './routes/me/themes.js'
+import adminThemesRoutes from './routes/admin/themes.js'
+import themeGalleryRoute from './routes/themes/gallery.js'
+import adminNotificationsRoutes from './routes/admin/notifications.js'
 import meStorageRoutes from './routes/me/storage.js'
 import adminStorageRoutes from './routes/admin/storage.js'
 import meArchiveStemsRoutes from './routes/me/archive-stems.js'
@@ -702,6 +713,17 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meRadioSubmissionRoutes)
   await fastify.register(meAnnouncementsRoutes)
   await fastify.register(adminAnnouncementsRoutes)
+  await fastify.register(meDiscoWidgetsRoutes)
+  await fastify.register(adminDiscoWidgetsRoutes)
+  await fastify.register(discoWidgetStoreRoutes)
+  await fastify.register(discoWidgetPublicRoutes)
+  await fastify.register(internetRadioPresetsRoute)
+  await fastify.register(meInternetRadioRoutes)
+  await fastify.register(adminInternetRadioRoutes)
+  await fastify.register(meThemesRoutes)
+  await fastify.register(adminThemesRoutes)
+  await fastify.register(themeGalleryRoute)
+  await fastify.register(adminNotificationsRoutes)
   await fastify.register(meStorageRoutes)
   await fastify.register(adminStorageRoutes)
   await fastify.register(meArchiveStemsRoutes)

@@ -31,6 +31,11 @@ const GUIDES: { href: string; title: string; description: string }[] = [
     description: 'Live-hour limits, audio quality, and what changes when you support Tahti ry.',
   },
   {
+    href: '/help/disco-widgets',
+    title: 'Contribute a Disco-widget',
+    description: 'Build a widget for the store and submit it as a pull request for review.',
+  },
+  {
     href: '/help/support',
     title: 'Contact support',
     description: 'Reach the Tahti team about your account, billing, or a technical issue.',

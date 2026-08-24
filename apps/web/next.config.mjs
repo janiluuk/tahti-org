@@ -71,7 +71,29 @@ const nextConfig = {
         ],
       },
       {
-        source: '/((?!embed).*)',
+        // Disco-widgets sandbox: a third, distinct policy from both of the
+        // above. Embeddable only by our own pages (frame-ancestors 'self'),
+        // never third parties — but unlike the catch-all below, NOT
+        // frame-ancestors DENY, since our own DiscoWidgetFrame does embed it.
+        // The widget bundle itself is pinned via Subresource Integrity on its
+        // own <script integrity> attribute (see bundleHashToIntegrity in
+        // @tahti/shared and the route handler that serves this page), not by
+        // this CSP — script-src 'self' plus the sandboxed iframe's lack of
+        // allow-same-origin (set by DiscoWidgetFrame) is what actually
+        // contains a widget's code, not which same-origin script it loads.
+        source: '/widget-sandbox/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          {
+            key: 'Content-Security-Policy',
+            value:
+              "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'none'; frame-ancestors 'self'",
+          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+      {
+        source: '/((?!embed|widget-sandbox).*)',
         headers: [
           { key: 'X-Source-Code', value: 'https://github.com/tahtiapp/tahti' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
