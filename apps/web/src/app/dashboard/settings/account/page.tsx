@@ -8,7 +8,6 @@ import { AvatarTile } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
-import { TwoFactorPanel } from '../../two-factor-panel'
 import StoragePanel from '../../storage-panel'
 
 interface MembershipInfo {
@@ -95,8 +94,6 @@ export default async function AccountSettingsPage() {
           subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
         />
       )}
-
-      <TwoFactorPanel />
 
       {storageInfo && (
         <StoragePanel

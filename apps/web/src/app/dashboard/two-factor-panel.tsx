@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { ButtonIcon, Button, Panel } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -20,6 +21,7 @@ function formatSecret(secret: string): string {
 export function TwoFactorPanel() {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [setupData, setSetupData] = useState<SetupData | null>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [confirmCode, setConfirmCode] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
   const [disabling, setDisabling] = useState(false)
@@ -49,7 +51,9 @@ export function TwoFactorPanel() {
         credentials: 'include',
       })
       if (!res.ok) throw new Error()
-      setSetupData((await res.json()) as SetupData)
+      const data = (await res.json()) as SetupData
+      setSetupData(data)
+      setQrDataUrl(await QRCode.toDataURL(data.otpauthUri, { width: 220, margin: 1 }))
     } catch {
       setError('Could not start 2FA setup. Try again.')
     } finally {
@@ -78,6 +82,7 @@ export function TwoFactorPanel() {
       }
       setBackupCodes(data.backupCodes ?? [])
       setSetupData(null)
+      setQrDataUrl(null)
       setConfirmCode('')
       setEnabled(true)
     } catch {
@@ -216,17 +221,27 @@ export function TwoFactorPanel() {
         <div>
           <ol className="studio-text-sm" style={{ paddingLeft: '1.25rem' }}>
             <li>Install an authenticator app (Google Authenticator, Authy, 1Password, etc.)</li>
-            <li>
-              Add a new account using the setup key below, or paste this link if your app supports
-              it:
-            </li>
+            <li>Scan the QR code below, or add the setup key manually if you can&apos;t scan:</li>
           </ol>
+          {qrDataUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- locally-generated data: URI, not a remote image
+            <img
+              src={qrDataUrl}
+              alt="Scan with your authenticator app"
+              width={220}
+              height={220}
+              className="studio-mt-sm"
+            />
+          )}
           <p className="studio-mt-sm" style={{ fontFamily: 'monospace', fontSize: '1.1rem' }}>
             {formatSecret(setupData.secret)}
           </p>
-          <p className="studio-text-muted-sm studio-mt-xs" style={{ wordBreak: 'break-all' }}>
-            {setupData.otpauthUri}
-          </p>
+          <details className="studio-mt-xs">
+            <summary className="studio-text-muted-sm">Can&apos;t scan? Show the setup link</summary>
+            <p className="studio-text-muted-sm studio-mt-xs" style={{ wordBreak: 'break-all' }}>
+              {setupData.otpauthUri}
+            </p>
+          </details>
           <label className="studio-field studio-mt-sm">
             <span className="studio-label">Enter the 6-digit code from your app</span>
             <input
@@ -254,6 +269,7 @@ export function TwoFactorPanel() {
               size="sm"
               onClick={() => {
                 setSetupData(null)
+                setQrDataUrl(null)
                 setConfirmCode('')
                 setError(null)
               }}

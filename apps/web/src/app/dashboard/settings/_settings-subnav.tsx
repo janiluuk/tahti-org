@@ -18,9 +18,16 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
       { href: '/dashboard/settings/artist-info#members', label: 'Members' },
       { href: '/dashboard/settings/connections', label: 'Connections' },
       { href: '/dashboard/settings/discovery', label: 'Discovery' },
+      { href: '/dashboard/settings/disco-widgets', label: 'Disco-widgets' },
+      { href: '/dashboard/settings/internet-radio', label: 'Internet radio' },
+      { href: '/dashboard/settings/themes', label: 'Themes' },
       { href: '/dashboard/settings/domain', label: 'Username & domain' },
       { href: '/dashboard/settings/api', label: 'API tokens' },
     ],
+  },
+  {
+    label: 'Security',
+    items: [{ href: '/dashboard/settings/security', label: 'Security' }],
   },
   {
     label: 'Broadcast',
