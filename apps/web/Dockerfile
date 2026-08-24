@@ -14,6 +14,7 @@ COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json     ./packages/ui/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
+COPY packages/widget-sdk/package.json ./packages/widget-sdk/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
@@ -49,6 +50,7 @@ COPY tsconfig.base.json ./tsconfig.base.json
 COPY packages/shared/tsconfig.json ./packages/shared/tsconfig.json
 COPY packages/shared/src ./packages/shared/src
 COPY packages/audio-edit/src ./packages/audio-edit/src
+COPY packages/widget-sdk/src ./packages/widget-sdk/src
 COPY packages/ui/src     ./packages/ui/src
 COPY packages/api-client/src ./packages/api-client/src
 COPY apps/web/           ./apps/web/
@@ -68,6 +70,7 @@ COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json     ./packages/ui/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
+COPY packages/widget-sdk/package.json ./packages/widget-sdk/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
@@ -80,6 +83,7 @@ RUN pnpm install --frozen-lockfile --prod
 # Shared/UI source needed for workspace symlink resolution at runtime
 COPY packages/shared/src ./packages/shared/src
 COPY packages/ui/src     ./packages/ui/src
+COPY packages/widget-sdk/src ./packages/widget-sdk/src
 COPY packages/api-client/src ./packages/api-client/src
 
 # Compiled Next.js output + static assets — chowned to the runtime user
