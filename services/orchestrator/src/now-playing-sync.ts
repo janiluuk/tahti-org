@@ -195,6 +195,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
       title: true,
       artistName: true,
       bannerUrl: true,
+      durationSec: true,
       channel: { select: { user: { select: { displayName: true, username: true } } } },
     },
   })
@@ -220,6 +221,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
       nowPlayingArtistName: artistName,
       nowPlayingArtistUsername: artistUsername,
       nowPlayingArtworkUrl: item.bannerUrl,
+      nowPlayingDurationSec: item.durationSec,
       nowPlayingUpdatedAt: new Date(),
     },
   })

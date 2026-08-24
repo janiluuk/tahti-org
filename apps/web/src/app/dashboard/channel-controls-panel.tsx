@@ -61,14 +61,36 @@ function TransportIcon({ direction }: { direction: 'previous' | 'next' }) {
   )
 }
 
+type NowPlaying = {
+  title: string
+  artistName: string
+  durationSec: number | null
+  startedAt: string
+}
+
+function formatRemaining(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds))
+  const m = Math.floor(s / 60)
+  const rem = s % 60
+  return `${m}:${String(rem).padStart(2, '0')}`
+}
+
 export function ChannelControlsPanel({ slug }: { slug: string }) {
   const [programme, setProgramme] = useState<Programme | null>(null)
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([])
   const [collection, setCollection] = useState<CollectionDetail | null>(null)
-  const [nowPlaying, setNowPlaying] = useState<string | null>(null)
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null)
+  // True right after a transport action, until the poller actually observes
+  // a different track — skip/previous act on Liquidsoap directly, but
+  // nowPlaying only reflects the ~20s orchestrator poller sync, so the old
+  // title would otherwise sit there looking unchanged/broken for up to 20s.
+  const [switchingTrack, setSwitchingTrack] = useState(false)
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  // Ticks once a second while a track with a known duration is playing, purely
+  // to force the remaining-time display to re-render — see remainingSec below.
+  const [, setClockTick] = useState(0)
 
   const loadCollection = useCallback(async (playlistSlug: string) => {
     const response = await fetch(
@@ -111,33 +133,72 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
     }
   }, [loadCollection, slug])
 
+  const fetchNowPlaying = useCallback(async (): Promise<NowPlaying | null> => {
+    const response = await fetch(`${API_URL}/api/channels/${encodeURIComponent(slug)}`, {
+      cache: 'no-store',
+    })
+    if (!response.ok) throw new Error()
+    const data = (await response.json()) as { nowPlaying: NowPlaying | null }
+    return data.nowPlaying
+  }, [slug])
+
   useEffect(() => {
     let cancelled = false
-    async function refreshNowPlaying() {
+    async function poll() {
       try {
-        const response = await fetch(`${API_URL}/api/channels/${encodeURIComponent(slug)}`, {
-          cache: 'no-store',
-        })
-        if (!response.ok || cancelled) return
-        const data = (await response.json()) as { nowPlaying: { title: string } | null }
-        setNowPlaying(data.nowPlaying?.title ?? null)
+        const next = await fetchNowPlaying()
+        if (!cancelled) setNowPlaying(next)
       } catch {
         // Keep the last known track; transport controls remain usable.
       }
     }
-    void refreshNowPlaying()
-    const timer = setInterval(refreshNowPlaying, 15_000)
+    void poll()
+    const timer = setInterval(poll, 15_000)
     return () => {
       cancelled = true
       clearInterval(timer)
     }
-  }, [slug])
+  }, [fetchNowPlaying])
+
+  // Only ticking while there's a duration to count down — no point re-rendering
+  // once a second for a channel with nothing (or a duration-less item) playing.
+  useEffect(() => {
+    if (nowPlaying?.durationSec == null) return
+    const timer = setInterval(() => setClockTick((t) => t + 1), 1000)
+    return () => clearInterval(timer)
+  }, [nowPlaying?.durationSec, nowPlaying?.startedAt])
+
+  const remainingSec =
+    nowPlaying?.durationSec != null
+      ? nowPlaying.durationSec - (Date.now() - new Date(nowPlaying.startedAt).getTime()) / 1000
+      : null
 
   const activePlaylist = playlists.find((playlist) => playlist.active) ?? null
   const rotationItems = useMemo(
     () => programme?.items.filter((item) => item.isFallback) ?? [],
     [programme],
   )
+
+  // Skip/previous act on Liquidsoap directly, but nowPlaying only reflects the
+  // orchestrator's ~20s poller sync — poll faster for a short window right
+  // after a transport action instead of leaving the pre-change track sitting
+  // there looking unchanged (indistinguishable from "broken") for up to 20s.
+  async function pollUntilTrackChanges(previousTitle: string | undefined) {
+    setSwitchingTrack(true)
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      try {
+        const next = await fetchNowPlaying()
+        if (next?.title !== previousTitle) {
+          setNowPlaying(next)
+          break
+        }
+      } catch {
+        // Try again next attempt; give up silently after the loop ends.
+      }
+    }
+    setSwitchingTrack(false)
+  }
 
   async function transport(action: 'previous' | 'skip') {
     setPending(action)
@@ -153,6 +214,7 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
       )
       if (!response.ok) throw new Error()
       setMessage(action === 'skip' ? 'Playing the next track.' : 'Playing the previous track.')
+      void pollUntilTrackChanges(nowPlaying?.title)
     } catch {
       setError('Could not change track. The channel may not be running yet.')
     } finally {
@@ -301,10 +363,23 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
     >
       <div className="db-channel-controls__now">
         <span className="signal-dot" aria-hidden />
-        <span>
+        <span className="db-channel-controls__status">
           {programme?.fallbackEnabled ? 'Channel rotation on' : 'Channel stopped'}
-          {nowPlaying ? ` · Now playing: ${nowPlaying}` : ''}
         </span>
+        {nowPlaying && (
+          <span className="db-channel-controls__track-info">
+            <span className="db-channel-controls__track-title">{nowPlaying.title}</span>
+            <span className="db-channel-controls__track-artist">{nowPlaying.artistName}</span>
+            {remainingSec != null && (
+              <span className="db-channel-controls__track-remaining">
+                {formatRemaining(remainingSec)} left
+              </span>
+            )}
+          </span>
+        )}
+        {switchingTrack && (
+          <span className="db-channel-controls__switching">Switching track…</span>
+        )}
       </div>
 
       <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">

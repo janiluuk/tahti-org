@@ -553,6 +553,12 @@ export const PublicChannelViewSchema = z.object({
       artistName: z.string(),
       artistUsername: z.string().nullable(),
       artworkUrl: z.string().nullable(),
+      /** Source ArchiveItem.durationSec — null for an item with no known
+       * duration, e.g. one that came in as an embed rather than a real file. */
+      durationSec: z.number().nullable(),
+      /** When this track started — remaining time is durationSec minus the
+       * elapsed time since this timestamp. */
+      startedAt: z.string(),
     })
     .nullable(),
   // Curated-rotation channels only (Tahti Selects): the next track in the

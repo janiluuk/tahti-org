@@ -52,6 +52,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           nowPlayingArtistName: true,
           nowPlayingArtistUsername: true,
           nowPlayingArtworkUrl: true,
+          nowPlayingDurationSec: true,
           nowPlayingUpdatedAt: true,
           user: {
             select: {
@@ -97,6 +98,8 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
               artistName: channel.nowPlayingArtistName,
               artistUsername: channel.nowPlayingArtistUsername,
               artworkUrl: channel.nowPlayingArtworkUrl,
+              durationSec: channel.nowPlayingDurationSec,
+              startedAt: channel.nowPlayingUpdatedAt!.toISOString(),
             }
           : null
 

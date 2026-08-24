@@ -1206,6 +1206,11 @@ model Channel {
   nowPlayingArtistName     String?
   nowPlayingArtistUsername String?
   nowPlayingArtworkUrl     String?
+  /// Source ArchiveItem.durationSec, snapshotted alongside the rest of these
+  /// fields — lets a caller show remaining time without a second lookup.
+  /// nowPlayingUpdatedAt doubles as "started at" (only rewritten when the
+  /// resolved track actually changes, see now-playing-sync.ts).
+  nowPlayingDurationSec    Int?
   nowPlayingUpdatedAt      DateTime?
   // Multistream video overlay (see buildRtmpMirrorOutput): what's baked into
   // the static video frame pushed alongside audio to YouTube/Twitch/etc.

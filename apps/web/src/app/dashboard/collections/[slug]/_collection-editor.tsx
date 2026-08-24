@@ -27,6 +27,9 @@ import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-moda
 import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
 import { HearthisImportModal } from './_hearthis-import-modal'
 import { listMyIntegrations } from '../../integrations-actions'
+import { HearthisEmbedRow } from '../../../u/[username]/c/[slug]/_hearthis-embed-row'
+import { MixcloudEmbedRow } from '../../../u/[username]/c/[slug]/_mixcloud-embed-row'
+import { SpotifyEmbedRow } from '../../../u/[username]/c/[slug]/_spotify-embed-row'
 
 const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
   SPOTIFY_EMBED: 'SPOTIFY EMBED',
@@ -60,6 +63,8 @@ interface CollectionItem {
     createdAt: string
     source: ArchiveItemSource
     qualityBadge: ArchiveQualityBadge
+    embedProvider?: string | null
+    embedUri?: string | null
   } | null
   release: {
     id: string
@@ -162,6 +167,9 @@ export function CollectionEditor({
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
   const [hearthisModalOpen, setHearthisModalOpen] = useState(false)
+  // Which row's embed player (Hearthis/Mixcloud/Spotify — no audio file of
+  // their own, so no shared-mini-player playback) is currently expanded.
+  const [expandedEmbedItemId, setExpandedEmbedItemId] = useState<string | null>(null)
   // null = still loading — fail open so the buttons aren't stuck disabled if this is slow.
   const [installedProviders, setInstalledProviders] = useState<Record<string, boolean> | null>(null)
 
@@ -269,25 +277,31 @@ export function CollectionEditor({
     [displayItems],
   )
 
-  async function toggleItemPlayback(item: CollectionItem) {
-    if (!item.audioUrl) return
-    const playerTrack = toPlayerTrack(item)
-    if (track?.id === playerTrack.id) {
-      await togglePlay()
-      return
-    }
-    load(playerTrack, { autoplay: true, queue: playbackQueue })
-  }
+  const toggleItemPlayback = useCallback(
+    async (item: CollectionItem) => {
+      if (!item.audioUrl) return
+      const playerTrack = toPlayerTrack(item)
+      if (track?.id === playerTrack.id) {
+        await togglePlay()
+        return
+      }
+      load(playerTrack, { autoplay: true, queue: playbackQueue })
+    },
+    [track, togglePlay, load, playbackQueue],
+  )
 
-  function queueItem(item: CollectionItem) {
-    if (!item.audioUrl) return
-    const added = addToQueue(toPlayerTrack(item))
-    const title = itemTitle(item)
-    showToast(
-      added ? `Added “${title}” to the queue.` : `“${title}” is already in the queue.`,
-      added ? 'success' : 'info',
-    )
-  }
+  const queueItem = useCallback(
+    (item: CollectionItem) => {
+      if (!item.audioUrl) return
+      const added = addToQueue(toPlayerTrack(item))
+      const title = itemTitle(item)
+      showToast(
+        added ? `Added “${title}” to the queue.` : `“${title}” is already in the queue.`,
+        added ? 'success' : 'info',
+      )
+    },
+    [addToQueue, showToast],
+  )
 
   const addFromLibrary = useCallback(async () => {
     if (!libraryPick) return
@@ -328,6 +342,9 @@ export function CollectionEditor({
       const badgeClass =
         (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
         (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
+      const embedUri = item.archiveItem?.embedUri
+      const embedProvider = item.archiveItem?.embedProvider
+      const isEmbedExpanded = expandedEmbedItemId === item.id
       return (
         <>
           <span className="collection-tracklist__pos">{idx + 1}</span>
@@ -374,11 +391,34 @@ export function CollectionEditor({
                 </svg>
               </button>
             </span>
+          ) : embedUri ? (
+            <span className="collection-tracklist__playback">
+              <button
+                type="button"
+                onClick={() => setExpandedEmbedItemId(isEmbedExpanded ? null : item.id)}
+                title={isEmbedExpanded ? 'Hide player' : 'Play'}
+                aria-label={isEmbedExpanded ? `Hide ${title} player` : `Play ${title}`}
+                aria-expanded={isEmbedExpanded}
+              >
+                {isEmbedExpanded ? '❚❚' : '▶'}
+              </button>
+            </span>
           ) : null}
           {badgeLabel ? (
             <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>{badgeLabel}</span>
           ) : null}
           {dur != null && <span className="collection-tracklist__dur">{formatDuration(dur)}</span>}
+          {isEmbedExpanded && embedUri && (
+            <ul className="collection-tracklist__embed">
+              {embedProvider === 'MIXCLOUD' ? (
+                <MixcloudEmbedRow title={title} embedUri={embedUri} />
+              ) : embedProvider === 'SPOTIFY' ? (
+                <SpotifyEmbedRow title={title} embedUri={embedUri} />
+              ) : (
+                <HearthisEmbedRow title={title} embedUri={embedUri} />
+              )}
+            </ul>
+          )}
           {reorderSaving && (
             <span className="collection-tracklist__saving" aria-hidden>
               …
@@ -387,7 +427,7 @@ export function CollectionEditor({
         </>
       )
     },
-    [playing, reorderSaving, track],
+    [playing, reorderSaving, track, expandedEmbedItemId, queueItem, toggleItemPlayback],
   )
 
   const handleDelete = useCallback(async () => {
