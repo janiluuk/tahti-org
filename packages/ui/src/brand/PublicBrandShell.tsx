@@ -21,6 +21,10 @@ export type PublicBrandShellProps = {
   user?: { username: string; displayName: string; hasChannel?: boolean } | null
   /** Status page URL, forwarded to PublicFooter when showFooter is set. */
   statusUrl?: string
+  /** Server action for the header user-menu's "Log out" form, forwarded to
+   * ChannelHeader when showHeader is set. Without it the button renders but
+   * does nothing — see the comment on the same prop in ChannelHeaderProps. */
+  logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
 /** Light public pages using brand-public.css — import that stylesheet on the route. */
@@ -33,6 +37,7 @@ export function PublicBrandShell({
   activeNav,
   user,
   statusUrl,
+  logoutAction,
 }: PublicBrandShellProps) {
   const layoutClass = [
     'brand-public',
@@ -46,7 +51,9 @@ export function PublicBrandShell({
       data-tahti-ui="brand"
       className={['brand-public-shell', wide && 'shell-public'].filter(Boolean).join(' ')}
     >
-      {showHeader && <ChannelHeader activeNav={activeNav} user={user} />}
+      {showHeader && (
+        <ChannelHeader activeNav={activeNav} user={user} logoutAction={logoutAction} />
+      )}
       <div className={layoutClass}>{children}</div>
       {showFooter && <PublicFooter statusUrl={statusUrl} />}
     </div>

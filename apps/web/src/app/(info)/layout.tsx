@@ -6,12 +6,20 @@ import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
+import { logout } from '@/app/auth/actions'
 
 export default async function InfoLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
   return (
-    <PublicBrandShell wide showHeader showFooter user={user} statusUrl={statusPageUrl()}>
+    <PublicBrandShell
+      wide
+      showHeader
+      showFooter
+      user={user}
+      statusUrl={statusPageUrl()}
+      logoutAction={logout}
+    >
       {children}
     </PublicBrandShell>
   )
