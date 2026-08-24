@@ -17,11 +17,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import {
-  getUserIntegrationCredential,
-  removeUserIntegrationCredential,
-  upsertUserIntegrationCredential,
-} from '@tahti/db'
+import { removeUserIntegrationCredential, upsertUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 
 function zodError(
