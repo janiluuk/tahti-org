@@ -88,6 +88,17 @@ export async function getObjectStream(key: string): Promise<{
   }
 }
 
+/** Reads a whole small object into memory — only for objects known to be
+ * capped at a small size (e.g. widget bundles), never for media files. */
+export async function getObjectBuffer(key: string): Promise<Buffer> {
+  const { body } = await getObjectStream(key)
+  const chunks: Buffer[] = []
+  for await (const chunk of body) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return Buffer.concat(chunks)
+}
+
 /** Ground-truth object size straight from storage — never trust a client-declared size. */
 export async function headObjectSize(key: string): Promise<number | null> {
   try {

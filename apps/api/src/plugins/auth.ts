@@ -3,7 +3,7 @@
 
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import type { User } from '@tahti/db'
+import type { Channel, User } from '@tahti/db'
 import { validateSession } from '../lib/session.js'
 import { validateApiToken, TOKEN_PREFIX } from '../lib/api-token.js'
 import { config } from '../config.js'
@@ -15,6 +15,8 @@ declare module 'fastify' {
     /** Non-null only when auth came from a personal API token (Authorization: Bearer),
      * as opposed to the session cookie. Drives the read/write scope check below. */
     apiTokenScopes: string[] | null
+    /** Set by requireArtist once it's confirmed sessionUser owns a channel. */
+    channel: Channel | null
   }
 }
 
@@ -23,6 +25,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest('sessionUser', null)
   fastify.decorateRequest('apiTokenScopes', null)
+  fastify.decorateRequest('channel', null)
 
   fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const authHeader = request.headers.authorization
@@ -83,4 +86,19 @@ export async function requireBoard(request: FastifyRequest, reply: FastifyReply)
   if (!request.sessionUser?.isBoard) {
     return reply.status(403).send({ error: 'Board members only' })
   }
+}
+
+// Artist-only routes (has a channel). Decorates request.channel so the route
+// doesn't have to re-run the same findUnique-or-404 lookup every route did
+// ad hoc before this existed (see e.g. routes/me/profile.ts).
+export async function requireArtist(request: FastifyRequest, reply: FastifyReply) {
+  await requireAuth(request, reply)
+  if (reply.sent) return
+  const channel = await request.server.prisma.channel.findUnique({
+    where: { userId: request.sessionUser!.id },
+  })
+  if (!channel) {
+    return reply.status(404).send({ error: 'Channel not found' })
+  }
+  request.channel = channel
 }
