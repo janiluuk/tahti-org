@@ -78,6 +78,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             galleryAudioReactive: true,
             visualPreset: true,
             colorSchemeJson: true,
+            embedProvider: true,
+            embedUri: true,
             _count: { select: { comments: true } },
           },
         })

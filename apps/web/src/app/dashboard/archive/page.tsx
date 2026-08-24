@@ -16,6 +16,8 @@ interface ArchiveItem {
   artistName: string | null
   durationSec: number | null
   audioUrl: string | null
+  embedProvider: string | null
+  embedUri: string | null
   bannerUrl: string | null
   peaks: number[] | null
   visualPreset: string | null

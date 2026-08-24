@@ -2376,6 +2376,12 @@
   min-width: 0;
 }
 
+[data-tahti-ui='studio'] .archive-list__embed {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
 [data-tahti-ui='studio'] .studio-collection-row-title {
   display: flex;
   align-items: center;

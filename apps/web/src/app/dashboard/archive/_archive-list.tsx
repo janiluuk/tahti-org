@@ -7,6 +7,9 @@ import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { ArchiveItemPlayback } from '@/components/archive-item-playback'
 import type { PlayerTrack } from '@/contexts/player-context'
+import { HearthisEmbedRow } from '../../u/[username]/c/[slug]/_hearthis-embed-row'
+import { MixcloudEmbedRow } from '../../u/[username]/c/[slug]/_mixcloud-embed-row'
+import { SpotifyEmbedRow } from '../../u/[username]/c/[slug]/_spotify-embed-row'
 
 const ArchiveEditor = dynamic(() => import('../archive-editor'))
 
@@ -24,6 +27,8 @@ interface PlayableItem {
   title: string
   artistName: string | null
   audioUrl: string | null
+  embedProvider: string | null
+  embedUri: string | null
   bannerUrl: string | null
   peaks: number[] | null
   visualPreset: string | null
@@ -232,6 +237,17 @@ export function ArchiveList({
                         queue={queue}
                       />
                     </div>
+                  )}
+                  {!play?.audioUrl && play?.embedUri && (
+                    <ul className="archive-list__embed">
+                      {play.embedProvider === 'MIXCLOUD' ? (
+                        <MixcloudEmbedRow title={play.title} embedUri={play.embedUri} />
+                      ) : play.embedProvider === 'SPOTIFY' ? (
+                        <SpotifyEmbedRow title={play.title} embedUri={play.embedUri} />
+                      ) : (
+                        <HearthisEmbedRow title={play.title} embedUri={play.embedUri} />
+                      )}
+                    </ul>
                   )}
                 </div>
               </li>

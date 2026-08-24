@@ -21,6 +21,8 @@ interface PlayableItem {
   title: string
   artistName: string | null
   audioUrl: string | null
+  embedProvider: string | null
+  embedUri: string | null
   bannerUrl: string | null
   peaks: number[] | null
   visualPreset: string | null
