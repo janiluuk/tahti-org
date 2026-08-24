@@ -113,6 +113,7 @@ import adminReportsRoutes from './routes/admin/reports.js'
 import adminContentReportRoutes from './routes/admin/content-reports.js'
 import adminFeatureRequestRoutes from './routes/admin/feature-requests.js'
 import adminAuditRoutes from './routes/admin/audit.js'
+import adminLogsRoutes from './routes/admin/logs.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
 import contentReportsRoute from './routes/reports/submit.js'
@@ -636,6 +637,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
+  await fastify.register(adminLogsRoutes)
   await fastify.register(adminVenueRoutes)
   await fastify.register(adminBetaRoutes)
   await fastify.register(adminIntegrationsRoutes)

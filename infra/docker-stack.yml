@@ -4,17 +4,20 @@ version: "3.9"
 x-db-pool-env: &db-pool-env
   DATABASE_URL: postgres://tahti@pgbouncer:5432/tahti?pgbouncer=true
 
-# Ships every service's stdout/stderr to the in-stack Loki (not vimage6 — see
-# infra/loki-config.yml). Requires the Loki Docker logging driver plugin
-# installed on EVERY swarm node before this stack (re)deploys, or those
-# containers fail to start:
+# CORRECTED 2026-08-25: this file is not actually deployed today — the real
+# production stack on vimage runs via infra/docker-compose.stack.yml (plain
+# `docker compose`, not Swarm; see that file for the active x-loki-logging).
+# Kept internally consistent here in case this Swarm migration ever
+# happens for real. Loki/Grafana already run on vimage6 (monitoring-loki,
+# monitoring-grafana, both host-networked, confirmed live) — do NOT add a
+# second Loki or a duplicate Grafana datasource; point at the real one.
+# Requires the Loki Docker logging driver plugin installed on every swarm
+# node before this stack (re)deploys, or those containers fail to start:
 #   docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
-# mode: non-blocking + max-buffer-size so a Loki hiccup drops/queues log
-# lines instead of blocking or crash-looping the app container.
 x-loki-logging: &loki-logging
   driver: loki
   options:
-    loki-url: "http://loki:3100/loki/api/v1/push"
+    loki-url: "http://192.168.2.105:3100/loki/api/v1/push"
     loki-external-labels: "service={{.Name}},job=tahti"
     loki-retries: "3"
     loki-batch-size: "400"
@@ -81,7 +84,6 @@ volumes:
   cover_cache_shared:
   prometheus_data:
   grafana_data:
-  loki_data:
 
 secrets:
   pg_password:               { external: true }
@@ -107,8 +109,6 @@ configs:
   icecast:      { file: ./icecast.xml }
   icecast_b:    { file: ./icecast-b.xml }
   prometheus:   { file: ./prometheus.yml }
-  loki:         { file: ./loki-config.yml }
-  grafana_datasources: { file: ./grafana-datasources.yml }
 
 services:
 
@@ -668,26 +668,13 @@ services:
       resources:
         limits: { cpus: "1", memory: 1G }
 
-  # Deliberately not logging: *loki-logging on itself — no point buffering a
-  # service's own logs against itself before it's up, and it keeps Loki's
-  # own startup/crash logs reachable via `docker service logs` even if Loki
-  # is the thing that's broken.
-  loki:
-    image: grafana/loki:latest
-    networks: [internal]
-    volumes:
-      - loki_data:/loki
-    configs:
-      - source: loki
-        target: /etc/loki/loki-config.yml
-    command: -config.file=/etc/loki/loki-config.yml
-    deploy:
-      replicas: 1
-      placement:
-        constraints: [node.labels.role == db]
-      resources:
-        limits: { cpus: "1", memory: 1G }
-
+  # No loki/grafana service defined here — both already run on vimage6
+  # (monitoring-loki, monitoring-grafana), which already has a Loki
+  # datasource provisioned (uid: loki-main). This is the aspirational Swarm
+  # migration file, not what's live; don't stand up a second Loki or
+  # Grafana if this ever gets deployed for real. The `grafana.tahti.live`
+  # entry in Caddyfile below is speculative too — confirm where that
+  # hostname should actually route before relying on it.
   grafana:
     image: grafana/grafana:latest
     logging: *loki-logging
@@ -699,9 +686,6 @@ services:
     secrets: [session_secret]
     volumes:
       - grafana_data:/var/lib/grafana
-    configs:
-      - source: grafana_datasources
-        target: /etc/grafana/provisioning/datasources/loki.yml
     deploy:
       replicas: 1
       placement:

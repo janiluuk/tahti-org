@@ -149,8 +149,10 @@ export const config = {
   icecastIngestHealthPath: process.env.ICECAST_INGEST_HEALTH_PATH ?? '/status-json.xsl',
   /** Internal hostname:port for Liquidsoap pull and ops (e.g. icecast:8000). */
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
-  /** In-stack Loki (infra/docker-stack.yml) queried server-to-server for the admin logs page — not vimage6. */
-  lokiUrl: process.env.LOKI_URL ?? 'http://loki:3100',
+  /** Loki already running on vimage6 (monitoring-loki, host-networked) — queried
+   * server-to-server for the admin logs page. Confirmed live 2026-08-25, not
+   * something this app deploys or owns. */
+  lokiUrl: process.env.LOKI_URL ?? 'http://192.168.2.105:3100',
   /** Public ingest URL shown in dashboard (e.g. https://ingest-icecast.tahti.live or http://localhost:8100). */
   icecastPublicUrl:
     process.env.ICECAST_PUBLIC_URL ??

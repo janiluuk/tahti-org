@@ -8,6 +8,24 @@
 
 name: tahti-stack
 
+# Ships every service's stdout/stderr to the Loki that's already running on
+# vimage6 (monitoring-loki, host-networked, port 3100 — confirmed live, not
+# something this change adds). vimage6 already has a Grafana Loki datasource
+# provisioned (uid: loki-main) pointed at it, so nothing needed on the
+# Grafana side. Requires the Loki Docker logging driver plugin installed on
+# THIS host (vimage) before `docker compose up` picks up the change, or
+# every service fails to start:
+#   docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+x-loki-logging: &loki-logging
+  driver: loki
+  options:
+    loki-url: "http://192.168.2.105:3100/loki/api/v1/push"
+    loki-external-labels: "service={{.Name}},job=tahti"
+    loki-retries: "3"
+    loki-batch-size: "400"
+    mode: non-blocking
+    max-buffer-size: 4m
+
 x-app-env: &app-env
   NODE_ENV: production
   # PLAT-003: transaction pool via PgBouncer (migrations use direct postgres in db-push)
@@ -104,6 +122,7 @@ x-app-env: &app-env
 
 services:
   postgres:
+    logging: *loki-logging
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: tahti
@@ -120,6 +139,7 @@ services:
       start_period: 10s
 
   pgbouncer:
+    logging: *loki-logging
     image: edoburu/pgbouncer:1.22.1-p0
     environment:
       DATABASE_URL: postgres://tahti:${POSTGRES_PASSWORD:-tahti_dev}@postgres:5432/tahti
@@ -140,6 +160,7 @@ services:
       start_period: 5s
 
   redis:
+    logging: *loki-logging
     image: redis:7-alpine
     command: ['redis-server', '--appendonly', 'yes', '--loglevel', 'warning']
     volumes:
@@ -151,6 +172,7 @@ services:
       retries: 5
 
   minio:
+    logging: *loki-logging
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
@@ -169,6 +191,7 @@ services:
       start_period: 10s
 
   minio-init:
+    logging: *loki-logging
     image: minio/mc:latest
     environment:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
@@ -198,6 +221,7 @@ services:
     restart: 'no'
 
   chat:
+    logging: *loki-logging
     image: centrifugo/centrifugo:v5
     command: centrifugo --config /centrifugo/config.json --port=8000 --health
     environment:
@@ -219,12 +243,14 @@ services:
       retries: 5
 
   mailhog:
+    logging: *loki-logging
     image: mailhog/mailhog:latest
     ports:
       - '${MAILHOG_SMTP_PORT:-15025}:1025'
       - '${MAILHOG_UI_PORT:-18025}:8025'
 
   icecast:
+    logging: *loki-logging
     image: moul/icecast:latest
     user: '101:102'
     entrypoint: ['/usr/bin/icecast2']
@@ -236,6 +262,7 @@ services:
 
   # STREAM-007: optional second Icecast for local failover testing (`docker compose --profile icecast-failover up`)
   icecast-b:
+    logging: *loki-logging
     profiles: ['icecast-failover']
     image: moul/icecast:latest
     user: '101:102'
@@ -247,6 +274,7 @@ services:
       - '${ICECAST_B_PORT:-18101}:8000'
 
   rtmp-ingest:
+    logging: *loki-logging
     image: tiangolo/nginx-rtmp:latest
     volumes:
       - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
@@ -258,6 +286,7 @@ services:
 
   # STREAM-003: optional second RTMP ingest for local failover testing
   rtmp-ingest-b:
+    logging: *loki-logging
     profiles: ['rtmp-failover']
     image: tiangolo/nginx-rtmp:latest
     volumes:
@@ -270,6 +299,7 @@ services:
         condition: service_healthy
 
   db-push:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
@@ -284,6 +314,7 @@ services:
     restart: 'no'
 
   api:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
@@ -309,6 +340,7 @@ services:
       start_period: 30s
 
   web:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
@@ -341,6 +373,7 @@ services:
       start_period: 45s
 
   worker:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: apps/worker/Dockerfile
@@ -370,6 +403,7 @@ services:
   # first time (torch + two baked-in model checkpoints) — build it once on
   # the deploy host before relying on "Download stems" in the library.
   stem-separator:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: services/stem-separator/Dockerfile
@@ -378,6 +412,7 @@ services:
       - '${STEM_SEPARATOR_PORT:-8090}:8090'
 
   orchestrator:
+    logging: *loki-logging
     build:
       context: ..
       dockerfile: services/orchestrator/Dockerfile
@@ -412,6 +447,7 @@ services:
         condition: service_healthy
 
   website:
+    logging: *loki-logging
     build:
       context: ../website
       dockerfile: Dockerfile
