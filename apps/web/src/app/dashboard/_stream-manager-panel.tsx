@@ -15,6 +15,13 @@ import { endBroadcast } from './actions'
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const STATS_POLL_MS = 5000
 const MULTISTREAM_POLL_MS = 15000
+/** How long the signal must actually be down before the "Reconnecting…" pill
+ * shows — signalConnected comes straight from a poll of the live icecast
+ * mountpoint, which can report a false negative for a single cycle without
+ * the stream having genuinely dropped. Matches the chat WS panel's own
+ * RECONNECT_BANNER_DELAY_MS debounce (apps/web/src/app/c/[slug]/chat-panel.tsx)
+ * — same reasoning, this one just had no debounce at all before. */
+const SIGNAL_DOWN_BANNER_DELAY_MS = 8000
 
 interface StreamStats {
   audioBitrateKbps: number | null
@@ -108,6 +115,7 @@ export function StreamManagerPanel({
   const router = useRouter()
   const [stats, setStats] = useState<StreamStats | null>(null)
   const [ending, setEnding] = useState(false)
+  const [showSignalDown, setShowSignalDown] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -131,6 +139,23 @@ export function StreamManagerPanel({
       window.clearInterval(id)
     }
   }, [slug])
+
+  // Debounced separately from `stats` itself — flipping back to connected
+  // clears this immediately (good news needs no delay), but going down only
+  // shows the pill once it's stayed down for SIGNAL_DOWN_BANNER_DELAY_MS, so
+  // one flaky poll cycle doesn't flicker it on and off. Keyed on the boolean
+  // itself, not the `stats` object — a fresh object comes in every 5s poll
+  // even when signalConnected hasn't changed, which would otherwise restart
+  // this timer before it ever reaches an 8s delay.
+  const signalConnected = stats?.signalConnected ?? true
+  useEffect(() => {
+    if (signalConnected) {
+      setShowSignalDown(false)
+      return
+    }
+    const timer = window.setTimeout(() => setShowSignalDown(true), SIGNAL_DOWN_BANNER_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [signalConnected])
 
   async function handleEndStream() {
     if (!confirm('End your live broadcast now?')) return
@@ -178,7 +203,7 @@ export function StreamManagerPanel({
           <span className="stream-mgr-panel__stat-value">
             {stats == null ? (
               '—'
-            ) : stats.signalConnected ? (
+            ) : stats.signalConnected || !showSignalDown ? (
               <StatusPill tone="green">Connected</StatusPill>
             ) : (
               <StatusPill tone="amber">Reconnecting…</StatusPill>

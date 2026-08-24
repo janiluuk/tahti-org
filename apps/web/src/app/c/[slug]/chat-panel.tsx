@@ -35,6 +35,9 @@ interface ChatMessage {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+/** How long the connection must actually be down before the "reconnecting"
+ * banner shows — a blip that resolves faster than this never flickers it. */
+const RECONNECT_BANNER_DELAY_MS = 3000
 
 /** Heart button in the chat header — loves whatever archive track is currently
  * playing (from the shared player), posting a reaction pinned to the current
@@ -261,6 +264,9 @@ export default function ChatPanel({
     const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
     let ws: WebSocket | null = null
     let retryTimer: ReturnType<typeof setTimeout> | null = null
+    // A blip that reconnects within RECONNECT_BANNER_DELAY_MS never shows this
+    // at all — only a connection that's genuinely been down that long does.
+    let errorTimer: ReturnType<typeof setTimeout> | null = null
     let retryAttempt = 0
     let cancelled = false
 
@@ -294,6 +300,10 @@ export default function ChatPanel({
             }
             if (data.connect) {
               retryAttempt = 0
+              if (errorTimer) {
+                clearTimeout(errorTimer)
+                errorTimer = null
+              }
               setError(null)
               ws?.send(
                 JSON.stringify({
@@ -348,7 +358,15 @@ export default function ChatPanel({
     function scheduleReconnect() {
       if (cancelled || retryTimer) return
       setStatus('connecting')
-      setError('Chat connection lost — reconnecting…')
+      // Don't show the banner for a blip that self-resolves — only once the
+      // connection has genuinely been down for RECONNECT_BANNER_DELAY_MS does
+      // the user need to know. Cleared above the instant a reconnect succeeds.
+      if (!errorTimer) {
+        errorTimer = setTimeout(() => {
+          errorTimer = null
+          setError('Chat connection lost — reconnecting…')
+        }, RECONNECT_BANNER_DELAY_MS)
+      }
       const delay = Math.min(1000 * 2 ** retryAttempt++, 15_000)
       retryTimer = setTimeout(() => {
         retryTimer = null
@@ -360,6 +378,7 @@ export default function ChatPanel({
     return () => {
       cancelled = true
       if (retryTimer) clearTimeout(retryTimer)
+      if (errorTimer) clearTimeout(errorTimer)
       ws?.close()
     }
   }, [connectionToken, slug])
