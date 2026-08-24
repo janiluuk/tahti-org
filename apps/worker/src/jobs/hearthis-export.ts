@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
 import { prisma, getUserIntegrationCredential } from '@tahti/db'
 import { downloadToFile } from '../lib/minio.js'
-import { uploadTrackToHearthis } from '../lib/hearthis-export-client.js'
+import { uploadTrackToHearthis, HearthisPremiumRequiredError } from '@tahti/hearthis'
 
 export async function processHearthisExportJob(job: Job): Promise<void> {
   const { archiveItemId } = job.data as { archiveItemId: string }
@@ -33,7 +33,7 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
     item.channel.userId,
     'hearthis-export',
   )
-  if (!credential?.apiKey) {
+  if (!credential?.key || !credential.secret) {
     await prisma.archiveItem.update({
       where: { id: archiveItemId },
       data: { hearthisExportStatus: 'failed' },
@@ -48,11 +48,10 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
     await downloadToFile(sourceKey, srcPath)
     const audioBuffer = await readFile(srcPath)
 
-    const result = await uploadTrackToHearthis(credential.apiKey, {
-      title: item.title,
-      audioBuffer,
-      filename: `${item.id}.${ext}`,
-    })
+    const result = await uploadTrackToHearthis(
+      { key: credential.key, secret: credential.secret },
+      { title: item.title, audioBuffer, filename: `${item.id}.${ext}` },
+    )
 
     await prisma.archiveItem.update({
       where: { id: archiveItemId },
@@ -67,6 +66,15 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
       where: { id: archiveItemId },
       data: { hearthisExportStatus: 'failed' },
     })
+    // Surfaced in job logs, not persisted (ArchiveItem has no error-message
+    // column — same convention as Release.revelatorStatus) — but distinguish
+    // the Premium-lapsed case in the message so ops can tell it apart from a
+    // transient/network failure at a glance.
+    if (err instanceof HearthisPremiumRequiredError) {
+      throw new Error(
+        `ArchiveItem ${archiveItemId}: hearthis.at Premium is required (account may have lapsed) — ${err.message}`,
+      )
+    }
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

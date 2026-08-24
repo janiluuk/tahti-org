@@ -27,6 +27,11 @@ export interface IntegrationProvider {
   oauthConnectPath?: string
   /** OAUTH kind only — the User column that's non-null once connected. */
   oauthStatusField?: string
+  /** API_KEY kind only. Shown as a "Don't have an account?" link above the
+   * credential form, for providers whose fields require one to already exist
+   * (e.g. hearthis-export's email/password). */
+  signupUrl?: string
+  signupLabel?: string
 }
 
 export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
@@ -78,10 +83,16 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
   {
     slug: 'hearthis-export',
     name: 'hearthis.at',
-    description: 'Push a track from your Tahti library out to your own hearthis.at account.',
+    description:
+      'Push a track from your Tahti library out to your own hearthis.at account. Requires an active hearthis.at Premium account — we sign in with your email and password once, to fetch the API key, and only that key is stored.',
     scope: 'EXPORT',
     authKind: 'API_KEY',
-    fields: [{ key: 'apiKey', label: 'hearthis.at API key', secret: true }],
+    fields: [
+      { key: 'email', label: 'hearthis.at email' },
+      { key: 'password', label: 'hearthis.at password', secret: true },
+    ],
+    signupUrl: 'https://hearthis.at/premium/',
+    signupLabel: "Don't have a hearthis.at Premium account? Get one →",
   },
   {
     slug: 'acoustid',

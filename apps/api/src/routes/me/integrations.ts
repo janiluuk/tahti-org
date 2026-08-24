@@ -19,6 +19,7 @@ import {
 } from '@tahti/shared'
 import { removeUserIntegrationCredential, upsertUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { getIntegrationInstaller } from '../../lib/integration-installers.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -102,11 +103,19 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: `Missing field: ${missingKey}` })
       }
 
+      let fieldsToStore = parsed.data.fields
+      const installer = getIntegrationInstaller(provider.slug)
+      if (installer) {
+        const result = await installer(parsed.data.fields)
+        if ('error' in result) return reply.status(400).send({ error: result.error })
+        fieldsToStore = result.fields
+      }
+
       await upsertUserIntegrationCredential(
         fastify.prisma,
         request.sessionUser!.id,
         provider.slug,
-        parsed.data.fields,
+        fieldsToStore,
       )
       return reply.status(204).send()
     },

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -153,5 +153,76 @@ describe('me/integrations', () => {
     })
     expect(row).not.toBeNull()
     expect(row?.fieldsEnc).not.toContain('secret-xyz')
+  })
+
+  describe('hearthis-export (email/password exchanged for key/secret)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('exchanges credentials for key/secret on a Premium account, storing only the pair', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ premium: true, key: 'the-key', secret: 'the-secret' }),
+        }),
+      )
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/integrations/hearthis-export/install',
+        headers: { cookie },
+        payload: { fields: { email: 'artist@example.com', password: 'hunter2' } },
+      })
+      expect(res.statusCode).toBe(204)
+
+      const row = await prisma.integrationCredential.findUnique({
+        where: { userId_providerSlug: { userId, providerSlug: 'hearthis-export' } },
+      })
+      expect(row).not.toBeNull()
+      expect(row?.fieldsEnc).not.toContain('hunter2')
+
+      await prisma.integrationCredential.deleteMany({
+        where: { userId, providerSlug: 'hearthis-export' },
+      })
+    })
+
+    it('rejects install for a non-Premium account', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ premium: false, key: 'the-key', secret: 'the-secret' }),
+        }),
+      )
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/integrations/hearthis-export/install',
+        headers: { cookie },
+        payload: { fields: { email: 'artist@example.com', password: 'hunter2' } },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json()).toMatchObject({ error: expect.stringMatching(/Premium/) })
+    })
+
+    it('rejects install for wrong hearthis.at credentials', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
+      )
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/integrations/hearthis-export/install',
+        headers: { cookie },
+        payload: { fields: { email: 'artist@example.com', password: 'wrong' } },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json()).toMatchObject({ error: expect.stringMatching(/email|password/i) })
+    })
   })
 })

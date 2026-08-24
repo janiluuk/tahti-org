@@ -57,6 +57,8 @@ export const archiveItemMetadataSelect = {
   sourceFormat: true,
   sourceBitrateKbps: true,
   embedUri: true,
+  hearthisExportStatus: true,
+  hearthisExportId: true,
   pinnedAt: true,
   trackOrder: true,
   createdAt: true,

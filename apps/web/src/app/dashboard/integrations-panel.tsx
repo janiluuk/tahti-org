@@ -24,11 +24,15 @@ export interface IntegrationsPanelProps {
 function CredentialForm({
   fields,
   pending,
+  signupUrl,
+  signupLabel,
   onSubmit,
   onCancel,
 }: {
   fields: IntegrationField[]
   pending: boolean
+  signupUrl?: string
+  signupLabel?: string
   onSubmit: (values: Record<string, string>) => void
   onCancel: () => void
 }) {
@@ -40,6 +44,16 @@ function CredentialForm({
       className="ui-panel studio-mt-sm"
       style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
     >
+      {signupUrl && (
+        <a
+          href={signupUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="studio-text-muted-sm"
+        >
+          {signupLabel ?? "Don't have an account? Sign up →"}
+        </a>
+      )}
       {fields.map((f) => (
         <label key={f.key} className="studio-field">
           <span className="studio-label">{f.label}</span>
@@ -223,6 +237,8 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
                       <CredentialForm
                         fields={fields}
                         pending={isPending}
+                        signupUrl={provider?.signupUrl}
+                        signupLabel={provider?.signupLabel}
                         onSubmit={(values) => void handleInstall(row.slug, values)}
                         onCancel={() => setConfiguringSlug(null)}
                       />

@@ -2,7 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, vi } from 'vitest'
-import { createHearthisClient, parseHearthisUsername } from './index.js'
+import {
+  createHearthisClient,
+  parseHearthisUsername,
+  loginToHearthis,
+  uploadTrackToHearthis,
+  HearthisLoginError,
+  HearthisPremiumRequiredError,
+} from './index.js'
 
 const SAMPLE_TRACK = {
   id: '14624101',
@@ -167,5 +174,88 @@ describe('parseHearthisUsername', () => {
 
   it('rejects empty input', () => {
     expect(parseHearthisUsername('')).toBeNull()
+  })
+})
+
+describe('loginToHearthis', () => {
+  it('returns the key/secret pair and premium flag on success', async () => {
+    const fetchMock = mockFetch(200, {
+      id: '9675121',
+      username: 'Yaniho',
+      permalink: 'yaniho',
+      premium: true,
+      key: 'DsuWnpSB31byqVm46ijNcYGzFUg2HQK7fI5ECZwaxrl8e0vMLhdA9PRJXOotTk',
+      secret: '54u28474x284x2r21374d4e454r2w2b4t2',
+    })
+    const result = await loginToHearthis('artist@example.com', 'hunter2', { fetch: fetchMock })
+    expect(result.premium).toBe(true)
+    expect(result.auth).toEqual({
+      key: 'DsuWnpSB31byqVm46ijNcYGzFUg2HQK7fI5ECZwaxrl8e0vMLhdA9PRJXOotTk',
+      secret: '54u28474x284x2r21374d4e454r2w2b4t2',
+    })
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).toContain('/login/')
+    expect(calledUrl).toContain('email=artist%40example.com')
+  })
+
+  it('reports premium:false for a non-premium account (login itself still succeeds)', async () => {
+    const fetchMock = mockFetch(200, { premium: false, key: 'k', secret: 's' })
+    const result = await loginToHearthis('artist@example.com', 'hunter2', { fetch: fetchMock })
+    expect(result.premium).toBe(false)
+  })
+
+  it('throws HearthisLoginError on wrong credentials', async () => {
+    const fetchMock = mockFetch(401, { message: 'Invalid email or password.' })
+    await expect(
+      loginToHearthis('artist@example.com', 'wrong', { fetch: fetchMock }),
+    ).rejects.toThrow(HearthisLoginError)
+  })
+})
+
+describe('uploadTrackToHearthis', () => {
+  const auth = { key: 'k', secret: 's' }
+
+  it('uploads via multipart with the `file` field and returns the remote id/url', async () => {
+    const fetchMock = mockFetch(200, {
+      files: [{ id: '501', error: '', full: { permalink_url: 'https://hearthis.at/yaniho/set/' } }],
+    })
+    const result = await uploadTrackToHearthis(
+      auth,
+      { title: 'Set', audioBuffer: Buffer.from('x'), filename: 'set.mp3' },
+      { fetch: fetchMock },
+    )
+    expect(result).toEqual({ remoteId: '501', url: 'https://hearthis.at/yaniho/set/' })
+
+    const [calledUrl, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(calledUrl).toContain('/upload_api.php')
+    expect(calledUrl).toContain('key=k')
+    expect(calledUrl).toContain('secret=s')
+    const form = init.body as FormData
+    expect(form.get('title')).toBe('Set')
+    expect(form.get('file')).toBeInstanceOf(Blob)
+  })
+
+  it('throws HearthisPremiumRequiredError on a 403 (valid key/secret, no Premium)', async () => {
+    const fetchMock = mockFetch(403, {
+      files: [{ error: 'This API endpoint is only available for Premium users.' }],
+    })
+    await expect(
+      uploadTrackToHearthis(
+        auth,
+        { title: 'Set', audioBuffer: Buffer.from('x'), filename: 'set.mp3' },
+        { fetch: fetchMock },
+      ),
+    ).rejects.toThrow(HearthisPremiumRequiredError)
+  })
+
+  it('throws a plain Error on other failures (e.g. unsupported filetype)', async () => {
+    const fetchMock = mockFetch(400, { files: [{ error: 'This filetype is not supported.' }] })
+    await expect(
+      uploadTrackToHearthis(
+        auth,
+        { title: 'Set', audioBuffer: Buffer.from('x'), filename: 'set.wav' },
+        { fetch: fetchMock },
+      ),
+    ).rejects.toThrow(/not supported/)
   })
 })

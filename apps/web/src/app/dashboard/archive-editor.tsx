@@ -23,6 +23,7 @@ import { ArchiveVersionPanel } from './archive-version-panel'
 import { ArchiveDownloadPanel } from './archive-download-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
+import { ArchiveHearthisExportPanel } from './archive-hearthis-export-panel'
 import ArchiveVisualPanel from './archive-visual-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
 import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-visibility'
@@ -416,6 +417,11 @@ export default function ArchiveEditor({
                   mixcloudConnected={mixcloudConnected}
                   mixcloudConfigured={mixcloudConfigured}
                   apiUrl={apiUrl}
+                />
+                <ArchiveHearthisExportPanel
+                  itemId={item.id}
+                  initialStatus={item.hearthisExportStatus as string | null | undefined}
+                  initialRemoteId={item.hearthisExportId as string | null | undefined}
                 />
               </>
             )}

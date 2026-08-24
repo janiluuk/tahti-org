@@ -238,3 +238,132 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
       }),
   }
 }
+
+// --- Write side: login + upload ------------------------------------------
+//
+// VERIFIED 2026-08-24 against the live account docs at hearthis.at/api/
+// (Premium-gated — logged in with a real Premium account to read them) and a
+// real upload/login round-trip. Two hosts: api-v2.hearthis.at for auth,
+// xhr.hearthis.at for upload/edit/delete, all of which additionally require
+// an active Premium account (anonymous → 401, logged-in free → 403).
+
+const UPLOAD_BASE_URL = 'https://xhr.hearthis.at'
+
+/** The `key`/`secret` pair returned by loginToHearthis — the docs call these
+ * masterkey/verify_code, but the live response field names are `key`/`secret`.
+ * Durable, not a session token: "possession of a valid key/secret pair is
+ * the authorization" (no separate CSRF/session concept). */
+export interface HearthisAuth {
+  key: string
+  secret: string
+}
+
+export interface HearthisLoginResult {
+  auth: HearthisAuth
+  premium: boolean
+  userId: string
+  username: string
+  permalink: string
+}
+
+/** Thrown by loginToHearthis for a wrong email/password (never for a
+ * non-Premium account — login itself doesn't require Premium, only writes do). */
+export class HearthisLoginError extends Error {}
+
+/** VERIFIED — GET /login/ on api-v2.hearthis.at. `email`+`password` in,
+ * account object with `key`/`secret`/`premium` out. The same endpoint takes
+ * `action=register`+`username` to create an account instead, per the docs —
+ * intentionally not wrapped here: Tahti links out to hearthis.at/signup/
+ * rather than creating accounts on a third-party service on a user's behalf. */
+export async function loginToHearthis(
+  email: string,
+  password: string,
+  options: { baseUrl?: string; fetch?: typeof fetch } = {},
+): Promise<HearthisLoginResult> {
+  const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
+  const doFetch = options.fetch ?? fetch
+  const url = new URL('/login/', baseUrl)
+  url.searchParams.set('email', email)
+  url.searchParams.set('password', password)
+
+  const res = await doFetch(url.toString())
+  const data = (await res.json().catch(() => null)) as {
+    key?: string
+    secret?: string
+    premium?: boolean
+    id?: string
+    username?: string
+    permalink?: string
+    message?: string
+  } | null
+
+  if (!res.ok || !data?.key || !data.secret) {
+    throw new HearthisLoginError(
+      data?.message ?? 'hearthis.at login failed — check the email and password.',
+    )
+  }
+
+  return {
+    auth: { key: data.key, secret: data.secret },
+    premium: Boolean(data.premium),
+    userId: data.id ?? '',
+    username: data.username ?? '',
+    permalink: data.permalink ?? '',
+  }
+}
+
+export interface HearthisUploadInput {
+  title: string
+  audioBuffer: Buffer
+  filename: string
+}
+
+export interface HearthisUploadResult {
+  remoteId: string
+  url?: string
+}
+
+/** Thrown by uploadTrackToHearthis when the account's key/secret are valid
+ * but it isn't (or is no longer) Premium — distinct from a hard auth/network
+ * failure so callers can show "upgrade to Premium" instead of a generic error. */
+export class HearthisPremiumRequiredError extends Error {}
+
+/** VERIFIED — POST /upload_api.php on xhr.hearthis.at. Multipart field is
+ * `file` (not `mp3`); auth is `key`/`secret` query params, not a form field.
+ * Metadata fields (genre, tags, tracklist, description, ...) are all optional
+ * and accepted in the same call — only title is sent here, matching what
+ * Tahti tracks metadata Tahti itself. */
+export async function uploadTrackToHearthis(
+  auth: HearthisAuth,
+  input: HearthisUploadInput,
+  options: { baseUrl?: string; fetch?: typeof fetch } = {},
+): Promise<HearthisUploadResult> {
+  const baseUrl = options.baseUrl ?? UPLOAD_BASE_URL
+  const doFetch = options.fetch ?? fetch
+  const url = new URL('/upload_api.php', baseUrl)
+  url.searchParams.set('key', auth.key)
+  url.searchParams.set('secret', auth.secret)
+
+  const form = new FormData()
+  form.set('file', new Blob([Uint8Array.from(input.audioBuffer)]), input.filename)
+  form.set('title', input.title)
+
+  const res = await doFetch(url.toString(), { method: 'POST', body: form })
+  const data = (await res.json().catch(() => null)) as {
+    files?: Array<{
+      id?: string
+      error?: string
+      full?: { permalink_url?: string }
+    }>
+  } | null
+  const file = data?.files?.[0]
+  const errorMessage = file?.error || (!res.ok ? `hearthis.at upload failed: ${res.status}` : '')
+
+  if (errorMessage) {
+    if (res.status === 403) throw new HearthisPremiumRequiredError(errorMessage)
+    throw new Error(errorMessage)
+  }
+  if (!file?.id) throw new Error('hearthis.at upload response had no track id')
+
+  return { remoteId: file.id, url: file.full?.permalink_url }
+}
