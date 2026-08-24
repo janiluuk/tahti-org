@@ -114,8 +114,11 @@ function cardBgStyle(artworkUrl: string | null | undefined): CSSProperties | und
 /** Not live, but airing its 24/7 archive rotation right now — same REPLAY
  * convention as Tahti Radio's own badge (see _tahti-radio-card.tsx /
  * mini-player.tsx), just applied to any channel with fallbackEnabled. Not
- * inline-playable from the card (see usePlayChannelCard) — clicking through
- * to the full channel page plays the rotation correctly. */
+ * inline-playable from the card (see usePlayChannelCard) — the rotation
+ * plays back through a separate path from the live encoder mount, so this
+ * play icon is a visual affordance for "click to listen" that, like the
+ * rest of the card, goes to the full channel page (which does play the
+ * rotation correctly) rather than actually starting inline playback here. */
 function ReplayCard({ channel }: { channel: ChannelCard }) {
   const artworkUrl = cardArtworkUrl(channel)
   return (
@@ -133,6 +136,11 @@ function ReplayCard({ channel }: { channel: ChannelCard }) {
             {channel.user.displayName.charAt(0).toUpperCase()}
           </span>
         )}
+        <span className="listen-card__playhint" aria-hidden>
+          <svg width="20" height="20" viewBox="0 0 18 18" fill="currentColor">
+            <path d="M5 3l11 6-11 6V3z" />
+          </svg>
+        </span>
       </div>
 
       <div className="listen-card__body">

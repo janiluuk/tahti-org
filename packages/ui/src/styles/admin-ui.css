@@ -2160,6 +2160,26 @@
   object-fit: cover;
 }
 
+/* "Click to listen" affordance — this card goes to the full channel page
+ * (which plays the 24/7 rotation correctly) rather than starting playback
+ * inline, but should still look like the rest of Discover's playable cards. */
+.listen-card__playhint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.listen-card:hover .listen-card__playhint {
+  opacity: 1;
+}
+
 .listen-card__avatar-fallback {
   display: flex;
   align-items: center;
