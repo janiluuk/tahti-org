@@ -64,6 +64,13 @@
   text-transform: uppercase;
 }
 
+[data-tahti-ui='studio'] .studio-top-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__logo {
   font-family: var(--font-head);
   font-size: var(--text-sm);
@@ -132,6 +139,45 @@
   gap: 6px;
   color: var(--coral);
   border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__upcoming {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__upcoming:hover {
+  background: color-mix(in srgb, var(--amber) 18%, transparent);
+  border-color: color-mix(in srgb, var(--amber) 50%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__upcoming-source {
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__upcoming-title {
+  font-weight: var(--weight-medium);
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__upcoming-when {
+  font-family: var(--font-mono, inherit);
+  white-space: nowrap;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__link--admin:hover {
@@ -265,6 +311,142 @@
   color: var(--green);
   border-color: color-mix(in srgb, var(--green) 55%, transparent);
   background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+/* Active/open state — icon buttons that open a popover or dropdown keep the
+ * hover treatment while `aria-expanded="true"`, so it's obvious which one is
+ * currently open. */
+[data-tahti-ui='studio'] .studio-top-nav__icon-btn[aria-expanded='true'] {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn[aria-expanded='true'] {
+  color: var(--coral);
+  border-color: color-mix(in srgb, var(--coral) 55%, transparent);
+  background: color-mix(in srgb, var(--coral) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-btn--live[aria-expanded='true'] {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 55%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive {
+  position: relative;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-menu {
+  min-width: 220px;
+  padding: 12px;
+  gap: 10px;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--coral);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-dot--live {
+  background: var(--green);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-detail {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-family: var(--font-mono, inherit);
+  margin-left: auto;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-manage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__golive-manage:hover {
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+}
+
+/* Messages dropdown (MessagesBell) — reused here from the public channel
+ * header; brand-channel.css only scopes these under [data-tahti-ui='brand']. */
+[data-tahti-ui='studio'] .studio-top-nav__messages-menu {
+  min-width: 300px;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-item:hover {
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-item--unread {
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-item--unread:hover {
+  background: color-mix(in srgb, var(--cyan) 14%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-avatar {
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-body {
+  min-width: 0;
+  flex: 1;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-name {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__message-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--cyan);
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__notif {
@@ -3028,8 +3210,15 @@
 }
 
 /* ── Stream manager modal — chrome around the panel above, opened from the
-   top-nav go-live icon ──────────────────────────────────────────────────── */
-[data-tahti-ui='studio'] .stream-mgr-modal {
+   top-nav go-live icon. Deliberately NOT scoped under [data-tahti-ui='studio']
+   like the rest of this file: StreamManagerModal renders as a sibling of
+   <StudioShell> (see _studio-shell-client.tsx), outside that div, not inside
+   it — a [data-tahti-ui='studio'] ancestor selector never matched it, so the
+   modal painted unstyled (position:static, no overlay, no z-index) wherever
+   it fell in normal document flow. The design tokens it uses (--card2,
+   --border, --muted, --text, --space-*, --radius-md) are all defined
+   unscoped on :root, so dropping the prefix costs nothing. ────────────────── */
+.stream-mgr-modal {
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -3040,7 +3229,7 @@
   background: rgba(0, 0, 0, 0.6);
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__card {
+.stream-mgr-modal__card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -3057,7 +3246,7 @@
   overflow-y: auto;
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__close {
+.stream-mgr-modal__close {
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
@@ -3073,7 +3262,7 @@
   cursor: pointer;
 }
 
-[data-tahti-ui='studio'] .stream-mgr-modal__close:hover {
+.stream-mgr-modal__close:hover {
   color: var(--text);
   background: color-mix(in srgb, var(--muted) 10%, transparent);
 }
@@ -5722,10 +5911,79 @@
 }
 
 [data-tahti-ui='studio'] .studio-radio-calendar__cell-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell-avatar {
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell-text {
   font-size: var(--text-micro);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Fixed positioning (not absolute) — escapes .studio-radio-calendar__scroll's
+   overflow-x:auto, same reasoning as GuidedTour's spotlight card. */
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard {
+  position: fixed;
+  z-index: 200;
+  display: flex;
+  gap: 0.6rem;
+  width: 260px;
+  padding: 0.75rem;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard--up {
+  transform: translateY(-100%);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-avatar {
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-body {
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-artist {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-time {
+  font-size: var(--text-micro);
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: var(--text-micro);
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hovercard-link:hover {
+  text-decoration: underline;
 }
 
 [data-tahti-ui='studio'] .studio-radio-calendar__actionbar {
@@ -6046,7 +6304,9 @@
 
 [data-tahti-ui='studio'] .channel-accent-swatch--active {
   border-color: var(--white);
-  box-shadow: 0 0 0 2px var(--cyan), 0 0 16px color-mix(in srgb, var(--cyan) 45%, transparent);
+  box-shadow:
+    0 0 0 2px var(--cyan),
+    0 0 16px color-mix(in srgb, var(--cyan) 45%, transparent);
   transform: scale(1.12);
 }
 
@@ -6119,7 +6379,9 @@
   border-radius: 999px;
   background: var(--surface);
   cursor: pointer;
-  transition: background 0.16s ease, border-color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 [data-tahti-ui='studio'] .channel-visualizer-switch[aria-checked='true'] {
@@ -6137,7 +6399,9 @@
   transition: transform 0.16s ease;
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch[aria-checked='true'] .channel-visualizer-switch__thumb {
+[data-tahti-ui='studio']
+  .channel-visualizer-switch[aria-checked='true']
+  .channel-visualizer-switch__thumb {
   transform: translateX(21px);
 }
 
@@ -8939,7 +9203,11 @@
   font-size: var(--text-sm);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 [data-tahti-ui='studio'] .upload-progress__seg-btn + .upload-progress__seg-btn {
@@ -10957,7 +11225,9 @@
   border: 1px solid var(--border);
   background: var(--muted2);
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease;
 }
 
 [data-tahti-ui='studio'] .broadcast-studio__red-toggle > span {
@@ -10966,7 +11236,9 @@
   border-radius: 50%;
   background: var(--text-muted);
   transform: translateX(0);
-  transition: transform 140ms ease, background 140ms ease;
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
 }
 
 [data-tahti-ui='studio'] .broadcast-studio__red-toggle:disabled {
@@ -11015,7 +11287,9 @@
   color: var(--text);
   text-align: center;
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
 [data-tahti-ui='studio'] .studio-file-dropzone:hover,
@@ -12270,7 +12544,11 @@
   border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 88% 10%,
+      color-mix(in srgb, var(--accent) 20%, transparent),
+      transparent 34%
+    ),
     linear-gradient(135deg, var(--surface-raised), var(--surface));
 }
 
@@ -12320,7 +12598,10 @@
   max-width: 52rem;
 }
 
-[data-tahti-ui='studio'] .artist-info-identity-fields > .studio-field--block + .studio-field--block {
+[data-tahti-ui='studio']
+  .artist-info-identity-fields
+  > .studio-field--block
+  + .studio-field--block {
   padding-top: var(--space-4);
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }

@@ -33,6 +33,7 @@ export const RadioSlotBookingItemSchema = z.object({
   showType: BroadcastShowTypeSchema,
   channelSlug: z.string(),
   displayName: z.string(),
+  avatarUrl: z.string().nullable(),
   isMine: z.boolean(),
 })
 export type RadioSlotBookingItem = z.infer<typeof RadioSlotBookingItemSchema>

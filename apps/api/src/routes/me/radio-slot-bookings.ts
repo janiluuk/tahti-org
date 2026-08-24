@@ -62,7 +62,11 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
       const rows = await fastify.prisma.radioSlotBooking.findMany({
         where: { startAt: { lt: to }, endAt: { gt: from } },
         orderBy: { startAt: 'asc' },
-        include: { channel: { select: { slug: true, user: { select: { displayName: true } } } } },
+        include: {
+          channel: {
+            select: { slug: true, user: { select: { displayName: true, avatarUrl: true } } },
+          },
+        },
       })
 
       return reply.send(
@@ -74,6 +78,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
           showType: r.showType,
           channelSlug: r.channel.slug,
           displayName: r.channel.user.displayName,
+          avatarUrl: r.channel.user.avatarUrl,
           isMine: r.channelId === channel?.id,
         })),
       )
@@ -93,7 +98,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: request.sessionUser!.id },
-        select: { id: true, slug: true, user: { select: { displayName: true } } },
+        select: { id: true, slug: true, user: { select: { displayName: true, avatarUrl: true } } },
       })
       if (!channel) {
         return reply.status(403).send({ error: 'You need a channel to book a live slot' })
@@ -175,6 +180,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         showType: row.showType,
         channelSlug: channel.slug,
         displayName: channel.user.displayName,
+        avatarUrl: channel.user.avatarUrl,
         isMine: true,
       })
     },

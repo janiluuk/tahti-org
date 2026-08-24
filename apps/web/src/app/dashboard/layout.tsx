@@ -14,6 +14,8 @@ import {
   fetchMyStickyNotifications,
   markAllNotificationsRead,
 } from './notification-actions'
+import { fetchConversations } from './messages/actions'
+import { fetchNextUpcomingShow } from './_upcoming-show-actions'
 import { StudioShellClient } from './_studio-shell-client'
 import { StickyNotificationBanner } from './_sticky-notification-banner'
 
@@ -31,18 +33,25 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const hasChannel = Boolean(user?.channel)
   const channelUrl = user?.channel ? resolveChannelUrl(user.channel.slug) : undefined
   const stickyNotifications = user ? await fetchMyStickyNotifications() : []
+  // Both possible sources (a Tahti Radio slot, an episode on your own
+  // schedule) require a channel to have booked anything in the first place.
+  const nextUpcomingShow = hasChannel ? await fetchNextUpcomingShow() : null
 
   return (
     <StudioShellClient
       displayName={displayName}
       isLive={isOnline}
       isReallyLive={isReallyLive}
+      goneLiveAt={user?.channel?.goneLiveAt ?? null}
+      nextBroadcastAt={user?.channel?.nextBroadcastAt ?? null}
+      nextUpcomingShow={nextUpcomingShow}
       isBoard={isBoard}
       hasChannel={hasChannel}
       channelUrl={channelUrl}
       channelSlug={user?.channel?.slug}
       fetchNotifications={fetchMyNotifications}
       markNotificationsRead={markAllNotificationsRead}
+      fetchConversations={fetchConversations}
       logoutAction={logout}
     >
       <StickyNotificationBanner initial={stickyNotifications} />

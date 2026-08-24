@@ -8,12 +8,26 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { SidebarNavIconSvg } from './SidebarNav'
 import { NotificationBell, type NotificationBellItem } from './NotificationBell'
+import { MessagesBell, type MessagesBellConversation } from './MessagesBell'
+import { GoLiveStatus } from './GoLiveStatus'
+import { UpcomingShowNotice, type UpcomingShowInfo } from './UpcomingShowNotice'
 import { HelpTourButton } from './HelpTourButton'
 import { getStudioTourSteps } from './tour-steps'
 
 type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
+  /** True only for a real broadcast (Channel.goneLiveAt set) — distinct from
+   * `isLive`, which the 24/7 rotation also satisfies. Decides the go-live
+   * icon's green/red color and what its status popover says. */
+  isReallyLive?: boolean
+  goneLiveAt?: string | null
+  /** Artist-set "next broadcast" hint — shown as a countdown in the go-live
+   * popover when set and still in the future. */
+  nextBroadcastAt?: string | null
+  /** Soonest booked-but-not-live show — a Tahti Radio slot or an episode on
+   * the artist's own channel schedule, whichever comes first. */
+  nextUpcomingShow?: UpcomingShowInfo | null
   isBoard?: boolean
   hasChannel?: boolean
   channelUrl?: string
@@ -22,9 +36,10 @@ type StudioTopNavProps = {
     unreadCount: number
   }>
   markNotificationsRead?: () => Promise<void>
-  /** When set, clicking the go-live icon always opens the stream manager
-   * instead of navigating to /dashboard/broadcast — the modal itself
-   * branches between live stats and rotation/playlist controls. */
+  fetchConversations?: () => Promise<MessagesBellConversation[]>
+  /** When set, clicking the go-live icon opens a small status popover with a
+   * button through to the stream manager, instead of navigating straight to
+   * /dashboard/broadcast. */
   onGoLiveClick?: () => void
   /** Server action for the "Log out" form. The old hardcoded
    * action="/api/auth/logout" posted to a path that only exists on the API
@@ -53,20 +68,6 @@ function IconLogout() {
   )
 }
 
-function IconGoLive() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <circle cx="8" cy="8" r="3" fill="currentColor" />
-      <path
-        d="M4.2 4.2a5.4 5.4 0 0 0 0 7.6M11.8 4.2a5.4 5.4 0 0 1 0 7.6M2.3 2.3a8.2 8.2 0 0 0 0 11.4M13.7 2.3a8.2 8.2 0 0 1 0 11.4"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
 function IconUpload() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -82,19 +83,6 @@ function IconUpload() {
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function IconMessages() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M2 4.5A1.5 1.5 0 0 1 3.5 3h9A1.5 1.5 0 0 1 14 4.5v5A1.5 1.5 0 0 1 12.5 11H6.8L3.6 13.4A.5.5 0 0 1 3 13v-2H3.5A1.5 1.5 0 0 1 2 9.5v-5Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
         strokeLinejoin="round"
       />
     </svg>
@@ -126,11 +114,16 @@ function IconSwitch() {
 export function StudioTopNav({
   displayName,
   isLive,
+  isReallyLive,
+  goneLiveAt,
+  nextBroadcastAt,
+  nextUpcomingShow,
   isBoard,
   hasChannel,
   channelUrl,
   fetchNotifications,
   markNotificationsRead,
+  fetchConversations,
   onGoLiveClick,
   logoutAction,
 }: StudioTopNavProps) {
@@ -161,15 +154,22 @@ export function StudioTopNav({
 
   return (
     <header className="studio-top-nav">
-      {/* Artists always have a channel, so a bare "/" would immediately
-       * redirect back to /dashboard (see (marketing)/page.tsx) — this never
-       * actually left the studio. ?home=1 tells that redirect to stand down,
-       * same escape hatch ChannelHeader's resolveHomeHref() already uses. */}
-      <Link href="/?home=1" className="studio-top-nav__logo">
-        TAHTI
-      </Link>
+      <div className="studio-top-nav__brand">
+        {/* Artists always have a channel, so a bare "/" would immediately
+         * redirect back to /dashboard (see (marketing)/page.tsx) — this never
+         * actually left the studio. ?home=1 tells that redirect to stand down,
+         * same escape hatch ChannelHeader's resolveHomeHref() already uses. */}
+        <Link href="/?home=1" className="studio-top-nav__logo">
+          TAHTI
+        </Link>
+        <HelpTourButton
+          steps={getStudioTourSteps(pathname ?? '/dashboard')}
+          className="studio-top-nav__icon-btn studio-top-nav__help-btn"
+        />
+      </div>
       <div className="studio-top-nav__actions">
         <div className="studio-top-nav__scroll-links">
+          {displayName && nextUpcomingShow && <UpcomingShowNotice show={nextUpcomingShow} />}
           {isBoard && (
             <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
               <IconSwitch />
@@ -177,30 +177,14 @@ export function StudioTopNav({
             </Link>
           )}
         </div>
-        {displayName &&
-          hasChannel &&
-          (onGoLiveClick ? (
-            <button
-              type="button"
-              className={`studio-top-nav__icon-btn studio-top-nav__golive-btn${
-                isLive ? ' studio-top-nav__golive-btn--live' : ''
-              }`}
-              aria-label="Stream manager"
-              title="Stream manager"
-              onClick={onGoLiveClick}
-            >
-              <IconGoLive />
-            </button>
-          ) : (
-            <Link
-              href="/dashboard/broadcast"
-              className="studio-top-nav__icon-btn studio-top-nav__golive-btn"
-              aria-label="Go live"
-              title="Go live"
-            >
-              <IconGoLive />
-            </Link>
-          ))}
+        {displayName && hasChannel && (
+          <GoLiveStatus
+            isReallyLive={Boolean(isReallyLive)}
+            goneLiveAt={goneLiveAt}
+            nextBroadcastAt={nextBroadcastAt}
+            onOpenManager={onGoLiveClick}
+          />
+        )}
         {displayName && hasChannel && (
           <Link
             href="/dashboard/upload"
@@ -211,15 +195,8 @@ export function StudioTopNav({
             <IconUpload />
           </Link>
         )}
-        {displayName && (
-          <Link
-            href="/dashboard/messages"
-            className="studio-top-nav__icon-btn"
-            aria-label="Messages"
-            title="Messages"
-          >
-            <IconMessages />
-          </Link>
+        {displayName && fetchConversations && (
+          <MessagesBell fetchConversations={fetchConversations} />
         )}
         {displayName && fetchNotifications && markNotificationsRead && (
           <NotificationBell
@@ -227,10 +204,6 @@ export function StudioTopNav({
             markAllRead={markNotificationsRead}
           />
         )}
-        <HelpTourButton
-          steps={getStudioTourSteps(pathname ?? '/dashboard')}
-          className="studio-top-nav__icon-btn"
-        />
         {displayName && (
           <div className="studio-top-nav__user-menu" ref={menuRef}>
             <button

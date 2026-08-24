@@ -4,6 +4,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { HelpTourButton } from './HelpTourButton'
+import { getAdminTourSteps } from './tour-steps'
 
 export interface AdminShellHeaderProps {
   displayName: string
@@ -13,15 +16,22 @@ export interface AdminShellHeaderProps {
 
 /** Production admin top bar — pairs with AdminShell `variant="studio"`. */
 export function AdminShellHeader({ displayName, username, userInitial }: AdminShellHeaderProps) {
+  const pathname = usePathname()
   return (
     <>
       <div className="admin-view-strip" role="status" aria-live="polite">
         ⚠ ADMIN VIEW · acting as board member @{username} · all actions audit-logged
       </div>
       <header className="studio-top-nav">
-        <Link href="/admin/dashboard" className="studio-top-nav__logo admin-top-logo">
-          TAHTI ADMIN
-        </Link>
+        <div className="studio-top-nav__brand">
+          <Link href="/admin/dashboard" className="studio-top-nav__logo admin-top-logo">
+            TAHTI ADMIN
+          </Link>
+          <HelpTourButton
+            steps={getAdminTourSteps(pathname ?? '/admin/dashboard')}
+            className="studio-top-nav__icon-btn studio-top-nav__help-btn"
+          />
+        </div>
         <div className="studio-top-nav__actions">
           <div className="studio-top-nav__user" aria-label={`Signed in as ${displayName}`}>
             <span className="studio-top-nav__user-avatar admin-user-avatar" aria-hidden>

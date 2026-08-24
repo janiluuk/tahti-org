@@ -108,6 +108,9 @@ export function GuidedTour({ steps, onClose }: { steps: TourStep[]; onClose: () 
             ×
           </button>
           <p>Nothing to highlight on this page yet.</p>
+          <a href="/help" className="guided-tour__help-center">
+            Visit the Help Center →
+          </a>
         </div>
       </div>
     )
@@ -173,6 +176,9 @@ export function GuidedTour({ steps, onClose }: { steps: TourStep[]; onClose: () 
             </button>
           )}
         </div>
+        <a href="/help" className="guided-tour__help-center">
+          Visit the Help Center →
+        </a>
       </div>
     </div>
   )

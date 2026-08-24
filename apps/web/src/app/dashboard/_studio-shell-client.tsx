@@ -38,11 +38,15 @@ export function StudioShellClient({
   channelSlug,
   isLive: initialIsLive,
   isReallyLive: initialIsReallyLive,
+  goneLiveAt: initialGoneLiveAt,
+  nextBroadcastAt: initialNextBroadcastAt,
   ...shellProps
 }: StudioShellClientProps) {
   const [streamManagerOpen, setStreamManagerOpen] = useState(false)
   const [isLive, setIsLive] = useState(Boolean(initialIsLive))
   const [isReallyLive, setIsReallyLive] = useState(Boolean(initialIsReallyLive))
+  const [goneLiveAt, setGoneLiveAt] = useState(initialGoneLiveAt ?? null)
+  const [nextBroadcastAt, setNextBroadcastAt] = useState(initialNextBroadcastAt ?? null)
 
   useEffect(() => {
     setIsLive(Boolean(initialIsLive))
@@ -53,6 +57,14 @@ export function StudioShellClient({
   }, [initialIsReallyLive])
 
   useEffect(() => {
+    setGoneLiveAt(initialGoneLiveAt ?? null)
+  }, [initialGoneLiveAt])
+
+  useEffect(() => {
+    setNextBroadcastAt(initialNextBroadcastAt ?? null)
+  }, [initialNextBroadcastAt])
+
+  useEffect(() => {
     if (!channelSlug) return
     let cancelled = false
     async function poll() {
@@ -60,10 +72,12 @@ export function StudioShellClient({
         const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
         if (!res.ok || cancelled) return
         const me = (await res.json()) as {
-          channel?: { state?: string; goneLiveAt?: string | null }
+          channel?: { state?: string; goneLiveAt?: string | null; nextBroadcastAt?: string | null }
         }
         setIsLive(Boolean(me.channel) && me.channel?.state !== 'OFFLINE')
         setIsReallyLive(Boolean(me.channel?.goneLiveAt))
+        setGoneLiveAt(me.channel?.goneLiveAt ?? null)
+        setNextBroadcastAt(me.channel?.nextBroadcastAt ?? null)
       } catch {
         // ignore polling errors — keep showing the last known state
       }
@@ -78,17 +92,45 @@ export function StudioShellClient({
   const openStreamManager = () => setStreamManagerOpen(true)
 
   return (
-    <StreamManagerContext.Provider value={channelSlug ? openStreamManager : null}>
-      <StudioShell {...shellProps} isLive={isLive} onGoLiveClick={openStreamManager} />
-      {channelSlug && (
-        <StreamManagerModal
-          slug={channelSlug}
-          displayName={shellProps.displayName}
-          open={streamManagerOpen}
-          onClose={() => setStreamManagerOpen(false)}
-          isReallyLive={isReallyLive}
-        />
-      )}
-    </StreamManagerContext.Provider>
+    // Two nested wrappers, not one — both load-bearing:
+    //
+    // 1. The outer .tahti-studio carries the dark-theme --tahti-* variable
+    //    bridge (defined only under [data-tahti-ui='studio'].tahti-studio —
+    //    see the block at the top of brand-studio.css). StreamManagerModal
+    //    renders here as a *sibling* of <StudioShell>, not inside it, so
+    //    without a shared ancestor providing that bridge, CSS custom
+    //    properties like --tahti-text never reach it or anything inside it
+    //    (Panel headings, buttons, …) — they'd inherit the light-admin
+    //    default instead and render as near-invisible dark-on-dark text.
+    //
+    // 2. The inner plain div keeps the modal from being a *direct* child of
+    //    the outer .tahti-studio: brand-studio.css resets every direct child
+    //    of .tahti-studio to position:relative (so page content sits above
+    //    the fixed WebGL background canvas), which would clobber the modal's
+    //    own position:fixed overlay. One extra nesting level and that reset
+    //    never reaches it, without relying on a CSS specificity tie-break.
+    <div data-tahti-ui="studio" className="tahti-studio">
+      <div>
+        <StreamManagerContext.Provider value={channelSlug ? openStreamManager : null}>
+          <StudioShell
+            {...shellProps}
+            isLive={isLive}
+            isReallyLive={isReallyLive}
+            goneLiveAt={goneLiveAt}
+            nextBroadcastAt={nextBroadcastAt}
+            onGoLiveClick={openStreamManager}
+          />
+          {channelSlug && (
+            <StreamManagerModal
+              slug={channelSlug}
+              displayName={shellProps.displayName}
+              open={streamManagerOpen}
+              onClose={() => setStreamManagerOpen(false)}
+              isReallyLive={isReallyLive}
+            />
+          )}
+        </StreamManagerContext.Provider>
+      </div>
+    </div>
   )
 }
