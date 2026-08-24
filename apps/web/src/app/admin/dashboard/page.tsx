@@ -181,36 +181,30 @@ export default async function AdminDashboardPage() {
     .reduce((s, [, v]) => s + parseInt(v, 10), 0)
 
   const actionRows: ActionRow[] = [
-    ...betaApplications.map(
-      (a): ActionRow => ({
-        key: `beta-${a.id}`,
-        title: `${a.name} · ${a.artistType}`,
-        meta: `Beta application · applied ${new Date(a.createdAt).toLocaleDateString('fi-FI')}`,
-        actionLabel: 'Approve',
-        actionTone: 'primary',
-        href: '/admin/beta?status=PENDING',
-      }),
-    ),
-    ...pendingVenues.map(
-      (v): ActionRow => ({
-        key: `venue-${v.id}`,
-        title: `${v.name}, ${v.city}`,
-        meta: `Venue verification · submitted ${new Date(v.createdAt).toLocaleDateString('fi-FI')}`,
-        actionLabel: 'Verify',
-        actionTone: 'primary',
-        href: '/governance/venues',
-      }),
-    ),
-    ...failedPayouts.map(
-      (p): ActionRow => ({
-        key: `payout-${p.id}`,
-        title: `@${p.artistUsername} — ${formatEur(p.netToArtistCents)}`,
-        meta: 'Fan-sub payout failed',
-        actionLabel: 'Retry',
-        actionTone: 'amber',
-        href: '/admin/financial/fansubs',
-      }),
-    ),
+    ...betaApplications.map((a): ActionRow => ({
+      key: `beta-${a.id}`,
+      title: `${a.name} · ${a.artistType}`,
+      meta: `Beta application · applied ${new Date(a.createdAt).toLocaleDateString('fi-FI')}`,
+      actionLabel: 'Approve',
+      actionTone: 'primary',
+      href: '/admin/beta?status=PENDING',
+    })),
+    ...pendingVenues.map((v): ActionRow => ({
+      key: `venue-${v.id}`,
+      title: `${v.name}, ${v.city}`,
+      meta: `Venue verification · submitted ${new Date(v.createdAt).toLocaleDateString('fi-FI')}`,
+      actionLabel: 'Verify',
+      actionTone: 'primary',
+      href: '/governance/venues',
+    })),
+    ...failedPayouts.map((p): ActionRow => ({
+      key: `payout-${p.id}`,
+      title: `@${p.artistUsername} — ${formatEur(p.netToArtistCents)}`,
+      meta: 'Fan-sub payout failed',
+      actionLabel: 'Retry',
+      actionTone: 'amber',
+      href: '/admin/financial/fansubs',
+    })),
   ]
 
   const visibleActionRows = actionRows.slice(0, 6)

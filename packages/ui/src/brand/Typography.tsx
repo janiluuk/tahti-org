@@ -5,15 +5,7 @@ import type { HTMLAttributes } from 'react'
 import { cn } from '../lib/cn'
 
 export type BrandTextSize =
-  | 'display'
-  | 'statBig'
-  | 'h2'
-  | 'h3'
-  | 'body'
-  | 'sm'
-  | 'xs'
-  | 'label'
-  | 'micro'
+  'display' | 'statBig' | 'h2' | 'h3' | 'body' | 'sm' | 'xs' | 'label' | 'micro'
 
 export type BrandTextTone = 'primary' | 'secondary' | 'tertiary' | 'onBrand'
 

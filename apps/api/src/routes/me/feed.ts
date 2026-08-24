@@ -102,46 +102,40 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
       const likeCountById = new Map(likeCounts.map((l) => [l.archiveItemId, l._count]))
 
       const releaseItems: FeedItem[] = await Promise.all(
-        releases.map(
-          async (r): Promise<FeedItem> => ({
-            kind: 'release',
-            id: r.id,
-            date: (r.publishedAt ?? new Date()).toISOString(),
-            artist: r.user,
-            title: r.title,
-            releaseType: r.type,
-            artworkUrl: await resolveReleaseArtworkUrl(r),
-            url: `/r/${r.smartLinkSlug}`,
-          }),
-        ),
+        releases.map(async (r): Promise<FeedItem> => ({
+          kind: 'release',
+          id: r.id,
+          date: (r.publishedAt ?? new Date()).toISOString(),
+          artist: r.user,
+          title: r.title,
+          releaseType: r.type,
+          artworkUrl: await resolveReleaseArtworkUrl(r),
+          url: `/r/${r.smartLinkSlug}`,
+        })),
       )
 
       const items: FeedItem[] = [
-        ...posts.map(
-          (p): FeedItem => ({
-            kind: 'post',
-            id: p.id,
-            date: p.publishAt.toISOString(),
-            artist: p.user,
-            title: p.title,
-            body: p.body,
-            url: `/u/${p.user.username}`,
-          }),
-        ),
-        ...tracks.map(
-          (t): FeedItem => ({
-            kind: 'track',
-            id: t.id,
-            date: t.createdAt.toISOString(),
-            artist: t.channel.user,
-            title: t.title,
-            bannerUrl: t.bannerUrl,
-            channelSlug: t.channel.slug,
-            liked: likedIds.has(t.id),
-            likeCount: likeCountById.get(t.id) ?? 0,
-            url: resolveChannelUrl(t.channel.slug, { hash: `archive-item-${t.id}` }),
-          }),
-        ),
+        ...posts.map((p): FeedItem => ({
+          kind: 'post',
+          id: p.id,
+          date: p.publishAt.toISOString(),
+          artist: p.user,
+          title: p.title,
+          body: p.body,
+          url: `/u/${p.user.username}`,
+        })),
+        ...tracks.map((t): FeedItem => ({
+          kind: 'track',
+          id: t.id,
+          date: t.createdAt.toISOString(),
+          artist: t.channel.user,
+          title: t.title,
+          bannerUrl: t.bannerUrl,
+          channelSlug: t.channel.slug,
+          liked: likedIds.has(t.id),
+          likeCount: likeCountById.get(t.id) ?? 0,
+          url: resolveChannelUrl(t.channel.slug, { hash: `archive-item-${t.id}` }),
+        })),
         ...releaseItems,
       ]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

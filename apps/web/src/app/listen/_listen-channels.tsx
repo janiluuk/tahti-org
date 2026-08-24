@@ -70,7 +70,9 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
             type="button"
             className="listen-card__play-btn"
             onClick={(e) => void handlePlayClick(e)}
-            aria-label={isCurrent ? `Pause ${channel.user.displayName}` : `Play ${channel.user.displayName}`}
+            aria-label={
+              isCurrent ? `Pause ${channel.user.displayName}` : `Play ${channel.user.displayName}`
+            }
           >
             {isCurrent ? '❚❚' : '▶'}
           </button>
@@ -106,7 +108,11 @@ function cardBgStyle(artworkUrl: string | null | undefined): CSSProperties | und
 function ReplayCard({ channel }: { channel: ChannelCard }) {
   const artworkUrl = cardArtworkUrl(channel)
   return (
-    <Link href={resolveChannelUrl(channel.slug)} className="listen-card" style={cardBgStyle(artworkUrl)}>
+    <Link
+      href={resolveChannelUrl(channel.slug)}
+      className="listen-card"
+      style={cardBgStyle(artworkUrl)}
+    >
       <div className="listen-card__avatar">
         {artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

@@ -103,22 +103,18 @@ export default async function RevenuePage() {
   }
 
   const rows: PayoutRow[] = [
-    ...stats.recent.map(
-      (p): PayoutRow => ({
-        date: new Date(p.paidAt ?? p.createdAt),
-        description: `Fan-sub — ${p.tierName}`,
-        status: p.state as PayoutRow['status'],
-        netCents: p.netToArtistCents,
-      }),
-    ),
-    ...(royalties?.reports ?? []).map(
-      (r): PayoutRow => ({
-        date: new Date(r.periodEnd),
-        description: `Distribution royalties — ${r.releaseTitle}`,
-        status: 'PAID',
-        netCents: r.amountCents,
-      }),
-    ),
+    ...stats.recent.map((p): PayoutRow => ({
+      date: new Date(p.paidAt ?? p.createdAt),
+      description: `Fan-sub — ${p.tierName}`,
+      status: p.state as PayoutRow['status'],
+      netCents: p.netToArtistCents,
+    })),
+    ...(royalties?.reports ?? []).map((r): PayoutRow => ({
+      date: new Date(r.periodEnd),
+      description: `Distribution royalties — ${r.releaseTitle}`,
+      status: 'PAID',
+      netCents: r.amountCents,
+    })),
   ]
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, ROW_LIMIT)

@@ -21,18 +21,18 @@ export default function DiscoWidgetsHelpPage() {
       <Heading level={2}>1. Build it</Heading>
       <Text>
         Use the <code>@tahti/widget-sdk</code> package in the tahti-org repository —{' '}
-        <code>packages/widget-sdk/README.md</code> walks through the whole contract (what a
-        widget exports, how it talks to the host page, and the size/security limits it runs
-        under) and <code>packages/widget-sdk/example/live-status/</code> is a complete working
-        example to start from.
+        <code>packages/widget-sdk/README.md</code> walks through the whole contract (what a widget
+        exports, how it talks to the host page, and the size/security limits it runs under) and{' '}
+        <code>packages/widget-sdk/example/live-status/</code> is a complete working example to start
+        from.
       </Text>
 
       <Heading level={2}>2. Open a pull request</Heading>
       <ol>
         <li>
           Fork the tahti-org repository and add your widget under a new directory, e.g.{' '}
-          <code>contrib/disco-widgets/&lt;your-widget-slug&gt;/</code> — include your source
-          (<code>src/index.ts</code>), a short <code>README.md</code> describing what it does and
+          <code>contrib/disco-widgets/&lt;your-widget-slug&gt;/</code> — include your source (
+          <code>src/index.ts</code>), a short <code>README.md</code> describing what it does and
           which scope it targets (listener, artist, or admin), and note any config it expects.
         </li>
         <li>Push your branch and open a pull request against tahti-org&apos;s main branch.</li>
@@ -40,8 +40,7 @@ export default function DiscoWidgetsHelpPage() {
           In the PR description, be explicit about:
           <ul>
             <li>
-              <strong>What it&apos;s for</strong> — the widget&apos;s purpose and who it&apos;s
-              for.
+              <strong>What it&apos;s for</strong> — the widget&apos;s purpose and who it&apos;s for.
             </li>
             <li>
               <strong>What to test</strong> — concrete steps a reviewer can follow to verify it
@@ -67,9 +66,8 @@ export default function DiscoWidgetsHelpPage() {
       <Heading level={2}>3. What happens next</Heading>
       <Text>
         A maintainer reviews the code in your PR. Once it&apos;s merged, an admin builds your
-        widget, publishes it through the Disco-widgets admin panel, and approves it — at that
-        point it&apos;s live in its store, credited to you, with no further action needed on your
-        end.
+        widget, publishes it through the Disco-widgets admin panel, and approves it — at that point
+        it&apos;s live in its store, credited to you, with no further action needed on your end.
       </Text>
     </article>
   )

@@ -3,7 +3,10 @@
 
 import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
-import { fetchInternetRadioPresets, fetchMyInternetRadioStations } from '@/lib/internet-radio-client'
+import {
+  fetchInternetRadioPresets,
+  fetchMyInternetRadioStations,
+} from '@/lib/internet-radio-client'
 import { InternetRadioPanel } from '../../internet-radio-panel'
 
 export default async function InternetRadioSettingsPage() {

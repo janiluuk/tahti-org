@@ -37,9 +37,7 @@ const discoWidgetStoreRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const parsed = DiscoWidgetStoreQuerySchema.safeParse(request.query)
       if (!parsed.success) {
-        return reply
-          .status(400)
-          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid query' })
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid query' })
       }
       const { scope, category } = parsed.data
 

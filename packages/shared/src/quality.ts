@@ -23,12 +23,7 @@ export type ArchiveItemSource =
 export type ArchiveQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
 
 export type ArchiveEmbedProvider =
-  | 'SPOTIFY'
-  | 'MIXCLOUD'
-  | 'HEARTHIS'
-  | 'YOUTUBE'
-  | 'APPLE'
-  | 'GENERIC'
+  'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
 
 const EMBED_ONLY_SOURCES: ReadonlySet<ArchiveItemSource> = new Set([
   'SPOTIFY_EMBED',
@@ -58,11 +53,7 @@ export function deriveQualityBadge(
 }
 
 export type ArchivePlayerKind =
-  | 'TAHTI'
-  | 'SPOTIFY_EMBED'
-  | 'MIXCLOUD_EMBED'
-  | 'HEARTHIS_EMBED'
-  | 'GENERIC_EMBED'
+  'TAHTI' | 'SPOTIFY_EMBED' | 'MIXCLOUD_EMBED' | 'HEARTHIS_EMBED' | 'GENERIC_EMBED'
 
 export function playerKindForSource(source: ArchiveItemSource): ArchivePlayerKind {
   switch (source) {

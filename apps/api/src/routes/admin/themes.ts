@@ -43,7 +43,10 @@ const adminThemesRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/themes',
     {
       preHandler: requireBoard,
-      schema: { tags: ['admin'], response: openApiResponse(AdminThemeListSchema, 'AdminThemeList') },
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminThemeListSchema, 'AdminThemeList'),
+      },
     },
     async (request, reply) => {
       const parsed = AdminThemeListQuerySchema.safeParse(request.query)

@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, NotificationListSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
+import {
+  IdParamSchema,
+  NotificationListSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const NOTIFICATION_LIMIT = 30
@@ -40,9 +45,7 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
 
       const [notifications, unreadCount] = await Promise.all([
         fastify.prisma.notification.findMany({
-          where: stickyOnly
-            ? { userId: user.id, sticky: true, readAt: null }
-            : { userId: user.id },
+          where: stickyOnly ? { userId: user.id, sticky: true, readAt: null } : { userId: user.id },
           orderBy: { createdAt: 'desc' },
           ...(stickyOnly ? {} : { take: NOTIFICATION_LIMIT }),
           select: NOTIFICATION_SELECT,

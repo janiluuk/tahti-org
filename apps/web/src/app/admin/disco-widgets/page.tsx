@@ -15,8 +15,8 @@ export default async function AdminDiscoWidgetsPage() {
     <>
       <h1 className="admin-section-title">Disco-widgets</h1>
       <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
-        Register, publish, and moderate widgets across all three stores (listener, artist,
-        admin), and manage which ADMIN-scope widgets appear on the homepage.
+        Register, publish, and moderate widgets across all three stores (listener, artist, admin),
+        and manage which ADMIN-scope widgets appear on the homepage.
       </p>
 
       <AdminDiscoWidgetsPanel

@@ -83,7 +83,10 @@ export function DiscoWidgetStore({
             : 'No widgets match your search.'}
         </p>
       ) : (
-        <div className="studio-mt-sm" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div
+          className="studio-mt-sm"
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+        >
           {filtered.map((widget) => {
             const isInstalled = installedWidgetIds.has(widget.id)
             const isInstalling = installingId === widget.id

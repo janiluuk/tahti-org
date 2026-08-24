@@ -200,7 +200,12 @@ export const ADMIN_NAV = [
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
         <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M8 2.5v11M2.5 8h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <path
+          d="M8 2.5v11M2.5 8h11"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },

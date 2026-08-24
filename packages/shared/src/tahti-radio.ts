@@ -34,9 +34,7 @@ export type TahtiRadioStreamConfig = {
 }
 
 export type ActiveRadioPlayback =
-  | { kind: 'video'; embedUrl: string }
-  | { kind: 'audio'; audioUrl: string }
-  | { kind: 'none' }
+  { kind: 'video'; embedUrl: string } | { kind: 'audio'; audioUrl: string } | { kind: 'none' }
 
 /** Parse TAHTI_RADIO_STREAM_MODE — defaults to video. */
 export function parseTahtiRadioStreamMode(raw: string | undefined): TahtiRadioStreamMode {

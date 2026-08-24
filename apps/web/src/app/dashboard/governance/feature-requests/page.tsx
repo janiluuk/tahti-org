@@ -32,7 +32,10 @@ export default async function DashboardFeatureRequestsPage() {
 
   if (!me.isMember) {
     return (
-      <PublicPageHeader title="Topics" back={{ href: '/dashboard/governance', label: '← Governance' }}>
+      <PublicPageHeader
+        title="Topics"
+        back={{ href: '/dashboard/governance', label: '← Governance' }}
+      >
         This board is for paying Tahti ry members. Activate your membership to post topics and vote.
       </PublicPageHeader>
     )
@@ -46,7 +49,10 @@ export default async function DashboardFeatureRequestsPage() {
 
   return (
     <>
-      <PublicPageHeader title="Topics" back={{ href: '/dashboard/governance', label: '← Governance' }}>
+      <PublicPageHeader
+        title="Topics"
+        back={{ href: '/dashboard/governance', label: '← Governance' }}
+      >
         Post ideas for Tahti, discuss them, and vote on what other members have proposed. The board
         reviews this board every quarter and marks what&apos;s planned, in progress, or declined —
         see the quarterly reports on the Motions page.

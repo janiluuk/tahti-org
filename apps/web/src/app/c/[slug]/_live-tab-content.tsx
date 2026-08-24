@@ -40,7 +40,11 @@ export function LiveTabContent({
 
   return (
     <div className="ch-live-owner">
-      <div className="prof-tabs__bar ch-live-owner__subtabs" role="tablist" aria-label="Live section">
+      <div
+        className="prof-tabs__bar ch-live-owner__subtabs"
+        role="tablist"
+        aria-label="Live section"
+      >
         <button
           type="button"
           role="tab"
@@ -62,12 +66,12 @@ export function LiveTabContent({
       </div>
 
       {tab === 'listen' ? (
-        listenContent ?? (
+        (listenContent ?? (
           <p className="studio-text-muted-sm ch-live-owner__empty">
-            You&apos;re not live right now — switch to Stream manager to check in or start your
-            24/7 rotation.
+            You&apos;re not live right now — switch to Stream manager to check in or start your 24/7
+            rotation.
           </p>
-        )
+        ))
       ) : isReallyLive ? (
         <StreamManagerPanel slug={slug} displayName={displayName} />
       ) : rotationTrackCount > 0 ? (

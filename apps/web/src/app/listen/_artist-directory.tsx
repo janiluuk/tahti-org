@@ -120,7 +120,9 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
                     />
                   )}
                   <span className="artist-directory__name">{item.displayName}</span>
-                  {item.isActive && <span className="artist-directory__active-badge">● Active</span>}
+                  {item.isActive && (
+                    <span className="artist-directory__active-badge">● Active</span>
+                  )}
                   {item.genres.length > 0 && (
                     <span className="artist-directory__genre">{item.genres[0]}</span>
                   )}

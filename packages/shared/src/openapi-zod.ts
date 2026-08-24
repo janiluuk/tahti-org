@@ -14,8 +14,7 @@ function unwrapNamedJsonSchema(
   name: string,
 ): Record<string, unknown> {
   const components = json.components as
-    | { schemas?: Record<string, Record<string, unknown>> }
-    | undefined
+    { schemas?: Record<string, Record<string, unknown>> } | undefined
   const fromComponents = components?.schemas?.[name]
   if (fromComponents) return { ...fromComponents }
 

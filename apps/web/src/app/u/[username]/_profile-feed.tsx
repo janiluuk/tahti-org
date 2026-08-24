@@ -37,9 +37,11 @@ function formatFeedDate(iso: string): string {
 export function ProfileFeed({ posts, releases }: { posts: FeedPost[]; releases: FeedRelease[] }) {
   const items: FeedItem[] = [
     ...posts.map((post): FeedItem => ({ kind: 'post', date: post.publishAt, post })),
-    ...releases.map(
-      (release): FeedItem => ({ kind: 'release', date: release.releaseDate, release }),
-    ),
+    ...releases.map((release): FeedItem => ({
+      kind: 'release',
+      date: release.releaseDate,
+      release,
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   if (items.length === 0) {

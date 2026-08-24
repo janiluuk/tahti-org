@@ -100,7 +100,11 @@ function RegisterWidgetForm({ onRegistered }: { onRegistered: (w: DiscoWidgetAdm
         />
       </Field>
       <Field label="Author name">
-        <Input value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Tahti" />
+        <Input
+          value={authorName}
+          onChange={(e) => setAuthorName(e.target.value)}
+          placeholder="Tahti"
+        />
       </Field>
       <Field
         label="Categories"
@@ -263,7 +267,12 @@ function CatalogRow({
 
       {widget.status === 'PENDING' && (
         <div className="admin-row studio-mt-sm" style={{ gap: '0.5rem', alignItems: 'center' }}>
-          <Button variant="primary" size="sm" disabled={pending} onClick={() => void handleApprove()}>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={pending}
+            onClick={() => void handleApprove()}
+          >
             Approve
           </Button>
           <Input
@@ -279,7 +288,12 @@ function CatalogRow({
       )}
       {widget.status === 'APPROVED' && (
         <div className="studio-mt-sm">
-          <Button variant="danger" size="sm" disabled={pending} onClick={() => void handleDisable()}>
+          <Button
+            variant="danger"
+            size="sm"
+            disabled={pending}
+            onClick={() => void handleDisable()}
+          >
             Disable
           </Button>
         </div>

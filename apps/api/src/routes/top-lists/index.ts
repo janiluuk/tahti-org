@@ -42,7 +42,8 @@ const topListsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
-      const genre = typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
+      const genre =
+        typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
 
       const entries = await buildTopList(fastify.prisma, {
         since: periodSince(period.data),

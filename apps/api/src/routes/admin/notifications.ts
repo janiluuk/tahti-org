@@ -21,16 +21,15 @@ const adminNotificationsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        response: openApiResponse(
-          SendTestNotificationResponseSchema,
-          'AdminTestNotificationSent',
-        ),
+        response: openApiResponse(SendTestNotificationResponseSchema, 'AdminTestNotificationSent'),
       },
     },
     async (request, reply) => {
       const parsed = SendTestNotificationSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
 
       const target = await fastify.prisma.user.findUnique({

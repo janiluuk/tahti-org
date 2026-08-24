@@ -43,11 +43,16 @@ export function TestNotificationPanel() {
 
       <div className="admin-row" role="radiogroup" aria-label="Target" style={{ gap: '1rem' }}>
         <label>
-          <input type="radio" checked={target === 'user'} onChange={() => setTarget('user')} /> Single
-          user
+          <input type="radio" checked={target === 'user'} onChange={() => setTarget('user')} />{' '}
+          Single user
         </label>
         <label>
-          <input type="radio" disabled checked={target === 'group'} onChange={() => setTarget('group')} />{' '}
+          <input
+            type="radio"
+            disabled
+            checked={target === 'group'}
+            onChange={() => setTarget('group')}
+          />{' '}
           Group (coming soon)
         </label>
       </div>

@@ -40,13 +40,7 @@ export function ReleaseEmbedButton({ releaseId }: { releaseId: string }) {
   )
 }
 
-function ReleaseEmbedModal({
-  releaseId,
-  onClose,
-}: {
-  releaseId: string
-  onClose: () => void
-}) {
+function ReleaseEmbedModal({ releaseId, onClose }: { releaseId: string; onClose: () => void }) {
   const [size, setSize] = useState<EmbedSize>('standard')
   const [transparentBg, setTransparentBg] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -112,13 +106,17 @@ function ReleaseEmbedModal({
               onClick={(e) => (e.target as HTMLTextAreaElement).select()}
             />
           </label>
-          <Button onClick={() => void copyCode()} variant="primary" size="sm" className="studio-mt-sm">
+          <Button
+            onClick={() => void copyCode()}
+            variant="primary"
+            size="sm"
+            className="studio-mt-sm"
+          >
             <ButtonIcon name="link" />
             {copied ? 'Copied!' : 'Copy embed code'}
           </Button>
           <p className="studio-text-muted-sm studio-mt-sm">
-            Paste this into any website. The preview below updates as you change the options
-            above.
+            Paste this into any website. The preview below updates as you change the options above.
           </p>
           <div className="share-embed-modal__preview studio-mt-sm">
             <iframe

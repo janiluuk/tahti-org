@@ -72,12 +72,22 @@ function VarRow({ varKey, value, onChange, onRemove, disabled }: VarRowProps) {
       ) : (
         <span style={{ width: 30, flexShrink: 0 }} />
       )}
-      <span className="studio-text-muted-sm" style={{ width: '9rem', flexShrink: 0 }} title={varKey}>
+      <span
+        className="studio-text-muted-sm"
+        style={{ width: '9rem', flexShrink: 0 }}
+        title={varKey}
+      >
         {varKey}
       </span>
       <Input value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} />
       {!disabled && (
-        <Button type="button" variant="ghost" size="sm" onClick={onRemove} aria-label={`Remove ${varKey}`}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          aria-label={`Remove ${varKey}`}
+        >
           ✕
         </Button>
       )}
@@ -101,8 +111,12 @@ export interface ThemeEditorProps {
 
 export function ThemeEditor({ initial, readOnly, onSave, saving }: ThemeEditorProps) {
   const [name, setName] = useState(initial?.name ?? 'My Theme')
-  const [vars, setVars] = useState<Record<string, string>>(initial?.vars ?? { ...DEFAULT_THEME_VARS })
-  const [dark, setDark] = useState<Record<string, string>>(initial?.dark ?? { ...DEFAULT_THEME_DARK })
+  const [vars, setVars] = useState<Record<string, string>>(
+    initial?.vars ?? { ...DEFAULT_THEME_VARS },
+  )
+  const [dark, setDark] = useState<Record<string, string>>(
+    initial?.dark ?? { ...DEFAULT_THEME_DARK },
+  )
   const [tab, setTab] = useState<'light' | 'dark'>('light')
   const [previewMode, setPreviewMode] = useState<'light' | 'dark'>('light')
   const [newKey, setNewKey] = useState('')
@@ -130,7 +144,10 @@ export function ThemeEditor({ initial, readOnly, onSave, saving }: ThemeEditorPr
   const previewVars = previewMode === 'dark' ? { ...vars, ...dark } : vars
 
   return (
-    <div className="studio-row" style={{ alignItems: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}>
+    <div
+      className="studio-row"
+      style={{ alignItems: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}
+    >
       <div style={{ minWidth: '18rem', flex: 1 }}>
         {!readOnly && (
           <>
@@ -161,7 +178,10 @@ export function ThemeEditor({ initial, readOnly, onSave, saving }: ThemeEditorPr
           </>
         )}
 
-        <div className="studio-mt-sm" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div
+          className="studio-mt-sm"
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}
+        >
           {Object.entries(activeScope).map(([key, value]) => (
             <VarRow
               key={key}

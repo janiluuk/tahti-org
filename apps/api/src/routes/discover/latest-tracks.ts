@@ -2,7 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TahtiSelectsGalleryResponseSchema, archivePlaybackKey, openApiResponse } from '@tahti/shared'
+import {
+  TahtiSelectsGalleryResponseSchema,
+  archivePlaybackKey,
+  openApiResponse,
+} from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 
 const DEFAULT_LIMIT = 24
@@ -37,7 +41,8 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
         MAX_LIMIT,
         Math.max(1, Number.parseInt(String(query.limit ?? DEFAULT_LIMIT), 10) || DEFAULT_LIMIT),
       )
-      const genre = typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
+      const genre =
+        typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
 
       let contentTypes: string[] | undefined
       if (typeof query.contentTypes === 'string' && query.contentTypes.length > 0) {

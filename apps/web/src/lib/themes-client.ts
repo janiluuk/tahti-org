@@ -49,7 +49,10 @@ export async function patchMyTheme(
   id: string,
   patch: Record<string, unknown>,
 ): Promise<{ error: string | null; theme?: ThemeView }> {
-  return request<ThemeView>(`/api/me/themes/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
+  return request<ThemeView>(`/api/me/themes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
 }
 
 export async function deleteMyTheme(id: string): Promise<{ error: string | null }> {

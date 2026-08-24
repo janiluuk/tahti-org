@@ -7,12 +7,7 @@ import { useState } from 'react'
 import { Badge, Button, Panel } from '@tahti/ui'
 import type { ThemeView } from '@tahti/shared'
 import { ThemeEditor, type ThemeEditorValue } from '@/components/themes/theme-editor'
-import {
-  removeMyTheme,
-  saveNewTheme,
-  submitThemeAsPublic,
-  updateMyTheme,
-} from './themes-actions'
+import { removeMyTheme, saveNewTheme, submitThemeAsPublic, updateMyTheme } from './themes-actions'
 
 function visibilityBadge(theme: ThemeView) {
   if (theme.visibility === 'PENDING_REVIEW') return <Badge variant="neutral">In review</Badge>
@@ -82,16 +77,33 @@ function ThemeRow({
         </div>
         <div className="studio-row" style={{ gap: '0.5rem' }}>
           {canEdit && (
-            <Button type="button" variant="secondary" size="sm" onClick={() => setEditing((v) => !v)}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setEditing((v) => !v)}
+            >
               {editing ? 'Close' : 'Edit'}
             </Button>
           )}
           {canSubmit && (
-            <Button type="button" variant="primary" size="sm" disabled={pending} onClick={() => void handleSubmit()}>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={pending}
+              onClick={() => void handleSubmit()}
+            >
               Submit as public
             </Button>
           )}
-          <Button type="button" variant="danger" size="sm" disabled={pending} onClick={() => void handleDelete()}>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            disabled={pending}
+            onClick={() => void handleDelete()}
+          >
             Delete
           </Button>
         </div>
@@ -151,7 +163,9 @@ export function ThemesPanel({ initialThemes }: { initialThemes: ThemeView[] }) {
           <ThemeRow
             key={t.id}
             theme={t}
-            onChange={(updated) => setThemes((prev) => prev.map((th) => (th.id === updated.id ? updated : th)))}
+            onChange={(updated) =>
+              setThemes((prev) => prev.map((th) => (th.id === updated.id ? updated : th)))
+            }
             onRemove={(id) => setThemes((prev) => prev.filter((th) => th.id !== id))}
           />
         ))
@@ -162,7 +176,12 @@ export function ThemesPanel({ initialThemes }: { initialThemes: ThemeView[] }) {
           <ThemeEditor onSave={(v) => void handleCreate(v)} saving={pending} />
         </div>
       ) : (
-        <Button type="button" variant="primary" className="studio-mt-lg" onClick={() => setCreating(true)}>
+        <Button
+          type="button"
+          variant="primary"
+          className="studio-mt-lg"
+          onClick={() => setCreating(true)}
+        >
           New theme
         </Button>
       )}

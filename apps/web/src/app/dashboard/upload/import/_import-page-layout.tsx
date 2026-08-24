@@ -10,12 +10,7 @@ import {
 } from '../../_studio-flow-layout'
 
 export type ImportService =
-  | 'soundcloud'
-  | 'bandcamp'
-  | 'url'
-  | 'broadcast'
-  | 'google-drive'
-  | 'mixcloud-rescue'
+  'soundcloud' | 'bandcamp' | 'url' | 'broadcast' | 'google-drive' | 'mixcloud-rescue'
 
 const SERVICE_META: Record<ImportService, { abbr: string; tone: StudioFlowBadgeTone }> = {
   soundcloud: { abbr: 'SC', tone: 'soundcloud' },

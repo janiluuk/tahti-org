@@ -4,13 +4,7 @@
 import type { ManageStats } from './_manage-panel'
 
 export type ManageMetricKey =
-  | 'audioBitrate'
-  | 'listeners'
-  | 'listenerPeak'
-  | 'plays'
-  | 'likes'
-  | 'reposts'
-  | 'duration'
+  'audioBitrate' | 'listeners' | 'listenerPeak' | 'plays' | 'likes' | 'reposts' | 'duration'
 
 export interface MetricBreakdownItem {
   label: string

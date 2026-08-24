@@ -9,14 +9,7 @@ import { ButtonIcon, Button } from '@tahti/ui'
 import { createSmartLinkEntry } from '../../../release-actions'
 
 type Service =
-  | 'spotify'
-  | 'apple'
-  | 'youtube'
-  | 'tidal'
-  | 'bandcamp'
-  | 'soundcloud'
-  | 'deezer'
-  | 'amazon'
+  'spotify' | 'apple' | 'youtube' | 'tidal' | 'bandcamp' | 'soundcloud' | 'deezer' | 'amazon'
 
 const SERVICE_LABELS: Record<Service, string> = {
   spotify: 'Spotify',

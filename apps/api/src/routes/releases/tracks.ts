@@ -167,9 +167,7 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  type OwnedReadyTrackResult =
-    | { ok: false; error: string; status: number }
-    | { ok: true }
+  type OwnedReadyTrackResult = { ok: false; error: string; status: number } | { ok: true }
 
   async function ownedReadyTrack(
     userId: string,

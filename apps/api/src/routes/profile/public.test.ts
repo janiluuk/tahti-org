@@ -50,9 +50,7 @@ describe('GET /api/v1/u/:username/profile', () => {
     }
     expect(body.artist.countryCode).toBe('FI')
     expect(body.artist.pronouns).toBe('she/her')
-    expect(body.artist.fullBio).toBe(
-      'A much longer history of how this project got started.',
-    )
+    expect(body.artist.fullBio).toBe('A much longer history of how this project got started.')
   })
 
   it('includes collection style so the profile page can group DJ mixes/playlists/collections', async () => {

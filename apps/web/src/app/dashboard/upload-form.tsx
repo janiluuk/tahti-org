@@ -14,13 +14,7 @@ import {
 } from './archive-metadata-fields'
 
 type UploadState =
-  | 'idle'
-  | 'preparing'
-  | 'uploading'
-  | 'completing'
-  | 'transcoding'
-  | 'done'
-  | 'error'
+  'idle' | 'preparing' | 'uploading' | 'completing' | 'transcoding' | 'done' | 'error'
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))

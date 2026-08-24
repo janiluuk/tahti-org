@@ -82,12 +82,7 @@ function rgba(hex: string, alpha: number): string {
 }
 
 export type AlbumArtGenre =
-  | 'Ambient'
-  | 'Electronic'
-  | 'Downtempo'
-  | 'Lo-fi'
-  | 'Synthwave'
-  | 'Experimental'
+  'Ambient' | 'Electronic' | 'Downtempo' | 'Lo-fi' | 'Synthwave' | 'Experimental'
 
 export interface AlbumArtColors {
   bg: string

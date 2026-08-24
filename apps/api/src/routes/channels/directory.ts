@@ -32,7 +32,9 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
             slug: true,
             state: true,
             fallbackEnabled: true,
-            user: { select: { username: true, displayName: true, avatarUrl: true, socialLinks: true } },
+            user: {
+              select: { username: true, displayName: true, avatarUrl: true, socialLinks: true },
+            },
           },
         })
 

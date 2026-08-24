@@ -7,7 +7,13 @@ import { useState } from 'react'
 import type { NotificationView } from '@tahti/shared'
 import { dismissNotification } from './notification-actions'
 
-function StickyItem({ notification, onDismiss }: { notification: NotificationView; onDismiss: (id: string) => void }) {
+function StickyItem({
+  notification,
+  onDismiss,
+}: {
+  notification: NotificationView
+  onDismiss: (id: string) => void
+}) {
   const [pending, setPending] = useState(false)
 
   async function handleDismiss() {
@@ -25,7 +31,10 @@ function StickyItem({ notification, onDismiss }: { notification: NotificationVie
 
   return (
     <div className="pinned-announcement" role="alert">
-      <div className="pinned-announcement__body" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div
+        className="pinned-announcement__body"
+        style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+      >
         <span style={{ flex: 1 }}>
           {notification.url ? <a href={notification.url}>{content}</a> : content}
         </span>
@@ -50,7 +59,10 @@ export function StickyNotificationBanner({ initial }: { initial: NotificationVie
   if (items.length === 0) return null
 
   return (
-    <div className="studio-mt-sm" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div
+      className="studio-mt-sm"
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+    >
       {items.map((n) => (
         <StickyItem
           key={n.id}

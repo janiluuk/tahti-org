@@ -80,7 +80,11 @@ export async function prepareDiscoWidgetUpload(
     `/api/admin/disco-widgets/${widgetId}/prepare-upload`,
     { method: 'POST', body: JSON.stringify({ version, fileSizeBytes }) },
   )
-  return { error: result.error, uploadUrl: result.data?.uploadUrl, bundleKey: result.data?.bundleKey }
+  return {
+    error: result.error,
+    uploadUrl: result.data?.uploadUrl,
+    bundleKey: result.data?.bundleKey,
+  }
 }
 
 export async function publishDiscoWidgetVersion(
@@ -88,10 +92,13 @@ export async function publishDiscoWidgetVersion(
   version: string,
   changelog?: string,
 ): Promise<{ error: string | null; widget?: DiscoWidgetAdminItem }> {
-  return adminRequest<DiscoWidgetAdminItem>(`/api/admin/disco-widgets/${widgetId}/publish-version`, {
-    method: 'POST',
-    body: JSON.stringify({ version, changelog }),
-  })
+  return adminRequest<DiscoWidgetAdminItem>(
+    `/api/admin/disco-widgets/${widgetId}/publish-version`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ version, changelog }),
+    },
+  )
 }
 
 export async function approveDiscoWidget(
@@ -149,6 +156,8 @@ export async function patchHomepageDiscoWidgetInstall(
   return patchDiscoWidgetInstall('/api/admin/disco-widgets/installs', id, patch)
 }
 
-export async function removeHomepageDiscoWidgetInstall(id: string): Promise<{ error: string | null }> {
+export async function removeHomepageDiscoWidgetInstall(
+  id: string,
+): Promise<{ error: string | null }> {
   return deleteDiscoWidgetInstall('/api/admin/disco-widgets/installs', id)
 }

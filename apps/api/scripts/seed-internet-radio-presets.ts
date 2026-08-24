@@ -13,7 +13,11 @@ import { prisma } from '@tahti/db'
 
 const PRESETS = [
   { name: 'YleX', genre: 'Pop / Hits', description: 'Finnish youth-focused pop and hits station.' },
-  { name: 'Radio Helsinki', genre: 'Talk / Variety', description: 'Helsinki-area talk and variety station.' },
+  {
+    name: 'Radio Helsinki',
+    genre: 'Talk / Variety',
+    description: 'Helsinki-area talk and variety station.',
+  },
   { name: 'Radio Rock', genre: 'Rock', description: 'Finnish rock radio station.' },
 ]
 

@@ -8630,13 +8630,7 @@ export interface paths {
               }[]
               genres: string[]
               contentTypes: (
-                | 'STUDIO'
-                | 'LIVE'
-                | 'DJ_MIX'
-                | 'PODCAST'
-                | 'ORIGINAL'
-                | 'REMIX'
-                | 'RADIO_SHOW'
+                'STUDIO' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
               )[]
             }
           }
@@ -8683,13 +8677,7 @@ export interface paths {
                 genreCustom: string | null
                 /** @enum {string} */
                 contentType:
-                  | 'STUDIO'
-                  | 'LIVE'
-                  | 'DJ_MIX'
-                  | 'PODCAST'
-                  | 'ORIGINAL'
-                  | 'REMIX'
-                  | 'RADIO_SHOW'
+                  'STUDIO' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
                 status: string
                 isPublic: boolean
                 durationSec: number | null

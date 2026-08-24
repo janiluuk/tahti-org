@@ -64,9 +64,7 @@ describe('M12 — artist profile API', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().displayName).toBe('Profile Artist')
-    expect(res.json().fullBio).toBe(
-      'A much longer history of how this project got started.',
-    )
+    expect(res.json().fullBio).toBe('A much longer history of how this project got started.')
     expect(res.json().publicAttribution).toBe(false)
     expect(res.json().countryCode).toBe('FI')
     expect(res.json().pronouns).toBe('they/them')
@@ -126,11 +124,7 @@ describe('M12 — artist profile API', () => {
       payload: { displayName: 'New Name' },
     })
     expect(res.statusCode).toBe(200)
-    expect(putObjectText).toHaveBeenCalledWith(
-      key,
-      expect.stringContaining('NN'),
-      'image/svg+xml',
-    )
+    expect(putObjectText).toHaveBeenCalledWith(key, expect.stringContaining('NN'), 'image/svg+xml')
   })
 
   it('PATCH /api/me/profile leaves a real uploaded avatar untouched on rename', async () => {

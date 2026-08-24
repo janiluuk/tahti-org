@@ -71,8 +71,7 @@ export function extFromMime(contentType: string): string {
 }
 
 export type FetchImageResult =
-  | { ok: true; bytes: Buffer; contentType: string }
-  | { ok: false; error: string }
+  { ok: true; bytes: Buffer; contentType: string } | { ok: false; error: string }
 
 /**
  * Fetch a user-supplied image URL server-side with SSRF guards: only http(s), no

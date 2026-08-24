@@ -25,7 +25,11 @@ describe('processFingerprintReleaseTrackJob', () => {
   beforeAll(async () => {
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
     const user = await prisma.user.create({
-      data: { email: `${PREFIX}user@example.com`, username: `${PREFIX}user`, displayName: 'FP Job Test' },
+      data: {
+        email: `${PREFIX}user@example.com`,
+        username: `${PREFIX}user`,
+        displayName: 'FP Job Test',
+      },
     })
     const release = await prisma.release.create({
       data: {

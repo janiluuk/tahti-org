@@ -41,8 +41,8 @@ export default async function DashboardGovernancePage() {
   if (!me.isMember) {
     return (
       <PublicPageHeader title="Governance">
-        This area is for Tahti ry members. Activate your membership to take part in motions,
-        voting, and topic discussions.
+        This area is for Tahti ry members. Activate your membership to take part in motions, voting,
+        and topic discussions.
       </PublicPageHeader>
     )
   }
@@ -99,8 +99,8 @@ export default async function DashboardGovernancePage() {
   return (
     <>
       <PublicPageHeader title="Governance">
-        Tahti is member-owned — this is where that actually happens. Vote on open motions, weigh
-        in on topics other artists have proposed, or post your own suggestion below.
+        Tahti is member-owned — this is where that actually happens. Vote on open motions, weigh in
+        on topics other artists have proposed, or post your own suggestion below.
       </PublicPageHeader>
 
       <section className="brand-section">
@@ -113,7 +113,10 @@ export default async function DashboardGovernancePage() {
                 : `${openMotionsWithComments.filter((m) => !m.youVoted).length} of ${openMotionsWithComments.length} open motion${openMotionsWithComments.length === 1 ? '' : 's'} still need your vote.`}
             </p>
           </div>
-          <Link href="/dashboard/governance/motions" className="ui-btn ui-btn--secondary ui-btn--sm">
+          <Link
+            href="/dashboard/governance/motions"
+            className="ui-btn ui-btn--secondary ui-btn--sm"
+          >
             All motions →
           </Link>
         </div>

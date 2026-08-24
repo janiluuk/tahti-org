@@ -182,9 +182,7 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
     const res = await doFetch(buildUrl(path, params).toString())
     if (!res.ok) throw new Error(`hearthis.at API request failed (${res.status}): ${path}`)
     const data = (await res.json()) as
-      | T
-      | { success: false; message: string }
-      | { status: 'error'; message: string }
+      T | { success: false; message: string } | { status: 'error'; message: string }
     // The API uses two different shapes for in-band errors depending on the
     // endpoint: {success:false,...} (e.g. search rate limits) and
     // {status:"error",...} (e.g. a permalink that no longer resolves).

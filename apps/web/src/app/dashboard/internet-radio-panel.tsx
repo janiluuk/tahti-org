@@ -91,7 +91,13 @@ function StationRow({
           placeholder="https://…/stream.m3u8"
           disabled={pending}
         />
-        <Button type="button" variant="secondary" size="sm" disabled={pending} onClick={() => void handleSaveUrl()}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={pending}
+          onClick={() => void handleSaveUrl()}
+        >
           Save URL
         </Button>
         <Button
@@ -188,11 +194,17 @@ export function InternetRadioPanel({ initialPresets, initialStations }: Internet
             {initialPresets.map((preset) => {
               const alreadyAdded = addedPresetIds.has(preset.id)
               return (
-                <div key={preset.id} className="ui-panel studio-row" style={{ justifyContent: 'space-between' }}>
+                <div
+                  key={preset.id}
+                  className="ui-panel studio-row"
+                  style={{ justifyContent: 'space-between' }}
+                >
                   <div>
                     <strong>{preset.name}</strong>{' '}
                     {preset.genre && <Badge variant="neutral">{preset.genre}</Badge>}
-                    {preset.description && <p className="studio-text-muted-sm">{preset.description}</p>}
+                    {preset.description && (
+                      <p className="studio-text-muted-sm">{preset.description}</p>
+                    )}
                   </div>
                   <Button
                     type="button"
