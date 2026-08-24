@@ -489,6 +489,14 @@ enum NotificationType {
   CHAT_MENTION
   /// Board rejected a Tahti Radio track submission (only when a note is provided).
   RADIO_SUBMISSION_REJECTED
+  /// Your submitted theme entered the admin review queue.
+  THEME_UNDER_REVIEW
+  /// Admin approved your theme — a PR opening it for merge is in progress.
+  THEME_APPROVED
+  /// Admin rejected your theme submission (see the notification body for why).
+  THEME_REJECTED
+  /// Manually sent by an admin from /admin/news's test-notification form.
+  ADMIN_TEST
 
   @@schema("core")
 }
@@ -780,6 +788,10 @@ model User {
   featureRequestComments  FeatureRequestComment[] @relation("FeatureRequestCommentAuthor")
   featureRequestReportsGenerated FeatureRequestQuarterlyReport[]
   newsPostsAuthored              NewsPost[]
+  discoWidgetsAuthored           DiscoWidget[]          @relation("DiscoWidgetAuthor")
+  discoWidgetInstalls            DiscoWidgetInstall[]   @relation("DiscoWidgetListenerInstall")
+  internetRadioStations          InternetRadioStation[]
+  themes                         Theme[]
 
   @@schema("core")
 }
@@ -1201,6 +1213,7 @@ model Channel {
   liveShowEpisodes LiveShowEpisode[]
   members           ChannelMember[]
   slugRedirects     ChannelSlugRedirect[]
+  discoWidgetInstalls DiscoWidgetInstall[]
 
   @@index([state])
   @@schema("channel")
@@ -2583,6 +2596,10 @@ model Notification {
   body        String?
   url         String?
   readAt      DateTime?
+  /// Surfaced in a separate must-dismiss banner (see StickyNotificationBanner)
+  /// instead of the ordinary bell dropdown — opening the bell does NOT mark
+  /// these read, only an explicit per-notification dismiss does.
+  sticky      Boolean           @default(false)
   createdAt   DateTime          @default(now())
 
   @@index([userId, createdAt(sort: Desc)])
@@ -2910,4 +2927,191 @@ model NewsPost {
 
   @@index([publishedAt])
   @@schema("admin")
+}
+
+// ── Disco-widgets ────────────────────────────────────────────────────────────
+// Dynamically-loaded, sandboxed third-party widgets — see docs/design for the
+// full writeup. A widget's code never runs in the main app's origin; it's
+// fetched by /widget-sandbox/[bundleHash] and executed inside a cookieless,
+// sandboxed iframe with no allow-same-origin, talking to the host only over
+// postMessage. bundleHash is pinned into that route's per-request CSP
+// script-src, so an approved bundle can never be swapped without a version
+// bump (which mints a new hash).
+
+enum DiscoWidgetScope {
+  LISTENER
+  ARTIST
+  ADMIN
+
+  @@schema("core")
+}
+
+enum DiscoWidgetStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  DISABLED
+
+  @@schema("core")
+}
+
+model DiscoWidget {
+  id              String            @id @default(cuid())
+  slug            String            @unique
+  scope           DiscoWidgetScope
+  name            String
+  description     String
+  authorName      String
+  authorUserId    String?
+  authorUser      User?             @relation("DiscoWidgetAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  categories      String[]
+  iconUrl         String?
+  currentVersion  String
+  bundleKey       String
+  bundleHash      String
+  bundleSizeBytes Int
+  permissionsJson Json              @default("{}")
+  status          DiscoWidgetStatus @default(DRAFT)
+  moderationNote  String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  versions DiscoWidgetVersion[]
+  installs DiscoWidgetInstall[]
+
+  @@index([scope, status])
+  @@schema("core")
+}
+
+// One row per published bundle revision — kept even after currentVersion moves
+// on, so an install with pinnedVersion set can keep resolving its own hash.
+model DiscoWidgetVersion {
+  id         String      @id @default(cuid())
+  widgetId   String
+  widget     DiscoWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  version    String
+  bundleKey  String
+  bundleHash String
+  changelog  String?
+  createdAt  DateTime    @default(now())
+
+  @@unique([widgetId, version])
+  @@schema("core")
+}
+
+// One install row covers all three scopes, discriminated by whichever of
+// listenerUserId / channelId / adminSurface is set for a given row (enforced
+// in the route handlers, not a DB constraint — mirrors this schema's existing
+// style of application-level invariants over CHECK constraints).
+model DiscoWidgetInstall {
+  id             String      @id @default(cuid())
+  widgetId       String
+  widget         DiscoWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  listenerUserId String?
+  listenerUser   User?       @relation("DiscoWidgetListenerInstall", fields: [listenerUserId], references: [id], onDelete: Cascade)
+  channelId      String?
+  channel        Channel?    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  adminSurface   String?
+  pinnedVersion  String?
+  position       Int         @default(0)
+  enabled        Boolean     @default(true)
+  configJson     Json        @default("{}")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([widgetId, listenerUserId])
+  @@unique([widgetId, channelId])
+  @@unique([widgetId, adminSurface])
+  @@index([listenerUserId, position])
+  @@index([channelId, position])
+  @@index([adminSurface, position])
+  @@schema("core")
+}
+
+// ── Internet radio library ───────────────────────────────────────────────────
+// Client-side only: a station's streamUrl is played directly in the listener's
+// browser (same hls.js path as Tahti's own live streams) — Tahti never
+// ingests, relays, or rebroadcasts third-party stream audio.
+
+// Admin-curated catalog a user can one-click add from — see
+// /admin/internet-radio ("internet radio source configuration"). streamUrl is
+// often intentionally blank (rights/URL not supplied yet); a user filling it
+// in on their own copy doesn't affect the shared preset.
+model InternetRadioPreset {
+  id             String   @id @default(cuid())
+  name           String
+  genre          String?
+  description    String?
+  iconUrl        String?
+  /// Optional endpoint some stations expose for "what's on now" — display-only.
+  programmingUrl String?
+  streamUrl      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@schema("core")
+}
+
+// A user's own personal library entry — either copied from a preset (presetId
+// set, further edits are theirs alone) or fully custom.
+model InternetRadioStation {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  presetId       String?
+  name           String
+  genre          String?
+  description    String?
+  iconUrl        String?
+  programmingUrl String?
+  streamUrl      String?
+  position       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, position])
+  @@schema("core")
+}
+
+// ── Themes ────────────────────────────────────────────────────────────────
+// A theme's CSS-variable JSON lives here only until it ships — "public" isn't
+// a DB state: once a PR is merged, the theme lives in themes/registry.json +
+// themes/<slug>.json in this repo, fetched live by GET /api/v1/themes/gallery.
+// Merging the PR *is* the publish step; nothing here needs to flip afterward.
+
+enum ThemeVisibility {
+  PRIVATE
+  PENDING_REVIEW
+  REJECTED
+
+  @@schema("core")
+}
+
+enum ThemePrStatus {
+  NONE
+  PENDING
+  OPENED
+  ERROR
+
+  @@schema("core")
+}
+
+model Theme {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  varsJson       Json
+  darkJson       Json
+  visibility     ThemeVisibility @default(PRIVATE)
+  moderationNote String?
+  prStatus       ThemePrStatus   @default(NONE)
+  prUrl          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([visibility])
+  @@schema("core")
 }

@@ -32,5 +32,9 @@ export {
   notifyUserOfNewMessage,
   notifyUsersOfChatMention,
   notifyArtistOfRadioSubmissionRejected,
+  notifyUserThemeUnderReview,
+  notifyUserThemeApproved,
+  notifyUserThemeRejected,
+  notifyUserAdminTest,
   processScheduledPostNotifications,
 } from './notifications.js'

@@ -14,6 +14,10 @@ export const NotificationTypeSchema = z.enum([
   'NEW_RELEASE',
   'CHAT_MENTION',
   'RADIO_SUBMISSION_REJECTED',
+  'THEME_UNDER_REVIEW',
+  'THEME_APPROVED',
+  'THEME_REJECTED',
+  'ADMIN_TEST',
 ])
 
 export const NotificationSchema = z.object({
@@ -30,6 +34,9 @@ export const NotificationSchema = z.object({
   body: z.string().nullable(),
   url: z.string().nullable(),
   readAt: z.string().datetime().nullable(),
+  /** Surfaced in the dashboard's must-dismiss banner instead of the ordinary
+   * bell — see StickyNotificationBanner. */
+  sticky: z.boolean(),
   createdAt: z.string().datetime(),
 })
 

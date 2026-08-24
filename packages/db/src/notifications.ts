@@ -246,6 +246,78 @@ export async function notifyArtistOfRadioSubmissionRejected(
   })
 }
 
+/** Theme review lifecycle — all three are sticky (must be explicitly dismissed
+ * in the dashboard's StickyNotificationBanner, not just cleared by opening
+ * the ordinary notification bell). */
+export async function notifyUserThemeUnderReview(
+  prisma: PrismaClient,
+  userId: string,
+  theme: { id: string; name: string },
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'THEME_UNDER_REVIEW',
+      title: `"${theme.name}" is in review`,
+      body: 'An admin will approve or reject it soon.',
+      url: '/dashboard/settings/themes',
+      sticky: true,
+    },
+  })
+}
+
+export async function notifyUserThemeApproved(
+  prisma: PrismaClient,
+  userId: string,
+  theme: { id: string; name: string },
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'THEME_APPROVED',
+      title: `"${theme.name}" was approved`,
+      body: 'Opening a pull request to publish it now.',
+      url: '/dashboard/settings/themes',
+      sticky: true,
+    },
+  })
+}
+
+export async function notifyUserThemeRejected(
+  prisma: PrismaClient,
+  userId: string,
+  theme: { id: string; name: string },
+  moderationNote: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'THEME_REJECTED',
+      title: `"${theme.name}" was rejected`,
+      body: moderationNote.slice(0, 500),
+      url: '/dashboard/settings/themes',
+      sticky: true,
+    },
+  })
+}
+
+/** One-off notification an admin sends from /admin/news's test-notification form. */
+export async function notifyUserAdminTest(
+  prisma: PrismaClient,
+  userId: string,
+  input: { title: string; body?: string; url?: string },
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'ADMIN_TEST',
+      title: input.title,
+      body: input.body ?? null,
+      url: input.url ?? null,
+    },
+  })
+}
+
 export async function processScheduledPostNotifications(
   prisma: PrismaClient,
 ): Promise<{ notified: number }> {

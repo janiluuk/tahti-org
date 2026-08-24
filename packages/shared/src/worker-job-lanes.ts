@@ -40,7 +40,13 @@ export const WORKER_JOB_LANES = {
     'channel-fallback-reconciler',
     'radio-slot-switchover',
   ],
-  dist: ['mixcloud-upload', 'revelator-deliver', 'revelator-royalty-sync', 'social-post-dispatch'],
+  dist: [
+    'mixcloud-upload',
+    'revelator-deliver',
+    'revelator-royalty-sync',
+    'social-post-dispatch',
+    'open-theme-pull-request',
+  ],
   light: [
     'newsletter-dispatch',
     'monthly-ledger-rollup',
