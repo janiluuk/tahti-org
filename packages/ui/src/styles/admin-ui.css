@@ -1695,6 +1695,39 @@
   gap: var(--tahti-space-3);
 }
 
+.selects-gallery__tile-wrap {
+  position: relative;
+}
+
+/* Own link, sibling to (not nested in) .selects-gallery__tile's play button
+ * — takes you to the artist's profile instead of playing the track. */
+.selects-gallery__artist-link {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+
+.selects-gallery__artist-link:hover {
+  background: var(--cyan);
+  color: var(--text-on-brand, #062028);
+}
+
+.selects-gallery__rank {
+  color: var(--coral, #ef4444);
+  font-weight: 700;
+  margin-right: 0.3em;
+}
+
 .selects-gallery__tile {
   position: relative;
   display: block;
