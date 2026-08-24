@@ -19,8 +19,146 @@ import {
   usePlaybackAnimation,
   usePlaylistData,
 } from '@waveform-playlist/browser'
-import { completeArchiveVersionUpload, prepareArchiveVersionUpload } from '../archive-actions'
+import {
+  completeArchiveVersionUpload,
+  fetchArchiveStems,
+  prepareArchiveVersionUpload,
+  requestArchiveStems,
+  type StemJobRow,
+} from '../archive-actions'
 import { saveEditorProject } from './editor-actions'
+
+const STEM_POLL_MS = 4000
+
+const STEM_SET_LABELS: Record<StemJobRow['stemSet'], string> = {
+  TWO_STEM: 'Vocals + instrumental',
+  FOUR_STEM: 'Vocals, drums, bass, other',
+}
+
+function StemSeparationPanel({
+  archiveItemId,
+  tracks,
+  addTracks,
+  removeTrack,
+}: {
+  archiveItemId: string | null
+  tracks: ClipTrack[]
+  addTracks: (sources: { src: string; name?: string }[]) => void
+  removeTrack: (trackId: string) => void
+}) {
+  const [pendingSet, setPendingSet] = useState<StemJobRow['stemSet'] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [readyFiles, setReadyFiles] = useState<StemJobRow['files'] | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const tracksRef = useRef(tracks)
+  tracksRef.current = tracks
+
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current)
+  }, [])
+
+  function applyReadyStems(job: StemJobRow, replacingIds: string[]) {
+    addTracks(job.files.map((f) => ({ src: f.url, name: f.label })))
+    for (const id of replacingIds) removeTrack(id)
+    setReadyFiles(job.files)
+    setPendingSet(null)
+  }
+
+  async function separate(stemSet: StemJobRow['stemSet']) {
+    setError(null)
+    setReadyFiles(null)
+    if (!archiveItemId) {
+      setError('Link this session to an archive item before separating stems')
+      return
+    }
+    setPendingSet(stemSet)
+    // Snapshot of what's loaded right now — separated stems replace exactly
+    // these tracks (typically the single original source), not anything the
+    // user adds afterward while a separation is still in flight.
+    const replacingIds = tracksRef.current.map((t) => t.id)
+
+    const kicked = await requestArchiveStems(archiveItemId, stemSet)
+    if (kicked.error) {
+      setError(kicked.error)
+      setPendingSet(null)
+      return
+    }
+    if (kicked.status === 'READY') {
+      const result = await fetchArchiveStems(archiveItemId)
+      const job = 'jobs' in result ? result.jobs.find((j) => j.stemSet === stemSet) : undefined
+      if (job) applyReadyStems(job, replacingIds)
+      else setPendingSet(null)
+      return
+    }
+
+    pollRef.current = setInterval(async () => {
+      const result = await fetchArchiveStems(archiveItemId)
+      if ('error' in result) {
+        setError(result.error)
+        if (pollRef.current) clearInterval(pollRef.current)
+        setPendingSet(null)
+        return
+      }
+      const job = result.jobs.find((j) => j.stemSet === stemSet)
+      if (!job || job.status === 'PENDING' || job.status === 'PROCESSING') return
+      if (pollRef.current) clearInterval(pollRef.current)
+      if (job.status === 'ERROR') {
+        setError(job.errorMessage ?? 'Stem separation failed')
+        setPendingSet(null)
+        return
+      }
+      applyReadyStems(job, replacingIds)
+    }, STEM_POLL_MS)
+  }
+
+  return (
+    <div className="studio-field--block studio-mb-md">
+      <span className="studio-label">Separate into stems</span>
+      <p className="studio-text-muted-sm studio-m-0">
+        Replaces the current track(s) with isolated stems, loaded as separate rows you can mute,
+        solo, and preview independently — then save the mix with some muted.
+      </p>
+      <div className="studio-row studio-row--wrap studio-mt-sm">
+        {(['TWO_STEM', 'FOUR_STEM'] as const).map((stemSet) => (
+          <Button
+            key={stemSet}
+            onClick={() => void separate(stemSet)}
+            disabled={pendingSet !== null || !archiveItemId}
+            variant="secondary"
+            size="sm"
+          >
+            {pendingSet === stemSet ? (
+              <>
+                <span className="studio-spinner" aria-hidden />
+                Separating…
+              </>
+            ) : (
+              STEM_SET_LABELS[stemSet]
+            )}
+          </Button>
+        ))}
+      </div>
+      {error && <p className="studio-text-error studio-mt-xs">{error}</p>}
+      {readyFiles && readyFiles.length > 0 && (
+        <div className="studio-row studio-row--wrap studio-mt-sm">
+          {readyFiles.map((f) => (
+            <a
+              key={f.label}
+              href={f.url}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ui-btn ui-btn--ghost ui-btn--sm"
+            >
+              <ButtonIcon name="download" />
+              Save {f.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type EditorSource = {
   archiveItemId: string
@@ -196,7 +334,7 @@ export function MultitrackEditor({
   sources: EditorSource[]
 }) {
   const router = useRouter()
-  const { tracks, addTracks, isLoading, errors } = useDynamicTracks()
+  const { tracks, addTracks, removeTrack, isLoading, errors } = useDynamicTracks()
   const seeded = useRef(false)
   const [title, setTitle] = useState(initialTitle)
   const [versionLabel, setVersionLabel] = useState(`${initialTitle} mix`)
@@ -276,6 +414,13 @@ export function MultitrackEditor({
           />
         </label>
       </div>
+
+      <StemSeparationPanel
+        archiveItemId={archiveItemId}
+        tracks={readyTracks}
+        addTracks={addTracks}
+        removeTrack={removeTrack}
+      />
 
       {readyTracks.length > 0 && (
         <EditorWorkspace
