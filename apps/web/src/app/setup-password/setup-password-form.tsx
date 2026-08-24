@@ -58,12 +58,17 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
                 <Input value={info.email} readOnly disabled />
               </Field>
 
-              <Field label="Password" hint="At least 8 characters">
+              <Field
+                label="Password"
+                hint="At least 10 characters, with uppercase, lowercase, and a number"
+              >
                 <Input
                   name="password"
                   type="password"
                   required
-                  minLength={8}
+                  minLength={10}
+                  pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{10,}"
+                  title="At least 10 characters, with uppercase, lowercase, and a number"
                   autoComplete="new-password"
                 />
               </Field>
@@ -73,7 +78,7 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
                   name="confirm"
                   type="password"
                   required
-                  minLength={8}
+                  minLength={10}
                   autoComplete="new-password"
                 />
               </Field>

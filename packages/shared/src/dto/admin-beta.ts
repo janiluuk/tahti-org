@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { PasswordSchema } from './auth.js'
 
 export const BetaApplicationStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED'])
 
@@ -72,10 +73,7 @@ export const SetupPasswordInfoSchema = z.object({
 
 export const SetupPasswordBodySchema = z.object({
   token: z.string().min(1),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long'),
+  password: PasswordSchema,
 })
 
 export const SetupPasswordResponseSchema = z.object({

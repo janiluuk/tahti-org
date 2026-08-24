@@ -3,12 +3,20 @@
 
 import { z } from 'zod'
 
+// Applies to every flow that SETS a new password (register, reset, beta
+// setup-password) — never to LoginSchema/TotpDisableSchema, which check an
+// existing password and shouldn't reject a legitimately-created older one.
+export const PasswordSchema = z
+  .string()
+  .min(10, 'Password must be at least 10 characters')
+  .max(128, 'Password too long')
+  .regex(/[a-z]/, 'Password must include a lowercase letter')
+  .regex(/[A-Z]/, 'Password must include an uppercase letter')
+  .regex(/[0-9]/, 'Password must include a number')
+
 export const RegisterSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long'),
+  password: PasswordSchema,
   username: z
     .string()
     .min(2, 'Username must be at least 2 characters')
@@ -87,10 +95,7 @@ export const ResetPasswordInfoSchema = z.object({
 
 export const ResetPasswordBodySchema = z.object({
   token: z.string().min(1),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long'),
+  password: PasswordSchema,
 })
 
 export const ResetPasswordResponseSchema = z.object({

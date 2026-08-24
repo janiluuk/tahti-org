@@ -226,13 +226,19 @@ export function SignupForm() {
               </div>
 
               <div className="signup-password-row">
-                <Field label="Password" htmlFor="signup-password" hint="At least 8 characters">
+                <Field
+                  label="Password"
+                  htmlFor="signup-password"
+                  hint="At least 10 characters, with uppercase, lowercase, and a number"
+                >
                   <Input
                     id="signup-password"
                     name="password"
                     type="password"
                     required
-                    minLength={8}
+                    minLength={10}
+                    pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{10,}"
+                    title="At least 10 characters, with uppercase, lowercase, and a number"
                     autoComplete="new-password"
                   />
                 </Field>
@@ -243,7 +249,7 @@ export function SignupForm() {
                     name="confirm"
                     type="password"
                     required
-                    minLength={8}
+                    minLength={10}
                     autoComplete="new-password"
                   />
                 </Field>

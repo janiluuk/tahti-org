@@ -52,12 +52,17 @@ export function ResetPasswordForm({ token, info }: { token: string; info: ResetI
           <Stack gap={4}>
             {submitError && <Alert variant="error">{submitError}</Alert>}
 
-            <Field label="New password" hint="At least 8 characters">
+            <Field
+              label="New password"
+              hint="At least 10 characters, with uppercase, lowercase, and a number"
+            >
               <Input
                 name="password"
                 type="password"
                 required
-                minLength={8}
+                minLength={10}
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{10,}"
+                title="At least 10 characters, with uppercase, lowercase, and a number"
                 autoComplete="new-password"
               />
             </Field>
@@ -67,7 +72,7 @@ export function ResetPasswordForm({ token, info }: { token: string; info: ResetI
                 name="confirm"
                 type="password"
                 required
-                minLength={8}
+                minLength={10}
                 autoComplete="new-password"
               />
             </Field>
