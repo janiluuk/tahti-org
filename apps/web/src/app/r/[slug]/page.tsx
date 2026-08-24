@@ -73,7 +73,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
   const year = new Date(data.release.releaseDate).getFullYear()
   const trackCount = data.release.tracks.length
-  const hasTargets = Object.values(data.targets).some((url) => url?.trim())
   const playbackQueue: CatalogPlaybackTrack[] = data.release.tracks.flatMap((track) =>
     track.audioUrl
       ? [
@@ -155,14 +154,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           </div>
         ) : null}
         <SmartLinkDspButtons smartLinkSlug={params.slug} targets={data.targets} />
-        {!hasTargets ? (
-          <div className="public-empty-card">
-            <p className="public-empty-card__text">Streaming links coming soon.</p>
-            <p className="public-empty-card__hint">
-              <Link href={data.releaseUrl}>Listen on Tahti</Link>
-            </p>
-          </div>
-        ) : null}
       </ReleaseSmartLink>
       <ReportButton targetType="RELEASE" targetId={data.release.id} />
     </SmartLinkPageLayout>
