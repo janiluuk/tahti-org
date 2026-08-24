@@ -130,7 +130,16 @@ export function ChannelHeader({
 }: ChannelHeaderProps) {
   const pathname = usePathname()
   const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
-  const channelLiveMode = Boolean(isLive && artistHandle && !resolvedActiveNav && !contextLink)
+  // Deliberately keyed off the raw `activeNav` prop, not resolvedActiveNav's
+  // pathname-match fallback: a channel served on its own subdomain
+  // (yaniho.tahti.live/) renders at pathname "/", which collides with
+  // SITE_NAV's home entry ("/") and would otherwise force resolvedActiveNav
+  // to "home" and wrongly disable the compact live bar — showing the full
+  // default header (nav + its own Help icon) *alongside* the artist card's
+  // own HelpTourButton below, i.e. two help icons with two different (and
+  // differently scoped) tour steps. Only an explicitly-passed activeNav
+  // (a real top-level nav page) should ever suppress live mode.
+  const channelLiveMode = Boolean(isLive && artistHandle && !activeNav && !contextLink)
   const homeHref = resolveHomeHref()
   const radioHref = resolveRadioNavHref()
   const [menuOpen, setMenuOpen] = useState(false)
