@@ -47,7 +47,12 @@ export function parseArchiveFileTags(tags: Record<string, unknown>): ParsedArchi
   }
 }
 
-function mapGenre(raw: string): { genre?: string; genreCustom?: string } {
+/** Maps a raw genre string (from ID3 tags or an external import source) to
+ * the matching preset `genre` value, or `genreCustom` when it's not one of
+ * ARCHIVE_GENRES — same normalization either way, so an import from Spotify/
+ * Mixcloud/hearthis/SoundCloud lands genre in the same place a manual pick
+ * or an uploaded file's embedded tag would. */
+export function mapGenre(raw: string): { genre?: string; genreCustom?: string } {
   const trimmed = raw.trim().slice(0, 80)
   if (!trimmed) return {}
   const preset = ARCHIVE_GENRES.find((g) => g.toLowerCase() === trimmed.toLowerCase())

@@ -7,6 +7,7 @@ import {
   HearthisAddTrackResponseSchema,
   HearthisSearchResponseSchema,
   HearthisUserTracksResponseSchema,
+  mapGenre,
   openApiResponse,
 } from '@tahti/shared'
 import { createHearthisClient, parseHearthisUsername, type HearthisTrack } from '@tahti/hearthis'
@@ -168,6 +169,8 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
           embedProvider: 'HEARTHIS',
           status: 'READY',
           isPublic: true,
+          bannerUrl: result.coverUrl,
+          ...(result.genre ? mapGenre(result.genre) : {}),
         },
         select: { id: true },
       })
