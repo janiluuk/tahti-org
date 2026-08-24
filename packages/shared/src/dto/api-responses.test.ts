@@ -97,6 +97,7 @@ describe('api response schemas', () => {
         username: 'dj1',
         displayName: 'DJ',
         bio: null,
+        fullBio: null,
         avatarUrl: null,
         socialLinks: {},
         tipJarUrl: null,

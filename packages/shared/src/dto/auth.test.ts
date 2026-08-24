@@ -8,7 +8,7 @@ describe('RegisterSchema', () => {
   it('accepts valid input', () => {
     const result = RegisterSchema.safeParse({
       email: 'artist@example.com',
-      password: 'securepassword123',
+      password: 'SecurePassword123',
       username: 'testartist',
       displayName: 'Test Artist',
     })
@@ -18,7 +18,7 @@ describe('RegisterSchema', () => {
   it('rejects invalid email', () => {
     const result = RegisterSchema.safeParse({
       email: 'not-an-email',
-      password: 'securepassword123',
+      password: 'SecurePassword123',
       username: 'testartist',
       displayName: 'Test Artist',
     })
@@ -38,7 +38,7 @@ describe('RegisterSchema', () => {
   it('rejects username with invalid characters', () => {
     const result = RegisterSchema.safeParse({
       email: 'artist@example.com',
-      password: 'securepassword123',
+      password: 'SecurePassword123',
       username: 'UPPERCASE',
       displayName: 'Test Artist',
     })
@@ -48,7 +48,7 @@ describe('RegisterSchema', () => {
   it('rejects username that is too short', () => {
     const result = RegisterSchema.safeParse({
       email: 'artist@example.com',
-      password: 'securepassword123',
+      password: 'SecurePassword123',
       username: 'x',
       displayName: 'Test Artist',
     })
@@ -58,7 +58,7 @@ describe('RegisterSchema', () => {
   it('accepts username with hyphens and underscores', () => {
     const result = RegisterSchema.safeParse({
       email: 'artist@example.com',
-      password: 'securepassword123',
+      password: 'SecurePassword123',
       username: 'test-artist_2',
       displayName: 'Test Artist',
     })
