@@ -8,8 +8,10 @@ import {
   SpotifyAddTrackResponseSchema,
   SpotifyMeTracksResponseSchema,
   SpotifySearchResponseSchema,
+  getSpotifyArtist,
   getSpotifyArtistTracks,
   getSpotifyTrack,
+  mapGenre,
   parseSpotifyArtistId,
   searchSpotifyTracks,
   trackIdFromSpotifyUri,
@@ -167,9 +169,14 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       if (!collection) return reply.status(404).send({ error: 'Collection not found' })
 
       let track
+      let genre: string | null = null
       try {
         const token = await getSpotifyAppToken(credential ?? undefined)
         track = await getSpotifyTrack(token, trackId)
+        if (track.artistId) {
+          const artist = await getSpotifyArtist(token, track.artistId).catch(() => null)
+          genre = artist?.genres[0] ?? null
+        }
       } catch {
         return reply.status(502).send({ error: 'Could not fetch track from Spotify' })
       }
@@ -185,6 +192,8 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
           embedProvider: 'SPOTIFY',
           status: 'READY',
           isPublic: true,
+          bannerUrl: track.coverUrl,
+          ...(genre ? mapGenre(genre) : {}),
         },
         select: { id: true },
       })

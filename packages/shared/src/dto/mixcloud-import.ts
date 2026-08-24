@@ -10,6 +10,7 @@ export const MixcloudTrackResultSchema = z.object({
   displayName: z.string(),
   durationSec: z.number().int().nonnegative(),
   coverUrl: z.string().nullable(),
+  genre: z.string().nullable(),
 })
 
 export const MixcloudSearchResponseSchema = z.object({

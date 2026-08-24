@@ -81,6 +81,8 @@ export interface SpotifyTrackResult {
   uri: string
   title: string
   artists: string[]
+  /** Primary (first-credited) artist's id — used to look up genre on add, not shown in the UI. */
+  artistId: string | null
   album: string | null
   durationSec: number
   coverUrl: string | null
@@ -100,6 +102,7 @@ function mapSpotifyTrack(track: RawSpotifyTrack): SpotifyTrackResult {
     uri: track.uri,
     title: track.name,
     artists: (track.artists ?? []).map((a) => a.name),
+    artistId: track.artists?.[0]?.id ?? null,
     album: track.album?.name ?? null,
     durationSec: Math.round(track.duration_ms / 1000),
     coverUrl: track.album?.images?.[0]?.url ?? null,
@@ -139,12 +142,14 @@ export interface SpotifyArtistResult {
   id: string
   name: string
   imageUrl: string | null
+  genres: string[]
 }
 
 interface RawSpotifyArtist {
   id: string
   name: string
   images?: Array<{ url: string }>
+  genres?: string[]
 }
 
 /** Fetches artist metadata — used to verify a pasted artist URL/ID is real before saving it. */
@@ -157,6 +162,7 @@ export async function getSpotifyArtist(
     id: data.id,
     name: data.name,
     imageUrl: data.images?.[0]?.url ?? null,
+    genres: data.genres ?? [],
   }
 }
 

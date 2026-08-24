@@ -22,6 +22,7 @@ export interface MixcloudTrackResult {
   displayName: string
   durationSec: number
   coverUrl: string | null
+  genre: string | null
 }
 
 interface RawMixcloudCloudcast {
@@ -30,6 +31,7 @@ interface RawMixcloudCloudcast {
   audio_length: number
   user?: { username?: string; name?: string }
   pictures?: { medium?: string; large?: string; thumbnail?: string }
+  tags?: Array<{ name?: string }>
 }
 
 function mapMixcloudCloudcast(cast: RawMixcloudCloudcast): MixcloudTrackResult {
@@ -40,6 +42,7 @@ function mapMixcloudCloudcast(cast: RawMixcloudCloudcast): MixcloudTrackResult {
     displayName: cast.user?.name ?? cast.user?.username ?? '',
     durationSec: cast.audio_length ?? 0,
     coverUrl: cast.pictures?.medium ?? cast.pictures?.large ?? cast.pictures?.thumbnail ?? null,
+    genre: cast.tags?.[0]?.name ?? null,
   }
 }
 

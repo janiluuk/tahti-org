@@ -11,6 +11,7 @@ import {
   MixcloudSearchResponseSchema,
   getMixcloudCloudcastByUrl,
   getMixcloudUserCloudcasts,
+  mapGenre,
   parseMixcloudUsername,
   searchMixcloudCloudcasts,
   openApiResponse,
@@ -165,6 +166,8 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
           embedProvider: 'MIXCLOUD',
           status: 'READY',
           isPublic: true,
+          bannerUrl: track.coverUrl,
+          ...(track.genre ? mapGenre(track.genre) : {}),
         },
         select: { id: true },
       })

@@ -5,7 +5,7 @@ import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
 import { prisma } from '@tahti/db'
-import { extensionFromDriveFile } from '@tahti/shared'
+import { extensionFromDriveFile, mapGenre } from '@tahti/shared'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
 import { uploadStream } from '../lib/minio.js'
 import { enqueueTranscodeArchive } from '../lib/queue.js'
@@ -15,6 +15,8 @@ interface SoundcloudTrack {
   title: string
   download_url?: string
   downloadable?: boolean
+  genre?: string
+  artwork_url?: string
 }
 
 export async function processSoundcloudImportJob(job: Job): Promise<void> {
@@ -104,6 +106,8 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
         fileSizeBytes: BigInt(contentLength ?? 0),
         status: 'PENDING',
         source: 'SOUNDCLOUD',
+        bannerUrl: track.artwork_url ?? null,
+        ...(track.genre ? mapGenre(track.genre) : {}),
       },
       select: { id: true },
     })
