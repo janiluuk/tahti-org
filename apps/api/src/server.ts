@@ -136,6 +136,7 @@ import smartlinkClickRoutes from './routes/releases/smartlink-click.js'
 import latestReleasesRoutes from './routes/releases/latest.js'
 import releaseAnalyticsRoutes from './routes/releases/analytics.js'
 import sitemapRoutes from './routes/sitemap.js'
+import ogRoutes from './routes/og.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
 import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
@@ -654,6 +655,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(latestReleasesRoutes)
   await fastify.register(releaseAnalyticsRoutes)
   await fastify.register(sitemapRoutes)
+  await fastify.register(ogRoutes)
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)
