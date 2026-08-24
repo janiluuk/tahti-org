@@ -45,16 +45,32 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
 
       const result = await getCachedJson('channels:list', 10, async () => {
         const [liveChannels, replayingChannels, recentChannels] = await Promise.all([
+          // goneLiveAt (not just state:'LIVE') is what actually means "a human is
+          // broadcasting right now" — channel-fallback-reconciler.ts also sets
+          // state:'LIVE' when it bootstraps a fallbackEnabled channel's 24/7
+          // rotation, without touching goneLiveAt, so state alone can't tell a
+          // real broadcast from the archive just looping (same distinction as
+          // dashboard/layout.tsx's isOnline vs isReallyLive). Without the
+          // goneLiveAt filter here, a rotation-only channel would show up
+          // labeled "Live now" on Discover instead of "Replay".
           fastify.prisma.channel.findMany({
-            where: { state: 'LIVE', user: { deletedAt: null } },
+            where: { state: 'LIVE', goneLiveAt: { not: null }, user: { deletedAt: null } },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,
           }),
-          // Not live, but airing their 24/7 archive rotation right now — the
-          // "REPLAY" tier, same concept as Tahti Radio's own REPLAY badge.
+          // Not really live, but airing their 24/7 archive rotation right now —
+          // the "REPLAY" tier, same concept as Tahti Radio's own REPLAY badge.
+          // Covers both the ordinary case (state left OFFLINE while fallback
+          // audio streams) and the state:'LIVE'-but-goneLiveAt-null case above.
           fastify.prisma.channel.findMany({
-            where: { state: { not: 'LIVE' }, fallbackEnabled: true, user: { deletedAt: null } },
+            where: {
+              OR: [
+                { state: { not: 'LIVE' }, fallbackEnabled: true },
+                { state: 'LIVE', goneLiveAt: null },
+              ],
+              user: { deletedAt: null },
+            },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,
