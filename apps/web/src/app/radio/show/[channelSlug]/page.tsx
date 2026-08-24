@@ -41,6 +41,11 @@ function EpisodeList({ episodes, emptyText }: { episodes: RadioShowEpisode[]; em
             </span>
             {ep.note && <span className="ch-radio-upcoming__note">{ep.note}</span>}
           </div>
+          {ep.recording && (
+            <Link href={ep.recording.channelItemUrl} className="ch-radio-upcoming__recording">
+              ▶ Listen to the recording
+            </Link>
+          )}
         </li>
       ))}
     </ul>

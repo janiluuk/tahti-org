@@ -83,10 +83,13 @@ async function fetchRotation(): Promise<RadioRotationItem[]> {
   }
 }
 
+// Named for what it's mainly used for, but the range also reaches back far
+// enough to cover RadioScheduleList's PAST_DAYS_SHOWN days.
 async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
   const now = new Date()
+  const from = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
   const to = new Date(now.getTime() + 9 * 24 * 60 * 60 * 1000)
-  const { slots } = await listPublicRadioSlots(now.toISOString(), to.toISOString())
+  const { slots } = await listPublicRadioSlots(from.toISOString(), to.toISOString())
   return slots
 }
 

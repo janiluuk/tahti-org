@@ -16,6 +16,7 @@ import {
   type ColorScheme,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
+import { resolveChannelUrl } from '../../lib/channel-url.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 
@@ -312,7 +313,17 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           where: { channelId: channel.id, endAt: { lte: now } },
           orderBy: { startAt: 'desc' },
           take: 50,
-          select: { id: true, startAt: true, endAt: true, note: true, showType: true },
+          select: {
+            id: true,
+            startAt: true,
+            endAt: true,
+            note: true,
+            showType: true,
+            // Broadcast.archiveItemId is a bare scalar column (no Prisma
+            // relation to ArchiveItem declared on either model) — resolved
+            // via a second batch query below, not a nested select.
+            broadcasts: { select: { archiveItemId: true }, take: 1 },
+          },
         }),
         fastify.prisma.radioSlotBooking.findMany({
           where: { channelId: channel.id, endAt: { gt: now } },
@@ -321,19 +332,50 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       ])
 
+      const archiveItemIds = [
+        ...new Set(
+          pastRows.flatMap((r) => r.broadcasts.map((b) => b.archiveItemId).filter((id) => id)),
+        ),
+      ] as string[]
+      // Only a *published* recording counts as "the artist published it" —
+      // an archived-but-still-private item shouldn't show up as a public
+      // recording link on this no-auth page.
+      const recordingRows =
+        archiveItemIds.length === 0
+          ? []
+          : await fastify.prisma.archiveItem.findMany({
+              where: { id: { in: archiveItemIds }, isPublic: true, status: 'READY' },
+              select: { id: true, title: true, channel: { select: { slug: true } } },
+            })
+      const recordingByArchiveItemId = new Map(recordingRows.map((r) => [r.id, r]))
+
       const toEpisode = (r: {
         id: string
         startAt: Date
         endAt: Date
         note: string | null
         showType: 'LIVE_SET' | 'TALK'
-      }) => ({
-        id: r.id,
-        startAt: r.startAt.toISOString(),
-        endAt: r.endAt.toISOString(),
-        note: r.note,
-        showType: r.showType,
-      })
+        broadcasts?: { archiveItemId: string | null }[]
+      }) => {
+        const archiveItemId = r.broadcasts?.[0]?.archiveItemId
+        const recordingItem = archiveItemId ? recordingByArchiveItemId.get(archiveItemId) : null
+        return {
+          id: r.id,
+          startAt: r.startAt.toISOString(),
+          endAt: r.endAt.toISOString(),
+          note: r.note,
+          showType: r.showType,
+          recording: recordingItem
+            ? {
+                archiveItemId: recordingItem.id,
+                title: recordingItem.title,
+                channelItemUrl: resolveChannelUrl(recordingItem.channel.slug, {
+                  hash: `archive-item-${recordingItem.id}`,
+                }),
+              }
+            : null,
+        }
+      }
 
       return reply.send({
         artist: {

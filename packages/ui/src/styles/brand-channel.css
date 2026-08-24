@@ -1997,6 +1997,20 @@
   text-decoration: underline;
 }
 
+[data-tahti-ui='brand'] .ch-radio-upcoming__recording {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__recording:hover {
+  text-decoration: underline;
+}
+
 [data-tahti-ui='brand'] .ch-radio-upcoming__body,
 [data-tahti-ui='brand'] .ch-radio-recent__body {
   display: flex;

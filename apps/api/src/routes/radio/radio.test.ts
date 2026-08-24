@@ -5,7 +5,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { prisma } from '@tahti/db'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { buildApp } from '../../server.js'
-import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createReadyArchiveItem,
+  createTestArtist,
+} from '../../test/helpers.js'
 
 const PREFIX = 'radio-rotation-test-'
 
@@ -195,5 +199,124 @@ describe('public live-artist slot calendar', () => {
     expect(body[0]?.artist.displayName).toBe('Slot Test Artist')
     expect(body[0]?.artist.username).toBe(`${PREFIX2}artist`)
     expect(body[0]?.artist.channelSlug).toBe(`${PREFIX2}artist`)
+  })
+})
+
+describe('radio show detail — past episode recording linkage', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  const PREFIX3 = 'radio-show-test-'
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX3)
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX3)
+    await app.close()
+  })
+
+  it('links a past episode to its published recording, and leaves an unpublished one bare', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX3}artist@example.com`,
+      username: `${PREFIX3}artist`,
+      displayName: 'Show Test Artist',
+    })
+    const now = new Date()
+
+    const publishedItem = await createReadyArchiveItem(
+      prisma,
+      artist.channel!.id,
+      'Published set',
+    )
+    const airedBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+        endAt: new Date(now.getTime() - 60 * 60 * 1000),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: airedBooking.id,
+        archiveItemId: publishedItem.id,
+        wentLiveAt: airedBooking.startAt,
+        endedAt: airedBooking.endAt,
+      },
+    })
+
+    // A second past slot the artist never actually aired — no Broadcast row
+    // at all, so it should come back with recording: null too.
+    await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 26 * 60 * 60 * 1000),
+        endAt: new Date(now.getTime() - 25 * 60 * 60 * 1000),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      pastEpisodes: Array<{
+        id: string
+        recording: { archiveItemId: string; title: string; channelItemUrl: string } | null
+      }>
+    }
+    expect(body.pastEpisodes).toHaveLength(2)
+
+    const aired = body.pastEpisodes.find((ep) => ep.id === airedBooking.id)
+    expect(aired?.recording).toEqual({
+      archiveItemId: publishedItem.id,
+      title: 'Published set',
+      channelItemUrl: expect.stringContaining(`archive-item-${publishedItem.id}`),
+    })
+
+    const noShow = body.pastEpisodes.find((ep) => ep.id !== airedBooking.id)
+    expect(noShow?.recording).toBeNull()
+  })
+
+  it("doesn't link to a recording the artist hasn't made public", async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX3}private@example.com`,
+      username: `${PREFIX3}private`,
+      displayName: 'Private Recording Artist',
+    })
+    const now = new Date()
+
+    const privateItem = await createReadyArchiveItem(prisma, artist.channel!.id, 'Private set')
+    await prisma.archiveItem.update({ where: { id: privateItem.id }, data: { isPublic: false } })
+    const booking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+        endAt: new Date(now.getTime() - 60 * 60 * 1000),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: booking.id,
+        archiveItemId: privateItem.id,
+        wentLiveAt: booking.startAt,
+        endedAt: booking.endAt,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { pastEpisodes: Array<{ recording: unknown }> }
+    expect(body.pastEpisodes).toHaveLength(1)
+    expect(body.pastEpisodes[0]?.recording).toBeNull()
   })
 })

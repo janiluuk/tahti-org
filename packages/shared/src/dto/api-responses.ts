@@ -276,6 +276,16 @@ export const RadioShowEpisodeSchema = z.object({
   endAt: z.string(),
   note: z.string().nullable(),
   showType: z.enum(['LIVE_SET', 'TALK']),
+  /** Set only for a past episode the artist actually broadcast AND published
+   * to their archive afterward — null for a past slot with no broadcast (a
+   * no-show) or one the artist hasn't published a recording of. */
+  recording: z
+    .object({
+      archiveItemId: z.string(),
+      title: z.string(),
+      channelItemUrl: z.string(),
+    })
+    .nullable(),
 })
 export const RadioShowDetailSchema = z.object({
   artist: z.object({
