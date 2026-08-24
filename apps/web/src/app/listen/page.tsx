@@ -6,6 +6,7 @@ import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
 import { NewToYouSection } from './_new-to-you-section'
+import { YourFeedSection } from './_your-feed-section'
 import { DiscoWidgetsSection } from './_disco-widgets-section'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
@@ -142,6 +143,8 @@ export default async function ListenPage() {
         artistName={radioPreview.artistName}
         artworkUrl={radioPreview.artworkUrl}
       />
+
+      <YourFeedSection />
 
       <NewToYouSection />
 

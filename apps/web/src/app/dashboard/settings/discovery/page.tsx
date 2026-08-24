@@ -3,7 +3,9 @@
 
 import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
+import { fetchDiscoWidgetInstalls, fetchDiscoWidgetStore } from '@/lib/disco-widgets-client'
 import { DiscoverySettingsPanel } from '../../discovery-settings-panel'
+import { DiscoWidgetsPanel } from '../../disco-widgets-panel'
 
 export default async function DiscoverySettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -29,6 +31,11 @@ export default async function DiscoverySettingsPage() {
     // render with defaults
   }
 
+  const [store, installs] = await Promise.all([
+    fetchDiscoWidgetStore('LISTENER'),
+    fetchDiscoWidgetInstalls('/api/me/disco-widgets/installs'),
+  ])
+
   return (
     <div className="studio-settings-stack">
       <div className="studio-page-header">
@@ -36,6 +43,11 @@ export default async function DiscoverySettingsPage() {
       </div>
 
       <DiscoverySettingsPanel initialTopListsOptOut={topListsOptOut} />
+
+      <div className="studio-page-header studio-mt-lg">
+        <h2 className="studio-page-title">Disco-widgets</h2>
+      </div>
+      <DiscoWidgetsPanel initialWidgets={store.widgets} initialInstalls={installs.installs} />
     </div>
   )
 }

@@ -4,13 +4,11 @@
 import { redirect } from 'next/navigation'
 import { PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
-import type { FeedItem } from '@tahti/shared'
 import { DashboardOverview } from './_dashboard-overview'
 import { HeaderGoLiveAction } from './_header-go-live-action'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { ChannelManagementActions } from './_studio-header-actions'
-import { ArtistFeedSection } from './_artist-feed-section'
 
 interface ModeratedChannel {
   slug: string
@@ -102,7 +100,6 @@ export default async function DashboardPage() {
     createdAt: string
   }> = []
   let liveBroadcastTitle: string | null = null
-  let feed: { items: FeedItem[]; followingCount: number } = { items: [], followingCount: 0 }
   const isOnAir = user.channel?.state === 'LIVE' || user.channel?.state === 'PREVIEW'
   try {
     const [
@@ -114,7 +111,6 @@ export default async function DashboardPage() {
       recentArchiveRes,
       preflightRes,
       statsSummaryRes,
-      feedRes,
     ] = await Promise.all([
       get('/api/me/moderate'),
       get('/api/me/membership'),
@@ -124,7 +120,6 @@ export default async function DashboardPage() {
       slug ? get('/api/me/archive/recent') : null,
       slug && isOnAir ? get('/api/me/channel/preflight') : null,
       slug ? get('/api/me/stats/summary') : null,
-      get('/api/me/feed'),
     ])
 
     if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
@@ -152,9 +147,6 @@ export default async function DashboardPage() {
     }
     if (statsSummaryRes?.ok) {
       statsSummary = (await statsSummaryRes.json()) as typeof statsSummary
-    }
-    if (feedRes.ok) {
-      feed = (await feedRes.json()) as { items: FeedItem[]; followingCount: number }
     }
   } catch {
     // ignore — dashboard renders with partial data
@@ -308,11 +300,6 @@ export default async function DashboardPage() {
         channelLiveStats={channelLiveStats}
         otherModeratedChannels={otherModeratedChannels}
       />
-
-      <div className="studio-mt-xl">
-        <h2 className="admin-section-label">Your feed</h2>
-        <ArtistFeedSection items={feed.items} followingCount={feed.followingCount} />
-      </div>
     </PageShell>
   )
 }
