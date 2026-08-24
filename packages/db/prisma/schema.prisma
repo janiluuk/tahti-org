@@ -632,6 +632,10 @@ model User {
   username              String     @unique
   displayName           String
   bio                   String?
+  // Optional longer-form history ("+ Add full bio" on the artist profile
+  // page) shown expanded below the short bio — unlike bio, never truncated
+  // or used in card/list previews.
+  fullBio               String?
   avatarUrl             String?
   // Static first-frame extracted client-side when avatarUrl is an animated
   // GIF — shown at rest on the profile hero, swapped for avatarUrl on hover

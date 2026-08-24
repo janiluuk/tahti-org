@@ -55,6 +55,7 @@ describe('M12 — artist profile API', () => {
       payload: {
         displayName: 'Profile Artist',
         bio: 'Thanks @profile-mentioned for the collab',
+        fullBio: 'A much longer history of how this project got started.',
         tipJarUrl: 'https://ko-fi.com/test',
         countryCode: 'fi',
         pronouns: 'they/them',
@@ -63,6 +64,9 @@ describe('M12 — artist profile API', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().displayName).toBe('Profile Artist')
+    expect(res.json().fullBio).toBe(
+      'A much longer history of how this project got started.',
+    )
     expect(res.json().publicAttribution).toBe(false)
     expect(res.json().countryCode).toBe('FI')
     expect(res.json().pronouns).toBe('they/them')
@@ -82,6 +86,24 @@ describe('M12 — artist profile API', () => {
     expect(empty.statusCode).toBe(400)
 
     void target
+  })
+
+  it('PATCH /api/me/profile clears fullBio when set to null', async () => {
+    await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { fullBio: 'Something to clear later.' },
+    })
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { fullBio: null },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().fullBio).toBeNull()
   })
 
   it('PATCH /api/me/profile regenerates a stale generated placeholder avatar on rename', async () => {

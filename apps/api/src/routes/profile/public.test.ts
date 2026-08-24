@@ -26,7 +26,11 @@ describe('GET /api/v1/u/:username/profile', () => {
     })
     await prisma.user.update({
       where: { id: artist.id },
-      data: { countryCode: 'FI', pronouns: 'she/her' },
+      data: {
+        countryCode: 'FI',
+        pronouns: 'she/her',
+        fullBio: 'A much longer history of how this project got started.',
+      },
     })
   })
 
@@ -41,9 +45,14 @@ describe('GET /api/v1/u/:username/profile', () => {
       url: '/api/v1/u/public-profile-artist/profile',
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { artist: { countryCode?: string | null; pronouns?: string | null } }
+    const body = res.json() as {
+      artist: { countryCode?: string | null; pronouns?: string | null; fullBio?: string | null }
+    }
     expect(body.artist.countryCode).toBe('FI')
     expect(body.artist.pronouns).toBe('she/her')
+    expect(body.artist.fullBio).toBe(
+      'A much longer history of how this project got started.',
+    )
   })
 
   it('includes collection style so the profile page can group DJ mixes/playlists/collections', async () => {

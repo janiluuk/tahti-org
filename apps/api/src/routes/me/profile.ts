@@ -30,6 +30,7 @@ const profileSelect = {
   username: true,
   displayName: true,
   bio: true,
+  fullBio: true,
   avatarUrl: true,
   avatarPosterUrl: true,
   avatarThemeJson: true,
@@ -55,6 +56,7 @@ function serializeProfile(
     username: string
     displayName: string
     bio: string | null
+    fullBio: string | null
     avatarUrl: string | null
     avatarPosterUrl: string | null
     avatarThemeJson: string | null
@@ -80,6 +82,7 @@ function serializeProfile(
     username: profile.username,
     displayName: profile.displayName,
     bio: profile.bio,
+    fullBio: profile.fullBio,
     avatarUrl: profile.avatarUrl,
     avatarPosterUrl: profile.avatarPosterUrl,
     avatarTheme: parseAvatarTheme(profile.avatarThemeJson),
@@ -148,6 +151,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (body.displayName !== undefined) data.displayName = body.displayName
       if (body.bio !== undefined) data.bio = body.bio.trim() || null
+      if (body.fullBio !== undefined) data.fullBio = body.fullBio?.trim() || null
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
       if (body.avatarPosterUrl !== undefined)
         data.avatarPosterUrl = body.avatarPosterUrl?.trim() || null

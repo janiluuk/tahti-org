@@ -11,6 +11,8 @@ export const ProfilePatchSchema = z
   .object({
     displayName: z.string().trim().min(1, 'displayName cannot be empty').max(100).optional(),
     bio: z.string().max(5000).optional(),
+    /** Optional longer-form history, shown expanded below the short bio. */
+    fullBio: z.string().max(20000).nullable().optional(),
     avatarUrl: z.string().trim().max(2000).optional(),
     avatarPosterUrl: z.string().trim().max(2000).nullable().optional(),
     /** Solid / gradient avatar fill. Null clears a stored theme (falls back to seeded default). */

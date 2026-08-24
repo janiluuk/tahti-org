@@ -809,6 +809,8 @@ export const PublicProfileArtistSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   bio: z.string().nullable(),
+  /** Optional longer-form history, shown expanded below the short bio. */
+  fullBio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   /** Static poster frame — present only when avatarUrl is an animated GIF. */
   avatarPosterUrl: z.string().nullable().optional(),
@@ -1052,6 +1054,8 @@ export const ProfileFieldsSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   bio: z.string().nullable(),
+  /** Optional longer-form history, shown expanded below the short bio. */
+  fullBio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   avatarPosterUrl: z.string().nullable(),
   avatarTheme: AvatarThemeSchema.nullable(),
