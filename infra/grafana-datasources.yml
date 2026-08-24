@@ -1,0 +1,15 @@
+# Grafana provisioning — declarative datasources, loaded on container start.
+# Only adds Loki; the stack's existing Prometheus datasource in Grafana was
+# set up manually through the UI and is left alone here so this doesn't
+# fight it (no `prometheus.yml`-equivalent provisioning existed before this
+# file — check the Grafana UI's Data Sources page before assuming there's a
+# naming collision).
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: true
