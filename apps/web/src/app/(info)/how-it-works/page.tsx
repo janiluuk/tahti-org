@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 export default function HowItWorksPage() {
   return (
     <div className="brand-public">
-      <PublicPageHeader title="How Tahti works">
+      <PublicPageHeader
+        title="How Tahti works"
+        breadcrumb={[{ label: 'Home', href: '/' }, { label: 'How it works' }]}
+      >
         Not a features list — a walkthrough. What actually happens when you listen, and what
         actually happens when you broadcast. Every number below is the same number published on the{' '}
         <a href="/transparency">transparency page</a>.

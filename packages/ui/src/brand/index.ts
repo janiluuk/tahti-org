@@ -15,6 +15,7 @@ export { PublicBrandShell } from './PublicBrandShell'
 export { PublicFooter, type PublicFooterProps } from './PublicFooter'
 export { PublicPageHeader } from './PublicPageHeader'
 export type { PublicPageHeaderProps } from './PublicPageHeader'
+export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from './Breadcrumb'
 export { StudioTabs } from './StudioTabs'
 export type {
   StudioTabsProps,

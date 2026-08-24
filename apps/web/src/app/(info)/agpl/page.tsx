@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 export default function AgplPage() {
   return (
     <div className="brand-public">
-      <PublicPageHeader title="Source code & AGPL licence">
+      <PublicPageHeader
+        title="Source code & AGPL licence"
+        breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Source & licence' }]}
+      >
         Tahti is fully open source under the GNU Affero General Public Licence v3.
       </PublicPageHeader>
 

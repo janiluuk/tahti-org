@@ -9,7 +9,10 @@ import { logout } from '@/app/auth/actions'
 
 type PublicChannelSiteLayoutProps = {
   children: ReactNode
-  activeNav: SiteNavId
+  /** Omit for pages with no matching top-nav item (About, …) — ChannelHeader
+   * falls back to a pathname match, which won't hit either, so nothing gets
+   * a misleading highlight. */
+  activeNav?: SiteNavId
 }
 
 /** shell-public — Home, Discover, and similar brand routes. The gateway background

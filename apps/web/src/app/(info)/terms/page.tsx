@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <div className="brand-public">
-      <PublicPageHeader title="Terms of service">
+      <PublicPageHeader
+        title="Terms of service"
+        breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Terms of service' }]}
+      >
         Last updated: 1 August 2026. These terms govern your use of tahti.live.
       </PublicPageHeader>
 

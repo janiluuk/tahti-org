@@ -3,7 +3,7 @@
 
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { BrowserFrame } from '@tahti/ui'
+import { Breadcrumb, BrowserFrame } from '@tahti/ui'
 import channelImg from '/public/screenshots/channel.png'
 import dashboardImg from '/public/screenshots/dashboard.png'
 import statsImg from '/public/screenshots/stats.png'
@@ -62,6 +62,10 @@ export default function ForArtistsPage() {
   return (
     <div className="brand-public brand-public--wide">
       <div className="for-artists-hero">
+        <Breadcrumb
+          items={[{ label: 'Home', href: '/' }, { label: 'For artists' }]}
+          className="for-artists-hero__breadcrumb"
+        />
         <p className="for-artists-hero__eyebrow">For artists</p>
         <h1 className="for-artists-hero__title">
           Broadcast independently.

@@ -21,6 +21,37 @@
   text-decoration: underline;
 }
 
+[data-tahti-ui='brand'] .brand-public .brand-page-header__breadcrumb {
+  margin: 0 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+[data-tahti-ui='brand'] .brand-breadcrumb__item a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .brand-breadcrumb__item a:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .brand-breadcrumb__sep {
+  color: var(--faint, var(--muted));
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-page-header__title {
   font-size: 1.625rem;
   font-weight: 500;
@@ -1251,6 +1282,10 @@
 /* ---- For-artists feature grid ---- */
 [data-tahti-ui='brand'] .for-artists-hero {
   margin-bottom: 3rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-hero__breadcrumb {
+  margin-bottom: 1rem;
 }
 
 [data-tahti-ui='brand'] .for-artists-hero__eyebrow {

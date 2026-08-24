@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <div className="brand-public">
-      <PublicPageHeader title="Privacy policy">
+      <PublicPageHeader
+        title="Privacy policy"
+        breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Privacy policy' }]}
+      >
         Effective date: 1 August 2026. Data controller: Tahti ry, Finland.
       </PublicPageHeader>
 
