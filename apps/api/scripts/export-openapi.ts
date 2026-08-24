@@ -13,7 +13,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { buildApp } from '../src/server.js'
-import { mediaQueue } from '../src/lib/queue.js'
+import { mediaQueue, mediaQueueEvents } from '../src/lib/queue.js'
 import { toPublicOpenApi } from '../src/lib/public-openapi.js'
 import { config } from '../src/config.js'
 
@@ -35,8 +35,14 @@ writeFileSync(publicPath, JSON.stringify(publicSpec, null, 2))
 
 await app.close()
 await mediaQueue.close()
+await mediaQueueEvents.close()
 
 const pathCount = Object.keys(publicSpec.paths ?? {}).length
 console.log(
   `OpenAPI written — full → ${fullPath}; public (${pathCount} paths) → ${publicPath} @ ${generatedAt}`,
 )
+// mediaQueueEvents holds an open ioredis subscriber connection that closing
+// alone doesn't always release fast enough to let the event loop drain —
+// without this, callers that wait on this process's exit (e.g. api-client's
+// generate.mjs via execFileSync) can hang even after the work above is done.
+process.exit(0)

@@ -665,6 +665,8 @@ export interface paths {
                 state: string
                 /** Format: date-time */
                 goneLiveAt: string | null
+                /** Format: date-time */
+                nextBroadcastAt: string | null
                 customDomain: string | null
                 customDomainVerified: boolean
               } | null
@@ -929,6 +931,12 @@ export interface paths {
                 nextBroadcastNote: string | null
                 genres: string[]
                 fallbackEnabled: boolean
+                hlsUrl: string | null
+                nowPlaying: {
+                  title: string
+                  artistName: string
+                  artworkUrl: string | null
+                } | null
                 user: {
                   username: string
                   displayName: string
@@ -953,6 +961,12 @@ export interface paths {
                 nextBroadcastNote: string | null
                 genres: string[]
                 fallbackEnabled: boolean
+                hlsUrl: string | null
+                nowPlaying: {
+                  title: string
+                  artistName: string
+                  artworkUrl: string | null
+                } | null
                 user: {
                   username: string
                   displayName: string
@@ -977,6 +991,12 @@ export interface paths {
                 nextBroadcastNote: string | null
                 genres: string[]
                 fallbackEnabled: boolean
+                hlsUrl: string | null
+                nowPlaying: {
+                  title: string
+                  artistName: string
+                  artworkUrl: string | null
+                } | null
                 user: {
                   username: string
                   displayName: string
@@ -1030,9 +1050,11 @@ export interface paths {
             'application/json': {
               items: {
                 slug: string
+                username: string
                 displayName: string
                 avatarUrl: string | null
                 genres: string[]
+                isActive: boolean
               }[]
             }
           }
@@ -1143,6 +1165,53 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/discover/latest-tracks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Newest public tracks, for the Discover "Latest tracks" widget */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              items: {
+                archiveItemId: string
+                title: string
+                artistName: string
+                artistUsername: string | null
+                channelSlug: string
+                bannerUrl: string | null
+                durationSec: number | null
+                audioUrl: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/search': {
     parameters: {
       query?: never
@@ -1180,6 +1249,13 @@ export interface paths {
                 displayName: string
                 avatarUrl: string | null
                 channelSlug: string | null
+              }[]
+              collections: {
+                slug: string
+                name: string
+                coverUrl: string | null
+                ownerUsername: string
+                ownerDisplayName: string
               }[]
             }
           }
@@ -1311,6 +1387,7 @@ export interface paths {
               likes: number
               reposts: number
               liveDurationSec: number | null
+              rotationTrackCount: number
             }
           }
         }
@@ -1837,6 +1914,75 @@ export interface paths {
             'application/json': {
               [key: string]: unknown
             }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tracks/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Public single-track detail page — full metadata plus real waveform peaks */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              artistName: string
+              channelSlug: string
+              channel: {
+                username: string
+                displayName: string
+                avatarUrl: string | null
+                bio: string | null
+              }
+              durationSec: number | null
+              audioUrl: string | null
+              bannerUrl: string | null
+              genre: string | null
+              subGenres: string[]
+              contentType: string
+              mixVersion: string | null
+              description: string | null
+              commentary: string | null
+              tracklist?: unknown
+              credits?: unknown
+              license: string
+              releasedAt: string
+              effectiveBpm: number | null
+              effectiveKey: string | null
+              peaks: number[] | null
+              commentCount: number
+              downloadCount: number
+            } & {
+              [key: string]: unknown
+            }
           }
         }
       }
@@ -11507,6 +11653,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/me/releases/{id}/tracks/{trackId}/fingerprint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+          trackId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              fingerprint: string | null
+              match: {
+                acoustidId: string
+                score: number
+                recordingId?: string
+                title?: string
+                artist?: string
+              } | null
+              persisted: boolean
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/releases/{id}/tracks/{trackId}/fingerprint/check': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+          trackId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              fingerprint: string | null
+              match: {
+                acoustidId: string
+                score: number
+                recordingId?: string
+                title?: string
+                artist?: string
+              } | null
+              persisted: boolean
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/releases/{id}/tracks/{trackId}/credits': {
     parameters: {
       query?: never
@@ -11929,6 +12171,7 @@ export interface paths {
                 username: string
                 displayName: string
                 bio: string | null
+                fullBio: string | null
                 avatarUrl: string | null
                 avatarPosterUrl?: string | null
                 avatarTheme?: {
@@ -12313,6 +12556,7 @@ export interface paths {
               username: string
               displayName: string
               bio: string | null
+              fullBio: string | null
               avatarUrl: string | null
               avatarPosterUrl: string | null
               avatarTheme: {
@@ -12369,6 +12613,7 @@ export interface paths {
               username: string
               displayName: string
               bio: string | null
+              fullBio: string | null
               avatarUrl: string | null
               avatarPosterUrl: string | null
               avatarTheme: {
@@ -13382,6 +13627,7 @@ export interface paths {
               showType: 'LIVE_SET' | 'TALK'
               channelSlug: string
               displayName: string
+              avatarUrl: string | null
               isMine: boolean
             }[]
           }
@@ -13413,6 +13659,7 @@ export interface paths {
               showType: 'LIVE_SET' | 'TALK'
               channelSlug: string
               displayName: string
+              avatarUrl: string | null
               isMine: boolean
             }
           }
@@ -17328,6 +17575,10 @@ export interface paths {
                   | 'NEW_RELEASE'
                   | 'CHAT_MENTION'
                   | 'RADIO_SUBMISSION_REJECTED'
+                  | 'THEME_UNDER_REVIEW'
+                  | 'THEME_APPROVED'
+                  | 'THEME_REJECTED'
+                  | 'ADMIN_TEST'
                 actor: {
                   username: string
                   displayName: string
@@ -17338,6 +17589,7 @@ export interface paths {
                 url: string | null
                 /** Format: date-time */
                 readAt: string | null
+                sticky: boolean
                 /** Format: date-time */
                 createdAt: string
               }[]
@@ -17386,6 +17638,41 @@ export interface paths {
     options?: never
     head?: never
     patch?: never
+    trace?: never
+  }
+  '/api/me/notifications/{id}/read': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
     trace?: never
   }
   '/api/me/feed': {
@@ -18863,6 +19150,41 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/me/archive/{id}/export/hearthis': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/archive/{id}/banner/prepare': {
     parameters: {
       query?: never
@@ -19884,6 +20206,1826 @@ export interface paths {
               ok: true
               /** @enum {string} */
               renderStatus: 'READY' | 'PROCESSING' | 'ERROR'
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/disco-widgets/installs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              installs: {
+                id: string
+                widget: {
+                  id: string
+                  slug: string
+                  name: string
+                  description: string
+                  authorName: string
+                  categories: string[]
+                  iconUrl: string | null
+                  currentVersion: string
+                }
+                position: number
+                enabled: boolean
+                configJson?: unknown
+                /** Format: date-time */
+                createdAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              widget: {
+                id: string
+                slug: string
+                name: string
+                description: string
+                authorName: string
+                categories: string[]
+                iconUrl: string | null
+                currentVersion: string
+              }
+              position: number
+              enabled: boolean
+              configJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/disco-widgets/installs/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/me/channel/disco-widgets/installs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              installs: {
+                id: string
+                widget: {
+                  id: string
+                  slug: string
+                  name: string
+                  description: string
+                  authorName: string
+                  categories: string[]
+                  iconUrl: string | null
+                  currentVersion: string
+                }
+                position: number
+                enabled: boolean
+                configJson?: unknown
+                /** Format: date-time */
+                createdAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              widget: {
+                id: string
+                slug: string
+                name: string
+                description: string
+                authorName: string
+                categories: string[]
+                iconUrl: string | null
+                currentVersion: string
+              }
+              position: number
+              enabled: boolean
+              configJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/disco-widgets/installs/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/admin/disco-widgets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              widgets: {
+                id: string
+                slug: string
+                /** @enum {string} */
+                scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+                /** @enum {string} */
+                status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+                name: string
+                description: string
+                authorName: string
+                categories: string[]
+                iconUrl: string | null
+                currentVersion: string
+                bundleSizeBytes: number
+                moderationNote: string | null
+                /** Format: date-time */
+                createdAt: string
+                /** Format: date-time */
+                updatedAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              slug: string
+              /** @enum {string} */
+              scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+              name: string
+              description: string
+              authorName: string
+              categories: string[]
+              iconUrl: string | null
+              currentVersion: string
+              bundleSizeBytes: number
+              moderationNote: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/prepare-upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uri */
+              uploadUrl: string
+              bundleKey: string
+              expiresAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/publish-version': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              slug: string
+              /** @enum {string} */
+              scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+              name: string
+              description: string
+              authorName: string
+              categories: string[]
+              iconUrl: string | null
+              currentVersion: string
+              bundleSizeBytes: number
+              moderationNote: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/approve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/reject': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/disable': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/installs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              installs: {
+                id: string
+                widget: {
+                  id: string
+                  slug: string
+                  name: string
+                  description: string
+                  authorName: string
+                  categories: string[]
+                  iconUrl: string | null
+                  currentVersion: string
+                }
+                position: number
+                enabled: boolean
+                configJson?: unknown
+                /** Format: date-time */
+                createdAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              widget: {
+                id: string
+                slug: string
+                name: string
+                description: string
+                authorName: string
+                categories: string[]
+                iconUrl: string | null
+                currentVersion: string
+              }
+              position: number
+              enabled: boolean
+              configJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/installs/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/disco-widgets/store': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              widgets: {
+                id: string
+                slug: string
+                name: string
+                description: string
+                authorName: string
+                categories: string[]
+                iconUrl: string | null
+                currentVersion: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/channels/{slug}/disco-widgets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              widgets: {
+                installId: string
+                widgetSlug: string
+                name: string
+                sandboxUrl: string
+                version: string
+                position: number
+                config?: unknown
+                context?: unknown
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/disco-widgets/homepage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              widgets: {
+                installId: string
+                widgetSlug: string
+                name: string
+                sandboxUrl: string
+                version: string
+                position: number
+                config?: unknown
+                context?: unknown
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/disco-widgets/discover': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              widgets: {
+                installId: string
+                widgetSlug: string
+                name: string
+                sandboxUrl: string
+                version: string
+                position: number
+                config?: unknown
+                context?: unknown
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/disco-widgets/bundle/{bundleHash}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          bundleHash: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/internet-radio/presets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              presets: {
+                id: string
+                name: string
+                genre: string | null
+                description: string | null
+                iconUrl: string | null
+                programmingUrl: string | null
+                streamUrl: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/internet-radio': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              stations: {
+                id: string
+                presetId: string | null
+                name: string
+                genre: string | null
+                description: string | null
+                iconUrl: string | null
+                programmingUrl: string | null
+                streamUrl: string | null
+                position: number
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              presetId: string | null
+              name: string
+              genre: string | null
+              description: string | null
+              iconUrl: string | null
+              programmingUrl: string | null
+              streamUrl: string | null
+              position: number
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/internet-radio/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/admin/internet-radio-presets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              presets: {
+                id: string
+                name: string
+                genre: string | null
+                description: string | null
+                iconUrl: string | null
+                programmingUrl: string | null
+                streamUrl: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              name: string
+              genre: string | null
+              description: string | null
+              iconUrl: string | null
+              programmingUrl: string | null
+              streamUrl: string | null
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/internet-radio-presets/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/me/themes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              themes: {
+                id: string
+                name: string
+                vars: {
+                  [key: string]: string
+                }
+                dark: {
+                  [key: string]: string
+                }
+                /** @enum {string} */
+                visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+                moderationNote: string | null
+                /** @enum {string} */
+                prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+                prUrl: string | null
+                /** Format: date-time */
+                createdAt: string
+                /** Format: date-time */
+                updatedAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              name: string
+              vars: {
+                [key: string]: string
+              }
+              dark: {
+                [key: string]: string
+              }
+              /** @enum {string} */
+              visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+              moderationNote: string | null
+              /** @enum {string} */
+              prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+              prUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/themes/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/me/themes/{id}/submit-public': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              name: string
+              vars: {
+                [key: string]: string
+              }
+              dark: {
+                [key: string]: string
+              }
+              /** @enum {string} */
+              visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+              moderationNote: string | null
+              /** @enum {string} */
+              prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+              prUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/themes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              themes: {
+                id: string
+                name: string
+                vars: {
+                  [key: string]: string
+                }
+                dark: {
+                  [key: string]: string
+                }
+                /** @enum {string} */
+                visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+                moderationNote: string | null
+                /** @enum {string} */
+                prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+                prUrl: string | null
+                /** Format: date-time */
+                createdAt: string
+                /** Format: date-time */
+                updatedAt: string
+                authorUsername: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/themes/{id}/approve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              name: string
+              vars: {
+                [key: string]: string
+              }
+              dark: {
+                [key: string]: string
+              }
+              /** @enum {string} */
+              visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+              moderationNote: string | null
+              /** @enum {string} */
+              prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+              prUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/themes/{id}/reject': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              name: string
+              vars: {
+                [key: string]: string
+              }
+              dark: {
+                [key: string]: string
+              }
+              /** @enum {string} */
+              visibility: 'PRIVATE' | 'PENDING_REVIEW' | 'REJECTED'
+              moderationNote: string | null
+              /** @enum {string} */
+              prStatus: 'NONE' | 'PENDING' | 'OPENED' | 'ERROR'
+              prUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/themes/gallery': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              themes: {
+                name: string
+                file: string
+                author?: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/integrations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              integrations: {
+                slug: string
+                name: string
+                description: string
+                /** @enum {string} */
+                scope: 'IMPORT' | 'EXPORT' | 'FINGERPRINT'
+                /** @enum {string} */
+                authKind: 'API_KEY' | 'OAUTH'
+                installed: boolean
+                connected: boolean
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/integrations/{slug}/install': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/integrations/{slug}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/notifications/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
             }
           }
         }
@@ -20932,6 +23074,9 @@ export interface paths {
                 episodeNumberEnabled: boolean
                 /** @default 1 */
                 nextEpisodeNumber: number
+                /** @default 1 */
+                intervalHours: 1 | 2
+                scheduleNote: string | null
                 id: string
                 /** Format: date-time */
                 createdAt: string
@@ -20982,6 +23127,41 @@ export interface paths {
     options?: never
     head?: never
     patch?: never
+    trace?: never
+  }
+  '/api/me/channel/show-series/{seriesId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          seriesId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
     trace?: never
   }
   '/api/me/channel/show-series/{seriesId}/episodes': {
@@ -21052,6 +23232,184 @@ export interface paths {
     options?: never
     head?: never
     patch?: never
+    trace?: never
+  }
+  '/api/me/channel/show-series/{seriesId}/live-show-episodes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          seriesId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              episodes: {
+                id: string
+                seriesId: string
+                episodeNumber: number | null
+                title: string
+                description: string | null
+                artworkUrl: string | null
+                /** @enum {string} */
+                status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
+                /** @enum {string} */
+                source: 'UPLOAD' | 'BROADCAST'
+                archiveItemId: string | null
+                radioSlotBookingId: string | null
+                /** Format: date-time */
+                createdAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          seriesId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              seriesId: string
+              episodeNumber: number | null
+              title: string
+              description: string | null
+              artworkUrl: string | null
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
+              /** @enum {string} */
+              source: 'UPLOAD' | 'BROADCAST'
+              archiveItemId: string | null
+              radioSlotBookingId: string | null
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/live-show-episodes/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              seriesId: string
+              episodeNumber: number | null
+              title: string
+              description: string | null
+              artworkUrl: string | null
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
+              /** @enum {string} */
+              source: 'UPLOAD' | 'BROADCAST'
+              archiveItemId: string | null
+              radioSlotBookingId: string | null
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              seriesId: string
+              episodeNumber: number | null
+              title: string
+              description: string | null
+              artworkUrl: string | null
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
+              /** @enum {string} */
+              source: 'UPLOAD' | 'BROADCAST'
+              archiveItemId: string | null
+              radioSlotBookingId: string | null
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
     trace?: never
   }
   '/api/me/channel/provision': {
@@ -24518,6 +26876,7 @@ export interface components {
         username: string
         displayName: string
         bio: string | null
+        fullBio: string | null
         avatarUrl: string | null
         avatarPosterUrl?: string | null
         avatarTheme?: {
@@ -24717,6 +27076,8 @@ export interface components {
         state: string
         /** Format: date-time */
         goneLiveAt: string | null
+        /** Format: date-time */
+        nextBroadcastAt: string | null
         customDomain: string | null
         customDomainVerified: boolean
       } | null
@@ -24742,6 +27103,7 @@ export interface components {
       username: string
       displayName: string
       bio: string | null
+      fullBio: string | null
       avatarUrl: string | null
       avatarPosterUrl: string | null
       avatarTheme: {

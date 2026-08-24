@@ -85,6 +85,41 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
+    # export-openapi.ts builds the real Fastify app (buildApp/ready), which
+    # constructs a BullMQ QueueEvents — that opens an eager Redis connection
+    # (not the lazy one-shot Queue might get away with), and Prisma needs a
+    # reachable Postgres too. Without both, this hangs until the ioredis
+    # retry loop or the job timeout kills it — same fix as the typecheck job.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -102,13 +137,14 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @tahti/db db:generate
 
-      # No live DB/Redis needed: export-openapi.ts builds the Fastify route
-      # graph without connecting to either (see apps/api/src/lib/queue.ts —
-      # bullmq's Queue connects lazily). Regenerates src/schema.d.ts fresh
-      # from the current route schemas and fails if that's not what's
-      # committed — the enforcement half of "the SDK stays in sync with the
-      # API" (the other half is turbo.json making apps/web's dev/build/
-      # typecheck regenerate it automatically; see packages/api-client/README.md).
+      - name: Push DB schema (test database)
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      # Regenerates src/schema.d.ts fresh from the current route schemas and
+      # fails if that's not what's committed — the enforcement half of "the
+      # SDK stays in sync with the API" (the other half is turbo.json making
+      # apps/web's dev/build/typecheck regenerate it automatically; see
+      # packages/api-client/README.md).
       - name: Regenerate SDK types
         run: pnpm --filter @tahti/api-client generate
 
@@ -125,9 +161,41 @@ jobs:
     needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+
+    # @tahti/web#typecheck depends on @tahti/api-client#generate (turbo.json),
+    # which boots the real apps/api Fastify app (buildApp/ready) to export its
+    # OpenAPI spec — that needs a reachable Postgres, same as the test job.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
@@ -145,6 +213,9 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema (test database)
+        run: pnpm --filter @tahti/db db:migrate:test
 
       - name: Typecheck (tsc --noEmit)
         run: pnpm typecheck
