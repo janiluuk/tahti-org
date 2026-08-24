@@ -172,6 +172,9 @@ interface ProfileResponse {
     createdAt: string
     channelItemUrl: string | null
     releaseSlug: string | null
+    source?: string
+    embedProvider?: string | null
+    embedUri?: string | null
   }>
   links: {
     channel: string | null

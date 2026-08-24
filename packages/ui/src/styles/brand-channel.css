@@ -4367,10 +4367,34 @@
 }
 
 [data-tahti-ui='brand'] .prof-track-modal__art {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius) var(--radius) 0 0;
   overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__play:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
 }
 
 [data-tahti-ui='brand'] .prof-track-modal__art img {
@@ -7014,6 +7038,9 @@
  * compound) so it also works inside a brand-scoped wrapper that isn't the
  * page root, e.g. the dashboard's track list. */
 [data-tahti-ui='brand'] .report-button__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--coral) 20%, var(--border));
   border-radius: var(--radius-pill);

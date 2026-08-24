@@ -22,6 +22,11 @@ export interface TrackTabItem {
   createdAt: string
   channelItemUrl: string | null
   releaseSlug: string | null
+  /** *_EMBED-sourced items (no audio file — playUrl is always null for these)
+   * need embedProvider + embedUri to render the matching embed player. */
+  source?: string
+  embedProvider?: string | null
+  embedUri?: string | null
 }
 
 type SortMode = 'time' | 'name' | 'manual'

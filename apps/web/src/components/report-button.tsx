@@ -85,8 +85,8 @@ export function ReportButton({
           type="button"
           className="report-button__trigger report-button__trigger--icon"
           onClick={() => setOpen(true)}
-          aria-label="Report"
-          title="Report"
+          aria-label="Flag"
+          title="Flag"
         >
           <IconFlag />
         </button>
@@ -94,13 +94,14 @@ export function ReportButton({
     }
     return (
       <button type="button" className="report-button__trigger" onClick={() => setOpen(true)}>
-        Report
+        <IconFlag />
+        Flag
       </button>
     )
   }
 
   return (
-    <div className="report-button__form" role="form" aria-label="Report content">
+    <div className="report-button__form" role="form" aria-label="Flag content">
       <select value={reason} onChange={(e) => setReason(e.target.value)}>
         {REASONS.map((r) => (
           <option key={r.value} value={r.value}>
@@ -117,7 +118,7 @@ export function ReportButton({
       />
       <div className="report-button__actions">
         <button type="button" disabled={pending} onClick={() => void submit()}>
-          {pending ? 'Sending…' : 'Submit report'}
+          {pending ? 'Sending…' : 'Submit flag'}
         </button>
         <button type="button" onClick={() => setOpen(false)} disabled={pending}>
           Cancel

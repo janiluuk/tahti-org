@@ -149,6 +149,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           pinnedAt: true,
           trackOrder: true,
           createdAt: true,
+          source: true,
+          embedProvider: true,
+          embedUri: true,
         },
       })
     : []
@@ -203,6 +206,12 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       ? resolveChannelUrl(channelSlug, { hash: `archive-item-${item.id}` })
       : null,
     releaseSlug: releaseSlugByArchiveId.get(item.id) ?? null,
+    // *_EMBED-sourced items have no audio file (rawKey/mp3Key/flacKey are all
+    // null) — the Tracks tab needs these to render the same working embed
+    // player collections already use, instead of a dead "no play button" row.
+    source: item.source,
+    embedProvider: item.embedProvider,
+    embedUri: item.embedUri,
   }))
 
   const releases = await Promise.all(
