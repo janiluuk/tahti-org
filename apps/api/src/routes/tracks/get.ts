@@ -62,7 +62,9 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           channel: {
             select: {
               slug: true,
-              user: { select: { username: true, displayName: true, avatarUrl: true } },
+              user: {
+                select: { username: true, displayName: true, avatarUrl: true, bio: true },
+              },
             },
           },
         },
@@ -87,6 +89,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           username: channel.user.username,
           displayName: channel.user.displayName,
           avatarUrl: channel.user.avatarUrl,
+          bio: channel.user.bio,
         },
         releasedAt: item.releasedAt.toISOString(),
         audioUrl,

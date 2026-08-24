@@ -37,6 +37,7 @@ describe('GET /api/tracks/:id', () => {
         username: 'track-get-testuser',
         displayName: 'Track Get Test',
         avatarUrl: 'https://cdn.test/avatar.png',
+        bio: 'Bedroom producer making slow ambient sets.',
         emailVerifiedAt: new Date(),
         membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
         channel: {
@@ -99,6 +100,7 @@ describe('GET /api/tracks/:id', () => {
       username: 'track-get-testuser',
       displayName: 'Track Get Test',
       avatarUrl: 'https://cdn.test/avatar.png',
+      bio: 'Bedroom producer making slow ambient sets.',
     })
     expect(body.audioUrl).toBe('https://minio.test/get')
     expect(body.peaks).toEqual([10, 50, 200, 80])

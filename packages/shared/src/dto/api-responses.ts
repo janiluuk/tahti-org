@@ -767,6 +767,7 @@ export const PublicTrackDetailSchema = z
       username: z.string(),
       displayName: z.string(),
       avatarUrl: z.string().nullable(),
+      bio: z.string().nullable(),
     }),
     durationSec: z.number().int().nullable(),
     audioUrl: z.string().nullable(),
