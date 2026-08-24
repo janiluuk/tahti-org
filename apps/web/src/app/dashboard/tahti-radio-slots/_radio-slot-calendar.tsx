@@ -155,6 +155,12 @@ export function RadioSlotCalendar({
   }
 
   function scheduleHideHoverCard() {
+    // Clear any timer already pending — without this, crossing an intermediate
+    // unbooked cell on the way to the card schedules a second timer that
+    // overwrites the ref to the first, orphaning it: cancelHideHoverCard can
+    // then only ever cancel the *latest* one, and the orphaned earlier timer
+    // still fires on its own schedule regardless.
+    if (hideHoverTimer.current) clearTimeout(hideHoverTimer.current)
     hideHoverTimer.current = setTimeout(() => setHoverCard(null), 150)
   }
 
