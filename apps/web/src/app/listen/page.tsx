@@ -5,7 +5,6 @@ import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
-import { ArtistsSection } from './_artists-section'
 import { NewToYouSection } from './_new-to-you-section'
 import { DiscoWidgetsSection } from './_disco-widgets-section'
 
@@ -156,8 +155,6 @@ export default async function ListenPage() {
         gallery={gallery}
         galleryRanks={galleryRanks}
       />
-
-      <ArtistsSection items={directory} />
     </div>
   )
 }
