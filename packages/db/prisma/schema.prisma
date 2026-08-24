@@ -792,6 +792,7 @@ model User {
   discoWidgetInstalls            DiscoWidgetInstall[]   @relation("DiscoWidgetListenerInstall")
   internetRadioStations          InternetRadioStation[]
   themes                         Theme[]
+  integrationCredentials         IntegrationCredential[]
 
   @@schema("core")
 }
@@ -1016,6 +1017,26 @@ model TotpChallenge {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@schema("core")
+}
+
+// One user's credential for one entry in the code-level integration-provider
+// registry (packages/shared/src/integration-providers.ts) — import/export
+// sources and fingerprinting providers a user installs with their own
+// API key, as opposed to the OAuth-based connections which keep using their
+// existing per-user token columns on User.
+model IntegrationCredential {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerSlug String
+  fieldsEnc    String   // AES-GCM encrypted JSON blob of the provider's declared fields
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, providerSlug])
   @@index([userId])
   @@schema("core")
 }
@@ -1578,6 +1599,9 @@ model ArchiveItem {
   selectsOptIn         Boolean           @default(false) // artist opted this track into the Tahti Selects weekly draw
   commentsEnabled      Boolean           @default(true) // initialized from User.defaultTrackCommentsEnabled
   topListsEligible     Boolean           @default(true) // initialized from !User.topListsOptOut
+  hearthisExportId     String?           // remote track id once exported, for building the public hearthis.at link
+  hearthisExportStatus String?           // pending | submitted | delivered | failed — same convention as Release.revelatorStatus
+  hearthisExportedAt   DateTime?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 

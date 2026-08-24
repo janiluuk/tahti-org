@@ -46,6 +46,7 @@ export const WORKER_JOB_LANES = {
     'revelator-royalty-sync',
     'social-post-dispatch',
     'open-theme-pull-request',
+    'hearthis-export',
   ],
   light: [
     'newsletter-dispatch',

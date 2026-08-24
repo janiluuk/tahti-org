@@ -185,6 +185,7 @@ import adminInternetRadioRoutes from './routes/admin/internet-radio.js'
 import meThemesRoutes from './routes/me/themes.js'
 import adminThemesRoutes from './routes/admin/themes.js'
 import themeGalleryRoute from './routes/themes/gallery.js'
+import meIntegrationsRoutes from './routes/me/integrations.js'
 import adminNotificationsRoutes from './routes/admin/notifications.js'
 import meStorageRoutes from './routes/me/storage.js'
 import adminStorageRoutes from './routes/admin/storage.js'
@@ -723,6 +724,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meThemesRoutes)
   await fastify.register(adminThemesRoutes)
   await fastify.register(themeGalleryRoute)
+  await fastify.register(meIntegrationsRoutes)
   await fastify.register(adminNotificationsRoutes)
   await fastify.register(meStorageRoutes)
   await fastify.register(adminStorageRoutes)

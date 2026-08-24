@@ -4,8 +4,18 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { lookupAcoustidFullTrack, type AcoustidFullMatch } from '@tahti/shared'
+import { getUserIntegrationCredential, prisma } from '@tahti/db'
 
 const execFileAsync = promisify(execFile)
+
+/** The track owner's installed AcoustID key, if any — else the global ops-configured fallback. */
+async function resolveAcoustidApiKey(userId?: string): Promise<string> {
+  if (userId) {
+    const fields = await getUserIntegrationCredential(prisma, userId, 'acoustid')
+    if (fields?.apiKey?.trim()) return fields.apiKey.trim()
+  }
+  return process.env.ACOUSTID_API_KEY?.trim() ?? ''
+}
 
 // Alpine's `ffmpeg` package (apps/worker/Dockerfile) isn't built with
 // chromaprint support, so ffmpeg's own chromaprint muxer isn't available in
@@ -31,8 +41,10 @@ export async function generateChromaprintFingerprint(
 export async function fingerprintAndIdentify(
   inputPath: string,
   durationSec: number,
+  /** Track owner's user id, so an installed per-user AcoustID key is preferred over the global one. */
+  userId?: string,
 ): Promise<{ fingerprint: string | null; match: AcoustidFullMatch | null }> {
-  const apiKey = process.env.ACOUSTID_API_KEY?.trim() ?? ''
+  const apiKey = await resolveAcoustidApiKey(userId)
 
   try {
     const fp = await generateChromaprintFingerprint(inputPath)

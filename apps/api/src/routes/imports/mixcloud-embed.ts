@@ -15,6 +15,7 @@ import {
   searchMixcloudCloudcasts,
   openApiResponse,
 } from '@tahti/shared'
+import { getUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 
 // Mixcloud's read API (search, a user's cloudcasts) is public — no client ID, no OAuth.
@@ -126,6 +127,15 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const { collectionId, cloudcastUrl } = parsed.data
       const user = request.sessionUser!
+
+      const credential = await getUserIntegrationCredential(
+        fastify.prisma,
+        user.id,
+        'mixcloud-import',
+      )
+      if (!credential) {
+        return reply.status(400).send({ error: 'Install the Mixcloud import plugin first' })
+      }
 
       const [channel, collection] = await Promise.all([
         fastify.prisma.channel.findUnique({ where: { userId: user.id }, select: { id: true } }),

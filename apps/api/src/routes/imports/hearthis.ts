@@ -11,6 +11,7 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { createHearthisClient, parseHearthisUsername, type HearthisTrack } from '@tahti/hearthis'
+import { getUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 
@@ -139,6 +140,15 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const { collectionId, trackUrl } = parsed.data
       const user = request.sessionUser!
+
+      const credential = await getUserIntegrationCredential(
+        fastify.prisma,
+        user.id,
+        'hearthis-import',
+      )
+      if (!credential) {
+        return reply.status(400).send({ error: 'Install the hearthis.at import plugin first' })
+      }
 
       const [channel, collection] = await Promise.all([
         fastify.prisma.channel.findUnique({ where: { userId: user.id }, select: { id: true } }),

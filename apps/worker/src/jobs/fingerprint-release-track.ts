@@ -36,7 +36,10 @@ export async function processFingerprintReleaseTrackJob(
 ): Promise<FingerprintReleaseTrackResult> {
   const { trackId, persist } = job.data as { trackId: string; persist: boolean }
 
-  const track = await prisma.releaseTrack.findUnique({ where: { id: trackId } })
+  const track = await prisma.releaseTrack.findUnique({
+    where: { id: trackId },
+    include: { release: { select: { userId: true } } },
+  })
   if (!track) throw new Error(`ReleaseTrack ${trackId} not found`)
   if (!track.sourceKey) throw new Error(`ReleaseTrack ${trackId} has no source audio`)
 
@@ -49,6 +52,7 @@ export async function processFingerprintReleaseTrackJob(
     const { fingerprint, match } = await fingerprintAndIdentify(
       srcPath,
       track.durationSec ?? 0,
+      track.release.userId,
     )
 
     if (persist) {

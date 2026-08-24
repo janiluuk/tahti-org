@@ -15,8 +15,19 @@ import {
   trackIdFromSpotifyUri,
   openApiResponse,
 } from '@tahti/shared'
+import { getUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { getSpotifyAppToken, spotifyConfigured } from '../../lib/spotify-session.js'
+
+/** The caller's installed Spotify credential, if any — else null to fall back to global config. */
+async function resolveSpotifyCredential(
+  prisma: Parameters<typeof getUserIntegrationCredential>[0],
+  userId: string,
+): Promise<{ clientId: string; clientSecret: string } | null> {
+  const fields = await getUserIntegrationCredential(prisma, userId, 'spotify')
+  if (!fields?.clientId || !fields?.clientSecret) return null
+  return { clientId: fields.clientId, clientSecret: fields.clientSecret }
+}
 
 const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/imports/spotify/search?q=... — "Search Spotify" tab, app-token only.
@@ -31,7 +42,8 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!spotifyConfigured()) {
+      const credential = await resolveSpotifyCredential(fastify.prisma, request.sessionUser!.id)
+      if (!credential && !spotifyConfigured()) {
         return reply.status(503).send({ error: 'Spotify search is not configured' })
       }
       const query = request.query as Record<string, string>
@@ -39,7 +51,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       if (!q) return reply.status(400).send({ error: 'q is required' })
 
       try {
-        const token = await getSpotifyAppToken()
+        const token = await getSpotifyAppToken(credential ?? undefined)
         const tracks = await searchSpotifyTracks(token, q)
         return reply.send({ tracks })
       } catch {
@@ -60,10 +72,11 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!spotifyConfigured()) {
+      const user = request.sessionUser!
+      const credential = await resolveSpotifyCredential(fastify.prisma, user.id)
+      if (!credential && !spotifyConfigured()) {
         return reply.status(503).send({ error: 'Spotify search is not configured' })
       }
-      const user = request.sessionUser!
       const row = await fastify.prisma.user.findUnique({
         where: { id: user.id },
         select: { spotifyArtistId: true },
@@ -73,7 +86,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const token = await getSpotifyAppToken()
+        const token = await getSpotifyAppToken(credential ?? undefined)
         const tracks = await getSpotifyArtistTracks(token, row.spotifyArtistId)
         return reply.send({ artistId: row.spotifyArtistId, tracks })
       } catch {
@@ -94,7 +107,8 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!spotifyConfigured()) {
+      const credential = await resolveSpotifyCredential(fastify.prisma, request.sessionUser!.id)
+      if (!credential && !spotifyConfigured()) {
         return reply.status(503).send({ error: 'Spotify search is not configured' })
       }
       const query = request.query as Record<string, string>
@@ -104,7 +118,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const token = await getSpotifyAppToken()
+        const token = await getSpotifyAppToken(credential ?? undefined)
         const tracks = await getSpotifyArtistTracks(token, artistId)
         return reply.send({ tracks })
       } catch {
@@ -125,7 +139,9 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!spotifyConfigured()) {
+      const user = request.sessionUser!
+      const credential = await resolveSpotifyCredential(fastify.prisma, user.id)
+      if (!credential && !spotifyConfigured()) {
         return reply.status(503).send({ error: 'Spotify search is not configured' })
       }
       const parsed = SpotifyAddTrackRequestSchema.safeParse(request.body)
@@ -136,7 +152,6 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       const { collectionId, spotifyUri } = parsed.data
-      const user = request.sessionUser!
 
       const trackId = trackIdFromSpotifyUri(spotifyUri)
       if (!trackId) return reply.status(400).send({ error: 'Invalid spotifyUri' })
@@ -153,7 +168,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
 
       let track
       try {
-        const token = await getSpotifyAppToken()
+        const token = await getSpotifyAppToken(credential ?? undefined)
         track = await getSpotifyTrack(token, trackId)
       } catch {
         return reply.status(502).send({ error: 'Could not fetch track from Spotify' })

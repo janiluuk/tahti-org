@@ -17,7 +17,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { notifyFollowersOfNewTrack } from '@tahti/db'
+import { getUserIntegrationCredential, notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   archiveItemMetadataSelect,
@@ -25,6 +25,7 @@ import {
   serializeArchiveItem,
 } from '../../lib/archive-metadata.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
+import { enqueueHearthisExport } from '../../lib/queue.js'
 import {
   MAX_FALLBACK_ITEMS,
   fallbackCount,
@@ -637,6 +638,47 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         select: { visualPreset: true, colorSchemeJson: true },
       })
       return reply.send(updated)
+    },
+  )
+
+  // POST /api/me/archive/:id/export/hearthis — push this track out to the
+  // caller's own hearthis.at account, via their installed hearthis-export credential.
+  fastify.post(
+    '/api/me/archive/:id/export/hearthis',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const credential = await getUserIntegrationCredential(
+        fastify.prisma,
+        user.id,
+        'hearthis-export',
+      )
+      if (!credential) {
+        return reply.status(400).send({ error: 'Install the hearthis.at export plugin first' })
+      }
+
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id: routeParams.id, channel: { userId: user.id } },
+        select: { id: true, hearthisExportStatus: true, rawKey: true, mp3Key: true, flacKey: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item.rawKey && !item.mp3Key && !item.flacKey) {
+        return reply.status(400).send({ error: 'This track has no audio file to export' })
+      }
+      if (item.hearthisExportStatus === 'pending' || item.hearthisExportStatus === 'submitted') {
+        return reply.status(409).send({ error: 'Export already in progress' })
+      }
+
+      await fastify.prisma.archiveItem.update({
+        where: { id: item.id },
+        data: { hearthisExportStatus: 'pending' },
+      })
+      await enqueueHearthisExport(item.id)
+
+      return reply.status(202).send({ archiveItemId: item.id, hearthisExportStatus: 'pending' })
     },
   )
 }

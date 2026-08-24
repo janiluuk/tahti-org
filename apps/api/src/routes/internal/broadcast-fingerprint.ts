@@ -41,7 +41,7 @@ const broadcastFingerprintInternalRoutes: FastifyPluginAsync = async (fastify) =
 
       const broadcast = await fastify.prisma.broadcast.findUnique({
         where: { id: routeParams.broadcastId },
-        select: { id: true, endedAt: true },
+        select: { id: true, endedAt: true, channel: { select: { userId: true } } },
       })
       if (!broadcast) {
         return reply.status(404).send({ error: 'Broadcast not found' })
@@ -58,6 +58,8 @@ const broadcastFingerprintInternalRoutes: FastifyPluginAsync = async (fastify) =
           fingerprint: parsed.data.fingerprint,
         },
         parsed.data.audioSampleBase64,
+        fastify.prisma,
+        broadcast.channel.userId,
       )
 
       await appendBroadcastFingerprintSegment(routeParams.broadcastId, enriched)

@@ -121,7 +121,11 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       track.release.userId,
     )
 
-    const { fingerprint, match } = await fingerprintAndIdentify(srcPath, meta.duration)
+    const { fingerprint, match } = await fingerprintAndIdentify(
+      srcPath,
+      meta.duration,
+      track.release.userId,
+    )
 
     await prisma.releaseTrack.update({
       where: { id: trackId },

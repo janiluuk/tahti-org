@@ -40,6 +40,7 @@ import {
 import { processMentionDigestJob } from './jobs/mention-digest.js'
 import { processPostPublishNotifyJob } from './jobs/post-publish-notify.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
+import { processHearthisExportJob } from './jobs/hearthis-export.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processRadioSlotSwitchoverJob } from './jobs/radio-slot-switchover.js'
@@ -215,6 +216,8 @@ const worker = new Worker(
         await processPostPublishNotifyJob(job)
       } else if (job.name === 'revelator-deliver') {
         await processRevelatorDeliverJob(job)
+      } else if (job.name === 'hearthis-export') {
+        await processHearthisExportJob(job)
       } else if (job.name === 'revelator-royalty-sync') {
         const summary = await processRevelatorRoyaltySyncJob(prisma, job)
         console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))

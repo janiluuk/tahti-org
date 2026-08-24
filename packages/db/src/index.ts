@@ -38,3 +38,10 @@ export {
   notifyUserAdminTest,
   processScheduledPostNotifications,
 } from './notifications.js'
+export {
+  encryptIntegrationFields,
+  decryptIntegrationFields,
+  getUserIntegrationCredential,
+  upsertUserIntegrationCredential,
+  removeUserIntegrationCredential,
+} from './integration-credentials.js'

@@ -217,12 +217,22 @@ export interface OpenThemePullRequestJob {
   themeId: string
 }
 
-export async function enqueueOpenThemePullRequest(
-  payload: OpenThemePullRequestJob,
-): Promise<void> {
+export async function enqueueOpenThemePullRequest(payload: OpenThemePullRequestJob): Promise<void> {
   await mediaQueue.add('open-theme-pull-request', payload, {
     jobId: `open-theme-pull-request-${payload.themeId}`,
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   })
+}
+
+export async function enqueueHearthisExport(archiveItemId: string): Promise<void> {
+  await mediaQueue.add(
+    'hearthis-export',
+    { archiveItemId },
+    {
+      jobId: `hearthis-export-${archiveItemId}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 15_000 },
+    },
+  )
 }
