@@ -3,25 +3,78 @@
 
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react'
 import Link from 'next/link'
 import type { ChannelCard } from '@tahti/shared'
 import { WatcherCount } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { usePlayer } from '@/contexts/player-context'
+
+/** The artwork a card shows: fresh now-playing art first (what's actually on
+ * right now), falling back to the artist's avatar, then an initial letter —
+ * so a channel with no now-playing metadata doesn't just render black. */
+function cardArtworkUrl(channel: ChannelCard): string | null {
+  return channel.nowPlaying?.artworkUrl ?? channel.user.avatarUrl ?? null
+}
+
+/** Plays a LIVE channel straight from its Discover card — the 24/7 fallback
+ * "replay" rotation isn't wired here since it plays back through a different
+ * mechanism than the live encoder mount (the full channel page still handles
+ * that correctly when a Replay card is clicked through instead). */
+function usePlayChannelCard(channel: ChannelCard) {
+  const { track, playing, load, togglePlay } = usePlayer()
+  const isCurrent = channel.hlsUrl != null && track?.id === channel.hlsUrl
+  const canPlayInline = channel.state === 'LIVE' && channel.hlsUrl != null
+
+  async function handlePlayClick(e: MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!canPlayInline) return
+    if (isCurrent) {
+      await togglePlay()
+      return
+    }
+    load(
+      {
+        id: channel.hlsUrl!,
+        kind: 'live',
+        url: channel.hlsUrl!,
+        title: channel.nowPlaying?.title ?? channel.user.displayName,
+        subtitle: channel.nowPlaying?.artistName ?? `@${channel.user.username}`,
+        href: resolveChannelUrl(channel.slug),
+        artworkUrl: cardArtworkUrl(channel),
+      },
+      { autoplay: true },
+    )
+  }
+
+  return { canPlayInline, isCurrent: isCurrent && playing, handlePlayClick }
+}
 
 function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCount?: number }) {
+  const { canPlayInline, isCurrent, handlePlayClick } = usePlayChannelCard(channel)
   return (
     <Link href={resolveChannelUrl(channel.slug)} className="listen-live-card">
       <div className="listen-live-card__avatar">
-        {channel.user.avatarUrl ? (
+        {cardArtworkUrl(channel) ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
+          <img src={cardArtworkUrl(channel)!} alt={channel.user.displayName} loading="lazy" />
         ) : (
           <span className="listen-live-card__avatar-fallback">
             {channel.user.displayName.charAt(0).toUpperCase()}
           </span>
         )}
         <span className="listen-live-card__pulse" aria-hidden />
+        {canPlayInline && (
+          <button
+            type="button"
+            className="listen-card__play-btn"
+            onClick={(e) => void handlePlayClick(e)}
+            aria-label={isCurrent ? `Pause ${channel.user.displayName}` : `Play ${channel.user.displayName}`}
+          >
+            {isCurrent ? '❚❚' : '▶'}
+          </button>
+        )}
       </div>
       <div className="listen-live-card__body">
         <div className="listen-live-card__top-row">
@@ -41,66 +94,23 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
   )
 }
 
-function cardBgStyle(avatarUrl: string | null | undefined): CSSProperties | undefined {
-  return avatarUrl ? ({ '--card-bg-image': `url(${avatarUrl})` } as CSSProperties) : undefined
-}
-
-function ChannelCardItem({ channel }: { channel: ChannelCard }) {
-  const isLive = channel.state === 'LIVE'
-
-  return (
-    <Link
-      href={resolveChannelUrl(channel.slug)}
-      className="listen-card"
-      style={cardBgStyle(channel.user.avatarUrl)}
-    >
-      <div className="listen-card__avatar">
-        {channel.user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
-        ) : (
-          <span className="listen-card__avatar-fallback">
-            {channel.user.displayName.charAt(0).toUpperCase()}
-          </span>
-        )}
-        {isLive && <span className="listen-card__live-dot" aria-label="Live now" />}
-      </div>
-
-      <div className="listen-card__body">
-        <div className="listen-card__name">{channel.user.displayName}</div>
-        <div className="listen-card__handle">@{channel.user.username}</div>
-        {isLive ? (
-          <div className="listen-card__status listen-card__status--live">● Live now</div>
-        ) : channel.nextBroadcastNote ? (
-          <div className="listen-card__status">{channel.nextBroadcastNote}</div>
-        ) : channel.goneLiveAt ? (
-          <div className="listen-card__status listen-card__status--muted">
-            Last live{' '}
-            {new Date(channel.goneLiveAt).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </div>
-        ) : null}
-      </div>
-    </Link>
-  )
+function cardBgStyle(artworkUrl: string | null | undefined): CSSProperties | undefined {
+  return artworkUrl ? ({ '--card-bg-image': `url(${artworkUrl})` } as CSSProperties) : undefined
 }
 
 /** Not live, but airing its 24/7 archive rotation right now — same REPLAY
  * convention as Tahti Radio's own badge (see _tahti-radio-card.tsx /
- * mini-player.tsx), just applied to any channel with fallbackEnabled. */
+ * mini-player.tsx), just applied to any channel with fallbackEnabled. Not
+ * inline-playable from the card (see usePlayChannelCard) — clicking through
+ * to the full channel page plays the rotation correctly. */
 function ReplayCard({ channel }: { channel: ChannelCard }) {
+  const artworkUrl = cardArtworkUrl(channel)
   return (
-    <Link
-      href={resolveChannelUrl(channel.slug)}
-      className="listen-card"
-      style={cardBgStyle(channel.user.avatarUrl)}
-    >
+    <Link href={resolveChannelUrl(channel.slug)} className="listen-card" style={cardBgStyle(artworkUrl)}>
       <div className="listen-card__avatar">
-        {channel.user.avatarUrl ? (
+        {artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
+          <img src={artworkUrl} alt={channel.user.displayName} loading="lazy" />
         ) : (
           <span className="listen-card__avatar-fallback">
             {channel.user.displayName.charAt(0).toUpperCase()}
@@ -120,29 +130,25 @@ function ReplayCard({ channel }: { channel: ChannelCard }) {
 export function ListenChannels({
   live,
   replaying,
-  recent,
   listenerCounts,
 }: {
   live: ChannelCard[]
   replaying: ChannelCard[]
-  recent: ChannelCard[]
   listenerCounts?: Record<string, number>
 }) {
   const [genre, setGenre] = useState<string | null>(null)
 
   const genres = useMemo(() => {
     const set = new Set<string>()
-    for (const ch of [...live, ...replaying, ...recent]) {
+    for (const ch of [...live, ...replaying]) {
       for (const g of ch.genres) set.add(g)
     }
     return [...set].sort((a, b) => a.localeCompare(b))
-  }, [live, replaying, recent])
+  }, [live, replaying])
 
   const filteredLive = genre ? live.filter((ch) => ch.genres.includes(genre)) : live
   const filteredReplaying = genre ? replaying.filter((ch) => ch.genres.includes(genre)) : replaying
-  const filteredRecent = genre ? recent.filter((ch) => ch.genres.includes(genre)) : recent
-  const empty =
-    filteredLive.length === 0 && filteredReplaying.length === 0 && filteredRecent.length === 0
+  const empty = filteredLive.length === 0 && filteredReplaying.length === 0
 
   return (
     <>
@@ -200,17 +206,6 @@ export function ListenChannels({
               <div className="listen-grid">
                 {filteredReplaying.map((ch) => (
                   <ReplayCard key={ch.slug} channel={ch} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {filteredRecent.length > 0 && (
-            <section className="listen-section">
-              <div className="listen-section__label">Recently active</div>
-              <div className="listen-grid">
-                {filteredRecent.map((ch) => (
-                  <ChannelCardItem key={ch.slug} channel={ch} />
                 ))}
               </div>
             </section>

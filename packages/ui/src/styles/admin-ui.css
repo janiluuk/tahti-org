@@ -1601,6 +1601,12 @@
   color: var(--muted);
 }
 
+.artist-directory__active-badge {
+  font-size: var(--tahti-text-xs, 12px);
+  font-weight: 600;
+  color: var(--legacy-live-bright);
+}
+
 .artist-directory__scroll-status {
   min-height: 1.5rem;
   margin-top: var(--tahti-space-6);
@@ -1942,6 +1948,27 @@
   background: var(--legacy-live-bright);
   border: 2.5px solid var(--bg);
   animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.listen-card__play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.listen-live-card__avatar:hover .listen-card__play-btn,
+.listen-card__avatar:hover .listen-card__play-btn {
+  opacity: 1;
 }
 
 .listen-live-card__body {

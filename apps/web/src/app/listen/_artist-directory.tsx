@@ -19,6 +19,7 @@ const PAGE_SIZE = 24
 export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<string | null>(null)
+  const [activeOnly, setActiveOnly] = useState(false)
 
   const genres = useMemo(() => {
     const set = new Set<string>()
@@ -30,9 +31,16 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
     const q = query.trim().toLowerCase()
     return items
       .filter((item) => !genre || item.genres.includes(genre))
+      .filter((item) => !activeOnly || item.isActive)
       .filter((item) => !q || item.displayName.toLowerCase().includes(q) || item.slug.includes(q))
-      .sort((a, b) => a.displayName.localeCompare(b.displayName))
-  }, [items, query, genre])
+      .sort((a, b) => {
+        // Active (live/replaying) artists surface first — inactive ones are
+        // still browsable here, just tagged, per Discover's own "only show
+        // active channels" rule for the main Live tab.
+        if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
+        return a.displayName.localeCompare(b.displayName)
+      })
+  }, [items, query, genre, activeOnly])
 
   const resetKey = `${genre ?? ''}|${query}|${filtered.length}`
   const { shown, hasMore, sentinelRef, total, visibleCount } = useInfiniteSlice(
@@ -52,6 +60,15 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search artists"
         />
+        <div className="listen-genre-filter" role="group" aria-label="Filter by activity">
+          <button
+            type="button"
+            className={`listen-genre-filter__chip${activeOnly ? ' listen-genre-filter__chip--active' : ''}`}
+            onClick={() => setActiveOnly((v) => !v)}
+          >
+            Active now
+          </button>
+        </div>
         {genres.length > 0 && (
           <div className="listen-genre-filter" role="group" aria-label="Filter by genre">
             <button
@@ -103,6 +120,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
                     />
                   )}
                   <span className="artist-directory__name">{item.displayName}</span>
+                  {item.isActive && <span className="artist-directory__active-badge">● Active</span>}
                   {item.genres.length > 0 && (
                     <span className="artist-directory__genre">{item.genres[0]}</span>
                   )}

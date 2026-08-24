@@ -7,6 +7,7 @@ import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
 import { ArtistsSection } from './_artists-section'
 import { NewToYouSection } from './_new-to-you-section'
+import { DiscoWidgetsSection } from './_disco-widgets-section'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -117,7 +118,7 @@ async function fetchRanks(archiveItemIds: string[]): Promise<Record<string, numb
 }
 
 export default async function ListenPage() {
-  const [{ live, replaying, recent }, radioPreview, directory, gallery] = await Promise.all([
+  const [{ live, replaying }, radioPreview, directory, gallery] = await Promise.all([
     fetchChannels(),
     fetchTahtiRadioPreview(),
     fetchDirectory(),
@@ -145,10 +146,11 @@ export default async function ListenPage() {
 
       <NewToYouSection />
 
+      <DiscoWidgetsSection />
+
       <DiscoverTabs
         live={live}
         replaying={replaying}
-        recent={recent}
         listenerCounts={listenerCounts}
         directory={directory}
         gallery={gallery}

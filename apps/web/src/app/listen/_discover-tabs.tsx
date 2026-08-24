@@ -16,8 +16,8 @@ type Tab = 'live' | 'selects' | 'artists' | 'top-lists'
 const HELP_STEPS: HelpSpotlightStep[] = [
   {
     id: 'live',
-    label: 'Live & recent',
-    description: 'Channels streaming right now, plus who was live most recently.',
+    label: 'Live',
+    description: 'Channels streaming or airing their rotation right now.',
   },
   {
     id: 'selects',
@@ -41,7 +41,6 @@ const HELP_STEPS: HelpSpotlightStep[] = [
 export function DiscoverTabs({
   live,
   replaying,
-  recent,
   listenerCounts,
   directory,
   gallery,
@@ -49,14 +48,16 @@ export function DiscoverTabs({
 }: {
   live: ChannelCard[]
   replaying: ChannelCard[]
-  recent: ChannelCard[]
   listenerCounts: Record<string, number>
   directory: ChannelDirectoryEntry[]
   gallery: TahtiSelectsGalleryItem[]
   galleryRanks: Record<string, number>
 }) {
   const [tab, setTab] = useState<Tab>('live')
-  const empty = live.length === 0 && replaying.length === 0 && recent.length === 0
+  // Only active (live/replaying) channels appear here — a channel that isn't
+  // currently playing anything shows up in the Artists tab instead, tagged
+  // as inactive rather than mixed in with what's actually on right now.
+  const empty = live.length === 0 && replaying.length === 0
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
     live: null,
     selects: null,
@@ -80,7 +81,7 @@ export function DiscoverTabs({
           className={`discover-tab${tab === 'live' ? ' discover-tab--active' : ''}`}
           onClick={() => setTab('live')}
         >
-          Live &amp; recent
+          Live
         </button>
         <button
           type="button"
@@ -125,12 +126,7 @@ export function DiscoverTabs({
               </p>
             </div>
           ) : (
-            <ListenChannels
-              live={live}
-              replaying={replaying}
-              recent={recent}
-              listenerCounts={listenerCounts}
-            />
+            <ListenChannels live={live} replaying={replaying} listenerCounts={listenerCounts} />
           ))}
       </div>
 

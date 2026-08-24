@@ -30,6 +30,8 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
           take: 500,
           select: {
             slug: true,
+            state: true,
+            fallbackEnabled: true,
             user: { select: { username: true, displayName: true, avatarUrl: true, socialLinks: true } },
           },
         })
@@ -41,6 +43,7 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
             displayName: ch.user.displayName,
             avatarUrl: ch.user.avatarUrl,
             genres: parseSocialLinksGenres(ch.user.socialLinks),
+            isActive: ch.state === 'LIVE' || ch.fallbackEnabled,
           })),
         }
       })

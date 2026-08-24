@@ -637,6 +637,12 @@ export const TrackPlaybackDetailsSchema = z.object({
   broadcastReactions: z.array(z.object({ emoji: z.string(), elapsedSec: z.number() })),
 })
 
+export const ChannelCardNowPlayingSchema = z.object({
+  title: z.string(),
+  artistName: z.string(),
+  artworkUrl: z.string().nullable(),
+})
+
 export const ChannelCardSchema = z.object({
   slug: z.string(),
   state: z.string(),
@@ -648,6 +654,13 @@ export const ChannelCardSchema = z.object({
    * live) — shown as "REPLAY" on the Discover page, same convention as the
    * mini-player's REPLAY badge for Tahti Radio's own rotation. */
   fallbackEnabled: z.boolean(),
+  /** Playable straight from the Discover page's card — only set when
+   * state === 'LIVE' (the "replaying" 24/7 fallback rotation uses a separate
+   * playback path the card doesn't attempt inline). */
+  hlsUrl: z.string().nullable(),
+  /** Fresh (< 2 min old) now-playing metadata, when available — the card's
+   * artwork prefers this over the artist's own avatar. */
+  nowPlaying: ChannelCardNowPlayingSchema.nullable(),
   user: PublicChannelUserSchema,
 })
 
@@ -669,6 +682,9 @@ export const ChannelDirectoryEntrySchema = z.object({
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   genres: z.array(z.string()),
+  /** Live right now, or airing its 24/7 fallback rotation — otherwise not
+   * currently playing anything (still browsable, just tagged separately). */
+  isActive: z.boolean(),
 })
 
 export const ChannelDirectoryResponseSchema = z.object({

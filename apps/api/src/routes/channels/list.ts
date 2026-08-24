@@ -4,6 +4,10 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { ChannelListResponseSchema, openApiResponse, parseSocialLinksGenres } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { config } from '../../config.js'
+import { liveHlsUrl } from '../../lib/stream-quality.js'
+
+const NOW_PLAYING_STALE_MS = 2 * 60 * 1000
 
 const channelListRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -23,6 +27,10 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
         nextBroadcastAt: true,
         nextBroadcastNote: true,
         fallbackEnabled: true,
+        nowPlayingTitle: true,
+        nowPlayingArtistName: true,
+        nowPlayingArtworkUrl: true,
+        nowPlayingUpdatedAt: true,
         user: {
           select: {
             username: true,
@@ -30,6 +38,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
             bio: true,
             avatarUrl: true,
             socialLinks: true,
+            tier: true,
           },
         },
       } as const
@@ -67,12 +76,33 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
           }),
         ])
 
-        const toCard = (ch: (typeof liveChannels)[0]) => ({
-          ...ch,
-          goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
-          nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
-          genres: parseSocialLinksGenres(ch.user.socialLinks),
-        })
+        const toCard = (ch: (typeof liveChannels)[0]) => {
+          const { tier, ...userRest } = ch.user
+          const nowPlayingFresh =
+            ch.nowPlayingUpdatedAt != null &&
+            Date.now() - ch.nowPlayingUpdatedAt.getTime() < NOW_PLAYING_STALE_MS
+          const nowPlaying =
+            nowPlayingFresh && ch.nowPlayingTitle && ch.nowPlayingArtistName
+              ? {
+                  title: ch.nowPlayingTitle,
+                  artistName: ch.nowPlayingArtistName,
+                  artworkUrl: ch.nowPlayingArtworkUrl,
+                }
+              : null
+
+          return {
+            slug: ch.slug,
+            state: ch.state,
+            goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
+            nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
+            nextBroadcastNote: ch.nextBroadcastNote,
+            fallbackEnabled: ch.fallbackEnabled,
+            genres: parseSocialLinksGenres(ch.user.socialLinks),
+            hlsUrl: ch.state === 'LIVE' ? liveHlsUrl(config.hlsBaseUrl, ch.slug, tier) : null,
+            nowPlaying,
+            user: userRest,
+          }
+        }
 
         return {
           live: liveChannels.map(toCard),
