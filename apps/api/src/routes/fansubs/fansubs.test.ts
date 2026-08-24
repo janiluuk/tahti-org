@@ -166,6 +166,11 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(cats).toEqual(
       ['FAN_SUB_GROSS_RECEIVED', 'FAN_SUB_NET_TO_ARTIST', 'FAN_SUB_OPERATIONAL_FEE'].sort(),
     )
+
+    const auditRows = await prisma.auditLog.findMany({
+      where: { action: 'FAN_SUBSCRIPTION_CREATE', actorId: fan.id, targetId: artist.id },
+    })
+    expect(auditRows).toHaveLength(1)
   })
 
   it('prevents a duplicate active subscription', async () => {
@@ -176,6 +181,12 @@ describe('M19 — fan-to-artist subscriptions', () => {
       payload: { tierId },
     })
     expect(res.statusCode).toBe(409)
+
+    // Rejected duplicates never reach activateSubscription, so still just one row.
+    const auditRows = await prisma.auditLog.findMany({
+      where: { action: 'FAN_SUBSCRIPTION_CREATE', actorId: fan.id, targetId: artist.id },
+    })
+    expect(auditRows).toHaveLength(1)
   })
 
   it('lists the subscription for the fan', async () => {

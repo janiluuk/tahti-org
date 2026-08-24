@@ -10,6 +10,7 @@ import {
 } from '@tahti/shared'
 import { notifyArtistOfNewLike } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 
 const archiveLikeRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -52,6 +53,12 @@ const archiveLikeRoutes: FastifyPluginAsync = async (fastify) => {
           title: item.title,
           channelSlug: item.channel.slug,
         }).catch((e) => fastify.log.warn(e, 'new-like notification failed'))
+        await auditLog(fastify.prisma, {
+          action: 'ARCHIVE_ITEM_LIKE',
+          actorId: user.id,
+          targetId: item.id,
+          meta: { title: item.title, channelSlug: item.channel.slug },
+        })
       }
 
       const likeCount = await fastify.prisma.archiveItemLike.count({

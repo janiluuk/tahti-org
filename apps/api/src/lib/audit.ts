@@ -47,6 +47,9 @@ interface AuditParams {
     | 'USER_REGISTER'
     | 'CONTENT_UPLOAD'
     | 'RELEASE_PUBLISH'
+    | 'ARCHIVE_ITEM_LIKE'
+    | 'ARTIST_FOLLOW'
+    | 'FAN_SUBSCRIPTION_CREATE'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

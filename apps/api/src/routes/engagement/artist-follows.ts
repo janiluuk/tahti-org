@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { notifyArtistOfNewFollower } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 
 const FOLLOW_LIST_PAGE_SIZE = 30
 
@@ -57,6 +58,12 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
         await notifyArtistOfNewFollower(fastify.prisma, artist.id, user).catch((e) =>
           fastify.log.warn(e, 'new-follower notification failed'),
         )
+        await auditLog(fastify.prisma, {
+          action: 'ARTIST_FOLLOW',
+          actorId: user.id,
+          targetId: artist.id,
+          meta: { artistUsername: artist.username, artistDisplayName: artist.displayName },
+        })
       }
 
       const followerCount = await fastify.prisma.artistFollow.count({

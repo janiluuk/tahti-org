@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import { computeFanSubSplit } from '@tahti/ledger'
 import { stripeEnabled } from './stripe.js'
+import { auditLog } from './audit.js'
 
 // Shared fan-subscription lifecycle used by both the dev/test direct-activation
 // path and the production Stripe webhook handler, so the two never diverge.
@@ -19,7 +20,17 @@ export interface ActivateInput {
 
 // Upserts an ACTIVE subscription (idempotent on the artist/subscriber pair).
 export async function activateSubscription(prisma: PrismaClient, input: ActivateInput) {
-  return prisma.fanSubscription.upsert({
+  const existed = await prisma.fanSubscription.findUnique({
+    where: {
+      artistUserId_subscriberUserId: {
+        artistUserId: input.artistUserId,
+        subscriberUserId: input.subscriberUserId,
+      },
+    },
+    select: { subscriberUserId: true },
+  })
+
+  const result = await prisma.fanSubscription.upsert({
     where: {
       artistUserId_subscriberUserId: {
         artistUserId: input.artistUserId,
@@ -44,6 +55,19 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
       currentPeriodEnd: input.currentPeriodEnd,
     },
   })
+
+  // Only the first activation is a "new subscriber" event — a renewal or a
+  // tier change re-upserts the same row and shouldn't re-fire it.
+  if (!existed) {
+    await auditLog(prisma, {
+      action: 'FAN_SUBSCRIPTION_CREATE',
+      actorId: input.subscriberUserId,
+      targetId: input.artistUserId,
+      meta: { tierName: input.tierName, amountCents: input.amountCents },
+    })
+  }
+
+  return result
 }
 
 // Records a single billing-period payment: a PAID payout row (with the fee

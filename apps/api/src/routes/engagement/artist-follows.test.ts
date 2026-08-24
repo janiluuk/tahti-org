@@ -128,4 +128,37 @@ describe('artist followers/following list routes', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('POST /follow writes exactly one ARTIST_FOLLOW audit row, not one per repeat call', async () => {
+    const artist2 = await createTestArtist(prisma, {
+      email: `${PREFIX}artist2@example.com`,
+      username: `${PREFIX}artist2`,
+      tier: 'ARTIST',
+    })
+    const follower2 = await createTestArtist(prisma, {
+      email: `${PREFIX}follower2@example.com`,
+      username: `${PREFIX}follower2`,
+      tier: 'ARTIST',
+    })
+    const follower2Cookie = await sessionCookieFor(prisma, follower2.id)
+
+    const first = await app.inject({
+      method: 'POST',
+      url: `/api/v1/artists/${PREFIX}artist2/follow`,
+      headers: { cookie: follower2Cookie },
+    })
+    expect(first.statusCode).toBe(200)
+
+    const second = await app.inject({
+      method: 'POST',
+      url: `/api/v1/artists/${PREFIX}artist2/follow`,
+      headers: { cookie: follower2Cookie },
+    })
+    expect(second.statusCode).toBe(200)
+
+    const rows = await prisma.auditLog.findMany({
+      where: { action: 'ARTIST_FOLLOW', actorId: follower2.id, targetId: artist2.id },
+    })
+    expect(rows).toHaveLength(1)
+  })
 })
