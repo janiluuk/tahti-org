@@ -13,7 +13,34 @@ import {
 /** Owner-only: add one of your own tracks to one of your own collections
  * (aka playlists — CollectionStyle.PLAYLIST is the default style, but any
  * collection can hold tracks). Lazily loads the picker list on open. */
-export function AddToPlaylistButton({ archiveItemId }: { archiveItemId: string }) {
+function IconPlaylist() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2.5 4h11M2.5 8h11M2.5 12h6.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 10.5v4M10 12.5h4"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function AddToPlaylistButton({
+  archiveItemId,
+  variant = 'text',
+}: {
+  archiveItemId: string
+  /** Icon-only trigger for compact toolbars (see archive-editor.tsx's row
+   * actions) — the picker menu itself is unchanged. */
+  variant?: 'text' | 'icon'
+}) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [collections, setCollections] = useState<MyCollectionSummary[] | null>(null)
@@ -53,10 +80,14 @@ export function AddToPlaylistButton({ archiveItemId }: { archiveItemId: string }
     <div className="add-to-playlist">
       <button
         type="button"
-        className="ui-btn ui-btn--sm ui-btn--ghost"
+        className={
+          variant === 'icon' ? 'ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon' : 'ui-btn ui-btn--sm ui-btn--ghost'
+        }
         onClick={() => void toggle()}
+        title="Add to playlist"
+        aria-label="Add to playlist"
       >
-        Add to playlist
+        {variant === 'icon' ? <IconPlaylist /> : 'Add to playlist'}
       </button>
       {open && (
         <div className="add-to-playlist__menu">

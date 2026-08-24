@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
-import { resolveChannelUrl } from '@/lib/app-url'
 import { deleteArchiveItem, updateArchiveMetadata } from './archive-actions'
 import {
   ArchiveBasicsFields,
@@ -28,6 +27,50 @@ import ArchiveVisualPanel from './archive-visual-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
 import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-visibility'
 
+function IconPin({ filled }: { filled: boolean }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 2v4.2L5 9v1.5h6V9L8 6.2V2Z"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M8 10.5V14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconRotation({ active }: { active: boolean }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M13 5.5A5 5 0 1 0 13.8 9"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path d="M13 2v4h-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      {active && <circle cx="8" cy="8" r="1.5" fill="currentColor" />}
+    </svg>
+  )
+}
+
+function IconInsights() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M3 13V7M8 13V3M13 13V9"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'sharing' | 'advanced'
 
 const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
@@ -44,12 +87,14 @@ export default function ArchiveEditor({
   mixcloudConnected,
   mixcloudConfigured,
   apiUrl,
-  channelSlug,
 }: {
   item: Record<string, unknown> & { id: string; title: string; status: string }
   mixcloudConnected: boolean
   mixcloudConfigured: boolean
   apiUrl: string
+  /** No longer used here (the "View on channel" link was removed) — still
+   * accepted so callers threading it through a longer prop chain for other
+   * reasons don't need updating. */
   channelSlug?: string | null
 }) {
   const router = useRouter()
@@ -207,61 +252,58 @@ export default function ArchiveEditor({
             Close
           </Button>
         ) : isReady && isPublic ? (
-          <div className="studio-row-actions">
-            {channelSlug && (
-              <NextLink
-                href={resolveChannelUrl(channelSlug)}
-                className="ui-btn ui-btn--sm ui-btn--primary"
-              >
-                <ButtonIcon name="link" />
-                View on channel →
-              </NextLink>
-            )}
-            <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
+          <div className="studio-row-actions studio-row-actions--icons">
+            <Button
+              onClick={() => setOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="ui-btn--icon"
+              title="Edit"
+              aria-label="Edit"
+            >
               <ButtonIcon name="edit" />
-              Edit
             </Button>
             {!item.embedUri && (
               <NextLink
                 href={`/dashboard/archive/${item.id}/editor`}
-                className="ui-btn ui-btn--sm ui-btn--ghost"
+                className="ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon"
+                title="Audio editor"
+                aria-label="Audio editor"
               >
                 <ButtonIcon name="edit" />
-                Audio editor
               </NextLink>
             )}
-            <details className="studio-row-more">
-              <summary className="studio-row-more__summary">More</summary>
-              <div className="studio-row-more__menu">
-                <Button
-                  onClick={togglePin}
-                  disabled={pinPending}
-                  variant="ghost"
-                  size="sm"
-                  className="studio-row-more__btn--pin"
-                >
-                  {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
-                </Button>
-                <Button
-                  onClick={toggleRotation}
-                  disabled={rotationPending}
-                  variant="ghost"
-                  size="sm"
-                  className="studio-row-more__btn--rotation"
-                >
-                  {inRotation ? 'Remove from rotation' : 'Add to rotation'}
-                </Button>
-                <span className="studio-row-more__btn--playlist">
-                  <AddToPlaylistButton archiveItemId={item.id} />
-                </span>
-                <NextLink
-                  href={`/dashboard/insights/archive/${item.id}`}
-                  className="ui-btn ui-btn--sm ui-btn--ghost studio-row-more__btn--insights"
-                >
-                  Show insights
-                </NextLink>
-              </div>
-            </details>
+            <Button
+              onClick={togglePin}
+              disabled={pinPending}
+              variant="ghost"
+              size="sm"
+              className="ui-btn--icon"
+              title={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+              aria-label={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+            >
+              <IconPin filled={pinned} />
+            </Button>
+            <Button
+              onClick={toggleRotation}
+              disabled={rotationPending}
+              variant="ghost"
+              size="sm"
+              className="ui-btn--icon"
+              title={inRotation ? 'Remove from rotation' : 'Add to rotation'}
+              aria-label={inRotation ? 'Remove from rotation' : 'Add to rotation'}
+            >
+              <IconRotation active={inRotation} />
+            </Button>
+            <AddToPlaylistButton archiveItemId={item.id} variant="icon" />
+            <NextLink
+              href={`/dashboard/insights/archive/${item.id}`}
+              className="ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon"
+              title="Show insights"
+              aria-label="Show insights"
+            >
+              <IconInsights />
+            </NextLink>
           </div>
         ) : isReady ? (
           <div className="studio-row-actions">

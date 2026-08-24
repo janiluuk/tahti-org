@@ -295,6 +295,14 @@
   padding: var(--tahti-space-3) var(--tahti-space-6);
   font-size: var(--tahti-text-base);
 }
+/* Square, icon-only — combine with a size modifier (e.g. ui-btn--sm) for the
+ * icon's own scale; this just removes the text-button padding/min-width. */
+.ui-btn--icon {
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
 
 .ui-btn--primary {
   background: var(--tahti-primary);
