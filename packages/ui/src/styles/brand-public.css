@@ -1425,3 +1425,49 @@
   line-height: 1.55;
   margin: 0;
 }
+
+[data-tahti-ui='brand'] .help-index__header {
+  margin: 0 0 2rem;
+}
+
+[data-tahti-ui='brand'] .help-index__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+}
+
+[data-tahti-ui='brand'] .help-index__card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  border-radius: 10px;
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .help-index__card:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+}
+
+[data-tahti-ui='brand'] .help-index__card-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .help-index__card-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin: 0 0 0.4rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .help-index__card-description {
+  font-size: 0.8375rem;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
