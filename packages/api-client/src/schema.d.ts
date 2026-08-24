@@ -15360,6 +15360,7 @@ export interface paths {
                 displayName: string
                 durationSec: number
                 coverUrl: string | null
+                genre: string | null
               }[]
             }
           }
@@ -15406,6 +15407,7 @@ export interface paths {
                 displayName: string
                 durationSec: number
                 coverUrl: string | null
+                genre: string | null
               }[]
             }
           }
@@ -15451,6 +15453,7 @@ export interface paths {
                 displayName: string
                 durationSec: number
                 coverUrl: string | null
+                genre: string | null
               }[]
             }
           }
@@ -15500,6 +15503,7 @@ export interface paths {
                 displayName: string
                 durationSec: number
                 coverUrl: string | null
+                genre: string | null
               }
             }
           }
