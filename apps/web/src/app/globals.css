@@ -446,6 +446,23 @@ body {
   background: color-mix(in srgb, var(--cyan) 12%, transparent);
 }
 
+.mini-player__queue-toggle--flash {
+  animation: mini-player-queue-flash 0.7s ease-out;
+}
+
+@keyframes mini-player-queue-flash {
+  0% {
+    color: var(--cyan);
+    border-color: color-mix(in srgb, var(--cyan) 70%, transparent);
+    background: color-mix(in srgb, var(--cyan) 25%, transparent);
+  }
+  100% {
+    color: inherit;
+    border-color: var(--border);
+    background: var(--card2);
+  }
+}
+
 /* ── Mini-player queue panel ─────────────────────────────────────────── */
 .mini-player-queue {
   display: flex;
