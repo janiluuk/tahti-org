@@ -54,7 +54,16 @@ function usePlayChannelCard(channel: ChannelCard) {
 function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCount?: number }) {
   const { canPlayInline, isCurrent, handlePlayClick } = usePlayChannelCard(channel)
   return (
-    <Link href={resolveChannelUrl(channel.slug)} className="listen-live-card">
+    <div className="listen-live-card">
+      {/* Stretched link (see .listen-live-card__listen-link in admin-ui.css)
+          — the whole-card "go listen" target. .listen-live-card__handle
+          below stays independently clickable to the artist's profile on top
+          of it; nesting an <a> inside this one would be invalid HTML. */}
+      <Link
+        href={resolveChannelUrl(channel.slug)}
+        className="listen-live-card__listen-link"
+        aria-label={`Listen to ${channel.user.displayName}`}
+      />
       <div className="listen-live-card__avatar">
         {cardArtworkUrl(channel) ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -89,10 +98,12 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
           )}
         </div>
         <div className="listen-live-card__name">{channel.user.displayName}</div>
-        <div className="listen-live-card__handle">@{channel.user.username}</div>
+        <Link href={`/u/${channel.user.username}`} className="listen-live-card__handle">
+          @{channel.user.username}
+        </Link>
       </div>
       <div className="listen-live-card__cta">Listen →</div>
-    </Link>
+    </div>
   )
 }
 

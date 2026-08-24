@@ -64,7 +64,18 @@ function formatNewsDate(iso: string): string {
 
 function LiveTile({ channel }: { channel: ChannelCard }) {
   return (
-    <Link href={resolveChannelUrl(channel.slug)} className="listen-live-card">
+    <div className="listen-live-card">
+      {/* "Stretched link" covering the whole card — the primary click target
+          (go listen). .listen-live-card__handle below sits in normal flow on
+          top of it (position: relative + higher z-index in CSS) so it stays
+          independently clickable to the artist's profile instead of being
+          swallowed by this overlay; nesting an <a> inside this one would be
+          invalid HTML and unreliable to click. */}
+      <Link
+        href={resolveChannelUrl(channel.slug)}
+        className="listen-live-card__listen-link"
+        aria-label={`Listen to ${channel.user.displayName}`}
+      />
       <div className="listen-live-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -82,10 +93,12 @@ function LiveTile({ channel }: { channel: ChannelCard }) {
           Live now
         </div>
         <div className="listen-live-card__name">{channel.user.displayName}</div>
-        <div className="listen-live-card__handle">@{channel.user.username}</div>
+        <Link href={`/u/${channel.user.username}`} className="listen-live-card__handle">
+          @{channel.user.username}
+        </Link>
       </div>
       <div className="listen-live-card__cta">Listen →</div>
-    </Link>
+    </div>
   )
 }
 

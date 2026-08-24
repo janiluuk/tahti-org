@@ -1890,7 +1890,6 @@
   background: rgba(0, 230, 118, 0.05);
   border: 1px solid rgba(0, 230, 118, 0.2);
   border-radius: var(--tahti-radius-lg);
-  text-decoration: none;
   color: inherit;
   transition:
     border-color 0.18s ease,
@@ -1912,6 +1911,19 @@
   border-color: rgba(0, 230, 118, 0.5);
   background: rgba(0, 230, 118, 0.08);
   transform: translateY(-1px);
+}
+
+/* Stretched link — covers the whole card as the primary "go listen" click
+ * target, including over the non-interactive parts of the avatar/name/cta
+ * (z-index: 1 puts it above their default auto-stacking so a click there
+ * still reaches this link, matching the old single-<a>-wraps-everything
+ * behavior). .listen-live-card__handle and .listen-card__play-btn each get a
+ * higher z-index still, so those two stay independently clickable on top of
+ * it rather than being swallowed. */
+.listen-live-card__listen-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   text-decoration: none;
 }
 
@@ -1960,6 +1972,7 @@
 .listen-card__play-btn {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2022,9 +2035,20 @@
 }
 
 .listen-live-card__handle {
+  display: inline-block;
+  /* Sits above .listen-live-card__listen-link's whole-card stretched link
+   * (z-index: 1) so it stays independently clickable rather than swallowed. */
+  position: relative;
+  z-index: 2;
   font-size: var(--tahti-text-xs);
   color: var(--muted);
+  text-decoration: none;
   margin-top: 2px;
+}
+
+.listen-live-card__handle:hover {
+  color: var(--legacy-live-bright);
+  text-decoration: underline;
 }
 
 .listen-live-card__cta {
