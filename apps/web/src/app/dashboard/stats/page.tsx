@@ -11,6 +11,9 @@ import { StatsHero } from './_stats-hero'
 import { StatsTopThree } from './_stats-top-three'
 import { StatsWhatChanged } from './_stats-what-changed'
 import { ArtistTopLists, type ArtistTopListBucket } from './_artist-top-lists'
+import { StatsPlaysPanel } from './stats-plays-panel'
+import { ListenerMapPanel } from './listener-map-panel'
+import type { GeoPoint } from '@/components/country-choropleth-map'
 
 interface TopTrack {
   archiveItemId: string
@@ -105,12 +108,15 @@ export default async function StatsPage({
   if (!sessionCookie) redirect('/login')
 
   const range = RANGES.some((r) => r.value === searchParams.range) ? searchParams.range! : '30'
-  const tab = searchParams.tab === 'top-lists' ? 'top-lists' : 'overview'
-  const topPeriod = ['month', 'half_year', 'all_time'].includes(searchParams.period ?? '')
-    ? searchParams.period!
-    : 'month'
+  const tab =
+    searchParams.tab === 'top-lists' ? 'top-lists' : searchParams.tab === 'plays' ? 'plays' : 'overview'
+  // Top lists' own period granularity ('week'/'month'/'all_time') is coarser
+  // than plain days, but maps cleanly onto the shared 7d/30d/All range — one
+  // control now drives every tab instead of each having its own.
+  const topPeriod = range === '7' ? 'week' : range === 'all' ? 'all_time' : 'month'
   const topDimension = searchParams.dimension === 'genre' ? 'genre' : 'type'
   const topSort = searchParams.sort === 'asc' ? 'asc' : 'desc'
+  const geoPeriod = range === '7' ? '7d' : range === 'all' ? 'all' : '30d'
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
@@ -126,6 +132,7 @@ export default async function StatsPage({
     channelLiveStats,
     artistTopLists,
     user,
+    listenerGeo,
   ] = await Promise.all([
     apiFetch<PlaysPayload>(apiUrl, cookie, `/api/me/stats/plays?range=${range}`),
     apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, `/api/me/stats/top-tracks?range=${range}`),
@@ -145,6 +152,9 @@ export default async function StatsPage({
         )
       : null,
     getDashboardUser(),
+    tab === 'plays'
+      ? apiFetch<{ geo: GeoPoint[] }>(apiUrl, cookie, `/api/me/listener-geo?period=${geoPeriod}`)
+      : null,
   ])
 
   const totalPlays = plays?.totalPlays ?? 0
@@ -225,7 +235,15 @@ export default async function StatsPage({
               Overview
             </NextLink>
             <NextLink
-              href="/dashboard/stats?tab=top-lists"
+              href={`/dashboard/stats?tab=plays&range=${range}`}
+              className={`stats-view-tab${tab === 'plays' ? ' stats-view-tab--active' : ''}`}
+              role="tab"
+              aria-selected={tab === 'plays'}
+            >
+              Plays &amp; listeners
+            </NextLink>
+            <NextLink
+              href={`/dashboard/stats?tab=top-lists&range=${range}`}
               className={`stats-view-tab${tab === 'top-lists' ? ' stats-view-tab--active' : ''}`}
               role="tab"
               aria-selected={tab === 'top-lists'}
@@ -235,28 +253,21 @@ export default async function StatsPage({
           </div>
         </div>
         <div className="studio-page-header__actions">
-          {tab === 'overview' ? (
-            <div className="stats-range-tabs" role="group" aria-label="Period">
-              {RANGES.map((r) => (
-                <NextLink
-                  key={r.value}
-                  href={`/dashboard/stats?range=${r.value}`}
-                  className={`stats-range-tab${range === r.value ? ' stats-range-tab--active' : ''}`}
-                  aria-current={range === r.value ? 'true' : undefined}
-                >
-                  {r.label}
-                </NextLink>
-              ))}
-            </div>
-          ) : null}
-          {tab === 'overview' ? (
-            <NextLink
-              href="/dashboard/stats/detail"
-              className="ui-btn ui-btn--sm ui-btn--secondary"
-            >
-              Plays &amp; listeners →
-            </NextLink>
-          ) : null}
+          {/* One range control for every tab — was overview-only before, with
+              Plays & listeners and Top lists each running their own separate
+              (and differently-grained) period picker. */}
+          <div className="stats-range-tabs" role="group" aria-label="Period">
+            {RANGES.map((r) => (
+              <NextLink
+                key={r.value}
+                href={`/dashboard/stats?tab=${tab}&range=${r.value}`}
+                className={`stats-range-tab${range === r.value ? ' stats-range-tab--active' : ''}`}
+                aria-current={range === r.value ? 'true' : undefined}
+              >
+                {r.label}
+              </NextLink>
+            ))}
+          </div>
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
             isLive={user?.channel?.state === 'LIVE'}
@@ -349,10 +360,15 @@ export default async function StatsPage({
             )}
           </div>
         </>
+      ) : tab === 'plays' ? (
+        <div className="stats-plays-tab">
+          {plays && <StatsPlaysPanel initial={plays} />}
+          <ListenerMapPanel initial={listenerGeo?.geo ?? []} />
+        </div>
       ) : (
         <ArtistTopLists
           buckets={artistTopLists?.buckets ?? []}
-          period={topPeriod}
+          range={range}
           dimension={topDimension}
           sort={topSort}
         />

@@ -17,12 +17,6 @@ export interface ArtistTopListBucket {
   entries: ArtistTopListEntry[]
 }
 
-const PERIODS = [
-  { value: 'month', label: 'Month' },
-  { value: 'half_year', label: 'Half year' },
-  { value: 'all_time', label: 'All time' },
-] as const
-
 const DIMENSIONS = [
   { value: 'type', label: 'By type' },
   { value: 'genre', label: 'By genre' },
@@ -33,8 +27,8 @@ const SORTS = [
   { value: 'asc', label: 'Least listened' },
 ] as const
 
-function href(period: string, dimension: string, sort: string): string {
-  return `/dashboard/stats?tab=top-lists&period=${period}&dimension=${dimension}&sort=${sort}`
+function href(range: string, dimension: string, sort: string): string {
+  return `/dashboard/stats?tab=top-lists&range=${range}&dimension=${dimension}&sort=${sort}`
 }
 
 function bucketLabel(value: string): string {
@@ -46,12 +40,12 @@ function bucketLabel(value: string): string {
 
 export function ArtistTopLists({
   buckets,
-  period,
+  range,
   dimension,
   sort,
 }: {
   buckets: ArtistTopListBucket[]
-  period: string
+  range: string
   dimension: string
   sort: string
 }) {
@@ -66,22 +60,11 @@ export function ArtistTopLists({
           </p>
         </div>
         <div className="stats-top-lists__filters">
-          <div className="stats-range-tabs" role="group" aria-label="Top list period">
-            {PERIODS.map((option) => (
-              <NextLink
-                key={option.value}
-                href={href(option.value, dimension, sort)}
-                className={`stats-range-tab${period === option.value ? ' stats-range-tab--active' : ''}`}
-              >
-                {option.label}
-              </NextLink>
-            ))}
-          </div>
           <div className="stats-range-tabs" role="group" aria-label="Top list grouping">
             {DIMENSIONS.map((option) => (
               <NextLink
                 key={option.value}
-                href={href(period, option.value, sort)}
+                href={href(range, option.value, sort)}
                 className={`stats-range-tab${dimension === option.value ? ' stats-range-tab--active' : ''}`}
               >
                 {option.label}
@@ -92,7 +75,7 @@ export function ArtistTopLists({
             {SORTS.map((option) => (
               <NextLink
                 key={option.value}
-                href={href(period, dimension, option.value)}
+                href={href(range, dimension, option.value)}
                 className={`stats-range-tab${sort === option.value ? ' stats-range-tab--active' : ''}`}
               >
                 {option.label}

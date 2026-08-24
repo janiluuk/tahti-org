@@ -2728,10 +2728,25 @@
 }
 
 [data-tahti-ui='studio'] .studio-editor-tab--active {
+  position: relative;
   color: var(--tab-accent, var(--cyan));
   background: color-mix(in srgb, var(--tab-accent, var(--cyan)) 16%, transparent);
   border-color: color-mix(in srgb, var(--tab-accent, var(--cyan)) 40%, transparent);
   font-weight: var(--weight-medium);
+}
+
+/* Belt-and-braces indicator under the pill shape above — the color/background
+ * treatment alone can read as "just a hover state" at a glance; this makes
+ * which tab is actually open unambiguous. */
+[data-tahti-ui='studio'] .studio-editor-tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: -5px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--tab-accent, var(--cyan));
 }
 
 [data-tahti-ui='studio'] .studio-editor-tab__icon {
@@ -3950,6 +3965,12 @@
 /* PLAT-065: listener geography map */
 [data-tahti-ui='studio'] .stats-panel--map {
   overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .stats-plays-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 [data-tahti-ui='studio'] .stats-period-tabs {
