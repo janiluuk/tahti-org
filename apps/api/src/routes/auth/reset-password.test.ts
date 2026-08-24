@@ -49,7 +49,7 @@ describe('GET/POST /api/auth/reset-password', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/auth/reset-password',
-      payload: { token, password: 'brandnewpassword123' },
+      payload: { token, password: 'BrandNewPassword123' },
     })
     expect(res.statusCode).toBe(200)
     expect(res.cookies.some((c) => c.name === 'tahti_session')).toBe(true)
@@ -60,7 +60,7 @@ describe('GET/POST /api/auth/reset-password', () => {
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: `${PREFIX}user@example.com`, password: 'brandnewpassword123' },
+      payload: { email: `${PREFIX}user@example.com`, password: 'BrandNewPassword123' },
     })
     expect(login.statusCode).toBe(200)
   })
@@ -75,14 +75,14 @@ describe('GET/POST /api/auth/reset-password', () => {
     const first = await app.inject({
       method: 'POST',
       url: '/api/auth/reset-password',
-      payload: { token, password: 'firstnewpassword123' },
+      payload: { token, password: 'FirstNewPassword123' },
     })
     expect(first.statusCode).toBe(200)
 
     const second = await app.inject({
       method: 'POST',
       url: '/api/auth/reset-password',
-      payload: { token, password: 'secondnewpassword123' },
+      payload: { token, password: 'SecondNewPassword123' },
     })
     expect(second.statusCode).toBe(400)
   })

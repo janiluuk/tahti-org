@@ -63,7 +63,7 @@ describe('Vital flows (E2E journeys)', () => {
       url: '/api/auth/register',
       payload: {
         email,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username,
         displayName: 'Journey Onboard',
       },
@@ -79,7 +79,7 @@ describe('Vital flows (E2E journeys)', () => {
     const loginBlocked = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password: 'strongpassword123' },
+      payload: { email, password: 'StrongPassword123' },
     })
     expect(loginBlocked.statusCode).toBe(403)
 
@@ -93,7 +93,7 @@ describe('Vital flows (E2E journeys)', () => {
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password: 'strongpassword123' },
+      payload: { email, password: 'StrongPassword123' },
     })
     expect(login.statusCode).toBe(200)
     const cookie = login.headers['set-cookie']?.toString().match(/tahti_session=[^;]+/)?.[0]

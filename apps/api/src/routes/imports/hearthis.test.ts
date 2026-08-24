@@ -50,7 +50,7 @@ vi.mock('@tahti/hearthis', () => ({
 }))
 
 import { buildApp } from '../../server.js'
-import { prisma } from '@tahti/db'
+import { prisma, encryptIntegrationFields } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
   createTestArtist,
@@ -78,6 +78,10 @@ describe('hearthis.at mixed-source import', () => {
     cookie = await sessionCookieFor(prisma, artist.id)
     userId = artist.id
 
+    await prisma.integrationCredential.create({
+      data: { userId, providerSlug: 'hearthis-import', fieldsEnc: encryptIntegrationFields({}) },
+    })
+
     const collection = await prisma.collection.create({
       data: { userId, name: 'Test collection', slug: 'hearthis-import-test-collection' },
     })
@@ -88,6 +92,7 @@ describe('hearthis.at mixed-source import', () => {
     await prisma.collectionItem.deleteMany({ where: { collectionId } })
     await prisma.collection.deleteMany({ where: { userId } })
     await prisma.archiveItem.deleteMany({ where: { channel: { userId } } })
+    await prisma.integrationCredential.deleteMany({ where: { userId } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })

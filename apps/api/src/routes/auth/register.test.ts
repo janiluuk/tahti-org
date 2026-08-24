@@ -34,7 +34,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}1@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'testartist1',
         displayName: 'Test Artist',
       },
@@ -52,7 +52,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}2@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'testartist2',
         displayName: 'Test Artist',
       },
@@ -74,7 +74,7 @@ describe('POST /api/auth/register', () => {
   it('returns 409 when email is already taken', async () => {
     const payload = {
       email: `${TEST_EMAIL_PREFIX}3@example.com`,
-      password: 'strongpassword123',
+      password: 'StrongPassword123',
       username: 'testartist3',
       displayName: 'Test Artist',
     }
@@ -94,7 +94,7 @@ describe('POST /api/auth/register', () => {
   it('returns 409 when username is already taken', async () => {
     const first = {
       email: `${TEST_EMAIL_PREFIX}4a@example.com`,
-      password: 'strongpassword123',
+      password: 'StrongPassword123',
       username: 'takenusername',
       displayName: 'First Artist',
     }
@@ -105,7 +105,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}4b@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'takenusername',
         displayName: 'Second Artist',
       },
@@ -121,7 +121,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: 'not-an-email',
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'testuser',
         displayName: 'Test',
       },
@@ -149,7 +149,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}6@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'testartist6',
         displayName: 'Test Artist',
         gender: 'Non-binary',
@@ -168,7 +168,7 @@ describe('POST /api/auth/register', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}7@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: 'testartist7',
         displayName: 'Test Artist',
       },

@@ -21,7 +21,7 @@ describe('GET /api/auth/username-available', () => {
       url: '/api/auth/register',
       payload: {
         email: `${TEST_EMAIL_PREFIX}1@example.com`,
-        password: 'strongpassword123',
+        password: 'StrongPassword123',
         username: TAKEN_USERNAME,
         displayName: 'Taken Artist',
       },

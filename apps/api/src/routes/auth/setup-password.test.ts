@@ -62,7 +62,7 @@ describe('POST /api/auth/setup-password', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/auth/setup-password',
-      payload: { token, password: 'newpassword123' },
+      payload: { token, password: 'NewPassword123' },
     })
     expect(res.statusCode).toBe(200)
     expect(res.cookies.some((c) => c.name === 'tahti_session')).toBe(true)
@@ -76,7 +76,7 @@ describe('POST /api/auth/setup-password', () => {
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password: 'newpassword123' },
+      payload: { email, password: 'NewPassword123' },
     })
     expect(login.statusCode).toBe(200)
   })

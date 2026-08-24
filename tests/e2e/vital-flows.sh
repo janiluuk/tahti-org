@@ -21,7 +21,7 @@ ARTIST_USER="e2e-artist-${UNIQUE}"
 FAN_USER="e2e-fan-${UNIQUE}"
 ARTIST_EMAIL="e2e-artist-${UNIQUE}@test.tahti.live"
 FAN_EMAIL="e2e-fan-${UNIQUE}@test.tahti.live"
-PASS='testpassword123'
+PASS='TestPassword123'
 
 echo "── Tahti vital flows e2e ─────────────────────────────────"
 echo "   API: $API_URL"
