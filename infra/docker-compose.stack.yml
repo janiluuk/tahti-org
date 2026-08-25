@@ -71,10 +71,12 @@ x-app-env: &app-env
   # always throws), so unlike the secrets above this needs an explicit value here.
   RTMP_KEY_ENC_KEY: ${RTMP_KEY_ENC_KEY:-abababababababababababababababababababababababababababababababab}
   ORCHESTRATOR_URL: http://orchestrator:3003
-  # UVR5-family stem separation — CPU-only Python service (see
-  # services/stem-separator). Not required to boot; the worker's
-  # separate-stems job just fails that one job if unreachable.
-  STEM_SEPARATOR_URL: http://stem-separator:8090
+  # UVR5-family stem separation — GPU service (see services/stem-separator),
+  # colocated with worker-transcode on vimage7 (the only box with a GPU),
+  # not on this host — see infra/docker-compose.worker-remote.yml. Not
+  # required to boot; the worker's separate-stems job just fails that one
+  # job if unreachable.
+  STEM_SEPARATOR_URL: ${STEM_SEPARATOR_URL:-http://192.168.2.187:8090}
   ICECAST_HOST: icecast:8000
   ICECAST_BASE_URL: http://icecast:8000
   ICECAST_PUBLIC_URL: ${ICECAST_PUBLIC_URL:-http://localhost:${ICECAST_PORT:-18100}}
@@ -398,18 +400,9 @@ services:
       redis:
         condition: service_healthy
 
-  # UVR5-family vocal/instrument separation (see services/stem-separator).
-  # CPU-only, no GPU in colo/Hetzner. Image is large and slow to build the
-  # first time (torch + two baked-in model checkpoints) — build it once on
-  # the deploy host before relying on "Download stems" in the library.
-  stem-separator:
-    logging: *loki-logging
-    build:
-      context: ..
-      dockerfile: services/stem-separator/Dockerfile
-    restart: unless-stopped
-    ports:
-      - '${STEM_SEPARATOR_PORT:-8090}:8090'
+  # stem-separator moved to vimage7 (GPU) — see
+  # infra/docker-compose.worker-remote.yml. Nothing runs on this host for it
+  # anymore; STEM_SEPARATOR_URL above points there instead.
 
   orchestrator:
     logging: *loki-logging

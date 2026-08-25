@@ -1,13 +1,22 @@
-# Remote ffmpeg transcode worker — connects to the main stack over LAN.
+# Remote ffmpeg transcode worker + GPU stem-separator — connects to the
+# main stack over LAN.
 #
-# Lab: vimage7 (192.168.2.187) → vimage (192.168.2.100)
+# Lab: vimage7 (192.168.2.187, GTX 950) → vimage (192.168.2.100)
 #
 #   cp infra/stack.env.worker-remote.example infra/stack.env.worker-remote
 #   # fill secrets to match vimage infra/stack.env
+#   # one-time host prerequisite for stem-separator's GPU access:
+#   #   docker plugin/toolkit: install the NVIDIA Container Toolkit on
+#   #   vimage7 (apt package nvidia-container-toolkit, then
+#   #   `nvidia-ctk runtime configure --runtime=docker && systemctl restart docker`)
 #   ./scripts/deploy_worker_remote.sh
 #
-# Processes only the `transcode` lane (see packages/shared/src/worker-job-lanes.ts):
-# archive/release ffmpeg jobs that need Redis + Postgres + MinIO, not local HLS volumes.
+# worker-transcode processes only the `transcode` lane (see
+# packages/shared/src/worker-job-lanes.ts): archive/release ffmpeg jobs that
+# need Redis + Postgres + MinIO, not local HLS volumes. `separate-stems` is
+# in that lane too, which is why stem-separator is colocated here rather
+# than staying on vimage — same host, no network hop, and it's the only box
+# in the fleet with a GPU.
 
 name: tahti-worker-remote
 
@@ -18,6 +27,10 @@ services:
       dockerfile: apps/worker/Dockerfile
     restart: unless-stopped
     command: ['tsx', 'apps/worker/src/index.ts', '--queues=transcode']
+    # Deliberately no depends_on: stem-separator's own startup can fail
+    # (e.g. GPU toolkit not installed yet) without blocking this container —
+    # matches the existing "not required to boot" resilience design; a
+    # separate-stems job just fails on its own if stem-separator is down.
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -27,7 +40,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET:-tahti}
       MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-}
-      STEM_SEPARATOR_URL: ${STEM_SEPARATOR_URL:-http://192.168.2.100:8090}
+      # Colocated on this same host/compose project now — was
+      # http://192.168.2.100:8090 (vimage) before stem-separator moved here.
+      STEM_SEPARATOR_URL: http://stem-separator:8090
       ORCHESTRATOR_URL: ${ORCHESTRATOR_URL:-}
       INTERNAL_SECRET: ${INTERNAL_SECRET}
       RTMP_KEY_ENC_KEY: ${RTMP_KEY_ENC_KEY:-}
@@ -40,3 +55,22 @@ services:
       R2_BUCKET: ${R2_BUCKET:-tahti-user-storage}
       # Extra headroom on a dedicated transcode box (vimage7: 15 GB RAM).
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+
+  # GPU-accelerated (see services/stem-separator/Dockerfile) — the only box
+  # in the fleet with a GPU, so this doesn't run anywhere else. `docker
+  # compose up` fails this service (not the others) until the NVIDIA
+  # Container Toolkit is installed on the host — see the header comment.
+  stem-separator:
+    build:
+      context: ..
+      dockerfile: services/stem-separator/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${STEM_SEPARATOR_PORT:-8090}:8090'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

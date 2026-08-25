@@ -2,10 +2,22 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Tahti ry <https://tahti.live>
 #
-# CPU-only (no GPU in colo/Hetzner — see hosting-decisions). Models are
-# downloaded and baked in at build time so a running container never blocks
-# on a first-request download; this makes the image large (~3-5GB with
-# torch + two model checkpoints) and the build slow the first time.
+# GPU-accelerated (audio-separator[gpu] — see requirements.txt), deployed
+# to vimage7 (GTX 950, 2GB VRAM) via infra/docker-compose.worker-remote.yml
+# — not the production colo/Hetzner box, which still has no GPU. Needs the
+# NVIDIA Container Toolkit + `--gpus`/device-reservation on the host; the
+# torch GPU wheel bundles its own CUDA runtime, so no nvidia/cuda base image
+# is needed here. 2GB VRAM is tight for BS-Roformer in particular — if it
+# OOMs on real tracks, that model may need to stay on CPU while htdemucs
+# uses the GPU (audio-separator auto-detects CUDA per `Separator()` call in
+# main.py; check its actual segment/batch-size flags before assuming one is
+# available — not verified against 0.44.5's exact API here).
+#
+# Models are downloaded and baked in at build time (build itself runs
+# without GPU access, so this step stays CPU-only regardless) so a running
+# container never blocks on a first-request download; this makes the image
+# large (~3-5GB with torch + two model checkpoints) and the build slow the
+# first time.
 #
 # Build from repo root:
 #   docker build -f services/stem-separator/Dockerfile -t tahti/stem-separator .
