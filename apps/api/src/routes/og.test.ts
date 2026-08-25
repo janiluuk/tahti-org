@@ -87,4 +87,42 @@ describe('GET /api/og/*', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+
+  it('returns HTML with real collection metadata', async () => {
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'og-route-collection',
+        name: 'OG Route Collection',
+        description: 'A real collection description for OG tests.',
+        isPublic: true,
+      },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/og/collection/og-route-collection' })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('<title>OG Route Collection by OG Route Artist on Tahti</title>')
+    expect(res.body).toContain('A real collection description for OG tests.')
+    expect(res.body).toContain('property="og:image" content="https://cdn.example/avatar.jpg"')
+  })
+
+  it('404s for a private collection instead of leaking its metadata', async () => {
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'og-route-private-collection',
+        name: 'OG Route Private Collection',
+        isPublic: false,
+      },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/og/collection/og-route-private-collection',
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('404s for an unknown collection', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/og/collection/no-such-collection' })
+    expect(res.statusCode).toBe(404)
+  })
 })
