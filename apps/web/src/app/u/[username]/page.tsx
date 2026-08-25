@@ -377,9 +377,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
           .filter(([, url]) => !!url),
         ...Object.entries(artist.socialLinks)
           .filter(([key, url]) => !!url && key !== 'genres' && !(key in STREAMING_LINK_LABELS))
-          .map(
-            ([key, url]) => [key.charAt(0).toUpperCase() + key.slice(1), url] as const,
-          ),
+          .map(([key, url]) => [key.charAt(0).toUpperCase() + key.slice(1), url] as const),
       ]
     : []
   // Music tab: pinned releases get their own (non-playable — a release isn't
@@ -391,10 +389,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const latestTracks = [...tracks]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 5)
-  const musicTabTracks = [
-    ...pinnedTracks,
-    ...latestTracks.filter((t) => !t.pinned),
-  ]
+  const musicTabTracks = [...pinnedTracks, ...latestTracks.filter((t) => !t.pinned)]
   // Tahti Releases first, then everything else — same items as before, the
   // formal-release section just leads instead of trailing behind DJ mixes/
   // playlists/collections/individual tracks.

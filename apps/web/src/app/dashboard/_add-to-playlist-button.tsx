@@ -81,7 +81,9 @@ export function AddToPlaylistButton({
       <button
         type="button"
         className={
-          variant === 'icon' ? 'ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon' : 'ui-btn ui-btn--sm ui-btn--ghost'
+          variant === 'icon'
+            ? 'ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon'
+            : 'ui-btn ui-btn--sm ui-btn--ghost'
         }
         onClick={() => void toggle()}
         title="Add to playlist"

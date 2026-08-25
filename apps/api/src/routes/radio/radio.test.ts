@@ -225,11 +225,7 @@ describe('radio show detail — past episode recording linkage', () => {
     })
     const now = new Date()
 
-    const publishedItem = await createReadyArchiveItem(
-      prisma,
-      artist.channel!.id,
-      'Published set',
-    )
+    const publishedItem = await createReadyArchiveItem(prisma, artist.channel!.id, 'Published set')
     const airedBooking = await prisma.radioSlotBooking.create({
       data: {
         channelId: artist.channel!.id,

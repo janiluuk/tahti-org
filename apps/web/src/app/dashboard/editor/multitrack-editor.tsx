@@ -53,9 +53,12 @@ function StemSeparationPanel({
   const tracksRef = useRef(tracks)
   tracksRef.current = tracks
 
-  useEffect(() => () => {
-    if (pollRef.current) clearInterval(pollRef.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    },
+    [],
+  )
 
   function applyReadyStems(job: StemJobRow, replacingIds: string[]) {
     addTracks(job.files.map((f) => ({ src: f.url, name: f.label })))

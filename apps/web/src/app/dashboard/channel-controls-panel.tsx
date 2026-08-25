@@ -377,9 +377,7 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
             )}
           </span>
         )}
-        {switchingTrack && (
-          <span className="db-channel-controls__switching">Switching track…</span>
-        )}
+        {switchingTrack && <span className="db-channel-controls__switching">Switching track…</span>}
       </div>
 
       <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">

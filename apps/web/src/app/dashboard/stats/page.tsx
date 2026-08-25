@@ -109,7 +109,11 @@ export default async function StatsPage({
 
   const range = RANGES.some((r) => r.value === searchParams.range) ? searchParams.range! : '30'
   const tab =
-    searchParams.tab === 'top-lists' ? 'top-lists' : searchParams.tab === 'plays' ? 'plays' : 'overview'
+    searchParams.tab === 'top-lists'
+      ? 'top-lists'
+      : searchParams.tab === 'plays'
+        ? 'plays'
+        : 'overview'
   // Top lists' own period granularity ('week'/'month'/'all_time') is coarser
   // than plain days, but maps cleanly onto the shared 7d/30d/All range — one
   // control now drives every tab instead of each having its own.

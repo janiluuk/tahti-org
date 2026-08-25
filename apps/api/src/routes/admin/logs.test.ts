@@ -13,7 +13,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { createTestArtist, sessionCookieFor, cleanupUsersByEmailPrefix } from '../../test/helpers.js'
+import {
+  createTestArtist,
+  sessionCookieFor,
+  cleanupUsersByEmailPrefix,
+} from '../../test/helpers.js'
 
 const PREFIX = 'admin-logs-test-'
 

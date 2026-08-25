@@ -51,7 +51,8 @@ const adminLogsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'Board-only: container logs from the vimage6 Loki, filtered by service/search/time',
+        description:
+          'Board-only: container logs from the vimage6 Loki, filtered by service/search/time',
         response: openApiResponse(AdminLogsResponseSchema, 'AdminLogsResponse'),
       },
     },

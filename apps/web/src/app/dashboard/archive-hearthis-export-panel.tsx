@@ -77,12 +77,7 @@ export function ArchiveHearthisExportPanel({
 
       <div className="studio-row studio-row--wrap studio-mt-sm">
         {status === 'delivered' && initialRemoteId ? (
-          <Button
-            onClick={() => void onExport()}
-            disabled={pending}
-            variant="secondary"
-            size="sm"
-          >
+          <Button onClick={() => void onExport()} disabled={pending} variant="secondary" size="sm">
             <ButtonIcon name="refresh" />
             {pending ? 'Re-exporting…' : 'Re-export'}
           </Button>
@@ -105,8 +100,8 @@ export function ArchiveHearthisExportPanel({
 
       {(status === 'pending' || status === 'submitted') && (
         <p className="studio-text-muted-sm studio-mt-xs">
-          Export queued — this runs in the background. Reopen this track in a bit to see whether
-          it went through.
+          Export queued — this runs in the background. Reopen this track in a bit to see whether it
+          went through.
         </p>
       )}
       {status === 'failed' && (
