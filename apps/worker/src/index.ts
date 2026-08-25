@@ -230,7 +230,7 @@ const worker = new Worker(
         }
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)
-        if (summary.flagged > 0) {
+        if (summary.flagged > 0 || summary.autoResolved > 0) {
           console.log('[worker] missed-live-show-scan:', JSON.stringify(summary))
         }
       } else if (job.name === 'annual-grant-calc') {

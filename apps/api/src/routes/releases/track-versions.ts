@@ -15,7 +15,11 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { ensureInitialReleaseTrackVersion, syncActiveVersionToTrack } from '@tahti/db'
+import {
+  ensureInitialReleaseTrackVersion,
+  syncActiveVersionToTrack,
+  restrictionErrorMessage,
+} from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { enqueueReleaseTrackVersionTranscode } from '../../lib/queue.js'
@@ -90,6 +94,10 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
+
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
       const routeParams = parseRouteParams(ReleaseIdTrackIdParamsSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { releaseId, trackId } = routeParams

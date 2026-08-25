@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
-import { getActiveRestriction } from '@tahti/db'
+import { restrictionErrorMessage } from '@tahti/db'
 import { verifyPassword } from '../../lib/password.js'
 import { createSession, revokeAllSessions } from '../../lib/session.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
@@ -66,14 +66,8 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'This account has been deleted' })
       }
 
-      const loginBan = await getActiveRestriction(fastify.prisma, user.id, 'LOGIN')
-      if (loginBan) {
-        return reply.status(403).send({
-          error: loginBan.expiresAt
-            ? `Sign-in is blocked until ${loginBan.expiresAt.toLocaleString()}: ${loginBan.reason}`
-            : `Sign-in is blocked: ${loginBan.reason}`,
-        })
-      }
+      const loginBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'LOGIN')
+      if (loginBanError) return reply.status(403).send({ error: loginBanError })
 
       if (user.totpEnabledAt) {
         const challenge = await fastify.prisma.totpChallenge.create({

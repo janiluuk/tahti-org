@@ -13,6 +13,7 @@ import {
 import { hashPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
 import { config } from '../../config.js'
+import { restrictionErrorMessage } from '@tahti/db'
 
 const setupPasswordRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -108,6 +109,8 @@ const setupPasswordRoute: FastifyPluginAsync = async (fastify) => {
       if (setup.user.deletedAt || setup.user.suspendedAt) {
         return reply.status(403).send({ error: 'This account is not available' })
       }
+      const loginBanError = await restrictionErrorMessage(fastify.prisma, setup.userId, 'LOGIN')
+      if (loginBanError) return reply.status(403).send({ error: loginBanError })
 
       const passwordHash = await hashPassword(parsed.data.password)
 

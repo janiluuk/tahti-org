@@ -11,10 +11,30 @@ const GRACE_MINUTES = 30
 
 /** Flags a ScheduledLiveShow as missed (creates a MissedLiveShowFlag +
  * notifies the board) when its start time has passed with no Broadcast
- * against it and no existing flag. Runs hourly — see
+ * against it and no existing flag. Also auto-resolves any still-open flag
+ * whose show has since been linked to a Broadcast — the go-live flow
+ * (apps/api's ensurePlannedShowFilled) links a broadcast to a
+ * ScheduledLiveShow up to 12 hours after its scheduled start, well past
+ * this job's 30-minute grace window, so an artist running late enough to
+ * get flagged but still going live shouldn't leave a stale flag sitting in
+ * the admin queue forever. Runs hourly — see
  * packages/shared/src/worker-cron-jobs.ts. */
-export async function processMissedLiveShowScanJob(_job: Job): Promise<{ flagged: number }> {
+export async function processMissedLiveShowScanJob(
+  _job: Job,
+): Promise<{ flagged: number; autoResolved: number }> {
   const cutoff = new Date(Date.now() - GRACE_MINUTES * 60_000)
+
+  const autoResolved = await prisma.missedLiveShowFlag.updateMany({
+    where: {
+      status: { in: ['OPEN', 'REVIEWING'] },
+      scheduledLiveShow: { broadcast: { isNot: null } },
+    },
+    data: {
+      status: 'DISMISSED',
+      resolutionNote: 'Auto-resolved: the artist went live for this show after all.',
+      resolvedAt: new Date(),
+    },
+  })
 
   const overdue = await prisma.scheduledLiveShow.findMany({
     where: {
@@ -32,16 +52,25 @@ export async function processMissedLiveShowScanJob(_job: Job): Promise<{ flagged
     },
   })
 
-  for (const show of overdue) {
-    await prisma.missedLiveShowFlag.create({
-      data: { scheduledLiveShowId: show.id, channelId: show.channelId },
+  if (overdue.length > 0) {
+    const boardMembers = await prisma.user.findMany({
+      where: { isBoard: true },
+      select: { id: true },
     })
-    await notifyBoardOfMissedLiveShow(
-      prisma,
-      { id: show.id, title: show.title, startAt: show.startAt },
-      show.channel.user.displayName,
-    )
+    const boardMemberIds = boardMembers.map((m) => m.id)
+
+    for (const show of overdue) {
+      await prisma.missedLiveShowFlag.create({
+        data: { scheduledLiveShowId: show.id, channelId: show.channelId },
+      })
+      await notifyBoardOfMissedLiveShow(
+        prisma,
+        { id: show.id, title: show.title, startAt: show.startAt },
+        show.channel.user.displayName,
+        boardMemberIds,
+      )
+    }
   }
 
-  return { flagged: overdue.length }
+  return { flagged: overdue.length, autoResolved: autoResolved.count }
 }

@@ -305,21 +305,28 @@ export async function notifyUserThemeRejected(
  * cron flags a ScheduledLiveShow — see MissedLiveShowFlag in schema.prisma.
  * Deep-links to the admin queue list (there's no per-flag detail page — the
  * list itself carries the inspect/message/status actions), not the artist's
- * own dashboard. */
+ * own dashboard.
+ *
+ * `boardMemberIds` lets a caller looping over several shows in one pass
+ * (the scan job) fetch the board roster once instead of re-querying it per
+ * show — omit it to have this function look the roster up itself for a
+ * single one-off call. */
 export async function notifyBoardOfMissedLiveShow(
   prisma: PrismaClient,
   show: { id: string; title: string; startAt: Date },
   artistDisplayName: string,
+  boardMemberIds?: string[],
 ): Promise<void> {
-  const boardMembers = await prisma.user.findMany({
-    where: { isBoard: true },
-    select: { id: true },
-  })
-  if (boardMembers.length === 0) return
+  const ids =
+    boardMemberIds ??
+    (await prisma.user.findMany({ where: { isBoard: true }, select: { id: true } })).map(
+      (m) => m.id,
+    )
+  if (ids.length === 0) return
 
   await prisma.notification.createMany({
-    data: boardMembers.map((member) => ({
-      userId: member.id,
+    data: ids.map((userId) => ({
+      userId,
       type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
       title: `${artistDisplayName} missed a scheduled show`,
       body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,

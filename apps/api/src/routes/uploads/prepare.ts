@@ -4,7 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { PrepareUploadResponseSchema, PrepareUploadSchema, openApiResponse } from '@tahti/shared'
-import { getActiveRestriction } from '@tahti/db'
+import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 
@@ -33,14 +33,8 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
       const { filename, contentType, title, fileSizeBytes } = parsed.data
       const user = request.sessionUser!
 
-      const uploadBan = await getActiveRestriction(fastify.prisma, user.id, 'UPLOAD')
-      if (uploadBan) {
-        return reply.status(403).send({
-          error: uploadBan.expiresAt
-            ? `Uploads are blocked until ${uploadBan.expiresAt.toLocaleString()}: ${uploadBan.reason}`
-            : `Uploads are blocked: ${uploadBan.reason}`,
-        })
-      }
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },

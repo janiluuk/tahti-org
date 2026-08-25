@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { StashListQuerySchema, StashPagedListSchema, openApiResponse } from '@tahti/shared'
+import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 
@@ -74,6 +75,10 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/stash/prepare — presigned PUT URL for uploading to stash
   fastify.post('/api/me/stash/prepare', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
+
+    const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+    if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
     const body = request.body as {
       filename?: string
       contentType?: string

@@ -64,6 +64,31 @@ export async function getActiveRestriction(
   return restriction
 }
 
+const RESTRICTION_ACTION_LABEL = {
+  LIVE_SHOW_BOOKING: 'Booking',
+  UPLOAD: 'Uploads',
+  LOGIN: 'Sign-in',
+} as const
+
+/** One-call convenience for the common "block this request if restricted"
+ * check — every upload route (and login, and booking) needs the same
+ * lookup-then-format sequence, so route handlers can do
+ * `const err = await uploadRestrictionError(...); if (err) return reply.status(403).send({ error: err })`
+ * instead of repeating the ternary at every call site. Returns null when
+ * there's no active restriction. */
+export async function restrictionErrorMessage(
+  prisma: PrismaClient,
+  userId: string,
+  type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN',
+): Promise<string | null> {
+  const restriction = await getActiveRestriction(prisma, userId, type)
+  if (!restriction) return null
+  const action = RESTRICTION_ACTION_LABEL[type]
+  return restriction.expiresAt
+    ? `${action} is blocked until ${restriction.expiresAt.toLocaleString()}: ${restriction.reason}`
+    : `${action} is blocked: ${restriction.reason}`
+}
+
 /** Creates missing ScheduledLiveShow rows for one recurring series from a
  * caller-supplied list of occurrence instants. Idempotent — only fills in
  * occurrences that don't already have a (non-canceled) ScheduledLiveShow at

@@ -10,6 +10,7 @@ import { decryptTotpSecret } from '../../lib/totp-secret-enc.js'
 import { verifyPassword } from '../../lib/password.js'
 import { normalizeBackupCode } from '../../lib/totp-backup-codes.js'
 import { auditLog } from '../../lib/audit.js'
+import { restrictionErrorMessage } from '@tahti/db'
 
 const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -50,6 +51,14 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
       if (!user || !user.totpEnabledAt || !user.totpSecretEnc) {
         return reply.status(401).send({ error: 'Invalid login challenge' })
       }
+
+      // The initial /api/auth/login step already checks this before ever
+      // issuing a challenge — re-checked here too, since a restriction
+      // applied while an already-issued challenge is still valid (a few
+      // minutes) would otherwise let it complete without ever touching that
+      // check.
+      const loginBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'LOGIN')
+      if (loginBanError) return reply.status(403).send({ error: loginBanError })
 
       const secret = decryptTotpSecret(user.totpSecretEnc)
       let ok = verifyTotpCode(secret, code)

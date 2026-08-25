@@ -50,6 +50,7 @@ export {
   generateForSeries,
   syncNextBroadcast,
   getActiveRestriction,
+  restrictionErrorMessage,
   type RecurringSeriesInput,
   type ActiveRestriction,
 } from './live-show-recurrence.js'

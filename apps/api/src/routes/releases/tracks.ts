@@ -19,7 +19,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { nanoid } from 'nanoid'
-import { getActiveRestriction } from '@tahti/db'
+import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 import { mediaQueue, runFingerprintReleaseTrack } from '../../lib/queue.js'
@@ -101,14 +101,8 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const body = parsed.data
 
-      const uploadBan = await getActiveRestriction(fastify.prisma, user.id, 'UPLOAD')
-      if (uploadBan) {
-        return reply.status(403).send({
-          error: uploadBan.expiresAt
-            ? `Uploads are blocked until ${uploadBan.expiresAt.toLocaleString()}: ${uploadBan.reason}`
-            : `Uploads are blocked: ${uploadBan.reason}`,
-        })
-      }
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
 
       const release = await fastify.prisma.release.findFirst({
         where: { id: releaseId, userId: user.id },

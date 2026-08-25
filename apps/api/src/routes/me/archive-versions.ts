@@ -20,7 +20,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 import { enqueueVersionTranscode, getMediaJob } from '../../lib/queue.js'
-import { ensureInitialVersion, syncActiveVersionToItem } from '@tahti/db'
+import { ensureInitialVersion, syncActiveVersionToItem, restrictionErrorMessage } from '@tahti/db'
 import { serializeArchiveVersion } from '../../lib/archive-versions.js'
 
 const PRESIGN_TTL_SEC = 900
@@ -247,6 +247,10 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
+
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams

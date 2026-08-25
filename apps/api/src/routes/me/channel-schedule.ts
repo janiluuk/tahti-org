@@ -22,7 +22,7 @@ import {
 } from '@tahti/shared'
 import {
   generateForSeries,
-  getActiveRestriction,
+  restrictionErrorMessage,
   syncNextBroadcast as syncNextBroadcastDb,
 } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -267,18 +267,12 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'No channel' })
 
       if (parsed.data.recurrenceEnabled) {
-        const ban = await getActiveRestriction(
+        const banError = await restrictionErrorMessage(
           fastify.prisma,
           request.sessionUser!.id,
           'LIVE_SHOW_BOOKING',
         )
-        if (ban) {
-          return reply.status(403).send({
-            error: ban.expiresAt
-              ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
-              : `Booking is blocked: ${ban.reason}`,
-          })
-        }
+        if (banError) return reply.status(403).send({ error: banError })
       }
 
       const series = await showDb.liveShowSeries.create({
@@ -316,18 +310,12 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       if (!existing) return reply.status(404).send({ error: 'Series not found' })
 
       if (parsed.data.recurrenceEnabled) {
-        const ban = await getActiveRestriction(
+        const banError = await restrictionErrorMessage(
           fastify.prisma,
           request.sessionUser!.id,
           'LIVE_SHOW_BOOKING',
         )
-        if (ban) {
-          return reply.status(403).send({
-            error: ban.expiresAt
-              ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
-              : `Booking is blocked: ${ban.reason}`,
-          })
-        }
+        if (banError) return reply.status(403).send({ error: banError })
       }
 
       const data: Record<string, unknown> = { ...parsed.data }
@@ -364,18 +352,12 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'No channel' })
       const { seriesId } = request.params as { seriesId: string }
 
-      const ban = await getActiveRestriction(
+      const banError = await restrictionErrorMessage(
         fastify.prisma,
         request.sessionUser!.id,
         'LIVE_SHOW_BOOKING',
       )
-      if (ban) {
-        return reply.status(403).send({
-          error: ban.expiresAt
-            ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
-            : `Booking is blocked: ${ban.reason}`,
-        })
-      }
+      if (banError) return reply.status(403).send({ error: banError })
 
       const scheduled = await fastify.prisma.$transaction(async (tx) => {
         const transactionDb = showScheduleDb(tx)
