@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from 'react'
 import { isTypingTarget } from '../lib/is-typing-target'
+import type { PlayerEmbedSource } from './player-embed-plugins/hearthis-embed-plugin'
 
 interface HlsErrorData {
   fatal: boolean
@@ -112,6 +113,12 @@ export interface PlayerTrack {
   /** A 'live'-kind stream that's actually playing pre-recorded rotation right
    * now, nobody's on air — mini-player shows "REPLAY" instead of "LIVE". */
   isReplay?: boolean
+  /** Set when this track has no locally-hosted audio at all — playback lives
+   * entirely inside a third-party embed widget (see player-embed-plugins/).
+   * `url` is meaningless when this is set (leave it ''); load() skips every
+   * native <audio>/HLS step, and transport methods (togglePlay/seek/seekBy)
+   * become no-ops, since there's no control channel into the embed's iframe. */
+  embed?: PlayerEmbedSource
 }
 
 interface PlayerState {
@@ -364,6 +371,20 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       teardownHls()
 
+      // Embed tracks (hearthis.at, etc.) have no file for the shared <audio>
+      // element to play — silence it so a previous native track doesn't keep
+      // running underneath the embed widget, and skip straight past the HLS/
+      // native-audio branches below. `playing` is set optimistically off the
+      // requested autoplay intent, since there's no <audio> 'play'/'pause'
+      // event to derive it from for an embed track.
+      if (track.embed) {
+        audio.pause()
+        audio.removeAttribute('src')
+        audio.load()
+        setState((prev) => ({ ...prev, playing: opts?.autoplay !== false }))
+        return
+      }
+
       const playWhenReady = () => {
         if (opts?.autoplay !== false) {
           audio.play().catch((e) => console.warn('[player] play() rejected', e))
@@ -433,6 +454,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const togglePlay = useCallback(async () => {
     const audio = audioRef.current
     if (!audio || !state.track) return
+    // No control channel into an embed widget's iframe — see PlayerTrack.embed.
+    if (state.track.embed) return
     if (audio.paused) {
       await audio.play()
     } else {

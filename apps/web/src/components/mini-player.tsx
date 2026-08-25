@@ -12,6 +12,7 @@ import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 import { fetchMyCollections, type MyCollectionSummary } from '@/app/dashboard/collection-actions'
+import { HearthisEmbedSurface } from '@/contexts/player-embed-plugins/hearthis-embed-plugin'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -489,7 +490,13 @@ function FullPlayerSheet({
       )}
 
       <div className="full-player__seek">
-        {seekable ? (
+        {track.embed ? (
+          <HearthisEmbedSurface
+            embedUri={track.embed.embedUri}
+            title={track.title}
+            autoplay={playing}
+          />
+        ) : seekable ? (
           <>
             {details?.peaks && details.peaks.length > 0 ? (
               <ArchiveWaveform
@@ -586,8 +593,9 @@ function FullPlayerSheet({
           type="button"
           className={`full-player__play${buffering ? ' full-player__play--buffering' : ''}`}
           onClick={() => void togglePlay()}
-          aria-label={playing ? 'Pause' : 'Play'}
-          disabled={buffering}
+          aria-label={track.embed ? 'Use the hearthis.at player above' : playing ? 'Pause' : 'Play'}
+          title={track.embed ? 'Use the hearthis.at player above' : undefined}
+          disabled={buffering || Boolean(track.embed)}
         >
           {buffering ? (
             <span className="mini-player__spinner" aria-hidden />
@@ -745,6 +753,15 @@ export function MiniPlayer() {
       cancelled = true
     }
   }, [queueOpen, collections])
+
+  // An embed track (hearthis.at) has no working transport in the collapsed
+  // bar — its play/pause/seek is inert (see PlayerTrack.embed) — so jump
+  // straight to the full player, which mounts the real, interactive widget.
+  // Otherwise a freshly-loaded hearthis track would look identical to a dead
+  // click: the bar shows up, nothing else visibly happens.
+  useEffect(() => {
+    if (track?.embed) setExpanded(true)
+  }, [track?.id, track?.embed])
 
   if (!track) return null
 
@@ -1003,12 +1020,23 @@ export function MiniPlayer() {
             <button
               type="button"
               className={`mini-player__play${buffering ? ' mini-player__play--buffering' : ''}`}
-              onClick={() => void togglePlay()}
-              aria-label={playing ? 'Pause' : 'Play'}
+              onClick={() => (track.embed ? setExpanded(true) : void togglePlay())}
+              aria-label={track.embed ? 'Open hearthis.at player' : playing ? 'Pause' : 'Play'}
+              title={track.embed ? 'Open hearthis.at player' : undefined}
               disabled={buffering}
             >
               {buffering ? (
                 <span className="mini-player__spinner" aria-hidden />
+              ) : track.embed ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path
+                    d="M4 9v3h3M12 7V4H9M4.5 11.5 11.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               ) : playing ? (
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
                   <rect x="3" y="2" width="4" height="14" rx="1" />
@@ -1056,6 +1084,10 @@ export function MiniPlayer() {
               className={`mini-player__badge${track.isReplay ? ' mini-player__badge--replay' : ''}`}
             >
               {track.isReplay ? 'REPLAY' : 'LIVE'}
+            </span>
+          ) : track.embed ? (
+            <span className="mini-player__badge" title="Playing via hearthis.at's own widget">
+              HEARTHIS
             </span>
           ) : (
             <span className="mini-player__time">

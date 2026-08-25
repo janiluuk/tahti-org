@@ -8,20 +8,19 @@ import Link from 'next/link'
 import { LoveButton } from '@/components/love-button'
 import { ReportButton } from '@/components/report-button'
 import { usePlayer } from '@/contexts/player-context'
-import { HearthisEmbedRow } from './c/[slug]/_hearthis-embed-row'
 import { MixcloudEmbedRow } from './c/[slug]/_mixcloud-embed-row'
 import { SpotifyEmbedRow } from './c/[slug]/_spotify-embed-row'
 import { useSwitchProfileTab } from './_profile-tab-context'
 import { formatDuration, type TrackTabItem } from './_tracks-tab'
 
 /** *_EMBED-sourced items have no audio file — playUrl is always null for
- * these — so they need the same embed widgets collection pages already use
- * instead of the native play button below. */
+ * these. Mixcloud/Spotify still get their own page-local widget (no player-
+ * context integration for those providers yet); hearthis.at routes through
+ * the shared mini-player instead — see handleTogglePlay below and
+ * player-embed-plugins/hearthis-embed-plugin.tsx. */
 function EmbedPlayer({ track }: { track: TrackTabItem }) {
   if (!track.embedUri) return null
   switch (track.embedProvider) {
-    case 'HEARTHIS':
-      return <HearthisEmbedRow title={track.title} embedUri={track.embedUri} />
     case 'MIXCLOUD':
       return <MixcloudEmbedRow title={track.title} embedUri={track.embedUri} />
     case 'SPOTIFY':
@@ -53,8 +52,29 @@ export function TrackDetailModal({
   const { track: playerTrack, playing, load, togglePlay } = usePlayer()
   const isCurrent = playerTrack?.id === track.id
   const isEmbed = Boolean(track.embedProvider && track.embedUri)
+  const isHearthisEmbed = track.embedProvider === 'HEARTHIS' && Boolean(track.embedUri)
+  const isOtherEmbed = isEmbed && !isHearthisEmbed
 
   async function handleTogglePlay() {
+    if (isHearthisEmbed) {
+      if (!isCurrent) {
+        load(
+          {
+            id: track.id,
+            kind: 'archive',
+            url: '',
+            title: track.title,
+            subtitle: track.artistName ?? undefined,
+            artworkUrl: track.bannerUrl,
+            embed: { provider: 'HEARTHIS', embedUri: track.embedUri! },
+          },
+          { autoplay: true },
+        )
+        return
+      }
+      await togglePlay()
+      return
+    }
     if (!track.playUrl) return
     if (!isCurrent) {
       load(
@@ -122,7 +142,7 @@ export function TrackDetailModal({
           ) : (
             <span className="prof-track-modal__art-ph" aria-hidden />
           )}
-          {!isEmbed && track.playUrl && (
+          {(isHearthisEmbed || (!isEmbed && track.playUrl)) && (
             <button
               type="button"
               className="prof-track-modal__play"
@@ -144,7 +164,10 @@ export function TrackDetailModal({
             {formatDuration(track.durationSec)}
           </p>
 
-          {isEmbed && <EmbedPlayer track={track} />}
+          {isOtherEmbed && <EmbedPlayer track={track} />}
+          {isHearthisEmbed && (
+            <p className="prof-track-modal__meta">Plays via hearthis.at&rsquo;s own widget.</p>
+          )}
 
           <div className="prof-track-modal__actions">
             {channelSlug && (

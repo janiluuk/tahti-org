@@ -1321,6 +1321,20 @@ body:has(.mini-player) {
   margin-bottom: var(--space-5);
 }
 
+/* hearthis.at (or any future iframe-embedded) player surface — mounted here
+ * in place of the seek bar, since an embed track has no seekable native
+ * <audio> to draw a progress bar for. Sized to match the widget's own
+ * waveform+controls layout (same height convention as HearthisEmbedRow's
+ * inline use in track lists). */
+.player-embed-surface {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
 .full-player__progress {
   display: block;
   width: 100%;
