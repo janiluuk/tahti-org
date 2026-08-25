@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
+import { isDirectVideoFileUrl } from '../safe-background-url.js'
 
 // M31: Three.js ambient visualizer presets
 
@@ -244,6 +245,19 @@ export const ChannelVisualPatchSchema = z.object({
   /** Map of preset → { speed, intensity }. Null clears all overrides. */
   visualSettings: VisualSettingsMapSchema.nullable().optional(),
   headerStyle: z.enum(CHANNEL_HEADER_STYLES).optional(),
+  /** Reuses Channel.videoBackgroundUrl (the same column Gallery & backdrop
+   * settings write to) so the VIDEO_LOOP header style has a clip to play.
+   * Stricter than that feature's own patch schema: this renders as a raw
+   * <video> element, so it must be a direct .mp4/.webm file, not a
+   * YouTube/Vimeo link — see isDirectVideoFileUrl. */
+  videoBackgroundUrl: z
+    .string()
+    .max(2048)
+    .nullable()
+    .optional()
+    .refine((v) => v == null || v === '' || isDirectVideoFileUrl(v), {
+      message: 'Must be an HTTPS URL ending in .mp4 or .webm',
+    }),
   brandAccentPreset: z.string().nullable().optional(),
   slideshowPreset: z.enum(SLIDESHOW_PRESETS).optional(),
   slideshowIntervalSeconds: z.number().int().min(5).max(30).optional(),

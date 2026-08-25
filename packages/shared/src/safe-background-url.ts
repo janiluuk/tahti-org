@@ -30,3 +30,20 @@ export function cssBackdropUrlValue(url: string): string | null {
   const escaped = url.trim().replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   return `url("${escaped}")`
 }
+
+/** Direct, HTTPS-served .mp4/.webm file only — no query-string trickery, no bare host. */
+const DIRECT_VIDEO_FILE_URL = /^https:\/\/\S+\.(mp4|webm)(\?\S*)?$/i
+
+/**
+ * Stricter than `isAllowedBackdropUrl`: the channel-header `VIDEO_LOOP` style
+ * renders a raw `<video>` element (no iframe embed), so — unlike the Gallery &
+ * backdrop feature that shares this same `Channel.videoBackgroundUrl` column —
+ * it needs a directly playable HTTPS `.mp4`/`.webm` file, not a YouTube/Vimeo
+ * watch link.
+ */
+export function isDirectVideoFileUrl(url: string): boolean {
+  const trimmed = url.trim()
+  if (!trimmed || trimmed.length > 2048) return false
+  if (CSS_URL_UNSAFE.test(trimmed)) return false
+  return DIRECT_VIDEO_FILE_URL.test(trimmed)
+}

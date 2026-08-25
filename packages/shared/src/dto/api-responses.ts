@@ -535,6 +535,8 @@ export const PublicChannelViewSchema = z.object({
   textLayerText: z.string(),
   textLayerAlign: z.string(),
   videoBackgroundUrl: z.string().nullable(),
+  /** Channel page header banner treatment — VIDEO_LOOP reuses videoBackgroundUrl above. */
+  headerStyle: z.string(),
   // M31
   colorSchemeJson: z.string().nullable(),
   colorScheme: ColorSchemeSchema,

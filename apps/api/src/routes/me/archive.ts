@@ -462,6 +462,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         visualPreset: true,
         visualSettingsJson: true,
         headerStyle: true,
+        videoBackgroundUrl: true,
         brandAccentPreset: true,
         slideshowPreset: true,
         slideshowIntervalSeconds: true,
@@ -484,6 +485,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       colorScheme,
       visualSettings,
       headerStyle,
+      videoBackgroundUrl,
       brandAccentPreset,
       slideshowPreset,
       slideshowIntervalSeconds,
@@ -491,17 +493,22 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       slideshowAutoplay,
     } = parsed.data
 
-    if (headerStyle === 'VIDEO_LOOP' && user.tier === 'FREE') {
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true, headerStyle: true },
+    })
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+    // Gate on the header style this patch will leave in effect, not just one
+    // this specific call happens to set — otherwise a FREE-tier channel that
+    // somehow already has VIDEO_LOOP could keep updating its clip URL forever
+    // without ever re-tripping the paid-tier check.
+    const effectiveHeaderStyle = headerStyle ?? channel.headerStyle
+    if (effectiveHeaderStyle === 'VIDEO_LOOP' && user.tier === 'FREE') {
       return reply
         .status(403)
         .send({ error: 'Video loop header is a paid-tier feature — upgrade to use it' })
     }
-
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
     const updated = await fastify.prisma.channel.update({
       where: { id: channel.id },
@@ -519,6 +526,9 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
             }
           : {}),
         ...(headerStyle !== undefined ? { headerStyle } : {}),
+        ...(videoBackgroundUrl !== undefined
+          ? { videoBackgroundUrl: videoBackgroundUrl || null }
+          : {}),
         ...(brandAccentPreset !== undefined ? { brandAccentPreset } : {}),
         ...(slideshowPreset !== undefined ? { slideshowPreset } : {}),
         ...(slideshowIntervalSeconds !== undefined ? { slideshowIntervalSeconds } : {}),
@@ -530,6 +540,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         visualPreset: true,
         visualSettingsJson: true,
         headerStyle: true,
+        videoBackgroundUrl: true,
         brandAccentPreset: true,
         slideshowPreset: true,
         slideshowIntervalSeconds: true,

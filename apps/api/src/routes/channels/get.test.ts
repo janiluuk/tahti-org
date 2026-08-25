@@ -64,6 +64,31 @@ describe('GET /api/channels/:slug', () => {
     expect(body.user.displayName).toBe('Channel Get Test')
     expect(body.user.username).toBe('channel-get-testuser')
     expect(body.hlsUrl).toBeNull()
+    // Default channel header style — see ChannelDesigner's VIDEO_LOOP header
+    // and its videoBackgroundUrl wiring (reused from Gallery & backdrop).
+    expect(body.headerStyle).toBe('GRADIENT')
+    expect(body.videoBackgroundUrl).toBeNull()
+  })
+
+  it('reflects VIDEO_LOOP header style and its video URL', async () => {
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { headerStyle: 'VIDEO_LOOP', videoBackgroundUrl: 'https://cdn.example.com/loop.mp4' },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.headerStyle).toBe('VIDEO_LOOP')
+    expect(body.videoBackgroundUrl).toBe('https://cdn.example.com/loop.mp4')
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { headerStyle: 'GRADIENT', videoBackgroundUrl: null },
+    })
   })
 
   it('returns ISO nextBroadcastAt when schedule is set', async () => {

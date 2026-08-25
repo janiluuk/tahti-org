@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_COLOR_SCHEME, parseColorScheme, resolveColorScheme } from './visual-preset.js'
+import {
+  ChannelVisualPatchSchema,
+  DEFAULT_COLOR_SCHEME,
+  parseColorScheme,
+  resolveColorScheme,
+} from './visual-preset.js'
 
 describe('visual-preset color scheme', () => {
   const scheme = {
@@ -35,5 +40,25 @@ describe('visual-preset color scheme', () => {
   it('resolveColorScheme falls back to palette then platform defaults', () => {
     expect(resolveColorScheme(null, JSON.stringify(scheme))).toEqual(scheme)
     expect(resolveColorScheme(null, null)).toEqual(DEFAULT_COLOR_SCHEME)
+  })
+})
+
+describe('ChannelVisualPatchSchema videoBackgroundUrl', () => {
+  it('accepts a direct .mp4/.webm file, null, or omission', () => {
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        headerStyle: 'VIDEO_LOOP',
+        videoBackgroundUrl: 'https://cdn.example.com/loop.mp4',
+      }).success,
+    ).toBe(true)
+    expect(ChannelVisualPatchSchema.safeParse({ videoBackgroundUrl: null }).success).toBe(true)
+    expect(ChannelVisualPatchSchema.safeParse({}).success).toBe(true)
+  })
+
+  it('rejects a YouTube/Vimeo link — this field renders as a raw <video>, not an iframe embed', () => {
+    const result = ChannelVisualPatchSchema.safeParse({
+      videoBackgroundUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    })
+    expect(result.success).toBe(false)
   })
 })
