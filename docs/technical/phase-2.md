@@ -1,5 +1,7 @@
 # Phase 2 — Dev environment
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** any developer can clone the repo, run `make dev`, and have all infrastructure services running locally within 2 minutes. CI builds the website image and pushes it on every merge to `main`.
 
 **Timeline:** Week 2–4  

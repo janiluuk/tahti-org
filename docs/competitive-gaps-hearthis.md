@@ -5,8 +5,11 @@ presentation). Tahti is **channel-first** and nonprofit; hearthis is **track/set
 and commercial. This doc lists gaps artists will notice when comparing the two, and
 what to build to close them.
 
-**Status:** most items below are **not implemented** (docs-only package). The in-browser
-editor is **specified** in `audio-editor.md` but not built.
+**Status (2026-08-24): resolved.** Every shortcoming below shipped as M22 (metadata +
+tracklist), M23 (collections + RSS), M24 (per-content visuals), M25 (artist commentary),
+and M21 (full audio editor, incl. EQ/compressor — see PLAT-066–069 in
+`project-roadmap.md`). This doc is kept as competitive-positioning reference and for the
+original problem framing; treat the checklists below as historical, not open work.
 
 ---
 

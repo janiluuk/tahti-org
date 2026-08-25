@@ -1,5 +1,7 @@
 # Phase 1 — Website live
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** `tahti.live` and `www.tahti.live` serve the marketing site over HTTPS with a valid Let's Encrypt certificate. No manual steps after `git push` to main.
 
 **Timeline:** Week 1–2  

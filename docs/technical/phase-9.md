@@ -1,5 +1,7 @@
 # Phase 9 — Newsletter and promo toolkit (M13–M14)
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** every artist can send newsletters to listeners who opt in, and every release auto-generates a smart link, embeddable player, and optional social auto-posts. Analytics show plays, smart-link clicks, and embed impressions in one dashboard.
 
 **Timeline:** Months 13–18  

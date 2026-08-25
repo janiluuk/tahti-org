@@ -1,5 +1,7 @@
 # Phase 3 — Stateful services in production
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** Postgres, Redis, and MinIO running on the production node with Docker Swarm secrets, automated daily backups to UpCloud, and a tested restore procedure.
 
 **Timeline:** Month 1–2  

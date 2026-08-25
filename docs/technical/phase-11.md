@@ -1,5 +1,7 @@
 # Phase 11 — Engagement and monetization: downloads, fan-subs, tier gating (M18–M20)
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** downloads become a first-class action with anti-fraud and grant-unit accounting; artists can accept direct fan subscriptions via Stripe Connect; free-tier artists are gently limited to 1 hour of live broadcasting per week while member artists broadcast lossless FLAC.
 
 **Timeline:** Months 22–24  

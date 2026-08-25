@@ -1,5 +1,7 @@
 # Phase 4 — Artist app alpha
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** a hand-recruited artist can sign up, create a channel, broadcast live via OBS or Mixxx, and have the broadcast auto-archived. Listeners can tune in and chat in real time.
 
 **Timeline:** Month 2–5 (milestones M0–M5 from `docs/AGENT.md`)  

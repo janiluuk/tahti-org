@@ -1,5 +1,7 @@
 # Phase 5 — Staging cluster
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** a structurally identical copy of production (3-node Swarm) auto-deploys on every push to `main`. Production only deploys on a tagged release. Both environments use real data structures, different data.
 
 **Timeline:** Month 3–4 (parallel with Phase 4 app work)  

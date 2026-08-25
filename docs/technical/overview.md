@@ -4,29 +4,37 @@ This directory contains technical documentation for each delivery phase, user jo
 
 ## Phase timeline
 
+> **Original target timeline — not current status.** This chart shows the dates and
+> sequencing planned when each phase doc was written. As of 2026-08-24, all engineering
+> milestones through M31 are built (see `project-roadmap.md`'s milestone matrix); the
+> org-side phases this chart calls "Legal / Grants" and "Beta" have **not** happened on
+> this schedule — Tahti ry is not yet a registered association (`project-roadmap.md`
+> Phase 0 is still all-open) and public beta has not launched. Use
+> [`project-roadmap.md`](../project-roadmap.md) checklists for real status; treat the
+> dates below as historical planning intent only.
+
 ```mermaid
 gantt
-    title Tahti delivery phases
+    title Tahti delivery phases — original target dates (see note above)
     dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
-    todayMarker on
 
     section Legal / Grants
-    Phase 0 – Legal & grants            :done, p0, 2025-10-01, 2026-01-15
+    Phase 0 – Legal & grants            :p0, 2025-10-01, 2026-01-15
 
     section Infrastructure
-    Phase 1 – Website live              :done, p1, 2026-01-15, 2026-02-01
-    Phase 2 – Dev environment           :done, p2, 2026-02-01, 2026-03-01
-    Phase 3 – Stateful services         :active, p3, 2026-03-01, 2026-05-15
+    Phase 1 – Website live              :p1, 2026-01-15, 2026-02-01
+    Phase 2 – Dev environment           :p2, 2026-02-01, 2026-03-01
+    Phase 3 – Stateful services         :p3, 2026-03-01, 2026-05-15
     Phase 5 – Staging cluster           :p5, 2026-05-01, 2026-06-01
 
     section Product — MVP
-    Phase 4 – Artist app alpha (M0–M5)  :active, p4, 2026-04-01, 2026-06-15
+    Phase 4 – Artist app alpha (M0–M5)  :p4, 2026-04-01, 2026-06-15
     Phase 6 – Distribution & ledger (M6–M10) :p6, 2026-05-15, 2026-07-15
     Phase 7 – Hardening (M11)          :p7, 2026-07-01, 2026-08-01
 
     section Beta
-    Closed beta (invite-only)           :crit, beta, 2026-06-15, 2026-08-01
+    Closed beta (invite-only)           :beta, 2026-06-15, 2026-08-01
     Public beta launch                  :milestone, 2026-08-01, 0d
 
     section Post-launch features
@@ -39,13 +47,17 @@ gantt
     Phase 12 – Admin panel (M21)       :p12, 2027-07-01, 2027-09-01
 ```
 
-## Closed beta: 15.6–1.8.2026
+## Closed beta: original target 15.6–1.8.2026 (not yet reached — see note above)
 
-| Milestone | Date | Criteria |
+| Milestone | Target date | Criteria |
 |-----------|------|----------|
 | Beta opens (invite-only) | 15 June 2026 | Phase 4 exit criteria met; 5 anchor artists onboarded |
 | Mid-beta review | 15 July 2026 | P0 bugs < 3 open; OBS guide success rate ≥ 80% |
 | Beta closes / public beta opens | 1 August 2026 | Load test passed; 20+ active beta artists; Phase 7 hardening complete |
+
+Engineering readiness (M0–M11) is done; the gate on actually opening beta is the
+org-side Phase 8 checklist in `project-roadmap.md` (anchor-artist recruiting, office
+hours, P0 SLA), which is still open.
 
 ## CDN and hosting policy
 

@@ -1,5 +1,7 @@
 # Phase 10 — Community features: tagging, Tahti Radio, venue calendar (M15–M17)
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** artists can cross-reference each other with @-mentions, the org operates a 24/7 meta-stream that relays live channels (multistreamed to Mixcloud), and venues can publish iCalendar feeds of upcoming broadcasts.
 
 **Timeline:** Months 19–21  

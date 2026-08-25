@@ -1,5 +1,7 @@
 # Phase 8 — Artist profile and releases (M12)
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** every artist has a permanent public URL at `tahti.fi/u/<handle>` that functions as their home page on the internet — bio, release timeline, channel embed, and social links. Artists can upload tracks, publish releases, and have the platform generate smart links automatically.
 
 **Timeline:** Months 10–12 (post-launch, alongside live beta)  

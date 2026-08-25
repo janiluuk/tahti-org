@@ -1,5 +1,7 @@
 # Tahti — delivery phases
 
+> **Historical planning spec** — written prospectively, before this build shipped. Phases 1–7 and 6b below are now complete; for current status use the milestone matrix in [`project-roadmap.md`](./project-roadmap.md#build-audit--current-state-2026-06-03), not this file's phase numbers (which predate and don't match `project-roadmap.md`'s own Phase 0–10 scheme). Kept for the **Scaling reference** and **Rollback procedure** sections, which are still-relevant operational recipes.
+
 Practical engineering phases for taking the platform from a local repo to a live service. Each phase has a clear entry state, exit criteria, and hands-on steps. Do not start Phase N+1 until Phase N exits cleanly.
 
 ---

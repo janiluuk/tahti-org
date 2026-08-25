@@ -1,5 +1,7 @@
 # Phase 6 — Distribution, transparency ledger, grants
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** an artist can publish a release to major DSPs via Revelator, the transparency ledger is public, and the annual grant disbursement system runs on real data.
 
 **Timeline:** Month 5–9 (milestones M6–M10 from `docs/AGENT.md`)  

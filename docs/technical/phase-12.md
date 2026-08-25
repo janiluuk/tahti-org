@@ -1,5 +1,7 @@
 # Phase 12 — Admin panel: operations, finance, governance, support (M21)
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** A comprehensive `app.tahti.live/admin/*` section giving the director, board, and ops engineer a single surface for user management, stream operations, financial oversight, service health monitoring, support case handling, and governance tooling — replacing ad-hoc SSH, direct DB edits, and CSV downloads.
 
 **Timeline:** Months 25–30 (post-public-beta)

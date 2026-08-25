@@ -150,7 +150,7 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 | Step                    | Web route                    | API                                                                     | E2e                                     |
 | ----------------------- | ---------------------------- | ----------------------------------------------------------------------- | --------------------------------------- |
 | Public transparency     | `/transparency`              | `GET /api/v1/transparency/ytd`, `GET /api/v1/transparency/grants/:year` | `director.sh`, `vital-flows.sh`         |
-| Grant preview (dry run) | `/governance` (admin UI TBD) | `GET /api/admin/grants/preview/:year`                                   | `director.sh`, Vitest                   |
+| Grant preview (dry run) | `/admin/grants/:year`        | `GET /api/admin/grants/preview/:year`                                   | `director.sh`, Vitest                   |
 | Members export          | —                            | `GET /api/admin/members/export.csv`                                     | `director.sh`, Vitest                   |
 | Venue verification      | `/governance/venues`         | `GET/POST /api/admin/venues/*`                                          | `director.sh` (web), Vitest admin tests |
 | Auth guard (anon)       | —                            | admin routes → **401**                                                  | `director.sh`, Vitest                   |

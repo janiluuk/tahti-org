@@ -1,5 +1,7 @@
 # Phase 7 — Hardening and public launch
 
+> **Historical planning spec** — written prospectively before this phase shipped. For current build status, see the milestone matrix in [`project-roadmap.md`](../project-roadmap.md#build-audit--current-state-2026-06-03). Kept here for the original implementation recipe/detail.
+
 **Goal:** the platform meets the security, performance, and reliability bar required to charge €40/year and open public signup. Every check in this document must pass before launch day.
 
 **Timeline:** Month 8–9 (milestone M11 from `docs/AGENT.md`)  
