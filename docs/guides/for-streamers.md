@@ -10,6 +10,9 @@ This guide is for **broadcasting live audio** to your Tahti channel. If you only
 
 Your app (OBS, Mixxx, …) sends audio to Tahti’s **RTMP** server using a **secret stream key**; Tahti turns that into a **live** stream and **HLS** playout on `/c/your-slug`.
 
+![Broadcast studio](../e2e-screenshots/artist/broadcast-studio.png)
+_Dashboard → Broadcast: RTMP/Icecast credentials, test signal, pre-flight, and the Go Live button._
+
 ---
 
 ## 5-minute first broadcast (OBS)
@@ -34,10 +37,10 @@ Treat the stream key like a password. If it leaks, rotate it in the dashboard.
 
 ### 3. Audio settings (good defaults)
 
-| Setting | Value |
-|---------|--------|
-| Sample rate | 44.1 kHz |
-| Channels | Stereo |
+| Setting       | Value            |
+| ------------- | ---------------- |
+| Sample rate   | 44.1 kHz         |
+| Channels      | Stereo           |
 | Audio bitrate | 128–192 kbps AAC |
 
 See [obs-and-broadcasting-guides.md](../obs-and-broadcasting-guides.md) for screenshots and video-bitrate fields (OBS still wants a video track — often a static image).
@@ -60,12 +63,12 @@ Manage that fallback queue under `/dashboard/channel/playlist`; items can be pre
 
 ## Other software (same credentials)
 
-| Tool | Guide depth |
-|------|-------------|
-| **OBS Studio** | [Full OBS walkthrough](../obs-and-broadcasting-guides.md) |
+| Tool                            | Guide depth                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| **OBS Studio**                  | [Full OBS walkthrough](../obs-and-broadcasting-guides.md)                      |
 | **Mixxx / Traktor / VirtualDJ** | Use RTMP or Icecast fields from dashboard (Icecast: server + mount + password) |
-| **butt** (Icecast) | Minimal DJ streamer — Icecast block on dashboard |
-| **FFmpeg** | Power users — RTMP URL + key on command line |
+| **butt** (Icecast)              | Minimal DJ streamer — Icecast block on dashboard                               |
+| **FFmpeg**                      | Power users — RTMP URL + key on command line                                   |
 
 The dashboard shows **RTMP** and **Icecast** blocks; use the block that matches your app’s docs.
 
@@ -75,9 +78,9 @@ The dashboard shows **RTMP** and **Icecast** blocks; use the block that matches 
 
 Tahti tiers cap **live hours per week** (fair use on owned hardware):
 
-| Tier | Rough limit |
-|------|-------------|
-| FREE | 1 hour / week |
+| Tier   | Rough limit                                |
+| ------ | ------------------------------------------ |
+| FREE   | 1 hour / week                              |
 | Member | Membership benefits shown by the dashboard |
 
 The dashboard shows **warnings** (e.g. 45 / 55 minutes) and may **stop** the stream when you hit the cap, with a short **grace** if you disconnect right at the limit.
@@ -113,12 +116,12 @@ You can also **upload** files manually under Dashboard → **Archive**.
 
 ## Stream health checklist
 
-| Check | Good sign | Bad sign |
-|-------|-----------|----------|
-| OBS bottom bar | Green, no dropped frames | Red “dropped frames” |
-| Dashboard channel status | **Live** | Stuck Offline while OBS says streaming |
-| Listener player | Sound after ~15 s | Infinite loading |
-| CPU | Moderate | 100% — lower OBS preset |
+| Check                    | Good sign                | Bad sign                               |
+| ------------------------ | ------------------------ | -------------------------------------- |
+| OBS bottom bar           | Green, no dropped frames | Red “dropped frames”                   |
+| Dashboard channel status | **Live**                 | Stuck Offline while OBS says streaming |
+| Listener player          | Sound after ~15 s        | Infinite loading                       |
+| CPU                      | Moderate                 | 100% — lower OBS preset                |
 
 **Common fixes:**
 
@@ -152,12 +155,12 @@ Share **“Live now”** with the channel URL, not the raw RTMP URL.
 
 ## When something fails
 
-| Symptom | Likely cause |
-|---------|----------------|
-| OBS connects but Tahti not Live | Wrong key; wrong server path; cap already used |
-| Live but silent | OBS not sending audio source; mute button on source |
-| Kicked off mid-set | Weekly cap or orchestrator stop — read dashboard usage |
-| Fans say chat broken | Rare — Centrifugo/network; try refresh |
+| Symptom                         | Likely cause                                           |
+| ------------------------------- | ------------------------------------------------------ |
+| OBS connects but Tahti not Live | Wrong key; wrong server path; cap already used         |
+| Live but silent                 | OBS not sending audio source; mute button on source    |
+| Kicked off mid-set              | Weekly cap or orchestrator stop — read dashboard usage |
+| Fans say chat broken            | Rare — Centrifugo/network; try refresh                 |
 
 For tool-specific fields, always prefer the copy-paste values on **your** dashboard over generic examples in docs.
 
@@ -165,7 +168,7 @@ For tool-specific fields, always prefer the copy-paste values on **your** dashbo
 
 ## Related guides
 
-- [For artists](for-artists.md) — profile, releases, fan tiers  
-- [For viewers](for-viewers.md) — what listeners do  
-- [OBS detailed guide](../obs-and-broadcasting-guides.md)  
+- [For artists](for-artists.md) — profile, releases, fan tiers
+- [For viewers](for-viewers.md) — what listeners do
+- [OBS detailed guide](../obs-and-broadcasting-guides.md)
 - [All guides index](README.md)

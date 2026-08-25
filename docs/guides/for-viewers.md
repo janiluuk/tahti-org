@@ -2,6 +2,9 @@
 
 You do **not** need an account to listen, download public files, or use public chat. Sign in for follows, likes, messages, fan subscriptions, fan-only chat, and supporter perks. See the [feature catalog](../features.md) for the full product surface.
 
+![Channel page — live player, archive list, and chat](../e2e-screenshots/public/channel.png)
+_A channel page (`/c/artist-slug`): player at top, archive below, chat on the side._
+
 ---
 
 ## 1. Find a show
@@ -64,13 +67,13 @@ If you qualify, fan chat connects automatically when you open the channel. If yo
 
 **What you might get** (depends on what the artist listed):
 
-| Perk code (artist sets) | What it usually means |
-|-------------------------|------------------------|
-| (any active sub) | Supporter badge in public chat |
+| Perk code (artist sets)    | What it usually means                                |
+| -------------------------- | ---------------------------------------------------- |
+| (any active sub)           | Supporter badge in public chat                       |
 | Unlimited / download perks | Heavier-weight downloads on their tracks and archive |
-| `FLAC` | Lossless download option where available |
-| `FAN_CHAT` | Fan-only chat room |
-| `FAN_NEWSLETTER` | Fan-only email list when the artist sends that way |
+| `FLAC`                     | Lossless download option where available             |
+| `FAN_CHAT`                 | Fan-only chat room                                   |
+| `FAN_NEWSLETTER`           | Fan-only email list when the artist sends that way   |
 
 **Cancel:** Use your subscription management in Stripe, or the site’s “my subscriptions” when available. Access usually continues until the **end of the paid month**, then a short **grace period** (about 7 days) before perks turn off.
 
@@ -79,6 +82,9 @@ If you qualify, fan chat connects automatically when you open the channel. If yo
 ---
 
 ## 6. Smart links (Spotify, Bandcamp, etc.)
+
+![Smart link page with DSP buttons](../e2e-screenshots/public/smart-link.png)
+_`/r/release-slug`: one link, a button for every service the artist listed._
 
 Artists can put streaming links on `/r/release-slug`.
 
@@ -116,25 +122,25 @@ This is **org-level** openness, separate from what you pay an individual artist.
 
 ## Troubleshooting
 
-| Problem | Try this |
-|---------|----------|
-| Player won’t start | Refresh; check Wi‑Fi; try another browser (Chrome/Firefox). |
-| “Live” but no sound | Artist may have stopped sending audio — check back in a minute. |
-| Chat won’t connect | Disable strict ad blockers for the site; try again. |
-| Subscribe button greyed out | Artist may still be setting up Stripe Connect — try later. |
-| Fan chat missing | You need login + active sub + artist tier with `FAN_CHAT`. |
+| Problem                     | Try this                                                        |
+| --------------------------- | --------------------------------------------------------------- |
+| Player won’t start          | Refresh; check Wi‑Fi; try another browser (Chrome/Firefox).     |
+| “Live” but no sound         | Artist may have stopped sending audio — check back in a minute. |
+| Chat won’t connect          | Disable strict ad blockers for the site; try again.             |
+| Subscribe button greyed out | Artist may still be setting up Stripe Connect — try later.      |
+| Fan chat missing            | You need login + active sub + artist tier with `FAN_CHAT`.      |
 
 ---
 
 ## Glossary (one line each)
 
-| Word | Meaning |
-|------|---------|
-| **Channel** | Artist’s live + archive page (`/c/...`). |
-| **Profile** | Artist’s public page with releases (`/u/...`). |
-| **Archive** | Recorded sets uploaded or saved after a broadcast. |
-| **Fan sub** | Monthly payment directly to one artist. |
-| **Smart link** | One link that lists DSP/streaming destinations. |
+| Word           | Meaning                                            |
+| -------------- | -------------------------------------------------- |
+| **Channel**    | Artist’s live + archive page (`/c/...`).           |
+| **Profile**    | Artist’s public page with releases (`/u/...`).     |
+| **Archive**    | Recorded sets uploaded or saved after a broadcast. |
+| **Fan sub**    | Monthly payment directly to one artist.            |
+| **Smart link** | One link that lists DSP/streaming destinations.    |
 
 ---
 

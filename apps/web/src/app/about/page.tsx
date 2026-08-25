@@ -2,13 +2,56 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { Breadcrumb } from '@tahti/ui'
 import '@tahti/ui/src/styles/about-page.css'
+import channelImg from '/public/screenshots/channel.png'
+import dashboardImg from '/public/screenshots/dashboard.png'
+import listenImg from '/public/screenshots/listen.png'
+import profileImg from '/public/screenshots/profile.png'
+import statsImg from '/public/screenshots/stats.png'
 
 export const metadata: Metadata = {
   title: 'About Tahti',
   description:
     'Tahti is a home for music and live shows: a nonprofit broadcasting platform with a real release system, direct fan support, and artist governance.',
+}
+
+function Showcase({
+  url,
+  img,
+  alt,
+  eyeline,
+  title,
+  children,
+  reverse,
+}: {
+  url: string
+  img: typeof channelImg
+  alt: string
+  eyeline: string
+  title: string
+  children: string
+  reverse?: boolean
+}) {
+  return (
+    <div className={`about-showcase${reverse ? ' about-showcase--reverse' : ''}`}>
+      <div className="about-showcase-text">
+        <div className="about-eyeline">{eyeline}</div>
+        <h2>{title}</h2>
+        <p>{children}</p>
+      </div>
+      <div className="about-showcase-frame">
+        <div className="about-showcase-chrome">
+          <span className="about-showcase-dot" aria-hidden />
+          <span className="about-showcase-dot" aria-hidden />
+          <span className="about-showcase-dot" aria-hidden />
+          <span className="about-showcase-url">{url}</span>
+        </div>
+        <Image src={img} alt={alt} />
+      </div>
+    </div>
+  )
 }
 
 export default function AboutPage() {
@@ -44,6 +87,14 @@ export default function AboutPage() {
                 Lossless sound for listeners, without turning it into a premium paywall.
               </div>
             </div>
+          </div>
+          <div className="about-cta-row">
+            <a href="/join" className="about-cta-primary">
+              Join Tahti →
+            </a>
+            <a href="/login" className="about-cta-secondary">
+              Sign in
+            </a>
           </div>
         </div>
         <aside className="about-hero-card">
@@ -122,6 +173,18 @@ export default function AboutPage() {
         <div className="about-quote">The music never stops because someone clicked a menu.</div>
       </section>
 
+      <Showcase
+        url="tahti.live/c/your-channel"
+        img={channelImg}
+        alt="Channel page — live broadcast, archive, and chat"
+        eyeline="Your channel"
+        title="Live now, archive after."
+        reverse
+      >
+        Listeners land on one page for everything: the live player when you are on air, your archive
+        the rest of the time, and chat running alongside either way.
+      </Showcase>
+
       <section className="about-section" id="listeners">
         <div className="about-section-head">
           <div>
@@ -147,6 +210,17 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <Showcase
+        url="tahti.live/listen"
+        img={listenImg}
+        alt="Discover page — live channels, replays, and new releases"
+        eyeline="Discover"
+        title="One place to find who's playing."
+      >
+        Live channels, recent replays, and new releases from across Tahti, without an algorithm
+        deciding what you are allowed to see.
+      </Showcase>
 
       <section className="about-section" id="for">
         <div className="about-section-head">
@@ -306,6 +380,18 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <Showcase
+        url="tahti.live/dashboard"
+        img={dashboardImg}
+        alt="Artist dashboard — broadcast, library, releases, stats"
+        eyeline="Your studio"
+        title="Everything you run, in one dashboard."
+        reverse
+      >
+        Go live, manage the library, cut releases, watch stats, and design the channel — the control
+        room, not a scattered set of settings pages.
+      </Showcase>
+
       <section className="about-section" id="space">
         <div className="about-section-head">
           <div>
@@ -329,6 +415,17 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <Showcase
+        url="your-name.tahti.live"
+        img={profileImg}
+        alt="Public artist profile — bio, music, releases"
+        eyeline="Your own space"
+        title="A page that's actually yours."
+      >
+        Bio, releases, and archive on a name that&apos;s yours, not a profile competing for
+        attention against a feed of everyone else on the platform.
+      </Showcase>
 
       <section className="about-section" id="support">
         <div className="about-section-head">
@@ -430,6 +527,18 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <Showcase
+        url="tahti.live/dashboard/stats"
+        img={statsImg}
+        alt="Artist stats — plays, downloads, and grant estimate"
+        eyeline="Real numbers"
+        title="Plays, downloads, and your running grant estimate."
+        reverse
+      >
+        No listener-hours as a vanity headline. Just the engagement units that actually feed the
+        annual grant formula, visible to you as they accrue.
+      </Showcase>
 
       <section className="about-section" id="mixes">
         <div className="about-section-head">
@@ -723,6 +832,22 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <div className="about-cta-banner">
+        <h2>Bring your show to Tahti.</h2>
+        <p>
+          Free to start, lossless for members, and yours to take with you if you ever leave. No card
+          required to try it.
+        </p>
+        <div className="about-cta-row">
+          <a href="/join" className="about-cta-primary">
+            Join Tahti →
+          </a>
+          <a href="/login" className="about-cta-secondary">
+            Sign in
+          </a>
+        </div>
+      </div>
 
       <div className="about-footer-note">
         Tahti is built so the people making the work keep the time, the audience, and the ownership.

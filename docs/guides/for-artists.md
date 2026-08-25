@@ -12,18 +12,21 @@ This guide is for any artist account with a **channel**. Tahti ry membership add
 
 You get one **channel** (slug) and one **username** for your public profile.
 
+![Artist dashboard overview](../e2e-screenshots/artist/dashboard.png)
+_`/dashboard` after login: broadcast status, usage, revenue, and recent uploads in one view._
+
 ---
 
 ## Your important links
 
 Copy these from the dashboard **Your channel** section:
 
-| Link | Use when |
-|------|----------|
-| `/c/your-slug` | “I’m live” or “listen to my archive” |
-| `/u/your-username` | Bio, releases, main link in bio |
-| `/u/your-username/subscribe` | Patreon-style fan tiers |
-| `/r/release-slug` | One link for Spotify/Bandcamp buttons |
+| Link                         | Use when                              |
+| ---------------------------- | ------------------------------------- |
+| `/c/your-slug`               | “I’m live” or “listen to my archive”  |
+| `/u/your-username`           | Bio, releases, main link in bio       |
+| `/u/your-username/subscribe` | Patreon-style fan tiers               |
+| `/r/release-slug`            | One link for Spotify/Bandcamp buttons |
 
 ---
 
@@ -31,20 +34,20 @@ Copy these from the dashboard **Your channel** section:
 
 Open `/dashboard` after login.
 
-| Section | What it does |
-|---------|----------------|
-| **Tahti ry membership** | Pay €40/year or **Manage billing** (Stripe portal when enabled). |
-| **Channel** | Live/offline status, transport, now playing, active playlist, and channel links. |
-| **24/7 playlist** | Add archive or release tracks, preview, remove, and drag the offline queue into order. |
-| **Broadcast** | RTMP/Icecast setup, OBS preset, test signal, pre-flight, recording, publishing, and Go Live. |
-| **Multistream** | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)). |
-| **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices. |
-| **Fan subscriptions** | Stripe Connect + fan tiers + perk codes. |
-| **Releases** | Draft/publish releases + **DSP URLs** for smart links. |
-| **Discography** | Upload and manage tracks, sets, mixes, and catalog metadata. |
-| **Recordings** | Review recorded live shows separately from the rest of the discography. |
-| **Audio editor** | Preview processing, edit waveforms, export, and retain numbered revisions. |
-| **Channel design** | Identity, backgrounds, visualizer, gallery, media, and press kit with live preview. |
+| Section                   | What it does                                                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tahti ry membership**   | Pay €40/year or **Manage billing** (Stripe portal when enabled).                                                                                                          |
+| **Channel**               | Live/offline status, transport, now playing, active playlist, and channel links.                                                                                          |
+| **24/7 playlist**         | Add archive or release tracks, preview, remove, and drag the offline queue into order.                                                                                    |
+| **Broadcast**             | RTMP/Icecast setup, OBS preset, test signal, pre-flight, recording, publishing, and Go Live.                                                                              |
+| **Multistream**           | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)). |
+| **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices.                                                                                                     |
+| **Fan subscriptions**     | Stripe Connect + fan tiers + perk codes.                                                                                                                                  |
+| **Releases**              | Draft/publish releases + **DSP URLs** for smart links.                                                                                                                    |
+| **Discography**           | Upload and manage tracks, sets, mixes, and catalog metadata.                                                                                                              |
+| **Recordings**            | Review recorded live shows separately from the rest of the discography.                                                                                                   |
+| **Audio editor**          | Preview processing, edit waveforms, export, and retain numbered revisions.                                                                                                |
+| **Channel design**        | Identity, backgrounds, visualizer, gallery, media, and press kit with live preview.                                                                                       |
 
 ---
 
@@ -56,6 +59,9 @@ Open `/dashboard` after login.
 2. Visitors see your display name, bio, releases, and link to the channel.
 
 ### Releases & smart links
+
+![Releases catalog](../e2e-screenshots/artist/releases.png)
+_Dashboard → Releases: draft, publish, and attach DSP URLs per release._
 
 1. Dashboard → **Releases** → **Add draft** (title + tracks metadata in v1).
 2. Click **Publish** when ready (needs at least one track).
@@ -71,6 +77,9 @@ Open `/dashboard` after login.
 
 ## Step-by-step: fan subscriptions (money from fans)
 
+![Fan subscription settings](../e2e-screenshots/artist/settings-fan-subs.png)
+_Dashboard → Settings → Audience → Fan subs: Stripe Connect status and tier cards._
+
 ### 1. Turn on Stripe Connect
 
 1. Dashboard → **Fan subscriptions**.
@@ -81,19 +90,19 @@ Open `/dashboard` after login.
 
 Example tiers (you choose names and prices):
 
-| Tier | Price | Example perks (one per line) |
-|------|-------|------------------------------|
-| Backer | €5/mo | Early access |
-| Supporter | €3/mo | `FAN_CHAT` |
-| Patron | €10/mo | `FAN_NEWSLETTER`, `FLAC` |
+| Tier      | Price  | Example perks (one per line) |
+| --------- | ------ | ---------------------------- |
+| Backer    | €5/mo  | Early access                 |
+| Supporter | €3/mo  | `FAN_CHAT`                   |
+| Patron    | €10/mo | `FAN_NEWSLETTER`, `FLAC`     |
 
 **Special perk codes** (type exactly):
 
-| Code | Effect |
-|------|--------|
-| `FAN_CHAT` | Active fans can use **fan-only chat** on `/c/your-slug`. |
+| Code             | Effect                                                               |
+| ---------------- | -------------------------------------------------------------------- |
+| `FAN_CHAT`       | Active fans can use **fan-only chat** on `/c/your-slug`.             |
 | `FAN_NEWSLETTER` | Lets you send newsletter to **fans only** (API: `audience: "fans"`). |
-| `FLAC` | Fans get lossless downloads where the platform supports it. |
+| `FLAC`           | Fans get lossless downloads where the platform supports it.          |
 
 Free-text perks are shown on the subscribe page; only the codes above **turn on** platform features.
 
@@ -152,13 +161,13 @@ Use the [feature catalog](../features.md) for implemented surfaces and required 
 
 ## Troubleshooting
 
-| Problem | What to check |
-|---------|----------------|
-| Subscribe disabled for fans | Connect onboarding incomplete or `charges_enabled` false. |
-| No fan chat | Tier must include `FAN_CHAT` and fan must be logged in + subscribed. |
-| Smart link empty | Publish release + save DSP URLs in dashboard. |
-| “Weekly limit” on newsletter | FREE = 1 send/week, ARTIST = 4, STUDIO = unlimited. |
-| Broadcast stopped suddenly | Weekly hour cap — see usage banner on dashboard. |
+| Problem                      | What to check                                                        |
+| ---------------------------- | -------------------------------------------------------------------- |
+| Subscribe disabled for fans  | Connect onboarding incomplete or `charges_enabled` false.            |
+| No fan chat                  | Tier must include `FAN_CHAT` and fan must be logged in + subscribed. |
+| Smart link empty             | Publish release + save DSP URLs in dashboard.                        |
+| “Weekly limit” on newsletter | FREE = 1 send/week, ARTIST = 4, STUDIO = unlimited.                  |
+| Broadcast stopped suddenly   | Weekly hour cap — see usage banner on dashboard.                     |
 
 ---
 

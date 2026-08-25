@@ -275,6 +275,147 @@
   margin-top: 8px;
 }
 
+/* Screenshot showcases — deliberately roomy: one big shot per section,
+   paired with a short caption, alternating sides so the page doesn't read
+   as a wall of text between the card grids. */
+[data-tahti-ui='brand'] .about-showcase {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 48px;
+  align-items: center;
+  padding: 56px 0;
+}
+
+[data-tahti-ui='brand'] .about-showcase--reverse {
+  grid-template-columns: 1.15fr 0.85fr;
+}
+
+[data-tahti-ui='brand'] .about-showcase--reverse .about-showcase-frame {
+  order: 2;
+}
+
+[data-tahti-ui='brand'] .about-showcase-text .about-eyeline {
+  margin-bottom: 12px;
+}
+
+[data-tahti-ui='brand'] .about-showcase-text h2 {
+  font-family: var(--font-head);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+[data-tahti-ui='brand'] .about-showcase-text p {
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+[data-tahti-ui='brand'] .about-showcase-frame {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .about-showcase-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .about-showcase-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+[data-tahti-ui='brand'] .about-showcase-url {
+  margin-left: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-family: var(--font-head);
+}
+
+[data-tahti-ui='brand'] .about-showcase-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+[data-tahti-ui='brand'] .about-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+[data-tahti-ui='brand'] .about-cta-primary,
+[data-tahti-ui='brand'] .about-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-family: var(--font-head);
+  font-size: 0.96rem;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .about-cta-primary {
+  background: var(--amber);
+  color: #14110c;
+}
+
+[data-tahti-ui='brand'] .about-cta-secondary {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+}
+
+[data-tahti-ui='brand'] .about-cta-primary:hover,
+[data-tahti-ui='brand'] .about-cta-secondary:hover {
+  transform: translateY(-1px);
+}
+
+[data-tahti-ui='brand'] .about-cta-banner {
+  margin-top: 40px;
+  padding: 40px;
+  border-radius: 26px;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card2) 92%, transparent),
+    color-mix(in srgb, var(--card) 96%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--amber) 25%, transparent);
+}
+
+[data-tahti-ui='brand'] .about-cta-banner h2 {
+  font-family: var(--font-head);
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+[data-tahti-ui='brand'] .about-cta-banner p {
+  color: var(--muted);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+[data-tahti-ui='brand'] .about-cta-banner .about-cta-row {
+  justify-content: center;
+}
+
 @media (max-width: 980px) {
   [data-tahti-ui='brand'] .about-hero,
   [data-tahti-ui='brand'] .about-section-head,
@@ -282,7 +423,9 @@
   [data-tahti-ui='brand'] .about-grid-3,
   [data-tahti-ui='brand'] .about-grid-4,
   [data-tahti-ui='brand'] .about-callouts,
-  [data-tahti-ui='brand'] .about-flow {
+  [data-tahti-ui='brand'] .about-flow,
+  [data-tahti-ui='brand'] .about-showcase,
+  [data-tahti-ui='brand'] .about-showcase--reverse {
     grid-template-columns: 1fr;
   }
   [data-tahti-ui='brand'] .about-hero h1 {
@@ -290,5 +433,12 @@
   }
   [data-tahti-ui='brand'] .about-arrow {
     display: none;
+  }
+  [data-tahti-ui='brand'] .about-showcase--reverse .about-showcase-frame {
+    order: 0;
+  }
+  [data-tahti-ui='brand'] .about-showcase {
+    padding: 32px 0;
+    gap: 20px;
   }
 }

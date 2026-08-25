@@ -28,7 +28,7 @@ These rules are constitutional. They are not changeable by management decision. 
 
 Tahti ships a **channel-first** product: listeners discover and play artist channels (live HLS + archive), join chat, and subscribe to fan tiers; artists run a studio for broadcast, music, schedule, and revenue. The public HTTP API behind that product is documented below ([API documentation](#api-documentation)).
 
-- **Legal form:** Finnish *yhdistys* (registered nonprofit association)
+- **Legal form:** Finnish _yhdistys_ (registered nonprofit association)
 - **License:** AGPL-3.0
 - **Audio quality:** lossless FLAC for members (all their listeners); MP3 192 kbps for free-tier artists
 - **Grant distribution:** annual, weighted by engagement units (downloads + fan-sub euros, not listener-hours)
@@ -38,19 +38,43 @@ Tahti ships a **channel-first** product: listeners discover and play artist chan
 
 ### Web clients
 
-| Client | Role |
-|--------|------|
-| **`apps/web`** (this repo) | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live` |
+| Client                                  | Role                                                                                                                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`apps/web`** (this repo)              | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                         |
 | **Nuclear `tahti-web`** (separate repo) | Next listen + studio SPA on Nuclear UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
 
 Both clients talk to the same API, chat, and media stack. Prefer the Nuclear beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
 
 ## Screenshots
 
-| | |
-|---|---|
-| ![Channel page](docs/e2e-screenshots/public/channel.png) Channel page - archive rotation, releases, live chat | ![Artist dashboard](docs/e2e-screenshots/artist/dashboard.png) Artist dashboard |
-| ![Governance](docs/e2e-screenshots/artist/governance.png) Member governance - motions, voting, topics, all from the dashboard | ![Collections](docs/e2e-screenshots/artist/collections.png) Collections, each with one-click embed |
+Captured against the seeded Docker stack (real fixture data, not empty states) via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh) - see [`docs/e2e-screenshots/README.md`](docs/e2e-screenshots/README.md) to regenerate. Full route -> file mapping in [`manifest.json`](docs/e2e-screenshots/manifest.json).
+
+**Listener-facing**
+
+|                                                                              |                                                                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ![Channel page](docs/e2e-screenshots/public/channel.png)                     | ![Artist profile](docs/e2e-screenshots/public/profile.png)                      |
+| **Channel** (`/c/:slug`) - live player, archive rotation, chat, all one page | **Profile** (`/u/:username`) - bio, releases, archive, no algorithmic feed      |
+| ![Discover](docs/e2e-screenshots/public/listen.png)                          | ![Smart link](docs/e2e-screenshots/public/smart-link.png)                       |
+| **Discover** (`/listen`) - live channels, replays, new releases              | **Smart link** (`/r/:slug`) - one link, buttons for every DSP the artist listed |
+
+**Artist studio**
+
+|                                                                                                             |                                                                                               |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| ![Artist dashboard](docs/e2e-screenshots/artist/dashboard.png)                                              | ![Broadcast studio](docs/e2e-screenshots/artist/broadcast-studio.png)                         |
+| **Dashboard** (`/dashboard`) - broadcast status, usage, revenue, recent uploads at a glance                 | **Broadcast studio** (`/dashboard/broadcast`) - RTMP/Icecast credentials, pre-flight, go-live |
+| ![Stats](docs/e2e-screenshots/artist/stats.png)                                                             | ![Releases](docs/e2e-screenshots/artist/releases.png)                                         |
+| **Stats** (`/dashboard/stats`) - plays, downloads, listener map, grant estimate                             | **Releases** (`/dashboard/releases`) - draft/publish, DSP URLs, smart links                   |
+| ![Channel design](docs/e2e-screenshots/artist/channel-appearance.png)                                       | ![Collections](docs/e2e-screenshots/artist/collections.png)                                   |
+| **Channel design** (`/dashboard/channel/edit`) - identity, backgrounds, visualizer, press kit, live preview | **Collections** (`/dashboard/collections`) - curated sets, each with one-click embed          |
+
+**Governance & admin**
+
+|                                                                                               |                                                                               |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| ![Governance](docs/e2e-screenshots/artist/governance.png)                                     | ![Transparency dashboard](docs/e2e-screenshots/public/transparency.png)       |
+| **Governance** (`/governance`) - motions, voting, topics, run from the member's own dashboard | **Transparency** (`/transparency`) - the public ledger every member can audit |
 
 More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
 
@@ -58,60 +82,60 @@ More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are ca
 
 ### Foundation documents (read these to understand the project)
 
-| File | Purpose |
-|---|---|
-| [`docs/about.md`](docs/about.md) | Public About page text - mission, money, governance, AGPL |
-| [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | **Start here for rules.** The three rules. Constitutional. |
-| [`docs/business-evaluation.md`](docs/business-evaluation.md) | Honest "is this worth doing" memo for founder, board, grant officers |
+| File                                                           | Purpose                                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`docs/about.md`](docs/about.md)                               | Public About page text - mission, money, governance, AGPL                                  |
+| [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)                 | **Start here for rules.** The three rules. Constitutional.                                 |
+| [`docs/business-evaluation.md`](docs/business-evaluation.md)   | Honest "is this worth doing" memo for founder, board, grant officers                       |
 | [`docs/strategy-and-product.md`](docs/strategy-and-product.md) | Positioning, competitive critique (SoundCloud/Mixcloud/Spotify/Bandcamp), retention thesis |
-| [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md) | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36) |
-| [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model - revenue, cost, surplus, grant pool |
-| [`docs/budget-detailed.md`](docs/budget-detailed.md) | Line-item monthly budget + break-even sensitivity analysis |
+| [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md)         | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36)        |
+| [`docs/financial-model.md`](docs/financial-model.md)           | Headline 3-year model - revenue, cost, surplus, grant pool                                 |
+| [`docs/budget-detailed.md`](docs/budget-detailed.md)           | Line-item monthly budget + break-even sensitivity analysis                                 |
 
 ### User guides (plain language)
 
-| File | Purpose |
-|---|---|
-| [`docs/features.md`](docs/features.md) | Current implemented feature catalog and operational dependencies |
-| [`docs/guides/README.md`](docs/guides/README.md) | Index - who should read which guide |
-| [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md) | Listeners & fans: listen, chat, subscribe, smart links |
-| [`docs/guides/for-artists.md`](docs/guides/for-artists.md) | Members: dashboard, profile, releases, fan tiers |
-| [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md) | Going live: OBS, RTMP, limits, multistream |
+| File                                                                           | Purpose                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| [`docs/features.md`](docs/features.md)                                         | Current implemented feature catalog and operational dependencies    |
+| [`docs/guides/README.md`](docs/guides/README.md)                               | Index - who should read which guide                                 |
+| [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md)                     | Listeners & fans: listen, chat, subscribe, smart links              |
+| [`docs/guides/for-artists.md`](docs/guides/for-artists.md)                     | Members: dashboard, profile, releases, fan tiers                    |
+| [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md)                 | Going live: OBS, RTMP, limits, multistream                          |
 | [`docs/guides/multistream-simulcast.md`](docs/guides/multistream-simulcast.md) | Simulcast to Twitch, YouTube, Kick, etc. (stream keys per platform) |
 
 ### Implementation documents (for the agent + director)
 
-| File | Purpose |
-|---|---|
-| [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief - repo, milestones M0-M20, data model, anti-patterns |
-| [`docs/design/README.md`](docs/design/README.md) | Design docs index - constitution, v8 mockups, reference HTML pack, active briefs |
-| [`docs/project-roadmap.md`](docs/project-roadmap.md) | Build audit, phase checklist, milestone status |
-| [`docs/future-improvements.md`](docs/future-improvements.md) | Deferred milestones + engineering efficiency backlog |
-| [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |
-| [`docs/profile-and-promo-toolkit.md`](docs/profile-and-promo-toolkit.md) | Profile, release model, embed/smartlink/social/newsletter/analytics specs |
-| [`docs/engagement-and-fansubs.md`](docs/engagement-and-fansubs.md) | Engagement-unit grant formula + fan-to-artist subscription product spec |
-| [`docs/tahti-radio-and-venues.md`](docs/tahti-radio-and-venues.md) | Meta-stream architecture + venue calendar API |
-| [`docs/infra-strategy.md`](docs/infra-strategy.md) | Self-hosted Helsinki + UpCloud spillover, no CDN, GDPR posture |
-| [`docs/funding-strategy.md`](docs/funding-strategy.md) | Foundation grant pipeline (Tempo, Koneen, SKR, Creative Europe), donations, sponsorship |
-| [`docs/transparency-policy.md`](docs/transparency-policy.md) | Public ledger, annual report commitment, financial visibility |
-| [`docs/storage-policy.md`](docs/storage-policy.md) | Soft-target 500MB, no enforcement, hidden 50GB abuse safeguard |
-| [`docs/obs-and-broadcasting-guides.md`](docs/obs-and-broadcasting-guides.md) | Per-tool onboarding for OBS, Mixxx, Traktor, butt, browser ingest |
+| File                                                                         | Purpose                                                                                 |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`docs/AGENT.md`](docs/AGENT.md)                                             | Coding-agent brief - repo, milestones M0-M20, data model, anti-patterns                 |
+| [`docs/design/README.md`](docs/design/README.md)                             | Design docs index - constitution, v8 mockups, reference HTML pack, active briefs        |
+| [`docs/project-roadmap.md`](docs/project-roadmap.md)                         | Build audit, phase checklist, milestone status                                          |
+| [`docs/future-improvements.md`](docs/future-improvements.md)                 | Deferred milestones + engineering efficiency backlog                                    |
+| [`docs/governance-and-legal.md`](docs/governance-and-legal.md)               | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics                    |
+| [`docs/profile-and-promo-toolkit.md`](docs/profile-and-promo-toolkit.md)     | Profile, release model, embed/smartlink/social/newsletter/analytics specs               |
+| [`docs/engagement-and-fansubs.md`](docs/engagement-and-fansubs.md)           | Engagement-unit grant formula + fan-to-artist subscription product spec                 |
+| [`docs/tahti-radio-and-venues.md`](docs/tahti-radio-and-venues.md)           | Meta-stream architecture + venue calendar API                                           |
+| [`docs/infra-strategy.md`](docs/infra-strategy.md)                           | Self-hosted Helsinki + UpCloud spillover, no CDN, GDPR posture                          |
+| [`docs/funding-strategy.md`](docs/funding-strategy.md)                       | Foundation grant pipeline (Tempo, Koneen, SKR, Creative Europe), donations, sponsorship |
+| [`docs/transparency-policy.md`](docs/transparency-policy.md)                 | Public ledger, annual report commitment, financial visibility                           |
+| [`docs/storage-policy.md`](docs/storage-policy.md)                           | Soft-target 500MB, no enforcement, hidden 50GB abuse safeguard                          |
+| [`docs/obs-and-broadcasting-guides.md`](docs/obs-and-broadcasting-guides.md) | Per-tool onboarding for OBS, Mixxx, Traktor, butt, browser ingest                       |
 
 ### Infrastructure templates
 
-| File | Purpose |
-|---|---|
-| `infra/docker-stack.yml` | Production Swarm stack |
-| `infra/docker-compose.dev.yml` | Local development |
-| `infra/Caddyfile` | Edge TLS + reverse proxy |
+| File                                    | Purpose                          |
+| --------------------------------------- | -------------------------------- |
+| `infra/docker-stack.yml`                | Production Swarm stack           |
+| `infra/docker-compose.dev.yml`          | Local development                |
+| `infra/Caddyfile`                       | Edge TLS + reverse proxy         |
 | `infra/liquidsoap-channel.liq.template` | Per-channel broadcaster template |
 
 ### Presentations
 
-| File | Purpose |
-|---|---|
-| [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck - for founding-cohort recruitment + scene press |
-| [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx) | Governance + sustainability deck - for board candidates, grant officers, auditors |
+| File                                                         | Purpose                                                                           |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck - for founding-cohort recruitment + scene press                |
+| [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx)   | Governance + sustainability deck - for board candidates, grant officers, auditors |
 
 ## Running tests
 
@@ -153,10 +177,10 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/t
 
 Public, unauthenticated reference (Scalar + filtered OpenAPI):
 
-| Surface | URL |
-|---|---|
+| Surface           | URL                                                               |
+| ----------------- | ----------------------------------------------------------------- |
 | Human UI (Scalar) | [`https://api.tahti.live`](https://api.tahti.live/) (also `/api`) |
-| OpenAPI JSON | `GET /api/openapi.json` (admin/internal routes omitted) |
+| OpenAPI JSON      | `GET /api/openapi.json` (admin/internal routes omitted)           |
 
 Ops full Swagger UI stays at `/docs` (HTTP basic auth). Credential rotation: [`ops/RUNBOOK.md`](ops/RUNBOOK.md).
 
@@ -176,16 +200,16 @@ Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows
 
 ## Headline numbers (base case)
 
-| | Y1 | Y2 | Y3 | 3-yr cum. |
-|---|---|---|---|---|
-| Members | 200 | 1,200 | 4,000 | - |
-| Total org revenue | €35,426 | €107,700 | €290,872 | €433,998 |
-| Total costs (incl. director salary) | €54,572 | €86,092 | €148,220 | €288,884 |
-| **Org surplus** | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
-| **Artist grant pool (90% of surplus)** | **€0** | **€19,447** | **€129,737** | **€149,184** |
-| **Fan-sub direct to artists** | €1,622 | €22,705 | €138,394 | €162,721 |
-| **Total artist money** | €1,622 | €42,152 | €268,131 | **€311,905** |
-| Director compensation | €30,000 | €40,000 | €45,000 | €115,000 |
+|                                        | Y1           | Y2           | Y3            | 3-yr cum.     |
+| -------------------------------------- | ------------ | ------------ | ------------- | ------------- |
+| Members                                | 200          | 1,200        | 4,000         | -             |
+| Total org revenue                      | €35,426      | €107,700     | €290,872      | €433,998      |
+| Total costs (incl. director salary)    | €54,572      | €86,092      | €148,220      | €288,884      |
+| **Org surplus**                        | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
+| **Artist grant pool (90% of surplus)** | **€0**       | **€19,447**  | **€129,737**  | **€149,184**  |
+| **Fan-sub direct to artists**          | €1,622       | €22,705      | €138,394      | €162,721      |
+| **Total artist money**                 | €1,622       | €42,152      | €268,131      | **€311,905**  |
+| Director compensation                  | €30,000      | €40,000      | €45,000       | €115,000      |
 
 Break-even threshold: ~600 members in Y1 absent grant funding, ~775 in Y2, ~1,100 in Y3 (Y3 jump is the 10 Gbps fiber upgrade).
 
@@ -208,7 +232,7 @@ This package is the seventh major iteration of a multi-session design process. T
 
 3. **Fan-subs at 0% org take is unusual.** Patreon takes 8-12%, Bandcamp takes 10-15%. The 2% Tahti operational fee is bounded by costs (Stripe + GDPR + customer support); surplus rolls into the [...]
 
-4. **AGPL is a moat *and* a vulnerability.** Anyone can fork. The defense is the hosted instance + the network on it, not the code. Be at peace with this.
+4. **AGPL is a moat _and_ a vulnerability.** Anyone can fork. The defense is the hosted instance + the network on it, not the code. Be at peace with this.
 
 5. **Director salary is real and modest.** €30-45k cumulative €115k. This is the founder's three-year compensation; there is no equity upside downstream.
 
