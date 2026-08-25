@@ -18,6 +18,7 @@ export const archiveItemMetadataSelect = {
   bannerUrl: true,
   backgroundUrl: true,
   slideshowUrls: true,
+  peaks: true,
   galleryMode: true,
   galleryAudioReactive: true,
   commentary: true,
