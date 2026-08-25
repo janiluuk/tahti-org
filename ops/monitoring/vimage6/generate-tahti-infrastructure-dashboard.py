@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 DS = {"type": "prometheus", "uid": "P501B54A0D5548634"}
@@ -714,6 +715,17 @@ def main() -> None:
 
     out = Path(__file__).with_name("tahti-infrastructure.json")
     out.write_text(json.dumps(dashboard, indent=2) + "\n")
+    # Plain json.dumps output doesn't match the repo's prettier config —
+    # format in place so `pnpm format:check` never flags a freshly-generated
+    # dashboard (same fix as the e2e-screenshots manifest.json generator).
+    repo_root = Path(__file__).resolve().parents[3]
+    subprocess.run(
+        ["pnpm", "exec", "prettier", "--write", str(out)],
+        cwd=repo_root,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
     print(f"wrote {out}")
 
 
