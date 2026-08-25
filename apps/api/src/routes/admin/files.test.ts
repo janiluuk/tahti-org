@@ -57,6 +57,7 @@ describe('/api/admin/files', () => {
         status: 'READY',
         isPublic: true,
         mp3Key: `${PREFIX}techno.mp3`,
+        fileSizeBytes: BigInt(7_000_000),
       },
     })
     technoId = techno.id
@@ -96,10 +97,13 @@ describe('/api/admin/files', () => {
       headers: { cookie: boardCookie },
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { items: Array<{ id: string; genre: string | null }> }
+    const body = res.json() as {
+      items: Array<{ id: string; genre: string | null; sizeBytes: number | null }>
+    }
     const ids = body.items.map((i) => i.id)
     expect(ids).toContain(technoId)
     expect(ids).not.toContain(folkId)
+    expect(body.items.find((i) => i.id === technoId)?.sizeBytes).toBe(7_000_000)
   })
 
   it('bulk-assigns content type to selected ids', async () => {

@@ -5,18 +5,26 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 
 interface AdminUserFile {
-  trackId: string
+  id: string
+  kind: 'archive' | 'stash'
   title: string
-  releaseTitle: string
-  durationSec: number | null
-  inR2: boolean
   sizeBytes: number | null
+  createdAt: string
+  contentType: string | null
+  isPublic: boolean | null
+  isAudio: boolean
   previewUrl: string | null
+  runningTotalBytes: number
 }
 
 interface AdminUserFilesResponse {
+  userId: string
   username: string
   displayName: string
+  tier: 'FREE' | 'ARTIST' | 'STUDIO'
+  quotaBytes: number | null
+  usedBytes: number
+  unlimited: boolean
   files: AdminUserFile[]
 }
 
@@ -27,11 +35,12 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / 1024).toFixed(0)} KB`
 }
 
-function formatDuration(sec: number | null): string {
-  if (sec == null) return '—'
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return `${m}:${String(s).padStart(2, '0')}`
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 async function boardGet<T>(path: string): Promise<T | null> {
@@ -60,39 +69,42 @@ export default async function AdminUserStoragePage({ params }: { params: { userI
       <h1 className="admin-section-title">{data ? `${data.displayName} — files` : 'Files'}</h1>
       {data && (
         <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
-          @{data.username} · release tracks only (the only content type on R2 so far)
+          @{data.username} · {data.tier.toLowerCase()} tier ·{' '}
+          {data.unlimited
+            ? `${formatBytes(data.usedBytes)} used (unlimited — member)`
+            : `${formatBytes(data.usedBytes)} of ${formatBytes(data.quotaBytes)} used`}
         </p>
       )}
 
       {!data ? (
         <p className="admin-stat-sub">Could not load this user&apos;s files.</p>
       ) : data.files.length === 0 ? (
-        <p className="admin-stat-sub">No release tracks yet.</p>
+        <p className="admin-stat-sub">No files yet.</p>
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Track</th>
-                <th>Release</th>
-                <th>Duration</th>
-                <th>R2</th>
+                <th>File</th>
+                <th>Type</th>
+                <th>Uploaded</th>
                 <th>Size</th>
+                <th>Running total</th>
                 <th>Preview</th>
               </tr>
             </thead>
             <tbody>
               {data.files.map((file) => (
-                <tr key={file.trackId}>
+                <tr key={file.id}>
                   <td>{file.title}</td>
-                  <td style={{ opacity: 0.7 }}>{file.releaseTitle}</td>
-                  <td style={{ opacity: 0.6 }}>{formatDuration(file.durationSec)}</td>
-                  <td style={{ opacity: file.inR2 ? 1 : 0.4 }}>
-                    {file.inR2 ? 'Mirrored' : 'Local only'}
+                  <td style={{ opacity: 0.7 }}>
+                    {file.kind === 'archive' ? (file.contentType ?? 'archive') : 'stash'}
                   </td>
+                  <td style={{ opacity: 0.6 }}>{formatDate(file.createdAt)}</td>
                   <td style={{ opacity: 0.6 }}>{formatBytes(file.sizeBytes)}</td>
+                  <td style={{ opacity: 0.6 }}>{formatBytes(file.runningTotalBytes)}</td>
                   <td>
-                    {file.previewUrl ? (
+                    {file.isAudio && file.previewUrl ? (
                       // eslint-disable-next-line jsx-a11y/media-has-caption
                       <audio src={file.previewUrl} controls style={{ height: '28px' }} />
                     ) : (

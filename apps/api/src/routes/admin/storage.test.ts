@@ -6,6 +6,7 @@ import { prisma } from '@tahti/db'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
+  createReadyArchiveItem,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -42,7 +43,7 @@ describe('GET /api/admin/storage', () => {
     expect(res.statusCode).toBe(403)
   })
 
-  it('reports overall usage and a per-user breakdown', async () => {
+  it('reports overall usage and a per-user breakdown, with disk + object storage readings', async () => {
     const board = await createTestArtist(prisma, {
       email: `${PREFIX}board@example.com`,
       username: `${PREFIX}board`,
@@ -56,17 +57,36 @@ describe('GET /api/admin/storage', () => {
     })
     await recordUsageDelta(prisma, artist.id, 12_345)
 
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}member@example.com`,
+      username: `${PREFIX}member`,
+      tier: 'ARTIST',
+      isMember: true,
+    })
+    await recordUsageDelta(prisma, member.id, 999)
+
     const res = await app.inject({ method: 'GET', url: '/api/admin/storage', headers: { cookie } })
     expect(res.statusCode).toBe(200)
     const body = res.json()
     const row = body.users.find((u: { userId: string }) => u.userId === artist.id)
     expect(row).toBeDefined()
     expect(row.usedBytes).toBe(12_345)
+    expect(row.unlimited).toBe(false)
     expect(body.totalUsedBytes).toBeGreaterThanOrEqual(12_345)
+
+    const memberRow = body.users.find((u: { userId: string }) => u.userId === member.id)
+    expect(memberRow.unlimited).toBe(true)
+
+    expect(body.objectStorage.usedBytes).toBe(body.totalUsedBytes)
+    expect(body.objectStorage.totalBytes).toBeNull()
+    // Local disk is a real statfs() reading in the test environment, not a fixture.
+    expect(typeof body.localDisk.usedBytes === 'number' || body.localDisk.usedBytes === null).toBe(
+      true,
+    )
   })
 })
 
-describe('GET /api/admin/storage/users/:id/files', () => {
+describe('GET /api/admin/storage/users/:id/files (merged archive + stash)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let boardCookie: string
   let artistId: string
@@ -77,36 +97,27 @@ describe('GET /api/admin/storage/users/:id/files', () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
 
     const board = await createTestArtist(prisma, {
-      email: `${PREFIX}files-board@example.com`,
-      username: `${PREFIX}files-board`,
+      email: `${PREFIX}merged-board@example.com`,
+      username: `${PREFIX}merged-board`,
       isBoard: true,
     })
     boardCookie = await sessionCookieFor(prisma, board.id)
 
     const artist = await createTestArtist(prisma, {
-      email: `${PREFIX}files-artist@example.com`,
-      username: `${PREFIX}files-artist`,
+      email: `${PREFIX}merged-artist@example.com`,
+      username: `${PREFIX}merged-artist`,
+      tier: 'STUDIO',
     })
     artistId = artist.id
 
-    const release = await prisma.release.create({
+    await createReadyArchiveItem(prisma, artist.channel!.id, 'Merged Test Track')
+    await prisma.stashFile.create({
       data: {
         userId: artistId,
-        title: 'Files Test Single',
-        type: 'SINGLE',
-        releaseDate: new Date(),
-        smartLinkSlug: `${PREFIX}files-single`,
-      },
-    })
-    await prisma.releaseTrack.create({
-      data: {
-        releaseId: release.id,
-        position: 0,
-        title: 'Files Test Track',
-        streamKey: `releases/${artistId}/${release.id}/track-1/stream.ogg`,
-        r2Key: `releases/${artistId}/${release.id}/track-1/original.wav`,
-        r2SizeBytes: 999,
-        durationSec: 120,
+        filename: 'cover-art.png',
+        objectKey: `stash/${artistId}/cover-art.png`,
+        contentType: 'image/png',
+        sizeBytes: BigInt(2_000_000),
       },
     })
   })
@@ -124,7 +135,7 @@ describe('GET /api/admin/storage/users/:id/files', () => {
     expect(res.statusCode).toBe(401)
   })
 
-  it("lists a user's release tracks with R2 status and a preview URL", async () => {
+  it('merges archive items and stash files, oldest first, with a running total', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/api/admin/storage/users/${artistId}/files`,
@@ -132,11 +143,21 @@ describe('GET /api/admin/storage/users/:id/files', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(body.files).toHaveLength(1)
-    expect(body.files[0].title).toBe('Files Test Track')
-    expect(body.files[0].inR2).toBe(true)
-    expect(body.files[0].sizeBytes).toBe(999)
-    expect(body.files[0].previewUrl).toContain('stream.ogg')
+    expect(body.tier).toBe('STUDIO')
+    expect(body.unlimited).toBe(false)
+    expect(body.files).toHaveLength(2)
+
+    const [first, second] = body.files
+    expect(first.title).toBe('Merged Test Track')
+    expect(first.kind).toBe('archive')
+    expect(first.isAudio).toBe(true)
+    expect(first.runningTotalBytes).toBe(5_000_000)
+
+    expect(second.title).toBe('cover-art.png')
+    expect(second.kind).toBe('stash')
+    expect(second.isAudio).toBe(false)
+    expect(second.previewUrl).toBeNull()
+    expect(second.runningTotalBytes).toBe(5_000_000 + 2_000_000)
   })
 
   it('404s for an unknown user', async () => {
@@ -214,6 +235,24 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
     const body = res.json()
     expect(body.quotaBytes).toBe(3_000_000_000)
     expect(body.usedBytes).toBe(500)
+  })
+
+  it('reports unlimited for a member even when a quota row exists', async () => {
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}quota-member@example.com`,
+      username: `${PREFIX}quota-member`,
+      tier: 'ARTIST',
+      isMember: true,
+    })
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/storage/users/${member.id}/quota`,
+      headers: { cookie: boardCookie },
+      payload: { quotaBytes: 1_000_000 },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ quotaBytes: 1_000_000, usedBytes: 0, unlimited: true })
   })
 
   it('rejects a non-positive quota', async () => {

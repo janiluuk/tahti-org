@@ -12,14 +12,20 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { config } from '../../config.js'
+import { getHostDiskSpace } from '../../lib/host-disk.js'
+import { listUserFilesWithRunningTotal } from '../../lib/user-file-listing.js'
 
 const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
-  // Overall R2 usage across the platform + a per-user breakdown. R2 doesn't
-  // have unlimited real-time analytics without the Cloudflare account API
-  // (R2_API_TOKEN, separate from the S3 credentials) — this reports what we
+  // Overall usage across the platform + a per-user breakdown, plus the two
+  // physical-capacity readings the board actually asked for: the API host's
+  // local disk (also what MinIO's hot/streaming cache lives on) and Cloudflare
+  // R2 (docs/storage-policy.md's long-term, per-user-quota'd object store). R2
+  // doesn't have unlimited real-time analytics without the Cloudflare account
+  // API (R2_API_TOKEN, separate from the S3 credentials) — this reports what we
   // track ourselves in UserStorageQuota, which is authoritative for quota
-  // enforcement even if it lags Cloudflare's own dashboard slightly.
+  // enforcement even if it lags Cloudflare's own dashboard slightly, and has no
+  // fixed total/free reading since R2 is billed by usage, not a fixed volume.
   fastify.get(
     '/api/admin/storage',
     {
@@ -30,14 +36,17 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const rows = await fastify.prisma.userStorageQuota.findMany({
-        orderBy: { usedBytes: 'desc' },
-        select: {
-          quotaBytes: true,
-          usedBytes: true,
-          user: { select: { id: true, username: true, displayName: true } },
-        },
-      })
+      const [rows, localDisk] = await Promise.all([
+        fastify.prisma.userStorageQuota.findMany({
+          orderBy: { usedBytes: 'desc' },
+          select: {
+            quotaBytes: true,
+            usedBytes: true,
+            user: { select: { id: true, username: true, displayName: true, isMember: true } },
+          },
+        }),
+        getHostDiskSpace(),
+      ])
 
       let totalQuotaBytes = 0
       let totalUsedBytes = 0
@@ -50,6 +59,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
           displayName: row.user.displayName,
           quotaBytes: Number(row.quotaBytes),
           usedBytes: Number(row.usedBytes),
+          unlimited: row.user.isMember,
         }
       })
 
@@ -58,14 +68,31 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
         totalUsedBytes,
         userCount: users.length,
         users,
+        localDisk: localDisk
+          ? { ...localDisk, note: null }
+          : {
+              totalBytes: null,
+              freeBytes: null,
+              usedBytes: null,
+              note: 'Disk reading unavailable.',
+            },
+        objectStorage: {
+          totalBytes: null,
+          freeBytes: null,
+          usedBytes: totalUsedBytes,
+          note: config.r2.enabled
+            ? 'Cloudflare R2 is billed by usage, not a fixed volume — there is no total/free to report.'
+            : 'R2 is not configured on this environment — usage shown is 0.',
+        },
       })
     },
   )
 
-  // Per-user file browser — scoped to release tracks, the only content type
-  // that writes through to R2 so far. Preview URL always points at the
-  // (local MinIO) streaming copy, regardless of R2 status, since that's
-  // always present once a track is READY.
+  // Per-user file browser — every file that counts against the user's quota
+  // (archive items + stash files, see computeUserStorageUsedBytes), oldest
+  // first, with a running total so the board can see how usage built up over
+  // time. Preview URLs always point at the (local MinIO) streaming copy,
+  // regardless of R2 status, since that's always present once ready.
   fastify.get(
     '/api/admin/storage/users/:id/files',
     {
@@ -79,39 +106,32 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const user = await fastify.prisma.user.findUnique({
-        where: { id: routeParams.id },
-        select: { username: true, displayName: true },
-      })
+      const [user, quota, files] = await Promise.all([
+        fastify.prisma.user.findUnique({
+          where: { id: routeParams.id },
+          select: { username: true, displayName: true, tier: true, isMember: true },
+        }),
+        fastify.prisma.userStorageQuota.findUnique({
+          where: { userId: routeParams.id },
+          select: { quotaBytes: true, usedBytes: true },
+        }),
+        listUserFilesWithRunningTotal(fastify.prisma, routeParams.id),
+      ])
       if (!user) return reply.status(404).send({ error: 'User not found' })
 
-      const tracks = await fastify.prisma.releaseTrack.findMany({
-        where: { release: { userId: routeParams.id } },
-        select: {
-          id: true,
-          title: true,
-          durationSec: true,
-          r2Key: true,
-          r2SizeBytes: true,
-          streamKey: true,
-          release: { select: { title: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      })
-
-      const files = await Promise.all(
-        tracks.map(async (track) => ({
-          trackId: track.id,
-          title: track.title,
-          releaseTitle: track.release.title,
-          durationSec: track.durationSec,
-          inR2: track.r2Key != null,
-          sizeBytes: track.r2SizeBytes,
-          previewUrl: track.streamKey ? await presignedGetUrl(track.streamKey, 3600) : null,
+      return reply.send({
+        userId: routeParams.id,
+        username: user.username,
+        displayName: user.displayName,
+        tier: user.tier,
+        unlimited: user.isMember,
+        quotaBytes: user.isMember ? null : Number(quota?.quotaBytes ?? 0),
+        usedBytes: Number(quota?.usedBytes ?? 0),
+        files: files.map((f) => ({
+          ...f,
+          createdAt: f.createdAt.toISOString(),
         })),
-      )
-
-      return reply.send({ username: user.username, displayName: user.displayName, files })
+      })
     },
   )
 
@@ -141,7 +161,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
 
       const user = await fastify.prisma.user.findUnique({
         where: { id: routeParams.id },
-        select: { id: true },
+        select: { id: true, isMember: true },
       })
       if (!user) return reply.status(404).send({ error: 'User not found' })
 
@@ -152,9 +172,13 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
         select: { quotaBytes: true, usedBytes: true },
       })
 
+      // A board override always takes effect — a member's usage is still
+      // recorded against it — but the row keeps reading "Unlimited" for members
+      // (docs/storage-policy.md), same as the overview list and /api/me/storage.
       return reply.send({
         quotaBytes: Number(quota.quotaBytes),
         usedBytes: Number(quota.usedBytes),
+        unlimited: user.isMember,
       })
     },
   )

@@ -15,6 +15,7 @@ export const AdminFileRowSchema = z.object({
   status: z.string(),
   isPublic: z.boolean(),
   durationSec: z.number().int().nullable(),
+  sizeBytes: z.number().nullable(),
   bannerUrl: z.string().nullable(),
   createdAt: z.string().datetime(),
   channelSlug: z.string(),

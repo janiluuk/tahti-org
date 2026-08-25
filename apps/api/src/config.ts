@@ -105,6 +105,10 @@ export const config = {
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
   sourceRepoUrl: 'https://github.com/tahtiapp/tahti',
   isProd: process.env.NODE_ENV === 'production',
+  /** Filesystem path statfs'd for the admin storage panel's "local server disk" reading —
+   * the same volume MinIO's hot cache lives on. Override in prod if the API container's
+   * root isn't the volume you care about (e.g. a dedicated mount for MinIO's data dir). */
+  storageDiskPath: process.env.STORAGE_DISK_PATH ?? '/',
   minio: {
     endpoint: process.env.MINIO_ENDPOINT ?? 'http://localhost:9000',
     accessKey: process.env.MINIO_ACCESS_KEY ?? 'tahti',
