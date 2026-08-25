@@ -60,6 +60,13 @@ describe('GET /api/admin/logs', () => {
     await prisma.user.delete({ where: { id: member.id } })
   })
 
+  // The route's own fetch to Loki has an 8s AbortSignal.timeout (see
+  // logs.ts) — vitest's 5s default test timeout was shorter, so this test
+  // failed deterministically (not flakily) in CI, where LOKI_URL's private
+  // vimage6 address has no route at all and the connection attempt runs
+  // out the clock rather than failing fast the way it does on a machine
+  // with LAN access. Give the test itself more headroom than the route's
+  // own bound.
   it('queries Loki without throwing and returns the documented shape', async () => {
     const res = await app.inject({
       method: 'GET',
@@ -70,7 +77,7 @@ describe('GET /api/admin/logs', () => {
     const body = res.json() as { entries: unknown[]; lokiReachable: boolean }
     expect(Array.isArray(body.entries)).toBe(true)
     expect(typeof body.lokiReachable).toBe('boolean')
-  })
+  }, 12_000)
 
   it('rejects an out-of-range limit', async () => {
     const res = await app.inject({

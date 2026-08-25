@@ -151,13 +151,14 @@ describe('GET /api/channels/:slug', () => {
   })
 
   it('exposes a fresh nowPlaying sync as a shaped object, not raw fields', async () => {
+    const syncedAt = new Date()
     await prisma.channel.update({
       where: { slug: 'channel-get-testuser' },
       data: {
         nowPlayingTitle: 'Monster Parade',
         nowPlayingArtistName: 'Tahti Selects',
         nowPlayingArtworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
-        nowPlayingUpdatedAt: new Date(),
+        nowPlayingUpdatedAt: syncedAt,
       },
     })
 
@@ -172,6 +173,11 @@ describe('GET /api/channels/:slug', () => {
       artistName: 'Tahti Selects',
       artistUsername: null,
       artworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
+      // Remaining-time support for the Channel Controls panel — durationSec is
+      // whatever nowPlayingDurationSec last synced to (unset here, so null),
+      // startedAt mirrors nowPlayingUpdatedAt.
+      durationSec: null,
+      startedAt: syncedAt.toISOString(),
     })
     expect(body.nowPlayingTitle).toBeUndefined()
     expect(body.nowPlayingArtistName).toBeUndefined()
