@@ -959,6 +959,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               {channel.user.displayName} has turned off chat for this channel.
             </p>
           )}
+          {showSupport && user?.username !== channel.user.username && (
+            <div className="ch-sidebar-support">
+              <div className="ch-sidebar-support-card">
+                <div className="ch-sidebar-support-card__text">
+                  <p>Support {channel.user.displayName}</p>
+                  <span>Fan subscriptions, direct to the artist</span>
+                </div>
+                <Link
+                  href={`/u/${channel.user.username}/subscribe`}
+                  className="ch-sidebar-support-card__btn"
+                >
+                  Support
+                </Link>
+              </div>
+            </div>
+          )}
           <ReportButton targetType="CHANNEL" targetId={slug} />
         </>
       }
