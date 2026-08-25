@@ -13,8 +13,6 @@
 #   SSH_PROXY_JUMP           — e.g. pi@sparkki.dudeisland.eu:4322 (GitHub Actions / remote deploy)
 #   DEPLOY_APP_PORT          — default 8090
 #
-# NOTE: website/bg-audio.mp3 and output_vhs.mp4 are tracked in git and baked into the website image.
-#
 set -euo pipefail
 
 NO_CACHE=""
