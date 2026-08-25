@@ -234,6 +234,103 @@ exactly what was checked locally, then `scripts/deploy_prod.sh`. Confirmed
 after: API healthy, web responding, worker registered all 25 cron jobs
 (23 existing + the 2 new ones), website container healthy.
 
+## CI went red after the push, four separate causes
+
+The push landed clean, but CI failed — and kept failing on the next
+push too, each time for a genuinely different reason rather than one
+fix half-working. Chased each to its actual root cause rather than
+re-running and hoping:
+
+1. **Prettier drift on the regenerated Grafana dashboard.** The Python
+   generator (`ops/monitoring/vimage6/generate-tahti-infrastructure-
+dashboard.py`, edited earlier this session to add the Loki panel) writes
+   raw `json.dumps(dashboard, indent=2)` — doesn't match the repo's
+   prettier config. Same class of bug this codebase has hit before (the
+   e2e-screenshots `manifest.json` generator needed the identical fix).
+   Fixed the file and made the generator self-format its own output via
+   `subprocess.run(["pnpm", "exec", "prettier", "--write", ...])`, so it
+   can't drift again.
+2. **`packages/api-client/src/schema.d.ts` stale.** This session's new
+   API routes (admin missed-shows, admin account-restrictions, the
+   recurrence fields, the restriction checks) never went through
+   `pnpm --filter @tahti/api-client generate` before committing. Ran it,
+   committed the regenerated types.
+3. **A real assertion gone stale, not a regression.** `channels/get.test.ts`
+   hard-coded the exact shape of a `nowPlaying` object — predates this
+   session's Channel Controls remaining-time work
+   (`durationSec`/`startedAt` added to that same response earlier in the
+   session). The fields are correct; the test just never got updated to
+   expect them. Fixed the test, not the route.
+4. **A test timeout shorter than the thing it's testing.**
+   `admin/logs.test.ts` deliberately queries real Loki rather than mocking
+   it (documented in the file's own header comment). Its route has an
+   explicit 8s `AbortSignal.timeout` for an unreachable Loki — but
+   vitest's default per-test timeout is 5s, _shorter_ than that. Not
+   randomly flaky: deterministically fails wherever `LOKI_URL`'s private
+   vimage6 address has no route at all (GitHub Actions runners, no LAN to
+   the lab) and the connection attempt runs out the clock instead of
+   failing fast the way it does from a machine with LAN access.
+   Reproduced locally by pointing `LOKI_URL` at a black-hole address
+   (confirmed 9.48s to resolve) and fixed by giving the test itself 12s of
+   headroom — comfortably past the route's own bound instead of under it.
+
+All four fixed as separate commits, verified locally before each push
+(including reproducing #4 against a real unreachable address rather than
+trusting the fix by inspection). CI green as of the last push.
+
+## Audit pass: mock/no-op check + performance pass
+
+Asked to audit the session's new work for anything that looks wired up
+but isn't, plus a performance pass. Found real gaps, not just
+theoretical ones:
+
+**Upload restriction had holes.** Enumerated every real upload-issuing
+route in the API (there are five: `/api/uploads/prepare`, release-track
+upload, archive-item version upload, release-track version upload, stash
+upload) against the two the original restriction implementation actually
+covered. A user restricted from uploading could still push a new audio
+version onto an existing archive item, a new version of a release track,
+or a file into their private stash — all three completely unenforced.
+Added the check to all three.
+
+**Login restriction had holes too.** Enumerated every path that calls
+`createSession` (there are four): the initial `/api/auth/login` had the
+check, but `/api/auth/reset-password` auto-logs the user in after a
+successful reset with no check at all — a restricted user could regain
+a session just by resetting their own password, never touching the login
+endpoint. `/api/auth/login-totp` (the second step for TOTP-enabled
+accounts) also had no re-check, so a restriction applied while an
+already-issued TOTP challenge is still valid (a few minutes) could
+complete around it. Added the check to both, plus
+`/api/auth/setup-password` (first-time invite password + auto-login) for
+consistency — lower practical risk since a freshly-invited user is
+unlikely to already be restricted, but the same shape of gap.
+
+**Missed-show flags could go stale-open forever.** The existing go-live
+flow links a `Broadcast` to a `ScheduledLiveShow` up to 12 hours after
+its scheduled start (`ensurePlannedShowFilled` in
+`broadcast-preflight.ts`) — well past the missed-show scan's 30-minute
+flagging grace window. An artist who ran late enough to get flagged but
+who did still go live would leave a permanently-open flag sitting in the
+admin queue with nothing actually wrong. The scan job now auto-dismisses
+any `OPEN`/`REVIEWING` flag whose show has since been linked to a
+broadcast, before it looks for new ones to flag.
+
+**Minor perf finding.** `notifyBoardOfMissedLiveShow` re-queried the full
+board roster from scratch for every flagged show in the same scan pass —
+harmless at realistic volumes (rarely more than one or two missed shows
+per hour) but wasteful. Now fetched once per scan run and passed through.
+Also extracted the repeated "look up the restriction, format the 403
+message" sequence — it was duplicated inline at all ten enforcement call
+sites — into one `restrictionErrorMessage()` helper in `packages/db`.
+
+**Flagged, not fixed — a real but accepted limitation.** `recurrenceDurationMin`
+is stored (matches the Twitch-mockup UI's hours/minutes fields) but isn't
+consumed anywhere: no conflict/overlap detection, no derived end time on
+the generated `ScheduledLiveShow` rows. Nothing in the UI copy claims
+otherwise, so this is scope, not brokenness — flagging it here so it
+doesn't get assumed away.
+
 ## Not started this session
 
 - Bottom mini-player native hearthis.at embed support, and always
