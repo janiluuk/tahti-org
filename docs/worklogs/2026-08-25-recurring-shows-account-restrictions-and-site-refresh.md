@@ -449,11 +449,54 @@ instead of touching raw files or the database directly, so the
 change is reflected correctly in NPM's own state. Verified:
 `app.tahti.live` now returns `200` and serves the real Next.js app.
 
+## Mini-player: native hearthis.at embed support
+
+Previously-queued item, picked up. hearthis.at tracks (`ArchiveItem` with
+`embedProvider: HEARTHIS`) had no presence in the shared mini-player at
+all — they rendered a page-local iframe (`HearthisEmbedRow`) instead of
+calling `usePlayer().load()`, so no queue integration, no persistence
+across navigation, no "now playing" bar.
+
+Checked first whether hearthis.at's widget exposes a postMessage control
+API like Mixcloud/SoundCloud/YouTube's — it doesn't (no documentation
+found). That ruled out proxying real play/pause/seek/progress into the
+mini-player's existing transport, and shaped the whole design: rather
+than fake a control surface that doesn't exist, a new
+`apps/web/src/contexts/player-embed-plugins/hearthis-embed-plugin.tsx`
+module owns the one thing that's actually possible — mounting hearthis's
+real, interactive iframe widget — and everything provider-specific lives
+there, not scattered across `player-context.tsx`/`mini-player.tsx`.
+
+`PlayerTrack` gained an optional `embed` field (`player-context.tsx`).
+`load()` now branches early for it: silences the shared `<audio>` element
+and skips every HLS/native-audio step entirely, instead of trying to
+assign a nonsense URL. `togglePlay`/`seek`/`seekBy` no-op for embed
+tracks (no control channel exists) — the collapsed bar reflects this
+honestly rather than showing dead controls: play/pause becomes an
+"open the real player" button, the progress bar and time readout are
+replaced with a plain HEARTHIS badge, and loading an embed track
+auto-expands the full player sheet, which is where the actual widget
+(sized ~150px, same convention as the existing inline embed rows) gets
+mounted and mounts with `autoplay` tied to the load's own autoplay
+intent.
+
+Wired into `_track-detail-modal.tsx` (the artist-profile track detail
+view — the flagship listener-facing surface) as the one real
+integration point this session. The dashboard's archive list and
+collection editor (`_archive-list.tsx`, `_collection-editor.tsx`) still
+render the old page-local `HearthisEmbedRow` for hearthis tracks —
+functionally fine, just not migrated to the shared player yet. Mixcloud
+and Spotify embeds are untouched — same page-local pattern as before,
+out of scope (no research done on whether their widgets support real
+control either).
+
 ## Not started this session
 
-- Bottom mini-player native hearthis.at embed support, and always
-  assigning a fallback cover image for releases without one — queued
-  early, never reached.
+- Always assigning a fallback cover image for releases without one —
+  queued early, never reached.
+- Hearthis.at embed migration for the dashboard archive list and
+  collection editor (`_archive-list.tsx`, `_collection-editor.tsx`) —
+  same pattern as `_track-detail-modal.tsx`, just not done yet.
 - The visualizer-as-page-header and conditional Gallery tab pieces of the
   artist-profile restructure (see above — needs new data this page
   doesn't fetch yet).
