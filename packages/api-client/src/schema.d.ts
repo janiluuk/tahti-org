@@ -807,6 +807,7 @@ export interface paths {
               textLayerText: string
               textLayerAlign: string
               videoBackgroundUrl: string | null
+              headerStyle: string
               colorSchemeJson: string | null
               colorScheme: {
                 bg: string
@@ -838,6 +839,8 @@ export interface paths {
                 artistName: string
                 artistUsername: string | null
                 artworkUrl: string | null
+                durationSec: number | null
+                startedAt: string
               } | null
               nowPlayingNext: {
                 title: string
@@ -8827,6 +8830,7 @@ export interface paths {
                 status: string
                 isPublic: boolean
                 durationSec: number | null
+                sizeBytes: number | null
                 bannerUrl: string | null
                 /** Format: date-time */
                 createdAt: string
@@ -9844,6 +9848,8 @@ export interface paths {
               notes: {
                 id: string
                 body: string
+                /** @enum {string} */
+                kind: 'MESSAGE' | 'STATUS_CHANGE'
                 authorId: string | null
                 authorDisplayName: string | null
                 /** Format: date-time */
@@ -9902,6 +9908,8 @@ export interface paths {
               notes: {
                 id: string
                 body: string
+                /** @enum {string} */
+                kind: 'MESSAGE' | 'STATUS_CHANGE'
                 authorId: string | null
                 authorDisplayName: string | null
                 /** Format: date-time */
@@ -9952,6 +9960,8 @@ export interface paths {
               notes: {
                 id: string
                 body: string
+                /** @enum {string} */
+                kind: 'MESSAGE' | 'STATUS_CHANGE'
                 authorId: string | null
                 authorDisplayName: string | null
                 /** Format: date-time */
@@ -10008,6 +10018,8 @@ export interface paths {
               notes: {
                 id: string
                 body: string
+                /** @enum {string} */
+                kind: 'MESSAGE' | 'STATUS_CHANGE'
                 authorId: string | null
                 authorDisplayName: string | null
                 /** Format: date-time */
@@ -10019,6 +10031,228 @@ export interface paths {
       }
     }
     delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/missed-live-shows': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              flags: {
+                id: string
+                /** @enum {string} */
+                status: 'OPEN' | 'REVIEWING' | 'ACTIONED' | 'DISMISSED'
+                /** Format: date-time */
+                detectedAt: string
+                resolutionNote: string | null
+                /** Format: date-time */
+                resolvedAt: string | null
+                scheduledLiveShow: {
+                  id: string
+                  title: string
+                  /** Format: date-time */
+                  startAt: string
+                }
+                channel: {
+                  slug: string
+                  userId: string
+                  username: string
+                  displayName: string
+                }
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/missed-live-shows/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              /** @enum {string} */
+              status: 'OPEN' | 'REVIEWING' | 'ACTIONED' | 'DISMISSED'
+              /** Format: date-time */
+              detectedAt: string
+              resolutionNote: string | null
+              /** Format: date-time */
+              resolvedAt: string | null
+              scheduledLiveShow: {
+                id: string
+                title: string
+                /** Format: date-time */
+                startAt: string
+              }
+              channel: {
+                slug: string
+                userId: string
+                username: string
+                displayName: string
+              }
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/admin/users/{id}/restrictions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              restrictions: {
+                id: string
+                /** @enum {string} */
+                type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN'
+                reason: string
+                /** Format: date-time */
+                bannedAt: string
+                /** Format: date-time */
+                expiresAt: string | null
+                /** Format: date-time */
+                liftedAt: string | null
+                bannedByUsername: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/users/{id}/restrictions/{restrictionId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+          restrictionId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
     options?: never
     head?: never
     patch?: never
@@ -10703,6 +10937,49 @@ export interface paths {
           }
           content: {
             'application/json': string
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/logs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Board-only: container logs from the vimage6 Loki, filtered by service/search/time */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              entries: {
+                timestampMs: number
+                service: string
+                line: string
+              }[]
+              lokiReachable: boolean
+            }
           }
         }
       }
@@ -13731,6 +14008,7 @@ export interface paths {
               /** @enum {string} */
               showType: 'LIVE_SET' | 'TALK'
               channelSlug: string
+              username: string
               displayName: string
               avatarUrl: string | null
               isMine: boolean
@@ -13763,6 +14041,7 @@ export interface paths {
               /** @enum {string} */
               showType: 'LIVE_SET' | 'TALK'
               channelSlug: string
+              username: string
               displayName: string
               avatarUrl: string | null
               isMine: boolean
@@ -16906,6 +17185,11 @@ export interface paths {
                 note: string | null
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
+                recording: {
+                  archiveItemId: string
+                  title: string
+                  channelItemUrl: string
+                } | null
               }[]
               upcomingEpisodes: {
                 id: string
@@ -16914,6 +17198,11 @@ export interface paths {
                 note: string | null
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
+                recording: {
+                  archiveItemId: string
+                  title: string
+                  channelItemUrl: string
+                } | null
               }[]
               nextShowAt: string | null
               lastShowAt: string | null
@@ -22219,7 +22508,20 @@ export interface paths {
                 displayName: string
                 quotaBytes: number
                 usedBytes: number
+                unlimited: boolean
               }[]
+              localDisk: {
+                totalBytes: number | null
+                freeBytes: number | null
+                usedBytes: number | null
+                note: string | null
+              }
+              objectStorage: {
+                totalBytes: number | null
+                freeBytes: number | null
+                usedBytes: number | null
+                note: string | null
+              }
             }
           }
         }
@@ -22258,17 +22560,28 @@ export interface paths {
           }
           content: {
             'application/json': {
+              userId: string
               username: string
               displayName: string
+              /** @enum {string} */
+              tier: 'FREE' | 'ARTIST' | 'STUDIO'
+              quotaBytes: number | null
+              usedBytes: number
+              unlimited: boolean
               files: {
-                trackId: string
+                id: string
+                /** @enum {string} */
+                kind: 'archive' | 'stash'
                 title: string
-                releaseTitle: string
-                durationSec: number | null
-                inR2: boolean
                 sizeBytes: number | null
+                /** Format: date-time */
+                createdAt: string
+                contentType: string | null
+                isPublic: boolean | null
+                isAudio: boolean
                 /** Format: uri */
                 previewUrl: string | null
+                runningTotalBytes: number
               }[]
             }
           }
@@ -23186,6 +23499,15 @@ export interface paths {
                 /** @default 1 */
                 intervalHours: 1 | 2
                 scheduleNote: string | null
+                /** @default false */
+                recurrenceEnabled: boolean
+                /** @default [] */
+                recurrenceDays: number[]
+                recurrenceTimeOfDay?: string | null
+                recurrenceDurationMin?: number | null
+                recurrenceTimezone?: string | null
+                /** @default 28 */
+                recurrenceHorizonDays: number
                 id: string
                 /** Format: date-time */
                 createdAt: string
@@ -25263,7 +25585,7 @@ export interface paths {
             'application/json': {
               defaultEnabled: boolean
               /** @enum {string} */
-              defaultInvitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY'
+              defaultInvitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY' | 'EVERYONE'
             }
           }
         }
@@ -25292,7 +25614,7 @@ export interface paths {
             'application/json': {
               defaultEnabled: boolean
               /** @enum {string} */
-              defaultInvitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY'
+              defaultInvitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY' | 'EVERYONE'
             }
           }
         }
@@ -25327,13 +25649,13 @@ export interface paths {
               /** @enum {string} */
               channelState: 'OFFLINE' | 'PREVIEW' | 'LIVE'
               /** @enum {string} */
-              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY'
+              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY' | 'EVERYONE'
               invites: {
                 userId: string
                 username: string
                 displayName: string
                 /** @enum {string} */
-                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL'
+                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL' | 'PUBLIC'
                 invitedAt: string
                 joinedAt: string | null
               }[]
@@ -25374,13 +25696,13 @@ export interface paths {
               /** @enum {string} */
               channelState: 'OFFLINE' | 'PREVIEW' | 'LIVE'
               /** @enum {string} */
-              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY'
+              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY' | 'EVERYONE'
               invites: {
                 userId: string
                 username: string
                 displayName: string
                 /** @enum {string} */
-                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL'
+                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL' | 'PUBLIC'
                 invitedAt: string
                 joinedAt: string | null
               }[]
@@ -25427,13 +25749,13 @@ export interface paths {
               /** @enum {string} */
               channelState: 'OFFLINE' | 'PREVIEW' | 'LIVE'
               /** @enum {string} */
-              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY'
+              invitePool: 'MODERATORS_AND_SUBS' | 'SUBS_ONLY' | 'MANUAL_ONLY' | 'EVERYONE'
               invites: {
                 userId: string
                 username: string
                 displayName: string
                 /** @enum {string} */
-                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL'
+                source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL' | 'PUBLIC'
                 invitedAt: string
                 joinedAt: string | null
               }[]
@@ -25484,7 +25806,7 @@ export interface paths {
               username: string
               displayName: string
               /** @enum {string} */
-              source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL'
+              source: 'MODERATOR' | 'FAN_SUB' | 'MANUAL' | 'PUBLIC'
               invitedAt: string
               joinedAt: string | null
             }
@@ -26942,6 +27264,7 @@ export interface components {
       textLayerText: string
       textLayerAlign: string
       videoBackgroundUrl: string | null
+      headerStyle: string
       colorSchemeJson: string | null
       colorScheme: {
         bg: string
@@ -26973,6 +27296,8 @@ export interface components {
         artistName: string
         artistUsername: string | null
         artworkUrl: string | null
+        durationSec: number | null
+        startedAt: string
       } | null
       nowPlayingNext: {
         title: string
