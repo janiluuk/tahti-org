@@ -34,7 +34,9 @@ export async function listGreenRoomCandidates(
   artistUserId: string,
   pool: GreenRoomInvitePool,
 ): Promise<GreenRoomCandidateView[]> {
-  if (pool === 'MANUAL_ONLY') return []
+  // EVERYONE grants access dynamically per-request (see resolveGreenRoomAccess) —
+  // there is no fixed audience to pre-populate an invite list from.
+  if (pool === 'MANUAL_ONLY' || pool === 'EVERYONE') return []
 
   const candidates: GreenRoomCandidateView[] = []
   const seen = new Set<string>()
@@ -161,6 +163,7 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
       id: true,
       state: true,
       userId: true,
+      greenRoomDefaultInvitePool: true,
       user: { select: { username: true, displayName: true } },
     },
   })
@@ -205,6 +208,20 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
   })
 
   if (!invite) {
+    // EVERYONE never pre-populates an invite row (see listGreenRoomCandidates) —
+    // any signed-in listener is granted access on request; /join stamps the
+    // PUBLIC invite row the first time they actually join.
+    if (channel.greenRoomDefaultInvitePool === 'EVERYONE') {
+      return {
+        hasAccess: true,
+        channelState: channel.state,
+        greenRoomEnabled: true,
+        joinedAt: null as string | null,
+        hlsUrl: liveHlsUrl(config.hlsBaseUrl, slug, 'STUDIO'),
+        artistUsername: channel.user.username,
+        artistDisplayName: channel.user.displayName,
+      }
+    }
     return {
       hasAccess: false,
       channelState: channel.state,

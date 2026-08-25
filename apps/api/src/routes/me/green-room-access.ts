@@ -56,6 +56,7 @@ const meGreenRoomAccessRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           state: true,
           userId: true,
+          greenRoomDefaultInvitePool: true,
           user: { select: { username: true, displayName: true } },
         },
       })
@@ -79,10 +80,22 @@ const meGreenRoomAccessRoutes: FastifyPluginAsync = async (fastify) => {
       const invite = await fastify.prisma.broadcastGreenRoomInvite.findUnique({
         where: { broadcastId_userId: { broadcastId: broadcast.id, userId: user.id } },
       })
-      if (!invite)
-        return reply.status(403).send({ error: 'You are not invited to this green room' })
-
-      if (!invite.joinedAt) {
+      if (!invite) {
+        // EVERYONE pool has no pre-populated invite list (see
+        // listGreenRoomCandidates) — stamp one now so this join is recorded
+        // the same way an invited guest's is.
+        if (channel.greenRoomDefaultInvitePool !== 'EVERYONE') {
+          return reply.status(403).send({ error: 'You are not invited to this green room' })
+        }
+        await fastify.prisma.broadcastGreenRoomInvite.create({
+          data: {
+            broadcastId: broadcast.id,
+            userId: user.id,
+            source: 'PUBLIC',
+            joinedAt: new Date(),
+          },
+        })
+      } else if (!invite.joinedAt) {
         await fastify.prisma.broadcastGreenRoomInvite.update({
           where: { id: invite.id },
           data: { joinedAt: new Date() },

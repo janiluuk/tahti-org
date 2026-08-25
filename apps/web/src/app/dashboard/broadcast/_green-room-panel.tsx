@@ -18,6 +18,7 @@ const POOL_LABELS: Record<GreenRoomInvitePool, string> = {
   MODERATORS_AND_SUBS: 'Moderators + fan subscribers',
   SUBS_ONLY: 'Fan subscribers only',
   MANUAL_ONLY: 'Manual invites only',
+  EVERYONE: 'Everyone',
 }
 
 function inviteStatus(invite: GreenRoomInviteView) {
@@ -167,7 +168,7 @@ export function GreenRoomPanel({ artistUsername }: { artistUsername: string }) {
           </Text>
 
           <div className="green-room-panel__actions studio-mt-md">
-            {session.invitePool !== 'MANUAL_ONLY' ? (
+            {session.invitePool !== 'MANUAL_ONLY' && session.invitePool !== 'EVERYONE' ? (
               <Button
                 variant="secondary"
                 size="sm"

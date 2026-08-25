@@ -3,10 +3,15 @@
 
 import { z } from 'zod'
 
-export const GreenRoomInvitePoolSchema = z.enum(['MODERATORS_AND_SUBS', 'SUBS_ONLY', 'MANUAL_ONLY'])
+export const GreenRoomInvitePoolSchema = z.enum([
+  'MODERATORS_AND_SUBS',
+  'SUBS_ONLY',
+  'MANUAL_ONLY',
+  'EVERYONE',
+])
 export type GreenRoomInvitePool = z.infer<typeof GreenRoomInvitePoolSchema>
 
-export const GreenRoomInviteSourceSchema = z.enum(['MODERATOR', 'FAN_SUB', 'MANUAL'])
+export const GreenRoomInviteSourceSchema = z.enum(['MODERATOR', 'FAN_SUB', 'MANUAL', 'PUBLIC'])
 export type GreenRoomInviteSource = z.infer<typeof GreenRoomInviteSourceSchema>
 
 export const GreenRoomDefaultsSchema = z.object({

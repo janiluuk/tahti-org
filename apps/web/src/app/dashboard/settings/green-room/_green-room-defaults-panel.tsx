@@ -11,6 +11,7 @@ import type { GreenRoomDefaults, GreenRoomInvitePool } from '@tahti/shared'
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 const POOL_OPTIONS: Array<{ value: GreenRoomInvitePool; label: string }> = [
+  { value: 'EVERYONE', label: 'Everyone (any signed-in listener)' },
   { value: 'MODERATORS_AND_SUBS', label: 'Moderators + active fan subscribers' },
   { value: 'SUBS_ONLY', label: 'Active fan subscribers only' },
   { value: 'MANUAL_ONLY', label: 'Manual invites only (no auto-sync)' },

@@ -249,6 +249,9 @@ enum GreenRoomInvitePool {
   MODERATORS_AND_SUBS
   SUBS_ONLY
   MANUAL_ONLY
+  /// Any signed-in listener can join — no invite list is maintained ahead of
+  /// time; access is granted (and a PUBLIC invite row stamped) on request.
+  EVERYONE
 
   @@schema("channel")
 }
@@ -257,6 +260,8 @@ enum GreenRoomInviteSource {
   MODERATOR
   FAN_SUB
   MANUAL
+  /// Auto-stamped when the channel's invite pool is EVERYONE.
+  PUBLIC
 
   @@schema("channel")
 }

@@ -135,4 +135,33 @@ describe('Green room API', () => {
       invitePool: 'MANUAL_ONLY',
     })
   })
+
+  it('grants any signed-in guest access when the pool is EVERYONE, with no invite needed', async () => {
+    await prisma.broadcastGreenRoomInvite.deleteMany({ where: { broadcastId } })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { greenRoomDefaultInvitePool: 'EVERYONE' },
+    })
+
+    const access = await app.inject({
+      method: 'GET',
+      url: `/api/me/green-room/${channelSlug}`,
+      headers: { cookie: guestCookie },
+    })
+    expect(access.statusCode).toBe(200)
+    expect(access.json()).toMatchObject({ hasAccess: true, joinedAt: null })
+
+    const join = await app.inject({
+      method: 'POST',
+      url: `/api/me/green-room/${channelSlug}/join`,
+      headers: { cookie: guestCookie },
+    })
+    expect(join.statusCode).toBe(200)
+    expect(join.json().joinedAt).toBeTruthy()
+
+    const invite = await prisma.broadcastGreenRoomInvite.findUnique({
+      where: { broadcastId_userId: { broadcastId, userId: guestUserId } },
+    })
+    expect(invite?.source).toBe('PUBLIC')
+  })
 })

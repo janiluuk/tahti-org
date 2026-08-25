@@ -32,6 +32,9 @@ export const RadioSlotBookingItemSchema = z.object({
   note: z.string().nullable(),
   showType: BroadcastShowTypeSchema,
   channelSlug: z.string(),
+  /** Artist's account username — the identifier `/u/:username` (and the
+   * green-room guest route) uses, which can differ from `channelSlug`. */
+  username: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   isMine: z.boolean(),
