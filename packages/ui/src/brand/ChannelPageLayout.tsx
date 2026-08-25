@@ -70,6 +70,11 @@ type ChannelHeaderProps = {
    * action="/api/auth/logout" posted to a path that only exists on the API
    * host, not this app — every logout attempt 404'd. */
   logoutAction?: (formData: FormData) => void | Promise<void>
+  /** Strips the bar down to just the logo — no site nav, no @handle/LIVE
+   * pill, no bells, no sign-in/user menu. For pages (the artist profile) that
+   * want a quiet top bar; the logo link is still the way back to the full
+   * nav, so it stays the one thing that's never hidden. */
+  logoOnly?: boolean
 }
 
 const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
@@ -127,6 +132,7 @@ export function ChannelHeader({
   showLiveBadge,
   user,
   logoutAction,
+  logoOnly,
 }: ChannelHeaderProps) {
   const pathname = usePathname()
   const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
@@ -168,6 +174,17 @@ export function ChannelHeader({
   // Signing in returns the listener to whatever page they were on — /login only
   // falls back to /dashboard when there's genuinely nowhere else to send them.
   const signInHref = `/login?next=${encodeURIComponent(pathname || '/dashboard')}`
+
+  if (logoOnly) {
+    return (
+      <header className="ch-header ch-header--logo-only">
+        <Link href={homeHref} className="ch-logo">
+          <span className="ch-logo__bar" aria-hidden />
+          TAHTI
+        </Link>
+      </header>
+    )
+  }
 
   return (
     <header className="ch-header">

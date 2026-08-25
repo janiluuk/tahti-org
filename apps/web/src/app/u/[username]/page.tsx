@@ -440,6 +440,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
       <ProfilePageLayout
         isLive={isLive}
         activeNav="discover"
+        logoOnly
         logoutAction={logout}
         user={user}
         cover={
