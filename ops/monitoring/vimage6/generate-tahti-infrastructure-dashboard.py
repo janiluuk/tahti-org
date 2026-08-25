@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 DS = {"type": "prometheus", "uid": "P501B54A0D5548634"}
+LOKI_DS = {"type": "loki", "uid": "loki-main"}
 HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|pi4|pi5|web"
 NET_DEV = 'device!~"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*"'
 # scripts/backup.sh (tahti) and /usr/local/sbin/backup-other-services.sh (sparkki, giggi)
@@ -194,6 +195,46 @@ def bargauge_panel(
                 "legendFormat": "{{instance}}",
                 "instant": True,
                 "refId": "A",
+            }
+        ],
+    }
+
+
+def logs_panel(
+    panel_id: int,
+    title: str,
+    expr: str,
+    y: int,
+    w: int = 24,
+    h: int = 12,
+    x: int = 0,
+    description: str = "",
+) -> dict:
+    """Loki log stream panel — containers ship via the docker loki logging
+    driver (infra/docker-compose.stack.yml x-loki-logging), labelled
+    job="tahti", service=<container name>."""
+    return {
+        "id": panel_id,
+        "type": "logs",
+        "title": title,
+        "description": description,
+        "gridPos": {"h": h, "w": w, "x": x, "y": y},
+        "datasource": LOKI_DS,
+        "options": {
+            "showTime": True,
+            "showLabels": True,
+            "showCommonLabels": False,
+            "wrapLogMessage": True,
+            "prettifyLogMessage": False,
+            "enableLogDetails": True,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending",
+        },
+        "targets": [
+            {
+                "expr": expr,
+                "refId": "A",
+                "datasource": LOKI_DS,
             }
         ],
     }
@@ -596,6 +637,35 @@ def main() -> None:
             w=12,
             unit="ms",
             legend="{{dependency}}",
+        )
+    )
+    pid += 1
+    y += 8
+
+    panels.append(row("Logs (Loki)", y, pid))
+    pid += 1
+    y += 1
+    panels.append(
+        logs_panel(
+            pid,
+            "Container logs — all services",
+            '{job="tahti"}',
+            y,
+            description="Every container in the prod stack ships here via the "
+            "docker loki logging driver. Filter by service in the query "
+            "editor, e.g. {job=\"tahti\", service=\"tahti-stack-api-1\"}.",
+        )
+    )
+    pid += 1
+    y += 12
+    panels.append(
+        logs_panel(
+            pid,
+            "API errors",
+            '{job="tahti", service="tahti-stack-api-1"} |= "error"',
+            y,
+            h=8,
+            description="API container log lines containing \"error\" (case-sensitive substring match).",
         )
     )
 

@@ -9,7 +9,11 @@
     "to": "now"
   },
   "timezone": "browser",
-  "tags": ["tahti", "infrastructure", "vimage6"],
+  "tags": [
+    "tahti",
+    "infrastructure",
+    "vimage6"
+  ],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -106,7 +110,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -170,7 +176,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -234,7 +242,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -310,7 +320,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -374,7 +386,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -438,7 +452,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -502,7 +518,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -556,7 +574,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background"
       },
@@ -603,7 +623,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -640,7 +662,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -677,7 +701,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -714,7 +740,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -751,7 +779,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -788,7 +818,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -864,7 +896,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -928,7 +962,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -1140,7 +1176,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "horizontal",
         "displayMode": "gradient"
@@ -1682,6 +1720,90 @@
           "expr": "tahti_dependency_check_latency_ms{job=\"tahti_api_metrics\"}",
           "legendFormat": "{{dependency}}",
           "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "type": "row",
+      "title": "Logs (Loki)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 117
+      },
+      "collapsed": false
+    },
+    {
+      "id": 44,
+      "type": "logs",
+      "title": "Container logs \u2014 all services",
+      "description": "Every container in the prod stack ships here via the docker loki logging driver. Filter by service in the query editor, e.g. {job=\"tahti\", service=\"tahti-stack-api-1\"}.",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 118
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "expr": "{job=\"tahti\"}",
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki-main"
+          }
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "type": "logs",
+      "title": "API errors",
+      "description": "API container log lines containing \"error\" (case-sensitive substring match).",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 130
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "expr": "{job=\"tahti\", service=\"tahti-stack-api-1\"} |= \"error\"",
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki-main"
+          }
         }
       ]
     }
