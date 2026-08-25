@@ -142,6 +142,63 @@ export async function addSupportTicketNote(
   return { error: null }
 }
 
+export async function updateMissedLiveShowFlag(
+  flagId: string,
+  patch: { status: string; resolutionNote?: string | null },
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/missed-live-shows/${flagId}`, {
+    method: 'PATCH',
+    headers: { Cookie: sessionHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Update failed' }
+  }
+  revalidatePath('/admin/missed-shows')
+  return { error: null }
+}
+
+export async function createAccountRestriction(
+  userId: string,
+  input: {
+    type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN'
+    reason: string
+    durationDays: number | null
+  },
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/users/${userId}/restrictions`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not add restriction' }
+  }
+  revalidatePath(`/admin/users/${userId}`)
+  return { error: null }
+}
+
+export async function liftAccountRestriction(
+  userId: string,
+  restrictionId: string,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/users/${userId}/restrictions/${restrictionId}`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not lift restriction' }
+  }
+  revalidatePath(`/admin/users/${userId}`)
+  return { error: null }
+}
+
 export async function createEngagementAdjustment(input: {
   userId: string
   units: number

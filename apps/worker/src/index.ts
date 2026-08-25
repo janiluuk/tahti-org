@@ -11,6 +11,8 @@ import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-tri
 import { processOpenThemePullRequestJob } from './jobs/open-theme-pull-request.js'
 import { processSeparateStemsJob } from './jobs/separate-stems.js'
 import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
+import { processLiveShowRecurrenceJob } from './jobs/live-show-recurrence.js'
+import { processMissedLiveShowScanJob } from './jobs/missed-live-show-scan.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
@@ -221,6 +223,16 @@ const worker = new Worker(
       } else if (job.name === 'revelator-royalty-sync') {
         const summary = await processRevelatorRoyaltySyncJob(prisma, job)
         console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))
+      } else if (job.name === 'live-show-recurrence-generate') {
+        const summary = await processLiveShowRecurrenceJob(job)
+        if (summary.episodesCreated > 0) {
+          console.log('[worker] live-show-recurrence-generate:', JSON.stringify(summary))
+        }
+      } else if (job.name === 'missed-live-show-scan') {
+        const summary = await processMissedLiveShowScanJob(job)
+        if (summary.flagged > 0) {
+          console.log('[worker] missed-live-show-scan:', JSON.stringify(summary))
+        }
       } else if (job.name === 'annual-grant-calc') {
         // Default to the prior calendar year (matches Finnish fiscal year).
         const { year } = job.data as { year?: number }

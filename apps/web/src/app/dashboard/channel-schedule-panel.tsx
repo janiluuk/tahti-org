@@ -4,16 +4,22 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ButtonIcon, Button } from '@tahti/ui'
-import type { LiveShowSeriesView, ScheduledLiveShowView } from '@tahti/shared'
+import { WEEKDAY_LABELS, type LiveShowSeriesView, type ScheduledLiveShowView } from '@tahti/shared'
 import { Panel } from '@/components/ui'
 import {
   cancelScheduledLiveShow,
   createLiveShowSeries,
   scheduleLiveShowEpisode,
   updateChannelSchedule,
+  updateLiveShowSeriesRecurrence,
 } from './channel-schedule-actions'
+
+// Sun(0)..Sat(6) order to match WEEKDAY_LABELS/JS Date#getDay, but the button
+// row itself reads left-to-right starting Monday — how artists actually think
+// about a weekly show schedule.
+const FREQUENCY_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
 export default function ChannelSchedulePanel({
   initialAt,
@@ -28,6 +34,7 @@ export default function ChannelSchedulePanel({
   initialScheduledShows: ScheduledLiveShowView[]
   isLive?: boolean
 }) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [at, setAt] = useState(initialAt ? new Date(initialAt).toISOString().slice(0, 16) : '')
   const [note, setNote] = useState(initialNote ?? '')
@@ -37,6 +44,10 @@ export default function ChannelSchedulePanel({
   const [scheduledShows, setScheduledShows] = useState(initialScheduledShows)
   const [selectedSeriesId, setSelectedSeriesId] = useState(initialSeries[0]?.id ?? '')
   const [episodeAt, setEpisodeAt] = useState('')
+  const [episodeTitle, setEpisodeTitle] = useState('')
+  const [durationHours, setDurationHours] = useState(1)
+  const [durationMinutes, setDurationMinutes] = useState(0)
+  const [frequencyDays, setFrequencyDays] = useState<number[]>([])
   const [seriesName, setSeriesName] = useState(searchParams.get('seriesName') ?? '')
   const [description, setDescription] = useState('')
   const [tagline, setTagline] = useState('')
@@ -105,11 +116,13 @@ export default function ChannelSchedulePanel({
     })
   }
 
-  function scheduleEpisode() {
-    if (!selectedSeriesId || !episodeAt) {
-      setError('Choose a series and date first.')
-      return
-    }
+  function toggleFrequencyDay(day: number) {
+    setFrequencyDays((current) =>
+      current.includes(day) ? current.filter((d) => d !== day) : [...current, day],
+    )
+  }
+
+  function scheduleOneOffEpisode() {
     setError(null)
     setMessage(null)
     startTransition(async () => {
@@ -117,6 +130,7 @@ export default function ChannelSchedulePanel({
         selectedSeriesId,
         new Date(episodeAt).toISOString(),
         {
+          title: episodeTitle.trim() || null,
           venue: venue.trim() || null,
           location: location.trim() || null,
           artworkUrl: episodeArtworkUrl.trim() || null,
@@ -137,10 +151,77 @@ export default function ChannelSchedulePanel({
       setAt(episodeAt)
       setNote(result.data.title)
       setEpisodeAt('')
+      setEpisodeTitle('')
       setEpisodeArtworkUrl('')
       setVenue('')
       setLocation('')
       setMessage(`${result.data.title} scheduled.`)
+    })
+  }
+
+  function saveRecurringSchedule() {
+    setError(null)
+    setMessage(null)
+    const timeOfDay = episodeAt.slice(11, 16)
+    const durationMin = durationHours * 60 + durationMinutes
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    startTransition(async () => {
+      const result = await updateLiveShowSeriesRecurrence(selectedSeriesId, {
+        recurrenceEnabled: true,
+        recurrenceDays: frequencyDays,
+        recurrenceTimeOfDay: timeOfDay,
+        recurrenceDurationMin: durationMin > 0 ? durationMin : null,
+        recurrenceTimezone: timezone,
+      })
+      if (result.error || !result.data) {
+        setError(result.error ?? 'Could not save the recurring schedule')
+        return
+      }
+      setSeries((current) =>
+        current.map((item) => (item.id === selectedSeriesId ? result.data! : item)),
+      )
+      setEpisodeAt('')
+      setEpisodeTitle('')
+      setFrequencyDays([])
+      setMessage('Recurring schedule saved — upcoming shows are being generated.')
+      // The server just created ScheduledLiveShow rows synchronously
+      // (apps/api's generateRecurringEpisodes) — refresh to pull them into
+      // initialScheduledShows rather than re-deriving generation client-side.
+      router.refresh()
+    })
+  }
+
+  function addShow() {
+    if (!selectedSeriesId || !episodeAt) {
+      setError('Choose a series and date first.')
+      return
+    }
+    if (frequencyDays.length > 0) {
+      saveRecurringSchedule()
+    } else {
+      scheduleOneOffEpisode()
+    }
+  }
+
+  function stopRecurringSchedule() {
+    setError(null)
+    setMessage(null)
+    startTransition(async () => {
+      const result = await updateLiveShowSeriesRecurrence(selectedSeriesId, {
+        recurrenceEnabled: false,
+        recurrenceDays: [],
+        recurrenceTimeOfDay: null,
+        recurrenceDurationMin: null,
+        recurrenceTimezone: null,
+      })
+      if (result.error || !result.data) {
+        setError(result.error ?? 'Could not stop the recurring schedule')
+        return
+      }
+      setSeries((current) =>
+        current.map((item) => (item.id === selectedSeriesId ? result.data! : item)),
+      )
+      setMessage('Recurring schedule stopped. Already-generated upcoming shows stay put.')
     })
   }
 
@@ -157,6 +238,7 @@ export default function ChannelSchedulePanel({
     })
   }
 
+  const selectedSeries = series.find((item) => item.id === selectedSeriesId)
   const previewAtIso = at ? new Date(at).toISOString() : null
   const previewNote = note.trim() || null
 
@@ -293,13 +375,13 @@ export default function ChannelSchedulePanel({
       </Panel>
 
       <Panel
-        title="Schedule an episode"
-        description="The title and all saved series data will be filled automatically when you go live."
+        title="Add a show"
+        description="Set a one-off date, or pick days below to make it a weekly show — either way, the title and series details fill in automatically."
       >
         {series.length === 0 ? (
           <p className="studio-text-muted-sm">Create a show series first.</p>
         ) : (
-          <div className="studio-schedule-row studio-row--wrap">
+          <div className="studio-add-show">
             <label className="studio-schedule-row__field studio-flex-1">
               <span className="studio-label-sm">Series</span>
               <select
@@ -316,51 +398,163 @@ export default function ChannelSchedulePanel({
                 ))}
               </select>
             </label>
-            <label className="studio-schedule-row__field">
-              <span className="studio-label-sm">Date &amp; time</span>
-              <input
-                type="datetime-local"
-                className="studio-input"
-                value={episodeAt}
-                onChange={(event) => setEpisodeAt(event.target.value)}
-                disabled={isPending}
-              />
-            </label>
-            <label className="studio-schedule-row__field">
-              <span className="studio-label-sm">Venue</span>
-              <input
-                className="studio-input"
-                value={venue}
-                onChange={(event) => setVenue(event.target.value)}
-                placeholder="Optional venue"
-                disabled={isPending}
-              />
-            </label>
-            <label className="studio-schedule-row__field">
-              <span className="studio-label-sm">Location</span>
-              <input
-                className="studio-input"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                placeholder="City, country, or online"
-                disabled={isPending}
-              />
-            </label>
+
             <label className="studio-schedule-row__field studio-flex-1">
-              <span className="studio-label-sm">Different artwork for this episode</span>
+              <span className="studio-label-sm">Title</span>
               <input
-                type="url"
                 className="studio-input"
-                value={episodeArtworkUrl}
-                onChange={(event) => setEpisodeArtworkUrl(event.target.value)}
-                placeholder="Leave blank to keep the series artwork"
+                value={episodeTitle}
+                onChange={(event) => setEpisodeTitle(event.target.value)}
+                placeholder="Tell your listeners what they're in for (optional)"
+                maxLength={200}
                 disabled={isPending}
               />
+              <span className="studio-add-show__hint">
+                Leave blank to use the series name
+                {selectedSeries?.episodeNumberEnabled ? ' + episode number' : ''}.
+              </span>
             </label>
-            <Button onClick={scheduleEpisode} disabled={isPending || !episodeAt} variant="primary">
-              <ButtonIcon name="plus" />
-              Schedule show
-            </Button>
+
+            <div className="studio-add-show__time-row">
+              <label className="studio-schedule-row__field">
+                <span className="studio-label-sm">Date &amp; time</span>
+                <input
+                  type="datetime-local"
+                  className="studio-input"
+                  value={episodeAt}
+                  onChange={(event) => setEpisodeAt(event.target.value)}
+                  disabled={isPending}
+                />
+              </label>
+              <span className="studio-add-show__for">for</span>
+              <label className="studio-schedule-row__field">
+                <span className="studio-label-sm">Hours</span>
+                <select
+                  className="studio-input studio-input--narrow"
+                  value={durationHours}
+                  onChange={(event) => setDurationHours(Number(event.target.value))}
+                  disabled={isPending}
+                >
+                  {Array.from({ length: 13 }, (_, h) => h).map((h) => (
+                    <option key={h} value={h}>
+                      {h} hours
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="studio-schedule-row__field">
+                <span className="studio-label-sm">Minutes</span>
+                <select
+                  className="studio-input studio-input--narrow"
+                  value={durationMinutes}
+                  onChange={(event) => setDurationMinutes(Number(event.target.value))}
+                  disabled={isPending}
+                >
+                  {[0, 15, 30, 45].map((m) => (
+                    <option key={m} value={m}>
+                      {m} minutes
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div>
+              <span className="studio-label-sm">Frequency</span>
+              <div className="studio-add-show__frequency">
+                {FREQUENCY_DAY_ORDER.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    className={`studio-add-show__day${frequencyDays.includes(day) ? ' studio-add-show__day--active' : ''}`}
+                    onClick={() => toggleFrequencyDay(day)}
+                    disabled={isPending}
+                  >
+                    Every {WEEKDAY_LABELS[day]}
+                  </button>
+                ))}
+              </div>
+              <span className="studio-add-show__hint">
+                {frequencyDays.length > 0
+                  ? 'Weekly show — episodes are generated automatically on the selected days, this far ahead: '
+                  : 'No day selected — this is a one-off show at the date and time above.'}
+                {frequencyDays.length > 0 && (
+                  <>
+                    {series.find((s) => s.id === selectedSeriesId)?.recurrenceHorizonDays ?? 28}{' '}
+                    days.
+                  </>
+                )}
+              </span>
+            </div>
+
+            {selectedSeries?.recurrenceEnabled && (
+              <div className="studio-add-show__recurrence-status">
+                <span>
+                  Currently repeating every{' '}
+                  {selectedSeries.recurrenceDays
+                    .slice()
+                    .sort((a, b) => a - b)
+                    .map((d) => WEEKDAY_LABELS[d])
+                    .join(', ')}
+                  {selectedSeries.recurrenceTimeOfDay
+                    ? ` at ${selectedSeries.recurrenceTimeOfDay}`
+                    : ''}
+                  .
+                </span>
+                <Button
+                  onClick={stopRecurringSchedule}
+                  disabled={isPending}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Stop recurring
+                </Button>
+              </div>
+            )}
+
+            <details className="studio-add-show__more">
+              <summary>More details (venue, location, artwork)</summary>
+              <div className="studio-schedule-row studio-row--wrap studio-mt-sm">
+                <label className="studio-schedule-row__field">
+                  <span className="studio-label-sm">Venue</span>
+                  <input
+                    className="studio-input"
+                    value={venue}
+                    onChange={(event) => setVenue(event.target.value)}
+                    placeholder="Optional venue"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-schedule-row__field">
+                  <span className="studio-label-sm">Location</span>
+                  <input
+                    className="studio-input"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="City, country, or online"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-schedule-row__field studio-flex-1">
+                  <span className="studio-label-sm">Different artwork for this episode</span>
+                  <input
+                    type="url"
+                    className="studio-input"
+                    value={episodeArtworkUrl}
+                    onChange={(event) => setEpisodeArtworkUrl(event.target.value)}
+                    placeholder="Leave blank to keep the series artwork"
+                    disabled={isPending}
+                  />
+                </label>
+              </div>
+            </details>
+
+            <div className="studio-add-show__submit-row">
+              <Button onClick={addShow} disabled={isPending || !episodeAt} variant="primary">
+                <ButtonIcon name="plus" />
+                {frequencyDays.length > 0 ? 'Save weekly show' : 'Schedule show'}
+              </Button>
+            </div>
           </div>
         )}
         {scheduledShows.length > 0 && (

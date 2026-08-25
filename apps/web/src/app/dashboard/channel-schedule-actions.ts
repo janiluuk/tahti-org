@@ -58,7 +58,12 @@ export async function createLiveShowSeries(payload: {
 export async function scheduleLiveShowEpisode(
   seriesId: string,
   startAt: string,
-  details: { venue: string | null; location: string | null; artworkUrl: string | null },
+  details: {
+    title: string | null
+    venue: string | null
+    location: string | null
+    artworkUrl: string | null
+  },
 ): Promise<{ data?: ScheduledLiveShowView; error?: string }> {
   const res = await fetch(`${apiUrl}/api/me/channel/show-series/${seriesId}/episodes`, {
     method: 'POST',
@@ -66,6 +71,25 @@ export async function scheduleLiveShowEpisode(
     body: JSON.stringify({ startAt, ...details }),
   })
   const body = (await res.json().catch(() => ({}))) as ScheduledLiveShowView & { error?: string }
+  return res.ok ? { data: body } : { error: body.error ?? `HTTP ${res.status}` }
+}
+
+export async function updateLiveShowSeriesRecurrence(
+  seriesId: string,
+  recurrence: {
+    recurrenceEnabled: boolean
+    recurrenceDays: number[]
+    recurrenceTimeOfDay: string | null
+    recurrenceDurationMin: number | null
+    recurrenceTimezone: string | null
+  },
+): Promise<{ data?: LiveShowSeriesView; error?: string }> {
+  const res = await fetch(`${apiUrl}/api/me/channel/show-series/${seriesId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(recurrence),
+  })
+  const body = (await res.json().catch(() => ({}))) as LiveShowSeriesView & { error?: string }
   return res.ok ? { data: body } : { error: body.error ?? `HTTP ${res.status}` }
 }
 

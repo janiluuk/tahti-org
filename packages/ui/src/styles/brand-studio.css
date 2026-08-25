@@ -11728,6 +11728,95 @@
   }
 }
 
+/* ── "Add a show" — one-off or recurring (Twitch-style Add Stream layout) ── */
+
+[data-tahti-ui='studio'] .studio-add-show {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__hint {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__time-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='studio'] .studio-add-show__for {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--muted);
+  padding-bottom: 10px;
+}
+
+[data-tahti-ui='studio'] .studio-add-show__frequency {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: 6px;
+}
+
+[data-tahti-ui='studio'] .studio-add-show__day {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-add-show__day:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+}
+
+[data-tahti-ui='studio'] .studio-add-show__day--active {
+  background: color-mix(in srgb, var(--cyan) 20%, transparent);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__recurrence-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__more {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__more summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-add-show__submit-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
 [data-tahti-ui='studio'] .studio-countdown-preview__label {
   margin: 0 0 var(--space-2);
   font-size: var(--text-label);

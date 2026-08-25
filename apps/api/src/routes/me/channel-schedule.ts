@@ -14,10 +14,17 @@ import {
   PatchLiveShowEpisodeSchema,
   PatchLiveShowSeriesSchema,
   ScheduleLiveShowSchema,
+  isValidRecurrenceRule,
   liveShowEpisodeTitle,
+  nextRecurrenceOccurrences,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import {
+  generateForSeries,
+  getActiveRestriction,
+  syncNextBroadcast as syncNextBroadcastDb,
+} from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 
 type LiveShowSeriesDbRow = {
@@ -34,6 +41,12 @@ type LiveShowSeriesDbRow = {
   nextEpisodeNumber: number
   intervalHours: number
   scheduleNote: string | null
+  recurrenceEnabled: boolean
+  recurrenceDays: number[]
+  recurrenceTimeOfDay: string | null
+  recurrenceDurationMin: number | null
+  recurrenceTimezone: string | null
+  recurrenceHorizonDays: number
   createdAt: Date
   updatedAt: Date
 }
@@ -117,23 +130,24 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
   }
 
   async function syncNextBroadcast(channelId: string) {
-    const next = await showDb.scheduledLiveShow.findFirst({
-      where: {
-        channelId,
-        canceledAt: null,
-        broadcast: null,
-        startAt: { gt: new Date() },
-      },
-      orderBy: { startAt: 'asc' },
-      select: { startAt: true, title: true },
-    })
-    await fastify.prisma.channel.update({
-      where: { id: channelId },
-      data: {
-        nextBroadcastAt: next?.startAt ?? null,
-        nextBroadcastNote: next?.title ?? null,
-      },
-    })
+    await syncNextBroadcastDb(fastify.prisma, channelId)
+  }
+
+  /** Runs an immediate generation pass for one series right after it's
+   * created/updated with recurrence on, so the artist sees upcoming shows
+   * appear without waiting for the next day's cron tick (which still runs,
+   * rolling the horizon forward as time passes — see
+   * apps/worker/src/jobs/live-show-recurrence.ts). */
+  async function generateRecurringEpisodes(series: LiveShowSeriesDbRow, userId: string) {
+    const rule = {
+      days: series.recurrenceDays,
+      timeOfDay: series.recurrenceTimeOfDay,
+      timezone: series.recurrenceTimezone,
+    }
+    if (!series.recurrenceEnabled || !isValidRecurrenceRule(rule)) return
+    const occurrences = nextRecurrenceOccurrences(rule, new Date(), series.recurrenceHorizonDays)
+    const created = await generateForSeries(fastify.prisma, { ...series, userId }, occurrences)
+    if (created > 0) await syncNextBroadcast(series.channelId)
   }
 
   fastify.get(
@@ -252,6 +266,21 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       const channel = await findChannel(request.sessionUser!.id)
       if (!channel) return reply.status(404).send({ error: 'No channel' })
 
+      if (parsed.data.recurrenceEnabled) {
+        const ban = await getActiveRestriction(
+          fastify.prisma,
+          request.sessionUser!.id,
+          'LIVE_SHOW_BOOKING',
+        )
+        if (ban) {
+          return reply.status(403).send({
+            error: ban.expiresAt
+              ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
+              : `Booking is blocked: ${ban.reason}`,
+          })
+        }
+      }
+
       const series = await showDb.liveShowSeries.create({
         data: {
           channelId: channel.id,
@@ -261,6 +290,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
           scheduleNote: parsed.data.scheduleNote || null,
         },
       })
+      await generateRecurringEpisodes(series, request.sessionUser!.id)
       return reply.status(201).send({
         ...series,
         createdAt: series.createdAt.toISOString(),
@@ -285,6 +315,21 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!existing) return reply.status(404).send({ error: 'Series not found' })
 
+      if (parsed.data.recurrenceEnabled) {
+        const ban = await getActiveRestriction(
+          fastify.prisma,
+          request.sessionUser!.id,
+          'LIVE_SHOW_BOOKING',
+        )
+        if (ban) {
+          return reply.status(403).send({
+            error: ban.expiresAt
+              ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
+              : `Booking is blocked: ${ban.reason}`,
+          })
+        }
+      }
+
       const data: Record<string, unknown> = { ...parsed.data }
       if ('description' in data) data.description = parsed.data.description || null
       if ('tagline' in data) data.tagline = parsed.data.tagline || null
@@ -294,6 +339,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: existing.id },
         data,
       })
+      await generateRecurringEpisodes(series, request.sessionUser!.id)
       return reply.send({
         ...series,
         createdAt: series.createdAt.toISOString(),
@@ -318,6 +364,19 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'No channel' })
       const { seriesId } = request.params as { seriesId: string }
 
+      const ban = await getActiveRestriction(
+        fastify.prisma,
+        request.sessionUser!.id,
+        'LIVE_SHOW_BOOKING',
+      )
+      if (ban) {
+        return reply.status(403).send({
+          error: ban.expiresAt
+            ? `Booking is blocked until ${ban.expiresAt.toLocaleString()}: ${ban.reason}`
+            : `Booking is blocked: ${ban.reason}`,
+        })
+      }
+
       const scheduled = await fastify.prisma.$transaction(async (tx) => {
         const transactionDb = showScheduleDb(tx)
         const series = await transactionDb.liveShowSeries.findFirst({
@@ -332,7 +391,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
             seriesId: series.id,
             startAt,
             episodeNumber,
-            title: liveShowEpisodeTitle(series.name, episodeNumber),
+            title: parsed.data.title?.trim() || liveShowEpisodeTitle(series.name, episodeNumber),
             description: series.description,
             tagline: series.tagline,
             venue: parsed.data.venue || null,

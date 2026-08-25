@@ -115,6 +115,8 @@ import adminFeatureRequestRoutes from './routes/admin/feature-requests.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminLogsRoutes from './routes/admin/logs.js'
 import adminVenueRoutes from './routes/admin/venues.js'
+import adminMissedLiveShowRoutes from './routes/admin/missed-live-shows.js'
+import adminAccountRestrictionRoutes from './routes/admin/account-restrictions.js'
 import supportContactRoutes from './routes/support/contact.js'
 import contentReportsRoute from './routes/reports/submit.js'
 import adminBetaRoutes from './routes/admin/beta.js'
@@ -627,6 +629,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminTopListsRoutes)
   await fastify.register(topListsRoutes)
   await fastify.register(adminSupportRoutes)
+  await fastify.register(adminMissedLiveShowRoutes)
+  await fastify.register(adminAccountRestrictionRoutes)
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(adminReportsRoutes)
   await fastify.register(adminContentReportRoutes)

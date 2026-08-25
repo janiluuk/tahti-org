@@ -4,19 +4,32 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
+import type { AccountRestrictionView } from '@tahti/shared'
 import { SuspendUserForm, UserAdminActions } from './user-admin-panel'
+import { AccountRestrictionsPanel } from './account-restrictions-panel'
 import { resolveChannelUrl } from '@/lib/app-url'
 
-async function fetchUser(id: string) {
+function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const res = await fetch(`${apiUrl}/api/admin/users/${id}`, {
+  return fetch(`${apiUrl}${path}`, {
     headers: { Cookie: `tahti_session=${sessionCookie?.value ?? ''}` },
     cache: 'no-store',
   })
+}
+
+async function fetchUser(id: string) {
+  const res = await boardFetch(`/api/admin/users/${id}`)
   if (res.status === 404) return null
   if (!res.ok) return null
   return (await res.json()) as UserDetail
+}
+
+async function fetchRestrictions(id: string): Promise<AccountRestrictionView[]> {
+  const res = await boardFetch(`/api/admin/users/${id}/restrictions`)
+  if (!res.ok) return []
+  const data = (await res.json()) as { restrictions: AccountRestrictionView[] }
+  return data.restrictions
 }
 
 interface UserDetail {
@@ -43,7 +56,10 @@ interface UserDetail {
 }
 
 export default async function AdminUserDetailPage({ params }: { params: { id: string } }) {
-  const user = await fetchUser(params.id)
+  const [user, restrictions] = await Promise.all([
+    fetchUser(params.id),
+    fetchRestrictions(params.id),
+  ])
   if (!user) notFound()
 
   return (
@@ -56,6 +72,10 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
         @{user.username} · {user.email} · {user.tier}
         {user.isMember ? ' · member' : ''}
         {user.isBoard ? ' · board' : ''}
+        {' · '}
+        <Link href={`/dashboard/messages?username=${encodeURIComponent(user.username)}`}>
+          Message →
+        </Link>
       </p>
 
       {user.suspendedAt ? (
@@ -107,6 +127,8 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
         isBoard={user.isBoard}
         suspended={Boolean(user.suspendedAt)}
       />
+
+      <AccountRestrictionsPanel userId={user.id} initialRestrictions={restrictions} />
 
       {!user.suspendedAt ? <SuspendUserForm userId={user.id} /> : null}
     </>

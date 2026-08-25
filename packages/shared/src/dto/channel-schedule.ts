@@ -24,12 +24,25 @@ export const CreateLiveShowSeriesSchema = z.object({
   /// Preferred length for this show's radio-slot bookings, hours.
   intervalHours: z.union([z.literal(1), z.literal(2)]).default(1),
   scheduleNote: z.string().trim().max(200).nullable().optional(),
+  recurrenceEnabled: z.boolean().default(false),
+  /// 0=Sunday..6=Saturday.
+  recurrenceDays: z.array(z.number().int().min(0).max(6)).max(7).default([]),
+  recurrenceTimeOfDay: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Use 24h HH:mm')
+    .nullable()
+    .optional(),
+  recurrenceDurationMin: z.number().int().min(15).max(720).nullable().optional(),
+  /// IANA zone, e.g. "Europe/Helsinki" — captured client-side.
+  recurrenceTimezone: z.string().trim().max(100).nullable().optional(),
+  recurrenceHorizonDays: z.number().int().min(7).max(90).default(28),
 })
 
 export const PatchLiveShowSeriesSchema = CreateLiveShowSeriesSchema.partial()
 
 export const ScheduleLiveShowSchema = z.object({
   startAt: z.string().datetime(),
+  title: z.string().trim().max(200).nullable().optional(),
   venue: z.string().trim().max(200).nullable().optional(),
   location: z.string().trim().max(200).nullable().optional(),
   artworkUrl: z.string().url().max(2_000).nullable().optional(),

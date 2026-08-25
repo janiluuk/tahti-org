@@ -36,6 +36,7 @@ export {
   notifyUserThemeApproved,
   notifyUserThemeRejected,
   notifyUserAdminTest,
+  notifyBoardOfMissedLiveShow,
   processScheduledPostNotifications,
 } from './notifications.js'
 export {
@@ -45,3 +46,10 @@ export {
   upsertUserIntegrationCredential,
   removeUserIntegrationCredential,
 } from './integration-credentials.js'
+export {
+  generateForSeries,
+  syncNextBroadcast,
+  getActiveRestriction,
+  type RecurringSeriesInput,
+  type ActiveRestriction,
+} from './live-show-recurrence.js'

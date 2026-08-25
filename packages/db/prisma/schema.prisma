@@ -500,6 +500,9 @@ enum NotificationType {
   THEME_REJECTED
   /// Manually sent by an admin from /admin/news's test-notification form.
   ADMIN_TEST
+  /// Sent to every board member when the missed-live-show-scan cron flags a
+  /// ScheduledLiveShow whose start time passed with no Broadcast against it.
+  MISSED_LIVE_SHOW_FLAGGED
 
   @@schema("core")
 }
@@ -767,6 +770,9 @@ model User {
   supportTicketsAssigned SupportTicket[]     @relation("SupportAssignee")
   supportTicketNotes    SupportTicketNote[]
   contentReportsResolved ContentReport[]
+  accountRestrictions        AccountRestriction[] @relation("AccountRestrictionUser")
+  accountRestrictionsIssued  AccountRestriction[] @relation("AccountRestrictionIssuedBy")
+  missedLiveShowFlagsResolved MissedLiveShowFlag[] @relation("MissedLiveShowFlagResolvedBy")
   boardResolutionsCreated BoardResolution[]
   annualReportsGenerated  AnnualReport[]
   socialConnections       SocialConnection[]
@@ -1227,6 +1233,7 @@ model Channel {
   broadcasts        Broadcast[]
   liveShowSeries    LiveShowSeries[]
   scheduledLiveShows ScheduledLiveShow[]
+  missedLiveShowFlags MissedLiveShowFlag[]
   announcements     ChannelAnnouncement[]
   chatBans          ChatBan[]
   chatMessages      ChatMessage[]
@@ -1408,6 +1415,21 @@ model LiveShowSeries {
   intervalHours          Int                 @default(1)
   /// Freeform recurring cadence hint (e.g. "Fridays 20:00") — display only, not scheduling logic.
   scheduleNote           String?
+  /// Recurring auto-scheduling: when enabled, a worker job (and an immediate
+  /// pass on save) keeps ScheduledLiveShow rows generated up to
+  /// recurrenceHorizonDays out, one per selected weekday, at
+  /// recurrenceTimeOfDay in recurrenceTimezone.
+  recurrenceEnabled      Boolean             @default(false)
+  /// 0=Sunday..6=Saturday (JS Date#getDay convention).
+  recurrenceDays         Int[]               @default([])
+  /// 24h "HH:mm", interpreted in recurrenceTimezone.
+  recurrenceTimeOfDay    String?
+  recurrenceDurationMin  Int?
+  /// IANA zone (e.g. "Europe/Helsinki"), captured client-side at setup time —
+  /// generation is timezone/DST-aware, unlike the naive datetime-local inputs
+  /// used elsewhere on this page.
+  recurrenceTimezone     String?
+  recurrenceHorizonDays  Int                 @default(28)
   scheduledShows         ScheduledLiveShow[]
   episodes               LiveShowEpisode[]
   createdAt              DateTime            @default(now())
@@ -1478,12 +1500,78 @@ model ScheduledLiveShow {
   autoArchive   Boolean
   canceledAt    DateTime?
   broadcast     Broadcast?
+  missedFlag    MissedLiveShowFlag?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
   @@index([channelId, startAt])
   @@index([seriesId, startAt])
   @@schema("channel")
+}
+
+/// Blocks a channel from booking new shows (manual scheduleLiveShowEpisode,
+/// and recurrence generation) while active — see the
+/// live-show-recurrence-generate cron and the show-series/episodes route,
+/// both of which check for an active ban before creating a
+/// ScheduledLiveShow. Distinct from ChatBan (which blocks chat, not
+/// broadcasting) and from Channel.suspendedAt (a full account suspension).
+enum AccountRestrictionType {
+  /// Blocks scheduling new live shows — manual scheduleLiveShowEpisode and
+  /// recurrence generation both check for this.
+  LIVE_SHOW_BOOKING
+  /// Blocks uploading new tracks/archive/release audio.
+  UPLOAD
+  /// Blocks signing in — checked at /api/auth/login.
+  LOGIN
+
+  @@schema("core")
+}
+
+/// A time-boxed (or indefinite) restriction an admin places on a user,
+/// always with a reason shown back to the user wherever the restriction is
+/// enforced. Three independent restriction types rather than one combined
+/// "ban" — an admin can restrict booking without touching upload or login,
+/// and vice versa. User-scoped (not channel-scoped): LOGIN clearly has to
+/// be, and keeping all three on the same shape/table means one admin UI
+/// pattern instead of three near-identical ones.
+model AccountRestriction {
+  id         String                 @id @default(cuid())
+  userId     String
+  user       User                   @relation("AccountRestrictionUser", fields: [userId], references: [id], onDelete: Cascade)
+  type       AccountRestrictionType
+  /// Shown to the user as the reason for the restriction.
+  reason     String
+  bannedAt   DateTime               @default(now())
+  /// Null = indefinite, lifted manually.
+  expiresAt  DateTime?
+  liftedAt   DateTime?
+  bannedById String?
+  bannedBy   User?                  @relation("AccountRestrictionIssuedBy", fields: [bannedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, type, expiresAt])
+  @@schema("core")
+}
+
+/// Raised by the missed-live-show-scan cron (apps/worker) when a
+/// ScheduledLiveShow's start time passes with no Broadcast against it —
+/// an admin review queue mirroring ContentReport/SupportTicket's
+/// status+resolution shape (reuses ContentReportStatus rather than adding a
+/// near-duplicate enum).
+model MissedLiveShowFlag {
+  id                  BigInt              @id @default(autoincrement())
+  scheduledLiveShowId String              @unique
+  scheduledLiveShow   ScheduledLiveShow   @relation(fields: [scheduledLiveShowId], references: [id], onDelete: Cascade)
+  channelId           String
+  channel             Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  detectedAt          DateTime            @default(now())
+  status              ContentReportStatus @default(OPEN)
+  resolvedById        String?
+  resolvedBy          User?               @relation("MissedLiveShowFlagResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolutionNote       String?
+  resolvedAt           DateTime?
+
+  @@index([status, detectedAt(sort: Desc)])
+  @@schema("admin")
 }
 
 /// Per-broadcast green room invite — access to the artist's PREVIEW stream before go-live.

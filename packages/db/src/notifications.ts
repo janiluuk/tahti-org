@@ -301,6 +301,33 @@ export async function notifyUserThemeRejected(
   })
 }
 
+/** Fans out to every board member when apps/worker's missed-live-show-scan
+ * cron flags a ScheduledLiveShow — see MissedLiveShowFlag in schema.prisma.
+ * Deep-links to the admin queue list (there's no per-flag detail page — the
+ * list itself carries the inspect/message/status actions), not the artist's
+ * own dashboard. */
+export async function notifyBoardOfMissedLiveShow(
+  prisma: PrismaClient,
+  show: { id: string; title: string; startAt: Date },
+  artistDisplayName: string,
+): Promise<void> {
+  const boardMembers = await prisma.user.findMany({
+    where: { isBoard: true },
+    select: { id: true },
+  })
+  if (boardMembers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: boardMembers.map((member) => ({
+      userId: member.id,
+      type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
+      title: `${artistDisplayName} missed a scheduled show`,
+      body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,
+      url: '/admin/missed-shows',
+    })),
+  })
+}
+
 /** One-off notification an admin sends from /admin/news's test-notification form. */
 export async function notifyUserAdminTest(
   prisma: PrismaClient,

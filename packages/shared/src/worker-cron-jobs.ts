@@ -168,4 +168,18 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     jobId: 'sweep-expired-stems-cron',
     description: 'Delete stem-separation output past its 7-day retention window (03:30 UTC)',
   },
+  {
+    name: 'live-show-recurrence-generate',
+    pattern: '15 3 * * *',
+    jobId: 'live-show-recurrence-generate-cron',
+    description:
+      'Roll recurring LiveShowSeries forward: generate missing ScheduledLiveShow occurrences up to each series’ horizon (03:15 UTC)',
+  },
+  {
+    name: 'missed-live-show-scan',
+    pattern: '5 * * * *',
+    jobId: 'missed-live-show-scan-cron',
+    description:
+      'Flag ScheduledLiveShows whose start time passed with no Broadcast, notify the board (5 min past the hour)',
+  },
 ]
