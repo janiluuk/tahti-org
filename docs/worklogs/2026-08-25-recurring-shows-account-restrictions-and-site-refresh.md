@@ -1,0 +1,246 @@
+# Recurring shows, missed-show flagging, account restrictions, and a site refresh (2026-08-25)
+
+## Scope
+
+Long mixed session: a queue of small UI/UX fixes across the artist and
+listener surfaces, then two larger content/infra pieces (About page +
+README/guides screenshot refresh, the marketing site swapped for a new
+slide-deck presentation, a Grafana logs panel), then the big one — a real
+weekly recurrence engine for live shows, automatic missed-show detection
+with a new admin queue, and a three-way account restriction system
+(booking / upload / login), all shipped and deployed to production in the
+same session. Ran the whole time alongside a second Claude session
+(`tahti-nuclear-1c`) working the same checkout on unrelated infra
+(observability, GPU stem-separator move) — coordinated via cross-session
+messages before every push and before touching shared hosts.
+
+## Artist/listener UI queue
+
+A long list of small, independent fixes and redesigns, each committed
+separately: social links moved into the artist-page header; the
+"streaming links coming soon" placeholder removed from release pages;
+hearthis.at/Mixcloud/Spotify embeds made playable (with waveform) in the
+collection editor and the artist Archive list, not just the public
+channel page; Channel Controls rebuilt to fix a real architectural gap —
+transport actions act on Liquidsoap directly while the DB-backed
+`nowPlaying` only reflects an independent ~20s poller, so a naive
+immediate refetch after skip/pause still showed stale data. Fixed with a
+fast-poll-until-changed strategy instead of pretending the poller isn't
+there.
+
+Also: Stats merged into three tabs (top lists / plays & listeners, unified
+range control) with `/dashboard/stats/detail` now redirecting rather than
+existing as a separate page; Fan subs redesigned as colorful tier cards
+under a new "Audience" settings section; Disco-widgets merged into
+Discovery settings; the listener Feed moved from the artist dashboard to
+the public Discover page; Discover's duplicate track-title/artist-name
+rendering fixed; a play-button affordance added to Live/Replay station
+cards; archive row actions converted to icon buttons with "View on
+channel" dropped; track-edit tabs given an active-state indicator.
+
+**Largest item in this batch:** the artist profile page (`/u/[username]`)
+restructured from 3 tabs (Home/Feed/Releases, defaulting to Releases) to
+2 (Music/Releases, defaulting to Music), with bio and feed promoted to
+always-visible content above the tabs instead of being tab-gated, and the
+Music tab rebuilt on top of the existing `TracksTab` component so tracks
+are genuinely playable through the shared mini-player rather than just
+linking out. **Deliberately not built:** the visualizer-as-page-header and
+a conditional Gallery tab from the same original request — both need new
+channel fields (`visualPreset`/`colorSchemeJson` fetched into this page,
+`slideshowImages`) this page doesn't currently pull in, and guessing at
+that shape without live data seemed worse than flagging it.
+
+## About page + README/guides screenshot refresh
+
+The About page (already rebuilt from the user's `tahti-live-deck.html`
+reference earlier this session) had zero imagery. Added five large,
+alternating-side screenshot showcases (channel/discover/dashboard/
+profile/stats) reusing the browser-chrome frame pattern already
+established on the `for-artists` page, plus a Join/Sign-in CTA the page
+never had before.
+
+README's screenshot section went from 4 uncaptioned thumbnails to 10,
+grouped by audience with a one-line caption each; the three plain-language
+guides (`for-viewers`, `for-artists`, `for-streamers`) each got a
+representative screenshot at the top and at their most relevant section.
+
+**Then discovered the screenshots themselves were stale** — captured
+before this session's (and recent prior sessions') UI work, so the newly
+captioned images didn't match current UI. Re-ran
+`scripts/e2e-screenshots.sh` against a fresh seeded Docker stack. First
+attempt crashed Playwright on the second page
+(`Protocol error (Page.captureScreenshot)`) — a transient Chromium flake,
+not a real bug; re-running just the capture step (stack already up)
+against the same stack succeeded cleanly, all 90 screenshots. Copied five
+of the refreshed ones into `apps/web/public/screenshots/` (what the About
+and for-artists pages actually serve) and confirmed visually that the
+new artist-profile Music/Releases tab structure shows up correctly in the
+regenerated profile screenshot.
+
+## Marketing site → slide deck
+
+Replaced `website/index.html` (a 162KB scroll page with a looped
+background video + audio track, ~46MB of assets) with a self-contained
+keyboard/click-driven slide deck matching the user's reference file,
+adding Join/Sign-in CTAs the old page never had. Preserved the existing
+OG/Twitter meta block so link previews don't regress. Removed the now-dead
+media pipeline the old page depended on: Dockerfile `COPY` lines, and the
+`output_vhs.mp4`/`bg-audio.mp3` bind mounts in the **production**
+`docker-stack.yml` as well as both local compose files — these three
+files were about to go stale (mounting files a rebuilt image no longer
+references) if left alone. Flagged clearly in the commit that
+`website/**` changes auto-deploy via a separate GitHub Actions pipeline
+(`.github/workflows/website.yml`), unlike the manual-only app deploy.
+
+## Grafana: logs panel + a "which boards are broken" audit
+
+Asked to confirm logs are visible on the Tahti Grafana board and to
+remove any broken boards. The prod stack had just started shipping
+container logs to vimage6's Loki (a different session's change, same
+day) but no dashboard actually queried it — Loki was a live datasource
+with nothing pointed at it. Added a Logs panel + a filtered "API errors"
+panel to `tahti-infrastructure.json`'s generator script (not the JSON
+directly — it's regenerated on every `deploy.sh` run), verified against
+Loki's `query_range` API that real log lines were flowing before wiring
+the panel in.
+
+For "remove broken boards": audited all 9 dashboards currently on
+vimage6's Grafana (only 3 are managed by this repo) by extracting every
+panel query and running it directly against Prometheus/Loki with the
+template variables substituted for real values (a naive first pass
+substituted `$host`-style vars with a literal token, which made almost
+every dashboard look "broken" — false signal, fixed the substitution to
+use `.*`/resolved durations and got a true picture). Result: all 9 are
+structurally sound. The only empty panels are legitimately not-yet-wired
+data — GPU metrics pending a manual NVIDIA toolkit install, `npm-access`
+logs not shipped to Loki yet — not broken dashboards. **Nothing removed.**
+Flagged that dashboards created directly in Grafana's UI (not
+file-provisioned) wouldn't show up in this audit at all — no admin
+credentials to check those.
+
+## Channel page: three compactness changes
+
+User compared the real `/c/:slug` page against a static "compact channel"
+mockup and asked for a change list before touching anything. Proposed six
+changes; three were approved: slim the secondary artist-info header block
+(64px→40px avatar, tighter padding — the sticky nav above it was already
+compact, this second block wasn't), tighten archive-row/controls-row
+padding, and add a persistent "Support {artist}" card pinned to the
+bottom of the chat sidebar (there wasn't one at all before — Support only
+lived in the small header CTA). Explicitly _not_ built: collapsing the
+five content tabs into a single always-visible player (user didn't select
+it) and removing the visualizer/color-theme/slideshow ambient backgrounds
+(real customization features the compact mockup just doesn't account
+for, not clutter).
+
+## Recurring live shows, missed-show detection, account restrictions
+
+The largest single piece of work this session, built together since all
+three touch the same booking/scheduling surface.
+
+**Recurring shows.** User shared a Twitch "Add Stream" screenshot as the
+target UX (title, category, time+duration, day-of-week frequency
+buttons). Tahti had no recurrence concept at all — a `LiveShowSeries` had
+only a freeform `scheduleNote` documented in-schema as "display only, not
+scheduling logic." First pass asked whether to fake the frequency buttons
+as display-only text (matching what existed) or build the real thing;
+user came back and said build the real thing.
+
+Added `recurrenceEnabled`/`Days`/`TimeOfDay`/`DurationMin`/`Timezone`/
+`HorizonDays` to `LiveShowSeries`. The real design problem: every other
+scheduling input on this page is a naive `datetime-local` value, converted
+to a UTC instant once, client-side, at input time — that only works for a
+single occurrence. Recurrence has to compute _future_ instants later, on
+the server, with no browser involved, so it needed an actual IANA
+timezone captured client-side (`Intl.DateTimeFormat().resolvedOptions().
+timeZone`) and a DST-correct local-time-in-a-zone → UTC conversion.
+Wrote that as a dependency-free pure function
+(`packages/shared/src/live-show-recurrence.ts`) using the standard
+`formatToParts` round-trip trick rather than adding a timezone library,
+and hand-verified it against known DST transitions (Europe/Helsinki's
+EEST→EET fallback, America/Los_Angeles) before wiring it into anything.
+
+Split the Prisma-writing half into `packages/db` (idempotent — re-running
+only fills in occurrences that don't already have a `ScheduledLiveShow` at
+that exact instant) so both `apps/api` (immediate generation pass on
+save, so the artist doesn't wait for a cron) and a new daily
+`live-show-recurrence-generate` worker cron (rolls the horizon forward
+for series nobody revisits) can call it without an app-to-app import.
+Had to route around a package-cycle trap here: `packages/shared` already
+depends on `@tahti/db`, so `@tahti/db` importing the occurrence-math back
+from `@tahti/shared` would've been circular — fixed by having callers
+compute occurrences (via `@tahti/shared`) and pass the list in, keeping
+`@tahti/db`'s half pure Prisma-writing with no dependency on `@tahti/shared`
+at all.
+
+**Missed-show detection.** New hourly `missed-live-show-scan` cron flags
+any `ScheduledLiveShow` whose start passed (30-minute grace) with no
+`Broadcast` against it — a new `MissedLiveShowFlag` model deliberately
+shaped like `ContentReport`/`SupportTicket` (same status+resolution
+fields, reusing `ContentReportStatus` rather than adding a near-duplicate
+enum) since that's this codebase's established "system flags something,
+admin reviews it in a queue" pattern. Notifies every board member through
+the existing `Notification` model (new `MISSED_LIVE_SHOW_FLAGGED` type).
+New `/admin/missed-shows` queue page, each row with Inspect (links to the
+existing admin user-detail page) and Message actions. There was no
+admin-to-user messaging system to reuse or build — fixed by giving the
+general DM inbox (`apps/web/src/app/dashboard/messages/page.tsx`) a
+`?username=` query param that starts/finds the conversation and redirects
+straight into the thread, so "Message" from an admin context needs no new
+messaging infrastructure at all.
+
+**Account restrictions.** Requested mid-build, in three escalating asks:
+booking bans with a reason, then upload/login bans "settable separately,"
+which meant the first (already-built, channel-scoped) `LiveShowBookingBan`
+table was the wrong shape — login is clearly user-level, and three
+near-identical tables for one concept was worse than one. Replaced it
+(never committed yet, so a straight edit rather than a follow-up
+migration) with a single user-scoped `AccountRestriction` model
+(`type: LIVE_SHOW_BOOKING | UPLOAD | LOGIN`, each independent, always with
+a reason shown back to the user). Enforced at every real entry point:
+`/show-series/:id/episodes` and the recurrence-enable path (booking),
+`/api/uploads/prepare` and the separate `/api/me/releases/:id/tracks/:id/upload`
+path (upload — there are two genuinely separate upload flows in this
+codebase, both needed the check), and `/api/auth/login` (login). Admin UI
+on the existing user-detail page: three independent restrict/lift
+controls with a reason field and a duration select (1/7/30/90 days or
+indefinite).
+
+**Verification, not just typechecking.** Rebuilt and ran the actual
+Docker stack for this: created a real recurring series (Wed/Fri 20:00
+Europe/Helsinki) and confirmed the generated instants were correct across
+the DST-active range; confirmed all three restriction types block and
+unblock exactly their own surface and nothing else (a LOGIN ban didn't
+touch uploads, an UPLOAD ban didn't touch login, etc.); force-aged a
+generated show into the past and ran the scan job directly (the local
+stack runs the worker from TypeScript source via `tsx`, not a compiled
+`dist/`, so exercised it with `npx tsx -e` against the built image rather
+than assuming) to confirm the flag, both board members' notifications,
+and the admin queue page all populated correctly end to end. Cleaned up
+every piece of smoke-test data (series, generated episodes, flag,
+notifications, restrictions) before it went near a commit.
+
+## Shipped to production
+
+Pushed to `main` across several commits (About/README refresh, website
+swap, Grafana panel, channel-page compaction, the recurrence/missed-show/
+restrictions feature). The last one needed schema changes prod didn't
+have — confirmed with the user before touching anything, then: fresh
+`scripts/backup.sh postgres` run on vimage first, the three new migrations
+applied by hand against the prod database (same technique used earlier in
+the session to validate them against the local stack — `docker exec
+psql`, `ON_ERROR_STOP=1`), verified column/table/enum state matched
+exactly what was checked locally, then `scripts/deploy_prod.sh`. Confirmed
+after: API healthy, web responding, worker registered all 25 cron jobs
+(23 existing + the 2 new ones), website container healthy.
+
+## Not started this session
+
+- Bottom mini-player native hearthis.at embed support, and always
+  assigning a fallback cover image for releases without one — queued
+  early, never reached.
+- The visualizer-as-page-header and conditional Gallery tab pieces of the
+  artist-profile restructure (see above — needs new data this page
+  doesn't fetch yet).
+- Collapsing the channel page's five tabs into one always-visible player
+  card — proposed, not selected by the user.
