@@ -516,6 +516,7 @@
    classes above for the shared parts, adds avatar + unread-dot specific ones. */
 [data-tahti-ui='brand'] .studio-top-nav__messages-menu {
   min-width: 300px;
+  max-width: min(340px, calc(100vw - 32px));
 }
 
 [data-tahti-ui='brand'] .studio-top-nav__message-item {

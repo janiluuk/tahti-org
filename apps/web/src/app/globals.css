@@ -6,11 +6,21 @@
 @import '@tahti/ui/src/styles/brand-channel.css';
 
 /* ── Dark-first body baseline ──────────────────────────────────────────── */
+html {
+  /* Stops the root scroll chain from rubber-banding sideways on Android Chrome —
+     without this, a slightly diagonal vertical swipe near a horizontal scroller
+     (tab strips, chip rows) reads as the whole page nudging left/right. Doesn't
+     affect intentional horizontal scrollers, which still handle their own
+     overscroll independently. */
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--tahti-font-body);
   overflow-x: hidden;
+  overscroll-behavior-x: none;
   -webkit-font-smoothing: antialiased;
 }
 

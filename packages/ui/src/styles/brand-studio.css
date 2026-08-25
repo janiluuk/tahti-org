@@ -400,6 +400,7 @@
  * header; brand-channel.css only scopes these under [data-tahti-ui='brand']. */
 [data-tahti-ui='studio'] .studio-top-nav__messages-menu {
   min-width: 300px;
+  max-width: min(340px, calc(100vw - 32px));
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__message-item {
