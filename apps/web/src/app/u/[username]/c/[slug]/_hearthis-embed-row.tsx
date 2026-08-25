@@ -25,7 +25,7 @@ export function HearthisEmbedRow({ title, embedUri }: Props) {
       {playing ? (
         <iframe
           title={title}
-          src={hearthisEmbedSrc(embedUri)}
+          src={hearthisEmbedSrc(embedUri, { autoplay: true })}
           width="100%"
           height="150"
           style={{ border: 0 }}

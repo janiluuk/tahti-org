@@ -12,4 +12,12 @@ describe('hearthisEmbedSrc', () => {
     expect(url).toContain('cover=1')
     expect(url).toContain('block_size=2')
   })
+
+  it('defaults autoplay off', () => {
+    expect(hearthisEmbedSrc('123')).toContain('autoplay=0')
+  })
+
+  it('turns autoplay on when the iframe is mounted from a listener click', () => {
+    expect(hearthisEmbedSrc('123', { autoplay: true })).toContain('autoplay=1')
+  })
 })

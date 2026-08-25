@@ -74,6 +74,31 @@ declare global {
   }
 }
 
+const HLS_JS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js'
+const HLS_JS_SCRIPT_ID = 'hls-js-cdn'
+
+/** Kicks off (or reuses) the hls.js CDN fetch and runs `onLoad` once it's ready —
+ * immediately if `window.Hls` is already set. Safe to call more than once
+ * (e.g. once eagerly on mount, again from the first live-track play click);
+ * later calls just attach another listener to the in-flight script tag rather
+ * than re-fetching. */
+function ensureHlsScriptLoading(onLoad?: () => void) {
+  if (window.Hls) {
+    onLoad?.()
+    return
+  }
+  const existing = document.getElementById(HLS_JS_SCRIPT_ID) as HTMLScriptElement | null
+  if (existing) {
+    if (onLoad) existing.addEventListener('load', onLoad, { once: true })
+    return
+  }
+  const script = document.createElement('script')
+  script.id = HLS_JS_SCRIPT_ID
+  script.src = HLS_JS_SRC
+  if (onLoad) script.addEventListener('load', onLoad, { once: true })
+  document.head.appendChild(script)
+}
+
 export interface PlayerTrack {
   /** Unique id used to detect "is this the track currently loaded". */
   id: string
@@ -215,6 +240,19 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setState((prev) => ({ ...prev, volume: readStoredVolume(), muted: readStoredMuted() }))
   }, [])
+
+  // Preload hls.js as soon as the app mounts, rather than waiting for the
+  // first live-track play click. Fetching it eagerly means window.Hls is
+  // already set by the time a listener actually clicks play, so load()'s
+  // init() below can call audio.play() synchronously within that click
+  // instead of racing an async <script onload> — a delayed play() call like
+  // that falls outside the click's user-gesture context and is silently
+  // blocked by the browser's autoplay policy, which is why the very first
+  // live/radio play of a session previously needed two clicks (the second
+  // one succeeding because the script had finished loading by then).
+  useEffect(() => {
+    ensureHlsScriptLoading()
+  }, [])
   const [queue, setQueue] = useState<PlayerTrack[]>([])
   const [queueFlashSignal, setQueueFlashSignal] = useState(0)
   const [history, setHistory] = useState<PlayerTrack[]>([])
@@ -289,7 +327,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       if (currentTrackIdRef.current === track.id) {
-        if (opts?.autoplay !== false) void audio.play()
+        if (opts?.autoplay !== false) {
+          audio.play().catch((e) => console.warn('[player] play() rejected', e))
+        }
         return
       }
 
@@ -325,7 +365,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       teardownHls()
 
       const playWhenReady = () => {
-        if (opts?.autoplay !== false) void audio.play()
+        if (opts?.autoplay !== false) {
+          audio.play().catch((e) => console.warn('[player] play() rejected', e))
+        }
       }
 
       // 'live' tracks are usually an HLS (.m3u8) playlist, but can also be a plain
@@ -373,22 +415,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             playWhenReady()
           }
         }
-        if (window.Hls) {
-          init()
-        } else if (!document.getElementById('hls-js-cdn')) {
-          const script = document.createElement('script')
-          script.id = 'hls-js-cdn'
-          script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js'
-          script.onload = init
-          document.head.appendChild(script)
-        } else {
-          const t = setInterval(() => {
-            if (window.Hls) {
-              clearInterval(t)
-              init()
-            }
-          }, 50)
-        }
+        ensureHlsScriptLoading(init)
       } else {
         // Safari plays the .m3u8 natively (no hls.js, so no LEVEL_SWITCHED to
         // report a measured bitrate) — same fixed 192kbps rendition applies.
