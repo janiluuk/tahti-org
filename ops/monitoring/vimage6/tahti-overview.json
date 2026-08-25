@@ -315,24 +315,6 @@
       ]
     },
     {
-      "id": 21,
-      "title": "Active gigs (Giggi)",
-      "description": "From Giggi metrics on the same monitor host.",
-      "type": "stat",
-      "gridPos": { "x": 20, "y": 8, "w": 4, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-      "targets": [
-        {
-          "expr": "giggi_gigs_active_total{environment=~\"$environment\"} or vector(0)",
-          "legendFormat": "active gigs",
-          "instant": true,
-          "refId": "A"
-        }
-      ]
-    },
-    {
       "id": 15,
       "title": "Postgres backup age (hours)",
       "description": "From GET /metrics — newest object under backups/pg/ in MinIO. -1 = unknown.",
@@ -537,7 +519,7 @@
       "gridPos": { "x": 0, "y": 36, "w": 24, "h": 5 },
       "options": {
         "mode": "markdown",
-        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, backup age, Stripe webhook failures |\n| `GET /metrics` | Storage used/quota (R2 budget %), tracks, published releases, registrations today |\n| Giggi (optional) | `giggi_gigs_active_total` — active gigs on the same monitor host |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nTimeseries: **Users over time** (registered, active today, registrations today, tracks) and **Platform inventory** (tracks, releases, registered users).\n\nAlerts: `prometheus-tahti-alerts.yml` (backup >26h WARN, >48h critical). Deploy: `./ops/monitoring/vimage6/deploy.sh`"
+        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, backup age, Stripe webhook failures |\n| `GET /metrics` | Storage used/quota (R2 budget %), tracks, published releases, registrations today |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nTimeseries: **Users over time** (registered, active today, registrations today, tracks) and **Platform inventory** (tracks, releases, registered users).\n\nAlerts: `prometheus-tahti-alerts.yml` (backup >26h WARN, >48h critical). Deploy: `./ops/monitoring/vimage6/deploy.sh`"
       }
     }
   ]
