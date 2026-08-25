@@ -61,10 +61,19 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           error: parsed.error.issues[0]?.message ?? 'Invalid query',
         })
       }
-      const { page, limit, status, category } = parsed.data
+      const { page, limit, status, category, q } = parsed.data
       const where: Prisma.SupportTicketWhereInput = {}
       if (status) where.status = status
       if (category) where.category = category
+      if (q) {
+        where.OR = [
+          { subject: { contains: q, mode: 'insensitive' } },
+          { message: { contains: q, mode: 'insensitive' } },
+          { contactEmail: { contains: q, mode: 'insensitive' } },
+          { artist: { username: { contains: q, mode: 'insensitive' } } },
+          { artist: { displayName: { contains: q, mode: 'insensitive' } } },
+        ]
+      }
 
       const [total, rows] = await Promise.all([
         fastify.prisma.supportTicket.count({ where }),
@@ -131,6 +140,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         notes: ticket.notes.map((n) => ({
           id: n.id.toString(),
           body: n.body,
+          kind: n.kind,
           authorId: n.authorId,
           authorDisplayName: n.author?.displayName ?? null,
           createdAt: n.createdAt,
@@ -171,6 +181,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         notes: ticket.notes.map((n) => ({
           id: n.id.toString(),
           body: n.body,
+          kind: n.kind,
           authorId: n.authorId,
           authorDisplayName: n.author?.displayName ?? null,
           createdAt: n.createdAt,
@@ -203,9 +214,30 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
       const existing = await fastify.prisma.supportTicket.findUnique({ where: { id } })
       if (!existing) return reply.status(404).send({ error: 'Ticket not found' })
 
-      const ticket = await fastify.prisma.supportTicket.update({
+      const actor = request.sessionUser!
+      const statusChanged =
+        parsed.data.status !== undefined && parsed.data.status !== existing.status
+
+      await fastify.prisma.supportTicket.update({
         where: { id },
         data: parsed.data,
+      })
+
+      // Every status transition gets its own timeline row alongside replies,
+      // so the ticket's activity trail shows more than just current state.
+      if (statusChanged) {
+        await fastify.prisma.supportTicketNote.create({
+          data: {
+            ticketId: id,
+            kind: 'STATUS_CHANGE',
+            body: `Status changed from ${existing.status} to ${parsed.data.status}`,
+            authorId: actor.id,
+          },
+        })
+      }
+
+      const ticket = await fastify.prisma.supportTicket.findUnique({
+        where: { id },
         include: {
           artist: { select: { username: true, displayName: true } },
           notes: {
@@ -216,11 +248,12 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send({
-        ...mapTicketRow(ticket),
-        message: ticket.message,
-        notes: ticket.notes.map((n) => ({
+        ...mapTicketRow(ticket!),
+        message: ticket!.message,
+        notes: ticket!.notes.map((n) => ({
           id: n.id.toString(),
           body: n.body,
+          kind: n.kind,
           authorId: n.authorId,
           authorDisplayName: n.author?.displayName ?? null,
           createdAt: n.createdAt,
@@ -279,6 +312,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         notes: ticket!.notes.map((n) => ({
           id: n.id.toString(),
           body: n.body,
+          kind: n.kind,
           authorId: n.authorId,
           authorDisplayName: n.author?.displayName ?? null,
           createdAt: n.createdAt,

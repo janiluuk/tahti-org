@@ -29,6 +29,9 @@ export const AdminSupportTicketListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: SupportStatusSchema.optional(),
   category: SupportCategorySchema.optional(),
+  // Free-text search across subject, message body, requester email, and
+  // requester username/display name (see admin/support.ts GET handler).
+  q: z.string().trim().min(1).max(200).optional(),
 })
 
 export const AdminSupportTicketRowSchema = z.object({
@@ -52,9 +55,12 @@ export const AdminSupportTicketListSchema = z.object({
   tickets: z.array(AdminSupportTicketRowSchema),
 })
 
+export const SupportTicketNoteKindSchema = z.enum(['MESSAGE', 'STATUS_CHANGE'])
+
 export const AdminSupportTicketNoteSchema = z.object({
   id: z.string(),
   body: z.string(),
+  kind: SupportTicketNoteKindSchema,
   authorId: z.string().nullable(),
   authorDisplayName: z.string().nullable(),
   createdAt: z.coerce.date(),

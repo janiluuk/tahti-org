@@ -89,8 +89,66 @@ describe('M21-F — support tickets', () => {
       payload: { body: 'Investigating ingest logs.' },
     })
     expect(note.statusCode).toBe(200)
-    const detail = note.json() as { notes: Array<{ body: string }> }
+    const detail = note.json() as {
+      notes: Array<{ body: string; kind: string }>
+    }
     expect(detail.notes.some((n) => n.body.includes('Investigating'))).toBe(true)
+  })
+
+  it('PATCH status transition auto-logs a STATUS_CHANGE timeline entry', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/support/tickets/${ticketId}`,
+      headers: { cookie: boardCookie },
+      payload: { status: 'RESOLVED' },
+    })
+    expect(patch.statusCode).toBe(200)
+    const detail = patch.json() as {
+      status: string
+      notes: Array<{ body: string; kind: string }>
+    }
+    expect(detail.status).toBe('RESOLVED')
+    const transitions = detail.notes.filter((n) => n.kind === 'STATUS_CHANGE')
+    expect(transitions.at(-1)?.body).toBe('Status changed from IN_PROGRESS to RESOLVED')
+
+    // A no-op PATCH (status unchanged) must not add another transition row.
+    const before = detail.notes.filter((n) => n.kind === 'STATUS_CHANGE').length
+    const noop = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/support/tickets/${ticketId}`,
+      headers: { cookie: boardCookie },
+      payload: { status: 'RESOLVED' },
+    })
+    const noopDetail = noop.json() as { notes: Array<{ kind: string }> }
+    const after = noopDetail.notes.filter((n) => n.kind === 'STATUS_CHANGE').length
+    expect(after).toBe(before)
+  })
+
+  it('GET /api/admin/support/tickets?q= searches subject, message, and requester', async () => {
+    const bySubject = await app.inject({
+      method: 'GET',
+      url: '/api/admin/support/tickets?q=Engagement+looks+wrong',
+      headers: { cookie: boardCookie },
+    })
+    expect(bySubject.statusCode).toBe(200)
+    const bySubjectBody = bySubject.json() as { tickets: Array<{ id: string }> }
+    expect(bySubjectBody.tickets.some((t) => t.id === ticketId)).toBe(true)
+
+    const byRequester = await app.inject({
+      method: 'GET',
+      url: '/api/admin/support/tickets?q=admin-sup-artist',
+      headers: { cookie: boardCookie },
+    })
+    const byRequesterBody = byRequester.json() as { tickets: Array<{ id: string }> }
+    expect(byRequesterBody.tickets.some((t) => t.id === ticketId)).toBe(true)
+
+    const noMatch = await app.inject({
+      method: 'GET',
+      url: '/api/admin/support/tickets?q=zzz-no-such-ticket-zzz',
+      headers: { cookie: boardCookie },
+    })
+    const noMatchBody = noMatch.json() as { tickets: Array<{ id: string }> }
+    expect(noMatchBody.tickets.some((t) => t.id === ticketId)).toBe(false)
   })
 
   it('POST engagement adjustment', async () => {

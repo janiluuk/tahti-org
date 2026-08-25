@@ -2973,14 +2973,25 @@ model SupportTicket {
   @@schema("admin")
 }
 
+/// A ticket's activity trail is this table: a board reply (MESSAGE) and an
+/// automatic record of a status transition (STATUS_CHANGE) are both rows
+/// here, ordered by createdAt — the admin UI renders them as one timeline.
+enum SupportTicketNoteKind {
+  MESSAGE
+  STATUS_CHANGE
+
+  @@schema("admin")
+}
+
 model SupportTicketNote {
-  id        BigInt        @id @default(autoincrement())
+  id        BigInt                @id @default(autoincrement())
   ticketId  BigInt
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket    SupportTicket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   body      String
+  kind      SupportTicketNoteKind @default(MESSAGE)
   authorId  String?
-  author    User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt DateTime      @default(now())
+  author    User?                 @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime              @default(now())
 
   @@index([ticketId, createdAt(sort: Asc)])
   @@schema("admin")
