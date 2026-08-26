@@ -9,9 +9,7 @@ describe('StatCard', () => {
   afterEach(() => cleanup())
 
   it('(Snapshot) renders correctly with the default card layout', () => {
-    const { container } = render(
-      <StatCard variant="plays" value="12,890" label="Total plays" />,
-    )
+    const { container } = render(<StatCard variant="plays" value="12,890" label="Total plays" />)
     expect(container).toMatchSnapshot()
   })
 
