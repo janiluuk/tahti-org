@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badge > (Snapshot) renders correctly with an explicit variant and className 1`] = `
+<div>
+  <span
+    class="badge-pill purple ml-2"
+  >
+    Beta
+  </span>
+</div>
+`;
+
+exports[`Badge > (Snapshot) renders correctly with the default variant 1`] = `
+<div>
+  <span
+    class="badge-pill cyan"
+  >
+    New
+  </span>
+</div>
+`;
+
+exports[`LiveBadge > (Snapshot) renders correctly 1`] = `
+<div>
+  <span
+    class="badge-live"
+  >
+    <span
+      class="badge-live-dot"
+    />
+    LIVE
+  </span>
+</div>
+`;
+
+exports[`QualityBadge > (Snapshot) renders correctly for quality=FLAC 1`] = `
+<div>
+  <span
+    class="badge-quality"
+  >
+    FLAC
+  </span>
+</div>
+`;
+
+exports[`QualityBadge > (Snapshot) renders correctly for quality=MP3 1`] = `
+<div>
+  <span
+    class="badge-quality mp3"
+  >
+    MP3
+  </span>
+</div>
+`;
+
+exports[`QualityBadge > (Snapshot) renders correctly for quality=OPUS 1`] = `
+<div>
+  <span
+    class="badge-quality"
+  >
+    OPUS
+  </span>
+</div>
+`;

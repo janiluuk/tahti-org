@@ -1,0 +1,143 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StatCard > (Snapshot) renders correctly with a subtitle, inline layout, compact size, and positive 1`] = `
+<div>
+  <div
+    aria-label="Paid out YTD"
+    class="stat-card stat-card--revenue stat-card--inline stat-card--compact stat-card--positive"
+    data-stat-variant="revenue"
+    role="group"
+  >
+    <div
+      class="stat-card__value"
+    >
+      €842.10
+    </div>
+    <div
+      class="stat-card__label"
+    >
+      Paid out YTD
+    </div>
+    <div
+      class="stat-card__subtitle"
+    >
+      8 payouts this month
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatCard > (Snapshot) renders correctly with the default card layout 1`] = `
+<div>
+  <div
+    aria-label="Total plays"
+    class="stat-card stat-card--plays"
+    data-stat-variant="plays"
+    role="group"
+  >
+    <div
+      class="stat-card__value"
+    >
+      12,890
+    </div>
+    <div
+      class="stat-card__label"
+    >
+      Total plays
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatCardGrid > (Snapshot) renders correctly with several stat cards 1`] = `
+<div>
+  <div
+    aria-label="Channel summary"
+    class="stat-card-grid stat-card-grid--cols-2"
+    role="group"
+  >
+    <div
+      aria-label="Total plays"
+      class="stat-card stat-card--plays"
+      data-stat-variant="plays"
+      role="group"
+    >
+      <div
+        class="stat-card__value"
+      >
+        12,890
+      </div>
+      <div
+        class="stat-card__label"
+      >
+        Total plays
+      </div>
+    </div>
+    <div
+      aria-label="Followers"
+      class="stat-card stat-card--fans"
+      data-stat-variant="fans"
+      role="group"
+    >
+      <div
+        class="stat-card__value"
+      >
+        284
+      </div>
+      <div
+        class="stat-card__label"
+      >
+        Followers
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatCardStrip > (Snapshot) renders correctly with a separator between items 1`] = `
+<div>
+  <section
+    aria-label="Platform stats"
+    class="stat-card-strip"
+  >
+    <div
+      aria-label="Artists"
+      class="stat-card stat-card--neutral"
+      data-stat-variant="neutral"
+      role="group"
+    >
+      <div
+        class="stat-card__value"
+      >
+        1,204
+      </div>
+      <div
+        class="stat-card__label"
+      >
+        Artists
+      </div>
+    </div>
+    <div
+      aria-hidden="true"
+      class="stat-card-strip__sep"
+    />
+    <div
+      aria-label="Live now"
+      class="stat-card stat-card--neutral"
+      data-stat-variant="neutral"
+      role="group"
+    >
+      <div
+        class="stat-card__value"
+      >
+        38
+      </div>
+      <div
+        class="stat-card__label"
+      >
+        Live now
+      </div>
+    </div>
+  </section>
+</div>
+`;

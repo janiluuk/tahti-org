@@ -1,0 +1,66 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Pill > (Snapshot) renders correctly for variant=archive with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--archive"
+  >
+    ARCHIVE
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly for variant=default with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--default"
+  >
+    Label
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly for variant=flac with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--flac"
+  >
+    FLAC
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly for variant=live with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--live"
+    role="status"
+  >
+    <span
+      aria-hidden="true"
+      class="pill__dot"
+    />
+    LIVE
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly for variant=recommended with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--recommended"
+  >
+    RECOMMENDED
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly with explicit children overriding the default label 1`] = `
+<div>
+  <span
+    class="pill pill--default"
+  >
+    Custom label
+  </span>
+</div>
+`;
