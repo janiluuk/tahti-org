@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RankBadge > (Snapshot) renders correctly for a single-digit rank 1`] = `
+<div>
+  <span
+    aria-label="#1 on the top list"
+    class="rank-badge"
+  >
+    #
+    1
+  </span>
+</div>
+`;
+
+exports[`RankBadge > (Snapshot) renders correctly with a className 1`] = `
+<div>
+  <span
+    aria-label="#42 on the top list"
+    class="rank-badge top-list-badge"
+  >
+    #
+    42
+  </span>
+</div>
+`;

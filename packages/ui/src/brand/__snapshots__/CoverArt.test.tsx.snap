@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CoverArt > (Snapshot) renders correctly as a gradient placeholder when there is no src 1`] = `
+<div>
+  <div
+    aria-hidden="true"
+    class="cover-art cover-art--md cover-art--coral"
+  />
+</div>
+`;
+
+exports[`CoverArt > (Snapshot) renders correctly as an image when src is set 1`] = `
+<div>
+  <img
+    alt="First Light EP"
+    class="cover-art cover-art--lg"
+    decoding="async"
+    height="140"
+    loading="lazy"
+    src="https://example.com/cover.jpg"
+    width="140"
+  />
+</div>
+`;
+
+exports[`CoverArt > (Snapshot) renders correctly at full size 1`] = `
+<div>
+  <img
+    alt="First Light EP"
+    class="cover-art cover-art--full"
+    decoding="async"
+    height="280"
+    loading="lazy"
+    src="https://example.com/cover.jpg"
+    width="280"
+  />
+</div>
+`;
