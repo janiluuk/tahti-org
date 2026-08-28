@@ -154,7 +154,7 @@ The streaming pipeline is the core product. Every component must be designed for
 - **Edge:** Caddy 2 with on-demand TLS
 - **Static serving:** Caddy on owned hardware serves HLS segments and MinIO-backed assets directly; UpCloud Helsinki mirrors for spillover and DR. No commercial CDN. See `docs/infra-strategy.md`.
 - **Orchestration:** Docker Swarm (production), Compose (dev)
-- **Auth (artist accounts only):** Lucia + argon2, optional Google/Apple OAuth
+- **Auth (artist accounts only):** Custom session cookies (`apps/api/src/lib/session.ts`) + argon2, optional Google/Apple OAuth
 - **Payments:** Stripe Checkout (subs) + Stripe Connect Express (grant payouts) +
   SEPA fallback where Stripe doesn't reach
 

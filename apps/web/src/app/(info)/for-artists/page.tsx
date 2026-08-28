@@ -3,7 +3,10 @@
 
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Breadcrumb, BrowserFrame } from '@tahti/ui'
+import { BETA_CLIENT_URL } from '@/lib/beta-client'
+import { isSignupOpen } from '@/lib/signup'
 import channelImg from '/public/screenshots/channel.png'
 import dashboardImg from '/public/screenshots/dashboard.png'
 import statsImg from '/public/screenshots/stats.png'
@@ -58,7 +61,8 @@ const FEATURES = [
   },
 ]
 
-export default function ForArtistsPage() {
+export default async function ForArtistsPage() {
+  const signupOpen = isSignupOpen()
   return (
     <div className="brand-public brand-public--wide">
       <div className="for-artists-hero">
@@ -78,14 +82,29 @@ export default function ForArtistsPage() {
           members.
         </p>
         <div className="for-artists-hero__cta-row">
-          <a href="/login" className="for-artists-cta-primary">
+          <a
+            href={BETA_CLIENT_URL}
+            className="for-artists-cta-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Try beta client
+          </a>
+          <Link href="/login" className="for-artists-cta-secondary">
             Sign in
-          </a>
-          <a href="/about" className="for-artists-cta-secondary">
-            About the org →
-          </a>
+          </Link>
+          {signupOpen && (
+            <Link href="/signup" className="for-artists-cta-secondary">
+              Join as an artist
+            </Link>
+          )}
         </div>
-        <p className="for-artists-hero__open-beta">Registration is temporarily closed</p>
+        {!signupOpen && (
+          <p className="for-artists-hero__open-beta">
+            Self-serve registration is closed — use the beta client or sign in with an existing
+            account.
+          </p>
+        )}
       </div>
 
       <div className="for-artists-carousel">

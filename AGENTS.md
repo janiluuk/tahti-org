@@ -162,6 +162,9 @@ Demo/e2e seed accounts (see `tests/e2e/journeys/fixtures.sh`): board account is
 (`./scripts/stack-up.sh --seed` or the individual `apps/api/scripts/seed-*.ts`
 scripts), password `screenshot-demo-pass`.
 
+**Naming:** `beta.tahti.live` is the Nuclear listen/studio SPA (production API).
+`[BETA]` / `*@beta.tahti.live` in seed scripts are **dev fixtures only**.
+
 ## Quality gates (before claiming done)
 
 ```bash

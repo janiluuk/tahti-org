@@ -10,6 +10,7 @@ import dashboardImg from '/public/screenshots/dashboard.png'
 import listenImg from '/public/screenshots/listen.png'
 import profileImg from '/public/screenshots/profile.png'
 import statsImg from '/public/screenshots/stats.png'
+import { AboutArtistCtas } from './_about-artist-ctas'
 
 export const metadata: Metadata = {
   title: 'About Tahti',
@@ -54,7 +55,7 @@ function Showcase({
   )
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
   return (
     <div className="about-page">
       <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'About' }]} />
@@ -89,12 +90,7 @@ export default function AboutPage() {
             </div>
           </div>
           <div className="about-cta-row">
-            <a href="/join" className="about-cta-primary">
-              Join Tahti →
-            </a>
-            <a href="/login" className="about-cta-secondary">
-              Sign in
-            </a>
+            <AboutArtistCtas />
           </div>
         </div>
         <aside className="about-hero-card">
@@ -840,12 +836,7 @@ export default function AboutPage() {
           required to try it.
         </p>
         <div className="about-cta-row">
-          <a href="/join" className="about-cta-primary">
-            Join Tahti →
-          </a>
-          <a href="/login" className="about-cta-secondary">
-            Sign in
-          </a>
+          <AboutArtistCtas />
         </div>
       </div>
 
