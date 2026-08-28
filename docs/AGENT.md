@@ -1,5 +1,11 @@
 # Project: Tahti ry — nonprofit broadcasting platform
 
+Cursor agents: also read root **`AGENTS.md`** (session map) and
+**`docs/remaining-work.md`** (collective incomplete checklist). Status matrices
+live in **`docs/project-roadmap.md`**; product surface in **`docs/features.md`**;
+test commands in **`docs/testing.md`**. Nuclear beta cutover:
+**`ops/nuclear-web-cutover.md`**.
+
 ## READ THIS FIRST
 
 Before reading anything else in this brief, read `docs/CONSTITUTION.md`. It is short. It contains the three rules that govern every implementation decision in this repository. The rules are:
@@ -14,12 +20,12 @@ If an implementation choice in this AGENT.md ever conflicts with the constitutio
 
 Use this language in product copy, docs, and user-facing errors:
 
-| Concept | Say | Do not say |
-|--------|-----|------------|
-| Artist on MP3 / 1 hr live cap | **free-tier artist** | paid customer, free user (as a product tier insult) |
-| Person supporting Tahti ry (€40/yr) | **member**, **Tahti ry membership** | paid customer, paying customer, paid member |
-| FLAC + unlimited live | **membership benefits** | paid tier, premium plan |
-| Fan paying an artist directly | **fan subscription**, **supporter** | (not a Tahti “member”) |
+| Concept                             | Say                                 | Do not say                                          |
+| ----------------------------------- | ----------------------------------- | --------------------------------------------------- |
+| Artist on MP3 / 1 hr live cap       | **free-tier artist**                | paid customer, free user (as a product tier insult) |
+| Person supporting Tahti ry (€40/yr) | **member**, **Tahti ry membership** | paid customer, paying customer, paid member         |
+| FLAC + unlimited live               | **membership benefits**             | paid tier, premium plan                             |
+| Fan paying an artist directly       | **fan subscription**, **supporter** | (not a Tahti “member”)                              |
 
 Every account is an **artist account**. Membership is **financial support for the cooperative**, not buying a SaaS subscription. The internal `User.tier` enum (`FREE` / `ARTIST`) is implementation detail — prefer “free-tier artist” vs “member with active membership” in UI.
 
@@ -63,6 +69,7 @@ The streaming pipeline is the core product. Every component must be designed for
 8. **Measure bandwidth per channel.** Caddy must log bytes-out per request prefixed with channel slug. Aggregate to Prometheus. This data feeds artist cost attribution (for future per-channel cost reporting) and informs the Y3 fiber upgrade decision.
 
 **Anti-patterns that will block scaling — never do these:**
+
 - Writing HLS segments to a Docker bind-mount or named volume
 - Spawning Liquidsoap with a recording output — recording is a separate concern
 - Serving HLS from the Liquidsoap container directly (Liquidsoap is not a web server)
@@ -89,7 +96,7 @@ The streaming pipeline is the core product. Every component must be designed for
 6. **Transparency is a product surface.** Live revenue, costs, surplus, and
    grant disbursements visible on `/transparency`, queryable via public read-only
    API.
-7. **Members own the org.** Artists who financially support Tahti ry are members of the *yhdistys*. The platform supports the governance, not the other way around.
+7. **Members own the org.** Artists who financially support Tahti ry are members of the _yhdistys_. The platform supports the governance, not the other way around.
 8. **AGPL all the way down.** Every file licensed, every page footer-linked to
    source, every API response with a `Source-Code` header.
 9. **One Liquidsoap container per channel.** Created on activation, runs
@@ -181,13 +188,14 @@ tahti/
 │   ├── BYLAWS.md                # Bylaws, version-tagged
 │   ├── ANNUAL_REPORT_*.md
 │   └── TRANSPARENCY.md
-├── AGENT.md
+├── AGENTS.md                    # Cursor/agent session entry (points here)
+├── docs/AGENT.md                # this file
 └── README.md
 ```
 
 Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts with the standard AGPL header.
 
-**CI quality gate (agents):** Before finishing any code change, run `pnpm ci:check` (or at minimum `pnpm lint` then `pnpm format:check`). The GitHub **Lint & format** job fails on ESLint *or* Prettier — fix with `pnpm format` when format:check fails. See `.cursor/rules/ci-lint-before-done.mdc`.
+**CI quality gate (agents):** Before finishing any code change, run `pnpm ci:check` (or at minimum `pnpm lint` then `pnpm format:check`). The GitHub **Lint & format** job fails on ESLint _or_ Prettier — fix with `pnpm format` when format:check fails. See `.cursor/rules/ci-lint-before-done.mdc`.
 
 **Marketing site (`website/`):** Off limits for agents unless the user explicitly asks. Do not edit landing HTML, nginx config, or `website/screenshots/`. See `.cursor/rules/website-off-limits.mdc`.
 
@@ -205,11 +213,11 @@ See `docs/e2e-screenshots/README.md` for ports, fixtures, and route → file map
 
 **All UI lives in `packages/ui` (`@tahti/ui`).** Do not implement Button, Panel, layout shells, or brand chrome under `apps/web`. The web app imports from `@tahti/ui` (or `@/components/ui`, which re-exports the package).
 
-| Surface | Routes | Key imports |
-|---------|--------|-------------|
-| Brand (dark) | `/c`, `/u`, `/r` | `ChannelPageLayout`, `ProfilePageLayout`, `SmartLinkPageLayout` |
-| Studio | `/dashboard` | `StudioShell`, `Button`, `Panel`, … |
-| Marketing / auth | `/`, `/login`, `/join` | `MarketingButton`, `Nav`, `LiveBadge`, `BgCanvas` (web-only) |
+| Surface          | Routes                 | Key imports                                                     |
+| ---------------- | ---------------------- | --------------------------------------------------------------- |
+| Brand (dark)     | `/c`, `/u`, `/r`       | `ChannelPageLayout`, `ProfilePageLayout`, `SmartLinkPageLayout` |
+| Studio           | `/dashboard`           | `StudioShell`, `Button`, `Panel`, …                             |
+| Marketing / auth | `/`, `/login`, `/join` | `MarketingButton`, `Nav`, `LiveBadge`, `BgCanvas` (web-only)    |
 
 **CSS:** Import token/stylesheets once per layout — see `packages/ui` styles, `reference/tokens.css` (legacy names), `.cursor/rules/ui-library.mdc`, and `docs/e2e-screenshots/` for visual ground truth.
 
@@ -323,6 +331,7 @@ product capability, not an afterthought.
 - "Now listening" sidebar (Studio tier only): show count + handles of chat-active listeners
 
 **Featured UX:**
+
 - Chat panel docked on the channel page by default (not collapsed)
 - Mobile: chat opens as bottom sheet, swipe up to expand
 - Announcements rendered with distinct visual treatment (gold/amber tint, pinned icon)
@@ -400,7 +409,7 @@ from the same release record.
 
 ### M8 — Transparency ledger (NEW for v4)
 
-This is what makes  Tahti a nonprofit, not just an open-source project.
+This is what makes Tahti a nonprofit, not just an open-source project.
 
 - Schema `ledger.ledger_entries` append-only, partitioned by month:
   - `id`, `category`, `amount_cents`, `currency`, `description`, `external_ref`,
@@ -483,7 +492,7 @@ diff can be displayed in the member portal.
 
 The artist profile is the artist's **home page on the internet** — what shows
 up when someone googles them, what they put on every flyer and Instagram bio.
-This is *not* a SoundCloud profile (no algorithmic feed, no follower graph, no
+This is _not_ a SoundCloud profile (no algorithmic feed, no follower graph, no
 track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
 
 **Profile structure:**
@@ -706,6 +715,7 @@ the platform. Tags resolve to profile links. Opt-in notifications. No social
 graph implied — tagging is just human-readable cross-references, like links.
 
 **Where tags work:**
+
 - Profile bio (Markdown rendering treats `@handle` as a link)
 - Channel announcements
 - Release credits ("Featuring @other-artist", "Remix by @another")
@@ -715,18 +725,21 @@ graph implied — tagging is just human-readable cross-references, like links.
 - Newsletter compose
 
 **Tag resolution:**
+
 - `@handle` → `tahti.live/u/<handle>` with the artist's display name
 - Unknown handles render as plain text (no broken links)
 - Tags in user-generated content (chat) are validated at send time; deleted
   artists' tags render as `@deleted-user`
 
 **Notifications:**
+
 - Opt-in per artist in settings (default ON for members, OFF for free)
 - "You were mentioned by @X in their bio / announcement / release / **tracklist** / chat"
 - Email digest, max one per day per mentioned-artist
 - Notification logs to ledger as auditable event
 
 **Anti-abuse:**
+
 - Rate limit: max 20 mentions per artist per day across all surfaces
 - "Mute mentions" — an artist can mute another artist from mentioning them at all
 - Bylaws-protected list — no mentioning deceased members or vulnerable parties
@@ -742,6 +755,7 @@ A 24/7 org-operated stream that **relays whichever channels are currently live**
 Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
 
 **Architecture:**
+
 - New service `services/tahti-radio/` — perpetual Liquidsoap container
 - Orchestrator runs a "TahtiRadioPicker" routine every 60 seconds
 - Picker queries currently-live channels (filtered: `metaStreamOptOut=false`,
@@ -757,10 +771,12 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
   (public-domain instrumental + voice tag)
 
 **Channel opt-out:**
+
 - Channel settings adds: "Include my live broadcasts on Tahti Radio" (default ON)
 - When OFF, channel is excluded from picker pool
 
 **Listener-hour attribution:**
+
 - Listeners on `radio.tahti.live` are counted toward the originating channel's
   listener-hour counter (vanity metric only; doesn't affect grants under v6)
 
@@ -781,6 +797,7 @@ A lightweight system for venues to register and publish iCalendar feeds of
 broadcasts happening at their location. No booking marketplace, no ticketing.
 
 **Scope:**
+
 - New account type `VENUE` (separate from `ARTIST`)
 - Public venue directory at `tahti.live/venues`
 - Venue profile pages at `tahti.live/v/<slug>`
@@ -847,11 +864,13 @@ Downloads of archive items and release tracks become a primary product
 action, with anti-fraud and grant-unit accounting baked in.
 
 **Permissions:**
+
 - Anonymous listener: streaming + free download (rate-limited)
 - Free account listener: same as anonymous
 - Fan-subscriber: streaming + unlimited downloads + FLAC option + source-format
 
 **Anti-fraud (per `docs/engagement-and-fansubs.md`):**
+
 - Rate limit per IP: 5/hour, 20/day
 - Rate limit per fingerprint: same
 - Same-track dedup: same fingerprint × same track = counts once per 30 days
@@ -860,6 +879,7 @@ action, with anti-fraud and grant-unit accounting baked in.
 - Tor and known bot IPs allowed but don't count
 
 **Grant unit logging:**
+
 - Every download writes a `Download` row to `engagement.downloads`
 - Row has `countedAt` and `weight` fields; populated by rules engine
 - `weight = 1` for anonymous/free, `weight = 5` for fan-subscriber
@@ -867,6 +887,7 @@ action, with anti-fraud and grant-unit accounting baked in.
   into the artist's engagement-unit counter
 
 **Storage handling:**
+
 - Original-source files preserved in MinIO
 - Opus 256 derivative served for free downloads
 - FLAC 16/44 derivative served for fan-sub downloads
@@ -886,6 +907,7 @@ A direct payment relationship between listeners and artists, with 0% org
 take (operationally break-even, 2% covers Stripe + GDPR + support).
 
 **Architecture:**
+
 - New account type for `SUBSCRIBER` listeners (separate from `ARTIST` and
   `VENUE`)
 - Stripe Connect Express onboarding for artists who enable fan-subs
@@ -895,12 +917,14 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
 - Monthly cron processes payouts, logs ledger entries
 
 **Artist setup flow:**
+
 1. Dashboard → "Fan Subscriptions" → "Enable"
 2. Stripe Connect Express onboarding (KYC: ID, bank, tax forms)
 3. Once approved (1-3 days), artist defines tiers
 4. Tiers go live on `tahti.live/u/<handle>/subscribe`
 
 **Listener subscribe flow:**
+
 1. On artist's channel page or profile: "Support [artist name]" button
 2. Routes to `tahti.live/u/<handle>/subscribe`
 3. Choose tier → Stripe Checkout
@@ -910,6 +934,7 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
    access granted
 
 **Subscriber accounts:**
+
 - Email + password (or Google/Apple OAuth)
 - Stripe customer ID
 - One or more active subscriptions
@@ -922,7 +947,7 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
 
 **Done when:** I enable fan-subs as an artist, set a €5/month tier, complete
 Stripe onboarding. A listener subscribes via Checkout. Money flows to my
-Stripe account minus 2% (~€0.45 to org) and Stripe fees (~€0.45). I see
+Stripe account minus 2% (~~€0.45 to org) and Stripe fees (~~€0.45). I see
 "Supporter: handle_42" in my fan chat. They can download my FLACs.
 
 ### M20 — Tier gating: free tier limits + membership lossless (NEW for v7)
@@ -930,6 +955,7 @@ Stripe account minus 2% (~€0.45 to org) and Stripe fees (~€0.45). I see
 Two gates implemented gracefully so free-tier artists never feel "broken":
 
 **Free tier weekly broadcasting cap:**
+
 - 1 hour (3,600 seconds) of live broadcasting per calendar week (UTC week, Mon 00:00)
 - `weeklyLiveSecondsUsed` field on User; incremented every minute during live broadcast
 - Cron `weekly-broadcast-reset` runs every Monday 00:00 UTC: resets all free-tier artists' counter to 0
@@ -939,6 +965,7 @@ Two gates implemented gracefully so free-tier artists never feel "broken":
 - Members: `weeklyLiveSecondsUsed` is still tracked (for stats) but the gate doesn't apply.
 
 **Audio quality differentiation:**
+
 - Liquidsoap channel template renders two outputs per live broadcast:
   - **`stream-mp3-192/`** — MP3 192 kbps, HLS segmented
   - **`stream-flac/`** — FLAC 16/44 over HLS-FLAC manifest
@@ -949,11 +976,13 @@ Two gates implemented gracefully so free-tier artists never feel "broken":
 - Archive playback: same logic. Free artists' archives transcode to MP3 derivatives; member artists' archives keep FLAC.
 
 **Upgrade path (graceful, no friction):**
-- "Upgrade to lossless" CTA appears at the *end* of a live broadcast (post-show, not during), shown to the artist (not listeners) in the dashboard:
+
+- "Upgrade to lossless" CTA appears at the _end_ of a live broadcast (post-show, not during), shown to the artist (not listeners) in the dashboard:
   > "Your listeners heard MP3 192 today. Upgrade to Tahti to broadcast in lossless FLAC and remove the weekly hour cap. €40/year, fully tax-deductible if you're a registered professional in Finland."
 - Upgrade processed via Stripe Checkout in <60 seconds; next broadcast is lossless.
 
 **Anti-patterns to avoid here:**
+
 - Showing free-tier artists a degraded UI ("upgrade for chat moderation!" — no, free-tier artists get full chat moderation).
 - Adding a watermark, advertising, or any audio degradation beyond bitrate.
 - Making the weekly cap user-visible as a "you've hit your limit" friction popup; it's a gentle banner approaching, a smooth transition at the cap.
@@ -975,12 +1004,12 @@ Each entry is an ordered row on `ArchiveItem.tracklist` (JSON):
 { "startSec": 1234, "title": "Track Name", "artist": "Plain text", "artistUsername": "handle" }
 ```
 
-| Field | Purpose |
-|---|---|
-| `startSec` | Timestamp in the mix/recording |
-| `title` | Track title as played |
-| `artist` | Free-text credit (ACRCloud import, guest DJs, non-Tahti artists) |
-| `artistUsername` | Optional Tahti `@handle` when the played artist is a member |
+| Field            | Purpose                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| `startSec`       | Timestamp in the mix/recording                                   |
+| `title`          | Track title as played                                            |
+| `artist`         | Free-text credit (ACRCloud import, guest DJs, non-Tahti artists) |
+| `artistUsername` | Optional Tahti `@handle` when the played artist is a member      |
 
 **Tagging other artists in tracklists (required):**
 
@@ -991,7 +1020,7 @@ Each entry is an ordered row on `ArchiveItem.tracklist` (JSON):
 - **Public display:** tagged artists link to `tahti.live/u/<handle>` on the
   archive page, profile release view, collection pages, and RSS tracklist blocks.
 - **Notifications:** new `MentionSurface.TRACKLIST` — tagged artist receives
-  M15 opt-in notification: "You were tagged in @X's tracklist for *[mix title]*".
+  M15 opt-in notification: "You were tagged in @X's tracklist for _[mix title]_".
 - **ACRCloud import:** may populate `title` + plain `artist` only; uploader can
   link rows to Tahti members afterward without re-entering timestamps.
 - **External artists:** leave `artistUsername` empty; plain `artist` text only.
@@ -1387,11 +1416,11 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
 - Mutating ledger entries after creation. The ledger is append-only — corrections
   are made by adding offsetting entries with a descriptive `description`.
 - Computing grants outside the annual cron. Real-time "estimated grant" displays
-  are okay; the *actual* calculation happens once a year against finalized data.
+  are okay; the _actual_ calculation happens once a year against finalized data.
 - Re-encoding original uploads. The `sourceKey` is the artist's master.
   Transcodes go into separate derivative keys. Never overwrite.
 - Streaming FLAC by default. Opus 256 streams to listeners; FLAC is for
-  Studio-tier *downloads* on tracks the user owns. This decision is about cost,
+  Studio-tier _downloads_ on tracks the user owns. This decision is about cost,
   not principle — revisit at M14 review if listener feedback warrants it.
 - Treating profile pages as SoundCloud profiles. They're label/biographical
   pages. No track-level comments, no follower graph, no like buttons.
@@ -1410,7 +1439,7 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
   will get copyright-struck within weeks. Mixcloud only.
 - **v6:** Editorializing the Tahti Radio rotation. The picker algorithm is
   fair-rotation by default. The director should not have programming control.
-- **v6:** Building a venue *booking* marketplace. Calendar feeds only — no
+- **v6:** Building a venue _booking_ marketplace. Calendar feeds only — no
   job postings, no application flows, no mediation. We are not Resident Advisor.
 - **v6:** Requiring accounts for free downloads. Anti-fraud relies on rate
   limits + fingerprint dedup. Accounts are required only for fan-subscribers.

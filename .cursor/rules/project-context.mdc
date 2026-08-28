@@ -1,0 +1,27 @@
+---
+description: Project map — constitution, agent brief, remaining work, testing
+alwaysApply: true
+---
+
+# Tahti — agent project context
+
+## Entry points
+
+1. Root **`AGENTS.md`** — short map for every session.
+2. **`docs/CONSTITUTION.md`** overrides everything else.
+3. **`docs/AGENT.md`** — stack, milestones, data model, anti-patterns.
+4. **`docs/remaining-work.md`** — collective incomplete checklist (do not invent a parallel backlog).
+5. **`docs/project-roadmap.md`** — authoritative `[x]` / `[~]` / `[ ]` status.
+6. **`docs/features.md`** — current product surface; **`docs/testing.md`** — how to verify.
+
+## Non-negotiables for code work
+
+- UI: `@tahti/ui` only (see `ui-library.mdc`).
+- Marketing `website/`: off limits unless the user explicitly asks (`website-off-limits.mdc`).
+- Before finish: `pnpm lint` + `pnpm format:check` (or `pnpm ci:check`); see `ci-lint-before-done.mdc`.
+- Streaming: MinIO for HLS, separate recorder, Prometheus on stream containers — see `docs/technical/streaming-architecture.md`.
+
+## Clients
+
+- Production app: `apps/web` (this repo).
+- Nuclear beta: separate repo; cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.
