@@ -38,6 +38,17 @@ export const PatchRtmpTargetSchema = z.object({
 
 export type PatchRtmpTargetInput = z.infer<typeof PatchRtmpTargetSchema>
 
+/** A raw TCP reachability check against the target's ingest host:port —
+ * confirms the endpoint accepts connections, not that the stream key
+ * itself is valid (that would need an actual RTMP handshake per
+ * platform, which isn't implemented). */
+export const RtmpTargetTestResultSchema = z.object({
+  ok: z.boolean(),
+  error: z.string().optional(),
+})
+
+export type RtmpTargetTestResult = z.infer<typeof RtmpTargetTestResultSchema>
+
 /** The video overlay baked into every multistream mirror push (see
  * buildRtmpMirrorOutput) — shared across all of a channel's RTMP targets,
  * not per-target. Empty string clears back to the display-name/avatar

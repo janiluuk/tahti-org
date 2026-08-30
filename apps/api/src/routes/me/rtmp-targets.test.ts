@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { createServer } from 'node:net'
 
 vi.mock('../../lib/stream-key-enc.js', () => ({
   encryptStreamKey: (plain: string) => Buffer.from(`enc:${plain}`).toString('base64'),
@@ -109,5 +110,68 @@ describe('M6 — RTMP multistream targets', () => {
 
     const updated = await prisma.rtmpTarget.findUnique({ where: { id: target!.id } })
     expect(updated?.enabled).toBe(false)
+  })
+
+  it('tests reachability of a real listening target', async () => {
+    const server = createServer((socket) => socket.end())
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const address = server.address()
+    const port = typeof address === 'object' && address ? address.port : 0
+
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/rtmp-targets',
+      headers: { cookie },
+      payload: {
+        provider: 'CUSTOM',
+        label: 'Local test target',
+        streamKey: 'k',
+        rtmpUrl: `rtmp://127.0.0.1:${port}/app`,
+      },
+    })
+    expect(create.statusCode).toBe(201)
+
+    const test = await app.inject({
+      method: 'POST',
+      url: `/api/me/rtmp-targets/${create.json().id}/test`,
+      headers: { cookie },
+    })
+    expect(test.statusCode).toBe(200)
+    expect(test.json()).toEqual({ ok: true })
+
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+  })
+
+  it('reports failure for an unreachable target', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/rtmp-targets',
+      headers: { cookie },
+      payload: {
+        provider: 'CUSTOM',
+        label: 'Unreachable test target',
+        streamKey: 'k',
+        rtmpUrl: 'rtmp://127.0.0.1:1/app',
+      },
+    })
+    expect(create.statusCode).toBe(201)
+
+    const test = await app.inject({
+      method: 'POST',
+      url: `/api/me/rtmp-targets/${create.json().id}/test`,
+      headers: { cookie },
+    })
+    expect(test.statusCode).toBe(200)
+    expect(test.json().ok).toBe(false)
+    expect(test.json().error).toBeTruthy()
+  })
+
+  it('404s testing a target that does not exist', async () => {
+    const test = await app.inject({
+      method: 'POST',
+      url: '/api/me/rtmp-targets/does-not-exist/test',
+      headers: { cookie },
+    })
+    expect(test.statusCode).toBe(404)
   })
 })
