@@ -19,6 +19,12 @@ export const CreateRadioSlotBookingSchema = z.object({
 })
 export type CreateRadioSlotBookingInput = z.infer<typeof CreateRadioSlotBookingSchema>
 
+export const UpdateRadioSlotBookingSchema = z.object({
+  note: z.string().trim().max(200).nullable().optional(),
+  showType: BroadcastShowTypeSchema.optional(),
+})
+export type UpdateRadioSlotBookingInput = z.infer<typeof UpdateRadioSlotBookingSchema>
+
 export const RadioSlotBookingListQuerySchema = z.object({
   from: z.string().datetime(),
   to: z.string().datetime(),

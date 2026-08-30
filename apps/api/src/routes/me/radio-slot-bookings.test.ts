@@ -220,6 +220,30 @@ describe('radio slot bookings', () => {
     expect(res.statusCode).toBe(404)
   })
 
+  it('forbids editing someone else’s booking', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/radio-slot-bookings/${bookingId}`,
+      cookies: { tahti_session: cookieB },
+      payload: { note: 'Hijacked' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('updates note and showType on your own booking', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/radio-slot-bookings/${bookingId}`,
+      cookies: { tahti_session: cookieA },
+      payload: { note: 'Updated note', showType: 'TALK' },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.note).toBe('Updated note')
+    expect(body.showType).toBe('TALK')
+    expect(body.id).toBe(bookingId)
+  })
+
   it('cancels your own booking', async () => {
     const res = await app.inject({
       method: 'DELETE',

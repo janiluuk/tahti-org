@@ -12,6 +12,7 @@ import {
   RadioSlotBookingListQuerySchema,
   RadioSlotBookingListSchema,
   RadioSlotBookingItemSchema,
+  UpdateRadioSlotBookingSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -181,6 +182,60 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.status(201).send({
+        id: row.id,
+        startAt: row.startAt.toISOString(),
+        endAt: row.endAt.toISOString(),
+        note: row.note,
+        showType: row.showType,
+        channelSlug: channel.slug,
+        username: channel.user.username,
+        displayName: channel.user.displayName,
+        avatarUrl: channel.user.avatarUrl,
+        isMine: true,
+      })
+    },
+  )
+
+  // PATCH /api/me/radio-slot-bookings/:id — note/showType only; times aren't
+  // editable here (cancel and rebook for a different slot).
+  fastify.patch(
+    '/api/me/radio-slot-bookings/:id',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(RadioSlotBookingItemSchema, 'RadioSlotBookingItem') },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const parsed = UpdateRadioSlotBookingSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: request.sessionUser!.id },
+        select: {
+          id: true,
+          slug: true,
+          user: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      })
+      if (!channel) return reply.status(403).send({ error: 'You need a channel to do this' })
+
+      const existing = await fastify.prisma.radioSlotBooking.findFirst({
+        where: { id: routeParams.id, channelId: channel.id },
+        select: { id: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Booking not found' })
+
+      const row = await fastify.prisma.radioSlotBooking.update({
+        where: { id: existing.id },
+        data: {
+          ...(parsed.data.note !== undefined ? { note: parsed.data.note } : {}),
+          ...(parsed.data.showType !== undefined ? { showType: parsed.data.showType } : {}),
+        },
+      })
+
+      return reply.send({
         id: row.id,
         startAt: row.startAt.toISOString(),
         endAt: row.endAt.toISOString(),
