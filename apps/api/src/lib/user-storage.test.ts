@@ -10,6 +10,7 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../test/helpers.js'
+import { computeAllUsersStorageUsedBytes } from './user-storage.js'
 
 const PREFIX = 'user-storage-test-'
 
@@ -75,5 +76,48 @@ describe('computeUserStorageUsedBytes via /api/auth/me', () => {
     }
     expect(body.storage.showSoftTarget).toBe(true)
     expect(body.storage.softTargetBytes).toBe('524288000')
+  })
+})
+
+describe('computeAllUsersStorageUsedBytes', () => {
+  const BULK_PREFIX = 'user-storage-bulk-test-'
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, BULK_PREFIX)
+  })
+
+  it('attributes archive bytes (via channel) and stash bytes (direct) to the right user, and omits users with no usage', async () => {
+    await cleanupUsersByEmailPrefix(prisma, BULK_PREFIX)
+
+    const withArchive = await createTestArtist(prisma, {
+      email: `${BULK_PREFIX}archive@example.com`,
+      username: `${BULK_PREFIX}archive`,
+    })
+    await createReadyArchiveItem(prisma, withArchive.channel!.id, 'Bulk archive track')
+
+    const withStash = await createTestArtist(prisma, {
+      email: `${BULK_PREFIX}stash@example.com`,
+      username: `${BULK_PREFIX}stash`,
+    })
+    await prisma.stashFile.create({
+      data: {
+        userId: withStash.id,
+        filename: 'bulk-fixture.bin',
+        objectKey: `stash/${withStash.id}/bulk-fixture.bin`,
+        contentType: 'application/octet-stream',
+        sizeBytes: BigInt(4_321),
+      },
+    })
+
+    const withNothing = await createTestArtist(prisma, {
+      email: `${BULK_PREFIX}empty@example.com`,
+      username: `${BULK_PREFIX}empty`,
+    })
+
+    const totals = await computeAllUsersStorageUsedBytes(prisma)
+
+    expect(totals.get(withArchive.id)).toBe(5_000_000n)
+    expect(totals.get(withStash.id)).toBe(4_321n)
+    expect(totals.has(withNothing.id)).toBe(false)
   })
 })

@@ -21,3 +21,47 @@ export async function computeUserStorageUsedBytes(
 
   return (archiveAgg._sum.fileSizeBytes ?? 0n) + (stashAgg._sum.sizeBytes ?? 0n)
 }
+
+/**
+ * Same as computeUserStorageUsedBytes, but for every user with archive or
+ * stash content, in 3 queries total instead of 2-per-user — the admin
+ * storage overview needs every user's usage at once, and looping
+ * computeUserStorageUsedBytes per user would be an N+1 query pattern (fine
+ * for one user's own /api/me/storage, not for a platform-wide dashboard).
+ *
+ * ArchiveItem has no direct userId column (it hangs off Channel, which is
+ * 1:1 with User), so archive bytes are grouped by channelId first and then
+ * remapped to userId via a channelId->userId lookup; stash bytes already
+ * have a direct userId column and group straight from that.
+ */
+export async function computeAllUsersStorageUsedBytes(
+  prisma: PrismaClient,
+): Promise<Map<string, bigint>> {
+  const [archiveByChannel, stashByUser, channels] = await Promise.all([
+    prisma.archiveItem.groupBy({
+      by: ['channelId'],
+      _sum: { fileSizeBytes: true },
+    }),
+    prisma.stashFile.groupBy({
+      by: ['userId'],
+      _sum: { sizeBytes: true },
+    }),
+    prisma.channel.findMany({ select: { id: true, userId: true } }),
+  ])
+
+  const channelToUser = new Map(channels.map((c) => [c.id, c.userId]))
+  const totals = new Map<string, bigint>()
+
+  for (const row of archiveByChannel) {
+    const userId = channelToUser.get(row.channelId)
+    if (!userId) continue
+    const bytes = row._sum.fileSizeBytes ?? 0n
+    totals.set(userId, (totals.get(userId) ?? 0n) + bytes)
+  }
+  for (const row of stashByUser) {
+    const bytes = row._sum.sizeBytes ?? 0n
+    totals.set(row.userId, (totals.get(row.userId) ?? 0n) + bytes)
+  }
+
+  return totals
+}

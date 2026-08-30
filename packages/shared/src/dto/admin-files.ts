@@ -22,6 +22,8 @@ export const AdminFileRowSchema = z.object({
   userId: z.string(),
   username: z.string(),
   displayName: z.string(),
+  /** Count of ArchiveItemVersion rows (re-renders/edits kept as history). */
+  revisionCount: z.number().int(),
 })
 
 export type AdminFileRow = z.infer<typeof AdminFileRowSchema>

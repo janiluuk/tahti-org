@@ -10,7 +10,26 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
-import { recordUsageDelta } from '../../lib/storage-quota.js'
+
+/** Usage is now computed live from real ArchiveItem/StashFile rows (see
+ * lib/user-storage.ts) rather than the disused UserStorageQuota cache —
+ * these tests seed a stash file of the desired size instead of the old
+ * recordUsageDelta helper, which nothing in the app calls any more. */
+async function seedStashUsage(
+  prisma: import('@tahti/db').PrismaClient,
+  userId: string,
+  sizeBytes: number,
+) {
+  await prisma.stashFile.create({
+    data: {
+      userId,
+      filename: `usage-fixture-${sizeBytes}.bin`,
+      objectKey: `stash/${userId}/usage-fixture-${sizeBytes}.bin`,
+      contentType: 'application/octet-stream',
+      sizeBytes: BigInt(sizeBytes),
+    },
+  })
+}
 
 const PREFIX = 'admin-storage-test-'
 
@@ -55,7 +74,7 @@ describe('GET /api/admin/storage', () => {
       email: `${PREFIX}artist@example.com`,
       username: `${PREFIX}artist`,
     })
-    await recordUsageDelta(prisma, artist.id, 12_345)
+    await seedStashUsage(prisma, artist.id, 12_345)
 
     const member = await createTestArtist(prisma, {
       email: `${PREFIX}member@example.com`,
@@ -63,7 +82,7 @@ describe('GET /api/admin/storage', () => {
       tier: 'ARTIST',
       isMember: true,
     })
-    await recordUsageDelta(prisma, member.id, 999)
+    await seedStashUsage(prisma, member.id, 999)
 
     const res = await app.inject({ method: 'GET', url: '/api/admin/storage', headers: { cookie } })
     expect(res.statusCode).toBe(200)
@@ -218,12 +237,15 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ quotaBytes: 2_000_000_000, usedBytes: 0, unlimited: false })
 
-    const row = await prisma.userStorageQuota.findUnique({ where: { userId: artistId } })
-    expect(row?.quotaBytes).toBe(2_000_000_000n)
+    const row = await prisma.user.findUnique({
+      where: { id: artistId },
+      select: { softTargetBytes: true },
+    })
+    expect(row?.softTargetBytes).toBe(2_000_000_000n)
   })
 
   it('overwrites an existing quota without touching usedBytes', async () => {
-    await recordUsageDelta(prisma, artistId, 500)
+    await seedStashUsage(prisma, artistId, 500)
 
     const res = await app.inject({
       method: 'PATCH',

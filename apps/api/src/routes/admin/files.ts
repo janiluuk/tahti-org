@@ -194,6 +194,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
                 user: { select: { id: true, username: true, displayName: true } },
               },
             },
+            _count: { select: { versions: true } },
           },
         }),
       ])
@@ -223,6 +224,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           userId: item.channel.user.id,
           username: item.channel.user.username,
           displayName: item.channel.user.displayName,
+          revisionCount: item._count.versions,
         })),
       })
     },

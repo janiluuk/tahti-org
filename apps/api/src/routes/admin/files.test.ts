@@ -62,6 +62,16 @@ describe('/api/admin/files', () => {
     })
     technoId = techno.id
 
+    await prisma.archiveItemVersion.create({
+      data: {
+        archiveItemId: technoId,
+        versionNumber: 1,
+        versionLabel: 'Original upload',
+        rawKey: `${PREFIX}techno-v1.wav`,
+        isActive: true,
+      },
+    })
+
     const folk = await prisma.archiveItem.create({
       data: {
         channelId: artist.channel!.id,
@@ -98,12 +108,18 @@ describe('/api/admin/files', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as {
-      items: Array<{ id: string; genre: string | null; sizeBytes: number | null }>
+      items: Array<{
+        id: string
+        genre: string | null
+        sizeBytes: number | null
+        revisionCount: number
+      }>
     }
     const ids = body.items.map((i) => i.id)
     expect(ids).toContain(technoId)
     expect(ids).not.toContain(folkId)
     expect(body.items.find((i) => i.id === technoId)?.sizeBytes).toBe(7_000_000)
+    expect(body.items.find((i) => i.id === technoId)?.revisionCount).toBe(1)
   })
 
   it('bulk-assigns content type to selected ids', async () => {

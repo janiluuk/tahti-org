@@ -15,6 +15,7 @@ import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getHostDiskSpace } from '../../lib/host-disk.js'
 import { listUserFilesWithRunningTotal } from '../../lib/user-file-listing.js'
+import { computeAllUsersStorageUsedBytes, computeUserStorageUsedBytes } from '../../lib/user-storage.js'
 
 const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
   // Overall usage across the platform + a per-user breakdown, plus the two
@@ -36,32 +37,43 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const [rows, localDisk] = await Promise.all([
-        fastify.prisma.userStorageQuota.findMany({
-          orderBy: { usedBytes: 'desc' },
-          select: {
-            quotaBytes: true,
-            usedBytes: true,
-            user: { select: { id: true, username: true, displayName: true, isMember: true } },
-          },
+      // Usage is computed live from ArchiveItem/StashFile, the same source
+      // /api/me/storage uses — UserStorageQuota.usedBytes is a legacy cached
+      // counter from the abandoned hard-cap model (see storage-quota.ts) that
+      // nothing ever writes to, so reading it here always showed 0 regardless
+      // of real uploads. softTargetBytes (docs/storage-policy.md) is now the
+      // one "quota" concept; every user has one (falls back to the schema
+      // default), so this covers users who never got a UserStorageQuota row.
+      const [allUsers, usedByUser, localDisk] = await Promise.all([
+        fastify.prisma.user.findMany({
+          select: { id: true, username: true, displayName: true, isMember: true, softTargetBytes: true },
         }),
+        computeAllUsersStorageUsedBytes(fastify.prisma),
         getHostDiskSpace(),
       ])
 
+      // Users with nothing uploaded add noise to a board-facing usage list
+      // without adding information — same "usage recorded" framing the
+      // client already shows for an empty list — and their soft target
+      // shouldn't inflate "total quota" for users who aren't using any.
+      const users = allUsers
+        .filter((user) => (usedByUser.get(user.id) ?? 0n) > 0n)
+        .map((user) => ({
+          userId: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          quotaBytes: Number(user.softTargetBytes),
+          usedBytes: Number(usedByUser.get(user.id) ?? 0n),
+          unlimited: user.isMember,
+        }))
+        .sort((a, b) => b.usedBytes - a.usedBytes)
+
       let totalQuotaBytes = 0
       let totalUsedBytes = 0
-      const users = rows.map((row) => {
-        totalQuotaBytes += Number(row.quotaBytes)
-        totalUsedBytes += Number(row.usedBytes)
-        return {
-          userId: row.user.id,
-          username: row.user.username,
-          displayName: row.user.displayName,
-          quotaBytes: Number(row.quotaBytes),
-          usedBytes: Number(row.usedBytes),
-          unlimited: row.user.isMember,
-        }
-      })
+      for (const row of users) {
+        totalQuotaBytes += row.quotaBytes
+        totalUsedBytes += row.usedBytes
+      }
 
       return reply.send({
         totalQuotaBytes,
@@ -135,10 +147,12 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // Admin override for a single user's quota — e.g. granting a supporter or
-  // problem case extra room without changing the platform-wide default.
-  // Upserts since a user may not have used any storage yet (quota row is
-  // otherwise lazily created on first upload, see getOrCreateQuota).
+  // Admin override for a single user's soft storage target — e.g. raising it
+  // for a supporter or a legitimate heavy user (docs/storage-policy.md's
+  // "hidden ceiling" review) without changing the platform-wide default.
+  // Writes User.softTargetBytes directly — the same field /api/me/storage
+  // reads — rather than the disused UserStorageQuota table (nothing else
+  // reads that table's quotaBytes any more; see the GET handler above).
   fastify.patch(
     '/api/admin/storage/users/:id/quota',
     {
@@ -159,25 +173,27 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const { quotaBytes } = parsedBody.data
 
-      const user = await fastify.prisma.user.findUnique({
+      const existing = await fastify.prisma.user.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, isMember: true },
+        select: { id: true },
       })
-      if (!user) return reply.status(404).send({ error: 'User not found' })
+      if (!existing) return reply.status(404).send({ error: 'User not found' })
 
-      const quota = await fastify.prisma.userStorageQuota.upsert({
-        where: { userId: routeParams.id },
-        create: { userId: routeParams.id, quotaBytes: BigInt(quotaBytes) },
-        update: { quotaBytes: BigInt(quotaBytes) },
-        select: { quotaBytes: true, usedBytes: true },
-      })
+      const [user, usedBytes] = await Promise.all([
+        fastify.prisma.user.update({
+          where: { id: routeParams.id },
+          data: { softTargetBytes: BigInt(quotaBytes) },
+          select: { softTargetBytes: true, isMember: true },
+        }),
+        computeUserStorageUsedBytes(fastify.prisma, routeParams.id),
+      ])
 
       // A board override always takes effect — a member's usage is still
       // recorded against it — but the row keeps reading "Unlimited" for members
       // (docs/storage-policy.md), same as the overview list and /api/me/storage.
       return reply.send({
-        quotaBytes: Number(quota.quotaBytes),
-        usedBytes: Number(quota.usedBytes),
+        quotaBytes: Number(user.softTargetBytes),
+        usedBytes: Number(usedBytes),
         unlimited: user.isMember,
       })
     },
