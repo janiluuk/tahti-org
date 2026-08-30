@@ -18,6 +18,10 @@ import { uploadFile } from '../lib/minio.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import { pruneArchiveRevisions } from '../lib/archive-version-retention.js'
 
+function logLine(fields: Record<string, unknown>, msg: string): void {
+  console.log(JSON.stringify({ ...fields, msg, component: 'transcode-version' }))
+}
+
 function ffprobeFormat(
   filePath: string,
 ): Promise<{ duration: number; format: string; codec: string | null; bitrateKbps: number | null }> {
@@ -67,6 +71,7 @@ function ffmpegToFlac(inputPath: string, outputPath: string): Promise<void> {
 
 export async function processTranscodeVersionJob(job: Job): Promise<void> {
   const { versionId } = job.data as { versionId: string }
+  const startedAt = Date.now()
 
   const version = await prisma.archiveItemVersion.findUnique({
     where: { id: versionId },
@@ -86,6 +91,10 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
   const itemId = version.archiveItemId
   const slug = version.archiveItem.channel.slug
 
+  logLine({ itemId, versionId }, `archive item ${itemId} version ${versionId} transcode starting`)
+
+  let targetFormat: 'flac' | 'mp3' = 'mp3'
+
   try {
     const rawPath = join(tmpDir, 'raw_input')
     await downloadSourceCached(version.rawKey, rawPath)
@@ -96,6 +105,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
     const sourceFormat = sourceFormatLabel(sourceMeta.codec)
 
     if (lossless) {
+      targetFormat = 'flac'
       const flacPath = join(tmpDir, 'output.flac')
       await ffmpegToFlac(rawPath, flacPath)
       const flacKey = `flac/${slug}/${itemId}-v${version.versionNumber}.flac`
@@ -139,11 +149,24 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
       await syncActiveVersionToItem(prisma, itemId)
     }
     await pruneArchiveRevisions(prisma, itemId)
+    logLine(
+      { itemId, versionId, targetFormat, elapsedMs: Date.now() - startedAt },
+      `archive item ${itemId} version ${versionId} transcode to ${targetFormat} done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
   } catch (err) {
     await prisma.archiveItemVersion.update({
       where: { id: versionId },
       data: { status: 'ERROR' },
     })
+    logLine(
+      {
+        itemId,
+        versionId,
+        elapsedMs: Date.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err),
+      },
+      `archive item ${itemId} version ${versionId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

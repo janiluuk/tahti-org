@@ -20,6 +20,10 @@ export const r2 = r2Enabled
     })
   : null
 
+function logLine(fields: Record<string, unknown>, msg: string): void {
+  console.log(JSON.stringify({ ...fields, msg, component: 'r2' }))
+}
+
 /** Long-term lossless mirror — never called unless r2Enabled (callers must check first). */
 export async function uploadFileToR2(
   key: string,
@@ -27,6 +31,7 @@ export async function uploadFileToR2(
   contentType: string,
 ): Promise<void> {
   if (!r2) throw new Error('R2 is not configured')
+  const startedAt = Date.now()
   await r2.send(
     new PutObjectCommand({
       Bucket: R2_BUCKET,
@@ -35,9 +40,14 @@ export async function uploadFileToR2(
       ContentType: contentType,
     }),
   )
+  logLine(
+    { bucket: R2_BUCKET, key, elapsedMs: Date.now() - startedAt },
+    `r2 upload ${key} done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+  )
 }
 
 export async function deleteFromR2(key: string): Promise<void> {
   if (!r2) return
   await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }))
+  logLine({ bucket: R2_BUCKET, key }, `r2 delete ${key}`)
 }

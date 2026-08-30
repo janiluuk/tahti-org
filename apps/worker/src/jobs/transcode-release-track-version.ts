@@ -10,6 +10,10 @@ import { prisma, syncActiveVersionToTrack } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { pruneOldR2VersionsForTrack, writeThroughToR2 } from '../lib/release-r2-sync.js'
 
+function logLine(fields: Record<string, unknown>, msg: string): void {
+  console.log(JSON.stringify({ ...fields, msg, component: 'transcode-release-track-version' }))
+}
+
 function ffprobeMetadata(
   filePath: string,
 ): Promise<{ duration: number; sampleRate: number; bitDepth: number; format: string }> {
@@ -72,6 +76,12 @@ export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<
   const releaseId = version.releaseTrack.release.id
   const userId = version.releaseTrack.release.userId
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-rtvtranscode-'))
+  const startedAt = Date.now()
+
+  logLine(
+    { trackId, versionId },
+    `release track ${trackId} version ${versionId} transcode starting`,
+  )
 
   try {
     await prisma.releaseTrackVersion.update({
@@ -132,11 +142,24 @@ export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<
     }
 
     await pruneOldR2VersionsForTrack(trackId, userId)
+    logLine(
+      { trackId, versionId, hasFlac: Boolean(flacKey), elapsedMs: Date.now() - startedAt },
+      `release track ${trackId} version ${versionId} transcode done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
   } catch (err) {
     await prisma.releaseTrackVersion.update({
       where: { id: versionId },
       data: { status: 'FAILED' },
     })
+    logLine(
+      {
+        trackId,
+        versionId,
+        elapsedMs: Date.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err),
+      },
+      `release track ${trackId} version ${versionId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

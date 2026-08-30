@@ -11,6 +11,10 @@ import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 import { fingerprintAndIdentify } from '../lib/track-fingerprint.js'
 
+function logLine(fields: Record<string, unknown>, msg: string): void {
+  console.log(JSON.stringify({ ...fields, msg, component: 'transcode-release-track' }))
+}
+
 function ffprobeMetadata(
   filePath: string,
 ): Promise<{ duration: number; sampleRate: number; bitDepth: number; format: string }> {
@@ -58,6 +62,7 @@ function transcodeFlac(inputPath: string, outputPath: string): Promise<void> {
 
 export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
   const { trackId } = job.data as { trackId: string }
+  const startedAt = Date.now()
 
   const track = await prisma.releaseTrack.findUnique({
     where: { id: trackId },
@@ -66,6 +71,8 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
 
   if (!track) throw new Error(`ReleaseTrack ${trackId} not found`)
   if (!track.sourceKey) throw new Error(`ReleaseTrack ${trackId} has no sourceKey`)
+
+  logLine({ trackId }, `release track ${trackId} transcode starting`)
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-rtranscode-'))
 
@@ -139,11 +146,19 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
         status: 'READY',
       },
     })
+    logLine(
+      { trackId, hasFlac: Boolean(flacKey), elapsedMs: Date.now() - startedAt },
+      `release track ${trackId} transcode done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
   } catch (err) {
     await prisma.releaseTrack.update({
       where: { id: trackId },
       data: { status: 'FAILED' },
     })
+    logLine(
+      { trackId, elapsedMs: Date.now() - startedAt, error: err instanceof Error ? err.message : String(err) },
+      `release track ${trackId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

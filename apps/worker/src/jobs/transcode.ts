@@ -24,6 +24,10 @@ import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
 
+function logLine(fields: Record<string, unknown>, msg: string): void {
+  console.log(JSON.stringify({ ...fields, msg, component: 'transcode' }))
+}
+
 function ffprobeFormat(
   filePath: string,
 ): Promise<{ duration: number; format: string; codec: string | null; bitrateKbps: number | null }> {
@@ -122,6 +126,7 @@ async function buildTagPatch(
 
 export async function processTranscodeJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
+  const startedAt = Date.now()
 
   const item = await prisma.archiveItem.findUnique({
     where: { id: itemId },
@@ -135,6 +140,8 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     where: { id: itemId },
     data: { status: 'PROCESSING' },
   })
+
+  logLine({ itemId }, `archive item ${itemId} transcode starting`)
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-transcode-'))
 
@@ -173,6 +180,10 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       })
       await ensureInitialVersion(prisma, itemId)
       await enqueueWarmArchiveFallbackCache(item.channelId)
+      logLine(
+        { itemId, targetFormat: 'flac', elapsedMs: Date.now() - startedAt },
+        `archive item ${itemId} transcode to flac done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      )
       return
     }
 
@@ -201,11 +212,19 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
     await ensureInitialVersion(prisma, itemId)
     await enqueueWarmArchiveFallbackCache(item.channelId)
+    logLine(
+      { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
+      `archive item ${itemId} transcode to mp3 done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
   } catch (err) {
     await prisma.archiveItem.update({
       where: { id: itemId },
       data: { status: 'ERROR' },
     })
+    logLine(
+      { itemId, elapsedMs: Date.now() - startedAt, error: err instanceof Error ? err.message : String(err) },
+      `archive item ${itemId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    )
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
