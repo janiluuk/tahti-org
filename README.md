@@ -107,7 +107,9 @@ More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are ca
 
 | File                                                                         | Purpose                                                                                 |
 | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`docs/AGENT.md`](docs/AGENT.md)                                             | Coding-agent brief - repo, milestones M0-M20, data model, anti-patterns                 |
+| [`AGENTS.md`](AGENTS.md)                                                     | Cursor/agent session entry - points at constitution, brief, remaining work              |
+| [`docs/AGENT.md`](docs/AGENT.md)                                             | Coding-agent brief - repo, milestones, data model, anti-patterns                        |
+| [`docs/remaining-work.md`](docs/remaining-work.md)                           | Collective incomplete checklist (legal, ops, engineering)                               |
 | [`docs/design/README.md`](docs/design/README.md)                             | Design docs index - constitution, v8 mockups, reference HTML pack, active briefs        |
 | [`docs/project-roadmap.md`](docs/project-roadmap.md)                         | Build audit, phase checklist, milestone status                                          |
 | [`docs/future-improvements.md`](docs/future-improvements.md)                 | Deferred milestones + engineering efficiency backlog                                    |

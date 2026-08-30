@@ -21,6 +21,7 @@ export default defineConfig({
       reporter: ['text', 'json'],
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/test/**'],
+      // Thresholds tracked in docs/testing.md; enable in CI when PLAT coverage gate lands.
     },
   },
 })

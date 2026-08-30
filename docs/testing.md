@@ -46,6 +46,33 @@ Under `apps/api/src/routes/journeys/`:
 ./scripts/unified-smoke.sh --all --seed # prod + e2e with fixture seed
 ```
 
+## Coverage expectations
+
+Vitest is the primary regression gate (~300+ `*.test.ts` files). Before merging
+API/route work:
+
+| Area                                                | Must have                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------- |
+| Money (Stripe membership, fan-subs, ledger, grants) | Colocated route/lib tests + `packages/ledger`                 |
+| Ingest / broadcast cap / internal webhooks          | `internal/*.test.ts`, shared `broadcast-cap`                  |
+| Downloads / engagement units / fraud                | `downloads/`, `engagement/`, ledger fraud-scan                |
+| Public moderation (`POST /api/v1/reports`)          | Covered in `admin/content-reports.test.ts`                    |
+| New public or authed route tree                     | Colocated `*.test.ts` **or** extend an existing journey suite |
+
+Run coverage locally (API package):
+
+```bash
+pnpm --filter @tahti/api exec vitest run --coverage
+```
+
+Target (not yet a CI gate): lines/functions/branches/statements **≥ 45%** on
+included `src/**`. Pure helpers in `packages/shared` and `packages/ledger`
+should stay near-complete for grant and playback logic. Enabling hard Vitest
+`thresholds` in CI is tracked under future-improvements / PLAT testing backlog.
+
+Incomplete manual/MVP matrix items (Mixxx path, load test, etc.) are tracked in
+[`remaining-work.md`](./remaining-work.md).
+
 ## Test data isolation
 
 - Prefer `cleanupUsersByEmailPrefix(prisma, 'my-prefix-')` for artist fixtures.
