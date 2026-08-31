@@ -7,7 +7,10 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
-import { ArchiveItemPlayback } from '@/components/archive-item-playback'
+import {
+  ArchiveItemPlayback,
+  HearthisArchiveItemPlayback,
+} from '@/components/archive-item-playback'
 import { HearthisEmbedRow } from '../u/[username]/c/[slug]/_hearthis-embed-row'
 import { MixcloudEmbedRow } from '../u/[username]/c/[slug]/_mixcloud-embed-row'
 import { SpotifyEmbedRow } from '../u/[username]/c/[slug]/_spotify-embed-row'
@@ -387,6 +390,17 @@ export default function ArchiveEditor({
             titleOverlay={{ title: item.title, subtitle: play.artistName }}
             extraControls={rowActions}
           />
+        </div>
+      ) : isReady && isPublic && !open && play?.embedUri && play.embedProvider === 'HEARTHIS' ? (
+        <div className="archive-list__playback-row" data-tahti-ui="brand">
+          <HearthisArchiveItemPlayback
+            id={item.id}
+            title={item.title}
+            artistName={play.artistName}
+            embedUri={play.embedUri}
+            queue={queue}
+          />
+          <div className="archive-list__row-actions">{rowActions}</div>
         </div>
       ) : isReady && isPublic && !open && play?.embedUri ? (
         <div className="archive-list__playback-row">

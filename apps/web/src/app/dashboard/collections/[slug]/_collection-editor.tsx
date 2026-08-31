@@ -28,7 +28,6 @@ import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-moda
 import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
 import { HearthisImportModal } from './_hearthis-import-modal'
 import { listMyIntegrations } from '../../integrations-actions'
-import { HearthisEmbedRow } from '../../../u/[username]/c/[slug]/_hearthis-embed-row'
 import { MixcloudEmbedRow } from '../../../u/[username]/c/[slug]/_mixcloud-embed-row'
 import { SpotifyEmbedRow } from '../../../u/[username]/c/[slug]/_spotify-embed-row'
 
@@ -303,7 +302,9 @@ export function CollectionEditor({
 
   const queueItem = useCallback(
     (item: CollectionItem) => {
-      if (!item.audioUrl) return
+      const isHearthis =
+        item.archiveItem?.source === 'HEARTHIS_EMBED' && Boolean(item.archiveItem.embedUri)
+      if (!item.audioUrl && !isHearthis) return
       const added = addToQueue(toPlayerTrack(item))
       const title = itemTitle(item)
       showToast(
@@ -416,35 +417,52 @@ export function CollectionEditor({
             <span className="collection-tracklist__playback">
               <button
                 type="button"
-                onClick={() => setExpandedEmbedItemId(isEmbedExpanded ? null : item.id)}
-                title={isEmbedExpanded ? 'Hide player' : 'Play'}
-                aria-label={isEmbedExpanded ? `Hide ${title} player` : `Play ${title}`}
-                aria-expanded={isEmbedExpanded}
+                onClick={() =>
+                  embedProvider === 'HEARTHIS'
+                    ? void toggleItemPlayback(item)
+                    : setExpandedEmbedItemId(isEmbedExpanded ? null : item.id)
+                }
+                title={
+                  embedProvider === 'HEARTHIS' ? 'Play' : isEmbedExpanded ? 'Hide player' : 'Play'
+                }
+                aria-label={
+                  embedProvider === 'HEARTHIS'
+                    ? `Play ${title}`
+                    : isEmbedExpanded
+                      ? `Hide ${title} player`
+                      : `Play ${title}`
+                }
+                aria-expanded={embedProvider === 'HEARTHIS' ? undefined : isEmbedExpanded}
               >
-                {isEmbedExpanded ? '❚❚' : '▶'}
+                {embedProvider === 'HEARTHIS' && track?.id === toPlayerTrack(item).id && playing
+                  ? '❚❚'
+                  : isEmbedExpanded
+                    ? '❚❚'
+                    : '▶'}
               </button>
+              {embedProvider === 'HEARTHIS' && (
+                <button
+                  type="button"
+                  onClick={() => queueItem(item)}
+                  title="Add to queue"
+                  aria-label={`Add ${title} to queue`}
+                >
+                  +
+                </button>
+              )}
             </span>
           ) : null}
           {badgeLabel ? (
             <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>{badgeLabel}</span>
           ) : null}
           {dur != null && <span className="collection-tracklist__dur">{formatDuration(dur)}</span>}
-          {isEmbedExpanded && embedUri && (
+          {isEmbedExpanded && embedUri && embedProvider !== 'HEARTHIS' && (
             <ul className="collection-tracklist__embed">
               {embedProvider === 'MIXCLOUD' ? (
                 <MixcloudEmbedRow title={title} embedUri={embedUri} />
               ) : embedProvider === 'SPOTIFY' ? (
                 <SpotifyEmbedRow title={title} embedUri={embedUri} />
-              ) : (
-                <HearthisEmbedRow
-                  title={title}
-                  embedUri={embedUri}
-                  id={item.archiveItem?.id}
-                  durationSec={item.archiveItem?.durationSec}
-                  thumbUrl={itemThumb(item)}
-                  queue={playbackQueue}
-                />
-              )}
+              ) : null}
             </ul>
           )}
           {reorderSaving && (

@@ -95,7 +95,10 @@ export function ArchiveList({
       {(visible) => {
         const queue: PlayerTrack[] = visible
           .map((item) => playable.find((p) => p.id === item.id))
-          .filter((p): p is PlayableItem => Boolean(p?.audioUrl))
+          .filter(
+            (p): p is PlayableItem =>
+              Boolean(p?.audioUrl) || (p?.embedProvider === 'HEARTHIS' && Boolean(p.embedUri)),
+          )
           .map((p) => ({
             id: p.id,
             kind: 'archive' as const,
@@ -103,6 +106,9 @@ export function ArchiveList({
             title: p.title,
             subtitle: p.artistName?.trim() || `@${artistUsername}`,
             artworkUrl: p.bannerUrl,
+            ...(p.embedProvider === 'HEARTHIS' && p.embedUri
+              ? { embed: { provider: 'HEARTHIS' as const, embedUri: p.embedUri } }
+              : {}),
           }))
         return (
           <>

@@ -195,3 +195,63 @@ export function ArchiveItemPlayback({
     </div>
   )
 }
+
+export function HearthisArchiveItemPlayback({
+  id,
+  title,
+  artistName,
+  embedUri,
+  queue,
+}: {
+  id: string
+  title: string
+  artistName?: string | null
+  embedUri: string
+  queue?: PlayerTrack[]
+}) {
+  const { track, playing, load, togglePlay, addToQueue } = usePlayer()
+  const { showToast } = useToast()
+  const playerTrack: PlayerTrack = {
+    id,
+    kind: 'archive',
+    url: '',
+    title,
+    subtitle: artistName?.trim() || undefined,
+    embed: { provider: 'HEARTHIS', embedUri },
+  }
+  const isCurrent = track?.id === playerTrack.id
+
+  async function handlePlay() {
+    if (!isCurrent) {
+      load(playerTrack, { autoplay: true, queue })
+      return
+    }
+    await togglePlay()
+  }
+
+  function handleQueue() {
+    const added = addToQueue(playerTrack)
+    showToast(
+      added ? `Added “${title}” to the queue.` : `“${title}” is already in the queue.`,
+      added ? 'success' : 'info',
+    )
+  }
+
+  return (
+    <div className="ch-archive-controls-row">
+      <div className="ch-archive-controls">
+        <button
+          type="button"
+          className="ch-archive-controls__play"
+          onClick={() => void handlePlay()}
+        >
+          {isCurrent && playing ? '❚❚' : '▶'}
+        </button>
+        <span className="mini-player__badge">HEARTHIS</span>
+      </div>
+      <button type="button" className="ch-archive-controls__queue" onClick={handleQueue}>
+        +
+      </button>
+    </div>
+  )
+}
