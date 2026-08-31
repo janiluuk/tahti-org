@@ -100,3 +100,20 @@ with play and queue actions like the other listening surfaces.
 4. Verify MinIO sync, Caddy serving, watchdog freshness, and archive fallback.
 5. Add an operator-only emergency flag for 192k-only output only if the test
    proves it is needed beyond normal per-listener ABR.
+
+## Plugin-system audit follow-up (2026-08-31)
+
+- Nuclear has an installable-plugin lifecycle (`onLoad`/`onEnable`/
+  `onDisable`) and namespaced persisted settings, but Tahti imports currently
+  live in a separate hard-coded `SOURCE_DEFS` registry and source-specific API
+  clients.
+- Nuclear already follows the required configuration rule for these sources:
+  the Configure gear opens an inline modal, where connection state is checked
+  and the user can connect/configure or disconnect; there is no separate
+  per-source settings page to preserve.
+- Tahti's Google Drive path already provides OAuth start/callback, encrypted
+  access and refresh tokens, picker configuration, queued cloud-import jobs,
+  worker processing, job status, and `CONTENT_UPLOAD` audit events. The first
+  core-porting change should therefore define a versioned provider/capability
+  contract around those existing boundaries, then adapt Google Drive to it;
+  duplicating the OAuth or configuration UI would violate the agreed boundary.
