@@ -70,3 +70,27 @@ with play and queue actions like the other listening surfaces.
 - Deploy Tahti core before publishing the compatible Nuclear plugin.
 - Verify the complete Google Drive journey in staging before removing legacy
   paths.
+
+## STREAM-011 B spike findings
+
+- Current Liquidsoap `v2.2.5` channel and rotation templates emit two HLS
+  variants (`stream-mp3-192` and `stream-flac`) using MPEG-TS segments on the
+  shared HLS volume.
+- The current live path and player still resolve a single leaf manifest; a
+  multi-bitrate implementation needs a master playlist and corresponding
+  `liveHlsManifestPath()` changes.
+- FLAC-in-MPEG-TS is not a viable browser path. The next experiment must test
+  Liquidsoap fMP4/CMAF output with a browser, including hls.js and Safari-native
+  playback, before changing the production template.
+- If browser-compatible lossless HLS fails, the fallback scope is a high-bitrate
+  AAC/MP3 rendition with per-listener ABR.
+- No production streaming behavior was changed during this spike.
+
+### Acceptance criteria before implementation
+
+1. Confirm the generated master playlist and variant codec/container metadata.
+2. Play every candidate rendition in hls.js and Safari-native HLS.
+3. Verify automatic downgrade under constrained throughput.
+4. Verify MinIO sync, Caddy serving, watchdog freshness, and archive fallback.
+5. Add an operator-only emergency flag for 192k-only output only if the test
+   proves it is needed beyond normal per-listener ABR.
