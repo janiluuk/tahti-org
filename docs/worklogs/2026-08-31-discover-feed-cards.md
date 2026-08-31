@@ -12,6 +12,12 @@ with play and queue actions like the other listening surfaces.
   context, and play/queue controls for playable tracks.
 - Kept the existing vertical feed layout for the standalone `/feed` page and
   dashboard embedding.
+- Feed post cards now include attached post images, with additional images
+  shown as thumbnails beneath the lead artwork.
+- Feed entries link to their content and use humanized relative dates such as
+  “3h ago” and “2d ago”.
+- Hearthis archive items in the dashboard archive and collection editor now
+  use the shared player, queue, and expanded hearthis widget lifecycle.
 
 ## Follow-up
 

@@ -481,24 +481,20 @@ mounted and mounts with `autoplay` tied to the load's own autoplay
 intent.
 
 Wired into `_track-detail-modal.tsx` (the artist-profile track detail
-view — the flagship listener-facing surface) as the one real
-integration point this session. The dashboard's archive list and
-collection editor (`_archive-list.tsx`, `_collection-editor.tsx`) still
-render the old page-local `HearthisEmbedRow` for hearthis tracks —
-functionally fine, just not migrated to the shared player yet. Mixcloud
-and Spotify embeds are untouched — same page-local pattern as before,
-out of scope (no research done on whether their widgets support real
-control either).
+view — the flagship listener-facing surface) as the first real integration
+point. The dashboard archive list and collection editor now use the same
+shared player and queue lifecycle for hearthis tracks. Mixcloud and Spotify
+embeds are untouched — same page-local pattern as before, out of scope (no
+research done on whether their widgets support real control either).
 
 ## Not started this session
 
 - Always assigning a fallback cover image for releases without one —
-  queued early, never reached.
-- Hearthis.at embed migration for the dashboard archive list and
-  collection editor (`_archive-list.tsx`, `_collection-editor.tsx`) —
-  same pattern as `_track-detail-modal.tsx`, just not done yet.
+  queued early, never reached; needs an approved fallback asset or a decision
+  to standardize on the existing gradient placeholder.
 - The visualizer-as-page-header and conditional Gallery tab pieces of the
-  artist-profile restructure (see above — needs new data this page
-  doesn't fetch yet).
+  artist-profile restructure remain queued: the profile API still does not
+  expose the channel visual preset, gallery mode, or slideshow images needed
+  to implement them safely.
 - Collapsing the channel page's five tabs into one always-visible player
   card — proposed, not selected by the user.
