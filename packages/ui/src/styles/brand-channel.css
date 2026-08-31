@@ -4810,7 +4810,7 @@
 
 [data-tahti-ui='brand'] .prof-tabs__panel {
   margin-top: 0;
-  padding-top: 1rem;
+  padding-top: 0;
 }
 
 [data-tahti-ui='brand'] .prof-tabs__panel > .prof-section:first-child {

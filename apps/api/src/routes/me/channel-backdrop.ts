@@ -55,7 +55,10 @@ const meChannelBackdropRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        response: openApiResponse(ChannelBackdropUploadCompleteResponseSchema, 'ChannelBackdropUploadComplete'),
+        response: openApiResponse(
+          ChannelBackdropUploadCompleteResponseSchema,
+          'ChannelBackdropUploadComplete',
+        ),
       },
     },
     async (request, reply) => {

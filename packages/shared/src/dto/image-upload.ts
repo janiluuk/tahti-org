@@ -35,7 +35,11 @@ export const UserMediaCompleteSchema = z.object({
   uploadKey: z.string().min(1).max(512),
   filename: z.string().min(1).max(255),
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
-  sizeBytes: z.number().int().positive().max(20 * 1024 * 1024),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(20 * 1024 * 1024),
 })
 
 export const UserMediaFileSchema = z.object({
