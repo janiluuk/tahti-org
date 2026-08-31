@@ -57,7 +57,7 @@ Ops-only go-lives (code ready): Revelator credentials (**PLAT-056**), Mixcloud p
 | ID           | Item                                               | Status | P   |
 | ------------ | -------------------------------------------------- | :----: | --- |
 | **PLAT-081** | Cloud import abstraction (Dropbox/OneDrive/WebDAV) | `[ ]`  | P3  |
-| **PLAT-082** | Google Drive import audit-log entry per job        | `[~]`  | P2  |
+| **PLAT-082** | Google Drive import audit-log entry per job        | `[x]`  | P2  |
 | **PLAT-053** | Radio Mixcloud Live (see above)                    | `[~]`  | P2  |
 
 Most PLAT-001–080 / SEC / UX / PERF items are **done** — see roadmap tables.
