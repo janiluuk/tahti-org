@@ -3,7 +3,7 @@
 Mermaid charts + screenshot maps for **every primary surface**, grouped by who is using the product. Modelled after Giggi’s `docs/journeys/` + `docs/ui/navigation-flows-design-review.md` pack: one spine diagram, then per-persona pages that list **route → functionality → tab/nav → screenshot**.
 
 **Tahti Player × Tahti workbench copy** (current + planned player-shell journeys):
-The implementation lives in the [Tahti Player repository](https://github.com/janiluuk/tahti-player), with local design references under `../tahti-nuclear/tahti-fit/flows/` when both workspaces are checked out.
+The implementation lives in the [Tahti Player repository](https://github.com/janiluuk/tahti-player), with local design references under `../tahti-player/tahti-fit/flows/` when both workspaces are checked out.
 
 **Screenshots:** Playwright captures under [`../e2e-screenshots/`](../e2e-screenshots/). Naming: `<role>/<slug>.png`. Full route map: [`manifest.json`](../e2e-screenshots/manifest.json).
 
@@ -81,6 +81,8 @@ Also:
 | --- | --- |
 | [site-map.md](site-map.md) | Every implemented route, colour-coded by auth gate |
 | [navigation-flows-design-review.md](navigation-flows-design-review.md) | Design-review pack: spine + **embedded screenshots** per part |
+
+**Screenshot gallery:** [e2e-screenshots index](../e2e-screenshots/manifest.json)
 
 ---
 

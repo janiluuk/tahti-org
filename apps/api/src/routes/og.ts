@@ -6,7 +6,7 @@
 // iMessage) that would otherwise see the SPA's single static index.html for
 // every /c, /u, /r route. Real browsers and JS-executing crawlers never hit
 // these directly — the web edge only proxies known bot user agents here.
-// See tahti-nuclear-player's packages/tahti-web/SEO-OG-NOTES.md for the plan
+// See tahti-player's packages/tahti-web/SEO-OG-NOTES.md for the plan
 // this implements.
 
 import type { FastifyPluginAsync } from 'fastify'

@@ -37,7 +37,7 @@ with play and queue actions like the other listening surfaces.
 
 - Tahti core owns API routes, OAuth handling, encrypted credentials, import
   jobs, audit logs, and persistence.
-- Nuclear, in `../tahti-nuclear`, owns the plugin UI and configuration modal.
+- Nuclear, in `../tahti-player`, owns the plugin UI and configuration modal.
 - Import configuration must happen through the plugin Configure action: enter
   settings, test the connection, save, then enable.
 - Do not add a parallel configuration surface in Tahti core.

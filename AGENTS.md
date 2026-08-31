@@ -37,7 +37,7 @@ units. Listeners stay anonymous by default.
 ## Nuclear import-plugin boundary
 
 The Nuclear client/plugin repository is the sibling checkout at
-`../tahti-nuclear`. Features that extend Nuclear’s import-plugin system belong
+`../tahti-player`. Features that extend Nuclear’s import-plugin system belong
 there, not in Tahti core. Keep Tahti responsible for its API, worker jobs, and
 server-side persistence; the Nuclear plugin owns its client configuration flow.
 

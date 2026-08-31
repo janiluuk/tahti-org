@@ -30,12 +30,12 @@ Session cookie `tahti_session` is host-only. Log in at **https://beta.tahti.live
 From the [Tahti Player repository](https://github.com/janiluuk/tahti-player):
 
 ```bash
-cd /home/jani/workspace/tahti-nuclear
+cd /home/jani/workspace/tahti-player
 pnpm deploy:tahti-beta
 ```
 
-Details: [`tahti-nuclear/packages/tahti-web/deploy/README.md`](../../tahti-nuclear/packages/tahti-web/deploy/README.md) and [`TAHTI-FORK.md`](../../tahti-nuclear/TAHTI-FORK.md).
+Details: [`tahti-player/packages/tahti-web/deploy/README.md`](../../tahti-player/packages/tahti-web/deploy/README.md) and [`TAHTI-FORK.md`](../../tahti-player/TAHTI-FORK.md).
 
 ## Production cutover
 
-When replacing production `apps/web` with this client, follow **[`nuclear-web-cutover.md`](nuclear-web-cutover.md)** → [`CUTOVER.md`](../../tahti-nuclear/packages/tahti-web/CUTOVER.md).
+When replacing production `apps/web` with this client, follow **[`nuclear-web-cutover.md`](nuclear-web-cutover.md)** → [`CUTOVER.md`](../../tahti-player/packages/tahti-web/CUTOVER.md).
