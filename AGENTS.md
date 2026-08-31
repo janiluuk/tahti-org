@@ -34,6 +34,25 @@ units. Listeners stay anonymous by default.
 | Marketing site             | `website/` — **off limits** unless user explicitly asks                                                  |
 | Nuclear beta client        | Separate repo; cutover in [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) (`beta.tahti.live`) |
 
+## Nuclear import-plugin boundary
+
+The Nuclear client/plugin repository is the sibling checkout at
+`../tahti-nuclear`. Features that extend Nuclear’s import-plugin system belong
+there, not in Tahti core. Keep Tahti responsible for its API, worker jobs, and
+server-side persistence; the Nuclear plugin owns its client configuration flow.
+
+For import plugins, all provider configuration must happen from the plugin’s
+Configure action in a modal. The modal must support entering keys/settings,
+testing the connection, and only then saving/enabling the plugin. Do not add a
+second configuration surface in Tahti core or silently enable an unverified
+provider.
+
+Still to clarify before extending the plugin API: whether Configure is a
+first-class SDK lifecycle hook or a host-rendered settings modal; the exact
+connection-test contract and error states; and whether Save and Enable are one
+atomic action or separate actions. Record the decision in both repositories’
+agent instructions when settled.
+
 ## Quality gates (before claiming done)
 
 ```bash
