@@ -54,6 +54,19 @@ export function parseSocialLinksGenres(socialLinks: unknown): string[] {
     .filter(Boolean)
 }
 
+/** Same shape as parseSocialLinksGenres, for the artist's self-selected roles
+ * (dj/producer/band/etc — see ARTIST_ROLE_OPTIONS in tahti-web's
+ * SettingsPanels.tsx), also comma-joined inside the same JSON bag. */
+export function parseSocialLinksArtistRoles(socialLinks: unknown): string[] {
+  if (!socialLinks || typeof socialLinks !== 'object') return []
+  const raw = (socialLinks as Record<string, unknown>).artistRoles
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  return raw
+    .split(',')
+    .map((r) => r.trim())
+    .filter(Boolean)
+}
+
 export const ARCHIVE_LICENSE_LABELS: Record<(typeof ARCHIVE_LICENSES)[number], string> = {
   ALL_RIGHTS_RESERVED: 'All rights reserved',
   CC_BY: 'Creative Commons — Attribution (CC BY)',

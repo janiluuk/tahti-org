@@ -704,6 +704,12 @@ export const ChannelDirectoryEntrySchema = z.object({
   /** Live right now, or airing its 24/7 fallback rotation — otherwise not
    * currently playing anything (still browsable, just tagged separately). */
   isActive: z.boolean(),
+  /** Self-selected artist roles (dj/producer/band/etc) — see
+   * ARTIST_ROLE_OPTIONS in tahti-web's SettingsPanels.tsx. */
+  artistRoles: z.array(z.string()),
+  /** True while the channel is live right now — the "radio host" directory
+   * filter's definition of "having an active running show". */
+  hasActiveShows: z.boolean(),
 })
 
 export const ChannelDirectoryResponseSchema = z.object({

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ChannelDirectoryResponseSchema,
   openApiResponse,
+  parseSocialLinksArtistRoles,
   parseSocialLinksGenres,
 } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
@@ -46,6 +47,8 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
             avatarUrl: ch.user.avatarUrl,
             genres: parseSocialLinksGenres(ch.user.socialLinks),
             isActive: ch.state === 'LIVE' || ch.fallbackEnabled,
+            artistRoles: parseSocialLinksArtistRoles(ch.user.socialLinks),
+            hasActiveShows: ch.state === 'LIVE',
           })),
         }
       })
