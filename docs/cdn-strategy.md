@@ -1,5 +1,17 @@
 # Tahti ry — CDN strategy (European-first)
 
+> **Superseded — kept for historical context only.** The org decided
+> **against** a CDN entirely. Current infrastructure is owned hardware in
+> Helsinki with UpCloud (Helsinki) as spillover/DR, described in
+> [`docs/infra-strategy.md`](./infra-strategy.md) — see its "What we don't
+> use" section, which explicitly rules out Bunny, Fastly, Cloudflare,
+> BlazingCDN, and AWS CloudFront. The comparison below reflects the earlier
+> plan this doc was written for and should not be treated as current. If the
+> CDN question is ever reopened (e.g. at the Y3 bandwidth-vs-fiber decision
+> point noted in `infra-strategy.md`), this doc's vendor research is still a
+> reasonable starting point — just verify pricing/DPA terms again before
+> acting on it.
+
 Tahti is a Helsinki-based Finnish nonprofit serving primarily EU listeners.
 Our CDN strategy is European-first for two reasons:
 
