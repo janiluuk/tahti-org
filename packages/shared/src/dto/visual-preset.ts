@@ -192,10 +192,13 @@ export function resolveColorScheme(
   return parseColorScheme(colorSchemeJson) ?? parseColorScheme(paletteJson) ?? DEFAULT_COLOR_SCHEME
 }
 
-/** Per-visualizer knobs (speed / intensity). Stored as a map keyed by preset. */
+/** Per-visualizer knobs (speed / intensity / scale / audio reactivity).
+ * Stored as a map keyed by preset. */
 export const VisualPresetSettingsSchema = z.object({
   speed: z.number().min(0.25).max(2),
   intensity: z.number().min(0.25).max(2),
+  scale: z.number().min(0.5).max(2),
+  audioReactive: z.boolean(),
 })
 
 export type VisualPresetSettings = z.infer<typeof VisualPresetSettingsSchema>
@@ -203,6 +206,8 @@ export type VisualPresetSettings = z.infer<typeof VisualPresetSettingsSchema>
 export const DEFAULT_VISUAL_PRESET_SETTINGS: VisualPresetSettings = {
   speed: 1,
   intensity: 1,
+  scale: 1,
+  audioReactive: true,
 }
 
 export const VisualSettingsMapSchema = z.record(z.string(), VisualPresetSettingsSchema.partial())
@@ -227,6 +232,9 @@ export function resolveVisualPresetSettings(
   return {
     speed: partial?.speed ?? DEFAULT_VISUAL_PRESET_SETTINGS.speed,
     intensity: partial?.intensity ?? DEFAULT_VISUAL_PRESET_SETTINGS.intensity,
+    scale: partial?.scale ?? DEFAULT_VISUAL_PRESET_SETTINGS.scale,
+    audioReactive:
+      partial?.audioReactive ?? DEFAULT_VISUAL_PRESET_SETTINGS.audioReactive,
   }
 }
 
