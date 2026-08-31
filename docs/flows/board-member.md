@@ -4,7 +4,9 @@
 
 **Technical:** [journey-director.md](../technical/journey-director.md)
 
-**Screenshot folder:** [`../e2e-screenshots/admin/`](../e2e-screenshots/admin/)
+**Screenshot folder:** [`../e2e-screenshots/admin/`](../e2e-screenshots/admin/) — the 20
+available captures are annotated with the admin navigation, main workspace, page heading,
+role, and exact route. Routes without dedicated seeded captures are listed below.
 
 **Nav source of truth:** `apps/web/src/app/admin/admin-nav.tsx` (`ADMIN_NAV`)
 
@@ -33,8 +35,12 @@ flowchart TD
     Selects["Selects"]
     Streams["Streams"]
     Support["Support"]
+    Missed["Missed shows"]
     Top["Top lists"]
     Ann["Announcements"]
+    Widgets["Disco widgets"]
+    Themes["Themes"]
+    Internet["Internet radio"]
     Storage["Storage"]
     Files["Files"]
     Reports["Reports"]
@@ -48,10 +54,30 @@ flowchart TD
   end
 
   Admin --> Dash
-  Dash --> Beta
-  Dash --> Users
-  Dash --> Streams
-  Dash --> Support
+  Admin --> Beta
+  Admin --> Users
+  Admin --> Radio
+  Admin --> RadioSub
+  Admin --> News
+  Admin --> Selects
+  Admin --> Streams
+  Admin --> Support
+  Admin --> Missed
+  Admin --> Top
+  Admin --> Ann
+  Admin --> Widgets
+  Admin --> Themes
+  Admin --> Internet
+  Admin --> Storage
+  Admin --> Files
+  Admin --> Reports
+  Admin --> Fin
+  Admin --> Gov
+  Admin --> Feat
+  Admin --> Grants
+  Admin --> AGM
+  Admin --> Vendors
+  Admin --> Status
   Fin --> Ledger["/admin/financial/ledger"]
   Fin --> FanSubs["/admin/financial/fansubs"]
   Fin --> Legacy["/admin/financial/legacy-members"]
