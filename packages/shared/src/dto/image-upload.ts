@@ -27,3 +27,22 @@ export const ImageUploadCompleteResponseSchema = z.object({
 export const ImageFromUrlSchema = z.object({
   sourceUrl: z.string().url().max(2000),
 })
+
+/** Generic "my media" upload complete — unlike ImageUploadCompleteSchema (which just
+ * confirms a key already tied to a specific record), this has no owning record to
+ * read metadata back from, so the client resends what it already knows about the file. */
+export const UserMediaCompleteSchema = z.object({
+  uploadKey: z.string().min(1).max(512),
+  filename: z.string().min(1).max(255),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  sizeBytes: z.number().int().positive().max(20 * 1024 * 1024),
+})
+
+export const UserMediaFileSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number(),
+  url: z.string(),
+  createdAt: z.string().datetime(),
+})

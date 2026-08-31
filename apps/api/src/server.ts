@@ -170,6 +170,7 @@ import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meTotpRoutes from './routes/me/totp.js'
 import meAvatarRoutes from './routes/me/avatar.js'
+import meMediaRoutes from './routes/me/media.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import mePressKitImages from './routes/me/press-kit-images.js'
 import meRadioSlotBookings from './routes/me/radio-slot-bookings.js'
@@ -667,6 +668,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meProfileRoutes)
   await fastify.register(meTotpRoutes)
   await fastify.register(meAvatarRoutes)
+  await fastify.register(meMediaRoutes)
   await fastify.register(mePrivacyRoutes)
   await fastify.register(mePressKitImages)
   await fastify.register(publicPressKitRoutes)
