@@ -307,6 +307,12 @@
   margin-bottom: 0;
 }
 
+[data-tahti-ui='brand'] .brand-public .gov-resource-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
 [data-tahti-ui='brand'] .brand-public .gov-stats-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;

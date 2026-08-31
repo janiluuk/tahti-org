@@ -46,7 +46,10 @@ export async function createFeatureRequest(params: {
       request: null,
     }
   }
+  revalidatePath('/governance/topics')
   revalidatePath('/governance/feature-requests')
+  revalidatePath('/dashboard/governance/topics')
+  revalidatePath('/dashboard/governance/feature-requests')
   return { error: null, request: (await res.json()) as FeatureRequestRef }
 }
 
@@ -60,7 +63,10 @@ export async function voteFeatureRequest(id: string): Promise<{ error: string | 
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to vote' }
   }
+  revalidatePath('/governance/topics')
   revalidatePath('/governance/feature-requests')
+  revalidatePath('/dashboard/governance/topics')
+  revalidatePath('/dashboard/governance/feature-requests')
   return { error: null }
 }
 
@@ -74,7 +80,10 @@ export async function unvoteFeatureRequest(id: string): Promise<{ error: string 
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to remove vote' }
   }
+  revalidatePath('/governance/topics')
   revalidatePath('/governance/feature-requests')
+  revalidatePath('/dashboard/governance/topics')
+  revalidatePath('/dashboard/governance/feature-requests')
   return { error: null }
 }
 

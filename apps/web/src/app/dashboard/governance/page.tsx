@@ -152,7 +152,7 @@ export default async function DashboardGovernancePage() {
             </p>
           </div>
           <Link
-            href="/dashboard/governance/feature-requests"
+            href="/dashboard/governance/topics"
             className="ui-btn ui-btn--secondary ui-btn--sm"
           >
             All topics →
@@ -163,7 +163,7 @@ export default async function DashboardGovernancePage() {
 
         {allFeatureRequests.length > TOP_TOPICS_COUNT && (
           <Text size="sm" tone="muted" className="studio-mt-sm">
-            <Link href="/dashboard/governance/feature-requests">
+            <Link href="/dashboard/governance/topics">
               +{allFeatureRequests.length - TOP_TOPICS_COUNT} more topic
               {allFeatureRequests.length - TOP_TOPICS_COUNT === 1 ? '' : 's'} →
             </Link>

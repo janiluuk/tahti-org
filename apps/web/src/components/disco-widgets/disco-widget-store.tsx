@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge, Button, Input, Link } from '@tahti/ui'
 import type { DiscoWidgetStoreItem } from '@tahti/shared'
 
@@ -31,14 +31,24 @@ export function DiscoWidgetStore({
 
   const categories = useMemo(() => {
     const seen = new Set<string>()
-    for (const w of widgets) for (const c of w.categories) seen.add(c)
+    for (const w of widgets) {
+      for (const category of w.categories) {
+        const normalized = category.trim()
+        if (normalized) seen.add(normalized)
+      }
+    }
     return [CATEGORY_ALL, ...Array.from(seen).sort()]
   }, [widgets])
+
+  useEffect(() => {
+    if (!categories.includes(category)) setCategory(CATEGORY_ALL)
+  }, [categories, category])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return widgets.filter((w) => {
-      const matchesCategory = category === CATEGORY_ALL || w.categories.includes(category)
+      const matchesCategory =
+        category === CATEGORY_ALL || w.categories.some((item) => item.trim() === category)
       if (!matchesCategory) return false
       if (!q) return true
       return (
@@ -97,11 +107,14 @@ export function DiscoWidgetStore({
                     <strong>{widget.name}</strong>
                     <span className="studio-text-muted-sm">by {widget.authorName}</span>
                     <Badge variant="neutral">v{widget.currentVersion}</Badge>
-                    {widget.categories.map((c) => (
-                      <Badge key={c} variant="neutral">
-                        {c}
-                      </Badge>
-                    ))}
+                    {widget.categories
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                      .map((item) => (
+                        <Badge key={item} variant="neutral">
+                          {item}
+                        </Badge>
+                      ))}
                   </div>
                   <p className="studio-text-muted-sm studio-mt-xs">{widget.description}</p>
                 </div>

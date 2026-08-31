@@ -1059,6 +1059,8 @@ export interface paths {
                 avatarUrl: string | null
                 genres: string[]
                 isActive: boolean
+                artistRoles: string[]
+                hasActiveShows: boolean
               }[]
             }
           }
@@ -15508,6 +15510,60 @@ export interface paths {
               queuedAt: string
               /** Format: date-time */
               completedAt: string | null
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/import-plugins': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Versioned import-provider capabilities for external clients */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              providers: {
+                /** @enum {number} */
+                contractVersion: 1
+                id: string
+                name: string
+                description: string
+                /** @enum {string} */
+                kind: 'oauth' | 'upload' | 'search' | 'tool'
+                capabilities: {
+                  configure: boolean
+                  connectionTest: boolean
+                  fileList: boolean
+                  import: boolean
+                }
+                oauthStartPath: string | null
+                statusPath: string
+              }[]
             }
           }
         }

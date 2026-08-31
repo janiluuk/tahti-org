@@ -68,4 +68,25 @@ describe('getCachedJson', () => {
     expect(result).toEqual({ value: 5 })
     expect(compute).toHaveBeenCalledTimes(1)
   })
+
+  it('coalesces concurrent cache misses for the same key', async () => {
+    mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
+    mockGet.mockResolvedValue(null)
+    let resolveCompute!: (value: { value: number }) => void
+    const compute = vi.fn(
+      () =>
+        new Promise<{ value: number }>((resolve) => {
+          resolveCompute = resolve
+        }),
+    )
+
+    const first = getCachedJson('hot-key', 10, compute)
+    const second = getCachedJson('hot-key', 10, compute)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    resolveCompute({ value: 42 })
+
+    await expect(Promise.all([first, second])).resolves.toEqual([{ value: 42 }, { value: 42 }])
+    expect(compute).toHaveBeenCalledTimes(1)
+    expect(mockSet).toHaveBeenCalledTimes(1)
+  })
 })

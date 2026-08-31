@@ -9,6 +9,7 @@ These are **“for dummies”** walkthroughs: short steps, no jargon where we ca
 | **[For artists](for-artists.md)** | **Artists** — members with a channel, releases, fan tiers | Dashboard, profile, fan tiers, releases |
 | **[For streamers](for-streamers.md)** | **Live broadcast** (subset of artist) — OBS, Mixxx, etc. | RTMP, stream key, going LIVE, limits |
 | **[Multistream / simulcast](multistream-simulcast.md)** | Mirror Tahti live to Twitch, YouTube, Kick, etc. | Paste each platform’s **stream key** in dashboard |
+| **[Plugins and add-ons](plugins-and-addons.md)** | Understand extension categories and choose a setup | Widgets, visual tools, integrations, and audio plugins |
 
 For a current cross-role inventory, see the **[feature catalog](../features.md)**.
 

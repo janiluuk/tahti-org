@@ -156,9 +156,18 @@ export default async function GovernancePage() {
           been proposed. The board reviews open topics every quarter — see the quarterly reports
           below for what got planned, merged, or declined.
         </Text>
-        <Link href="/governance/feature-requests" className="ui-btn ui-btn--primary ui-btn--sm">
+        <Link href="/governance/topics" className="ui-btn ui-btn--primary ui-btn--sm">
           Open Topics →
         </Link>
+      </section>
+
+      <section className="brand-section">
+        <h2 className="brand-section__title brand-section-heading">Governance resources</h2>
+        <div className="gov-resource-links">
+          <Link href="/transparency">Transparency and resolutions →</Link>
+          <Link href="/about#governance">About Tahti and the member model →</Link>
+          {me.isBoard && <Link href="/governance/venues">Venue verification →</Link>}
+        </div>
       </section>
 
       {me.isBoard && <NewMotionForm />}

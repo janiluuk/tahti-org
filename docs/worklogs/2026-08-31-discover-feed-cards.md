@@ -140,3 +140,29 @@ with play and queue actions like the other listening surfaces.
   avatar. Hover/focus reveals the upload affordance, which opens a modal using
   the shared file-dropzone flow; uploaded images are saved to the overlay
   immediately.
+
+## Admin and studio navigation UX sweep (2026-08-31)
+
+- Grouped studio destinations in the desktop and mobile “More” navigation so
+  library, broadcasting, and channel-setup tools share the same structure.
+- Removed the duplicate Members link from Settings navigation; members remain
+  reachable from the Artist info page’s members section.
+- Tightened the desktop More disclosure styling so grouped destinations remain
+  scannable without adding another navigation level.
+- Regenerated the full and public OpenAPI artifacts and typed API-client schema;
+  the new import-plugin registry endpoint is now documented.
+
+## Performance sweep and first optimization (2026-08-31)
+
+- Audited the existing frontend SSR fetch patterns, public API cache coverage,
+  database query limits, image loading, and streaming/infra constraints.
+- Confirmed the major dashboard SSR fetches are already parallelized, public
+  hot responses use short Redis caches, high-volume queries have bounds, and
+  expensive visual presets are already lazy-mounted.
+- Added in-process request coalescing to the shared API JSON cache. Concurrent
+  misses for the same Redis key now share one database/presigned-URL computation,
+  reducing cache-expiry spikes without changing response data or TTL behavior.
+- Added a concurrency regression test for the cache helper.
+- Follow-up candidates: measure real API P95/cache-hit rates, audit public image
+  dimensions and lazy loading, and profile the channel page’s multi-endpoint
+  payload before changing response limits.

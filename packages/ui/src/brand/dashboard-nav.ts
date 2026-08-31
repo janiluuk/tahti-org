@@ -202,8 +202,16 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
     requiresChannel: true,
     secondary: true,
+    group: 'Distribution',
   },
-  { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true, secondary: true },
+  {
+    href: '/dashboard/stash',
+    label: 'Stash',
+    icon: 'stash',
+    isRoute: true,
+    secondary: true,
+    group: 'Library',
+  },
 
   // Broadcasting — going live and scheduling it.
   {
@@ -229,16 +237,38 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
     requiresChannel: true,
   },
-  { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true, secondary: true },
-  { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true, secondary: true },
+  {
+    href: '/dashboard/venues',
+    label: 'Venues',
+    icon: 'venues',
+    isRoute: true,
+    secondary: true,
+    group: 'Broadcasting',
+  },
+  {
+    href: '/dashboard/events',
+    label: 'Events',
+    icon: 'schedule',
+    isRoute: true,
+    secondary: true,
+    group: 'Broadcasting',
+  },
   {
     href: '/dashboard/tahti-radio-slots',
     label: 'Radio slot',
     icon: 'schedule',
     isRoute: true,
     requiresChannel: true,
+    group: 'Broadcasting',
   },
-  { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true, secondary: true },
+  {
+    href: '/dashboard/embeds',
+    label: 'Embeds',
+    icon: 'embeds',
+    isRoute: true,
+    secondary: true,
+    group: 'Channel setup',
+  },
 
   // Audience — fans, mailing list, and money.
   {

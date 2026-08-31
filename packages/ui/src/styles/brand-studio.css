@@ -668,6 +668,11 @@
   color: var(--text);
 }
 
+[data-tahti-ui='studio'] .db-nav-more .db-nav-group-label {
+  padding-left: 20px;
+  padding-top: 12px;
+}
+
 [data-tahti-ui='studio'] .db-nav-item {
   padding: 9px 20px;
   font-size: var(--text-sm);
@@ -2571,33 +2576,28 @@
 
 /* ── Music browser: left nav rail + panel ───────────────────────────────── */
 [data-tahti-ui='studio'] .music-browser {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
+  display: block;
 }
 
 [data-tahti-ui='studio'] .music-browser__nav {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  flex-shrink: 0;
-  width: 160px;
-  position: sticky;
-  top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
 }
 
 [data-tahti-ui='studio'] .music-browser__nav-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   border-left: 3px solid transparent;
   background: transparent;
   color: var(--text-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   cursor: pointer;
   text-align: left;
   transition:
@@ -2717,22 +2717,7 @@
 
 @media (max-width: 720px) {
   [data-tahti-ui='studio'] .music-browser {
-    flex-direction: column;
-    /* Base rule sets `align-items: flex-start` for the desktop row layout (top-
-       align the nav rail against the panel). Once flex-direction flips to
-       column here, flex-start instead shrinks each child to its own content
-       width and left-aligns it — so .music-browser__panel's un-wrapped content
-       pokes past the 390px viewport instead of being constrained to it. Stretch
-       so children fill the available width like every other stacked mobile
-       layout in this file. */
-    align-items: stretch;
-  }
-
-  [data-tahti-ui='studio'] .music-browser__nav {
-    flex-direction: row;
-    flex-wrap: wrap;
     width: 100%;
-    position: static;
   }
 }
 
@@ -5344,12 +5329,12 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0.45rem 0.875rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: 500;
   text-decoration: none;
   transition:

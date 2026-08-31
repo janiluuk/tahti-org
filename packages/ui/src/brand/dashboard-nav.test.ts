@@ -24,4 +24,14 @@ describe('artist dashboard library navigation', () => {
     expect(DASHBOARD_NAV[recordingsIndex]?.label).toBe('Recordings')
     expect(recordingsIndex).toBeGreaterThan(broadcastIndex)
   })
+
+  it('groups secondary destinations by the job they support', () => {
+    expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/distribution')?.group).toBe(
+      'Distribution',
+    )
+    expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/stash')?.group).toBe('Library')
+    expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/embeds')?.group).toBe(
+      'Channel setup',
+    )
+  })
 })

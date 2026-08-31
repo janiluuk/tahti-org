@@ -138,11 +138,11 @@ export function MusicBrowser({
   ]
 
   const tabs: Array<{ id: MusicTab; label: string; count: number; accent: string }> = [
-    { id: 'tracks', label: 'Tracks', count: tracks.length, accent: 'cyan' },
-    { id: 'albums', label: 'Albums', count: albums.length, accent: 'purple' },
-    { id: 'dj-sets', label: 'DJ Sets', count: djSets.length, accent: 'amber' },
+    { id: 'tracks', label: 'Sounds', count: tracks.length, accent: 'cyan' },
     { id: 'collections', label: 'Collections', count: collections.length, accent: 'green' },
+    { id: 'albums', label: 'Releases', count: albums.length, accent: 'purple' },
     { id: 'embeds', label: 'Embeds', count: embedCount, accent: 'pink' },
+    { id: 'dj-sets', label: 'Shows', count: djSets.length, accent: 'amber' },
   ]
 
   return (

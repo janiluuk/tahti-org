@@ -59,6 +59,17 @@ export function StudioMobileNav({
       })
     : []
 
+  const moreGroups = moreItems.reduce<Array<{ label: string; items: DashboardNavDefinition[] }>>(
+    (groups, item) => {
+      const label = item.group ?? 'More'
+      const group = groups.find((candidate) => candidate.label === label)
+      if (group) group.items.push(item)
+      else groups.push({ label, items: [item] })
+      return groups
+    },
+    [],
+  )
+
   const primaryNav = hasChannel ? DASHBOARD_PRIMARY_NAV : LISTENER_MOBILE_NAV
 
   return (
@@ -69,19 +80,24 @@ export function StudioMobileNav({
         triggerRef={moreButtonRef}
         ariaLabel="More dashboard sections"
       >
-        <div className="db-mobile-more-sheet__grid">
-          {moreItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="db-mobile-more-sheet__item"
-              onClick={() => setMoreOpen(false)}
-            >
-              <SidebarNavIconSvg name={item.icon} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
+        {moreGroups.map((group) => (
+          <section key={group.label} className="db-mobile-more-sheet__group">
+            <h2 className="db-mobile-more-sheet__group-label">{group.label}</h2>
+            <div className="db-mobile-more-sheet__grid">
+              {group.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="db-mobile-more-sheet__item"
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <SidebarNavIconSvg name={item.icon} />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ))}
       </MobileNavSheet>
       <nav className="db-mobile-nav" aria-label="Mobile navigation">
         {primaryNav.map(({ href, label, icon }) => {
