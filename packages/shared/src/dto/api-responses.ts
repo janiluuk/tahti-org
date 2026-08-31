@@ -807,6 +807,13 @@ export const PublicTrackDetailSchema = z
     durationSec: z.number().int().nullable(),
     audioUrl: z.string().nullable(),
     bannerUrl: z.string().nullable(),
+    /** Wide backdrop image set in Studio's track editor — null falls back
+     * to a gradient built from the track's own cover art on the client. */
+    backgroundUrl: z.string().nullable().optional(),
+    /** Gallery images for the track page backdrop when `galleryMode` is
+     * STATIC_SLIDESHOW — same shape as the channel page's own gallery. */
+    slideshowUrls: z.array(z.string()).optional(),
+    galleryMode: z.string().nullable().optional(),
     genre: z.string().nullable(),
     subGenres: z.array(z.string()),
     contentType: z.string(),
