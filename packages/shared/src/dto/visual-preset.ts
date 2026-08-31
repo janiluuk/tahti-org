@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
-import { isDirectVideoFileUrl } from '../safe-background-url.js'
+import { isAllowedBackdropUrl, isDirectVideoFileUrl } from '../safe-background-url.js'
 
 // M31: Three.js ambient visualizer presets
 
@@ -239,31 +239,40 @@ export const VISUAL_PRESET_STRIP: VisualPreset[] = [
   'PARTICLE_FIELD',
 ]
 
-export const ChannelVisualPatchSchema = z.object({
-  visualPreset: z.enum(VISUAL_PRESETS).optional(),
-  colorScheme: ColorSchemeSchema.nullable().optional(),
-  /** Map of preset → { speed, intensity }. Null clears all overrides. */
-  visualSettings: VisualSettingsMapSchema.nullable().optional(),
-  headerStyle: z.enum(CHANNEL_HEADER_STYLES).optional(),
-  /** Reuses Channel.videoBackgroundUrl (the same column Gallery & backdrop
-   * settings write to) so the VIDEO_LOOP header style has a clip to play.
-   * Stricter than that feature's own patch schema: this renders as a raw
-   * <video> element, so it must be a direct .mp4/.webm file, not a
-   * YouTube/Vimeo link — see isDirectVideoFileUrl. */
-  videoBackgroundUrl: z
-    .string()
-    .max(2048)
-    .nullable()
-    .optional()
-    .refine((v) => v == null || v === '' || isDirectVideoFileUrl(v), {
-      message: 'Must be an HTTPS URL ending in .mp4 or .webm',
-    }),
-  brandAccentPreset: z.string().nullable().optional(),
-  slideshowPreset: z.enum(SLIDESHOW_PRESETS).optional(),
-  slideshowIntervalSeconds: z.number().int().min(5).max(30).optional(),
-  slideshowTransitionMs: z.number().int().min(300).max(1500).optional(),
-  slideshowAutoplay: z.boolean().optional(),
-})
+export const ChannelVisualPatchSchema = z
+  .object({
+    visualPreset: z.enum(VISUAL_PRESETS).optional(),
+    colorScheme: ColorSchemeSchema.nullable().optional(),
+    /** Map of preset → { speed, intensity }. Null clears all overrides. */
+    visualSettings: VisualSettingsMapSchema.nullable().optional(),
+    headerStyle: z.enum(CHANNEL_HEADER_STYLES).optional(),
+    /** Reuses Channel.videoBackgroundUrl — the same column the Gallery &
+     * backdrop settings write to, where it can be a static image or a
+     * YouTube/Vimeo link. Only requires a direct .mp4/.webm file when
+     * `headerStyle` is `VIDEO_LOOP`, since that style alone renders a raw
+     * <video> element — see isDirectVideoFileUrl / isAllowedBackdropUrl. */
+    videoBackgroundUrl: z.string().max(2048).nullable().optional(),
+    brandAccentPreset: z.string().nullable().optional(),
+    slideshowPreset: z.enum(SLIDESHOW_PRESETS).optional(),
+    slideshowIntervalSeconds: z.number().int().min(5).max(30).optional(),
+    slideshowTransitionMs: z.number().int().min(300).max(1500).optional(),
+    slideshowAutoplay: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const url = data.videoBackgroundUrl
+    if (url == null || url === '') return
+    const requiresDirectVideoFile = data.headerStyle === 'VIDEO_LOOP'
+    const valid = requiresDirectVideoFile ? isDirectVideoFileUrl(url) : isAllowedBackdropUrl(url)
+    if (!valid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['videoBackgroundUrl'],
+        message: requiresDirectVideoFile
+          ? 'Must be an HTTPS URL ending in .mp4 or .webm'
+          : 'Must be an HTTPS image or video URL',
+      })
+    }
+  })
 
 export type ChannelVisualPatch = z.infer<typeof ChannelVisualPatchSchema>
 

@@ -55,9 +55,34 @@ describe('ChannelVisualPatchSchema videoBackgroundUrl', () => {
     expect(ChannelVisualPatchSchema.safeParse({}).success).toBe(true)
   })
 
-  it('rejects a YouTube/Vimeo link — this field renders as a raw <video>, not an iframe embed', () => {
+  it('rejects a YouTube/Vimeo link when headerStyle is VIDEO_LOOP — that style renders a raw <video>, not an iframe embed', () => {
     const result = ChannelVisualPatchSchema.safeParse({
+      headerStyle: 'VIDEO_LOOP',
       videoBackgroundUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts a static image URL for the shared Gallery/backdrop use of this column when headerStyle is not VIDEO_LOOP', () => {
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        headerStyle: 'GRADIENT',
+        videoBackgroundUrl: 'https://cdn.example.com/backdrop.png',
+      }).success,
+    ).toBe(true)
+    // headerStyle omitted entirely (a patch that doesn't touch it) — still
+    // shouldn't require a direct video file.
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        videoBackgroundUrl: 'https://cdn.example.com/backdrop.jpg',
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects a static image URL when headerStyle is VIDEO_LOOP', () => {
+    const result = ChannelVisualPatchSchema.safeParse({
+      headerStyle: 'VIDEO_LOOP',
+      videoBackgroundUrl: 'https://cdn.example.com/backdrop.png',
     })
     expect(result.success).toBe(false)
   })

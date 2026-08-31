@@ -46,3 +46,32 @@ export const UserMediaFileSchema = z.object({
   url: z.string(),
   createdAt: z.string().datetime(),
 })
+
+/** Channel header backdrop upload — the one upload surface where the same
+ * slot accepts either a static image or a short video loop (matching the
+ * client's HEADER_MEDIA_TYPES allowlist), unlike every other image-only
+ * upload pair above. */
+export const ChannelBackdropUploadPrepareSchema = z.object({
+  filename: z.string().min(1).max(255),
+  contentType: z.enum([
+    'video/mp4',
+    'video/webm',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+  ]),
+  fileSizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(10 * 1024 * 1024),
+})
+
+export const ChannelBackdropUploadCompleteSchema = z.object({
+  uploadKey: z.string().min(1).max(512),
+})
+
+export const ChannelBackdropUploadCompleteResponseSchema = z.object({
+  videoBackgroundUrl: z.string(),
+})
