@@ -12,13 +12,25 @@
 import { prisma } from '@tahti/db'
 
 const PRESETS = [
-  { name: 'YleX', genre: 'Pop / Hits', description: 'Finnish youth-focused pop and hits station.' },
+  {
+    name: 'YleX',
+    genre: 'Pop / Hits',
+    description: 'Finnish youth-focused pop and hits station.',
+    iconUrl: 'https://img.img-cdn.yle.fi/crop_limit,w_640/ylex_vt',
+  },
   {
     name: 'Radio Helsinki',
     genre: 'Talk / Variety',
     description: 'Helsinki-area talk and variety station.',
+    iconUrl: 'https://www.streamurl.link/logos/JoiOnv3Q9An.webp',
   },
-  { name: 'Radio Rock', genre: 'Rock', description: 'Finnish rock radio station.' },
+  {
+    name: 'Radio Rock',
+    genre: 'Rock',
+    description: 'Finnish rock radio station.',
+    iconUrl:
+      'https://img.nm-ovp.nelonenmedia.fi/v1/novelist?src=%2Ffiles%2Fmisc_images%2F2024-08%2FRadioRock_2560x2560.jpg',
+  },
 ]
 
 async function main() {
