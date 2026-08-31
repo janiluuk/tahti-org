@@ -24,3 +24,49 @@ with play and queue actions like the other listening surfaces.
   placed below the live player; the archive is labeled “Sounds.”
 - Google Drive import job creation now writes a `CONTENT_UPLOAD` audit event with
   the job ID, source, external file ID, and filename.
+
+## Follow-up workplan: port the plugin system to core
+
+### Boundary
+
+- Tahti core owns API routes, OAuth handling, encrypted credentials, import
+  jobs, audit logs, and persistence.
+- Nuclear, in `../tahti-nuclear`, owns the plugin UI and configuration modal.
+- Import configuration must happen through the plugin Configure action: enter
+  settings, test the connection, save, then enable.
+- Do not add a parallel configuration surface in Tahti core.
+
+### Open decisions
+
+- Decide between a host-rendered configuration modal and a first-class SDK
+  configuration lifecycle hook.
+- Define the standard connection-test response and error states.
+- Decide whether Save and Enable are atomic or separate actions.
+- Decide whether provider secrets live only server-side or are temporarily
+  mirrored in Nuclear settings.
+
+### Implementation sequence
+
+1. Audit the existing Nuclear plugin SDK, Configure action, settings system,
+   Tahti source registry, OAuth flows, import workers, and audit paths.
+2. Define a versioned provider contract with capabilities for configuration,
+   connection testing, file listing, and import-job creation.
+3. Keep provider types separate: OAuth, file import, search, and tool sources
+   should not be forced into one universal interface.
+4. Add Tahti-side provider adapters, generic configuration/status endpoints,
+   encrypted credential handling, import-job creation, and audit logging.
+5. Add Nuclear’s plugin-scoped Configure modal with connection testing,
+   validation, Save, Enable, Disable, and Disconnect states.
+6. Port Google Drive first as the reference plugin while preserving the
+   existing integration through a compatibility adapter.
+7. Port SoundCloud and hearthis only after the Google Drive path is stable.
+
+### Quality and rollout gates
+
+- Test provider contracts, OAuth/token handling, import jobs, audit events, and
+  worker retries in Tahti.
+- Test Configure modal behavior, connection failures, Save/Enable flow, and
+  plugin lifecycle in Nuclear.
+- Deploy Tahti core before publishing the compatible Nuclear plugin.
+- Verify the complete Google Drive journey in staging before removing legacy
+  paths.
