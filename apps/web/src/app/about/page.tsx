@@ -852,6 +852,9 @@ export default function AboutPage() {
       <div className="about-footer-note">
         Tahti is built so the people making the work keep the time, the audience, and the ownership.
       </div>
+      <div className="about-footer-note">
+        Questions before you join? Visit the <a href="/help">Help center</a>.
+      </div>
     </div>
   )
 }
