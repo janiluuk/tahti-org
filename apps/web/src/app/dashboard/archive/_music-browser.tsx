@@ -14,6 +14,8 @@ type ArchiveListItem = Record<string, unknown> & {
   status: string
   contentType?: string
   isPublic?: boolean
+  embedUri?: string | null
+  embedProvider?: string | null
 }
 
 interface PlayableItem {
@@ -68,7 +70,14 @@ export interface CollectionSummary {
 // (studio takes, podcasts, originals, remixes) is a plain Track.
 const DJ_SET_CONTENT_TYPES = new Set(['DJ_MIX', 'LIVE', 'RADIO_SHOW'])
 
-type MusicTab = 'tracks' | 'albums' | 'dj-sets' | 'collections'
+type MusicTab = 'tracks' | 'albums' | 'dj-sets' | 'collections' | 'embeds'
+
+const EMBED_PROVIDER_ORDER = ['HEARTHIS', 'SPOTIFY', 'MIXCLOUD'] as const
+const EMBED_PROVIDER_LABELS: Record<string, string> = {
+  HEARTHIS: 'hearthis.at',
+  SPOTIFY: 'Spotify',
+  MIXCLOUD: 'Mixcloud',
+}
 
 export function MusicBrowser({
   items,
@@ -106,11 +115,34 @@ export function MusicBrowser({
     return { tracks, djSets }
   }, [items])
 
+  const embedsByProvider = useMemo(() => {
+    const byProvider = new Map<string, ArchiveListItem[]>()
+    for (const item of items) {
+      if (!item.embedUri) continue
+      const provider = item.embedProvider ?? 'OTHER'
+      const list = byProvider.get(provider) ?? []
+      list.push(item)
+      byProvider.set(provider, list)
+    }
+    return byProvider
+  }, [items])
+  const embedCount = useMemo(
+    () => [...embedsByProvider.values()].reduce((sum, list) => sum + list.length, 0),
+    [embedsByProvider],
+  )
+  const embedProviders = [
+    ...EMBED_PROVIDER_ORDER.filter((p) => embedsByProvider.has(p)),
+    ...[...embedsByProvider.keys()].filter(
+      (p) => !(EMBED_PROVIDER_ORDER as readonly string[]).includes(p),
+    ),
+  ]
+
   const tabs: Array<{ id: MusicTab; label: string; count: number; accent: string }> = [
     { id: 'tracks', label: 'Tracks', count: tracks.length, accent: 'cyan' },
     { id: 'albums', label: 'Albums', count: albums.length, accent: 'purple' },
     { id: 'dj-sets', label: 'DJ Sets', count: djSets.length, accent: 'amber' },
     { id: 'collections', label: 'Collections', count: collections.length, accent: 'green' },
+    { id: 'embeds', label: 'Embeds', count: embedCount, accent: 'pink' },
   ]
 
   return (
@@ -142,6 +174,7 @@ export function MusicBrowser({
               apiUrl={apiUrl}
               channelSlug={channelSlug}
               artistUsername={artistUsername}
+              showEmbedFilter
             />
           ))}
 
@@ -172,6 +205,31 @@ export function MusicBrowser({
             <p className="studio-text-muted-sm">No collections yet.</p>
           ) : (
             <CollectionsGrid collections={collections} />
+          ))}
+
+        {tab === 'embeds' &&
+          (embedCount === 0 ? (
+            <p className="studio-text-muted-sm">
+              No embedded tracks yet — items imported from hearthis.at, Spotify, or Mixcloud show up
+              here, grouped by service.
+            </p>
+          ) : (
+            embedProviders.map((provider) => (
+              <div key={provider} className="music-browser__embed-group">
+                <div className="music-browser__embed-group-label">
+                  {EMBED_PROVIDER_LABELS[provider] ?? provider}
+                </div>
+                <ArchiveList
+                  items={embedsByProvider.get(provider) ?? []}
+                  playable={playable}
+                  mixcloudConnected={mixcloudConnected}
+                  mixcloudConfigured={mixcloudConfigured}
+                  apiUrl={apiUrl}
+                  channelSlug={channelSlug}
+                  artistUsername={artistUsername}
+                />
+              </div>
+            ))
           ))}
       </div>
     </div>

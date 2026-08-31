@@ -5,6 +5,10 @@ import Link from 'next/link'
 import type { FeedItem } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
 import { LoveButton } from '@/components/love-button'
+import {
+  CatalogPlaybackButtons,
+  type CatalogPlaybackTrack,
+} from '@/components/catalog-playback-buttons'
 
 function formatFeedDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
@@ -22,9 +26,11 @@ function feedBadge(item: FeedItem): string {
 export function ArtistFeedSection({
   items,
   followingCount,
+  horizontal = false,
 }: {
   items: FeedItem[]
   followingCount: number
+  horizontal?: boolean
 }) {
   return (
     <section className="feed-page feed-page--embedded">
@@ -43,9 +49,12 @@ export function ArtistFeedSection({
           </Link>
         </div>
       ) : (
-        <ul className="feed-list">
+        <ul className={`feed-list${horizontal ? ' feed-list--horizontal' : ''}`}>
           {items.map((item) => (
-            <li key={`${item.kind}-${item.id}`} className="feed-item">
+            <li
+              key={`${item.kind}-${item.id}`}
+              className={`feed-item${horizontal ? ' feed-item--card' : ''}`}
+            >
               <Link href={`/u/${item.artist.username}`} className="feed-item__avatar">
                 <AvatarTile size="sm" name={item.artist.displayName} src={item.artist.avatarUrl} />
               </Link>
@@ -59,6 +68,19 @@ export function ArtistFeedSection({
                 </div>
                 {item.kind === 'post' ? (
                   <Link href={item.url} className="feed-item__content">
+                    {item.artist.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.artist.avatarUrl}
+                        alt=""
+                        className="feed-item__art feed-item__art--large"
+                      />
+                    ) : (
+                      <span
+                        className="feed-item__art feed-item__art--large feed-item__art--ph"
+                        aria-hidden
+                      />
+                    )}
                     {item.title && <div className="feed-item__title">{item.title}</div>}
                     <p className="feed-item__text">{item.body}</p>
                   </Link>
@@ -73,6 +95,31 @@ export function ArtistFeedSection({
                       )}
                       <div className="feed-item__title">{item.title}</div>
                     </Link>
+                    {horizontal && item.audioUrl && (
+                      <CatalogPlaybackButtons
+                        item={{
+                          id: item.id,
+                          title: item.title,
+                          audioUrl: item.audioUrl,
+                          subtitle: item.artist.displayName,
+                          artworkUrl: item.bannerUrl,
+                          href: item.url,
+                        }}
+                        queue={items
+                          .filter(
+                            (candidate): candidate is Extract<FeedItem, { kind: 'track' }> =>
+                              candidate.kind === 'track' && Boolean(candidate.audioUrl),
+                          )
+                          .map((candidate): CatalogPlaybackTrack => ({
+                            id: candidate.id,
+                            title: candidate.title,
+                            audioUrl: candidate.audioUrl!,
+                            subtitle: candidate.artist.displayName,
+                            artworkUrl: candidate.bannerUrl,
+                            href: candidate.url,
+                          }))}
+                      />
+                    )}
                     <LoveButton
                       channelSlug={item.channelSlug}
                       itemId={item.id}
@@ -84,9 +131,16 @@ export function ArtistFeedSection({
                   <Link href={item.url} className="feed-item__content feed-item__content--track">
                     {item.artworkUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.artworkUrl} alt="" className="feed-item__art" />
+                      <img
+                        src={item.artworkUrl}
+                        alt=""
+                        className="feed-item__art feed-item__art--large"
+                      />
                     ) : (
-                      <span className="feed-item__art feed-item__art--ph" aria-hidden />
+                      <span
+                        className="feed-item__art feed-item__art--large feed-item__art--ph"
+                        aria-hidden
+                      />
                     )}
                     <div className="feed-item__title">{item.title}</div>
                   </Link>

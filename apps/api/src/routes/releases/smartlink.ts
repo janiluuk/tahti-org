@@ -56,6 +56,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
             orderBy: { position: 'asc' },
             select: {
               id: true,
+              archiveItemId: true,
               title: true,
               isrc: true,
               position: true,

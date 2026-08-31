@@ -10,6 +10,7 @@ import { LoveButton } from '@/components/love-button'
 import { ReportButton } from '@/components/report-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
+import { ArchiveWaveform } from '@/components/archive-waveform'
 
 export interface TrackTabItem {
   id: string
@@ -29,6 +30,7 @@ export interface TrackTabItem {
   source?: string
   embedProvider?: string | null
   embedUri?: string | null
+  peaks?: number[] | null
 }
 
 type SourceFilter = 'all' | 'local' | 'HEARTHIS' | 'SPOTIFY' | 'MIXCLOUD'
@@ -146,7 +148,7 @@ export function TracksTab({
 }) {
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
-  const { track: playerTrack, load } = usePlayer()
+  const { track: playerTrack, load, currentTime, duration, seek } = usePlayer()
 
   const sourceCounts = useMemo(() => {
     const counts: Record<SourceFilter, number> = {
@@ -310,6 +312,26 @@ export function TracksTab({
                           </div>
                         </button>
                       </div>
+                      {t.playUrl &&
+                        t.peaks &&
+                        t.peaks.length > 0 &&
+                        (playerTrack?.id === t.id ? (
+                          <ArchiveWaveform
+                            peaks={t.peaks}
+                            progress={duration > 0 ? currentTime / duration : 0}
+                            onSeek={seek}
+                            size="large"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            className="ch-archive-playback__wf-btn"
+                            onClick={() => toggleRow(t, queue)}
+                            aria-label={`Play ${t.title}`}
+                          >
+                            <ArchiveWaveform peaks={t.peaks} size="large" />
+                          </button>
+                        ))}
                       {isExpanded && (
                         <div className="prof-collection-expand">
                           <EmbedFrame track={t} />

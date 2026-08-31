@@ -12,7 +12,7 @@ type Tab = PublicChannelTab
 const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'live', label: 'Live' },
   { id: 'bio', label: 'Bio' },
-  { id: 'archive', label: 'Archive' },
+  { id: 'archive', label: 'Sounds' },
   { id: 'releases', label: 'Releases' },
   { id: 'feed', label: 'Feed' },
 ]
@@ -26,7 +26,7 @@ const HELP_STEPS: HelpSpotlightStep[] = [
   },
   {
     id: 'archive',
-    label: 'Archive',
+    label: 'Sounds',
     description:
       'Past broadcasts and DJ sets the artist has kept around to listen back to, plus any external listen embeds.',
   },

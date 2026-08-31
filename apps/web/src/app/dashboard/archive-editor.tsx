@@ -7,6 +7,11 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
+import { ArchiveItemPlayback } from '@/components/archive-item-playback'
+import { HearthisEmbedRow } from '../u/[username]/c/[slug]/_hearthis-embed-row'
+import { MixcloudEmbedRow } from '../u/[username]/c/[slug]/_mixcloud-embed-row'
+import { SpotifyEmbedRow } from '../u/[username]/c/[slug]/_spotify-embed-row'
+import type { PlayerTrack } from '@/contexts/player-context'
 import { deleteArchiveItem, updateArchiveMetadata } from './archive-actions'
 import {
   ArchiveBasicsFields,
@@ -71,6 +76,99 @@ function IconInsights() {
   )
 }
 
+function IconTools() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M10.4 2.6a2.6 2.6 0 0 0-3.4 3.1L2.6 10.1a1.4 1.4 0 0 0 2 2l4.4-4.4a2.6 2.6 0 0 0 3.1-3.4l-1.7 1.7-1.4-1.4 1.7-1.7Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** Pin / rotation / add-to-playlist stay one-click; edit-oriented actions
+ * (details, audio editor, insights) group under this "Tools" disclosure so
+ * the row's icon cluster doesn't sprawl. Rendered inline with the playback
+ * row's own icons (love/queue/download/repost/comment/report) so management
+ * and listening actions read as a single button row instead of two. */
+function RowToolsActions({
+  itemId,
+  hasEmbed,
+  pinned,
+  pinPending,
+  togglePin,
+  inRotation,
+  rotationPending,
+  toggleRotation,
+  onEditDetails,
+}: {
+  itemId: string
+  hasEmbed: boolean
+  pinned: boolean
+  pinPending: boolean
+  togglePin: () => void
+  inRotation: boolean
+  rotationPending: boolean
+  toggleRotation: () => void
+  onEditDetails: () => void
+}) {
+  return (
+    <>
+      <Button
+        onClick={togglePin}
+        disabled={pinPending}
+        variant="ghost"
+        size="sm"
+        className="ui-btn--icon"
+        title={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+        aria-label={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+      >
+        <IconPin filled={pinned} />
+      </Button>
+      <Button
+        onClick={toggleRotation}
+        disabled={rotationPending}
+        variant="ghost"
+        size="sm"
+        className="ui-btn--icon"
+        title={inRotation ? 'Remove from rotation' : 'Add to rotation'}
+        aria-label={inRotation ? 'Remove from rotation' : 'Add to rotation'}
+      >
+        <IconRotation active={inRotation} />
+      </Button>
+      <AddToPlaylistButton archiveItemId={itemId} variant="icon" />
+      <details className="archive-list__tools">
+        <summary
+          className="ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon"
+          title="Tools"
+          aria-label="Tools"
+        >
+          <IconTools />
+        </summary>
+        <div className="archive-list__tools-menu" role="menu">
+          <button type="button" role="menuitem" onClick={onEditDetails}>
+            <ButtonIcon name="edit" />
+            Edit details
+          </button>
+          {!hasEmbed && (
+            <NextLink href={`/dashboard/archive/${itemId}/editor`} role="menuitem">
+              <ButtonIcon name="edit" />
+              Audio editor
+            </NextLink>
+          )}
+          <NextLink href={`/dashboard/insights/archive/${itemId}`} role="menuitem">
+            <IconInsights />
+            Insights
+          </NextLink>
+        </div>
+      </details>
+    </>
+  )
+}
+
 type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'sharing' | 'advanced'
 
 const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
@@ -87,15 +185,35 @@ export default function ArchiveEditor({
   mixcloudConnected,
   mixcloudConfigured,
   apiUrl,
+  channelSlug,
+  artistUsername,
+  play,
+  queue,
 }: {
   item: Record<string, unknown> & { id: string; title: string; status: string }
   mixcloudConnected: boolean
   mixcloudConfigured: boolean
   apiUrl: string
-  /** No longer used here (the "View on channel" link was removed) — still
-   * accepted so callers threading it through a longer prop chain for other
-   * reasons don't need updating. */
   channelSlug?: string | null
+  artistUsername?: string
+  /** Playable/embed metadata for this item — undefined for drafts, which
+   * aren't published (and so aren't in the public /items feed this comes
+   * from) and fall back to the plain title+status row below. */
+  play?: {
+    audioUrl: string | null
+    artistName: string | null
+    embedProvider: string | null
+    embedUri: string | null
+    bannerUrl: string | null
+    peaks: number[] | null
+    visualPreset: string | null
+    accentColor: string | null
+    repostToDownload: boolean
+    followToDownload: boolean
+    commentCount: number
+    downloadCount: number
+  }
+  queue?: PlayerTrack[]
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -228,105 +346,93 @@ export default function ArchiveEditor({
     })
   }
 
+  const hasEmbed = Boolean(item.embedUri)
+  const rowActions = !open && (
+    <RowToolsActions
+      itemId={item.id}
+      hasEmbed={hasEmbed}
+      pinned={pinned}
+      pinPending={pinPending}
+      togglePin={togglePin}
+      inRotation={inRotation}
+      rotationPending={rotationPending}
+      toggleRotation={toggleRotation}
+      onEditDetails={() => setOpen(true)}
+    />
+  )
+
   return (
     <div className={`studio-item-row--list${open ? ' studio-item-row--list--active' : ''}`}>
-      <div className="studio-card-row">
-        <div>
-          <div className="studio-stat-box-title">{item.title}</div>
-          <div className="studio-text-muted-sm">
-            {item.status as string}
-            {pinned && ' · Pinned'}
-            {inRotation && ' · In rotation'}
-            {item.contentType != null && ` · ${String(item.contentType).replace(/_/g, ' ')}`}
-            {item.genre != null && ` · ${String(item.genre)}`}
-            {item.sourceFormat != null &&
-              ` · Source: ${String(item.sourceFormat)}${
-                item.sourceBitrateKbps != null
-                  ? ` ${String(item.sourceBitrateKbps)} kbps`
-                  : ' (lossless)'
-              }`}
-          </div>
+      {isReady && isPublic && !open && play?.audioUrl && channelSlug ? (
+        <div className="archive-list__playback-row" data-tahti-ui="brand">
+          <ArchiveItemPlayback
+            channelSlug={channelSlug}
+            artistUsername={artistUsername ?? ''}
+            artistCredit={play.artistName}
+            item={{
+              id: item.id,
+              title: item.title,
+              audioUrl: play.audioUrl,
+              bannerUrl: play.bannerUrl,
+              peaks: play.peaks,
+              visualPreset: play.visualPreset,
+              repostToDownload: play.repostToDownload,
+              followToDownload: play.followToDownload,
+              commentCount: play.commentCount,
+              downloadCount: play.downloadCount,
+              accentColor: play.accentColor,
+            }}
+            isLoggedIn
+            queue={queue}
+            titleOverlay={{ title: item.title, subtitle: play.artistName }}
+            extraControls={rowActions}
+          />
         </div>
-        {open ? (
-          <Button onClick={() => setOpen(false)} variant="ghost" size="sm">
-            Close
-          </Button>
-        ) : isReady && isPublic ? (
-          <div className="studio-row-actions studio-row-actions--icons">
-            <Button
-              onClick={() => setOpen(true)}
-              variant="ghost"
-              size="sm"
-              className="ui-btn--icon"
-              title="Edit"
-              aria-label="Edit"
-            >
-              <ButtonIcon name="edit" />
-            </Button>
-            {!item.embedUri && (
-              <NextLink
-                href={`/dashboard/archive/${item.id}/editor`}
-                className="ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon"
-                title="Audio editor"
-                aria-label="Audio editor"
-              >
-                <ButtonIcon name="edit" />
-              </NextLink>
+      ) : isReady && isPublic && !open && play?.embedUri ? (
+        <div className="archive-list__playback-row">
+          <div className="archive-list__embed-row">
+            {play.embedProvider === 'MIXCLOUD' ? (
+              <MixcloudEmbedRow title={item.title} embedUri={play.embedUri} />
+            ) : play.embedProvider === 'SPOTIFY' ? (
+              <SpotifyEmbedRow title={item.title} embedUri={play.embedUri} />
+            ) : (
+              <HearthisEmbedRow title={item.title} embedUri={play.embedUri} />
             )}
-            <Button
-              onClick={togglePin}
-              disabled={pinPending}
-              variant="ghost"
-              size="sm"
-              className="ui-btn--icon"
-              title={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
-              aria-label={pinned ? 'Unpin from Stage' : 'Pin to Stage'}
-            >
-              <IconPin filled={pinned} />
-            </Button>
-            <Button
-              onClick={toggleRotation}
-              disabled={rotationPending}
-              variant="ghost"
-              size="sm"
-              className="ui-btn--icon"
-              title={inRotation ? 'Remove from rotation' : 'Add to rotation'}
-              aria-label={inRotation ? 'Remove from rotation' : 'Add to rotation'}
-            >
-              <IconRotation active={inRotation} />
-            </Button>
-            <AddToPlaylistButton archiveItemId={item.id} variant="icon" />
-            <NextLink
-              href={`/dashboard/insights/archive/${item.id}`}
-              className="ui-btn ui-btn--sm ui-btn--ghost ui-btn--icon"
-              title="Show insights"
-              aria-label="Show insights"
-            >
-              <IconInsights />
-            </NextLink>
           </div>
-        ) : isReady ? (
-          <div className="studio-row-actions">
-            {!item.embedUri && (
-              <NextLink
-                href={`/dashboard/archive/${item.id}/editor`}
-                className="ui-btn ui-btn--sm ui-btn--ghost"
-              >
-                <ButtonIcon name="edit" />
-                Audio editor
-              </NextLink>
-            )}
-            <Button onClick={() => setOpen(true)} variant="primary" size="sm">
-              <ButtonIcon name="send" />
-              Polish &amp; publish →
+          <div className="archive-list__row-actions">{rowActions}</div>
+        </div>
+      ) : (
+        <div className="studio-card-row">
+          <div className="studio-stat-box-title">{item.title}</div>
+          {open ? (
+            <Button onClick={() => setOpen(false)} variant="ghost" size="sm">
+              Close
             </Button>
-          </div>
-        ) : (
-          <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
-            Edit metadata
-          </Button>
-        )}
-      </div>
+          ) : isReady && isPublic ? (
+            <div className="studio-row-actions studio-row-actions--icons">{rowActions}</div>
+          ) : isReady ? (
+            <div className="studio-row-actions">
+              {!hasEmbed && (
+                <NextLink
+                  href={`/dashboard/archive/${item.id}/editor`}
+                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                >
+                  <ButtonIcon name="edit" />
+                  Audio editor
+                </NextLink>
+              )}
+              <Button onClick={() => setOpen(true)} variant="primary" size="sm">
+                <ButtonIcon name="send" />
+                Polish &amp; publish →
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
+              Edit metadata
+            </Button>
+          )}
+        </div>
+      )}
 
       {swapCandidate && (
         <div className="studio-row studio-row--wrap studio-gap-xs studio-mt-sm">

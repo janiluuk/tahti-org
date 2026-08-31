@@ -10,7 +10,6 @@ import {
   resolveVisualPresetSettings,
   type VisualPreset,
 } from '@tahti/shared'
-import { HelpTourButton, getPublicTourSteps } from '@tahti/ui'
 import { GalleryPhotosButton } from './_gallery-photos-button'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
@@ -25,6 +24,7 @@ import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveItemPlayback } from '@/components/archive-item-playback'
+import { LibraryBrowser } from '@/components/library/library-browser'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type { PlayerTrack } from '@/contexts/player-context'
@@ -375,6 +375,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               )}
               <div className="ch-header-banner" style={headerBannerStyle}>
                 <header className="ch-artist-header">
+                  <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
+                    Profile <span aria-hidden>»</span>
+                  </Link>
                   <Row className="ui-row--gap-3 ch-artist-header-row">
                     <AvatarTile
                       size="md"
@@ -429,14 +432,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         Support
                       </Link>
                     )}
-                    <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                      Profile
-                    </Link>
                     <GalleryPhotosButton images={channel.slideshowImages} />
-                    <HelpTourButton
-                      steps={getPublicTourSteps(`/c/${params.slug}`)}
-                      className="studio-top-nav__notif-btn"
-                    />
                   </div>
                   {tags.length > 0 && (
                     <div className="prof-tags">
@@ -448,25 +444,43 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     </div>
                   )}
                   {(streamingLinkEntries.length > 0 || socialLinkEntries.length > 0) && (
-                    <div className="prof-social-links">
-                      {[
-                        ...streamingLinkEntries,
-                        ...socialLinkEntries.map(([label, url]) => [label, url] as const),
-                      ].map(([label, url]) => (
-                        <a
-                          key={`${label}-${url}`}
-                          href={url}
-                          rel="noopener noreferrer"
-                          target={url.startsWith('mailto:') ? undefined : '_blank'}
-                          className="prof-social-link"
-                        >
-                          <SocialLinkIcon label={label} url={url} /> {label} ↗
-                        </a>
-                      ))}
+                    <div className="ch-artist-social-section">
+                      <div className="prof-sec-label">Find the artist elsewhere</div>
+                      <div className="prof-social-links">
+                        {[
+                          ...streamingLinkEntries,
+                          ...socialLinkEntries.map(([label, url]) => [label, url] as const),
+                        ].map(([label, url]) => (
+                          <a
+                            key={`${label}-${url}`}
+                            href={url}
+                            rel="noopener noreferrer"
+                            target={url.startsWith('mailto:') ? undefined : '_blank'}
+                            className="prof-social-link"
+                          >
+                            <SocialLinkIcon label={label} url={url} /> <span>{label}</span>{' '}
+                            <span aria-hidden>↗</span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </header>
               </div>
+
+              <section className="ch-artist-bio-section">
+                <div className="ch-section-label">About {channel.user.displayName}</div>
+                {bioHtml ? (
+                  <div
+                    className="ch-artist-bio ch-artist-bio--rich"
+                    dangerouslySetInnerHTML={{ __html: bioHtml }}
+                  />
+                ) : channel.user.bio ? (
+                  <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
+                ) : (
+                  <p className="ch-artist-bio ch-artist-bio--empty">No bio yet.</p>
+                )}
+              </section>
 
               {/* Ambient decoration (text layer + slideshow/gallery) — the
                   artist's own configured backdrop, not tied to whether
@@ -536,6 +550,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                               initialNowPlayingNext={channel.nowPlayingNext}
                             />
                             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
+                            {releases.length > 0 && (
+                              <section className="ch-archive-section ch-live-releases">
+                                <div className="ch-archive-section-head">
+                                  <h2 className="ch-section-label">Latest releases</h2>
+                                </div>
+                                <ReleasesGrid releases={releases.slice(0, 4)} />
+                              </section>
+                            )}
                           </>
                         ) : null
                       }
@@ -584,7 +606,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
                     <section className="ch-archive-section">
                       <div className="ch-archive-section-head">
-                        <h2 className="ch-section-label">Archive</h2>
+                        <h2 className="ch-section-label">Sounds</h2>
                         <a
                           href={channelArchiveRssUrl(apiUrl, slug)}
                           className="ch-rss-link"
@@ -619,153 +641,179 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           </p>
                         </div>
                       ) : (
-                        <ul className="ch-archive-list">
-                          {items.map((item) => {
-                            const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
-                              item.backgroundUrl,
-                            )
-                            return (
-                              <li
-                                key={item.id}
-                                id={`archive-item-${item.id}`}
-                                className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
-                                style={
-                                  cssImageUrl
-                                    ? { ['--ch-item-bg' as string]: cssImageUrl }
-                                    : undefined
-                                }
-                              >
-                                {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
-                                <div className="ch-archive-item-header">
-                                  <span style={{ position: 'relative', display: 'inline-flex' }}>
-                                    {item.bannerUrl ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={item.bannerUrl}
-                                        alt=""
-                                        className="ch-archive-item-thumb"
-                                      />
-                                    ) : (
-                                      <AvatarTile size="xs" name={item.title} />
-                                    )}
-                                    {ranks[item.id] && <RankBadge rank={ranks[item.id]!} />}
-                                  </span>
-                                  <div className="ch-archive-item-meta">
-                                    <div className="ch-archive-item-meta-main">
-                                      <div className="ch-archive-item-title">{item.title}</div>
-                                      {item.artistName ? (
-                                        <div className="ch-archive-item-credit">
-                                          <span>{item.artistName}</span>
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                    <div className="ch-archive-item-date">
-                                      {new Date(item.createdAt).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'short',
-                                      })}
-                                      {item.durationSec != null && (
-                                        <> · {fmtDuration(item.durationSec)}</>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                {(() => {
-                                  const hasCredits = Boolean(
-                                    item.credits && item.credits.length > 0,
+                        <div data-tahti-ui="studio">
+                          <LibraryBrowser
+                            items={items}
+                            getTitle={(item) => item.title}
+                            getCreatedAt={(item) => item.createdAt}
+                            searchPlaceholder="Search sounds…"
+                            emptyMessage="No archive items yet."
+                            noMatchMessage="No sounds match."
+                            showStatusFilters={false}
+                          >
+                            {(visible) => (
+                              <ul className="ch-archive-list">
+                                {visible.map((item) => {
+                                  const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
+                                    item.backgroundUrl,
                                   )
-                                  const hasGallery = Boolean(
-                                    item.slideshowUrls && item.slideshowUrls.length > 0,
-                                  )
-                                  const hasDesc = Boolean(item.description)
-                                  const hasCommentary = Boolean(item.commentary)
-                                  const hasTracklist = Boolean(
-                                    item.tracklist && item.tracklist.length > 0,
-                                  )
-                                  const hasDetails =
-                                    hasCredits ||
-                                    hasGallery ||
-                                    hasDesc ||
-                                    hasCommentary ||
-                                    hasTracklist
-                                  if (!hasDetails) return null
                                   return (
-                                    <details className="ch-archive-item-details">
-                                      <summary className="ch-archive-item-details__summary">
-                                        Details
-                                      </summary>
-                                      <div className="ch-archive-item-details__body">
-                                        {hasCredits ? (
-                                          <div className="ch-archive-item-credit ch-archive-item-credit--roles">
-                                            {item.credits!.map((c, i) => (
-                                              <span key={`${c.role}-${c.name}-${i}`}>
-                                                {i > 0 ? ' · ' : null}
-                                                {c.role}:{' '}
-                                                {c.artistUsername ? (
-                                                  <a
-                                                    href={`/u/${c.artistUsername}`}
-                                                    className="ch-archive-item-credit__link"
-                                                  >
-                                                    {c.name}
-                                                  </a>
-                                                ) : (
-                                                  c.name
-                                                )}
-                                              </span>
-                                            ))}
+                                    <li
+                                      key={item.id}
+                                      id={`archive-item-${item.id}`}
+                                      className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
+                                      style={
+                                        cssImageUrl
+                                          ? { ['--ch-item-bg' as string]: cssImageUrl }
+                                          : undefined
+                                      }
+                                    >
+                                      {videoEmbedUrl && (
+                                        <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />
+                                      )}
+                                      <div className="ch-archive-item-header">
+                                        <span
+                                          style={{ position: 'relative', display: 'inline-flex' }}
+                                        >
+                                          {item.bannerUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                              src={item.bannerUrl}
+                                              alt=""
+                                              className="ch-archive-item-thumb"
+                                            />
+                                          ) : (
+                                            <AvatarTile size="xs" name={item.title} />
+                                          )}
+                                          {ranks[item.id] && <RankBadge rank={ranks[item.id]!} />}
+                                        </span>
+                                        <div className="ch-archive-item-meta">
+                                          <div className="ch-archive-item-meta-main">
+                                            <div className="ch-archive-item-title">
+                                              {item.title}
+                                            </div>
+                                            {item.artistName ? (
+                                              <div className="ch-archive-item-credit">
+                                                <span>{item.artistName}</span>
+                                              </div>
+                                            ) : null}
                                           </div>
-                                        ) : null}
-                                        {hasGallery ? (
-                                          <ArchiveItemGallery
-                                            itemId={item.id}
-                                            images={item.slideshowUrls!}
-                                            galleryMode={item.galleryMode ?? 'NONE'}
-                                            audioReactive={Boolean(item.galleryAudioReactive)}
-                                          />
-                                        ) : null}
-                                        {hasDesc ? (
-                                          <SafePlainText
-                                            text={item.description!}
-                                            className="ch-archive-item-desc"
-                                          />
-                                        ) : null}
-                                        {hasCommentary ? (
-                                          <SafePlainText
-                                            text={item.commentary!}
-                                            className="ch-archive-item-commentary"
-                                          />
-                                        ) : null}
-                                        {hasTracklist ? (
-                                          <TracklistView entries={item.tracklist!} />
-                                        ) : null}
+                                          <div className="ch-archive-item-date">
+                                            {new Date(item.createdAt).toLocaleDateString(
+                                              undefined,
+                                              {
+                                                year: 'numeric',
+                                                month: 'short',
+                                              },
+                                            )}
+                                            {item.durationSec != null && (
+                                              <> · {fmtDuration(item.durationSec)}</>
+                                            )}
+                                          </div>
+                                        </div>
                                       </div>
-                                    </details>
+                                      {(() => {
+                                        const hasCredits = Boolean(
+                                          item.credits && item.credits.length > 0,
+                                        )
+                                        const hasGallery = Boolean(
+                                          item.slideshowUrls && item.slideshowUrls.length > 0,
+                                        )
+                                        const hasDesc = Boolean(item.description)
+                                        const hasCommentary = Boolean(item.commentary)
+                                        const hasTracklist = Boolean(
+                                          item.tracklist && item.tracklist.length > 0,
+                                        )
+                                        const hasDetails =
+                                          hasCredits ||
+                                          hasGallery ||
+                                          hasDesc ||
+                                          hasCommentary ||
+                                          hasTracklist
+                                        if (!hasDetails) return null
+                                        return (
+                                          <details className="ch-archive-item-details">
+                                            <summary className="ch-archive-item-details__summary">
+                                              Details
+                                            </summary>
+                                            <div className="ch-archive-item-details__body">
+                                              {hasCredits ? (
+                                                <div className="ch-archive-item-credit ch-archive-item-credit--roles">
+                                                  {item.credits!.map((c, i) => (
+                                                    <span key={`${c.role}-${c.name}-${i}`}>
+                                                      {i > 0 ? ' · ' : null}
+                                                      {c.role}:{' '}
+                                                      {c.artistUsername ? (
+                                                        <a
+                                                          href={`/u/${c.artistUsername}`}
+                                                          className="ch-archive-item-credit__link"
+                                                        >
+                                                          {c.name}
+                                                        </a>
+                                                      ) : (
+                                                        c.name
+                                                      )}
+                                                    </span>
+                                                  ))}
+                                                </div>
+                                              ) : null}
+                                              {hasGallery ? (
+                                                <ArchiveItemGallery
+                                                  itemId={item.id}
+                                                  images={item.slideshowUrls!}
+                                                  galleryMode={item.galleryMode ?? 'NONE'}
+                                                  audioReactive={Boolean(item.galleryAudioReactive)}
+                                                />
+                                              ) : null}
+                                              {hasDesc ? (
+                                                <SafePlainText
+                                                  text={item.description!}
+                                                  className="ch-archive-item-desc"
+                                                />
+                                              ) : null}
+                                              {hasCommentary ? (
+                                                <SafePlainText
+                                                  text={item.commentary!}
+                                                  className="ch-archive-item-commentary"
+                                                />
+                                              ) : null}
+                                              {hasTracklist ? (
+                                                <TracklistView entries={item.tracklist!} />
+                                              ) : null}
+                                            </div>
+                                          </details>
+                                        )
+                                      })()}
+                                      {item.audioUrl ? (
+                                        <ArchiveItemPlayback
+                                          channelSlug={slug}
+                                          artistUsername={channel.user.username}
+                                          artistCredit={item.artistName}
+                                          item={{ ...item, audioUrl: item.audioUrl }}
+                                          colorSchemeJson={channel.colorSchemeJson}
+                                          isLoggedIn={!!user}
+                                          queue={archiveQueue}
+                                        />
+                                      ) : (
+                                        <>
+                                          <TrackCommentsToggle
+                                            archiveItemId={item.id}
+                                            isLoggedIn={!!user}
+                                            commentCount={item.commentCount ?? 0}
+                                          />
+                                          <ReportButton
+                                            targetType="ARCHIVE_ITEM"
+                                            targetId={item.id}
+                                          />
+                                        </>
+                                      )}
+                                    </li>
                                   )
-                                })()}
-                                {item.audioUrl ? (
-                                  <ArchiveItemPlayback
-                                    channelSlug={slug}
-                                    artistUsername={channel.user.username}
-                                    artistCredit={item.artistName}
-                                    item={{ ...item, audioUrl: item.audioUrl }}
-                                    colorSchemeJson={channel.colorSchemeJson}
-                                    isLoggedIn={!!user}
-                                    queue={archiveQueue}
-                                  />
-                                ) : (
-                                  <>
-                                    <TrackCommentsToggle
-                                      archiveItemId={item.id}
-                                      isLoggedIn={!!user}
-                                      commentCount={item.commentCount ?? 0}
-                                    />
-                                    <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
-                                  </>
-                                )}
-                              </li>
-                            )
-                          })}
-                        </ul>
+                                })}
+                              </ul>
+                            )}
+                          </LibraryBrowser>
+                        </div>
                       )}
                     </section>
                   </>
@@ -887,7 +935,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <div className="public-empty-card">
                         <p className="public-empty-card__text">No updates yet.</p>
                         <p className="public-empty-card__hint">
-                          Posts and upcoming shows will land here. Past broadcasts are in Archive.
+                          Posts and upcoming shows will land here. Past broadcasts are in Sounds.
                         </p>
                         <Link
                           href={`/u/${channel.user.username}`}
@@ -916,14 +964,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <div className="public-empty-card">
                         <p className="public-empty-card__text">No bio yet.</p>
                       </div>
-                    )}
-                    {releases.length > 0 && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
-                          <h2 className="ch-section-label">Latest releases</h2>
-                        </div>
-                        <ReleasesGrid releases={releases.slice(0, 4)} />
-                      </section>
                     )}
                   </>
                 }

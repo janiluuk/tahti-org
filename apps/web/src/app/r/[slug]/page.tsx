@@ -10,7 +10,6 @@ import { SmartLinkReleaseDetails } from '@/components/smart-link-release-details
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelGalleryView } from '@/components/gallery'
-import { ReportButton } from '@/components/report-button'
 import {
   CatalogPlaybackButtons,
   type CatalogPlaybackTrack,
@@ -18,6 +17,7 @@ import {
 
 interface SmartLinkTrack {
   id: string
+  archiveItemId?: string | null
   title: string
   isrc: string | null
   position: number
@@ -77,11 +77,12 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
     track.audioUrl
       ? [
           {
-            id: `release-track-${track.id}`,
+            id: track.archiveItemId ?? `release-track-${track.id}`,
             title: track.title,
             audioUrl: track.audioUrl,
             subtitle: data.artist.displayName,
             artworkUrl: data.release.artworkUrl,
+            href: `/tracks/${track.archiveItemId}`,
           },
         ]
       : [],
@@ -147,7 +148,13 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
             {playbackQueue.map((track, index) => (
               <div key={track.id} className="smartlink-playable-tracks__row">
                 <span>{index + 1}</span>
-                <strong>{track.title}</strong>
+                {track.href ? (
+                  <Link href={track.href}>
+                    <strong>{track.title}</strong>
+                  </Link>
+                ) : (
+                  <strong>{track.title}</strong>
+                )}
                 <CatalogPlaybackButtons item={track} queue={playbackQueue} />
               </div>
             ))}
@@ -155,7 +162,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         ) : null}
         <SmartLinkDspButtons smartLinkSlug={params.slug} targets={data.targets} />
       </ReleaseSmartLink>
-      <ReportButton targetType="RELEASE" targetId={data.release.id} />
     </SmartLinkPageLayout>
   )
 }

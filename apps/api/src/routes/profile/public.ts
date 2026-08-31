@@ -152,6 +152,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           source: true,
           embedProvider: true,
           embedUri: true,
+          peaks: true,
         },
       })
     : []
@@ -212,6 +213,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     source: item.source,
     embedProvider: item.embedProvider,
     embedUri: item.embedUri,
+    peaks: item.peaks,
   }))
 
   const releases = await Promise.all(

@@ -2448,6 +2448,7 @@ model Release {
   smartLinkSlug    String       @unique
   smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
   smartLinkViewCount Int        @default(0) // M14: public /r/:slug loads
+  showPoweredByFooter Boolean   @default(false) // opt-in "Powered by tahti.live · @artist" smart-link footer
   state            ReleaseState @default(DRAFT)
   publishedAt      DateTime?
   commentary       String?      // M25: artist notes on the release (Markdown)

@@ -175,6 +175,7 @@ interface ProfileResponse {
     source?: string
     embedProvider?: string | null
     embedUri?: string | null
+    peaks?: number[] | null
   }>
   links: {
     channel: string | null
@@ -380,16 +381,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
           .map(([key, url]) => [key.charAt(0).toUpperCase() + key.slice(1), url] as const),
       ]
     : []
-  // Music tab: pinned releases get their own (non-playable — a release isn't
-  // a single stream) card row; pinned + most-recent individual tracks reuse
-  // TracksTab as-is so they're playable exactly like the Releases tab's full
-  // list, instead of the old plain-link cards this used to be.
   const pinnedReleases = releases.filter((r) => r.pinned)
-  const pinnedTracks = tracks.filter((t) => t.pinned)
-  const latestTracks = [...tracks]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5)
-  const musicTabTracks = [...pinnedTracks, ...latestTracks.filter((t) => !t.pinned)]
   // Tahti Releases first, then everything else — same items as before, the
   // formal-release section just leads instead of trailing behind DJ mixes/
   // playlists/collections/individual tracks.
@@ -651,24 +643,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   <ReleasesGrid releases={pinnedReleases} />
                 </section>
               )}
-              <section className="prof-section">
-                <div className="prof-sec-label-row">
-                  <div className="prof-sec-label">
-                    {pinnedTracks.length > 0 ? 'Pinned & latest tracks' : 'Latest tracks'}
-                  </div>
-                </div>
-                {musicTabTracks.length === 0 ? (
-                  <div className="public-empty-card">
-                    <p className="public-empty-card__text">No tracks yet.</p>
-                  </div>
-                ) : (
-                  <TracksTab
-                    tracks={musicTabTracks}
-                    isOwner={isOwner}
-                    channelSlug={channel?.slug ?? null}
-                  />
-                )}
-              </section>
             </>
           }
           releases={

@@ -3,12 +3,10 @@
 
 'use client'
 
+import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { ArchiveItemPlayback } from '@/components/archive-item-playback'
+import { resolveColorScheme } from '@tahti/shared'
 import type { PlayerTrack } from '@/contexts/player-context'
-import { HearthisEmbedRow } from '../../u/[username]/c/[slug]/_hearthis-embed-row'
-import { MixcloudEmbedRow } from '../../u/[username]/c/[slug]/_mixcloud-embed-row'
-import { SpotifyEmbedRow } from '../../u/[username]/c/[slug]/_spotify-embed-row'
 import { LibraryBrowser } from '@/components/library/library-browser'
 
 const ArchiveEditor = dynamic(() => import('../archive-editor'))
@@ -20,6 +18,10 @@ type ArchiveListItem = Record<string, unknown> & {
   isPublic?: boolean
   pinnedAt?: string | null
   createdAt?: string
+  embedUri?: string | null
+  embedProvider?: string | null
+  colorSchemeJson?: string | null
+  paletteJson?: string | null
 }
 
 interface PlayableItem {
@@ -44,13 +46,10 @@ function itemFilter(item: ArchiveListItem): 'unpublished' | 'drafts' | 'publishe
   return item.isPublic === false ? 'unpublished' : 'published'
 }
 
-/** Small deterministic decorative color per item — not a meaning-bound brand
- * token, just a stable hue so rows are visually distinguishable in a long list. */
-function swatchColor(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
-  const hue = hash % 360
-  return `hsl(${hue}, 55%, 55%)`
+const EMBED_PROVIDER_LABELS: Record<string, string> = {
+  HEARTHIS: 'hearthis.at',
+  SPOTIFY: 'Spotify',
+  MIXCLOUD: 'Mixcloud',
 }
 
 export function ArchiveList({
@@ -61,6 +60,7 @@ export function ArchiveList({
   apiUrl,
   channelSlug,
   artistUsername,
+  showEmbedFilter,
 }: {
   items: ArchiveListItem[]
   playable: PlayableItem[]
@@ -69,12 +69,22 @@ export function ArchiveList({
   apiUrl: string
   channelSlug: string | null
   artistUsername: string
+  /** Only meaningful on the plain Tracks list — DJ Sets/Embeds don't need a
+   * way to hide embeds since they're either not embeds or nothing but. */
+  showEmbedFilter?: boolean
 }) {
+  const [hideEmbeds, setHideEmbeds] = useState(false)
+  const baseItems = useMemo(
+    () => (hideEmbeds ? items.filter((item) => !item.embedUri) : items),
+    [items, hideEmbeds],
+  )
+  const embedCount = useMemo(() => items.filter((item) => item.embedUri).length, [items])
+
   // Shared play queue, in display order — lets playback auto-advance to the
   // next track on 'ended' instead of just stopping, same as public listings.
   return (
     <LibraryBrowser
-      items={items}
+      items={baseItems}
       getTitle={(item) => item.title}
       getCreatedAt={(item) => item.createdAt}
       getPinnedAt={(item) => item.pinnedAt}
@@ -95,71 +105,65 @@ export function ArchiveList({
             artworkUrl: p.bannerUrl,
           }))
         return (
-          <ul className="studio-list studio-mt-sm">
-            {visible.map((item) => {
-              const play = playable.find((a) => a.id === item.id)
-              return (
-                <li key={item.id} className="archive-list__row">
-                  <div
-                    className="archive-list__swatch"
-                    style={{ background: swatchColor(item.id) }}
-                    aria-hidden
-                  />
-                  <div className="archive-list__row-body">
-                    <ArchiveEditor
-                      item={item}
-                      mixcloudConnected={mixcloudConnected}
-                      mixcloudConfigured={mixcloudConfigured}
-                      apiUrl={apiUrl}
-                      channelSlug={channelSlug}
-                    />
-                    {channelSlug && play?.audioUrl && (
-                      // ArchiveItemPlayback's classes (ch-archive-*, waveform bars, action
-                      // pill colors) are only styled under the public "brand" design system —
-                      // the dashboard is scoped "studio", so without this wrapper the waveform
-                      // bars render with no size/color at all and only the background particle
-                      // visualizer is visible. Same fix mini-player.tsx uses to work everywhere.
-                      // (Not using the full .brand-channel class here — it sets min-height:100vh
-                      // for a page root, which would blow out this inline row's height.)
-                      <div data-tahti-ui="brand">
-                        <ArchiveItemPlayback
-                          channelSlug={channelSlug}
-                          artistUsername={artistUsername}
-                          artistCredit={play.artistName}
-                          item={{
-                            id: play.id,
-                            title: play.title,
-                            audioUrl: play.audioUrl,
-                            bannerUrl: play.bannerUrl,
-                            peaks: play.peaks,
-                            visualPreset: play.visualPreset,
-                            repostToDownload: play.repostToDownload,
-                            followToDownload: play.followToDownload,
-                            commentCount: play.commentCount,
-                            downloadCount: play.downloadCount,
-                            accentColor: play.accentColor,
-                          }}
-                          isLoggedIn
-                          queue={queue}
+          <>
+            {showEmbedFilter && embedCount > 0 && (
+              <label className="archive-list__embed-filter">
+                <input
+                  type="checkbox"
+                  checked={hideEmbeds}
+                  onChange={(e) => setHideEmbeds(e.target.checked)}
+                />
+                Hide embeds — show only my own tracks
+              </label>
+            )}
+            <ul className="studio-list studio-mt-sm">
+              {visible.map((item) => {
+                const play = playable.find((a) => a.id === item.id)
+                const cover = play?.bannerUrl
+                const scheme = resolveColorScheme(item.colorSchemeJson, item.paletteJson)
+                const providerLabel = play?.embedProvider
+                  ? (EMBED_PROVIDER_LABELS[play.embedProvider] ?? play.embedProvider)
+                  : null
+                return (
+                  <li
+                    key={item.id}
+                    className="archive-list__row"
+                    style={{
+                      background: `linear-gradient(135deg, ${scheme.bg} 0%, ${scheme.accent}33 100%)`,
+                    }}
+                  >
+                    <div className="archive-list__cover">
+                      {cover ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cover} alt="" />
+                      ) : (
+                        <div
+                          className="archive-list__cover-ph"
+                          style={{ background: scheme.accent }}
+                          aria-hidden
                         />
-                      </div>
-                    )}
-                    {!play?.audioUrl && play?.embedUri && (
-                      <ul className="archive-list__embed">
-                        {play.embedProvider === 'MIXCLOUD' ? (
-                          <MixcloudEmbedRow title={play.title} embedUri={play.embedUri} />
-                        ) : play.embedProvider === 'SPOTIFY' ? (
-                          <SpotifyEmbedRow title={play.title} embedUri={play.embedUri} />
-                        ) : (
-                          <HearthisEmbedRow title={play.title} embedUri={play.embedUri} />
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                      )}
+                      {providerLabel && (
+                        <span className="archive-list__cover-embed-badge">{providerLabel}</span>
+                      )}
+                    </div>
+                    <div className="archive-list__row-body">
+                      <ArchiveEditor
+                        item={item}
+                        mixcloudConnected={mixcloudConnected}
+                        mixcloudConfigured={mixcloudConfigured}
+                        apiUrl={apiUrl}
+                        channelSlug={channelSlug}
+                        artistUsername={artistUsername}
+                        play={play}
+                        queue={queue}
+                      />
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
         )
       }}
     </LibraryBrowser>

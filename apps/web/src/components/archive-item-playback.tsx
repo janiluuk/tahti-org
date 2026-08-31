@@ -3,8 +3,10 @@
 
 'use client'
 
+import type { ReactNode } from 'react'
 import type { VisualPreset } from '@tahti/shared'
 import { ActiveTrackStage } from '@/components/active-track-stage'
+import { ArchiveWaveform } from '@/components/archive-waveform'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
@@ -38,6 +40,14 @@ interface Props {
   /** Every playable track on the page, in display order — passed to load() so
    * 'ended' auto-advances to the next track instead of just stopping. */
   queue?: PlayerTrack[]
+  /** Dashboard-only: prints title/artist directly over the waveform instead
+   * of a separate header line above it — opt-in so public listings (which
+   * already show the title elsewhere) are unaffected. */
+  titleOverlay?: { title: string; subtitle?: string | null }
+  /** Dashboard-only: extra icon buttons (pin, rotation, tools, …) rendered
+   * inline with this row's own controls so management actions and playback
+   * actions read as one button cluster instead of two stacked rows. */
+  extraControls?: ReactNode
 }
 
 export function ArchiveItemPlayback({
@@ -48,6 +58,8 @@ export function ArchiveItemPlayback({
   colorSchemeJson,
   isLoggedIn,
   queue,
+  titleOverlay,
+  extraControls,
 }: Props) {
   const { track, playing, analyser, load, togglePlay, addToQueue, currentTime, duration, seek } =
     usePlayer()
@@ -87,21 +99,46 @@ export function ArchiveItemPlayback({
     <div
       className={`ch-archive-playback${isCurrent ? ' ch-archive-playback--current' : ''}${isCurrent && playing ? ' ch-archive-playback--playing' : ''}`}
     >
-      {isCurrent && (
-        <ActiveTrackStage
-          playing={playing}
-          preset={item.visualPreset}
-          colorSchemeJson={colorSchemeJson}
-          analyser={analyser}
-          peaks={item.peaks}
-          progress={progress}
-          onSeek={seek}
-          accentColor={item.accentColor}
-          artworkUrl={item.bannerUrl}
-          size="large"
-          className="ch-archive-playback__stage"
-        />
-      )}
+      <div className={titleOverlay ? 'ch-archive-playback__wf-wrap' : undefined}>
+        {isCurrent ? (
+          <ActiveTrackStage
+            playing={playing}
+            preset={item.visualPreset}
+            colorSchemeJson={colorSchemeJson}
+            analyser={analyser}
+            peaks={item.peaks}
+            progress={progress}
+            onSeek={seek}
+            accentColor={item.accentColor}
+            artworkUrl={item.bannerUrl}
+            size="large"
+            className="ch-archive-playback__stage"
+          />
+        ) : (
+          item.peaks &&
+          item.peaks.length > 0 && (
+            // Inactive rows still show their waveform (flat, unplayed) so the full
+            // list reads as a scannable set of tracks rather than just the one
+            // that's currently playing — click anywhere on it to start playback.
+            <button
+              type="button"
+              className="ch-archive-playback__wf-btn"
+              onClick={() => void handleTogglePlay()}
+              aria-label={`Play ${item.title}`}
+            >
+              <ArchiveWaveform peaks={item.peaks} accentColor={item.accentColor} size="large" />
+            </button>
+          )
+        )}
+        {titleOverlay && (
+          <div className="ch-archive-playback__title-overlay" aria-hidden>
+            <div className="ch-archive-playback__title">{titleOverlay.title}</div>
+            {titleOverlay.subtitle && (
+              <div className="ch-archive-playback__subtitle">{titleOverlay.subtitle}</div>
+            )}
+          </div>
+        )}
+      </div>
       <div className="ch-archive-controls-row">
         <div className="ch-archive-controls">
           <button
@@ -153,6 +190,7 @@ export function ArchiveItemPlayback({
           commentCount={item.commentCount ?? 0}
         />
         {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} variant="icon" />}
+        {extraControls}
       </div>
     </div>
   )

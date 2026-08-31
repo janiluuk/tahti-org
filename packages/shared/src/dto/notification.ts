@@ -71,6 +71,7 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     artist: FeedArtistSchema,
     title: z.string(),
     bannerUrl: z.string().nullable(),
+    audioUrl: z.string().nullable(),
     channelSlug: z.string(),
     liked: z.boolean(),
     likeCount: z.number().int(),

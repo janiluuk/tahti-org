@@ -3,10 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { FeedItem } from '@tahti/shared'
-import { MyFeedResponseSchema, openApiResponse } from '@tahti/shared'
+import { MyFeedResponseSchema, archivePlaybackKey, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 const FEED_LIMIT = 40
 
@@ -51,6 +52,8 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
             id: true,
             title: true,
             bannerUrl: true,
+            mp3Key: true,
+            flacKey: true,
             createdAt: true,
             channel: {
               select: {
@@ -100,6 +103,14 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           })
         : []
       const likeCountById = new Map(likeCounts.map((l) => [l.archiveItemId, l._count]))
+      const audioUrlByTrackId = new Map<string, string | null>(
+        await Promise.all(
+          tracks.map(async (track) => {
+            const key = archivePlaybackKey(track)
+            return [track.id, key ? await presignedGetUrl(key, 3600) : null] as const
+          }),
+        ),
+      )
 
       const releaseItems: FeedItem[] = await Promise.all(
         releases.map(async (r): Promise<FeedItem> => ({
@@ -131,6 +142,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           artist: t.channel.user,
           title: t.title,
           bannerUrl: t.bannerUrl,
+          audioUrl: audioUrlByTrackId.get(t.id) ?? null,
           channelSlug: t.channel.slug,
           liked: likedIds.has(t.id),
           likeCount: likeCountById.get(t.id) ?? 0,

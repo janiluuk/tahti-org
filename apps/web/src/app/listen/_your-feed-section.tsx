@@ -76,7 +76,11 @@ export function YourFeedSection() {
       <div className="listen-your-feed__header">
         <h2 className="listen-your-feed__title">Your feed</h2>
       </div>
-      <ArtistFeedSection items={data?.items ?? []} followingCount={data?.followingCount ?? 0} />
+      <ArtistFeedSection
+        items={data?.items ?? []}
+        followingCount={data?.followingCount ?? 0}
+        horizontal
+      />
     </section>
   )
 }
