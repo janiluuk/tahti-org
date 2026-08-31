@@ -9,9 +9,13 @@ import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateChannelVisual } from '../channel-visual-actions'
 import { updateChannelGallery } from '../channel-gallery-actions'
+import { updateChannelProfile } from '../channel-identity-actions'
+import { updateChannelTextLayer } from '../channel-text-layer-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
 import ChannelGalleryPanel from '../channel-gallery-panel'
 import ChannelSlideshowPanel from '../channel-slideshow-panel'
+import ChannelLinksPanel from '../channel-links-panel'
+import ChannelTextLayerPanel from '../channel-text-layer-panel'
 import { PressKitBuilder } from '../settings/presskit/_press-kit-builder'
 import { ChannelDiscoWidgetsPanel } from '../channel-disco-widgets-panel'
 import type { ChannelLink } from '../channel-links-panel'
@@ -29,6 +33,15 @@ import type {
   DiscoWidgetStoreItem,
 } from '@tahti/shared'
 
+function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const { label, url } of links) {
+    const key = label.trim()
+    if (key && url.trim()) map[key] = url.trim()
+  }
+  return map
+}
+
 export type ChannelEditorData = {
   channelSlug: string
   tier: string
@@ -39,6 +52,13 @@ export type ChannelEditorData = {
   bio: string
   genres: string[]
   links: ChannelLink[]
+  streamingLinks: {
+    youtube: string
+    hearthisAt: string
+    twitch: string
+    soundcloud: string
+    kick: string
+  }
   channelGallery: {
     galleryMode: ChannelGalleryMode
     slideshowImages: string[]
@@ -83,6 +103,7 @@ export function ChannelEditorSections({
   bio,
   genres,
   links,
+  streamingLinks,
   channelGallery,
   channelTextLayer,
   channelVisual,
@@ -91,6 +112,7 @@ export function ChannelEditorSections({
 }: ChannelEditorData) {
   const [draft, setDraft] = useState<ChannelPreviewDraft>({
     displayName,
+    username: channelSlug,
     avatarUrl,
     countryCode,
     pronouns,
@@ -120,6 +142,30 @@ export function ChannelEditorSections({
       })
       if (galleryRes.error) {
         setError(galleryRes.error)
+        return
+      }
+      const profileRes = await updateChannelProfile({
+        socialLinks: {
+          genres: draft.genres.join(', '),
+          youtube: streamingLinks.youtube.trim(),
+          hearthisAt: streamingLinks.hearthisAt.trim(),
+          twitch: streamingLinks.twitch.trim(),
+          soundcloud: streamingLinks.soundcloud.trim(),
+          kick: streamingLinks.kick.trim(),
+          ...linksToSocialLinks(draft.links),
+        },
+      })
+      if (profileRes.error) {
+        setError(profileRes.error)
+        return
+      }
+      const textLayerRes = await updateChannelTextLayer({
+        textLayerMode: draft.textLayer.textLayerMode,
+        textLayerText: draft.textLayer.textLayerText.trim(),
+        textLayerAlign: draft.textLayer.textLayerAlign,
+      })
+      if (textLayerRes.error) {
+        setError(textLayerRes.error)
         return
       }
       const visualRes = await updateChannelVisual({
@@ -171,7 +217,7 @@ export function ChannelEditorSections({
               href="/dashboard/settings/artist-info"
               className="ui-btn ui-btn--ghost ui-btn--sm"
             >
-              Edit name, bio & links →
+              Edit name & bio →
             </Link>
           </div>
         </div>
@@ -221,6 +267,32 @@ export function ChannelEditorSections({
               />
             </ChannelEditorSection>
           ) : null}
+
+          <ChannelEditorSection
+            id="channel-links"
+            title="Links"
+            description="Add the links shown in your channel banner."
+          >
+            <ChannelLinksPanel
+              initial={links}
+              onDraftChange={(nextLinks) =>
+                setDraft((current) => ({ ...current, links: nextLinks }))
+              }
+            />
+          </ChannelEditorSection>
+
+          <ChannelEditorSection
+            id="channel-text-overlay"
+            title="Text overlay"
+            description="Add a stylized headline or tagline to your channel page."
+          >
+            <ChannelTextLayerPanel
+              initial={channelTextLayer}
+              bare
+              hideSave
+              onDraftChange={(textLayer) => setDraft((current) => ({ ...current, textLayer }))}
+            />
+          </ChannelEditorSection>
         </div>
       </div>
 

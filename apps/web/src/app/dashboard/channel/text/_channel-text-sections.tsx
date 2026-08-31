@@ -34,6 +34,7 @@ export function ChannelTextSections({
 }: ChannelTextEditorData) {
   const [draft, setDraft] = useState<ChannelPreviewDraft>({
     displayName,
+    username: channelSlug,
     avatarUrl,
     countryCode,
     pronouns,

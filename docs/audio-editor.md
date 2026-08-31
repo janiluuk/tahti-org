@@ -16,6 +16,21 @@ Spec for implementation: **M21** in `docs/AGENT.md` and `docs/project-roadmap.md
 - Export sits beside Preview. Applying an effect preserves the original and creates a numbered revision.
 - Tahti retains the ten newest revisions and removes the oldest revision when an eleventh is created.
 
+## Tahti Player reference mastering
+
+The separate [Tahti Player repository](https://github.com/janiluuk/tahti-player)
+also provides a client-only **Reference mastering** tool under
+`packages/tahti-web/src/plugins/mastering/`. It ports Matchering's default
+loudness, tonal-balance, and limiter pipeline into TypeScript and runs the DSP
+in a Web Worker. It loads a Tahti-hosted source track and a reference file in
+the browser, then produces a downloadable/playable WAV.
+
+This feature does not add or require a Tahti API endpoint: the source is read
+through the existing archive editor-source route and the reference file never
+leaves the artist's browser. The result is currently preview/download-only; it
+is not written back to the archive because the API has no raw-client-audio
+create/version contract for that operation.
+
 ## Design principle
 
 - **Included for all artists** (free-tier and paying). Same editor, same feature set.

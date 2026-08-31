@@ -11,7 +11,7 @@ artists. Product surfaces:
 | Surface | Role |
 | --- | --- |
 | `apps/web` + `@tahti/ui` | Canonical hosted product (studio, channel, listen, admin) |
-| Nuclear (`beta.tahti.live`, separate repo) | Listen / studio client that talks to the same public API |
+| [Tahti Player](https://github.com/janiluuk/tahti-player) (`beta.tahti.live`, separate repo) | Listen / studio client that talks to the same public API |
 | `GET https://api.tahti.live/api` | Public Scalar / OpenAPI for integrators |
 
 Visual truth for the **web app** is the **live UI** plus committed Docker-stack

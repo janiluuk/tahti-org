@@ -20,6 +20,9 @@ import { Step4GoLive } from './_step4-go-live'
 import { SignalMeters } from './_signal-meters'
 import { RecordingToggle } from './_recording-toggle'
 import { PublishToggle } from './_publish-toggle'
+import { ChannelControlsPanel } from '../channel-controls-panel'
+import { StreamOverlayPanel } from '../settings/multistream/stream-overlay-panel'
+import { StreamStatsCard } from './_stream-stats-card'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -32,6 +35,12 @@ interface SignalStatus {
   codec: string | null
   bitrateKbps: number | null
   listeners: number | null
+}
+
+interface StreamOverlay {
+  streamOverlayTitle: string | null
+  streamOverlaySubtitle: string | null
+  streamOverlayCoverUrl: string | null
 }
 
 type LiveStatus = 'offline' | 'preview' | 'live'
@@ -58,6 +67,7 @@ export function BroadcastStudio({
   broadcastUsage,
   autoRecordEnabled,
   autoPublishBroadcast,
+  streamOverlay,
 }: {
   channelSlug: string
   artistUsername: string
@@ -66,6 +76,7 @@ export function BroadcastStudio({
   broadcastUsage: BroadcastUsage | null
   autoRecordEnabled: boolean
   autoPublishBroadcast: boolean
+  streamOverlay: StreamOverlay
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -96,8 +107,12 @@ export function BroadcastStudio({
       try {
         const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
         if (!res.ok) return
-        const me = (await res.json()) as { channel?: { state?: string } }
-        const next = statusFromState(me.channel?.state)
+        const me = (await res.json()) as {
+          channel?: { state?: string; goneLiveAt?: string | null }
+        }
+        const next = me.channel?.goneLiveAt
+          ? 'live'
+          : statusFromState(me.channel?.state === 'LIVE' ? undefined : me.channel?.state)
         if (next !== status) {
           setStatus(next)
           router.refresh()
@@ -311,6 +326,28 @@ export function BroadcastStudio({
           )}
         </Panel>
       )}
+
+      <section className="broadcast-studio__control-room" aria-labelledby="control-room-title">
+        <div className="broadcast-studio__section-heading">
+          <div>
+            <h2 id="control-room-title" className="studio-section-title">
+              Control room
+            </h2>
+            <p className="studio-text-muted-sm">
+              Keep your rotation, live health, and mirror artwork organized in one place.
+            </p>
+          </div>
+        </div>
+        <div className="broadcast-studio__control-grid">
+          <ChannelControlsPanel
+            slug={channelSlug}
+            title="Active rotation"
+            description="Control what plays when you are not broadcasting live."
+          />
+          <StreamStatsCard slug={channelSlug} />
+          <StreamOverlayPanel initial={streamOverlay} />
+        </div>
+      </section>
     </div>
   )
 }

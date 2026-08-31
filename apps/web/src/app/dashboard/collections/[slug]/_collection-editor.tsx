@@ -10,6 +10,7 @@ import { ButtonIcon, Button, SortableList } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
+import { LibraryBrowser } from '@/components/library/library-browser'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { useToast } from '@/contexts/toast-context'
 import {
@@ -273,13 +274,23 @@ export function CollectionEditor({
   }, [items, canManualReorder, initial.trackSortMode])
 
   const playbackQueue = useMemo(
-    () => displayItems.flatMap((item) => (item.audioUrl ? [toPlayerTrack(item)] : [])),
+    () =>
+      displayItems.flatMap((item) =>
+        item.audioUrl ||
+        (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri)
+          ? [toPlayerTrack(item)]
+          : [],
+      ),
     [displayItems],
   )
 
   const toggleItemPlayback = useCallback(
     async (item: CollectionItem) => {
-      if (!item.audioUrl) return
+      if (
+        !item.audioUrl &&
+        !(item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri)
+      )
+        return
       const playerTrack = toPlayerTrack(item)
       if (track?.id === playerTrack.id) {
         await togglePlay()
@@ -303,24 +314,27 @@ export function CollectionEditor({
     [addToQueue, showToast],
   )
 
-  const addFromLibrary = useCallback(async () => {
-    if (!libraryPick) return
-    setLibraryAdding(true)
-    setLibraryError(null)
-    const [kind, id] = libraryPick.split(':')
-    const { error } = await addCollectionItem(
-      initial.slug,
-      kind === 'archive' ? { archiveItemId: id } : { releaseId: id },
-    )
-    setLibraryAdding(false)
-    if (error) {
-      setLibraryError(error)
-      return
-    }
-    setLibraryPick('')
-    setLibraryPickerOpen(false)
-    startTransition(() => router.refresh())
-  }, [initial.slug, libraryPick, router])
+  const addFromLibrary = useCallback(
+    async (selectedPick = libraryPick) => {
+      if (!selectedPick) return
+      setLibraryAdding(true)
+      setLibraryError(null)
+      const [kind, id] = selectedPick.split(':')
+      const { error } = await addCollectionItem(
+        initial.slug,
+        kind === 'archive' ? { archiveItemId: id } : { releaseId: id },
+      )
+      setLibraryAdding(false)
+      if (error) {
+        setLibraryError(error)
+        return
+      }
+      setLibraryPick('')
+      setLibraryPickerOpen(false)
+      startTransition(() => router.refresh())
+    },
+    [initial.slug, libraryPick, router],
+  )
 
   const usedArchiveIds = new Set(items.map((i) => i.archiveItem?.id).filter(Boolean))
   const usedReleaseIds = new Set(items.map((i) => i.release?.id).filter(Boolean))
@@ -328,6 +342,13 @@ export function CollectionEditor({
     (a) => a.status === 'READY' && !usedArchiveIds.has(a.id),
   )
   const availableReleases = myReleases.filter((r) => !usedReleaseIds.has(r.id))
+  const availableLibraryItems = useMemo(
+    () => [
+      ...availableArchiveItems.map((item) => ({ ...item, kind: 'archive' as const })),
+      ...availableReleases.map((item) => ({ ...item, kind: 'release' as const })),
+    ],
+    [availableArchiveItems, availableReleases],
+  )
 
   const renderTrackRowBody = useCallback(
     (item: CollectionItem, idx: number) => {
@@ -415,7 +436,14 @@ export function CollectionEditor({
               ) : embedProvider === 'SPOTIFY' ? (
                 <SpotifyEmbedRow title={title} embedUri={embedUri} />
               ) : (
-                <HearthisEmbedRow title={title} embedUri={embedUri} />
+                <HearthisEmbedRow
+                  title={title}
+                  embedUri={embedUri}
+                  id={item.archiveItem?.id}
+                  durationSec={item.archiveItem?.durationSec}
+                  thumbUrl={itemThumb(item)}
+                  queue={playbackQueue}
+                />
               )}
             </ul>
           )}
@@ -427,7 +455,15 @@ export function CollectionEditor({
         </>
       )
     },
-    [playing, reorderSaving, track, expandedEmbedItemId, queueItem, toggleItemPlayback],
+    [
+      playing,
+      reorderSaving,
+      track,
+      expandedEmbedItemId,
+      queueItem,
+      toggleItemPlayback,
+      playbackQueue,
+    ],
   )
 
   const handleDelete = useCallback(async () => {
@@ -745,41 +781,51 @@ export function CollectionEditor({
           </div>
 
           {libraryPickerOpen ? (
-            <div className="collection-editor__library-picker studio-row studio-row--wrap studio-gap-xs studio-mt-sm">
-              <select
-                className="studio-input studio-flex-1"
-                value={libraryPick}
-                onChange={(e) => setLibraryPick(e.target.value)}
+            <div className="collection-editor__library-picker studio-mt-sm">
+              <LibraryBrowser
+                items={availableLibraryItems}
+                getTitle={(item) => item.title}
+                showStatusFilters={false}
+                searchPlaceholder="Search your library…"
+                emptyMessage="No unused library items available."
+                noMatchMessage="No unused library items match."
               >
-                <option value="">Choose an archive item or release…</option>
-                {availableArchiveItems.length > 0 && (
-                  <optgroup label="Archive items">
-                    {availableArchiveItems.map((a) => (
-                      <option key={a.id} value={`archive:${a.id}`}>
-                        {a.title}
-                      </option>
-                    ))}
-                  </optgroup>
+                {(visible) => (
+                  <ul className="studio-list studio-mt-sm">
+                    {visible.map((item) => {
+                      const value = `${item.kind}:${item.id}`
+                      const selected = libraryPick === value
+                      return (
+                        <li key={value} className="studio-programme-row">
+                          <button
+                            type="button"
+                            className="studio-programme-label"
+                            aria-pressed={selected}
+                            onClick={() => setLibraryPick(selected ? '' : value)}
+                          >
+                            <span>{item.title}</span>
+                            <span className="studio-text-muted-sm">
+                              {item.kind === 'archive' ? 'Archive item' : `Release · ${item.state}`}
+                            </span>
+                          </button>
+                          <Button
+                            onClick={() => {
+                              setLibraryPick(value)
+                              void addFromLibrary(value)
+                            }}
+                            disabled={libraryAdding}
+                            variant={selected ? 'primary' : 'secondary'}
+                            size="sm"
+                          >
+                            <ButtonIcon name="plus" />
+                            {libraryAdding && selected ? 'Adding…' : 'Add'}
+                          </Button>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 )}
-                {availableReleases.length > 0 && (
-                  <optgroup label="Releases">
-                    {availableReleases.map((r) => (
-                      <option key={r.id} value={`release:${r.id}`}>
-                        {r.title}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-              <Button
-                onClick={() => void addFromLibrary()}
-                disabled={!libraryPick || libraryAdding}
-                variant="primary"
-                size="sm"
-              >
-                <ButtonIcon name="plus" />
-                {libraryAdding ? 'Adding…' : 'Add'}
-              </Button>
+              </LibraryBrowser>
               {libraryError && <p className="studio-text-error studio-text-sm">{libraryError}</p>}
             </div>
           ) : null}
@@ -937,11 +983,16 @@ export function CollectionEditor({
 }
 
 function toPlayerTrack(item: CollectionItem): PlayerTrack {
+  const isHearthis = item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri
   return {
     id: item.archiveItem?.id ?? `collection-release-${item.release?.id ?? item.id}`,
     kind: 'archive',
-    url: item.audioUrl!,
+    url: item.audioUrl ?? '',
     title: itemTitle(item),
     artworkUrl: itemThumb(item),
+    durationSec: item.archiveItem?.durationSec,
+    ...(isHearthis
+      ? { embed: { provider: 'HEARTHIS' as const, embedUri: item.archiveItem!.embedUri! } }
+      : {}),
   }
 }

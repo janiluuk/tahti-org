@@ -10,7 +10,7 @@ weekly recurrence engine for live shows, automatic missed-show detection
 with a new admin queue, and a three-way account restriction system
 (booking / upload / login), all shipped and deployed to production in the
 same session. Ran the whole time alongside a second Claude session
-(`tahti-nuclear-1c`) working the same checkout on unrelated infra
+(`tahti-player-1c`) working the same checkout on unrelated infra
 (observability, GPU stem-separator move) — coordinated via cross-session
 messages before every push and before touching shared hosts.
 

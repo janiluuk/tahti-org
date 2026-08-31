@@ -41,7 +41,11 @@ function testRtmpReachability(rtmpUrl: string): Promise<{ ok: boolean; error?: s
   if (!parsed) return Promise.resolve({ ok: false, error: 'Could not parse the RTMP URL' })
 
   return new Promise((resolve) => {
-    const socket = netConnect({ host: parsed.host, port: parsed.port, timeout: RTMP_TEST_TIMEOUT_MS })
+    const socket = netConnect({
+      host: parsed.host,
+      port: parsed.port,
+      timeout: RTMP_TEST_TIMEOUT_MS,
+    })
     const finish = (result: { ok: boolean; error?: string }) => {
       socket.destroy()
       resolve(result)
@@ -51,7 +55,10 @@ function testRtmpReachability(rtmpUrl: string): Promise<{ ok: boolean; error?: s
       finish({ ok: false, error: `Timed out connecting to ${parsed.host}:${parsed.port}` }),
     )
     socket.once('error', (err) =>
-      finish({ ok: false, error: `Could not reach ${parsed.host}:${parsed.port} — ${err.message}` }),
+      finish({
+        ok: false,
+        error: `Could not reach ${parsed.host}:${parsed.port} — ${err.message}`,
+      }),
     )
   })
 }

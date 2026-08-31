@@ -15,7 +15,10 @@ import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getHostDiskSpace } from '../../lib/host-disk.js'
 import { listUserFilesWithRunningTotal } from '../../lib/user-file-listing.js'
-import { computeAllUsersStorageUsedBytes, computeUserStorageUsedBytes } from '../../lib/user-storage.js'
+import {
+  computeAllUsersStorageUsedBytes,
+  computeUserStorageUsedBytes,
+} from '../../lib/user-storage.js'
 
 const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
   // Overall usage across the platform + a per-user breakdown, plus the two
@@ -46,7 +49,13 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       // default), so this covers users who never got a UserStorageQuota row.
       const [allUsers, usedByUser, localDisk] = await Promise.all([
         fastify.prisma.user.findMany({
-          select: { id: true, username: true, displayName: true, isMember: true, softTargetBytes: true },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            isMember: true,
+            softTargetBytes: true,
+          },
         }),
         computeAllUsersStorageUsedBytes(fastify.prisma),
         getHostDiskSpace(),

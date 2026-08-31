@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { HelpTourButton } from './HelpTourButton'
 import { getAdminTourSteps } from './tour-steps'
 
@@ -17,6 +18,27 @@ export interface AdminShellHeaderProps {
 /** Production admin top bar — pairs with AdminShell `variant="studio"`. */
 export function AdminShellHeader({ displayName, username, userInitial }: AdminShellHeaderProps) {
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(event: PointerEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false)
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  useEffect(() => setOpen(false), [pathname])
+
   return (
     <>
       <div className="admin-view-strip" role="status" aria-live="polite">
@@ -33,17 +55,38 @@ export function AdminShellHeader({ displayName, username, userInitial }: AdminSh
           />
         </div>
         <div className="studio-top-nav__actions">
-          <div className="studio-top-nav__user" aria-label={`Signed in as ${displayName}`}>
-            <span className="studio-top-nav__user-avatar admin-user-avatar" aria-hidden>
-              {userInitial}
-            </span>
-            <span className="studio-top-nav__user-name">{displayName}</span>
+          <div className="studio-top-nav__user-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="studio-top-nav__user"
+              aria-label={`Signed in as ${displayName}`}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              onClick={() => setOpen((value) => !value)}
+            >
+              <span className="studio-top-nav__user-avatar admin-user-avatar" aria-hidden>
+                {userInitial}
+              </span>
+              <span className="studio-top-nav__user-name">{displayName}</span>
+              <span className="studio-top-nav__user-caret" aria-hidden>
+                {open ? '▴' : '▾'}
+              </span>
+            </button>
+            {open && (
+              <div className="studio-top-nav__menu" role="menu">
+                <Link
+                  href="/dashboard"
+                  className="studio-top-nav__menu-item"
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                >
+                  Switch to artist
+                </Link>
+              </div>
+            )}
           </div>
-          <Link href="/dashboard" className="studio-top-nav__link">
-            Switch to artist
-          </Link>
           <Link href="/governance" className="studio-top-nav__link">
-            Governance
+            Governance portal
           </Link>
         </div>
       </header>

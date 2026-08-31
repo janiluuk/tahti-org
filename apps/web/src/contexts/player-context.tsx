@@ -110,6 +110,8 @@ export interface PlayerTrack {
   subtitle?: string
   href?: string
   artworkUrl?: string | null
+  /** Duration supplied by an embed provider, used to advance the shared queue. */
+  durationSec?: number | null
   /** A 'live'-kind stream that's actually playing pre-recorded rotation right
    * now, nobody's on air — mini-player shows "REPLAY" instead of "LIVE". */
   isReplay?: boolean
@@ -228,6 +230,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * once consumed, when the listener explicitly starts a different live stream, or
    * on close(). */
   const radioResumeRef = useRef<PlayerTrack | null>(null)
+  const embedTimerRef = useRef<number | null>(null)
   /** Archive track ids a listen-event has already been recorded for this
    * session, so the threshold check below only ever fires once per track. */
   const recordedListenRef = useRef<Set<string>>(new Set())
@@ -341,6 +344,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       const prevTrack = currentTrackRef.current
+      if (embedTimerRef.current != null) {
+        window.clearTimeout(embedTimerRef.current)
+        embedTimerRef.current = null
+      }
       // Recorded the moment a track STARTS, not when it's superseded — otherwise a
       // session that only ever plays one track (e.g. tunes into radio and leaves it
       // running) never gets an entry, since nothing ever displaces it to trigger the
@@ -381,7 +388,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         audio.pause()
         audio.removeAttribute('src')
         audio.load()
-        setState((prev) => ({ ...prev, playing: opts?.autoplay !== false }))
+        const autoplay = opts?.autoplay !== false
+        setState((prev) => ({
+          ...prev,
+          playing: autoplay,
+          duration: track.durationSec ?? 0,
+        }))
         return
       }
 
@@ -507,6 +519,35 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     return true
   }, [load])
 
+  // Hearthis owns playback inside a cross-origin iframe, so it cannot emit the
+  // native audio element's `ended` event. Use its known duration to preserve
+  // the shared player's automatic queue advance.
+  useEffect(() => {
+    if (!state.track?.embed || !state.playing || !state.duration || state.duration <= 0) {
+      if (embedTimerRef.current != null) {
+        window.clearTimeout(embedTimerRef.current)
+        embedTimerRef.current = null
+      }
+      return
+    }
+    embedTimerRef.current = window.setTimeout(() => {
+      embedTimerRef.current = null
+      setState((prev) => ({ ...prev, playing: false, currentTime: 0 }))
+      const advanced = playNext()
+      if (!advanced && radioResumeRef.current) {
+        const resumeTrack = radioResumeRef.current
+        radioResumeRef.current = null
+        load(resumeTrack, { autoplay: true })
+      }
+    }, state.duration * 1000)
+    return () => {
+      if (embedTimerRef.current != null) {
+        window.clearTimeout(embedTimerRef.current)
+        embedTimerRef.current = null
+      }
+    }
+  }, [load, playNext, state.duration, state.playing, state.track])
+
   const playPrevious = useCallback(() => {
     const q = queueRef.current
     const currentId = currentTrackIdRef.current
@@ -525,6 +566,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.load()
     }
     teardownHls()
+    if (embedTimerRef.current != null) {
+      window.clearTimeout(embedTimerRef.current)
+      embedTimerRef.current = null
+    }
     const prevTrack = currentTrackRef.current
     if (prevTrack) {
       setHistory((h) =>

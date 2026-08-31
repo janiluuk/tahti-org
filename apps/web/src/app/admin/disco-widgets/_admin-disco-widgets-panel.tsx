@@ -3,8 +3,8 @@
 
 'use client'
 
-import { useRef, useState } from 'react'
-import { Badge, Button, Field, Input, Panel, Select } from '@tahti/ui'
+import { useState } from 'react'
+import { Badge, Button, Field, FileDropzone, Input, Panel, Select } from '@tahti/ui'
 import type {
   DiscoWidgetAdminItem,
   DiscoWidgetInstallView,
@@ -134,7 +134,6 @@ function PublishVersionForm({
   const [version, setVersion] = useState('')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function onFile(file: File) {
     setError(null)
@@ -167,7 +166,6 @@ function PublishVersionForm({
       setVersion('')
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -180,13 +178,12 @@ function PublishVersionForm({
         style={{ maxWidth: '7rem' }}
         disabled={uploading}
       />
-      <input
-        ref={fileInputRef}
-        type="file"
+      <FileDropzone
+        label="Choose widget script"
+        hint="JavaScript (.js)"
         accept=".js"
         disabled={uploading}
-        onChange={(e) => {
-          const file = e.target.files?.[0]
+        onFiles={([file]) => {
           if (file) void onFile(file)
         }}
       />

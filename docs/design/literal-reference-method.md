@@ -35,6 +35,6 @@ After meaningful UI changes, refresh `docs/e2e-screenshots/` via `./scripts/e2e-
 
 ## Anti-patterns
 
-- Treating Nuclear beta screenshots as `apps/web` ground truth (different client).
+- Treating [Tahti Player](https://github.com/janiluuk/tahti-player) beta screenshots as `apps/web` ground truth (different client).
 - Eyeballing from marketing site mockups.
 - Reintroducing discarded light-theme “Nordic” or newspaper layouts (see constitution + brand studio tokens).

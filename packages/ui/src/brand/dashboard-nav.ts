@@ -33,6 +33,48 @@ export type DashboardNavDefinition = {
   secondary?: boolean
 }
 
+/** The four stable destinations used by the artist studio navigation. */
+export const DASHBOARD_PRIMARY_NAV: DashboardNavDefinition[] = [
+  { href: '/dashboard', label: 'Studio', icon: 'channel', isRoute: true },
+  { href: '/dashboard/archive', label: 'Library', icon: 'archive', isRoute: true },
+  { href: '/dashboard/broadcast', label: 'Perform', icon: 'distribution', isRoute: true },
+  { href: '/dashboard/channel/edit', label: 'Manage', icon: 'appearance', isRoute: true },
+]
+
+/** Contextual submenu for each primary studio destination. */
+export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
+  '/dashboard': [
+    { href: '/dashboard', label: 'Overview', icon: 'channel', isRoute: true },
+    { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
+    { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
+    { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
+  ],
+  '/dashboard/archive': [
+    { href: '/dashboard/archive', label: 'Discography', icon: 'archive', isRoute: true },
+    { href: '/dashboard/releases', label: 'Smart Links', icon: 'links', isRoute: true },
+    { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
+    { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
+  ],
+  '/dashboard/broadcast': [
+    { href: '/dashboard/broadcast', label: 'Broadcast', icon: 'distribution', isRoute: true },
+    { href: '/dashboard/schedule', label: 'Schedule', icon: 'schedule', isRoute: true },
+    { href: '/dashboard/recordings', label: 'Recordings', icon: 'archive', isRoute: true },
+    { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
+    { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
+  ],
+  '/dashboard/channel/edit': [
+    { href: '/dashboard/channel/edit', label: 'Channel design', icon: 'appearance', isRoute: true },
+    {
+      href: '/dashboard/channel/playlist',
+      label: '24/7 playlist',
+      icon: 'collections',
+      isRoute: true,
+    },
+    { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true },
+    { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
+  ],
+}
+
 export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabId> = {
   overview: 'overview',
   // Archive, releases, and collections all moved to dedicated routes — old in-page anchors fall back to overview.

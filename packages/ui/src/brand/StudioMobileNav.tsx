@@ -5,116 +5,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { DASHBOARD_NAV } from './dashboard-nav'
+import { useEffect, useRef, useState } from 'react'
+import { DASHBOARD_NAV, DASHBOARD_PRIMARY_NAV } from './dashboard-nav'
+import type { DashboardNavDefinition } from './dashboard-nav'
+import { MobileNavSheet } from './MobileNavSheet'
 import { SidebarNavIconSvg } from './SidebarNav'
 
-function IconChannel() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M2 11 Q8 5 14 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M4 13 Q8 8 12 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="4" r="1.25" fill="currentColor" />
-    </svg>
-  )
-}
-function IconStats() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="9" width="3" height="5" rx="0.75" fill="currentColor" opacity=".6" />
-      <rect x="6.5" y="5" width="3" height="9" rx="0.75" fill="currentColor" opacity=".8" />
-      <rect x="11" y="2" width="3" height="12" rx="0.75" fill="currentColor" />
-    </svg>
-  )
-}
-function IconArchive() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M2 7h12" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M1.5 3.5h5l1.5 1.5H14.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-function IconRevenue() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M8 5v6M6 6.5c0-.83.67-1.5 1.5-1.5h1c.83 0 1.5.67 1.5 1.5S9.33 8 8.5 8h-1C6.67 8 6 8.67 6 9.5S6.67 11 7.5 11h1c.83 0 1.5-.67 1.5-1.5"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-function IconSettings() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M8 1.5v1.75M8 12.75V14.5M1.5 8h1.75M12.75 8H14.5M3.4 3.4l1.24 1.24M11.36 11.36l1.24 1.24M12.6 3.4l-1.24 1.24M4.64 11.36l-1.24 1.24"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-function IconUpload() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 2.5v7M5.5 5 8 2.5 10.5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M3 11.5v1.5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-function IconCollections() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="9" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="5.5" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
-const MOBILE_NAV = [
-  { href: '/dashboard', label: 'Channel', Icon: IconChannel, requiresChannel: true },
-  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, requiresChannel: true },
-  { href: '/dashboard/archive', label: 'Discography', Icon: IconArchive, requiresChannel: true },
-  { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload, requiresChannel: true },
-  {
-    href: '/dashboard/collections',
-    label: 'Collections',
-    Icon: IconCollections,
-    requiresChannel: true,
-  },
-  { href: '/dashboard/revenue', label: 'Revenue', Icon: IconRevenue, requiresChannel: true },
-  { href: '/dashboard/settings/account', label: 'Settings', Icon: IconSettings },
-]
-
-const LISTENER_MOBILE_NAV = [
-  { href: '/feed', label: 'Feed', Icon: IconArchive },
-  { href: '/dashboard/messages', label: 'Messages', Icon: IconCollections },
-  { href: '/dashboard/settings/account', label: 'Account', Icon: IconSettings },
+const LISTENER_MOBILE_NAV: DashboardNavDefinition[] = [
+  { href: '/feed', label: 'Feed', icon: 'archive', isRoute: true },
+  { href: '/dashboard/messages', label: 'Messages', icon: 'newsletter', isRoute: true },
+  { href: '/dashboard/settings/account', label: 'Account', icon: 'settings', isRoute: true },
 ]
 
 function IconMore() {
@@ -127,12 +27,12 @@ function IconMore() {
   )
 }
 
-const PRIMARY_HREFS = new Set(MOBILE_NAV.map((item) => item.href))
+const PRIMARY_HREFS = new Set(DASHBOARD_PRIMARY_NAV.map((item) => item.href))
 
 /** Mobile bottom nav for the dashboard (hidden on desktop). The bar itself only
- * has room for a handful of items — everything else in DASHBOARD_NAV (the same
- * list the desktop sidebar renders) surfaces behind "More" so nothing is
- * reachable on desktop but stranded on mobile. */
+ * has room for a handful of items — the same primary destinations as the
+ * desktop sidebar stay visible, while the rest of DASHBOARD_NAV surfaces
+ * behind "More". */
 export function StudioMobileNav({
   hasChannel = true,
   isBoard = false,
@@ -142,6 +42,7 @@ export function StudioMobileNav({
 }) {
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setMoreOpen(false)
@@ -158,44 +59,32 @@ export function StudioMobileNav({
       })
     : []
 
-  const primaryNav = hasChannel
-    ? MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel)
-    : LISTENER_MOBILE_NAV
+  const primaryNav = hasChannel ? DASHBOARD_PRIMARY_NAV : LISTENER_MOBILE_NAV
 
   return (
     <>
-      {moreOpen && (
-        <div
-          className="db-mobile-more-overlay"
-          role="presentation"
-          onClick={() => setMoreOpen(false)}
-        >
-          <div
-            className="db-mobile-more-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="More dashboard sections"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="db-mobile-more-sheet__handle" aria-hidden />
-            <div className="db-mobile-more-sheet__grid">
-              {moreItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="db-mobile-more-sheet__item"
-                  onClick={() => setMoreOpen(false)}
-                >
-                  <SidebarNavIconSvg name={item.icon} />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+      <MobileNavSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        triggerRef={moreButtonRef}
+        ariaLabel="More dashboard sections"
+      >
+        <div className="db-mobile-more-sheet__grid">
+          {moreItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="db-mobile-more-sheet__item"
+              onClick={() => setMoreOpen(false)}
+            >
+              <SidebarNavIconSvg name={item.icon} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
         </div>
-      )}
+      </MobileNavSheet>
       <nav className="db-mobile-nav" aria-label="Mobile navigation">
-        {primaryNav.map(({ href, label, Icon }) => {
+        {primaryNav.map(({ href, label, icon }) => {
           // `/dashboard` is a path prefix of every other dashboard route, so it can only
           // ever match exactly — a startsWith check here would light up Channel everywhere.
           const active =
@@ -208,7 +97,7 @@ export function StudioMobileNav({
               href={href}
               className={`db-mobile-nav-item${active ? ' active' : ''}`}
             >
-              <Icon />
+              <SidebarNavIconSvg name={icon} />
               <span>{label}</span>
             </Link>
           )
@@ -216,6 +105,7 @@ export function StudioMobileNav({
         {moreItems.length > 0 && (
           <button
             type="button"
+            ref={moreButtonRef}
             className={`db-mobile-nav-item db-mobile-nav-item--button${moreOpen ? ' active' : ''}`}
             aria-haspopup="dialog"
             aria-expanded={moreOpen}

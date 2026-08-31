@@ -62,30 +62,25 @@ export function DiscoWidgetManagerPanel({
     setInstalls((prev) => prev.map((i) => (i.id === id ? { ...i, enabled } : i)))
   }
 
-  async function handleMove(id: string, direction: 'up' | 'down') {
-    const index = installs.findIndex((i) => i.id === id)
-    const swapWith = direction === 'up' ? index - 1 : index + 1
-    if (index < 0 || swapWith < 0 || swapWith >= installs.length) return
-
-    const a = installs[index]!
-    const b = installs[swapWith]!
+  async function handleReorder(next: DiscoWidgetInstallView[]) {
+    const previous = installs
+    const reindexed = next.map((install, index) => ({ ...install, position: index }))
+    setInstalls(reindexed)
     setError(null)
-    setPendingId(id)
-    const [resA, resB] = await Promise.all([
-      actions.patch(a.id, { position: b.position }),
-      actions.patch(b.id, { position: a.position }),
-    ])
-    setPendingId(null)
-    if (resA.error || resB.error) {
-      setError(resA.error ?? resB.error ?? 'Failed to reorder')
-      return
-    }
-    setInstalls((prev) => {
-      const next = [...prev]
-      next[index] = { ...a, position: b.position }
-      next[swapWith] = { ...b, position: a.position }
-      return next.sort((x, y) => x.position - y.position)
+    setPendingId('reorder')
+    const moved = reindexed.filter((install) => {
+      const before = previous.find((i) => i.id === install.id)
+      return before && before.position !== install.position
     })
+    const results = await Promise.all(
+      moved.map((install) => actions.patch(install.id, { position: install.position })),
+    )
+    setPendingId(null)
+    const failed = results.find((result) => result.error)
+    if (failed) {
+      setInstalls(previous)
+      setError(failed.error ?? 'Failed to reorder')
+    }
   }
 
   async function handleRemove(id: string) {
@@ -106,7 +101,7 @@ export function DiscoWidgetManagerPanel({
         installs={installs}
         pendingId={pendingId}
         onToggle={(id, enabled) => void handleToggle(id, enabled)}
-        onMove={(id, direction) => void handleMove(id, direction)}
+        onReorder={(next) => void handleReorder(next)}
         onRemove={(id) => void handleRemove(id)}
       />
       <h3 className="studio-mt-lg">Browse the store</h3>

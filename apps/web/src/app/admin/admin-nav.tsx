@@ -97,7 +97,7 @@ export const ADMIN_NAV = [
   },
   {
     href: '/admin/tahti-selects',
-    label: 'Selects',
+    label: 'Tahti Selects',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
         <rect
@@ -194,7 +194,7 @@ export const ADMIN_NAV = [
   },
   {
     href: '/admin/disco-widgets',
-    label: 'Disco-widgets',
+    label: 'Disco widgets',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
         <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
@@ -399,20 +399,104 @@ export const ADMIN_NAV = [
   },
 ] as const
 
+export const ADMIN_MENU_GROUPS = [
+  {
+    href: '/admin/dashboard',
+    label: 'Overview',
+    items: [
+      '/admin/dashboard',
+      '/admin/financial',
+      '/admin/storage',
+      '/admin/settings/vendors',
+      '/admin/status',
+    ],
+  },
+  {
+    href: '/admin/users',
+    label: 'Community',
+    items: [
+      '/admin/users',
+      '/admin/support',
+      '/admin/beta',
+      '/admin/governance',
+      '/admin/grants',
+      '/admin/agm',
+      '/admin/missed-shows',
+    ],
+  },
+  {
+    href: '/admin/radio',
+    label: 'Content',
+    items: [
+      '/admin/radio',
+      '/admin/radio-submissions',
+      '/admin/tahti-selects',
+      '/admin/news',
+      '/admin/top-lists',
+      '/admin/announcements',
+    ],
+  },
+  {
+    href: '/admin/streams',
+    label: 'Manage',
+    items: [
+      '/admin/streams',
+      '/admin/files',
+      '/admin/disco-widgets',
+      '/admin/themes',
+      '/admin/internet-radio',
+      '/admin/content-reports',
+      '/admin/feature-requests',
+    ],
+  },
+] as const
+
+function menuItem(href: string) {
+  return ADMIN_NAV.find((item) => item.href === href)
+}
+
 export function AdminNav() {
   const pathname = usePathname()
+  const activeGroup =
+    ADMIN_MENU_GROUPS.find((group) =>
+      group.items.some((href) => pathname === href || pathname.startsWith(`${href}/`)),
+    ) ?? ADMIN_MENU_GROUPS[0]
+  const submenu = activeGroup.items.map(menuItem).filter(Boolean)
 
   return (
     <nav aria-label="Admin sections">
-      {ADMIN_NAV.map(({ href, label, icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`)
-        return (
-          <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
-            {icon}
-            {label}
-          </Link>
-        )
-      })}
+      <div className="db-nav-primary">
+        {ADMIN_MENU_GROUPS.map((group) => {
+          const item = menuItem(group.href)
+          if (!item) return null
+          return (
+            <Link
+              key={group.href}
+              href={group.href}
+              className={`db-nav-item${group.href === activeGroup.href ? ' active' : ''}`}
+            >
+              {item.icon}
+              {group.label}
+            </Link>
+          )
+        })}
+      </div>
+      <div className="db-nav-submenu" aria-label={`${activeGroup.label} menu`}>
+        {submenu.map((item) => {
+          if (!item) return null
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`db-nav-item${active ? ' active' : ''}`}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          )
+        })}
+      </div>
     </nav>
   )
 }

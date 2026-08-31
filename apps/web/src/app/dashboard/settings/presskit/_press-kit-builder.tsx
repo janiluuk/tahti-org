@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { Button, ButtonIcon, Panel, SortableList } from '@tahti/ui'
+import { Button, ButtonIcon, FileDropzone, Panel, SortableList } from '@tahti/ui'
 import type { PressKitImageItem } from '@tahti/shared'
 import {
   completePressKitImageUpload,
@@ -46,9 +46,7 @@ export function PressKitBuilder({
   const [images, setImages] = useState(initialImages)
   const [galleryPublic, setGalleryPublic] = useState(initialGalleryPublic)
   const [pending, setPending] = useState<PendingUpload[]>([])
-  const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const isEmpty = !bio && images.length === 0
   const zipImages = images.filter((i) => i.includeInZip)
@@ -159,40 +157,13 @@ export function PressKitBuilder({
         headerTight
         description="Drop in high-resolution promo photos. Drag to reorder — the top photo leads the preview and the .zip."
       >
-        <div
-          className={`presskit-dropzone${dragOver ? ' presskit-dropzone--active' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setDragOver(false)
-            if (e.dataTransfer.files?.length) void uploadFiles(e.dataTransfer.files)
-          }}
-          onClick={() => inputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          aria-label="Add photos"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
-          }}
-        >
-          <ButtonIcon name="import" />
-          <span>Drop photos here, or click to browse</span>
-          <span className="presskit-dropzone__hint">JPEG, PNG, or WebP — up to {MAX_IMAGES}</span>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
+        <FileDropzone
+          label="Drop photos here, or click to browse"
+          hint={`JPEG, PNG, or WebP — up to ${MAX_IMAGES}`}
           accept={ACCEPTED_TYPES.join(',')}
           multiple
-          className="studio-hidden-file-input"
-          onChange={(e) => {
-            if (e.target.files?.length) void uploadFiles(e.target.files)
-            e.target.value = ''
-          }}
+          className="presskit-dropzone"
+          onFiles={(files) => void uploadFiles(files)}
         />
 
         {pending.length > 0 && (

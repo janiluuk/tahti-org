@@ -35,7 +35,7 @@ export default async function ChannelPlaylistPage() {
         </div>
         <StudioHeaderActions
           hasChannel
-          isLive={user.channel.state === 'LIVE'}
+          isLive={Boolean(user.channel.goneLiveAt)}
           channelSlug={user.channel.slug}
           showBack
           backHref="/dashboard"

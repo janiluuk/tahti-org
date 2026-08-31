@@ -24,7 +24,7 @@ export default async function MultistreamSettingsPage() {
   ])
 
   const isPaid = me?.tier === 'STUDIO'
-  const channelLive = me?.channel?.state === 'LIVE'
+  const channelLive = Boolean(me?.channel?.goneLiveAt)
 
   return (
     <>

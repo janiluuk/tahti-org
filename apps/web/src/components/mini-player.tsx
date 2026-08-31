@@ -299,6 +299,14 @@ function FullPlayerSheet({
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
   function toggleFullscreen() {
     if (document.fullscreenElement) {
       void document.exitFullscreen()
@@ -389,18 +397,17 @@ function FullPlayerSheet({
           type="button"
           className="full-player__collapse"
           onClick={onClose}
-          aria-label="Collapse player"
+          aria-label="Close player"
+          title="Close player"
         >
-          <svg width="14" height="14" viewBox="0 0 10 10" fill="none" aria-hidden>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
-              d="M2 3.5L5 6.5L8 3.5"
+              d="M5 5l14 14m0-14L5 19"
               stroke="currentColor"
-              strokeWidth="1.6"
+              strokeWidth="2.2"
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
           </svg>
-          Now playing
         </button>
         <button
           type="button"

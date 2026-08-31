@@ -23,6 +23,7 @@ const EFFECT_MODES = CHANNEL_TEXT_LAYER_MODES.filter((m) => m !== 'NONE')
 export default function ChannelTextLayerPanel({
   initial,
   bare = false,
+  hideSave = false,
   onDraftChange,
 }: {
   initial: {
@@ -31,6 +32,8 @@ export default function ChannelTextLayerPanel({
     textLayerAlign: ChannelTextLayerAlignment
   }
   bare?: boolean
+  /** The parent editor owns persistence when this panel is embedded in a larger draft. */
+  hideSave?: boolean
   /** Fires on every edit (before save) so a live preview can mirror the draft. */
   onDraftChange?: (draft: {
     textLayerMode: ChannelTextLayerMode
@@ -140,13 +143,15 @@ export default function ChannelTextLayerPanel({
         </>
       )}
 
-      {error && <p className="studio-notice studio-notice--error">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success">{message}</p>}
+      {!hideSave && error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {!hideSave && message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button onClick={save} disabled={isPending} variant="primary">
-        <ButtonIcon name="save" />
-        {isPending ? 'Saving…' : 'Save text layer'}
-      </Button>
+      {!hideSave && (
+        <Button onClick={save} disabled={isPending} variant="primary">
+          <ButtonIcon name="save" />
+          {isPending ? 'Saving…' : 'Save text layer'}
+        </Button>
+      )}
     </>
   )
 

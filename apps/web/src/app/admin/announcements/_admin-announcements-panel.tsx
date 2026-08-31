@@ -3,9 +3,9 @@
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { brandTokens, ButtonIcon } from '@tahti/ui'
+import { brandTokens, ButtonIcon, FileDropzone } from '@tahti/ui'
 import {
   completeSystemAnnouncementUpload,
   deleteSystemAnnouncement,
@@ -36,7 +36,7 @@ export function AdminAnnouncementsPanel({
   const [error, setError] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   async function onTogglePreview(clip: AdminAnnouncementClipRow) {
     if (previewId === clip.id) {
@@ -95,7 +95,6 @@ export function AdminAnnouncementsPanel({
       setClips((prev) => [clip, ...prev])
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -151,16 +150,18 @@ export function AdminAnnouncementsPanel({
         </button>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
+      <FileDropzone
+        label="Choose an announcement clip"
+        hint="Audio file"
+        selectedText={selectedFile?.name}
         accept="audio/*"
         disabled={uploading}
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) void onFile(file)
+        className="admin-mb-md"
+        onFiles={([file]) => {
+          if (!file) return
+          setSelectedFile(file)
+          void onFile(file).finally(() => setSelectedFile(null))
         }}
-        style={{ marginBottom: '1rem' }}
       />
       {uploading && <p className="admin-stat-sub">Uploading…</p>}
       {error && (

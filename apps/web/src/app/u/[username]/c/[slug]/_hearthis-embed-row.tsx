@@ -3,12 +3,17 @@
 
 'use client'
 
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { HearthisEmbedSurface } from '@/contexts/player-embed-plugins/hearthis-embed-plugin'
 import { useState } from 'react'
-import { hearthisEmbedSrc } from '@tahti/shared'
 
 type Props = {
   title: string
   embedUri: string
+  id?: string
+  durationSec?: number | null
+  thumbUrl?: string | null
+  queue?: PlayerTrack[]
 }
 
 /**
@@ -17,33 +22,38 @@ type Props = {
  * never sees a listener's IP just from browsing the collection page.
  */
 export function HearthisEmbedRow({ title, embedUri }: Props) {
-  const [playing, setPlaying] = useState(false)
+  const { close } = usePlayer()
+  const [embedOpen, setEmbedOpen] = useState(false)
+
+  function play() {
+    // hearthis.at has no transport bridge. Close the global player and expose
+    // the provider's own controls in this row instead.
+    close()
+    setEmbedOpen((open) => !open)
+  }
 
   return (
     <li className="embed-frame-mixcloud">
       <span className="embed-frame-mixcloud__badge">HEARTHIS EMBED</span>
-      {playing ? (
-        <iframe
-          title={title}
-          src={hearthisEmbedSrc(embedUri, { autoplay: true })}
-          width="100%"
-          height="150"
-          style={{ border: 0 }}
-          allow="autoplay"
-          loading="lazy"
-        />
+      {embedOpen ? (
+        <>
+          <HearthisEmbedSurface embedUri={embedUri} title={title} autoplay={false} />
+          <button type="button" className="embed-frame-mixcloud__play" onClick={play}>
+            Close hearthis.at player
+          </button>
+        </>
       ) : (
         <button
           type="button"
           className="embed-frame-mixcloud__play"
-          onClick={() => setPlaying(true)}
+          onClick={play}
           aria-label={`Play ${title} on hearthis.at`}
         >
           <span className="embed-frame-mixcloud__play-icon" aria-hidden>
             ▶
           </span>
           <span className="embed-frame-mixcloud__title">{title}</span>
-          <span className="embed-frame-mixcloud__subline">Listen on hearthis.at</span>
+          <span className="embed-frame-mixcloud__subline">Open hearthis.at player</span>
         </button>
       )}
     </li>

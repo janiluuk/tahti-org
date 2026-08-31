@@ -33,8 +33,10 @@ import {
 
 export type ChannelPreviewDraft = {
   displayName: string
+  username?: string
   avatarUrl: string | null
   countryCode: string | null
+  joinDate?: string | null
   pronouns: string | null
   bio: string
   genres: string[]
@@ -120,45 +122,57 @@ export function ChannelLivePreview({
               />
             )}
 
-          {bannerStyle && <div className="ch-header-banner" style={bannerStyle} aria-hidden />}
-
-          <header className="ch-artist-header">
-            <Row className="ui-row--gap-3 ch-artist-header-row">
-              <AvatarTile size="sm" name={draft.displayName} src={draft.avatarUrl} />
-              <Heading level={2} className="ch-artist-name">
-                {draft.displayName}
-                {draft.pronouns && <span className="prof-pronouns">{draft.pronouns}</span>}
-              </Heading>
-            </Row>
-            {draft.countryCode ? (
-              <Text size="sm" tone="muted" className="ch-artist-flag">
-                {flagEmoji(draft.countryCode)} {countryName(draft.countryCode)}
-              </Text>
-            ) : null}
-            {showMedia && draft.bio && (
-              <Text size="sm" className="ch-artist-bio">
-                {draft.bio}
-              </Text>
-            )}
-            {showMedia && draft.genres.length > 0 && (
-              <div className="prof-tags">
-                {draft.genres.map((tag) => (
-                  <span key={tag} className="prof-tag-chip">
-                    {tag}
+          <div className="ch-header-banner" style={bannerStyle}>
+            <header className="ch-artist-header">
+              <Row className="ui-row--gap-3 ch-artist-header-row">
+                <AvatarTile
+                  size="md"
+                  name={draft.displayName}
+                  src={draft.avatarUrl}
+                  bordered
+                  className="ch-artist-avatar"
+                />
+                <Heading level={1} className="ch-artist-name">
+                  {draft.displayName}
+                  {draft.pronouns && <span className="prof-pronouns">{draft.pronouns}</span>}
+                </Heading>
+              </Row>
+              <Text size="sm" tone="muted" className="ch-artist-meta-row">
+                {draft.username ? `@${draft.username}` : null}
+                <span className="ch-artist-flag">
+                  {draft.countryCode ? flagEmoji(draft.countryCode) : '🌍'}{' '}
+                  {draft.countryCode ? countryName(draft.countryCode) : 'World citizen'}
+                </span>
+                {draft.joinDate && (
+                  <span className="ch-artist-flag">
+                    Member since{' '}
+                    {new Date(draft.joinDate).toLocaleDateString(undefined, {
+                      month: 'short',
+                      year: 'numeric',
+                    })}
                   </span>
-                ))}
-              </div>
-            )}
-            {showMedia && draft.links.length > 0 && (
-              <div className="prof-social-links">
-                {draft.links.map((link) => (
-                  <span key={link.label} className="prof-social-link">
-                    <SocialLinkIcon label={link.label} url={link.url} /> {link.label}
-                  </span>
-                ))}
-              </div>
-            )}
-          </header>
+                )}
+              </Text>
+              {showMedia && draft.genres.length > 0 && (
+                <div className="prof-tags">
+                  {draft.genres.map((tag) => (
+                    <span key={tag} className="prof-tag-chip">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {showMedia && draft.links.length > 0 && (
+                <div className="prof-social-links">
+                  {draft.links.map((link) => (
+                    <span key={link.label} className="prof-social-link">
+                      <SocialLinkIcon label={link.label} url={link.url} /> {link.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </header>
+          </div>
 
           {showMedia && (
             <ChannelTextLayerView

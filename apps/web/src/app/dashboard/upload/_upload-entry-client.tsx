@@ -3,8 +3,9 @@
 
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { FileDropzone } from '@tahti/ui'
 import { prepareNewUpload } from './upload-actions'
 import { setPendingUpload } from './_pending-uploads'
 
@@ -17,8 +18,6 @@ export function UploadEntryClient({
   source?: 'UPLOAD' | 'MIXCLOUD_RESCUE'
 } = {}) {
   const router = useRouter()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [dragOver, setDragOver] = useState(false)
   const [preparing, setPreparing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,44 +59,17 @@ export function UploadEntryClient({
   )
 
   return (
-    <div
-      className={`upload-entry__tile upload-entry__tile--drop${dragOver ? ' upload-entry__tile--dragover' : ''}`}
-      onDragOver={(e) => {
-        e.preventDefault()
-        setDragOver(true)
-      }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={(e) => {
-        e.preventDefault()
-        setDragOver(false)
-        if (e.dataTransfer.files.length > 0) void handleFiles(e.dataTransfer.files)
-      }}
-      onClick={() => !preparing && inputRef.current?.click()}
-      role="button"
-      tabIndex={0}
-      aria-label="Upload audio file"
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="file"
+    <>
+      <FileDropzone
+        label={preparing ? 'Preparing…' : 'Drop a file or click to browse'}
+        hint="FLAC · WAV · AIFF · MP3 · M4A · OGG · max 4 GB"
         accept={ACCEPTED}
         multiple
-        className="upload-entry__file-input"
-        onChange={(e) => {
-          if (e.target.files?.length) void handleFiles(e.target.files)
-        }}
+        disabled={preparing}
+        className="upload-entry__tile upload-entry__tile--drop"
+        onFiles={(files) => void handleFiles(files)}
       />
-      <div className="upload-entry__drop-icon" aria-hidden>
-        {preparing ? '…' : '↑'}
-      </div>
-      <p className="upload-entry__drop-label">
-        {preparing ? 'Preparing…' : 'Drop a file or click to browse'}
-      </p>
-      <p className="upload-entry__drop-formats">FLAC · WAV · AIFF · MP3 · M4A · OGG · max 4 GB</p>
       {error && <p className="upload-entry__drop-error">{error}</p>}
-    </div>
+    </>
   )
 }

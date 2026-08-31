@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Panel } from '@tahti/ui'
 import { RADIO_SUBMISSION_MAX_TRACKS } from '@tahti/shared'
+import { LibraryBrowser } from '@/components/library/library-browser'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -118,36 +119,49 @@ export function RadioSubmitPanel() {
           No ready tracks yet — upload something in Music first.
         </p>
       ) : (
-        <ul className="studio-list studio-mt-md">
-          {tracks.map((t) => {
-            const checked = selected.includes(t.id)
-            const awaiting = pendingIds.has(t.id)
-            const disabled =
-              awaiting || (!checked && selected.length >= RADIO_SUBMISSION_MAX_TRACKS)
-            return (
-              <li key={t.id} className="studio-programme-row">
-                <label className="studio-toggle-row">
-                  <input
-                    type="checkbox"
-                    className="studio-toggle-checkbox"
-                    checked={checked}
-                    disabled={disabled}
-                    onChange={() => toggle(t.id)}
-                  />
-                  <span className="studio-toggle-label">
-                    {t.title}
-                    {t.durationSec != null ? (
-                      <span className="studio-text-muted-sm"> {fmtDuration(t.durationSec)}</span>
-                    ) : null}
-                    {awaiting ? (
-                      <span className="studio-text-muted-sm"> · awaiting review</span>
-                    ) : null}
-                  </span>
-                </label>
-              </li>
-            )
-          })}
-        </ul>
+        <LibraryBrowser
+          items={tracks}
+          getTitle={(track) => track.title}
+          showStatusFilters={false}
+          searchPlaceholder="Search ready tracks…"
+          noMatchMessage="No ready tracks match."
+        >
+          {(visible) => (
+            <ul className="studio-list studio-mt-md">
+              {visible.map((t) => {
+                const checked = selected.includes(t.id)
+                const awaiting = pendingIds.has(t.id)
+                const disabled =
+                  awaiting || (!checked && selected.length >= RADIO_SUBMISSION_MAX_TRACKS)
+                return (
+                  <li key={t.id} className="studio-programme-row">
+                    <label className="studio-toggle-row">
+                      <input
+                        type="checkbox"
+                        className="studio-toggle-checkbox"
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={() => toggle(t.id)}
+                      />
+                      <span className="studio-toggle-label">
+                        {t.title}
+                        {t.durationSec != null ? (
+                          <span className="studio-text-muted-sm">
+                            {' '}
+                            {fmtDuration(t.durationSec)}
+                          </span>
+                        ) : null}
+                        {awaiting ? (
+                          <span className="studio-text-muted-sm"> · awaiting review</span>
+                        ) : null}
+                      </span>
+                    </label>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </LibraryBrowser>
       )}
 
       <label className="studio-field studio-mt-md">

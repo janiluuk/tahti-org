@@ -15,6 +15,12 @@ interface StreamSettings {
   hlsUrl: string
 }
 
+interface StreamOverlay {
+  streamOverlayTitle: string | null
+  streamOverlaySubtitle: string | null
+  streamOverlayCoverUrl: string | null
+}
+
 type BroadcastUsageInfo = {
   unlimited: boolean
   secondsUsed: number
@@ -45,29 +51,37 @@ export default async function BroadcastStudioPage() {
   let broadcastUsage: BroadcastUsageInfo | null = null
   let autoRecordEnabled = true
   let autoPublishBroadcast = true
+  let streamOverlay: StreamOverlay = {
+    streamOverlayTitle: null,
+    streamOverlaySubtitle: null,
+    streamOverlayCoverUrl: null,
+  }
 
   try {
-    const [streamSettingsRes, broadcastUsageRes, autoRecord, autoPublish] = await Promise.all([
-      get('/api/me/stream-settings'),
-      get('/api/me/broadcast-usage'),
-      fetchAutoRecordEnabled(),
-      fetchAutoPublishBroadcast(),
-    ])
+    const [streamSettingsRes, broadcastUsageRes, overlayRes, autoRecord, autoPublish] =
+      await Promise.all([
+        get('/api/me/stream-settings'),
+        get('/api/me/broadcast-usage'),
+        get('/api/me/channel/stream-overlay'),
+        fetchAutoRecordEnabled(),
+        fetchAutoPublishBroadcast(),
+      ])
 
     if (streamSettingsRes.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
     if (broadcastUsageRes.ok) {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
+    if (overlayRes.ok) streamOverlay = (await overlayRes.json()) as StreamOverlay
     autoRecordEnabled = autoRecord
     autoPublishBroadcast = autoPublish
   } catch {
     // render with partial data
   }
 
-  const isLive = user.channel.state === 'LIVE'
+  const isLive = Boolean(user.channel.goneLiveAt)
 
   return (
-    <PageShell size="md">
+    <PageShell size="lg">
       <div className="broadcast-studio-page">
         <header className="studio-page-header broadcast-studio-page__header">
           <div>
@@ -90,11 +104,20 @@ export default async function BroadcastStudioPage() {
           <BroadcastStudio
             channelSlug={user.channel.slug}
             artistUsername={user.username}
-            channelState={user.channel.state}
+            // The fallback rotation reports LIVE at the channel level, but it
+            // is not the artist's broadcast state shown by this studio.
+            channelState={
+              user.channel.goneLiveAt
+                ? 'LIVE'
+                : user.channel.state === 'PREVIEW'
+                  ? 'PREVIEW'
+                  : 'OFFLINE'
+            }
             streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}
             autoRecordEnabled={autoRecordEnabled}
             autoPublishBroadcast={autoPublishBroadcast}
+            streamOverlay={streamOverlay}
           />
         ) : (
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>

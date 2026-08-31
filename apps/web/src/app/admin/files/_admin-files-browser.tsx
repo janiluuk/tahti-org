@@ -20,6 +20,7 @@ import {
   type AdminFilesFacetsResponse,
   type AdminFilesListResponse,
 } from '@tahti/shared'
+import { Alert } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -161,6 +162,7 @@ function FileRow({
   const isCurrent = track?.id === row.id
   const progress = isCurrent && duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function playPreview(e: MouseEvent) {
     e.stopPropagation()
@@ -210,7 +212,7 @@ function FileRow({
       if (res.ok || res.status === 204) onDeleted()
       else {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
-        window.alert(body.error ?? 'Delete failed')
+        setError(body.error ?? 'Delete failed')
       }
     } finally {
       setBusy(false)
@@ -243,6 +245,7 @@ function FileRow({
       aria-valuenow={isCurrent ? Math.round(progress * 100) : undefined}
       aria-label={isCurrent ? `Seek ${row.title}` : undefined}
     >
+      {error && <Alert variant="error">{error}</Alert>}
       <label className="admin-files-row__check" onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" checked={selected} onChange={onToggle} aria-label="Select file" />
       </label>
@@ -320,6 +323,7 @@ export function AdminFilesBrowser() {
   const [presets, setPresets] = useState<FilterPreset[]>([])
   const [activePreset, setActivePreset] = useState('')
   const [presetNameDraft, setPresetNameDraft] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setPresets(readPresets())
@@ -397,7 +401,7 @@ export function AdminFilesBrowser() {
     if (bulkPublic === 'public') body.isPublic = true
     if (bulkPublic === 'private') body.isPublic = false
     if (!bulkGenre && !bulkType && !bulkPublic) {
-      window.alert('Pick a genre, type, or visibility to assign.')
+      setError('Pick a genre, type, or visibility to assign.')
       return
     }
     setBulkBusy(true)
@@ -410,7 +414,7 @@ export function AdminFilesBrowser() {
       })
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string }
-        window.alert(err.error ?? 'Bulk update failed')
+        setError(err.error ?? 'Bulk update failed')
         return
       }
       setBulkGenre('')
@@ -452,7 +456,7 @@ export function AdminFilesBrowser() {
     })
     if (!res.ok) {
       const err = (await res.json().catch(() => ({}))) as { error?: string }
-      window.alert(err.error ?? 'Save failed')
+      setError(err.error ?? 'Save failed')
       return
     }
     setEditId(null)
@@ -484,7 +488,7 @@ export function AdminFilesBrowser() {
   function saveCurrentAsPreset() {
     const name = presetNameDraft.trim()
     if (!name) {
-      window.alert('Enter a preset name.')
+      setError('Enter a preset name.')
       return
     }
     const existing = presets.find((p) => p.name.toLowerCase() === name.toLowerCase())
@@ -527,6 +531,7 @@ export function AdminFilesBrowser() {
 
   return (
     <div className="admin-files">
+      {error && <Alert variant="error">{error}</Alert>}
       <div className="admin-files-search-row">
         <label className="admin-files-search-label" htmlFor="admin-files-search">
           Search

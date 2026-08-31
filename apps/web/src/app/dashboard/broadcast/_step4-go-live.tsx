@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Alert } from '@tahti/ui'
 import { usePlayer } from '@/contexts/player-context'
 import { goLive } from '../actions'
 import { SignalMeters } from './_signal-meters'
@@ -119,6 +120,7 @@ export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; h
   const [preflight, setPreflight] = useState<Preflight | null>(null)
   const [targets, setTargets] = useState<RtmpTarget[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -141,13 +143,14 @@ export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; h
   }, [])
 
   async function handleGoLive() {
+    setError(null)
     setLoading(true)
     try {
       const result = await goLive()
       if (result.ok) {
         router.refresh()
       } else {
-        alert(result.error ?? 'Could not go live')
+        setError(result.error ?? 'Could not go live')
       }
     } finally {
       setLoading(false)
@@ -159,6 +162,7 @@ export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; h
   return (
     <>
       <AudioCheckPanel signal={signal} hlsUrl={hlsUrl} />
+      {error && <Alert variant="error">{error}</Alert>}
       <div className="broadcast-studio__go-live-hero" data-hero>
         <h3 className="broadcast-studio__go-live-title">Ready when you are</h3>
         <p className="broadcast-studio__go-live-sub">

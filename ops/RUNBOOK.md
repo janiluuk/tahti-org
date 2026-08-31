@@ -236,7 +236,8 @@ Public API docs (unauthenticated Scalar + OpenAPI JSON, regenerated on API deplo
 - Spec: `https://api.tahti.live/api/openapi.json`
 - Release artifacts: `openapi.json` (full) + `openapi.public.json` (admin/internal omitted)
 
-Nuclear beta (`beta.tahti.live`) proxies to the same production API, so those URLs apply there too.
+[Tahti Player beta](https://github.com/janiluuk/tahti-player) (`beta.tahti.live`)
+proxies to the same production API, so those URLs apply there too.
 
 ## Mixcloud OAuth (M7 production)
 

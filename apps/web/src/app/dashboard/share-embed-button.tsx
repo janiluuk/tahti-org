@@ -6,6 +6,9 @@
 import { useState } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveAppUrl, resolveChannelUrl } from '@/lib/app-url'
+import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 const SHARE_TARGETS: Array<{
   id: string
@@ -88,13 +91,14 @@ function ShareEmbedModal({
   displayName: string
   onClose: () => void
 }) {
-  const [tab, setTab] = useState<'share' | 'embed'>('share')
+  const [tab, setTab] = useState<'share' | 'embed' | 'rss'>('share')
   const [copied, setCopied] = useState<'link' | 'code' | null>(null)
   const [size, setSize] = useState<EmbedSize>('standard')
   const [showTracklist, setShowTracklist] = useState(true)
   const [transparentBg, setTransparentBg] = useState(false)
 
   const publicUrl = resolveChannelUrl(channelSlug)
+  const rssUrl = channelArchiveRssUrl(API_BASE, channelSlug)
   const { width, height } = EMBED_SIZES[size]
   const embedParams = new URLSearchParams()
   if (!showTracklist) embedParams.set('tracklist', '0')
@@ -145,6 +149,15 @@ function ShareEmbedModal({
           >
             Embed
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'rss'}
+            className={`share-embed-modal__tab${tab === 'rss' ? ' share-embed-modal__tab--active' : ''}`}
+            onClick={() => setTab('rss')}
+          >
+            RSS
+          </button>
         </div>
 
         {tab === 'share' ? (
@@ -177,6 +190,35 @@ function ShareEmbedModal({
                 </a>
               ))}
             </div>
+          </div>
+        ) : tab === 'rss' ? (
+          <div className="share-embed-modal__body">
+            <label className="studio-field--block">
+              <span className="studio-label">RSS feed</span>
+              <div className="studio-row--between studio-mt-xs">
+                <input
+                  type="text"
+                  readOnly
+                  value={rssUrl}
+                  className="studio-input"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button onClick={() => copy(rssUrl, 'link')} variant="secondary" size="sm">
+                  {copied === 'link' ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+            </label>
+            <p className="studio-text-muted-sm studio-mt-sm">
+              Follow this channel’s archive in a podcast or RSS reader.
+            </p>
+            <a
+              href={rssUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ui-btn ui-btn--sm ui-btn--ghost studio-mt-sm"
+            >
+              Open RSS feed ↗
+            </a>
           </div>
         ) : (
           <div className="share-embed-modal__body">

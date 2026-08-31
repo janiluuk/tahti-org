@@ -156,7 +156,11 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       data: { status: 'FAILED' },
     })
     logLine(
-      { trackId, elapsedMs: Date.now() - startedAt, error: err instanceof Error ? err.message : String(err) },
+      {
+        trackId,
+        elapsedMs: Date.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err),
+      },
       `release track ${trackId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
     throw err

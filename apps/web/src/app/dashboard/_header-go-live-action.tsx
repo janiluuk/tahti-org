@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useState } from 'react'
+import { Alert } from '@tahti/ui'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { goLive } from './actions'
@@ -30,6 +31,7 @@ export function HeaderGoLiveAction({
   label: string
 }) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const openStreamManager = useStreamManager()
 
@@ -52,13 +54,14 @@ export function HeaderGoLiveAction({
   }
 
   async function handleClick() {
+    setError(null)
     setLoading(true)
     try {
       const result = await goLive()
       if (result.ok) {
         router.refresh()
       } else {
-        alert(result.error ?? 'Could not go live')
+        setError(result.error ?? 'Could not go live')
       }
     } finally {
       setLoading(false)
@@ -66,16 +69,19 @@ export function HeaderGoLiveAction({
   }
 
   return (
-    <button
-      type="button"
-      className={className}
-      style={{ cursor: 'pointer' }}
-      onClick={() => void handleClick()}
-      disabled={loading}
-      aria-label="Go live"
-    >
-      <span className={dotClassName} aria-hidden style={{ width: 6, height: 6 }} />
-      {loading ? 'Going live…' : label}
-    </button>
+    <>
+      <button
+        type="button"
+        className={className}
+        style={{ cursor: 'pointer' }}
+        onClick={() => void handleClick()}
+        disabled={loading}
+        aria-label="Go live"
+      >
+        <span className={dotClassName} aria-hidden style={{ width: 6, height: 6 }} />
+        {loading ? 'Going live…' : label}
+      </button>
+      {error && <Alert variant="error">{error}</Alert>}
+    </>
   )
 }

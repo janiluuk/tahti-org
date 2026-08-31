@@ -5,18 +5,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { ADMIN_NAV } from './admin-nav'
+import { MobileNavSheet } from '@tahti/ui'
+import { useEffect, useRef, useState } from 'react'
+import { ADMIN_MENU_GROUPS, ADMIN_NAV } from './admin-nav'
 
-// AdminShell's sidebar (.db-sidebar) is hidden outright at ≤768px (same rule
-// that collapses the artist dashboard sidebar — see brand-studio.css's
-// "Mobile bottom nav" block) but, unlike the dashboard, nothing replaced it
-// here: board members on a phone had literally no way to reach any admin
-// section besides the couple of links in the top bar. Mirrors
-// StudioMobileNav's pattern (packages/ui/src/brand/StudioMobileNav.tsx) — a
-// handful of primary sections in an always-visible bottom bar, everything
-// else behind "More".
-const PRIMARY_HREFS = ['/admin/dashboard', '/admin/users', '/admin/financial', '/admin/support']
+// Keep the same four group destinations as the desktop sidebar. The bottom bar
+// exposes the group roots; the grouped More sheet exposes each group's tools.
+const PRIMARY_HREFS = new Set<string>(ADMIN_MENU_GROUPS.map((group) => group.href))
 
 function IconMore() {
   return (
@@ -31,34 +26,38 @@ function IconMore() {
 export function AdminMobileNav() {
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setMoreOpen(false)
   }, [pathname])
 
-  const primary = PRIMARY_HREFS.map((href) => ADMIN_NAV.find((item) => item.href === href)).filter(
-    (item): item is (typeof ADMIN_NAV)[number] => Boolean(item),
-  )
-  const moreItems = ADMIN_NAV.filter((item) => !PRIMARY_HREFS.includes(item.href))
+  const primary = ADMIN_MENU_GROUPS.map((group) =>
+    ADMIN_NAV.find((item) => item.href === group.href),
+  ).filter((item): item is (typeof ADMIN_NAV)[number] => Boolean(item))
+  const moreGroups = ADMIN_MENU_GROUPS.map((group) => ({
+    ...group,
+    items: group.items
+      .map((href) => ADMIN_NAV.find((item) => item.href === href))
+      .filter(
+        (item): item is (typeof ADMIN_NAV)[number] =>
+          item !== undefined && !PRIMARY_HREFS.has(item.href),
+      ),
+  })).filter((group) => group.items.length > 0)
 
   return (
     <>
-      {moreOpen && (
-        <div
-          className="db-mobile-more-overlay"
-          role="presentation"
-          onClick={() => setMoreOpen(false)}
-        >
-          <div
-            className="db-mobile-more-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="More admin sections"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="db-mobile-more-sheet__handle" aria-hidden />
+      <MobileNavSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        triggerRef={moreButtonRef}
+        ariaLabel="More admin sections"
+      >
+        {moreGroups.map((group) => (
+          <section key={group.href} className="db-mobile-more-sheet__group">
+            <h2 className="db-mobile-more-sheet__group-label">{group.label}</h2>
             <div className="db-mobile-more-sheet__grid">
-              {moreItems.map((item) => (
+              {group.items.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -70,9 +69,9 @@ export function AdminMobileNav() {
                 </Link>
               ))}
             </div>
-          </div>
-        </div>
-      )}
+          </section>
+        ))}
+      </MobileNavSheet>
       <nav className="db-mobile-nav" aria-label="Admin mobile navigation">
         {primary.map(({ href, label, icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`)
@@ -85,6 +84,7 @@ export function AdminMobileNav() {
         })}
         <button
           type="button"
+          ref={moreButtonRef}
           className={`db-mobile-nav-item db-mobile-nav-item--button${moreOpen ? ' active' : ''}`}
           aria-haspopup="dialog"
           aria-expanded={moreOpen}

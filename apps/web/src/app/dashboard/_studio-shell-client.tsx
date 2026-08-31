@@ -74,8 +74,11 @@ export function StudioShellClient({
         const me = (await res.json()) as {
           channel?: { state?: string; goneLiveAt?: string | null; nextBroadcastAt?: string | null }
         }
-        setIsLive(Boolean(me.channel) && me.channel?.state !== 'OFFLINE')
-        setIsReallyLive(Boolean(me.channel?.goneLiveAt))
+        // Rotation can report LIVE at the channel level too. Keep the shell's
+        // live signal reserved for an actual artist broadcast.
+        const reallyLive = Boolean(me.channel?.goneLiveAt)
+        setIsLive(reallyLive)
+        setIsReallyLive(reallyLive)
         setGoneLiveAt(me.channel?.goneLiveAt ?? null)
         setNextBroadcastAt(me.channel?.nextBroadcastAt ?? null)
       } catch {

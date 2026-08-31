@@ -19,7 +19,7 @@ export default async function ChannelTextPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const data = await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
 
-  const isLive = user.channel.state === 'LIVE'
+  const isLive = Boolean(user.channel.goneLiveAt)
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">

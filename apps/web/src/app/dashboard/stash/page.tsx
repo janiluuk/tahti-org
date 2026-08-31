@@ -98,7 +98,7 @@ export default async function StashPage() {
         <div className="studio-page-header__actions">
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
-            isLive={user?.channel?.state === 'LIVE'}
+            isLive={Boolean(user?.channel?.goneLiveAt)}
             channelSlug={user?.channel?.slug}
             showBack
           />

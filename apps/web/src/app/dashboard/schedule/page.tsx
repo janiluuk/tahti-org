@@ -49,7 +49,7 @@ export default async function SchedulePage() {
   if (!user) redirect('/login?next=/dashboard/schedule')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
-  const isLive = user.channel.state === 'LIVE'
+  const isLive = Boolean(user.channel.goneLiveAt)
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">

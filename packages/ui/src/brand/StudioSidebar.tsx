@@ -5,7 +5,13 @@
 
 import { usePathname } from 'next/navigation'
 import { Fragment, useEffect, useMemo, useState, type MouseEvent } from 'react'
-import { DASHBOARD_NAV, isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
+import {
+  DASHBOARD_NAV,
+  DASHBOARD_PRIMARY_NAV,
+  DASHBOARD_SUBMENUS,
+  isDashboardNavItemActive,
+  navigateDashboardHash,
+} from './dashboard-nav'
 import type { DashboardNavDefinition } from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
 
@@ -108,6 +114,14 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
 
   const secondaryOpen = secondary.some((item) => isItemActive(pathname, hash, onDashboard, item))
 
+  const activePrimary =
+    DASHBOARD_PRIMARY_NAV.find((item) => {
+      if (item.href === '/dashboard') return pathname === '/dashboard'
+      if (pathname?.startsWith(item.href)) return true
+      return (DASHBOARD_SUBMENUS[item.href] ?? []).some((child) => pathname?.startsWith(child.href))
+    }) ?? DASHBOARD_PRIMARY_NAV[0]
+  const submenu = activePrimary ? (DASHBOARD_SUBMENUS[activePrimary.href] ?? []) : []
+
   function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) {
     if (!itemHash || !onDashboard) return
     e.preventDefault()
@@ -117,14 +131,41 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   return (
     <aside className="db-sidebar">
       <nav aria-label={hasChannel ? 'Dashboard sections' : 'Account'}>
-        <NavRows
-          items={primary}
-          pathname={pathname}
-          hash={hash}
-          onDashboard={onDashboard}
-          onHashNavClick={onHashNavClick}
-        />
-        {secondary.length > 0 && (
+        {hasChannel ? (
+          <>
+            <div className="db-nav-primary">
+              {DASHBOARD_PRIMARY_NAV.map((item) => (
+                <SidebarNavLink
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  active={item.href === activePrimary?.href}
+                  surface="studio"
+                >
+                  {item.label}
+                </SidebarNavLink>
+              ))}
+            </div>
+            <div className="db-nav-submenu" aria-label={`${activePrimary?.label} menu`}>
+              <NavRows
+                items={submenu}
+                pathname={pathname}
+                hash={hash}
+                onDashboard={onDashboard}
+                onHashNavClick={onHashNavClick}
+              />
+            </div>
+          </>
+        ) : (
+          <NavRows
+            items={primary}
+            pathname={pathname}
+            hash={hash}
+            onDashboard={onDashboard}
+            onHashNavClick={onHashNavClick}
+          />
+        )}
+        {hasChannel && secondary.length > 0 && (
           <details className="db-nav-more" {...(secondaryOpen ? { open: true } : {})}>
             <summary className="db-nav-more__summary">More</summary>
             <NavRows

@@ -23,11 +23,9 @@ import { StickyNotificationBanner } from './_sticky-notification-banner'
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getDashboardUser()
   const displayName = user?.displayName
-  // "Online" (top-nav icon color) is broader than "really live": the 24/7
-  // rotation flips Channel.state to LIVE too (see channel-fallback-reconciler),
-  // so state alone can't tell a real broadcast from the archive just looping.
-  // goneLiveAt is only ever set by the actual go-live route.
-  const isOnline = Boolean(user?.channel) && user?.channel?.state !== 'OFFLINE'
+  // The 24/7 fallback rotation also sets Channel.state to LIVE. The dashboard
+  // live indicator must therefore follow the real broadcast marker instead of
+  // state alone, otherwise rotation looks like an artist broadcast.
   const isReallyLive = Boolean(user?.channel?.goneLiveAt)
   const isBoard = user?.isBoard ?? false
   const hasChannel = Boolean(user?.channel)
@@ -40,7 +38,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <StudioShellClient
       displayName={displayName}
-      isLive={isOnline}
+      isLive={isReallyLive}
       isReallyLive={isReallyLive}
       goneLiveAt={user?.channel?.goneLiveAt ?? null}
       nextBroadcastAt={user?.channel?.nextBroadcastAt ?? null}

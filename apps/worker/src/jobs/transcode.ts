@@ -222,7 +222,11 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       data: { status: 'ERROR' },
     })
     logLine(
-      { itemId, elapsedMs: Date.now() - startedAt, error: err instanceof Error ? err.message : String(err) },
+      {
+        itemId,
+        elapsedMs: Date.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err),
+      },
       `archive item ${itemId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
     throw err

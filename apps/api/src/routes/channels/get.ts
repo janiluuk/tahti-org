@@ -42,6 +42,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           textLayerAlign: true,
           videoBackgroundUrl: true,
           headerStyle: true,
+          brandAccentPreset: true,
           colorSchemeJson: true,
           visualPreset: true,
           visualSettingsJson: true,

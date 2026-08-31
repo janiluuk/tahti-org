@@ -1,6 +1,6 @@
-# beta.tahti.live (Nuclear listen POC)
+# beta.tahti.live (Tahti Player listen POC)
 
-Public Nuclear × Tahti listen client. **Does not modify** production `tahti.live` stack services.
+Public [Tahti Player](https://github.com/janiluuk/tahti-player) × Tahti listen client. **Does not modify** production `tahti.live` stack services.
 
 ## Live routing
 
@@ -27,7 +27,7 @@ Session cookie `tahti_session` is host-only. Log in at **https://beta.tahti.live
 
 ## Redeploy
 
-From the Tahti Nuclear fork:
+From the [Tahti Player repository](https://github.com/janiluuk/tahti-player):
 
 ```bash
 cd /home/jani/workspace/tahti-nuclear

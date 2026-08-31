@@ -34,6 +34,7 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
+import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
 import {
   AvatarTile,
   Heading,
@@ -59,6 +60,7 @@ import { ChannelTabs } from './_channel-tabs'
 import { PublicChannelTabs } from './_public-tabs'
 import { ManagePanel, type ManageStats } from './_manage-panel'
 import { cookies } from 'next/headers'
+import type { CSSProperties } from 'react'
 
 function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
   if (!joinDate) return null
@@ -79,6 +81,8 @@ interface ChannelResponse {
   textLayerText: string
   textLayerAlign: ChannelTextLayerAlignment
   videoBackgroundUrl?: string | null
+  headerStyle?: string
+  brandAccentPreset?: string | null
   colorSchemeJson?: string | null
   visualPreset?: string
   visualSettingsJson?: string | null
@@ -105,6 +109,16 @@ interface ChannelResponse {
     artworkUrl: string | null
   } | null
   nowPlayingNext: { title: string; artistName: string; artistUsername: string } | null
+}
+
+function resolveHeaderBannerStyle(channel: ChannelResponse): CSSProperties | undefined {
+  if (channel.headerStyle === 'VIDEO_LOOP') return undefined
+  const preset = BRAND_ACCENT_PRESETS.find((item) => item.id === channel.brandAccentPreset)
+  if (channel.headerStyle === 'SOLID') {
+    const scheme = parseColorScheme(channel.colorSchemeJson)
+    return { background: preset?.accent ?? scheme?.accent ?? DEFAULT_COLOR_SCHEME.accent }
+  }
+  return { background: preset?.gradient ?? BRAND_ACCENT_PRESETS[0]?.gradient }
 }
 
 interface ArchiveItem {
@@ -239,11 +253,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : []
 
   const isOwnerOrAdmin = !!user && (user.username === channel.user.username || user.isBoard)
-  // Stricter than isOwnerOrAdmin on purpose — the Stream manager sub-tab reuses
-  // dashboard panels that act on the *session's own* channel (not the slug in
-  // the URL), so it's only safe for the actual owner, not a board admin
-  // viewing someone else's page. See _live-tab-content.tsx.
-  const isTrueOwner = !!user && user.username === channel.user.username
+  // Manage stats are owner/board-only and power the channel's Manage tab.
   let manageStats: ManageStats | null = null
   if (isOwnerOrAdmin) {
     const sessionCookie = cookies().get('tahti_session')
@@ -264,15 +274,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   // Only show the Live tab when there's actually a stream to show — otherwise
   // it sits in the tab bar permanently empty. Bio (with a latest-releases
   // preview) is the landing tab the rest of the time (see PublicChannelTabs).
-  // The true owner always gets it though, so they can reach Stream manager
-  // (skip/reorder the 24/7 rotation, or check live stats) even while offline.
-  const showLiveTab = Boolean(hlsUrl) || isTrueOwner
+  const showLiveTab = Boolean(hlsUrl)
   // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
   // actually broadcasting — channel.state is still 'LIVE' while they run, but
   // "LIVE NOW" is misleading here; show the currently-rotating track instead.
   const isRotationChannel = slug === TAHTI_RADIO_SLUG || slug === TAHTI_SELECTS_SLUG
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
+  const headerBannerStyle = resolveHeaderBannerStyle(channel)
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
   const profileGenres = socialLinks.genres
     ? socialLinks.genres
@@ -364,71 +373,100 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   style={{ ['--ch-backdrop-image' as string]: channelBackdrop.cssImageUrl }}
                 />
               )}
-              <header className="ch-artist-header">
-                <Row className="ui-row--gap-3 ch-artist-header-row">
-                  <AvatarTile
-                    size="md"
-                    name={channel.user.displayName}
-                    src={channel.user.avatarUrl}
-                    bordered
-                    className="ch-artist-avatar"
-                  />
-                  <div>
-                    <Heading level={1} className="ch-artist-name">
-                      {channel.user.displayName}
-                      {channel.user.pronouns && (
-                        <span className="prof-pronouns">{channel.user.pronouns}</span>
-                      )}
-                    </Heading>
-                    <Text size="sm" tone="muted" className="ch-artist-meta-row">
-                      @{channel.user.username}
-                      <span className="ch-artist-flag">
-                        {channel.user.countryCode
-                          ? countryCodeToFlag(channel.user.countryCode)
-                          : '🌍'}{' '}
-                        {channel.user.countryCode
-                          ? countryName(channel.user.countryCode)
-                          : 'World citizen'}
-                      </span>
-                      {formatJoinDateLabel(channel.user.joinDate) && (
+              <div className="ch-header-banner" style={headerBannerStyle}>
+                <header className="ch-artist-header">
+                  <Row className="ui-row--gap-3 ch-artist-header-row">
+                    <AvatarTile
+                      size="md"
+                      name={channel.user.displayName}
+                      src={channel.user.avatarUrl}
+                      bordered
+                      className="ch-artist-avatar"
+                    />
+                    <div>
+                      <Heading level={1} className="ch-artist-name">
+                        {channel.user.displayName}
+                        {channel.user.pronouns && (
+                          <span className="prof-pronouns">{channel.user.pronouns}</span>
+                        )}
+                      </Heading>
+                      <Text size="sm" tone="muted" className="ch-artist-meta-row">
+                        @{channel.user.username}
                         <span className="ch-artist-flag">
-                          {formatJoinDateLabel(channel.user.joinDate)}
+                          {channel.user.countryCode
+                            ? countryCodeToFlag(channel.user.countryCode)
+                            : '🌍'}{' '}
+                          {channel.user.countryCode
+                            ? countryName(channel.user.countryCode)
+                            : 'World citizen'}
                         </span>
-                      )}
-                    </Text>
-                  </div>
-                </Row>
-                <div className="ch-artist-cta-row">
-                  {user?.username !== channel.user.username && (
-                    <FollowButton artistUsername={channel.user.username} />
-                  )}
-                  {showSupport && (
-                    <Link
-                      href={`/u/${channel.user.username}/subscribe`}
-                      className="ch-artist-sub-btn"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        aria-hidden
+                        {formatJoinDateLabel(channel.user.joinDate) && (
+                          <span className="ch-artist-flag">
+                            {formatJoinDateLabel(channel.user.joinDate)}
+                          </span>
+                        )}
+                      </Text>
+                    </div>
+                  </Row>
+                  <div className="ch-artist-cta-row">
+                    {user?.username !== channel.user.username && (
+                      <FollowButton artistUsername={channel.user.username} />
+                    )}
+                    {showSupport && (
+                      <Link
+                        href={`/u/${channel.user.username}/subscribe`}
+                        className="ch-artist-sub-btn"
                       >
-                        <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
-                      </svg>
-                      Support
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          aria-hidden
+                        >
+                          <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
+                        </svg>
+                        Support
+                      </Link>
+                    )}
+                    <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
+                      Profile
                     </Link>
+                    <GalleryPhotosButton images={channel.slideshowImages} />
+                    <HelpTourButton
+                      steps={getPublicTourSteps(`/c/${params.slug}`)}
+                      className="studio-top-nav__notif-btn"
+                    />
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="prof-tags">
+                      {tags.map((tag) => (
+                        <span key={tag} className="prof-tag-chip">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   )}
-                  <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                    Profile
-                  </Link>
-                  <GalleryPhotosButton images={channel.slideshowImages} />
-                  <HelpTourButton
-                    steps={getPublicTourSteps(`/c/${params.slug}`)}
-                    className="studio-top-nav__notif-btn"
-                  />
-                </div>
-              </header>
+                  {(streamingLinkEntries.length > 0 || socialLinkEntries.length > 0) && (
+                    <div className="prof-social-links">
+                      {[
+                        ...streamingLinkEntries,
+                        ...socialLinkEntries.map(([label, url]) => [label, url] as const),
+                      ].map(([label, url]) => (
+                        <a
+                          key={`${label}-${url}`}
+                          href={url}
+                          rel="noopener noreferrer"
+                          target={url.startsWith('mailto:') ? undefined : '_blank'}
+                          className="prof-social-link"
+                        >
+                          <SocialLinkIcon label={label} url={url} /> {label} ↗
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </header>
+              </div>
 
               {/* Ambient decoration (text layer + slideshow/gallery) — the
                   artist's own configured backdrop, not tied to whether
@@ -458,11 +496,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 live={
                   showLiveTab ? (
                     <LiveTabContent
-                      isOwner={isTrueOwner}
-                      slug={slug}
-                      displayName={channel.user.displayName}
-                      isReallyLive={manageStats?.liveDurationSec != null}
-                      rotationTrackCount={manageStats?.rotationTrackCount ?? 0}
                       listenContent={
                         hlsUrl ? (
                           <>
@@ -891,49 +924,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         </div>
                         <ReleasesGrid releases={releases.slice(0, 4)} />
                       </section>
-                    )}
-                    {tags.length > 0 && (
-                      <div className="prof-tags">
-                        {tags.map((tag) => (
-                          <span key={tag} className="prof-tag-chip">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {streamingLinkEntries.length > 0 && (
-                      <div className="prof-streaming-links">
-                        {streamingLinkEntries.map(([label, url]) => (
-                          <a
-                            key={label}
-                            href={url}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                            className="prof-social-link"
-                          >
-                            <SocialLinkIcon label={label} url={url} /> {label} ↗
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                    {socialLinkEntries.length > 0 && (
-                      <div className="prof-social-links">
-                        {socialLinkEntries.map(([key, url]) => {
-                          const label = key.charAt(0).toUpperCase() + key.slice(1)
-                          const isEmail = url.startsWith('mailto:')
-                          return (
-                            <a
-                              key={key}
-                              href={url}
-                              rel="noopener noreferrer"
-                              target={isEmail ? undefined : '_blank'}
-                              className="prof-social-link"
-                            >
-                              <SocialLinkIcon label={label} url={url} /> {label} ↗
-                            </a>
-                          )
-                        })}
-                      </div>
                     )}
                   </>
                 }

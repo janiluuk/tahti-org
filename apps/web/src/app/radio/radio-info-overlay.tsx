@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { RadioScheduleList } from './radio-schedule-list'
@@ -62,7 +62,7 @@ export function RadioInfoOverlay({
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'schedule' | 'rotation'>('schedule')
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)

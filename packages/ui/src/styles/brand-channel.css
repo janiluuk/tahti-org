@@ -729,14 +729,16 @@
 }
 
 [data-tahti-ui='brand'] .ch-header-banner {
-  height: 80px;
+  min-height: 180px;
   border-radius: var(--radius-md);
   margin-bottom: 1rem;
+  overflow: hidden;
 }
 
 [data-tahti-ui='brand'] .ch-artist-header {
-  margin: 0 0 1.1rem;
+  margin: 0;
   padding: 14px clamp(14px, 2vw, 22px);
+  background: color-mix(in srgb, var(--card) 76%, transparent);
 }
 
 /* Owner/board-only Overview/Manage tab bar on the channel page. */
@@ -4757,13 +4759,22 @@
 
 [data-tahti-ui='brand'] .prof-tabs__bar {
   display: flex;
+  width: 100%;
   gap: 0.25rem;
   padding: 3px;
-  margin-bottom: 1.25rem;
+  margin: 0;
   border-radius: var(--radius);
   background: var(--card);
   border: 1px solid var(--border);
-  width: fit-content;
+}
+
+[data-tahti-ui='brand'] .prof-tabs__panel {
+  margin-top: 0;
+  padding-top: 1rem;
+}
+
+[data-tahti-ui='brand'] .prof-tabs__panel > .prof-section:first-child {
+  margin-top: 0;
 }
 
 [data-tahti-ui='brand'] .ch-live-owner__subtabs {
@@ -6379,6 +6390,43 @@
   color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .prof-collection-embed-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.4rem;
+  color: var(--muted);
+  vertical-align: -1px;
+}
+
+[data-tahti-ui='brand'] .prof-collection-expand {
+  padding: 0.75rem 0.5rem 1rem;
+  margin: -0.25rem -8px 0.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .prof-collection-expand__frame {
+  width: 100%;
+  height: 120px;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+[data-tahti-ui='brand'] .prof-collection-expand__frame--hearthis {
+  height: 150px;
+}
+
+[data-tahti-ui='brand'] .prof-collection-expand__frame--spotify {
+  height: 80px;
+}
+
+[data-tahti-ui='brand'] .prof-collection-expand__actions {
+  margin: 0;
+}
+
 [data-tahti-ui='brand'] .prof-playlist-controls {
   display: flex;
   align-items: center;
@@ -7447,6 +7495,62 @@
 [data-tahti-ui='brand'] .prof-embed-modal__body {
   display: flex;
   flex-direction: column;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__tab {
+  flex: 1;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__tab--active {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__share-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__input {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.65rem;
+  background: var(--card2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__platforms .prof-embed-modal__copy-btn {
+  margin-top: 0;
+  text-decoration: none;
 }
 
 [data-tahti-ui='brand'] .prof-embed-modal__field {

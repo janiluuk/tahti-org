@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { StatusPill } from '@tahti/ui'
+import { Alert, StatusPill } from '@tahti/ui'
 import ChatPanel from '@/app/c/[slug]/chat-panel'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { RTMP_PROVIDERS } from '@/lib/rtmp-provider-help'
@@ -115,6 +115,7 @@ export function StreamManagerPanel({
   const router = useRouter()
   const [stats, setStats] = useState<StreamStats | null>(null)
   const [ending, setEnding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showSignalDown, setShowSignalDown] = useState(false)
 
   useEffect(() => {
@@ -159,6 +160,7 @@ export function StreamManagerPanel({
 
   async function handleEndStream() {
     if (!confirm('End your live broadcast now?')) return
+    setError(null)
     setEnding(true)
     try {
       const result = await endBroadcast()
@@ -166,7 +168,7 @@ export function StreamManagerPanel({
         onEnded?.()
         router.refresh()
       } else {
-        alert(result.error ?? 'Could not end broadcast')
+        setError(result.error ?? 'Could not end broadcast')
       }
     } finally {
       setEnding(false)
@@ -175,6 +177,7 @@ export function StreamManagerPanel({
 
   return (
     <div className="stream-mgr-panel">
+      {error && <Alert variant="error">{error}</Alert>}
       <div className="stream-mgr-panel__header">
         <div>
           <div className="stream-mgr-panel__title">

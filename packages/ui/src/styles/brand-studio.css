@@ -585,6 +585,8 @@
   min-height: calc(100vh - var(--topnav-h));
   max-width: var(--shell-max);
   margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
 
 /* Admin pages stack .admin-view-strip above .studio-top-nav — subtract both. */
@@ -598,6 +600,7 @@
   border-right: 1px solid var(--border);
   position: sticky;
   top: var(--topnav-h);
+  z-index: 2;
   height: calc(100vh - var(--topnav-h));
   overflow-y: auto;
   scrollbar-width: none;
@@ -621,6 +624,23 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+
+[data-tahti-ui='studio'] .db-nav-primary {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+[data-tahti-ui='studio'] .db-nav-submenu {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0 4px 10px;
+  border-top: 1px solid var(--tahti-border);
+}
+
+[data-tahti-ui='studio'] .db-nav-submenu .db-nav-item {
+  font-size: 0.9em;
 }
 
 [data-tahti-ui='studio'] .db-nav-more {
@@ -2311,6 +2331,11 @@
   box-shadow: 0 2px 10px color-mix(in srgb, var(--cyan) 45%, transparent);
 }
 
+[data-tahti-ui='studio'] .prof-collection-source-filters {
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
 [data-tahti-ui='studio'] .archive-list__toolbar-right {
   display: flex;
   align-items: center;
@@ -3372,6 +3397,7 @@
   }
 
   [data-tahti-ui='studio'] .db-mobile-more-sheet {
+    position: relative;
     width: 100%;
     max-height: 70vh;
     overflow-y: auto;
@@ -3391,10 +3417,47 @@
     margin: 0 auto 14px;
   }
 
+  [data-tahti-ui='studio'] .db-mobile-more-sheet__close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card2);
+    color: var(--muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  [data-tahti-ui='studio'] .db-mobile-more-sheet__close:hover,
+  [data-tahti-ui='studio'] .db-mobile-more-sheet__close:focus-visible {
+    color: var(--text);
+    border-color: var(--cyan);
+  }
+
   [data-tahti-ui='studio'] .db-mobile-more-sheet__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+
+  [data-tahti-ui='studio'] .db-mobile-more-sheet__group + .db-mobile-more-sheet__group {
+    margin-top: 16px;
+  }
+
+  [data-tahti-ui='studio'] .db-mobile-more-sheet__group-label {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: var(--text-micro);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 
   [data-tahti-ui='studio'] .db-mobile-more-sheet__item {
@@ -6707,6 +6770,45 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-bottom: 0.35rem;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__strip-shell {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__arrow {
+  flex: 0 0 32px;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__arrow:hover:not(:disabled) {
+  border-color: var(--cyan);
+  color: var(--text);
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__arrow:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__reactive-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__strip-card {
@@ -11133,6 +11235,100 @@
   margin-bottom: 0;
 }
 
+/* Go Live control room: operational surfaces are peers, not nested inside the
+   rotation editor. Keeping these cards in one responsive grid makes the page
+   scannable while preserving a single-column flow on smaller screens. */
+[data-tahti-ui='studio'] .broadcast-studio__control-room {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__section-heading p {
+  margin: var(--space-1) 0 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__control-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__control-grid > * {
+  min-width: 0;
+  height: 100%;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__control-grid .studio-mt-lg {
+  margin-top: 0;
+}
+
+[data-tahti-ui='studio'] .go-live-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .go-live-stats__item {
+  display: flex;
+  min-height: 5.5rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-raised) 72%, transparent);
+}
+
+[data-tahti-ui='studio'] .go-live-stats__label {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='studio'] .go-live-stats__value {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1080px) {
+  [data-tahti-ui='studio'] .broadcast-studio__control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-tahti-ui='studio'] .broadcast-studio__control-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .broadcast-studio__control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tahti-ui='studio'] .broadcast-studio__control-grid > :first-child {
+    grid-column: auto;
+  }
+
+  [data-tahti-ui='studio'] .go-live-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 [data-tahti-ui='studio'] .broadcast-studio .studio-field,
 [data-tahti-ui='studio'] .broadcast-studio .studio-field--block {
   margin-bottom: var(--space-2);
@@ -12494,53 +12690,58 @@
   padding: 4px 0;
   font-size: var(--text-sm);
 }
-[data-tahti-ui='studio'] .db-channel-controls__now {
+[data-tahti-ui='studio'] .db-channel-controls__row {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__now-compact {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-muted);
   font-size: var(--text-sm);
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__track-info {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0 0.4rem;
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__track-title {
-  font-size: var(--text-body);
-  font-weight: 600;
-  color: var(--text);
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__track-artist::before {
-  content: '— ';
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__track-remaining {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__track-remaining::before {
-  content: '· ';
-}
-
-[data-tahti-ui='studio'] .db-channel-controls__switching {
-  color: var(--cyan);
-  font-size: var(--text-xs);
-  font-style: italic;
 }
 
 [data-tahti-ui='studio'] .db-channel-controls__transport {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-5);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__expand-toggle:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__chevron {
+  transition: transform 0.15s ease;
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__chevron--open {
+  transform: rotate(180deg);
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__body {
+  margin-top: var(--space-4);
 }
 
 [data-tahti-ui='studio'] .db-channel-controls__select {
@@ -12559,6 +12760,26 @@
 [data-tahti-ui='studio'] .db-channel-controls__playlist-head span {
   color: var(--text-muted);
   font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .disco-widget-installed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='studio'] .disco-widget-installed-row.is-dragging {
+  border-color: var(--accent);
+  opacity: 0.75;
+}
+
+[data-tahti-ui='studio'] .disco-widget-installed-row__handle {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: grab;
+  font-size: var(--text-lg);
+  flex-shrink: 0;
 }
 
 [data-tahti-ui='studio'] .schedule-rotation-row__handle {

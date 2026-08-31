@@ -83,7 +83,7 @@ export default async function NewsletterComposePage() {
         <div className="studio-page-header__actions">
           <StudioHeaderActions
             hasChannel
-            isLive={user.channel.state === 'LIVE'}
+            isLive={Boolean(user.channel.goneLiveAt)}
             channelSlug={user.channel.slug}
             showBack
           />

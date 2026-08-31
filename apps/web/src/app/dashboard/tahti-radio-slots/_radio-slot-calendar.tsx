@@ -79,6 +79,7 @@ export function RadioSlotCalendar({
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const initialLoad = useRef(true)
 
   const days = useMemo(
     () => Array.from({ length: DAYS_VISIBLE }, (_, i) => addDays(weekStart, i)),
@@ -86,6 +87,13 @@ export function RadioSlotCalendar({
   )
 
   useEffect(() => {
+    // The server already supplied the visible week. Refetching it immediately
+    // on mount causes the calendar to repaint/flicker when the booking surface
+    // opens; only fetch when the artist actually changes weeks.
+    if (initialLoad.current) {
+      initialLoad.current = false
+      return
+    }
     setSelection(null)
     setError(null)
     setMessage(null)

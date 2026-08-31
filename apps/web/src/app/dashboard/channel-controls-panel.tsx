@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { Button, Panel, SortableList } from '@tahti/ui'
 
 const API_URL =
@@ -61,6 +61,39 @@ function TransportIcon({ direction }: { direction: 'previous' | 'next' }) {
   )
 }
 
+function StopResumeIcon({ playing }: { playing: boolean }) {
+  return playing ? (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d="M8 5v14l11-7z" fill="currentColor" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      className={`db-channel-controls__chevron${expanded ? ' db-channel-controls__chevron--open' : ''}`}
+    >
+      <path
+        d="M4 6l4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 type NowPlaying = {
   title: string
   artistName: string
@@ -75,7 +108,15 @@ function formatRemaining(seconds: number): string {
   return `${m}:${String(rem).padStart(2, '0')}`
 }
 
-export function ChannelControlsPanel({ slug }: { slug: string }) {
+export function ChannelControlsPanel({
+  slug,
+  title = 'Channel controls',
+  description = 'Control the 24/7 artist channel without leaving your panel.',
+}: {
+  slug: string
+  title?: string
+  description?: string
+}) {
   const [programme, setProgramme] = useState<Programme | null>(null)
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([])
   const [collection, setCollection] = useState<CollectionDetail | null>(null)
@@ -88,6 +129,8 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
+  const playlistSectionId = useId()
   // Ticks once a second while a track with a known duration is playing, purely
   // to force the remaining-time display to re-render — see remainingSec below.
   const [, setClockTick] = useState(0)
@@ -355,134 +398,148 @@ export function ChannelControlsPanel({ slug }: { slug: string }) {
 
   const editableItems = activePlaylist ? (collection?.items ?? []) : rotationItems
 
+  const statusText = switchingTrack
+    ? 'Switching track…'
+    : nowPlaying
+      ? `${nowPlaying.title} — ${nowPlaying.artistName}${
+          remainingSec != null ? ` · ${formatRemaining(remainingSec)} left` : ''
+        }`
+      : programme?.fallbackEnabled
+        ? 'Channel rotation on'
+        : 'Channel stopped'
+
   return (
-    <Panel
-      title="Channel controls"
-      headerTight
-      description="Control the 24/7 artist channel without leaving your panel."
-    >
-      <div className="db-channel-controls__now">
+    <Panel title={title} headerTight description={description}>
+      <div className="db-channel-controls__row">
         <span className="signal-dot" aria-hidden />
-        <span className="db-channel-controls__status">
-          {programme?.fallbackEnabled ? 'Channel rotation on' : 'Channel stopped'}
+        <span className="db-channel-controls__now-compact" title={statusText}>
+          {statusText}
         </span>
-        {nowPlaying && (
-          <span className="db-channel-controls__track-info">
-            <span className="db-channel-controls__track-title">{nowPlaying.title}</span>
-            <span className="db-channel-controls__track-artist">{nowPlaying.artistName}</span>
-            {remainingSec != null && (
-              <span className="db-channel-controls__track-remaining">
-                {formatRemaining(remainingSec)} left
-              </span>
-            )}
-          </span>
-        )}
-        {switchingTrack && <span className="db-channel-controls__switching">Switching track…</span>}
+        <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Previous track"
+            title="Previous track"
+            disabled={pending !== null}
+            onClick={() => void transport('previous')}
+          >
+            <TransportIcon direction="previous" />
+          </Button>
+          <Button
+            type="button"
+            variant={programme?.fallbackEnabled ? 'danger' : 'primary'}
+            aria-label={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
+            title={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
+            disabled={!programme || pending !== null}
+            onClick={() => void toggleChannel()}
+          >
+            <StopResumeIcon playing={Boolean(programme?.fallbackEnabled)} />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Next track"
+            title="Next track"
+            disabled={pending !== null}
+            onClick={() => void transport('skip')}
+          >
+            <TransportIcon direction="next" />
+          </Button>
+        </div>
+        <button
+          type="button"
+          className="db-channel-controls__expand-toggle"
+          aria-expanded={expanded}
+          aria-controls={playlistSectionId}
+          aria-label={expanded ? 'Hide playlist' : 'Show playlist'}
+          title={expanded ? 'Hide playlist' : 'Show playlist'}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          <ChevronIcon expanded={expanded} />
+        </button>
       </div>
 
-      <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">
-        <Button
-          type="button"
-          variant="secondary"
-          aria-label="Previous track"
-          title="Previous track"
-          disabled={pending !== null}
-          onClick={() => void transport('previous')}
-        >
-          <TransportIcon direction="previous" />
-        </Button>
-        <Button
-          type="button"
-          variant={programme?.fallbackEnabled ? 'danger' : 'primary'}
-          disabled={!programme || pending !== null}
-          onClick={() => void toggleChannel()}
-        >
-          {programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          aria-label="Next track"
-          title="Next track"
-          disabled={pending !== null}
-          onClick={() => void transport('skip')}
-        >
-          <TransportIcon direction="next" />
-        </Button>
-      </div>
+      {expanded && (
+        <div id={playlistSectionId} className="db-channel-controls__body">
+          <label className="studio-label" htmlFor="dashboard-channel-playlist">
+            Channel playlist
+          </label>
+          <select
+            id="dashboard-channel-playlist"
+            className="studio-input db-channel-controls__select"
+            value={activePlaylist?.id ?? ''}
+            disabled={pending !== null}
+            onChange={(event) => void switchPlaylist(event.target.value)}
+          >
+            <option value="">Default rotation ({rotationItems.length})</option>
+            {playlists.map((playlist) => (
+              <option key={playlist.id} value={playlist.id}>
+                {playlist.name} ({playlist.trackCount})
+              </option>
+            ))}
+          </select>
 
-      <label className="studio-label" htmlFor="dashboard-channel-playlist">
-        Channel playlist
-      </label>
-      <select
-        id="dashboard-channel-playlist"
-        className="studio-input db-channel-controls__select"
-        value={activePlaylist?.id ?? ''}
-        disabled={pending !== null}
-        onChange={(event) => void switchPlaylist(event.target.value)}
-      >
-        <option value="">Default rotation ({rotationItems.length})</option>
-        {playlists.map((playlist) => (
-          <option key={playlist.id} value={playlist.id}>
-            {playlist.name} ({playlist.trackCount})
-          </option>
-        ))}
-      </select>
-
-      <div className="db-channel-controls__playlist-head">
-        <strong>{activePlaylist?.name ?? 'Default rotation'}</strong>
-        <a href="/dashboard/channel/playlist" className="studio-link">
-          Edit full playlist
-        </a>
-      </div>
-      {editableItems.length === 0 ? (
-        <p className="studio-text-muted-sm studio-m-0">This playlist has no tracks yet.</p>
-      ) : activePlaylist ? (
-        <SortableList
-          as="ol"
-          className="db-channel-controls__playlist"
-          items={collection?.items ?? []}
-          itemId={(item) => item.id}
-          onReorder={(next) => void reorderCollection(next)}
-          renderItem={(item, index, sortable) => (
-            <li
-              ref={sortable.ref}
-              className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
-            >
-              <button
-                ref={sortable.handleRef}
-                type="button"
-                aria-label={`Reorder ${itemTitle(item)}`}
-              >
-                ⠿
-              </button>
-              <span>{index + 1}</span>
-              <strong>{itemTitle(item)}</strong>
-            </li>
+          <div className="db-channel-controls__playlist-head">
+            <strong>{activePlaylist?.name ?? 'Default rotation'}</strong>
+            <a href="/dashboard/channel/playlist" className="studio-link">
+              Edit full playlist
+            </a>
+          </div>
+          {editableItems.length === 0 ? (
+            <p className="studio-text-muted-sm studio-m-0">This playlist has no tracks yet.</p>
+          ) : activePlaylist ? (
+            <SortableList
+              as="ol"
+              className="db-channel-controls__playlist"
+              items={collection?.items ?? []}
+              itemId={(item) => item.id}
+              onReorder={(next) => void reorderCollection(next)}
+              renderItem={(item, index, sortable) => (
+                <li
+                  ref={sortable.ref}
+                  className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
+                >
+                  <button
+                    ref={sortable.handleRef}
+                    type="button"
+                    aria-label={`Reorder ${itemTitle(item)}`}
+                  >
+                    ⠿
+                  </button>
+                  <span>{index + 1}</span>
+                  <strong>{itemTitle(item)}</strong>
+                </li>
+              )}
+            />
+          ) : (
+            <SortableList
+              as="ol"
+              className="db-channel-controls__playlist"
+              items={rotationItems}
+              itemId={(item) => item.id}
+              onReorder={(next) => void reorderDefault(next)}
+              renderItem={(item, index, sortable) => (
+                <li
+                  ref={sortable.ref}
+                  className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
+                >
+                  <button
+                    ref={sortable.handleRef}
+                    type="button"
+                    aria-label={`Reorder ${item.title}`}
+                  >
+                    ⠿
+                  </button>
+                  <span>{index + 1}</span>
+                  <strong>{item.title}</strong>
+                </li>
+              )}
+            />
           )}
-        />
-      ) : (
-        <SortableList
-          as="ol"
-          className="db-channel-controls__playlist"
-          items={rotationItems}
-          itemId={(item) => item.id}
-          onReorder={(next) => void reorderDefault(next)}
-          renderItem={(item, index, sortable) => (
-            <li
-              ref={sortable.ref}
-              className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
-            >
-              <button ref={sortable.handleRef} type="button" aria-label={`Reorder ${item.title}`}>
-                ⠿
-              </button>
-              <span>{index + 1}</span>
-              <strong>{item.title}</strong>
-            </li>
-          )}
-        />
+          {pending === 'reorder' ? <p className="studio-text-muted-sm">Saving order…</p> : null}
+        </div>
       )}
-      {pending === 'reorder' ? <p className="studio-text-muted-sm">Saving order…</p> : null}
       {message ? <p className="studio-text-success studio-text-sm">{message}</p> : null}
       {error ? <p className="studio-text-error studio-text-sm">{error}</p> : null}
     </Panel>

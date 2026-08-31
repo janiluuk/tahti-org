@@ -666,7 +666,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                     tracks={musicTabTracks}
                     isOwner={isOwner}
                     channelSlug={channel?.slug ?? null}
-                    username={artist.username}
                   />
                 )}
               </section>
@@ -757,7 +756,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                     tracks={tracks}
                     isOwner={isOwner}
                     channelSlug={channel?.slug ?? null}
-                    username={artist.username}
                   />
                 </section>
               )}

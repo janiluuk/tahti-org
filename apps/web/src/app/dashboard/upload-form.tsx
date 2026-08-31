@@ -5,7 +5,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { SidebarNavIconSvg, Button } from '@tahti/ui'
+import { FileDropzone, SidebarNavIconSvg, Button } from '@tahti/ui'
 import { prepareUpload, completeUpload, getArchiveItemStatus } from './actions'
 import {
   ArchiveMetadataFields,
@@ -27,12 +27,12 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
   const [errorMsg, setErrorMsg] = useState('')
   const [showMeta, setShowMeta] = useState(true)
   const [meta, setMeta] = useState(defaultMetadataFormState)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const file = fileRef.current?.files?.[0]
+    const file = selectedFile
     const title = titleRef.current?.value?.trim()
 
     if (!file || !title) return
@@ -96,8 +96,8 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       }
 
       setState('done')
-      if (fileRef.current) fileRef.current.value = ''
       if (titleRef.current) titleRef.current.value = ''
+      setSelectedFile(null)
       setMeta(defaultMetadataFormState())
       onUploaded?.()
       router.refresh()
@@ -130,13 +130,13 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
 
       <div className="studio-field">
         <label className="studio-label">Audio file</label>
-        <input
-          ref={fileRef}
-          type="file"
+        <FileDropzone
+          label="Choose an audio file"
+          hint="WAV, FLAC, MP3, or other audio"
+          selectedText={selectedFile?.name}
           accept="audio/*"
-          required
           disabled={isLoading}
-          className="studio-file-input"
+          onFiles={([file]) => setSelectedFile(file ?? null)}
         />
       </div>
 

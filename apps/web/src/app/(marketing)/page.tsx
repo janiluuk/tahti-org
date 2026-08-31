@@ -135,9 +135,12 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
         </h1>
         <p className="home-sub">A nonprofit platform built to support artists — not algorithms.</p>
         <div className="home-ctas">
-          <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
+          <Link
+            href="https://beta.tahti.live"
+            className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary"
+          >
             <ButtonIcon name="play" />
-            Listen now
+            Try new beta!
           </Link>
           {!user && isSignupOpen() && (
             <Link href="/signup" className="ui-btn ui-btn--secondary ui-btn--lg">

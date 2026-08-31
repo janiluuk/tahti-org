@@ -3,25 +3,25 @@
 
 'use client'
 
-import { Badge, Button } from '@tahti/ui'
+import { Badge, Button, SortableList } from '@tahti/ui'
 import type { DiscoWidgetInstallView } from '@tahti/shared'
 
 export interface DiscoWidgetInstalledListProps {
   installs: DiscoWidgetInstallView[]
   pendingId: string | null
   onToggle: (id: string, enabled: boolean) => void
-  onMove: (id: string, direction: 'up' | 'down') => void
+  onReorder: (next: DiscoWidgetInstallView[]) => void
   onRemove: (id: string) => void
 }
 
 /** Nuclear's "Installed" tab: manage what's already installed — toggle on/off,
- * reorder, remove. Sorted list order (by `position`) is the render order on
- * whatever page these widgets actually show up on. */
+ * drag to reorder, remove. Sorted list order (by `position`) is the render
+ * order on whatever page these widgets actually show up on. */
 export function DiscoWidgetInstalledList({
   installs,
   pendingId,
   onToggle,
-  onMove,
+  onReorder,
   onRemove,
 }: DiscoWidgetInstalledListProps) {
   if (installs.length === 0) {
@@ -29,15 +29,31 @@ export function DiscoWidgetInstalledList({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      {installs.map((install, index) => {
-        const isPending = pendingId === install.id
+    <SortableList
+      as="div"
+      className="disco-widget-installed-list"
+      items={installs}
+      itemId={(install) => install.id}
+      onReorder={onReorder}
+      renderItem={(install, _index, sortable) => {
+        const isPending = pendingId === install.id || pendingId === 'reorder'
         return (
           <div
-            key={install.id}
-            className="ui-panel studio-row studio-row--start"
+            ref={sortable.ref}
+            className={`ui-panel studio-row studio-row--start disco-widget-installed-row${
+              sortable.isDragging ? ' is-dragging' : ''
+            }`}
             style={{ opacity: install.enabled ? 1 : 0.5 }}
           >
+            <button
+              ref={sortable.handleRef}
+              type="button"
+              className="disco-widget-installed-row__handle"
+              aria-label={`Reorder ${install.widget.name}`}
+              disabled={isPending}
+            >
+              ⠿
+            </button>
             <div className="studio-flex-1">
               <div className="studio-row studio-gap-xs">
                 <strong>{install.widget.name}</strong>
@@ -46,26 +62,6 @@ export function DiscoWidgetInstalledList({
               <p className="studio-text-muted-sm studio-mt-xs">{install.widget.description}</p>
             </div>
             <div className="studio-row studio-gap-xs" style={{ flexShrink: 0 }}>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isPending || index === 0}
-                onClick={() => onMove(install.id, 'up')}
-                aria-label="Move up"
-              >
-                ↑
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isPending || index === installs.length - 1}
-                onClick={() => onMove(install.id, 'down')}
-                aria-label="Move down"
-              >
-                ↓
-              </Button>
               <label className="studio-toggle-row">
                 <input
                   type="checkbox"
@@ -88,7 +84,7 @@ export function DiscoWidgetInstalledList({
             </div>
           </div>
         )
-      })}
-    </div>
+      }}
+    />
   )
 }

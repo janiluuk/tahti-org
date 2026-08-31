@@ -46,6 +46,10 @@ interface Props {
   /** Per-preset knobs map. */
   settingsMap?: VisualSettingsMap | null
   onSettingsChange?: (map: VisualSettingsMap) => void
+  /** Optional slideshow audio-reactive control shown alongside visualizer controls. */
+  audioReactive?: boolean
+  onAudioReactiveChange?: (enabled: boolean) => void
+  audioReactiveLabel?: string
   /**
    * Custom color scheme UI — rendered inside the Presets gallery only so the
    * main Design column stays accent + header + visualizer strip.
@@ -271,6 +275,20 @@ function GalleryIcon() {
   )
 }
 
+function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d={direction === 'left' ? 'M9.5 3.5 5 8l4.5 4.5' : 'M6.5 3.5 11 8l-4.5 4.5'}
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function stripPresets(selected: VisualPreset): VisualPreset[] {
   if (VISUAL_PRESET_STRIP.includes(selected)) return [...VISUAL_PRESET_STRIP]
   return [...VISUAL_PRESET_STRIP.slice(0, 3), selected]
@@ -287,6 +305,9 @@ export function VisualPresetPicker({
   settingsMap,
   onSettingsChange,
   colorSchemeEditor,
+  audioReactive,
+  onAudioReactiveChange,
+  audioReactiveLabel = 'Audio-reactive slideshow',
 }: Props) {
   const scheme = colorScheme ?? resolveColorScheme(colorSchemeJson ?? null, paletteJson ?? null)
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -297,9 +318,24 @@ export function VisualPresetPicker({
   const titleId = useId()
   const strip = useMemo(() => stripPresets(value), [value])
 
+  function shiftPreset(direction: -1 | 1) {
+    const index = VISUAL_PRESETS.indexOf(value)
+    const nextIndex = (index + direction + VISUAL_PRESETS.length) % VISUAL_PRESETS.length
+    onChange(VISUAL_PRESETS[nextIndex]!)
+  }
+
   useEffect(() => {
     if (galleryOpen) setFocus(value)
   }, [galleryOpen, value])
+
+  useEffect(() => {
+    if (!galleryOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [galleryOpen])
 
   useEffect(() => {
     if (!galleryOpen) return
@@ -331,50 +367,89 @@ export function VisualPresetPicker({
 
   return (
     <div className="visual-preset-picker">
-      <div className="visual-preset-picker__strip" role="radiogroup" aria-label="Visual preset">
-        {strip.map((preset) => {
-          const active = value === preset
-          return (
-            <button
-              key={preset}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              disabled={disabled}
-              title={VISUAL_PRESET_LABELS[preset]}
-              className={`visual-preset-picker__strip-card${active ? ' visual-preset-picker__strip-card--active' : ''}`}
-              onClick={() => onChange(preset)}
-              onMouseEnter={() => setHoveredStripPreset(preset)}
-              onMouseLeave={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
-              onFocus={() => setHoveredStripPreset(preset)}
-              onBlur={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
-            >
-              <PresetThumb
-                preset={preset}
-                scheme={scheme}
-                live={showPreview && hoveredStripPreset === preset}
-                settings={resolveVisualPresetSettings(settingsMap, preset)}
-                size="sm"
-              />
-              <span className="visual-preset-picker__strip-name">
-                {VISUAL_PRESET_LABELS[preset]}
-              </span>
-            </button>
-          )
-        })}
+      <div className="visual-preset-picker__strip-shell">
         <button
           type="button"
-          className="visual-preset-picker__gallery-btn"
+          className="visual-preset-picker__arrow"
           disabled={disabled}
-          aria-haspopup="dialog"
-          aria-expanded={galleryOpen}
-          title="Browse all visualizer presets"
-          onClick={() => setGalleryOpen(true)}
+          onClick={() => shiftPreset(-1)}
+          aria-label="Previous visualizer"
+          title="Previous visualizer"
         >
-          <GalleryIcon />
-          <span>Presets</span>
+          <ArrowIcon direction="left" />
+        </button>
+        <div className="visual-preset-picker__strip" role="radiogroup" aria-label="Visual preset">
+          {strip.map((preset) => {
+            const active = value === preset
+            return (
+              <button
+                key={preset}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                disabled={disabled}
+                title={VISUAL_PRESET_LABELS[preset]}
+                className={`visual-preset-picker__strip-card${active ? ' visual-preset-picker__strip-card--active' : ''}`}
+                onClick={() => onChange(preset)}
+                onMouseEnter={() => setHoveredStripPreset(preset)}
+                onMouseLeave={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
+                onFocus={() => setHoveredStripPreset(preset)}
+                onBlur={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
+              >
+                <PresetThumb
+                  preset={preset}
+                  scheme={scheme}
+                  live={showPreview && hoveredStripPreset === preset}
+                  settings={resolveVisualPresetSettings(settingsMap, preset)}
+                  size="sm"
+                />
+                <span className="visual-preset-picker__strip-name">
+                  {VISUAL_PRESET_LABELS[preset]}
+                </span>
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            className="visual-preset-picker__gallery-btn"
+            disabled={disabled}
+            aria-haspopup="dialog"
+            aria-expanded={galleryOpen}
+            title="Browse all visualizer presets"
+            onClick={() => {
+              // Set the stage selection before mounting the dialog. This avoids
+              // one frame of the previously-previewed preset when reopening it.
+              setFocus(value)
+              setGalleryOpen(true)
+            }}
+          >
+            <GalleryIcon />
+            <span>Presets</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          className="visual-preset-picker__arrow"
+          disabled={disabled}
+          onClick={() => shiftPreset(1)}
+          aria-label="Next visualizer"
+          title="Next visualizer"
+        >
+          <ArrowIcon direction="right" />
         </button>
       </div>
+
+      {onAudioReactiveChange && audioReactive !== undefined ? (
+        <label className="visual-preset-picker__reactive-toggle">
+          <input
+            type="checkbox"
+            checked={audioReactive}
+            disabled={disabled}
+            onChange={(event) => onAudioReactiveChange(event.target.checked)}
+          />
+          {audioReactiveLabel}
+        </label>
+      ) : null}
 
       {galleryOpen && (
         <div

@@ -274,7 +274,7 @@ export default async function StatsPage({
           </div>
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
-            isLive={user?.channel?.state === 'LIVE'}
+            isLive={Boolean(user?.channel?.goneLiveAt)}
             channelSlug={user?.channel?.slug}
             showBack
             showChannelActions={false}

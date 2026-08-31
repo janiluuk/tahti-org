@@ -114,6 +114,13 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
               ? 'Colors extracted from cover art. Enable override in Presets to customize.'
               : undefined,
           }}
+          audioReactive={
+            imageLines.trim().length > 0 && isWebGLGalleryMode(galleryMode)
+              ? galleryAudioReactive
+              : undefined
+          }
+          onAudioReactiveChange={setGalleryAudioReactive}
+          audioReactiveLabel="Audio-reactive slideshow"
         />
       </div>
 
@@ -154,18 +161,6 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
               </span>
             )}
           </label>
-
-          {isWebGLGalleryMode(galleryMode) && (
-            <label className="studio-label-row studio-text-sm studio-mb-sm">
-              <input
-                type="checkbox"
-                checked={galleryAudioReactive}
-                disabled={isPending}
-                onChange={(e) => setGalleryAudioReactive(e.target.checked)}
-              />
-              Audio-reactive — images pulse with this release&apos;s playback
-            </label>
-          )}
         </>
       )}
 

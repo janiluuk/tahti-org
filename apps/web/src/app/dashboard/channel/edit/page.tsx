@@ -57,9 +57,10 @@ export default async function ChannelDesignPage() {
     pronouns,
     genres,
     links,
+    streamingLinks,
   } = editorData
 
-  const isLive = user.channel.state === 'LIVE'
+  const isLive = Boolean(user.channel.goneLiveAt)
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">
@@ -92,6 +93,7 @@ export default async function ChannelDesignPage() {
         bio={bio}
         genres={genres}
         links={links}
+        streamingLinks={streamingLinks}
         channelGallery={channelGallery}
         channelTextLayer={channelTextLayer}
         channelVisual={channelVisual}

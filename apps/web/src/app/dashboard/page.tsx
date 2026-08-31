@@ -100,7 +100,8 @@ export default async function DashboardPage() {
     createdAt: string
   }> = []
   let liveBroadcastTitle: string | null = null
-  const isOnAir = user.channel?.state === 'LIVE' || user.channel?.state === 'PREVIEW'
+  const isReallyLive = Boolean(user.channel?.goneLiveAt)
+  const isOnAir = isReallyLive || user.channel?.state === 'PREVIEW'
   try {
     const [
       moderatedRes,
@@ -178,7 +179,13 @@ export default async function DashboardPage() {
             : 'Good night'
   const firstName = user.displayName.trim().split(/\s+/)[0] ?? user.displayName
 
-  const headerState = user.channel?.state
+  // 24/7 rotation uses Channel.state=LIVE, but it is not the artist's live
+  // broadcast. Normalize the state used by the dashboard header accordingly.
+  const headerState = isReallyLive
+    ? 'LIVE'
+    : user.channel?.state === 'PREVIEW'
+      ? 'PREVIEW'
+      : 'OFFLINE'
   const headerStatusLabel =
     headerState === 'LIVE'
       ? 'broadcasting live'

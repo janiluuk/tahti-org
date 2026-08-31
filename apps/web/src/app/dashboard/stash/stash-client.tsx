@@ -3,8 +3,8 @@
 
 'use client'
 
-import { useState, useRef } from 'react'
-import { SidebarNavIconSvg, Button } from '@tahti/ui'
+import { useState } from 'react'
+import { Alert, FileDropzone } from '@tahti/ui'
 
 interface StashShare {
   id: string
@@ -69,11 +69,10 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
   const [shareExpiryDays, setShareExpiryDays] = useState(7)
   const [shareGrantee, setShareGrantee] = useState('')
   const [sharePermission, setSharePermission] = useState<'READ' | 'DOWNLOAD'>('DOWNLOAD')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function handleUpload(file: File) {
+    setError(null)
     setUploading(true)
     setUploadProgress(0)
 
@@ -127,17 +126,19 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
       const listRes = await apiFetch('/api/me/stash?limit=100')
       if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
     } catch (err) {
-      alert(`Upload failed: ${String(err)}`)
+      setError(`Upload failed: ${String(err)}`)
     } finally {
       setUploading(false)
       setUploadProgress(0)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
   async function handleDownload(fileId: string, filename: string) {
     const res = await apiFetch(`/api/me/stash/${fileId}/download`)
-    if (!res.ok) return alert('Download failed')
+    if (!res.ok) {
+      setError('Download failed')
+      return
+    }
     const { url } = (await res.json()) as { url: string }
     const a = document.createElement('a')
     a.href = url
@@ -148,7 +149,10 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
   async function handleDelete(fileId: string) {
     if (!confirm('Delete this file from your stash?')) return
     const res = await apiFetch(`/api/me/stash/${fileId}`, { method: 'DELETE' })
-    if (!res.ok) return alert('Delete failed')
+    if (!res.ok) {
+      setError('Delete failed')
+      return
+    }
     setFiles((prev) => prev.filter((f) => f.id !== fileId))
   }
 
@@ -164,7 +168,10 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
-    if (!res.ok) return alert('Share creation failed')
+    if (!res.ok) {
+      setError('Share creation failed')
+      return
+    }
 
     const listRes = await apiFetch('/api/me/stash?limit=100')
     if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
@@ -175,7 +182,10 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
   async function handleRevokeShare(shareId: string) {
     if (!confirm('Revoke this share? They will lose access immediately.')) return
     const res = await apiFetch(`/api/me/stash/shares/${shareId}`, { method: 'DELETE' })
-    if (!res.ok) return alert('Revoke failed')
+    if (!res.ok) {
+      setError('Revoke failed')
+      return
+    }
     const listRes = await apiFetch('/api/me/stash?limit=100')
     if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
   }
@@ -185,24 +195,17 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
   return (
     <div className="stash-wrap">
       <div className="stash-actions">
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="stash-file-input"
-          aria-label="Upload file to stash"
-          onChange={handleUpload}
+        <FileDropzone
+          label="Choose a file for your stash"
+          hint="WIPs, stems, mixes, or project files"
           disabled={uploading}
+          onFiles={([file]) => {
+            if (file) void handleUpload(file)
+          }}
         />
-        <Button
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-          variant="primary"
-          className="stash-upload-btn"
-        >
-          <SidebarNavIconSvg name="upload" />
-          {uploading ? `Uploading… ${uploadProgress}%` : 'Upload file'}
-        </Button>
       </div>
+
+      {error && <Alert variant="error">{error}</Alert>}
 
       {uploading && (
         <div className="stash-progress-wrap">

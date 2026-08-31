@@ -808,6 +808,7 @@ export interface paths {
               textLayerAlign: string
               videoBackgroundUrl: string | null
               headerStyle: string
+              brandAccentPreset?: string | null
               colorSchemeJson: string | null
               colorScheme: {
                 bg: string
@@ -4434,6 +4435,46 @@ export interface paths {
         }
       }
     }
+    trace?: never
+  }
+  '/api/me/rtmp-targets/{id}/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              ok: boolean
+              error?: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/me/rtmp-targets/{id}/stream-key': {
@@ -8838,6 +8879,7 @@ export interface paths {
                 userId: string
                 username: string
                 displayName: string
+                revisionCount: number
               }[]
               nextCursor: string | null
               total: number
@@ -14123,7 +14165,40 @@ export interface paths {
     }
     options?: never
     head?: never
-    patch?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              startAt: string
+              endAt: string
+              note: string | null
+              /** @enum {string} */
+              showType: 'LIVE_SET' | 'TALK'
+              channelSlug: string
+              username: string
+              displayName: string
+              avatarUrl: string | null
+              isMine: boolean
+            }
+          }
+        }
+      }
+    }
     trace?: never
   }
   '/oembed': {
@@ -27300,6 +27375,7 @@ export interface components {
       textLayerAlign: string
       videoBackgroundUrl: string | null
       headerStyle: string
+      brandAccentPreset?: string | null
       colorSchemeJson: string | null
       colorScheme: {
         bg: string

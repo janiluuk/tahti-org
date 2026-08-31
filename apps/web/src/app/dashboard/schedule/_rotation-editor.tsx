@@ -8,6 +8,7 @@ import { MAX_FALLBACK_ITEMS, type FallbackMode } from '@tahti/shared'
 import { Alert, Button, ButtonIcon, Field, Panel, Select, SortableList, Text } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { usePlayer } from '@/contexts/player-context'
+import { LibraryBrowser } from '@/components/library/library-browser'
 import {
   addLibraryTrackToRotation,
   updateChannelProgramme,
@@ -207,7 +208,6 @@ export function RotationEditor({
             >
               <option value="shuffle">Shuffle (fair rotation)</option>
               <option value="ordered">Manual (drag to reorder)</option>
-              <option value="time">By time added</option>
               <option value="name">By name</option>
             </Select>
           </Field>
@@ -356,86 +356,100 @@ export function RotationEditor({
             </div>
 
             {pickerTab === 'archive' ? (
-              availableArchive.length === 0 ? (
-                <Text size="sm" tone="muted">
-                  No more ready archive sets to add. Upload sets from the Archive page.
-                </Text>
-              ) : (
-                <ul className="studio-list">
-                  {availableArchive.map((row) => (
-                    <li key={row.id} className="studio-programme-row">
-                      <span className="studio-programme-label">
-                        <span>{row.title}</span>
-                        {row.durationSec != null && (
-                          <Text size="sm" tone="muted">
-                            {formatDuration(row.durationSec)}
-                          </Text>
-                        )}
-                      </span>
-                      <PreviewPlayButton id={row.id} title={row.title} audioUrl={row.audioUrl} />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={isPending || atCap}
-                        title={atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined}
-                        onClick={() => addArchiveItem(row.id)}
-                      >
-                        + Add
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )
-            ) : library.length === 0 ? (
-              <Text size="sm" tone="muted">
-                No published release tracks yet — publish a release to pull tracks into rotation.
-              </Text>
-            ) : (
-              <ul className="studio-list">
-                {library.map((track) => {
-                  const linkedItem = track.archiveItemId
-                    ? items.find((i) => i.id === track.archiveItemId)
-                    : undefined
-                  const active = linkedItem?.isFallback ?? false
-                  return (
-                    <li key={track.releaseTrackId} className="studio-programme-row">
-                      <span className="studio-programme-label">
-                        <span>
-                          {track.releaseTitle} — {track.trackTitle}
+              <LibraryBrowser
+                items={availableArchive}
+                getTitle={(row) => row.title}
+                showStatusFilters={false}
+                searchPlaceholder="Search archive…"
+                emptyMessage="No more ready archive sets to add. Upload sets from the Discography page."
+                noMatchMessage="No archive sets match."
+              >
+                {(visible) => (
+                  <ul className="studio-list">
+                    {visible.map((row) => (
+                      <li key={row.id} className="studio-programme-row">
+                        <span className="studio-programme-label">
+                          <span>{row.title}</span>
+                          {row.durationSec != null && (
+                            <Text size="sm" tone="muted">
+                              {formatDuration(row.durationSec)}
+                            </Text>
+                          )}
                         </span>
-                        {track.durationSec != null && (
-                          <Text size="sm" tone="muted">
-                            {formatDuration(track.durationSec)}
-                          </Text>
-                        )}
-                      </span>
-                      {active ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => removeFromRotation(linkedItem!.id)}
-                        >
-                          Remove
-                        </Button>
-                      ) : (
+                        <PreviewPlayButton id={row.id} title={row.title} audioUrl={row.audioUrl} />
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
                           disabled={isPending || atCap}
                           title={atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined}
-                          onClick={() => promoteLibraryTrack(track.releaseTrackId)}
+                          onClick={() => addArchiveItem(row.id)}
                         >
-                          {promotingId === track.releaseTrackId ? 'Adding…' : '+ Add'}
+                          + Add
                         </Button>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </LibraryBrowser>
+            ) : (
+              <LibraryBrowser
+                items={library}
+                getTitle={(track) => `${track.releaseTitle} — ${track.trackTitle}`}
+                showStatusFilters={false}
+                searchPlaceholder="Search release tracks…"
+                emptyMessage="No published release tracks yet — publish a release to pull tracks into rotation."
+                noMatchMessage="No release tracks match."
+              >
+                {(visible) => (
+                  <ul className="studio-list">
+                    {visible.map((track) => {
+                      const linkedItem = track.archiveItemId
+                        ? items.find((i) => i.id === track.archiveItemId)
+                        : undefined
+                      const active = linkedItem?.isFallback ?? false
+                      return (
+                        <li key={track.releaseTrackId} className="studio-programme-row">
+                          <span className="studio-programme-label">
+                            <span>
+                              {track.releaseTitle} — {track.trackTitle}
+                            </span>
+                            {track.durationSec != null && (
+                              <Text size="sm" tone="muted">
+                                {formatDuration(track.durationSec)}
+                              </Text>
+                            )}
+                          </span>
+                          {active ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() => removeFromRotation(linkedItem!.id)}
+                            >
+                              Remove
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              disabled={isPending || atCap}
+                              title={
+                                atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined
+                              }
+                              onClick={() => promoteLibraryTrack(track.releaseTrackId)}
+                            >
+                              {promotingId === track.releaseTrackId ? 'Adding…' : '+ Add'}
+                            </Button>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </LibraryBrowser>
             )}
           </Panel>
         </div>

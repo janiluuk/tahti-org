@@ -1,6 +1,6 @@
-# Nuclear web cutover (apps/web → tahti-web)
+# Tahti Player web cutover (apps/web → tahti-web)
 
-Production listen/studio client cutover plan lives in the Nuclear fork:
+Production listen/studio client cutover plan lives in the [Tahti Player repository](https://github.com/janiluuk/tahti-player):
 
 **[`tahti-nuclear/packages/tahti-web/CUTOVER.md`](../../tahti-nuclear/packages/tahti-web/CUTOVER.md)**
 
