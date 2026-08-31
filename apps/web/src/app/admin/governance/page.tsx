@@ -35,6 +35,11 @@ const SECTIONS = [
     desc: 'Agenda builder, open motions, member notice checklist, and minutes links.',
   },
   {
+    href: '/admin/agm#records',
+    title: 'Meetings & documents',
+    desc: 'Persist meeting details and maintain the official governance document archive.',
+  },
+  {
     href: '/admin/governance/audit',
     title: 'Audit log viewer',
     desc: 'Searchable log of privileged actions across the platform.',

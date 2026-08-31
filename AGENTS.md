@@ -53,6 +53,17 @@ connection-test contract and error states; and whether Save and Enable are one
 atomic action or separate actions. Record the decision in both repositories’
 agent instructions when settled.
 
+### Plugin registry extraction guardrail
+
+Begin separating the plugin registry as an independently owned boundary, but do
+not break or migrate the current registry yet. First inventory its callers and
+persisted `plugins.json` format, define a small compatibility interface, and add
+contract tests for install, enable/disable, warnings, updates, and removal.
+The existing registry remains the runtime source of truth until the adapter,
+rollback path, and player-app contract are accepted. Do not change registry
+keys, bootstrap ordering, plugin discovery semantics, or storage location while
+doing this preparation.
+
 ## Quality gates (before claiming done)
 
 ```bash

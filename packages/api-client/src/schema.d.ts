@@ -10487,6 +10487,383 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/v1/governance/meetings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type: 'GENERAL' | 'EXTRAORDINARY_GENERAL' | 'BOARD'
+              /** @enum {string} */
+              state: 'DRAFT' | 'SCHEDULED' | 'HELD' | 'MINUTES_DRAFT' | 'APPROVED' | 'CANCELLED'
+              /** Format: date-time */
+              scheduledAt: string | null
+              location: string | null
+              remoteUrl: string | null
+              /** Format: date-time */
+              noticeAt: string | null
+              agenda?: unknown
+              minutesKey: string | null
+              /** Format: date-time */
+              minutesApprovedAt: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/governance/documents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type:
+                | 'BYLAWS'
+                | 'POLICY'
+                | 'MEETING_NOTICE'
+                | 'MINUTES'
+                | 'ANNUAL_REPORT'
+                | 'FINANCIAL_STATEMENT'
+                | 'AUDIT_REPORT'
+                | 'OTHER'
+              description: string | null
+              version: number
+              /** Format: date-time */
+              effectiveAt: string | null
+              /** Format: date-time */
+              publishedAt: string | null
+              meetingId: string | null
+              downloadUrl: string | null
+              externalUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/governance/meetings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type: 'GENERAL' | 'EXTRAORDINARY_GENERAL' | 'BOARD'
+              /** @enum {string} */
+              state: 'DRAFT' | 'SCHEDULED' | 'HELD' | 'MINUTES_DRAFT' | 'APPROVED' | 'CANCELLED'
+              /** Format: date-time */
+              scheduledAt: string | null
+              location: string | null
+              remoteUrl: string | null
+              /** Format: date-time */
+              noticeAt: string | null
+              agenda?: unknown
+              minutesKey: string | null
+              /** Format: date-time */
+              minutesApprovedAt: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type: 'GENERAL' | 'EXTRAORDINARY_GENERAL' | 'BOARD'
+              /** @enum {string} */
+              state: 'DRAFT' | 'SCHEDULED' | 'HELD' | 'MINUTES_DRAFT' | 'APPROVED' | 'CANCELLED'
+              /** Format: date-time */
+              scheduledAt: string | null
+              location: string | null
+              remoteUrl: string | null
+              /** Format: date-time */
+              noticeAt: string | null
+              agenda?: unknown
+              minutesKey: string | null
+              /** Format: date-time */
+              minutesApprovedAt: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/governance/meetings/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type: 'GENERAL' | 'EXTRAORDINARY_GENERAL' | 'BOARD'
+              /** @enum {string} */
+              state: 'DRAFT' | 'SCHEDULED' | 'HELD' | 'MINUTES_DRAFT' | 'APPROVED' | 'CANCELLED'
+              /** Format: date-time */
+              scheduledAt: string | null
+              location: string | null
+              remoteUrl: string | null
+              /** Format: date-time */
+              noticeAt: string | null
+              agenda?: unknown
+              minutesKey: string | null
+              /** Format: date-time */
+              minutesApprovedAt: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/admin/governance/documents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type:
+                | 'BYLAWS'
+                | 'POLICY'
+                | 'MEETING_NOTICE'
+                | 'MINUTES'
+                | 'ANNUAL_REPORT'
+                | 'FINANCIAL_STATEMENT'
+                | 'AUDIT_REPORT'
+                | 'OTHER'
+              description: string | null
+              version: number
+              /** Format: date-time */
+              effectiveAt: string | null
+              /** Format: date-time */
+              publishedAt: string | null
+              meetingId: string | null
+              downloadUrl: string | null
+              externalUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              /** @enum {string} */
+              type:
+                | 'BYLAWS'
+                | 'POLICY'
+                | 'MEETING_NOTICE'
+                | 'MINUTES'
+                | 'ANNUAL_REPORT'
+                | 'FINANCIAL_STATEMENT'
+                | 'AUDIT_REPORT'
+                | 'OTHER'
+              description: string | null
+              version: number
+              /** Format: date-time */
+              effectiveAt: string | null
+              /** Format: date-time */
+              publishedAt: string | null
+              meetingId: string | null
+              downloadUrl: string | null
+              externalUrl: string | null
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/reports': {
     parameters: {
       query?: never

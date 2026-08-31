@@ -4,6 +4,7 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { AgmAgendaBuilder } from './agm-agenda-builder'
+import { GovernanceRecordsPanel } from './governance-records-panel'
 
 interface Motion {
   id: string
@@ -35,6 +36,17 @@ async function fetchMotions(): Promise<Motion[]> {
   }
 }
 
+async function fetchGovernanceRecords() {
+  const [meetingsRes, documentsRes] = await Promise.all([
+    boardFetch('/api/admin/governance/meetings'),
+    boardFetch('/api/admin/governance/documents'),
+  ])
+  return {
+    meetings: meetingsRes.ok ? await meetingsRes.json() : [],
+    documents: documentsRes.ok ? await documentsRes.json() : [],
+  }
+}
+
 function motionStateBadge(state: string) {
   const styles: Record<string, string> = {
     DRAFT: 'var(--muted)',
@@ -59,6 +71,7 @@ function motionStateBadge(state: string) {
 
 export default async function AdminAgmPage() {
   const motions = await fetchMotions()
+  const records = await fetchGovernanceRecords()
   const openMotions = motions.filter((m) => m.state === 'OPEN' || m.state === 'DRAFT')
 
   return (
@@ -71,8 +84,12 @@ export default async function AdminAgmPage() {
       </p>
 
       <AgmAgendaBuilder />
+      <GovernanceRecordsPanel
+        initialMeetings={records.meetings}
+        initialDocuments={records.documents}
+      />
 
-      <section className="admin-card" style={{ marginTop: '1rem' }}>
+      <section id="records" className="admin-card" style={{ marginTop: '1rem' }}>
         <div
           style={{
             display: 'flex',

@@ -366,6 +366,38 @@ enum MotionState {
   @@schema("governance")
 }
 
+enum GovernanceMeetingType {
+  GENERAL
+  EXTRAORDINARY_GENERAL
+  BOARD
+
+  @@schema("governance")
+}
+
+enum GovernanceMeetingState {
+  DRAFT
+  SCHEDULED
+  HELD
+  MINUTES_DRAFT
+  APPROVED
+  CANCELLED
+
+  @@schema("governance")
+}
+
+enum GovernanceDocumentType {
+  BYLAWS
+  POLICY
+  MEETING_NOTICE
+  MINUTES
+  ANNUAL_REPORT
+  FINANCIAL_STATEMENT
+  AUDIT_REPORT
+  OTHER
+
+  @@schema("governance")
+}
+
 enum VoteChoice {
   YES
   NO
@@ -780,6 +812,8 @@ model User {
   missedLiveShowFlagsResolved MissedLiveShowFlag[] @relation("MissedLiveShowFlagResolvedBy")
   boardResolutionsCreated BoardResolution[]
   annualReportsGenerated  AnnualReport[]
+  governanceMeetingsCreated GovernanceMeeting[]
+  governanceDocumentsCreated GovernanceDocument[]
   socialConnections       SocialConnection[]
   socialPosts             SocialPost[]
   stashFiles              StashFile[]
@@ -2045,6 +2079,52 @@ model Motion {
   comments MotionComment[]
 
   @@index([state, closeAt])
+  @@schema("governance")
+}
+
+model GovernanceMeeting {
+  id          String                 @id @default(cuid())
+  title       String
+  type        GovernanceMeetingType
+  state       GovernanceMeetingState @default(DRAFT)
+  scheduledAt DateTime?
+  location    String?
+  remoteUrl   String?
+  noticeAt    DateTime?
+  agenda      Json?
+  minutesKey  String?
+  minutesApprovedAt DateTime?
+  createdById String
+  createdBy   User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  documents GovernanceDocument[]
+
+  @@index([type, scheduledAt])
+  @@index([state, scheduledAt])
+  @@schema("governance")
+}
+
+model GovernanceDocument {
+  id          String                 @id @default(cuid())
+  title       String
+  type        GovernanceDocumentType
+  description String?
+  storageKey  String?
+  externalUrl String?
+  version     Int                    @default(1)
+  effectiveAt DateTime?
+  publishedAt DateTime?
+  meetingId   String?
+  meeting     GovernanceMeeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([type, publishedAt])
+  @@index([meetingId])
   @@schema("governance")
 }
 

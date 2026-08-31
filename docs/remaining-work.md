@@ -71,6 +71,29 @@ adopted bylaws and legal review.
 | Privacy controls and historical membership eligibility records                                         | `[ ]`  | Dev / Legal | GDPR / bylaws           |
 | Replace governance list N+1 requests with detail loading and cursor pagination                         | `[ ]`  | Dev         | API/UI refactor         |
 
+Additional governance gaps from the audit:
+
+- [ ] Persist official member eligibility periods and privacy-scoped register views.
+- [ ] Add AGM/board attendance, quorum, chair, secretary, and signed approval data.
+- [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
+- [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
+- [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
+- [ ] Add legal association information: Business ID, registered details, contacts, auditor, and signatories.
+- [ ] Add annual filing checklist and approval status for accounts, auditor report, and PRH submission.
+
+## Plugin registry separation (non-breaking preparation)
+
+The plugin registry must become a separately owned product boundary, but the
+current implementation remains in place until the replacement contract is
+proven. Do not move files, change storage keys, or alter plugin bootstrap order
+as part of this preparation.
+
+- [ ] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
+- [ ] Define a minimal registry interface and compatibility adapter around the current implementation.
+- [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior.
+- [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
+- [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
+
 ---
 
 ## Platform backlog still open
