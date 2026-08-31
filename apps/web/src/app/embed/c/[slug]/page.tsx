@@ -60,7 +60,7 @@ export default async function ChannelEmbedPage({
 
       {channel.hlsUrl ? (
         <div className="embed-player-wrap">
-          <HlsPlayer url={channel.hlsUrl} />
+          <HlsPlayer url={channel.hlsUrl} channelSlug={channel.slug} />
         </div>
       ) : (
         <Text as="p" className="embed-offline">

@@ -2291,6 +2291,55 @@ model Download {
   @@schema("engagement")
 }
 
+enum ListenSource {
+  CHANNEL_PAGE
+  TAHTI_RADIO
+  ARTIST_PROFILE
+  DISCOVER
+  LIBRARY
+  EMBED
+  OTHER
+
+  @@schema("engagement")
+}
+
+/// Listen-time tracking, session-based — deliberately relaxed polling, not
+/// per-second/per-minute. The client pings "still listening" every 3 min
+/// (HEARTBEAT_INTERVAL_SEC in apps/web's player-context.tsx); a ping either
+/// extends the caller's current open session (lastSeenAt) or opens a new
+/// one. The `listen-session-close` cron (every 3 min) closes any session
+/// whose lastSeenAt has gone stale (missed its last expected ping), setting
+/// endedAt — so "minutes listened" is always a plain (endedAt - startedAt)
+/// on a closed row, never something the client self-reports. "From where"
+/// is two independent things: `source` (which surface the listener was on)
+/// and `countryCode` (geographic origin, from IP via the same geoip lookup
+/// Download uses). Anonymous listeners are tracked the same way Download
+/// tracks them (fingerprint + IP hash, no account required). Distinct from
+/// ListenEvent above, which is a per-day play-count dedup for top-lists
+/// ranking, not a duration log.
+model ListenSession {
+  id            BigInt       @id @default(autoincrement())
+  channelId     String
+  archiveItemId String?
+  byUserId      String?
+  byFingerprint String
+  byIpHash      String
+  countryCode   String?
+  source        ListenSource
+  startedAt     DateTime     @default(now())
+  lastSeenAt    DateTime     @default(now())
+  endedAt       DateTime?
+
+  @@index([channelId, startedAt])
+  @@index([archiveItemId, startedAt])
+  @@index([byUserId, startedAt])
+  @@index([source, startedAt])
+  @@index([countryCode, startedAt])
+  @@index([byFingerprint, channelId, archiveItemId, endedAt])
+  @@index([endedAt])
+  @@schema("engagement")
+}
+
 // M22: artist follow/subscribe — also unlocks follow-gated downloads, drives the
 // NEW_TRACK/NEW_POST notification fan-out, and (M40) is a real subscribe button
 // on the channel/profile page, not just a download-gate side effect anymore.

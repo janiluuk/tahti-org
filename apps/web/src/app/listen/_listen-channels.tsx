@@ -43,6 +43,7 @@ function usePlayChannelCard(channel: ChannelCard) {
         subtitle: channel.nowPlaying?.artistName ?? `@${channel.user.username}`,
         href: resolveChannelUrl(channel.slug),
         artworkUrl: cardArtworkUrl(channel),
+        channelSlug: channel.slug,
       },
       { autoplay: true },
     )

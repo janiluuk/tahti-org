@@ -13,6 +13,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { usePathname } from 'next/navigation'
 import { isTypingTarget } from '../lib/is-typing-target'
 import type { PlayerEmbedSource } from './player-embed-plugins/hearthis-embed-plugin'
 
@@ -115,6 +116,10 @@ export interface PlayerTrack {
   /** A 'live'-kind stream that's actually playing pre-recorded rotation right
    * now, nobody's on air — mini-player shows "REPLAY" instead of "LIVE". */
   isReplay?: boolean
+  /** Set on 'live' tracks so the listen-heartbeat effect can identify which
+   * channel to attribute minutes to — 'archive' tracks don't need this, the
+   * server resolves the channel from the archive item id instead. */
+  channelSlug?: string
   /** Set when this track has no locally-hosted audio at all — playback lives
    * entirely inside a third-party embed widget (see player-embed-plugins/).
    * `url` is meaningless when this is set (leave it ''); load() skips every
@@ -142,6 +147,33 @@ interface PlayerState {
 const VOLUME_STORAGE_KEY = 'tahti-player-volume'
 const MUTED_STORAGE_KEY = 'tahti-player-muted'
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+
+/** Seconds between listen-heartbeat "still listening" pings while actively
+ * playing — the server tracks sessions (start/last-seen/end), not seconds
+ * self-reported by the client, so this only needs to be frequent enough
+ * that the listen-session-close cron doesn't close a session that's
+ * actually still going. Deliberately relaxed (not per-second, not even
+ * per-minute) — session start/end boundaries land within a few minutes of
+ * reality, which is plenty for minutes-listened analytics, in exchange for
+ * a small fraction of the request volume. See STALE_AFTER_MS in
+ * packages/db/src/listen-sessions.ts, which must stay comfortably above
+ * this. */
+const HEARTBEAT_INTERVAL_SEC = 180
+
+/** Classifies which surface a heartbeat tick came from, best-effort from
+ * the current route — not meant to be exhaustive, `OTHER` is a fine
+ * fallback for routes that don't map cleanly onto the shared
+ * ListenSource enum (see @tahti/shared's dto/listen.ts). */
+function classifyListenSource(pathname: string | null): string {
+  if (!pathname) return 'OTHER'
+  if (pathname.startsWith('/embed/')) return 'EMBED'
+  if (pathname === '/radio' || pathname.startsWith('/radio/')) return 'TAHTI_RADIO'
+  if (/\/c\/[^/]+/.test(pathname)) return 'CHANNEL_PAGE'
+  if (pathname.startsWith('/u/')) return 'ARTIST_PROFILE'
+  if (pathname.startsWith('/listen') || pathname.startsWith('/feed')) return 'DISCOVER'
+  if (pathname.startsWith('/dashboard/')) return 'LIBRARY'
+  return 'OTHER'
+}
 
 function readStoredVolume(): number {
   if (typeof window === 'undefined') return 1
@@ -234,6 +266,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   /** Archive track ids a listen-event has already been recorded for this
    * session, so the threshold check below only ever fires once per track. */
   const recordedListenRef = useRef<Set<string>>(new Set())
+  const pathname = usePathname()
   const [state, setState] = useState<PlayerState>({
     track: null,
     playing: false,
@@ -772,6 +805,36 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ archiveItemId: track.id }),
     }).catch(() => undefined)
   }, [state.track, state.currentTime, state.duration])
+
+  // Listen-time tracking: while actively playing, pings "still listening"
+  // once a minute — no duration self-reported, the server tracks sessions
+  // (start/last-seen/end) and closes ones that stop pinging. "From where"
+  // is both `source` (current page, best-effort classified) and geography
+  // (resolved server-side from IP). Skips 'live' tracks with no
+  // channelSlug (artist-only preview surfaces like the broadcast studio or
+  // green room don't set it — not real listener minutes).
+  useEffect(() => {
+    const track = state.track
+    if (!track || !state.playing) return
+    if (track.kind === 'live' && !track.channelSlug) return
+
+    const source = classifyListenSource(pathname)
+    const ping = () => {
+      const body: Record<string, unknown> = { source }
+      if (track.kind === 'archive') body.archiveItemId = track.id
+      else body.channelSlug = track.channelSlug
+      fetch(`${API_URL}/api/v1/listen/heartbeat`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).catch(() => undefined)
+    }
+
+    ping()
+    const interval = window.setInterval(ping, HEARTBEAT_INTERVAL_SEC * 1000)
+    return () => window.clearInterval(interval)
+  }, [state.track, state.playing, pathname])
 
   /** Appends to the queue — starts one from the current track if none exists yet. */
   const addToQueue = useCallback(

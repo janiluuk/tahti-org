@@ -9,6 +9,7 @@ import { collectBackupMetrics, renderBackupMetricLines } from '../lib/backup-met
 import { renderAcrcloudMetricLines } from '../lib/acrcloud-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
 import { renderHttpMetricLines } from '../lib/http-metrics.js'
+import { collectListenMetrics, renderListenMetricLines } from '../lib/listen-metrics.js'
 import { collectPlatformMetrics, renderPlatformMetricLines } from '../lib/platform-metrics.js'
 import { renderStripeWebhookMetricLines } from '../lib/stripe-webhook-metrics.js'
 
@@ -32,6 +33,7 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
       const checks = await runDependencyChecks(fastify.prisma)
       const platform = await collectPlatformMetrics(fastify.prisma)
       const backup = await collectBackupMetrics()
+      const listen = await collectListenMetrics(fastify.prisma)
       const lines = [
         renderPrometheusMetrics(checks, Math.floor(process.uptime())).trimEnd(),
         ...renderHttpMetricLines(),
@@ -39,6 +41,7 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
         ...renderBackupMetricLines(backup),
         ...renderAcrcloudMetricLines(),
         ...renderStripeWebhookMetricLines(),
+        ...renderListenMetricLines(listen),
       ]
       return reply
         .header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')

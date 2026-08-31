@@ -3,6 +3,7 @@
 
 'use client'
 
+import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { usePlayer } from '@/contexts/player-context'
 
 export function TahtiRadioCard({
@@ -35,6 +36,7 @@ export function TahtiRadioCard({
         href: '/radio',
         artworkUrl,
         isReplay: true,
+        channelSlug: TAHTI_RADIO_SLUG,
       },
       { autoplay: true },
     )

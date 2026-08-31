@@ -239,6 +239,7 @@ export function LivePlayerSection({
           subtitle={subtitle ?? `@${slug}`}
           subtitleHref={subtitleHref}
           href={resolveChannelUrl(slug)}
+          channelSlug={slug}
           artworkUrl={artworkUrl}
           isReplay={isReplay}
           nextUpLabel={nextUpLabel}

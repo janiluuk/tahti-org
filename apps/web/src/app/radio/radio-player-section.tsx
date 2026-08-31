@@ -265,6 +265,7 @@ export function RadioPlayerSection({
           title={title}
           subtitle={subtitle}
           subtitleHref={subtitleHref}
+          channelSlug={TAHTI_RADIO_SLUG}
           artworkUrl={artworkUrl}
           liveElapsedSec={liveElapsedSec}
           isReplay={!liveSlot}

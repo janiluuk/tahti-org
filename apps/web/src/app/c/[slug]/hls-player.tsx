@@ -11,6 +11,7 @@ export default function HlsPlayer({
   title,
   subtitle,
   href,
+  channelSlug,
   artworkUrl,
   liveElapsedSec,
   isReplay = false,
@@ -29,6 +30,8 @@ export default function HlsPlayer({
   /** When set, the subtitle (artist name) links here — e.g. a rotation
    * channel's currently-playing track's real artist profile. */
   subtitleHref?: string
+  /** Attributes listen-heartbeat minutes to the right channel. */
+  channelSlug?: string
   artworkUrl?: string | null
   /** Wall-clock seconds since a live broadcast began — shown instead of "LIVE".
    * Leave unset for continuous/rotation playback (no meaningful elapsed time). */
@@ -77,6 +80,7 @@ export default function HlsPlayer({
           href,
           artworkUrl,
           isReplay,
+          channelSlug,
         },
         { autoplay: true },
       )

@@ -39,6 +39,7 @@ export {
   notifyBoardOfMissedLiveShow,
   processScheduledPostNotifications,
 } from './notifications.js'
+export { closeStaleListenSessions } from './listen-sessions.js'
 export {
   encryptIntegrationFields,
   decryptIntegrationFields,

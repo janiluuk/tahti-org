@@ -24,6 +24,7 @@ BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.t
 | `membership-renewal-reminder` | daily 07:00 | M1 |
 | `mention-digest` | daily 18:00 | M15 — daily @-mention notification digest |
 | `post-publish-notify` | every minute | M34 — notify followers when a scheduled post crosses its `publishAt` |
+| `listen-session-close` | every 3 min | Close `ListenSession`s that stopped pinging (listen-time tracking) |
 | `membership-lapse` | daily 08:00 | M1 |
 | `revelator-royalty-sync` | 04:00 on day 5 each month | M7 — pull Revelator royalty reports for the prior month |
 | `sweep-editor-peaks-backfill` | daily 03:00 | PERF-04 — backfill `editorPeaks` for READY archives missing pyramid data |

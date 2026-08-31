@@ -144,6 +144,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'M34: notify followers when a scheduled post crosses its publishAt',
   },
   {
+    name: 'listen-session-close',
+    pattern: '*/3 * * * *',
+    jobId: 'listen-session-close-cron',
+    description: 'Close ListenSessions that stopped pinging (listen-time tracking)',
+  },
+  {
     name: 'membership-lapse',
     pattern: '0 8 * * *',
     jobId: 'membership-lapse-cron',
