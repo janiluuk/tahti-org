@@ -82,7 +82,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
             audioUrl: track.audioUrl,
             subtitle: data.artist.displayName,
             artworkUrl: data.release.artworkUrl,
-            href: `/tracks/${track.archiveItemId}`,
+            href: track.archiveItemId ? `/tracks/${track.archiveItemId}` : undefined,
           },
         ]
       : [],
