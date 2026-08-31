@@ -33,7 +33,7 @@ listed for completeness but are not coding tasks.
 | MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test        |  `[ ]`  | Dev         | roadmap Phase 3 test matrix      |
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                        |  `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                |  `[~]`  | Dev         | future-improvements              |
-| Playwright smoke in CI against Docker stack (nightly)                                                                  |  `[ ]`  | Dev         | future-improvements §Testing     |
+| Playwright smoke in CI against Docker stack (nightly)                                                                  |  `[x]`  | Dev         | future-improvements §Testing     |
 | `user-journeys-e2e` required in branch protection                                                                      |  `[ ]`  | Dev         | future-improvements              |
 
 ---

@@ -24,6 +24,9 @@ echo "── Stack smoke: web probes ──"
 curl -sf "http://localhost:${WEB_PORT}/" | grep -qi tahti
 curl -sf "http://localhost:${WEB_PORT}/transparency" | grep -qi transparency
 
+echo "── Stack smoke: browser probes ──"
+WEB_BASE_URL="http://127.0.0.1:${WEB_PORT}" node "${ROOT}/tests/e2e/web-smoke.mjs"
+
 echo "── Stack smoke: PgBouncer port ──"
 if command -v pg_isready >/dev/null 2>&1; then
   pg_isready -h 127.0.0.1 -p "${PGBOUNCER_PORT:-16432}" -U tahti
