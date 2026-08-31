@@ -1,4 +1,4 @@
-# Tahti
+# Tahti.live 
 
 A nonprofit broadcasting platform owned and governed by its artist members.
 
