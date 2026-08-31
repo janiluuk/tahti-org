@@ -5093,10 +5093,33 @@
 }
 
 .track-player-page {
+  position: relative;
+  isolation: isolate;
   max-width: 760px;
   margin: 0 auto;
   padding: 2rem 1rem 5rem;
   color: var(--text);
+}
+
+.track-player-page--backdrop::before {
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 74%, transparent), var(--bg)),
+    var(--track-player-bg) center / cover no-repeat;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.track-player-page > .ch-video-backdrop,
+.track-player-page > [class*='gallery'] {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 .track-player-page__back,

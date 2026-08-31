@@ -4,8 +4,14 @@
 'use client'
 
 import Link from 'next/link'
+import type { ChannelGalleryMode } from '@tahti/shared'
 import { usePlayer } from '@/contexts/player-context'
 import { ArchiveWaveform } from '@/components/archive-waveform'
+import { ChannelGalleryView } from '@/components/gallery'
+import {
+  ArchiveVideoBackdrop,
+  resolveArchiveBackground,
+} from '@/app/c/[slug]/archive-item-backdrop'
 
 export interface TrackPlayerData {
   id: string
@@ -16,6 +22,9 @@ export interface TrackPlayerData {
   durationSec: number | null
   audioUrl: string | null
   bannerUrl: string | null
+  backgroundUrl: string | null
+  slideshowUrls: string[]
+  galleryMode: ChannelGalleryMode | null
   peaks: number[] | null
   description: string | null
   commentary: string | null
@@ -26,6 +35,8 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
   const { track: playerTrack, playing, load, togglePlay, currentTime, duration, seek } = usePlayer()
   const isCurrent = playerTrack?.id === track.id
   const progress = isCurrent && duration > 0 ? currentTime / duration : 0
+  const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(track.backgroundUrl)
+  const hasGallery = track.galleryMode !== null && track.slideshowUrls.length > 0
 
   async function toggle() {
     if (!track.audioUrl) return
@@ -47,7 +58,12 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
   }
 
   return (
-    <main className="track-player-page">
+    <main
+      className={`track-player-page${cssImageUrl ? ' track-player-page--backdrop' : ''}`}
+      style={cssImageUrl ? { ['--track-player-bg' as string]: cssImageUrl } : undefined}
+    >
+      {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
+      {hasGallery && <ChannelGalleryView mode={track.galleryMode!} images={track.slideshowUrls} />}
       <Link href={`/c/${track.channelSlug}`} className="track-player-page__back">
         ← {track.channel.displayName}
       </Link>
