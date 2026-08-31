@@ -493,7 +493,8 @@ research done on whether their widgets support real control either).
   queued early, never reached; needs an approved fallback asset or a decision
   to standardize on the existing gradient placeholder.
 - The profile API now exposes the channel visual preset, gallery mode, and
-  slideshow images; the remaining work is the artist-profile visualizer/header
-  and conditional Gallery tab UI.
+  slideshow images; artist profiles now render the configured visualizer over
+  the cover and show a conditional Gallery tab when a channel has gallery
+  images.
 - Collapsing the channel page's five tabs into one always-visible player
   card — proposed, not selected by the user.

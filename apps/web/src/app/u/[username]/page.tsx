@@ -29,10 +29,12 @@ import { resolveChannelUrl } from '@/lib/app-url'
 import type { PublicPressKitImage, DiscoWidgetRenderItem } from '@tahti/shared'
 import { DiscoWidgetFrame } from '@/components/disco-widgets/disco-widget-frame'
 import { ProfileTabs } from './_profile-tabs'
+import { ProfileCoverVisual } from './_profile-cover-visual'
 import { ProfileFeed } from './_profile-feed'
 import { TracksTab } from './_tracks-tab'
 import { ProfileBackgroundMusic } from './_profile-background-music'
 import { humanizeFutureDate } from './profile-upcoming'
+import { ChannelGalleryView } from '@/components/gallery'
 
 export const revalidate = 60
 
@@ -397,6 +399,10 @@ export default async function ArtistProfilePage({ params }: { params: { username
     djMixCollections.length > 0 ||
     playlistCollections.length > 0 ||
     otherCollections.length > 0
+  const hasProfileGallery =
+    channel?.galleryMode &&
+    channel.galleryMode !== 'NONE' &&
+    (channel.slideshowImages?.length ?? 0) > 0
   const nextEvent = events[0]
   const nextShow = upcomingShows[0]
   const showIsNext =
@@ -443,15 +449,17 @@ export default async function ArtistProfilePage({ params }: { params: { username
         logoutAction={logout}
         user={user}
         cover={
-          <ProfileCover
-            displayName={artist.displayName}
-            avatarUrl={artist.avatarUrl}
-            avatarPosterUrl={artist.avatarPosterUrl}
-            themeBackground={themeBackground}
-            logoUrl={logoUrl}
-            logoOnCover={logoShowsOnCover(logoPlacement)}
-            logoOnAvatar={logoShowsOnAvatar(logoPlacement)}
-          />
+          <ProfileCoverVisual preset={channel?.visualPreset}>
+            <ProfileCover
+              displayName={artist.displayName}
+              avatarUrl={artist.avatarUrl}
+              avatarPosterUrl={artist.avatarPosterUrl}
+              themeBackground={themeBackground}
+              logoUrl={logoUrl}
+              logoOnCover={logoShowsOnCover(logoPlacement)}
+              logoOnAvatar={logoShowsOnAvatar(logoPlacement)}
+            />
+          </ProfileCoverVisual>
         }
         hero={
           <ProfileHero
@@ -741,6 +749,17 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 </section>
               )}
             </>
+          }
+          gallery={
+            hasProfileGallery ? (
+              <section className="prof-section prof-profile-gallery">
+                <div className="prof-sec-label">Gallery</div>
+                <ChannelGalleryView
+                  mode={channel.galleryMode as Parameters<typeof ChannelGalleryView>[0]['mode']}
+                  images={channel.slideshowImages ?? []}
+                />
+              </section>
+            ) : undefined
           }
         />
       </ProfilePageLayout>

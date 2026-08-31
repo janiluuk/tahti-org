@@ -7,9 +7,9 @@ import { useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { ProfileTabSwitchProvider } from './_profile-tab-context'
 
-type Tab = 'music' | 'releases'
+type Tab = 'music' | 'releases' | 'gallery'
 
-const TABS: Array<{ id: Tab; label: string }> = [
+const BASE_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'music', label: 'Music' },
   { id: 'releases', label: 'Releases' },
 ]
@@ -26,10 +26,25 @@ const HELP_STEPS: HelpSpotlightStep[] = [
     description:
       'Every release, DJ mix, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
   },
+  {
+    id: 'gallery',
+    label: 'Gallery',
+    description: 'A visual gallery from the artist.',
+  },
 ]
 
-export function ProfileTabs({ music, releases }: { music: ReactNode; releases: ReactNode }) {
+export function ProfileTabs({
+  music,
+  releases,
+  gallery,
+}: {
+  music: ReactNode
+  releases: ReactNode
+  gallery?: ReactNode
+}) {
   const [active, setActiveState] = useState<Tab>('music')
+  const tabs = gallery ? BASE_TABS : BASE_TABS.filter((tab) => tab.id !== 'gallery')
+  const helpSteps = gallery ? HELP_STEPS : HELP_STEPS.filter((step) => step.id !== 'gallery')
 
   function setActive(tab: Tab) {
     setActiveState(tab)
@@ -38,19 +53,20 @@ export function ProfileTabs({ music, releases }: { music: ReactNode; releases: R
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
     music: null,
     releases: null,
+    gallery: null,
   })
 
   return (
     <div className="prof-tabs">
       <ProfileTabSwitchProvider value={setActive}>
         <HelpSpotlight
-          steps={HELP_STEPS}
+          steps={helpSteps}
           activeId={active}
           onNavigate={(id) => setActive(id as Tab)}
           getTargetEl={(step) => panelRefs.current[step.id as Tab]}
         />
         <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
@@ -81,6 +97,17 @@ export function ProfileTabs({ music, releases }: { music: ReactNode; releases: R
         >
           {releases}
         </div>
+        {gallery && (
+          <div
+            className="prof-tabs__panel"
+            hidden={active !== 'gallery'}
+            ref={(el) => {
+              panelRefs.current.gallery = el
+            }}
+          >
+            {gallery}
+          </div>
+        )}
       </ProfileTabSwitchProvider>
     </div>
   )
