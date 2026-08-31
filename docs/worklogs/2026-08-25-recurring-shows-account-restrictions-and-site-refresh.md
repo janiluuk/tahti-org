@@ -492,9 +492,8 @@ research done on whether their widgets support real control either).
 - Always assigning a fallback cover image for releases without one —
   queued early, never reached; needs an approved fallback asset or a decision
   to standardize on the existing gradient placeholder.
-- The visualizer-as-page-header and conditional Gallery tab pieces of the
-  artist-profile restructure remain queued: the profile API still does not
-  expose the channel visual preset, gallery mode, or slideshow images needed
-  to implement them safely.
+- The profile API now exposes the channel visual preset, gallery mode, and
+  slideshow images; the remaining work is the artist-profile visualizer/header
+  and conditional Gallery tab UI.
 - Collapsing the channel page's five tabs into one always-visible player
   card — proposed, not selected by the user.

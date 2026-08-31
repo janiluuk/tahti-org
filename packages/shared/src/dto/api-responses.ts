@@ -879,6 +879,9 @@ export const PublicProfileViewSchema = z.object({
       slug: z.string(),
       state: z.string(),
       artistKind: z.enum(['SINGLE', 'COLLECTIVE']).optional(),
+      visualPreset: z.string().optional(),
+      galleryMode: z.string().optional(),
+      slideshowImages: z.array(z.string()).optional(),
     })
     .nullable(),
   releases: z.array(z.record(z.string(), z.unknown())),

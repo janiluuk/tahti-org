@@ -73,6 +73,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           slug: true,
           state: true,
           artistKind: true,
+          visualPreset: true,
+          galleryMode: true,
+          slideshowImages: true,
           profileBackgroundClip: {
             select: { audioKey: true, renderStatus: true },
           },
@@ -272,7 +275,14 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       followingCount: user.showFollowing ? user._count.artistFollowing : null,
     },
     channel: user.channel
-      ? { slug: user.channel.slug, state: user.channel.state, artistKind: user.channel.artistKind }
+      ? {
+          slug: user.channel.slug,
+          state: user.channel.state,
+          artistKind: user.channel.artistKind,
+          visualPreset: user.channel.visualPreset,
+          galleryMode: user.channel.galleryMode,
+          slideshowImages: user.channel.slideshowImages,
+        }
       : null,
     releases,
     tracks,

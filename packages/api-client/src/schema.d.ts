@@ -12520,6 +12520,9 @@ export interface paths {
                 state: string
                 /** @enum {string} */
                 artistKind?: 'SINGLE' | 'COLLECTIVE'
+                visualPreset?: string
+                galleryMode?: string
+                slideshowImages?: string[]
               } | null
               releases: {
                 [key: string]: unknown
@@ -27698,6 +27701,9 @@ export interface components {
         state: string
         /** @enum {string} */
         artistKind?: 'SINGLE' | 'COLLECTIVE'
+        visualPreset?: string
+        galleryMode?: string
+        slideshowImages?: string[]
       } | null
       releases: {
         [key: string]: unknown

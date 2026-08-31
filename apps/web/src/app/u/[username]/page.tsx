@@ -139,7 +139,14 @@ interface ProfileResponse {
     followerCount?: number | null
     followingCount?: number | null
   }
-  channel: { slug: string; state: string; artistKind?: 'SINGLE' | 'COLLECTIVE' } | null
+  channel: {
+    slug: string
+    state: string
+    artistKind?: 'SINGLE' | 'COLLECTIVE'
+    visualPreset?: string
+    galleryMode?: string
+    slideshowImages?: string[]
+  } | null
   releases: Array<{
     id: string
     title: string
