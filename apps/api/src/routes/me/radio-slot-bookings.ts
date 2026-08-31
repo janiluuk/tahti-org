@@ -17,6 +17,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 
 const MS_PER_HOUR = 60 * 60 * 1000
 
@@ -181,6 +182,18 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         throw err
       }
 
+      await auditLog(fastify.prisma, {
+        action: 'RADIO_SLOT_BOOKING_CREATE',
+        actorId: request.sessionUser!.id,
+        targetId: row.id,
+        meta: {
+          channelId: channel.id,
+          startAt: row.startAt.toISOString(),
+          endAt: row.endAt.toISOString(),
+          showType: row.showType,
+        },
+      })
+
       return reply.status(201).send({
         id: row.id,
         startAt: row.startAt.toISOString(),
@@ -235,6 +248,17 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      await auditLog(fastify.prisma, {
+        action: 'RADIO_SLOT_BOOKING_UPDATE',
+        actorId: request.sessionUser!.id,
+        targetId: row.id,
+        meta: {
+          channelId: channel.id,
+          ...(parsed.data.note !== undefined ? { note: parsed.data.note } : {}),
+          ...(parsed.data.showType !== undefined ? { showType: parsed.data.showType } : {}),
+        },
+      })
+
       return reply.send({
         id: row.id,
         startAt: row.startAt.toISOString(),
@@ -268,6 +292,14 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
       if (!existing) return reply.status(404).send({ error: 'Booking not found' })
 
       await fastify.prisma.radioSlotBooking.delete({ where: { id: existing.id } })
+
+      await auditLog(fastify.prisma, {
+        action: 'RADIO_SLOT_BOOKING_CANCEL',
+        actorId: request.sessionUser!.id,
+        targetId: existing.id,
+        meta: { channelId: channel.id },
+      })
+
       return reply.status(204).send()
     },
   )

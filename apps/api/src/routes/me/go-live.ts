@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 import { enqueueWarmArchiveFallbackCache } from '../../lib/queue.js'
 import { queueChannelLiveSocialPost } from '../../lib/social-post.js'
 
@@ -49,6 +50,13 @@ const meGoLiveRoutes: FastifyPluginAsync = async (fastify) => {
           data: { wentLiveAt: new Date() },
         }),
       ])
+
+      await auditLog(fastify.prisma, {
+        action: 'CHANNEL_GO_LIVE',
+        actorId: user.id,
+        targetId: channel.id,
+        meta: { slug: channel.slug, broadcastId: broadcast.id },
+      })
 
       queueChannelLiveSocialPost(fastify.prisma, user.id, channel.id, channel.slug).catch(
         (err: unknown) =>

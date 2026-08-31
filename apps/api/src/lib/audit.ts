@@ -50,6 +50,10 @@ interface AuditParams {
     | 'ARCHIVE_ITEM_LIKE'
     | 'ARTIST_FOLLOW'
     | 'FAN_SUBSCRIPTION_CREATE'
+    | 'RADIO_SLOT_BOOKING_CREATE'
+    | 'RADIO_SLOT_BOOKING_UPDATE'
+    | 'RADIO_SLOT_BOOKING_CANCEL'
+    | 'CHANNEL_GO_LIVE'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>
