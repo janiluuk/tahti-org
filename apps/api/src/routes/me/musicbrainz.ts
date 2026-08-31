@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { randomBytes } from 'node:crypto'
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, RouteHandlerMethod } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { encryptStreamKey } from '../../lib/stream-key-enc.js'
@@ -58,7 +58,9 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/me/musicbrainz/oauth/callback — exchange code for token, fetch username
-  fastify.get('/api/me/musicbrainz/oauth/callback', async (request, reply) => {
+  // Keep the original path as an alias: OAuth clients created before this route
+  // was corrected may still return to /api/musicbrainz/oauth/callback.
+  const musicbrainzCallback: RouteHandlerMethod = async (request, reply) => {
     const query = request.query as Record<string, string>
     const code = query.code
     const state = query.state
@@ -131,7 +133,9 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
     } catch {
       return reply.redirect(302, `${dest}?mb=error#musicbrainz`)
     }
-  })
+  }
+  fastify.get('/api/me/musicbrainz/oauth/callback', musicbrainzCallback)
+  fastify.get('/api/musicbrainz/oauth/callback', musicbrainzCallback)
 
   // DELETE /api/me/musicbrainz — disconnect
   fastify.delete('/api/me/musicbrainz', { preHandler: requireAuth }, async (request, reply) => {

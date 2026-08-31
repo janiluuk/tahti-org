@@ -242,7 +242,7 @@ export const config = {
     clientSecret: readSecret('MUSICBRAINZ_CLIENT_SECRET', 'MUSICBRAINZ_CLIENT_SECRET_FILE', ''),
     redirectUri:
       process.env.MUSICBRAINZ_OAUTH_REDIRECT_URI ??
-      `${process.env.API_URL ?? 'http://localhost:3001'}/api/musicbrainz/oauth/callback`,
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/musicbrainz/oauth/callback`,
     oauthStateCookie: 'tahti_musicbrainz_oauth',
   },
   /** PLAT-080: Google Drive cloud import (optional — set GOOGLE_DRIVE_CLIENT_ID). */
