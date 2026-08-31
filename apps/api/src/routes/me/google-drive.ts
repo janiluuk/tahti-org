@@ -25,6 +25,7 @@ import {
   googleDrivePickerConfigured,
 } from '../../lib/google-drive-session.js'
 import { enqueueCloudImportGoogleDrive } from '../../lib/queue.js'
+import { auditLog } from '../../lib/audit.js'
 
 const OAUTH_STATE_MAX_AGE_SEC = 600
 
@@ -222,6 +223,17 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
             externalFileId: file.fileId,
             fileName: file.name,
             status: 'QUEUED',
+          },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'CONTENT_UPLOAD',
+          actorId: user.id,
+          targetId: job.id,
+          meta: {
+            source: 'GOOGLE_DRIVE',
+            event: 'cloud_import_job_created',
+            externalFileId: file.fileId,
+            fileName: file.name,
           },
         })
         await enqueueCloudImportGoogleDrive(job.id)

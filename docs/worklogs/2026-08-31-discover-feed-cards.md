@@ -22,3 +22,5 @@ with play and queue actions like the other listening surfaces.
   social links their own aligned “Find the artist elsewhere” section.
 - Artist channel pages now show the bio below the banner, with latest releases
   placed below the live player; the archive is labeled “Sounds.”
+- Google Drive import job creation now writes a `CONTENT_UPLOAD` audit event with
+  the job ID, source, external file ID, and filename.
