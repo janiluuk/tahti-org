@@ -41,7 +41,7 @@ Tahti ships a **channel-first** product: listeners discover and play artist chan
 | Client                                  | Role                                                                                                                                                                 |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`apps/web`** (this repo)              | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                         |
-| **[Tahti Player](https://github.com/janiluuk/tahti-player)** (`tahti-web`, separate repo) | Next listen + studio SPA on Nuclear UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
+| **[Tahti Player](https://github.com/janiluuk/tahti-player)** (`tahti-web`, separate repo) | Next listen + studio SPA on Tahti Player UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
 
 Both clients talk to the same API, chat, and media stack. Prefer the Tahti Player beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
 

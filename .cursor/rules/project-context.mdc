@@ -24,4 +24,4 @@ alwaysApply: true
 ## Clients
 
 - Production app: `apps/web` (this repo).
-- Nuclear beta: separate repo; cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.
+- Tahti Player beta: separate repo; cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.

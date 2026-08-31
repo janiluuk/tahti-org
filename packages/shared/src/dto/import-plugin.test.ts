@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { IMPORT_PLUGIN_CONTRACT_VERSION, ImportPluginProviderListSchema } from './import-plugin.js'
 
 describe('import plugin contract', () => {
-  it('accepts the versioned provider metadata exchanged with Nuclear', () => {
+  it('accepts the versioned provider metadata exchanged with Tahti Player', () => {
     const parsed = ImportPluginProviderListSchema.parse({
       providers: [
         {

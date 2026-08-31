@@ -1221,7 +1221,6 @@
 }
 
 .admin-governance-records__header,
-.admin-governance-records__forms,
 .admin-governance-records__lists {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1233,17 +1232,17 @@
   margin-bottom: 1rem;
 }
 
-.admin-governance-records__forms {
-  padding: 1rem;
-  border: 1px solid var(--admin-border, #333);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--admin-card, #14141c) 80%, transparent);
+.admin-governance-records__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
-.admin-governance-records__forms > div {
+.admin-governance-records__attendance {
   display: grid;
-  gap: 0.65rem;
-  align-content: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0.75rem 0;
 }
 
 .admin-governance-records__lists {
@@ -1261,8 +1260,14 @@
   font-size: 0.85rem;
 }
 
+.admin-governance-records__meetings-table th,
+.admin-governance-records__meetings-table td {
+  padding: 0.45rem 0.5rem;
+}
+
 @media (max-width: 700px) {
-  .admin-governance-records__forms,
+  .admin-governance-records__grid,
+  .admin-governance-records__attendance,
   .admin-governance-records__lists {
     grid-template-columns: 1fr;
   }

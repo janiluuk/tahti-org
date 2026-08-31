@@ -115,19 +115,18 @@ export default async function DashboardMotionsPage() {
       ? Math.round((totalVotesCast / (decidedCount * members.length)) * 100)
       : 0
 
-  const commentLists = await Promise.all(
-    motions.map((m) =>
-      fetch(`${apiUrl}/api/v1/governance/motions/${m.id}/comments`, {
-        headers: { Cookie: cookie },
-        cache: 'no-store',
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<MotionComment[]>) : []))
-        .catch(() => []),
-    ),
-  )
-  const motionsWithComments: MotionSummary[] = motions.map((m, i) => ({
+  const commentsByMotion: Record<string, MotionComment[]> =
+    motions.length === 0
+      ? {}
+      : await fetch(
+          `${apiUrl}/api/v1/governance/motions/comments?ids=${motions.map((m) => m.id).join(',')}`,
+          { headers: { Cookie: cookie }, cache: 'no-store' },
+        )
+          .then((r) => (r.ok ? (r.json() as Promise<Record<string, MotionComment[]>>) : {}))
+          .catch(() => ({}))
+  const motionsWithComments: MotionSummary[] = motions.map((m) => ({
     ...m,
-    comments: commentLists[i],
+    comments: commentsByMotion[m.id] ?? [],
   }))
 
   return (

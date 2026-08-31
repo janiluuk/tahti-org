@@ -16,7 +16,7 @@ export interface DiscoWidgetStoreProps {
   onInstall: (widgetId: string) => void
 }
 
-/** The Nuclear-store layout: search + single-select category chips + a
+/** The Tahti Player-store layout: search + single-select category chips + a
  * vertical list of cards, each with a 3-state install button. Reused as-is
  * across the listener, artist, and admin stores — only the fetched `widgets`
  * differ per scope. */

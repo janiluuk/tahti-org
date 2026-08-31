@@ -5,7 +5,7 @@ import type { ImportPluginProvider } from '@tahti/shared'
 import { IMPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
 
 /**
- * Core-owned provider metadata. Configuration controls remain in Nuclear's
+ * Core-owned provider metadata. Configuration controls remain in Tahti Player's
  * plugin Configure modal; this registry deliberately contains no credentials.
  */
 export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [

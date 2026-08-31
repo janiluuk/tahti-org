@@ -92,7 +92,7 @@ flowchart TD
 | └ Report | `/admin/governance/report` | Annual report generator |
 | **Features** | `/admin/feature-requests` | Feature request board |
 | **Grants** | `/admin/grants` | Grants overview; year drill-down |
-| **AGM** | `/admin/agm` | Annual general meeting tools |
+| **AGM** | `/admin/agm` | Agenda builder + persisted meeting/attendance/quorum + document archive — see [how governance works](../guides/governance-explained.md) |
 | **Vendors** | `/admin/settings/vendors` | Third-party vendor credentials |
 | **Status** | `/admin/status` | Admin-facing platform status |
 

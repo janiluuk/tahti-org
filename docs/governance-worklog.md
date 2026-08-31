@@ -15,6 +15,7 @@ bylaws and legal review authorize a binding electronic voting procedure.
 - [x] Members can see published meetings/documents in the governance dashboard.
 - [x] Admin AGM page has a governance-records panel for meeting/document metadata.
 - [x] Focused governance journey tests cover voting, discussion, feature requests, reports, and record visibility.
+- [x] Admin can persist AGM/board meetings with type, schedule, notice, location/remote link, agenda, eligibility count, and quorum, and record per-member attendance.
 
 ## Member journey
 
@@ -32,7 +33,7 @@ bylaws and legal review authorize a binding electronic voting procedure.
 
 - [x] Review advisory motions and close voting.
 - [ ] Review, second, schedule, and circulate member motions.
-- [ ] Record agenda items, attendance, quorum, chair, and secretary.
+- [x] Record agenda items, attendance, and quorum. (Chair/secretary role fields still missing.)
 - [ ] Publish notices and retain delivery evidence.
 - [ ] Capture official meeting votes and decisions.
 - [ ] Upload, approve, redact, sign, and publish minutes.

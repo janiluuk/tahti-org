@@ -431,6 +431,31 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     expect(comments[0].body).toBe('I support this in principle.')
     expect(comments[1].body).toBe('What is the expected cost?')
 
+    // Bulk lookup (used by governance list pages instead of one request per
+    // motion) returns the same threads keyed by motion id, plus an empty
+    // array for an id with no comments — and ignores an unknown id.
+    const bulk = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/comments?ids=${motionId},does-not-exist`,
+      headers: { cookie: members[0].cookie },
+    })
+    expect(bulk.statusCode).toBe(200)
+    const bulkComments = bulk.json() as Record<
+      string,
+      Array<{ body: string; authorDisplayName: string | null }>
+    >
+    expect(bulkComments[motionId]).toHaveLength(2)
+    expect(bulkComments[motionId][0].body).toBe('I support this in principle.')
+    expect(bulkComments['does-not-exist']).toEqual([])
+
+    const emptyBulk = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/motions/comments',
+      headers: { cookie: members[0].cookie },
+    })
+    expect(emptyBulk.statusCode).toBe(200)
+    expect(emptyBulk.json()).toEqual({})
+
     // commentCount surfaces on the list/detail endpoints so the UI can show a
     // count without an extra fetch.
     const motionList = await app.inject({

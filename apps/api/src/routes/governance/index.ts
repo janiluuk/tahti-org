@@ -9,6 +9,7 @@ import {
   IdParamSchema,
   MotionCommentListSchema,
   MotionCommentSchema,
+  MotionCommentsBulkSchema,
   MotionDetailSchema,
   MotionListSchema,
   MotionRefResponseSchema,
@@ -337,6 +338,49 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.status(201).send({ ok: true, choice })
+    },
+  )
+
+  // GET /api/v1/governance/motions/comments?ids=id1,id2,... — discussion threads
+  // for several motions in one request. Governance list pages need every open
+  // (or, on the full history page, every) motion's comments up front; fetching
+  // them one motion at a time doesn't scale past a handful of motions. Capped
+  // at 100 ids to match the motions list's own cap.
+  fastify.get(
+    '/api/v1/governance/motions/comments',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionCommentsBulkSchema, 'MotionCommentsBulk'),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as Record<string, unknown>
+      const ids =
+        typeof query.ids === 'string'
+          ? [...new Set(query.ids.split(',').filter(Boolean))].slice(0, 100)
+          : []
+      if (ids.length === 0) return reply.send({})
+
+      const comments = await fastify.prisma.motionComment.findMany({
+        where: { motionId: { in: ids } },
+        orderBy: { createdAt: 'asc' },
+        include: { author: { select: { displayName: true } } },
+      })
+
+      const byMotion: Record<string, unknown[]> = Object.fromEntries(ids.map((id) => [id, []]))
+      for (const c of comments) {
+        byMotion[c.motionId]!.push({
+          id: c.id.toString(),
+          body: c.body,
+          authorId: c.authorId,
+          authorDisplayName: c.author?.displayName ?? null,
+          createdAt: c.createdAt,
+        })
+      }
+
+      return reply.send(byMotion)
     },
   )
 

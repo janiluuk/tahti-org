@@ -120,23 +120,23 @@ export default async function GovernancePage() {
       ? Math.round((totalVotesCast / (decidedCount * members.length)) * 100)
       : 0
 
-  // Governance data volume is small (motions capped at 100, a handful open at
-  // once in practice) — fetching every motion's discussion thread up front on
-  // this already-fully-SSR'd page is simpler than a client-side authenticated
-  // fetch-on-expand, and avoids inventing a new auth-forwarding pattern for it.
-  const commentLists = await Promise.all(
-    motions.map((m) =>
-      fetch(`${apiUrl}/api/v1/governance/motions/${m.id}/comments`, {
-        headers: { Cookie: cookie },
-        cache: 'no-store',
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<MotionComment[]>) : []))
-        .catch(() => []),
-    ),
-  )
-  const motionsWithComments: MotionSummary[] = motions.map((m, i) => ({
+  // Governance data volume is small (motions capped at 100) — fetching every
+  // motion's discussion thread up front on this already-fully-SSR'd page is
+  // simpler than a client-side authenticated fetch-on-expand, and avoids
+  // inventing a new auth-forwarding pattern for it. One bulk request instead
+  // of one-per-motion, though — see /motions/comments in governance/index.ts.
+  const commentsByMotion: Record<string, MotionComment[]> =
+    motions.length === 0
+      ? {}
+      : await fetch(
+          `${apiUrl}/api/v1/governance/motions/comments?ids=${motions.map((m) => m.id).join(',')}`,
+          { headers: { Cookie: cookie }, cache: 'no-store' },
+        )
+          .then((r) => (r.ok ? (r.json() as Promise<Record<string, MotionComment[]>>) : {}))
+          .catch(() => ({}))
+  const motionsWithComments: MotionSummary[] = motions.map((m) => ({
     ...m,
-    comments: commentLists[i],
+    comments: commentsByMotion[m.id] ?? [],
   }))
 
   return (

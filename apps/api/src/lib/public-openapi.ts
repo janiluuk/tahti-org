@@ -68,7 +68,7 @@ export function toPublicOpenApi(
       '',
       '## Base URL',
       'Production: `https://api.tahti.live` — local: `http://localhost:3001`',
-      'Nuclear beta (`beta.tahti.live`) uses this same production API via `/tahti-api/`.',
+      'Tahti Player beta (`beta.tahti.live`) uses this same production API via `/tahti-api/`.',
       '',
       '## Authentication',
       'Session cookie `tahti_session` from `POST /api/auth/login` (and TOTP step when enabled).',

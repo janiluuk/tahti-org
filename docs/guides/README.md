@@ -6,6 +6,7 @@ These are **“for dummies”** walkthroughs: short steps, no jargon where we ca
 |-------|----------------|------------|
 | **[For viewers](for-viewers.md)** | **Listeners** — tune in, chat, fan subscribe (no coop account required) | Tune in, chat, subscribe, downloads |
 | **[For members](for-members.md)** | **Cooperative members** — €40/year, governance, voting | `/governance`, membership on dashboard |
+| **[How governance works](governance-explained.md)** | Deep dive for members and board — motions, AGM/board meetings, quorum | Annotated, with diagrams |
 | **[For artists](for-artists.md)** | **Artists** — members with a channel, releases, fan tiers | Dashboard, profile, fan tiers, releases |
 | **[For streamers](for-streamers.md)** | **Live broadcast** (subset of artist) — OBS, Mixxx, etc. | RTMP, stream key, going LIVE, limits |
 | **[Multistream / simulcast](multistream-simulcast.md)** | Mirror Tahti live to Twitch, YouTube, Kick, etc. | Paste each platform’s **stream key** in dashboard |

@@ -60,8 +60,8 @@ adopted bylaws and legal review.
 | ------------------------------------------------------------------------------------------------------ | :----: | ----------- | ----------------------- |
 | Members can submit formal motion drafts for board review                                               | `[x]`  | Dev         | member auth             |
 | Closed advisory-motion results are available through public history API                                | `[x]`  | Dev         | transparency API        |
-| Persist meeting metadata, eligibility counts, quorum thresholds, and attendance snapshots             | `[x]`  | Dev         | meeting records         |
-| Persist AGM and board meetings with agenda, notice, attendance, and quorum                             | `[ ]`  | Dev / Board | bylaws                  |
+| Persist meeting metadata, eligibility counts, quorum thresholds, and attendance snapshots              | `[x]`  | Dev         | meeting records         |
+| Persist AGM and board meetings with agenda, notice, attendance, and quorum                             | `[x]`  | Dev         | meeting records         |
 | Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[ ]`  | Dev / Board | meeting model           |
 | Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[ ]`  | Dev / Legal | bylaws                  |
 | Signed minutes upload, approval, redaction, publication, and immutable history                         | `[ ]`  | Dev / Board | document model          |
@@ -75,7 +75,8 @@ adopted bylaws and legal review.
 Additional governance gaps from the audit:
 
 - [ ] Persist official member eligibility periods and privacy-scoped register views.
-- [ ] Add AGM/board attendance, quorum, chair, secretary, and signed approval data.
+- [x] Add AGM/board attendance and quorum data.
+- [ ] Add AGM/board chair, secretary, and signed approval data.
 - [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
 - [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
@@ -160,7 +161,7 @@ transfer, governance rhythms, post-handover cadences — see roadmap Phases 8–
 - STREAM-011 B spike may land as high-bitrate AAC/MP3 ABR, not true lossless HLS
 - M30+: direct PRO filing, AllMusic pitch
 - ACRCloud post-production annotation cron (gated by `ACRCLOUD_ENABLED`)
-- Nuclear web production cutover — follow `ops/nuclear-web-cutover.md` only
+- Tahti Player web production cutover — follow `ops/nuclear-web-cutover.md`
 
 ---
 

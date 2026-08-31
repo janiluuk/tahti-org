@@ -37,7 +37,7 @@ with play and queue actions like the other listening surfaces.
 
 - Tahti core owns API routes, OAuth handling, encrypted credentials, import
   jobs, audit logs, and persistence.
-- Nuclear, in `../tahti-player`, owns the plugin UI and configuration modal.
+- Tahti Player, in `../tahti-player`, owns the plugin UI and configuration modal.
 - Import configuration must happen through the plugin Configure action: enter
   settings, test the connection, save, then enable.
 - Do not add a parallel configuration surface in Tahti core.
@@ -49,11 +49,11 @@ with play and queue actions like the other listening surfaces.
 - Define the standard connection-test response and error states.
 - Decide whether Save and Enable are atomic or separate actions.
 - Decide whether provider secrets live only server-side or are temporarily
-  mirrored in Nuclear settings.
+  mirrored in Tahti Player settings.
 
 ### Implementation sequence
 
-1. Audit the existing Nuclear plugin SDK, Configure action, settings system,
+1. Audit the existing Tahti Player plugin SDK, Configure action, settings system,
    Tahti source registry, OAuth flows, import workers, and audit paths.
 2. Define a versioned provider contract with capabilities for configuration,
    connection testing, file listing, and import-job creation.
@@ -61,7 +61,7 @@ with play and queue actions like the other listening surfaces.
    should not be forced into one universal interface.
 4. Add Tahti-side provider adapters, generic configuration/status endpoints,
    encrypted credential handling, import-job creation, and audit logging.
-5. Add Nuclear’s plugin-scoped Configure modal with connection testing,
+5. Add Tahti Player’s plugin-scoped Configure modal with connection testing,
    validation, Save, Enable, Disable, and Disconnect states.
 6. Port Google Drive first as the reference plugin while preserving the
    existing integration through a compatibility adapter.
@@ -72,8 +72,8 @@ with play and queue actions like the other listening surfaces.
 - Test provider contracts, OAuth/token handling, import jobs, audit events, and
   worker retries in Tahti.
 - Test Configure modal behavior, connection failures, Save/Enable flow, and
-  plugin lifecycle in Nuclear.
-- Deploy Tahti core before publishing the compatible Nuclear plugin.
+  plugin lifecycle in Tahti Player.
+- Deploy Tahti core before publishing the compatible Tahti Player plugin.
 - Verify the complete Google Drive journey in staging before removing legacy
   paths.
 
@@ -103,11 +103,11 @@ with play and queue actions like the other listening surfaces.
 
 ## Plugin-system audit follow-up (2026-08-31)
 
-- Nuclear has an installable-plugin lifecycle (`onLoad`/`onEnable`/
+- Tahti Player has an installable-plugin lifecycle (`onLoad`/`onEnable`/
   `onDisable`) and namespaced persisted settings, but Tahti imports currently
   live in a separate hard-coded `SOURCE_DEFS` registry and source-specific API
   clients.
-- Nuclear already follows the required configuration rule for these sources:
+- Tahti Player already follows the required configuration rule for these sources:
   the Configure gear opens an inline modal, where connection state is checked
   and the user can connect/configure or disconnect; there is no separate
   per-source settings page to preserve.
@@ -126,7 +126,7 @@ with play and queue actions like the other listening surfaces.
 - Added authenticated `GET /api/me/import-plugins`, currently returning the
   Google Drive reference adapter. The response is metadata-only and contains
   no credentials or user configuration values.
-- The next step is to make Nuclear consume this registry and connect its
+- The next step is to make Tahti Player consume this registry and connect its
   existing Configure modal to the generic contract before adding another
   provider.
 

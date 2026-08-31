@@ -25,6 +25,10 @@ When active, your account shows a **member number** and `Member governance` link
 
 If you see “sign in required”, log in with the same account you used for membership.
 
+Want the full walkthrough — motion lifecycle, AGM/board meetings, quorum,
+document archive — with diagrams? See
+**[How governance works](governance-explained.md)**.
+
 ---
 
 ## 3. Artist studio (optional)

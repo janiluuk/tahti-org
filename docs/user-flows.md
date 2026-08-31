@@ -36,19 +36,29 @@ flowchart TB
   smart["/r/:slug"]
   dash["/dashboard"]
   gov["/governance"]
+  dashGov["/dashboard/governance"]
   govVenues["/governance/venues"]
+  agm["/admin/agm (board)"]
 
   home --> join
   home --> login
   join --> verify
   login --> dash
   login --> gov
+  dash --> dashGov
+  dash --> agm
   profile --> channel
   profile --> subscribe
   smart --> profile
   trans --> method
   gov --> govVenues
 ```
+
+`/governance` and `/dashboard/governance` are the same feature (motions,
+discussion, voting, plus the AGM/board meeting archive) in two page shells —
+see [how governance works](guides/governance-explained.md) for the annotated
+walkthrough, or [`flows/site-map.md`](flows/site-map.md) for the full route
+graph including every dashboard/admin sidebar item.
 
 ## Automated journey e2e
 
@@ -120,7 +130,9 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 | Register          | `/join`           | `POST /api/auth/register`                                          | `vital-flows.sh` (register only) |
 | Verify email      | `/verify?token=…` | `GET /api/auth/verify`                                             | Manual / seed token              |
 | Login             | `/login`          | `POST /api/auth/login`                                             | `member.sh`                      |
-| Governance hub    | `/governance`     | `GET /api/v1/governance/members`, `GET /api/v1/governance/motions` | `member.sh`, Vitest              |
+| Governance hub    | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/members`, `GET /api/v1/governance/motions` | `member.sh`, Vitest              |
+| Meetings / documents (read) | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/meetings`, `GET /api/v1/governance/documents` | Vitest (`governance-records.test.ts`) |
+| AGM/board meeting admin (write) | `/admin/agm` | `POST`/`PATCH /api/admin/governance/meetings`, `.../attendance`, `POST /api/admin/governance/documents` | Vitest (`governance-records.test.ts`) |
 | Auth guard (anon) | —                 | governance routes → **401**                                        | `member.sh`, `vital-flows.sh`    |
 
 ### Fan supporter (listener with account)

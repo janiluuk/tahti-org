@@ -5366,6 +5366,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/governance/motions/comments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              [key: string]: {
+                id: string
+                body: string
+                authorId: string | null
+                authorDisplayName: string | null
+                /** Format: date-time */
+                createdAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/governance/motions/{id}/comments': {
     parameters: {
       query?: never
@@ -6129,6 +6173,39 @@ export interface paths {
               recorded: boolean
             }
           }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/listen/heartbeat': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        204: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
         }
       }
     }
@@ -14983,6 +15060,7 @@ export interface paths {
                 position: number
                 title: string
                 hasStream: boolean
+                peaks: number[] | null
               }[]
             } & {
               [key: string]: unknown
@@ -15093,6 +15171,7 @@ export interface paths {
                 /** @enum {string|null} */
                 embedProvider: 'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | null
                 embedUri: string | null
+                peaks: number[] | null
               }[]
             }
           }
@@ -15137,6 +15216,7 @@ export interface paths {
               url: string
               title: string
               expiresInSec: number
+              peaks: number[] | null
             }
           }
         }
@@ -15180,6 +15260,7 @@ export interface paths {
               url: string
               title: string
               expiresInSec: number
+              peaks: number[] | null
             }
           }
         }
@@ -28929,6 +29010,7 @@ export interface components {
         position: number
         title: string
         hasStream: boolean
+        peaks: number[] | null
       }[]
     } & {
       [key: string]: unknown
@@ -28952,6 +29034,7 @@ export interface components {
       url: string
       title: string
       expiresInSec: number
+      peaks: number[] | null
     }
     ApiTokenList: {
       id: string

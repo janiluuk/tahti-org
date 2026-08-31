@@ -36,7 +36,15 @@ flowchart TB
   %% Authed listener / member
   Dash["/dashboard"]:::auth
   Gov["/governance"]:::mem
+  GovTopics["/governance/topics"]:::mem
+  GovFeat["/governance/feature-requests"]:::mem
   GovVenues["/governance/venues"]:::board
+
+  %% Governance, embedded in the dashboard shell (same data, dashboard chrome)
+  DashGov["/dashboard/governance"]:::mem
+  DashGovMotions["/dashboard/governance/motions"]:::mem
+  DashGovTopics["/dashboard/governance/topics"]:::mem
+  DashGovFeat["/dashboard/governance/feature-requests"]:::mem
 
   %% Artist studio (sidebar)
   Stats["/dashboard/stats"]:::art
@@ -90,8 +98,14 @@ flowchart TB
   Dash --> Design
   Dash --> Settings
   Dash --> Gov
+  Dash --> DashGov
   Dash --> Admin
+  Gov --> GovTopics
+  Gov --> GovFeat
   Gov --> GovVenues
+  DashGov --> DashGovMotions
+  DashGov --> DashGovTopics
+  DashGov --> DashGovFeat
   Admin --> GovVenues
 
   classDef pub fill:#eef4ff,stroke:#3b82f6,color:#1e3a8a;
@@ -107,8 +121,17 @@ flowchart TB
 | --- | --- | --- |
 | None | Anonymous | `/`, `/listen`, `/radio`, `/c/:slug`, `/u/:…`, `/r/:…`, help, transparency |
 | Session | Any logged-in user | `/dashboard` (listener-lite or full studio), `/dashboard/messages` |
-| Coop member | Active €40 membership | `/governance` motions / voting |
+| Coop member | Active €40 membership | `/governance` motions / voting / feature-request topics |
 | Channel owner | Artist with provisioned channel | Studio sidebar routes under `/dashboard/*` |
 | Board | `User.isBoard` | `/admin/*`, venue verification queue |
+
+`/governance` and `/dashboard/governance` are the same feature in two shells —
+the former is the standalone public-site chrome, the latter is embedded in
+the studio dashboard sidebar; both call the same `/api/v1/governance/*`
+endpoints. See [how governance works](../guides/governance-explained.md) for
+the annotated walkthrough (motions, discussion, voting, AGM/board meetings,
+attendance, quorum, and the document archive) and
+[board-member.md](board-member.md) for the admin side (`/admin/agm`,
+`/admin/governance/*`).
 
 Successful login defaults toward `/dashboard` (or `?next=` safe internal path). Logout returns to public home / login.

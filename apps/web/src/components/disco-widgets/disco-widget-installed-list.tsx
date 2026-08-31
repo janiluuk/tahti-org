@@ -14,7 +14,7 @@ export interface DiscoWidgetInstalledListProps {
   onRemove: (id: string) => void
 }
 
-/** Nuclear's "Installed" tab: manage what's already installed — toggle on/off,
+/** Tahti Player's "Installed" tab: manage what's already installed — toggle on/off,
  * drag to reorder, remove. Sorted list order (by `position`) is the render
  * order on whatever page these widgets actually show up on. */
 export function DiscoWidgetInstalledList({

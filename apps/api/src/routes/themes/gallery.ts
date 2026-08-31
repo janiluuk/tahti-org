@@ -3,7 +3,7 @@
 
 // The public "shipped" theme store — reads live from the tahti-org repo
 // itself (themes/registry.json), the same technique the original theme
-// editor tool uses for Nuclear's own theme registry. There is no "PUBLIC"
+// editor tool uses for Tahti Player's own theme registry. There is no "PUBLIC"
 // state in the Theme table: merging a theme's PR *is* the publish step, so
 // this always reflects exactly what's actually shipped, with zero app-side
 // bookkeeping to keep in sync.

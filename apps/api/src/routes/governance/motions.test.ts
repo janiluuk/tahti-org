@@ -126,11 +126,39 @@ describe('M10 — member governance', () => {
     expect(ours).toEqual([97101, 97102, 97103])
   })
 
-  it('forbids non-board members from posting a motion', async () => {
+  it('lets a non-board member submit a draft motion, forced advisory regardless of the request', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/governance/motions',
       headers: { cookie: memberCookie },
+      payload: {
+        title: 'Member-submitted proposal',
+        description: 'x',
+        openAt: new Date().toISOString(),
+        closeAt: new Date(Date.now() + 86400000).toISOString(),
+        // A member can't request a binding vote — the API must force this to
+        // true regardless of what's sent, since only a board-opened motion
+        // can be marked non-advisory.
+        advisory: false,
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json().state).toBe('DRAFT')
+
+    const detail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${res.json().id}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(detail.statusCode).toBe(200)
+    expect(detail.json().advisory).toBe(true)
+  })
+
+  it('forbids non-member (free) users from posting a motion', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: freeCookie },
       payload: {
         title: 'Should fail',
         description: 'x',

@@ -114,19 +114,18 @@ export default async function DashboardGovernancePage() {
     .filter((m) => m.state === 'OPEN' || m.state === 'DRAFT')
     .sort((a, b) => Number(a.youVoted) - Number(b.youVoted))
 
-  const commentLists = await Promise.all(
-    openMotions.map((m) =>
-      fetch(`${apiUrl}/api/v1/governance/motions/${m.id}/comments`, {
-        headers: { Cookie: cookie },
-        cache: 'no-store',
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<MotionComment[]>) : []))
-        .catch(() => []),
-    ),
-  )
-  const openMotionsWithComments: MotionSummary[] = openMotions.map((m, i) => ({
+  const commentsByMotion: Record<string, MotionComment[]> =
+    openMotions.length === 0
+      ? {}
+      : await fetch(
+          `${apiUrl}/api/v1/governance/motions/comments?ids=${openMotions.map((m) => m.id).join(',')}`,
+          { headers: { Cookie: cookie }, cache: 'no-store' },
+        )
+          .then((r) => (r.ok ? (r.json() as Promise<Record<string, MotionComment[]>>) : {}))
+          .catch(() => ({}))
+  const openMotionsWithComments: MotionSummary[] = openMotions.map((m) => ({
     ...m,
-    comments: commentLists[i],
+    comments: commentsByMotion[m.id] ?? [],
   }))
 
   // Already sorted by vote count desc, then recency, by the API.
