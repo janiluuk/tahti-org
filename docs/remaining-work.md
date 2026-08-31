@@ -60,6 +60,7 @@ adopted bylaws and legal review.
 | ------------------------------------------------------------------------------------------------------ | :----: | ----------- | ----------------------- |
 | Members can submit formal motion drafts for board review                                               | `[x]`  | Dev         | member auth             |
 | Closed advisory-motion results are available through public history API                                | `[x]`  | Dev         | transparency API        |
+| Persist meeting metadata, eligibility counts, quorum thresholds, and attendance snapshots             | `[x]`  | Dev         | meeting records         |
 | Persist AGM and board meetings with agenda, notice, attendance, and quorum                             | `[ ]`  | Dev / Board | bylaws                  |
 | Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[ ]`  | Dev / Board | meeting model           |
 | Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[ ]`  | Dev / Legal | bylaws                  |

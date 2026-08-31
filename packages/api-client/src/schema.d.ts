@@ -10526,6 +10526,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              eligibleMemberCount: number | null
+              quorumRequired: number | null
+              attendanceCount: number
+              presentCount: number
+              quorumMet: boolean | null
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -10643,6 +10648,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              eligibleMemberCount: number | null
+              quorumRequired: number | null
+              attendanceCount: number
+              presentCount: number
+              quorumMet: boolean | null
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -10685,6 +10695,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              eligibleMemberCount: number | null
+              quorumRequired: number | null
+              attendanceCount: number
+              presentCount: number
+              quorumMet: boolean | null
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -10747,6 +10762,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              eligibleMemberCount: number | null
+              quorumRequired: number | null
+              attendanceCount: number
+              presentCount: number
+              quorumMet: boolean | null
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -10756,6 +10776,80 @@ export interface paths {
         }
       }
     }
+    trace?: never
+  }
+  '/api/admin/governance/meetings/{id}/attendance': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              memberId: string | null
+              displayName: string
+              /** @enum {string} */
+              status: 'PRESENT' | 'ABSENT' | 'EXCUSED'
+              /** Format: date-time */
+              recordedAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              memberId: string | null
+              displayName: string
+              /** @enum {string} */
+              status: 'PRESENT' | 'ABSENT' | 'EXCUSED'
+              /** Format: date-time */
+              recordedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/admin/governance/documents': {

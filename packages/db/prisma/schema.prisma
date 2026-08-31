@@ -398,6 +398,14 @@ enum GovernanceDocumentType {
   @@schema("governance")
 }
 
+enum GovernanceAttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+
+  @@schema("governance")
+}
+
 enum VoteChoice {
   YES
   NO
@@ -814,6 +822,7 @@ model User {
   annualReportsGenerated  AnnualReport[]
   governanceMeetingsCreated GovernanceMeeting[]
   governanceDocumentsCreated GovernanceDocument[]
+  governanceAttendance GovernanceAttendance[]
   socialConnections       SocialConnection[]
   socialPosts             SocialPost[]
   stashFiles              StashFile[]
@@ -2092,6 +2101,8 @@ model GovernanceMeeting {
   remoteUrl   String?
   noticeAt    DateTime?
   agenda      Json?
+  eligibleMemberCount Int?
+  quorumRequired Int?
   minutesKey  String?
   minutesApprovedAt DateTime?
   createdById String
@@ -2100,9 +2111,25 @@ model GovernanceMeeting {
   updatedAt   DateTime               @updatedAt
 
   documents GovernanceDocument[]
+  attendance GovernanceAttendance[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
+  @@schema("governance")
+}
+
+model GovernanceAttendance {
+  id          String                    @id @default(cuid())
+  meetingId   String
+  meeting     GovernanceMeeting         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId    String?
+  member      User?                     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  displayName String
+  status      GovernanceAttendanceStatus @default(PRESENT)
+  recordedAt  DateTime                  @default(now())
+
+  @@unique([meetingId, memberId])
+  @@index([meetingId, status])
   @@schema("governance")
 }
 

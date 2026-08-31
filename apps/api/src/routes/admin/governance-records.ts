@@ -6,9 +6,11 @@ import { Prisma } from '@tahti/db'
 import {
   CreateGovernanceDocumentSchema,
   CreateGovernanceMeetingSchema,
+  GovernanceAttendanceListSchema,
   GovernanceDocumentListSchema,
   GovernanceMeetingListSchema,
   PatchGovernanceMeetingSchema,
+  UpsertGovernanceAttendanceSchema,
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
@@ -47,6 +49,34 @@ async function documentResponse(document: {
   }
 }
 
+function meetingResponse(meeting: {
+  id: string
+  title: string
+  type: string
+  state: string
+  scheduledAt: Date | null
+  location: string | null
+  remoteUrl: string | null
+  noticeAt: Date | null
+  agenda: unknown
+  minutesKey: string | null
+  minutesApprovedAt: Date | null
+  eligibleMemberCount: number | null
+  quorumRequired: number | null
+  createdAt: Date
+  updatedAt: Date
+  attendance: Array<{ status: string }>
+}) {
+  const presentCount = meeting.attendance.filter((record) => record.status === 'PRESENT').length
+  return {
+    ...meeting,
+    attendance: undefined,
+    attendanceCount: meeting.attendance.length,
+    presentCount,
+    quorumMet: meeting.quorumRequired === null ? null : presentCount >= meeting.quorumRequired,
+  }
+}
+
 const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/v1/governance/meetings',
@@ -62,8 +92,9 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { state: { not: 'DRAFT' } },
         orderBy: { scheduledAt: 'desc' },
         take: 100,
+        include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings)
+      return reply.send(meetings.map(meetingResponse))
     },
   )
 
@@ -99,8 +130,9 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const meetings = await fastify.prisma.governanceMeeting.findMany({
         orderBy: { scheduledAt: 'desc' },
         take: 100,
+        include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings)
+      return reply.send(meetings.map(meetingResponse))
     },
   )
 
@@ -125,7 +157,12 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const meeting = await fastify.prisma.governanceMeeting.create({
         data: { ...body, agenda: body.agenda ?? undefined, createdById: request.sessionUser!.id },
       })
-      return reply.status(201).send(meeting)
+      return reply.status(201).send({
+        ...meeting,
+        attendanceCount: 0,
+        presentCount: 0,
+        quorumMet: body.quorumRequired ? false : null,
+      })
     },
   )
 
@@ -155,7 +192,73 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           agenda: parsed.data.agenda === null ? Prisma.JsonNull : parsed.data.agenda,
         },
       })
-      return reply.send(updated)
+      const withAttendance = await fastify.prisma.governanceMeeting.findUniqueOrThrow({
+        where: { id: updated.id },
+        include: { attendance: { select: { status: true } } },
+      })
+      return reply.send(meetingResponse(withAttendance))
+    },
+  )
+
+  fastify.get(
+    '/api/admin/governance/meetings/:id/attendance',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceAttendanceListSchema, 'GovernanceAttendanceList'),
+      },
+    },
+    async (request, reply) => {
+      const meetingId = (request.params as { id?: string }).id
+      if (!meetingId) return reply.status(400).send({ error: 'Meeting id is required' })
+      const records = await fastify.prisma.governanceAttendance.findMany({
+        where: { meetingId },
+        orderBy: { displayName: 'asc' },
+      })
+      return reply.send(records)
+    },
+  )
+
+  fastify.post(
+    '/api/admin/governance/meetings/:id/attendance',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponses([
+          {
+            status: 201,
+            schema: GovernanceAttendanceListSchema.element,
+            name: 'GovernanceAttendance',
+          },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const meetingId = (request.params as { id?: string }).id
+      if (!meetingId) return reply.status(400).send({ error: 'Meeting id is required' })
+      const parsed = UpsertGovernanceAttendanceSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const meeting = await fastify.prisma.governanceMeeting.findUnique({
+        where: { id: meetingId },
+      })
+      if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      const existing = parsed.data.memberId
+        ? await fastify.prisma.governanceAttendance.findFirst({
+            where: { meetingId, memberId: parsed.data.memberId },
+          })
+        : null
+      const record = existing
+        ? await fastify.prisma.governanceAttendance.update({
+            where: { id: existing.id },
+            data: parsed.data,
+          })
+        : await fastify.prisma.governanceAttendance.create({ data: { meetingId, ...parsed.data } })
+      return reply.status(existing ? 200 : 201).send(record)
     },
   )
 

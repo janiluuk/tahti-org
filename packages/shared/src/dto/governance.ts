@@ -81,6 +81,8 @@ export const CreateGovernanceMeetingSchema = z.object({
   location: z.string().trim().max(300).optional(),
   remoteUrl: z.string().url().max(1000).optional(),
   noticeAt: z.coerce.date().optional(),
+  eligibleMemberCount: z.number().int().nonnegative().optional(),
+  quorumRequired: z.number().int().positive().optional(),
   agenda: z
     .array(
       z.object({
@@ -98,6 +100,8 @@ export const PatchGovernanceMeetingSchema = z.object({
   location: z.string().trim().max(300).nullable().optional(),
   remoteUrl: z.string().url().max(1000).nullable().optional(),
   noticeAt: z.coerce.date().nullable().optional(),
+  eligibleMemberCount: z.number().int().nonnegative().nullable().optional(),
+  quorumRequired: z.number().int().positive().nullable().optional(),
   agenda: z
     .array(
       z.object({
@@ -136,11 +140,31 @@ export const GovernanceMeetingItemSchema = z.object({
   agenda: z.unknown().nullable(),
   minutesKey: z.string().nullable(),
   minutesApprovedAt: z.coerce.date().nullable(),
+  eligibleMemberCount: z.number().int().nullable(),
+  quorumRequired: z.number().int().nullable(),
+  attendanceCount: z.number().int(),
+  presentCount: z.number().int(),
+  quorumMet: z.boolean().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
 
 export const GovernanceMeetingListSchema = z.array(GovernanceMeetingItemSchema)
+
+export const GovernanceAttendanceStatusSchema = z.enum(['PRESENT', 'ABSENT', 'EXCUSED'])
+export const UpsertGovernanceAttendanceSchema = z.object({
+  memberId: z.string().cuid().nullable().optional(),
+  displayName: z.string().trim().min(1).max(200),
+  status: GovernanceAttendanceStatusSchema,
+})
+export const GovernanceAttendanceItemSchema = z.object({
+  id: z.string(),
+  memberId: z.string().nullable(),
+  displayName: z.string(),
+  status: GovernanceAttendanceStatusSchema,
+  recordedAt: z.coerce.date(),
+})
+export const GovernanceAttendanceListSchema = z.array(GovernanceAttendanceItemSchema)
 
 export const GovernanceDocumentItemSchema = z.object({
   id: z.string(),

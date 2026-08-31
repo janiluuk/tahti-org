@@ -60,11 +60,14 @@ describe('governance meetings and documents', () => {
         type: 'GENERAL',
         scheduledAt: '2026-03-28T12:00:00.000Z',
         location: 'Helsinki / video call',
+        eligibleMemberCount: 2,
+        quorumRequired: 2,
         agenda: [{ title: 'Approve annual accounts' }, { title: 'Elect the board' }],
       },
     })
     expect(create.statusCode).toBe(201)
     expect(create.json().state).toBe('DRAFT')
+    expect(create.json().quorumMet).toBe(false)
 
     const memberList = await app.inject({
       method: 'GET',
@@ -84,6 +87,33 @@ describe('governance meetings and documents', () => {
       payload: { state: 'SCHEDULED', noticeAt: '2026-03-01T12:00:00.000Z' },
     })
     expect(update.statusCode).toBe(200)
+
+    const attendance = await app.inject({
+      method: 'POST',
+      url: `/api/admin/governance/meetings/${meeting.id}/attendance`,
+      headers: { cookie: boardCookie },
+      payload: { displayName: 'Chair', status: 'PRESENT' },
+    })
+    expect(attendance.statusCode).toBe(201)
+
+    const secondAttendance = await app.inject({
+      method: 'POST',
+      url: `/api/admin/governance/meetings/${meeting.id}/attendance`,
+      headers: { cookie: boardCookie },
+      payload: { displayName: 'Secretary', status: 'PRESENT' },
+    })
+    expect(secondAttendance.statusCode).toBe(201)
+
+    const meetingList = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/meetings',
+      headers: { cookie: memberCookie },
+    })
+    expect(meetingList.json()[0]).toMatchObject({
+      attendanceCount: 2,
+      presentCount: 2,
+      quorumMet: true,
+    })
 
     const document = await app.inject({
       method: 'POST',
@@ -121,6 +151,9 @@ describe('governance meetings and documents', () => {
     expect(memberMeetings.json()[0]).toMatchObject({
       title: '2026 annual general meeting',
       state: 'SCHEDULED',
+      eligibleMemberCount: 2,
+      quorumRequired: 2,
+      quorumMet: true,
     })
   })
 

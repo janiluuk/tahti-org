@@ -38,6 +38,45 @@
   color: var(--text);
   background: color-mix(in srgb, var(--cyan) 14%, transparent);
 }
+
+[data-tahti-ui='brand'] .governance-archive-section {
+  margin-top: 2.5rem;
+}
+
+[data-tahti-ui='brand'] .governance-archive-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .governance-archive-card {
+  display: grid;
+  gap: 0.6rem;
+}
+
+[data-tahti-ui='brand'] .governance-archive-card h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+[data-tahti-ui='brand'] .governance-archive-row {
+  display: grid;
+  gap: 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 14%, transparent);
+  font-size: 0.82rem;
+}
+
+[data-tahti-ui='brand'] .governance-archive-row a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+@media (max-width: 700px) {
+  [data-tahti-ui='brand'] .governance-archive-grid {
+    grid-template-columns: 1fr;
+  }
+}
 [data-tahti-ui='brand'] .brand-public .brand-page-header {
   margin-bottom: 2rem;
 }

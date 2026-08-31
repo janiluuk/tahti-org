@@ -11,6 +11,8 @@ bylaws and legal review authorize a binding electronic voting procedure.
 - [x] Closed advisory motion results are exposed through public transparency history.
 - [x] Governance navigation links member motions, product feedback, and published results.
 - [x] Persisted meeting/document schema and admin/member API foundation added.
+- [x] Persisted meeting eligibility counts, quorum thresholds, and attendance snapshots.
+- [x] Members can see published meetings/documents in the governance dashboard.
 - [x] Admin AGM page has a governance-records panel for meeting/document metadata.
 - [x] Focused governance journey tests cover voting, discussion, feature requests, reports, and record visibility.
 

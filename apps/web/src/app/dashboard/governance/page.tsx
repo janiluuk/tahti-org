@@ -17,6 +17,28 @@ interface Member {
   username: string
 }
 
+interface GovernanceMeeting {
+  id: string
+  title: string
+  type: string
+  state: string
+  scheduledAt: string | null
+  location: string | null
+  attendanceCount: number
+  presentCount: number
+  quorumMet: boolean | null
+}
+
+interface GovernanceDocument {
+  id: string
+  title: string
+  type: string
+  version: number
+  effectiveAt: string | null
+  downloadUrl: string | null
+  externalUrl: string | null
+}
+
 const TOP_TOPICS_COUNT = 5
 
 export default async function DashboardGovernancePage() {
@@ -47,20 +69,30 @@ export default async function DashboardGovernancePage() {
     )
   }
 
-  const [motionsRes, membersRes, featureRequestsRes] = await Promise.all([
-    fetch(`${apiUrl}/api/v1/governance/motions`, {
-      headers: { Cookie: cookie },
-      cache: 'no-store',
-    }),
-    fetch(`${apiUrl}/api/v1/governance/members`, {
-      headers: { Cookie: cookie },
-      cache: 'no-store',
-    }),
-    fetch(`${apiUrl}/api/v1/governance/feature-requests`, {
-      headers: { Cookie: cookie },
-      cache: 'no-store',
-    }),
-  ])
+  const [motionsRes, membersRes, featureRequestsRes, meetingsRes, documentsRes] = await Promise.all(
+    [
+      fetch(`${apiUrl}/api/v1/governance/motions`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/v1/governance/members`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/v1/governance/feature-requests`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/v1/governance/meetings`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/v1/governance/documents`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      }),
+    ],
+  )
 
   const allMotions: MotionSummary[] = motionsRes.ok
     ? ((await motionsRes.json()) as MotionSummary[])
@@ -68,6 +100,12 @@ export default async function DashboardGovernancePage() {
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
   const allFeatureRequests: FeatureRequestRef[] = featureRequestsRes.ok
     ? ((await featureRequestsRes.json()) as FeatureRequestRef[])
+    : []
+  const meetings: GovernanceMeeting[] = meetingsRes.ok
+    ? ((await meetingsRes.json()) as GovernanceMeeting[])
+    : []
+  const documents: GovernanceDocument[] = documentsRes.ok
+    ? ((await documentsRes.json()) as GovernanceDocument[])
     : []
 
   // "Needs your attention" — everything you can still act on, unvoted first so
@@ -166,6 +204,65 @@ export default async function DashboardGovernancePage() {
             </Link>
           </Text>
         )}
+      </section>
+
+      <section className="brand-section governance-archive-section">
+        <div className="gov-header-row">
+          <div>
+            <h2 className="brand-section__title brand-section-heading">Association records</h2>
+            <p className="gov-header-row__subline">
+              Published meetings, documents, and the current record of quorum information.
+            </p>
+          </div>
+          <Link
+            href="/transparency#member-motion-history"
+            className="ui-btn ui-btn--secondary ui-btn--sm"
+          >
+            Public history →
+          </Link>
+        </div>
+        <div className="governance-archive-grid">
+          <div className="brand-card governance-archive-card">
+            <h3>Meetings</h3>
+            {meetings.length === 0 ? (
+              <p className="brand-muted">No meetings published yet.</p>
+            ) : (
+              meetings.slice(0, 5).map((meeting) => (
+                <div key={meeting.id} className="governance-archive-row">
+                  <strong>{meeting.title}</strong>
+                  <span className="brand-muted">
+                    {meeting.state.toLowerCase().replace('_', ' ')}
+                    {meeting.scheduledAt &&
+                      ` · ${new Date(meeting.scheduledAt).toLocaleDateString()}`}
+                    {meeting.quorumMet !== null &&
+                      ` · quorum ${meeting.quorumMet ? 'met' : 'not met'}`}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="brand-card governance-archive-card">
+            <h3>Documents</h3>
+            {documents.length === 0 ? (
+              <p className="brand-muted">No documents published yet.</p>
+            ) : (
+              documents.slice(0, 5).map((document) => (
+                <div key={document.id} className="governance-archive-row">
+                  {document.downloadUrl || document.externalUrl ? (
+                    <a href={document.downloadUrl ?? document.externalUrl ?? '#'}>
+                      {document.title}
+                    </a>
+                  ) : (
+                    <strong>{document.title}</strong>
+                  )}
+                  <span className="brand-muted">
+                    {document.type} · v{document.version}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </section>
     </>
   )
