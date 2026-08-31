@@ -13538,6 +13538,168 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/me/media/prepare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              uploadKey: string
+              /** Format: uri */
+              uploadUrl: string
+              /** Format: date-time */
+              expiresAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/media/complete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              filename: string
+              contentType: string
+              sizeBytes: number
+              url: string
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/video-background/prepare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              uploadKey: string
+              /** Format: uri */
+              uploadUrl: string
+              /** Format: date-time */
+              expiresAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/video-background/complete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              videoBackgroundUrl: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/press-kit.json': {
     parameters: {
       query?: never
@@ -18236,6 +18398,7 @@ export interface paths {
                     }
                     title: string
                     bannerUrl: string | null
+                    audioUrl: string | null
                     channelSlug: string
                     liked: boolean
                     likeCount: number
@@ -21706,6 +21869,54 @@ export interface paths {
                 iconUrl: string | null
                 programmingUrl: string | null
                 streamUrl: string | null
+                enabled: boolean
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/internet-radio/presets/enabled': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Listen page radio feed — board-enabled presets, public */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              presets: {
+                id: string
+                name: string
+                genre: string | null
+                description: string | null
+                iconUrl: string | null
+                programmingUrl: string | null
+                streamUrl: string | null
+                enabled: boolean
               }[]
             }
           }
@@ -21881,6 +22092,7 @@ export interface paths {
                 iconUrl: string | null
                 programmingUrl: string | null
                 streamUrl: string | null
+                enabled: boolean
               }[]
             }
           }
@@ -21911,6 +22123,7 @@ export interface paths {
               iconUrl: string | null
               programmingUrl: string | null
               streamUrl: string | null
+              enabled: boolean
             }
           }
         }
