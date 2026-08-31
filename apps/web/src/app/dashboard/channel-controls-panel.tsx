@@ -112,10 +112,12 @@ export function ChannelControlsPanel({
   slug,
   title = 'Channel controls',
   description = 'Control the 24/7 artist channel without leaving your panel.',
+  defaultCollapsed = false,
 }: {
   slug: string
   title?: string
   description?: string
+  defaultCollapsed?: boolean
 }) {
   const [programme, setProgramme] = useState<Programme | null>(null)
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([])
@@ -130,6 +132,7 @@ export function ChannelControlsPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
+  const [managerExpanded, setManagerExpanded] = useState(!defaultCollapsed)
   const playlistSectionId = useId()
   // Ticks once a second while a track with a known duration is playing, purely
   // to force the remaining-time display to re-render — see remainingSec below.
@@ -408,8 +411,73 @@ export function ChannelControlsPanel({
         ? 'Channel rotation on'
         : 'Channel stopped'
 
+  if (!managerExpanded) {
+    return (
+      <div className="db-channel-controls db-channel-controls--collapsed">
+        <strong className="db-channel-controls__collapsed-title">{title}</strong>
+        <span className="db-channel-controls__now-compact" title={statusText}>
+          {statusText}
+        </span>
+        <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Previous track"
+            title="Previous track"
+            disabled={pending !== null}
+            onClick={() => void transport('previous')}
+          >
+            <TransportIcon direction="previous" />
+          </Button>
+          <Button
+            type="button"
+            variant={programme?.fallbackEnabled ? 'danger' : 'primary'}
+            aria-label={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
+            title={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
+            disabled={!programme || pending !== null}
+            onClick={() => void toggleChannel()}
+          >
+            <StopResumeIcon playing={Boolean(programme?.fallbackEnabled)} />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Next track"
+            title="Next track"
+            disabled={pending !== null}
+            onClick={() => void transport('skip')}
+          >
+            <TransportIcon direction="next" />
+          </Button>
+        </div>
+        <button
+          type="button"
+          className="db-channel-controls__expand-toggle"
+          aria-expanded="false"
+          aria-label={`Expand ${title}`}
+          title={`Expand ${title}`}
+          onClick={() => setManagerExpanded(true)}
+        >
+          <ChevronIcon expanded={false} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <Panel title={title} headerTight description={description}>
+      <div className="db-channel-controls__manager-collapse">
+        <button
+          type="button"
+          className="db-channel-controls__manager-collapse-button"
+          aria-expanded="true"
+          aria-label={`Collapse ${title}`}
+          title={`Collapse ${title}`}
+          onClick={() => setManagerExpanded(false)}
+        >
+          Collapse manager
+        </button>
+      </div>
       <div className="db-channel-controls__row">
         <span className="signal-dot" aria-hidden />
         <span className="db-channel-controls__now-compact" title={statusText}>

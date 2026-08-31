@@ -129,3 +129,14 @@ with play and queue actions like the other listening surfaces.
 - The next step is to make Nuclear consume this registry and connect its
   existing Configure modal to the generic contract before adding another
   provider.
+
+## Go Live control-room polish (2026-08-31)
+
+- Added one-line collapse/expand states for broadcasting-software connection
+  credentials and the active stream playlist manager on the Go Live view.
+  The collapsed playlist row keeps the current item and previous/start/next
+  transport controls visible.
+- Replaced the stream-overlay cover URL field with a small clickable cover
+  avatar. Hover/focus reveals the upload affordance, which opens a modal using
+  the shared file-dropzone flow; uploaded images are saved to the overlay
+  immediately.

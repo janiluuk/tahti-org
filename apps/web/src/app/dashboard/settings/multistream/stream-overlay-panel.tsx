@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useState } from 'react'
-import { Button, ButtonIcon, Panel } from '@tahti/ui'
+import { Button, ButtonIcon, FileDropzone, Panel } from '@tahti/ui'
 
 interface StreamOverlay {
   streamOverlayTitle: string | null
@@ -25,6 +25,8 @@ export function StreamOverlayPanel({ initial }: { initial: StreamOverlay }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   async function save() {
     setSaving(true)
@@ -50,6 +52,56 @@ export function StreamOverlayPanel({ initial }: { initial: StreamOverlay }) {
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function uploadCover(files: File[]) {
+    const file = files[0]
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const prep = await fetch(`${API_BASE}/api/me/media/prepare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ filename: file.name, contentType: file.type }),
+      })
+      if (!prep.ok) throw new Error('Could not prepare image upload')
+      const prepared = (await prep.json()) as { uploadKey: string; uploadUrl: string }
+      const put = await fetch(prepared.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
+      if (!put.ok) throw new Error('Image upload failed')
+      const complete = await fetch(`${API_BASE}/api/me/media/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          uploadKey: prepared.uploadKey,
+          filename: file.name,
+          contentType: file.type,
+          sizeBytes: file.size,
+        }),
+      })
+      if (!complete.ok) throw new Error('Could not finish image upload')
+      const result = (await complete.json()) as { url: string }
+      const saveCover = await fetch(`${API_BASE}/api/me/channel/stream-overlay`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ streamOverlayCoverUrl: result.url }),
+      })
+      if (!saveCover.ok) throw new Error('Could not save overlay cover')
+      setCoverUrl(result.url)
+      setUploadOpen(false)
+      setSaved(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Image upload failed')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -100,27 +152,64 @@ export function StreamOverlayPanel({ initial }: { initial: StreamOverlay }) {
         />
       </div>
 
-      <div className="studio-field">
-        <label className="studio-label" htmlFor="overlay-cover">
-          Cover image URL
-        </label>
-        <input
-          id="overlay-cover"
-          type="url"
-          className="studio-input"
-          placeholder="Your avatar"
-          value={coverUrl}
-          onChange={(e) => {
-            setCoverUrl(e.target.value)
-            setSaved(false)
-          }}
-        />
+      <div className="studio-field stream-overlay-cover-field">
+        <span className="studio-label">Overlay cover</span>
+        <button
+          type="button"
+          className="stream-overlay-cover-avatar"
+          onClick={() => setUploadOpen(true)}
+          aria-label={coverUrl ? 'Change overlay cover image' : 'Upload overlay cover image'}
+          title="Upload overlay cover image"
+        >
+          {coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coverUrl} alt="" />
+          ) : (
+            <span aria-hidden>+</span>
+          )}
+          <span className="stream-overlay-cover-avatar__action" aria-hidden>
+            ↑
+          </span>
+        </button>
+        <span className="studio-text-muted-sm">Click the cover to upload a logo or artwork.</span>
       </div>
 
       <Button onClick={() => void save()} disabled={saving} variant="primary">
         <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save overlay'}
       </Button>
+
+      {uploadOpen && (
+        <div
+          className="stream-overlay-upload-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Upload overlay cover"
+          onClick={() => !uploading && setUploadOpen(false)}
+        >
+          <div className="stream-overlay-upload-modal__card" onClick={(e) => e.stopPropagation()}>
+            <div className="studio-row studio-row--between">
+              <h2 className="studio-section-title">Upload overlay cover</h2>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={uploading}
+                onClick={() => setUploadOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+            <FileDropzone
+              label={uploading ? 'Uploading…' : 'Drop an image here, or click to browse'}
+              hint="JPEG, PNG, or WebP — up to 20 MB"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={uploading}
+              onFiles={(files) => void uploadCover(files)}
+            />
+          </div>
+        </div>
+      )}
     </Panel>
   )
 }

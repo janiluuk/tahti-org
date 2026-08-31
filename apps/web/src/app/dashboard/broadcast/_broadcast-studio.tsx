@@ -225,6 +225,7 @@ export function BroadcastStudio({
           <StreamSettingsPanel
             initial={streamSettings}
             isLive={isLive || isPreview}
+            defaultCollapsed
             onStreamTypeChange={setStreamType}
           />
           <Panel
@@ -343,6 +344,7 @@ export function BroadcastStudio({
             slug={channelSlug}
             title="Active rotation"
             description="Control what plays when you are not broadcasting live."
+            defaultCollapsed
           />
           <StreamStatsCard slug={channelSlug} />
           <StreamOverlayPanel initial={streamOverlay} />
