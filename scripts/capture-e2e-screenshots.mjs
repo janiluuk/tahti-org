@@ -29,9 +29,68 @@ const API = process.env.API_URL ?? 'http://localhost:3001'
 async function collapseChat(tab) {
   const toggle = tab.locator('.ch-chat-collapse-toggle')
   if ((await toggle.count()) > 0) {
-    await toggle.first().click({ trial: false }).catch(() => {})
+    await toggle
+      .first()
+      .click({ trial: false })
+      .catch(() => {})
     await tab.waitForTimeout(400)
   }
+}
+
+/** Add a compact, visible annotation layer to screenshots intended for review.
+ * The layer is injected only into the temporary Playwright page and is never
+ * part of the product UI. */
+async function annotateAdminScreenshot(tab, page) {
+  await tab.evaluate(
+    ({ label, path }) => {
+      const style = document.createElement('style')
+      style.dataset.tahtiScreenshotAnnotation = 'true'
+      style.textContent = `
+      [data-tahti-screenshot-annotation] { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      [data-tahti-screenshot-annotation="banner"] {
+        position: fixed; z-index: 2147483647; top: 16px; right: 16px;
+        max-width: min(420px, calc(100vw - 32px)); padding: 12px 16px;
+        color: #fff; background: rgba(10, 15, 30, .94); border: 2px solid #22d3ee;
+        border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.35);
+        font-size: 13px; line-height: 1.35; pointer-events: none;
+      }
+      [data-tahti-screenshot-annotation="banner"] strong { display: block; color: #22d3ee; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
+      [data-tahti-screenshot-annotation="banner"] span { display: block; margin-top: 3px; }
+      [data-tahti-screenshot-annotation="marker"] {
+        position: absolute; z-index: 2147483646; padding: 3px 7px; color: #061018;
+        background: #22d3ee; border-radius: 999px; font: 700 11px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+        box-shadow: 0 2px 8px rgba(0,0,0,.3); pointer-events: none;
+      }
+      [data-tahti-screenshot-outline] { outline: 2px dashed #22d3ee !important; outline-offset: 4px !important; }
+    `
+      document.head.appendChild(style)
+
+      const banner = document.createElement('div')
+      banner.dataset.tahtiScreenshotAnnotation = 'banner'
+      banner.innerHTML = `<strong>Annotated admin capture</strong><span>${label}</span><span>${path}</span>`
+      document.body.appendChild(banner)
+
+      const targets = [
+        ['nav', '1 Admin navigation'],
+        ['main', '2 Main workspace'],
+        ['h1, h2', '3 Page heading'],
+      ]
+      for (const [selector, text] of targets) {
+        const target = document.querySelector(selector)
+        if (!target) continue
+        target.dataset.tahtiScreenshotOutline = 'true'
+        const marker = document.createElement('div')
+        marker.dataset.tahtiScreenshotAnnotation = 'marker'
+        marker.textContent = text
+        const rect = target.getBoundingClientRect()
+        marker.style.left = `${Math.max(8, window.scrollX + rect.left)}px`
+        marker.style.top = `${Math.max(8, window.scrollY + rect.top - 10)}px`
+        document.body.appendChild(marker)
+      }
+    },
+    { label: page.label, path: page.path },
+  )
+  await tab.waitForTimeout(250)
 }
 
 /**
@@ -426,7 +485,13 @@ async function main() {
   }
 
   const pages = buildPages(seed)
-  const roles = ['public', 'free', 'member', 'artist', 'admin']
+  const requestedRoles = (process.env.SCREENSHOT_ROLES ?? 'public,free,member,artist,admin')
+    .split(',')
+    .map((role) => role.trim())
+    .filter(Boolean)
+  const selectedPages = pages.filter((page) => requestedRoles.includes(page.role))
+  const annotateAdmin = process.env.ANNOTATE_ADMIN_SCREENSHOTS === '1'
+  const roles = [...new Set(selectedPages.map((page) => page.role))]
   for (const role of roles) {
     await mkdir(join(OUT, role), { recursive: true })
   }
@@ -456,7 +521,7 @@ async function main() {
 
   const manifest = []
 
-  for (const page of pages) {
+  for (const page of selectedPages) {
     const ctx = await contextForRole(page.role)
     const tab = await ctx.newPage()
     const url = `${APP}${page.path}`
@@ -467,6 +532,7 @@ async function main() {
     if (page.role !== 'public') {
       await assertAuthenticated(tab, `${page.role}/${page.id}`)
     }
+    if (annotateAdmin && page.role === 'admin') await annotateAdminScreenshot(tab, page)
 
     const file = `${page.role}/${page.id}.png`
     await tab.screenshot({ path: join(OUT, file), fullPage: true })

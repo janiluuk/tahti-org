@@ -76,6 +76,17 @@ Captured against the seeded Docker stack (real fixture data, not empty states) v
 | ![Governance](docs/e2e-screenshots/artist/governance.png)                                     | ![Transparency dashboard](docs/e2e-screenshots/public/transparency.png)       |
 | **Governance** (`/governance`) - motions, voting, topics, run from the member's own dashboard | **Transparency** (`/transparency`) - the public ledger every member can audit |
 
+The current board-admin surface is also captured with review annotations. The cyan
+labels identify the admin navigation, main workspace, and page heading; the dark
+callout records the exact route.
+
+|                                                                                         |                                                                                         |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| ![Annotated admin AGM](docs/e2e-screenshots/admin/agm.png)                              | ![Annotated admin governance](docs/e2e-screenshots/admin/governance.png)               |
+| **AGM admin** (`/admin/agm`) - agenda builder, governance records, motions and minutes | **Governance admin** (`/admin/governance`) - board governance operations and records   |
+| ![Annotated admin dashboard](docs/e2e-screenshots/admin/dashboard.png)                 | ![Annotated admin financial ledger](docs/e2e-screenshots/admin/financial-ledger.png)   |
+| **Admin dashboard** (`/admin/dashboard`) - operational overview                        | **Financial ledger** (`/admin/financial/ledger`) - immutable financial records           |
+
 More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
 
 ## Package structure

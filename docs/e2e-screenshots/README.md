@@ -18,7 +18,9 @@ Screenshots are grouped by role:
 | `journey/` | Fresh artist + admin | Empty account → channel → releases (Playwright journey) |
 
 See `manifest.json` for the full route → file mapping (public / free / member / artist /
-admin / journey). Known remaining gaps (routes needing seed data or dynamic-ID lookups
+admin / journey). The 20 current board-admin captures are annotated with the role,
+route, admin navigation, main workspace, and page heading so they can be reviewed
+without opening the app. Known remaining gaps (routes needing seed data or dynamic-ID lookups
 the capture script doesn't do yet): `/dashboard/moderate/[slug]`, `/v/[slug]`,
 `/admin/users/[id]`, `/admin/support/[id]`, `/dashboard/upload/[uploadId]` and its
 import sub-flows.
@@ -28,8 +30,24 @@ import sub-flows.
 After meaningful **UI** changes on public, dashboard, governance, or admin surfaces:
 
 1. Run the capture flow below on a machine with Docker.
-2. Commit changed PNGs under `docs/e2e-screenshots/` and `manifest.json` if routes changed.
-3. Do **not** touch `website/screenshots/` unless the user asks.
+2. For annotated board-admin captures, use the admin-only command below.
+3. Commit changed PNGs under `docs/e2e-screenshots/` and `manifest.json` if routes changed.
+4. Do **not** touch `website/screenshots/` unless the user asks.
+
+### Annotated admin capture
+
+This regenerates every manifest-defined admin page as the seeded board account and
+keeps the rest of the persona captures untouched:
+
+```bash
+./scripts/stack-up.sh --seed
+SCREENSHOT_ROLES=admin ANNOTATE_ADMIN_SCREENSHOTS=1 \
+  APP_URL=http://localhost:17777 API_URL=http://localhost:15011 \
+  node scripts/capture-e2e-screenshots.mjs
+```
+
+`ANNOTATE_ADMIN_SCREENSHOTS=1` changes only the temporary Playwright page before
+capture; it does not add annotation UI to the product.
 
 ## Reproduce (local only — not CI)
 
