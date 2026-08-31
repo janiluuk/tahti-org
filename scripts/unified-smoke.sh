@@ -68,7 +68,7 @@ fi
 
 if curl -sf "${WEB_URL}/" >/dev/null 2>&1; then
   pass "Web ${WEB_URL}/"
-  if curl -sf "${WEB_URL}/radio" | grep -qE 'ch-youtube-player|ch-player-wrap'; then
+  if curl -sf "${WEB_URL}/radio" | grep -qE 'ch-radio-player-wrap|radio-player'; then
     pass "Local /radio player markup"
   else
     fail "Local /radio missing player (rebuild web?)"
@@ -93,7 +93,7 @@ if [[ "$PROD" == true ]]; then
   prod_check "Prod API status" "curl -sf ${PAPI}/api/v1/status | grep -q postgres"
   prod_check "Prod app home" "curl -sf ${PWEB}/ | grep -qi tahti"
   prod_check "Prod /listen" "curl -sf ${PWEB}/listen | grep -qi listen"
-  prod_check "Prod /radio player" "curl -sf ${PWEB}/radio | grep -q ch-youtube-player"
+  prod_check "Prod /radio player" "curl -sf ${PWEB}/radio | grep -qE 'ch-radio-player-wrap|radio-player'"
   prod_check "Prod radio chat" "curl -sf -X POST ${PAPI}/api/chat/tahti-radio/viewer-token | grep -q token"
   prod_check "Prod transparency" "curl -sf ${PAPI}/api/v1/transparency/ytd | grep -q runningSurplus"
   prod_check "Prod /login" "test \$(curl -sf -o /dev/null -w '%{http_code}' ${PWEB}/login) = 200"
