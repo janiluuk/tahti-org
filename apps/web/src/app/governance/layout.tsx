@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
 import { getSessionUser } from '@/lib/session'
@@ -12,6 +13,11 @@ export default async function GovernanceLayout({ children }: { children: ReactNo
 
   return (
     <PublicBrandShell wide showHeader showFooter user={user} statusUrl={statusPageUrl()}>
+      <nav className="brand-governance-nav" aria-label="Governance navigation">
+        <Link href="/governance">Governance overview</Link>
+        <Link href="/dashboard/governance/motions">Member motions</Link>
+        <Link href="/transparency#member-motion-history">Published results</Link>
+      </nav>
       {children}
     </PublicBrandShell>
   )

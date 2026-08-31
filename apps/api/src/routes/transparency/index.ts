@@ -7,6 +7,7 @@ import {
   TransparencyGrantReportSchema,
   TransparencyLedgerLatestSchema,
   TransparencyMonthlyRollupListSchema,
+  TransparencyMotionListSchema,
   TransparencyResolutionListSchema,
   TransparencyYearQuerySchema,
   TransparencyYtdResponseSchema,
@@ -247,6 +248,64 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
           voteFor: r.voteFor,
           voteAgainst: r.voteAgainst,
           voteAbstain: r.voteAbstain,
+        })),
+      )
+    },
+  )
+
+  fastify.get(
+    '/api/v1/transparency/motions',
+    {
+      schema: {
+        tags: ['transparency'],
+        description: 'Closed advisory motion results for the public governance history',
+        response: openApiResponse(TransparencyMotionListSchema, 'TransparencyMotionList'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = TransparencyYearQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+
+      const year = parsed.data.year ? parseInt(parsed.data.year, 10) : undefined
+      const where = year
+        ? {
+            state: 'CLOSED' as const,
+            advisory: true,
+            closeAt: {
+              gte: new Date(Date.UTC(year, 0, 1)),
+              lt: new Date(Date.UTC(year + 1, 0, 1)),
+            },
+          }
+        : { state: 'CLOSED' as const, advisory: true }
+
+      const motions = await fastify.prisma.motion.findMany({
+        where,
+        orderBy: { closeAt: 'desc' },
+        take: 100,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          closeAt: true,
+          proposer: { select: { displayName: true } },
+          votes: { select: { choice: true } },
+        },
+      })
+
+      return reply.send(
+        motions.map((motion) => ({
+          id: motion.id,
+          title: motion.title,
+          description: motion.description,
+          closedAt: motion.closeAt,
+          proposer: motion.proposer.displayName,
+          voteFor: motion.votes.filter((vote) => vote.choice === 'YES').length,
+          voteAgainst: motion.votes.filter((vote) => vote.choice === 'NO').length,
+          voteAbstain: motion.votes.filter((vote) => vote.choice === 'ABSTAIN').length,
         })),
       )
     },

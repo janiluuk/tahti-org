@@ -126,11 +126,11 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/governance/motions — board posts a motion (starts as DRAFT)
+  // POST /api/v1/governance/motions — members submit motion drafts; board opens them
   fastify.post(
     '/api/v1/governance/motions',
     {
-      preHandler: requireBoard,
+      preHandler: requireMember,
       schema: {
         tags: ['governance'],
         response: openApiResponses([
@@ -151,7 +151,9 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           title,
           description,
           proposedBy: user.id,
-          advisory: advisory !== false,
+          // A member may submit a proposal, but cannot mark it binding while
+          // the official bylaws-driven voting workflow is not implemented.
+          advisory: user.isBoard ? advisory !== false : true,
           openAt,
           closeAt,
           state: 'DRAFT',

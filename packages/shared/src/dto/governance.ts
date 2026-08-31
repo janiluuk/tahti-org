@@ -40,3 +40,16 @@ export const PostMotionCommentSchema = z.object({
 })
 
 export type PostMotionCommentInput = z.infer<typeof PostMotionCommentSchema>
+
+export const TransparencyMotionItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  closedAt: z.coerce.date(),
+  proposer: z.string(),
+  voteFor: z.number().int(),
+  voteAgainst: z.number().int(),
+  voteAbstain: z.number().int(),
+})
+
+export const TransparencyMotionListSchema = z.array(TransparencyMotionItemSchema)

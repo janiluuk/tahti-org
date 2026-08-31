@@ -9,9 +9,7 @@
  * (BoardResolution). Complements the narrower boundary-condition tests in
  * motions.test.ts.
  *
- * Also exercises two known gaps on purpose (see comments below): voting twice
- * is rejected even though the UI implies a vote can be changed, and a closed
- * Motion's tally does not automatically appear on the public transparency page.
+ * Also exercises the advisory-history bridge and the member proposal workflow.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
@@ -91,7 +89,7 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     await app.close()
   })
 
-  it('GAP (b): ordinary members cannot propose a motion — only board can', async () => {
+  it('allows an ordinary member to submit an advisory motion draft for board review', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/governance/motions',
@@ -103,7 +101,11 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
         closeAt: new Date(Date.now() + 86400000).toISOString(),
       },
     })
-    expect(res.statusCode).toBe(403)
+    expect(res.statusCode).toBe(201)
+    expect(res.json().state).toBe('DRAFT')
+
+    const motion = await prisma.motion.findUnique({ where: { id: res.json().id as string } })
+    expect(motion?.advisory).toBe(true)
   })
 
   async function proposeAndOpen(title: string, description: string) {
@@ -283,7 +285,7 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     expect(detail.json().yourChoice).toBe('YES')
   })
 
-  it('GAP (d): a closed motion tally is NOT automatically on the public transparency page', async () => {
+  it('publishes a closed advisory motion in the public governance history without retyping it', async () => {
     const motionId = await proposeAndOpen(
       'Motion whose result is never bridged to a public resolution',
       'Deliberately left un-bridged to demonstrate Motion/BoardResolution are disconnected.',
@@ -311,6 +313,18 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     expect(publicRes.statusCode).toBe(200)
     const titles = (publicRes.json() as Array<{ title: string }>).map((r) => r.title)
     expect(titles).not.toContain('Motion whose result is never bridged to a public resolution')
+
+    const publicMotions = await app.inject({
+      method: 'GET',
+      url: `/api/v1/transparency/motions?year=${year}`,
+    })
+    expect(publicMotions.statusCode).toBe(200)
+    const publishedMotion = (
+      publicMotions.json() as Array<{ title: string; voteFor: number; voteAgainst: number }>
+    ).find(
+      (motion) => motion.title === 'Motion whose result is never bridged to a public resolution',
+    )
+    expect(publishedMotion).toMatchObject({ voteFor: 6, voteAgainst: 2 })
   })
 
   it('bridging a motion result to the public transparency page requires a separate manual write', async () => {

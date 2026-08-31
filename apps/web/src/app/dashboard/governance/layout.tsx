@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import '@tahti/ui/src/styles/brand-channel.css'
 import '@tahti/ui/src/styles/brand-public.css'
 
@@ -16,7 +17,15 @@ import '@tahti/ui/src/styles/brand-public.css'
 export default function DashboardGovernanceLayout({ children }: { children: ReactNode }) {
   return (
     <div data-tahti-ui="brand" className="brand-public-shell dashboard-governance">
-      <div className="brand-public">{children}</div>
+      <div className="brand-public">
+        <nav className="brand-governance-nav" aria-label="Governance navigation">
+          <Link href="/dashboard/governance">Overview</Link>
+          <Link href="/dashboard/governance/motions">Member motions</Link>
+          <Link href="/dashboard/governance/topics">Product feedback</Link>
+          <Link href="/transparency#member-motion-history">Published results</Link>
+        </nav>
+        {children}
+      </div>
     </div>
   )
 }

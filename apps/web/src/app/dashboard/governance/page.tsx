@@ -151,10 +151,7 @@ export default async function DashboardGovernancePage() {
               What other members want built next — vote for what matters to you, or post your own.
             </p>
           </div>
-          <Link
-            href="/dashboard/governance/topics"
-            className="ui-btn ui-btn--secondary ui-btn--sm"
-          >
+          <Link href="/dashboard/governance/topics" className="ui-btn ui-btn--secondary ui-btn--sm">
             All topics →
           </Link>
         </div>

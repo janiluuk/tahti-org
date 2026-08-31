@@ -4972,6 +4972,52 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/transparency/motions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Closed advisory motion results for the public governance history */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string
+              description: string
+              /** Format: date-time */
+              closedAt: string
+              proposer: string
+              voteFor: number
+              voteAgainst: number
+              voteAbstain: number
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/ledger': {
     parameters: {
       query?: never

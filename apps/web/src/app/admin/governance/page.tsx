@@ -25,6 +25,11 @@ const SECTIONS = [
     desc: 'Record and publish formal board decisions and vote outcomes.',
   },
   {
+    href: '/transparency',
+    title: 'Published governance history',
+    desc: 'Review the public archive of board decisions and closed advisory motions.',
+  },
+  {
     href: '/admin/agm',
     title: 'Annual General Meeting',
     desc: 'Agenda builder, open motions, member notice checklist, and minutes links.',

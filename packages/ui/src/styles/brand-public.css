@@ -3,6 +3,41 @@
 /* Note: tokens.css is loaded globally via apps/web/src/app/globals.css — no import needed here. */
 
 /* ---- Page header (transparency, venues, governance) ---- */
+
+[data-tahti-ui='brand'] .brand-governance-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin: 0 auto 1.25rem;
+  padding: 0.35rem;
+  max-width: 1120px;
+  border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-governance-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .brand-governance-nav a:hover,
+[data-tahti-ui='brand'] .brand-governance-nav a:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--cyan) 14%, transparent);
+}
 [data-tahti-ui='brand'] .brand-public .brand-page-header {
   margin-bottom: 2rem;
 }

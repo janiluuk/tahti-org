@@ -39,6 +39,17 @@ interface LedgerEntry {
   createdAt: string
 }
 
+interface TransparencyMotion {
+  id: string
+  title: string
+  description: string
+  closedAt: string
+  proposer: string
+  voteFor: number
+  voteAgainst: number
+  voteAbstain: number
+}
+
 const LEDGER_ROW_COLUMNS = '70px 1fr 90px 70px'
 
 function formatEur(cents: string | number): string {
@@ -99,12 +110,15 @@ export default async function TransparencyPage() {
   const statusUrl = statusPageUrl()
   const currentYear = new Date().getFullYear()
 
-  const [ytdRes, rollupRes, resolutionsRes, statsRes, ledgerRes] = await Promise.all([
+  const [ytdRes, rollupRes, resolutionsRes, motionsRes, statsRes, ledgerRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/transparency/ytd`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/v1/transparency/monthly_rollup?year=${currentYear}`, {
       cache: 'no-store',
     }),
     fetch(`${apiUrl}/api/v1/transparency/resolutions?year=${currentYear}`, {
+      cache: 'no-store',
+    }),
+    fetch(`${apiUrl}/api/v1/transparency/motions?year=${currentYear}`, {
       cache: 'no-store',
     }),
     fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
@@ -139,6 +153,10 @@ export default async function TransparencyPage() {
     voteAgainst: number
     voteAbstain: number
   }> = resolutionsRes.ok ? await resolutionsRes.json() : []
+
+  const motions: TransparencyMotion[] = motionsRes.ok
+    ? ((await motionsRes.json()) as TransparencyMotion[])
+    : []
 
   const ledgerEntries: LedgerEntry[] = ledgerRes.ok
     ? ((await ledgerRes.json()) as LedgerEntry[])
@@ -333,6 +351,26 @@ export default async function TransparencyPage() {
                   {r.voteAgainst}/{r.voteAbstain}
                 </p>
                 <p className="brand-pre-wrap">{r.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {motions.length > 0 && (
+        <section id="member-motion-history" className="brand-section">
+          <h2 className="brand-section__title brand-section-heading">
+            Member motion results ({ytd.year})
+          </h2>
+          <ul className="brand-section">
+            {motions.map((motion) => (
+              <li key={motion.id} className="brand-card">
+                <h3>{motion.title}</h3>
+                <p className="brand-muted">
+                  Advisory result · closed {new Date(motion.closedAt).toLocaleDateString()} ·{' '}
+                  {motion.voteFor}/{motion.voteAgainst}/{motion.voteAbstain}
+                </p>
+                <p className="brand-pre-wrap">{motion.description}</p>
               </li>
             ))}
           </ul>

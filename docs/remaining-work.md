@@ -50,6 +50,27 @@ listed for completeness but are not coding tasks.
 
 Ops-only go-lives (code ready): Revelator credentials (**PLAT-056**), Mixcloud prod OAuth (**PLAT-057**).
 
+## Governance system hardening (product + records)
+
+The governance portal currently supports advisory motions and discussion, but is
+not yet the association's official decision record. These items must follow the
+adopted bylaws and legal review.
+
+| ID / item                                                                                              | Status | Owner       | Depends                 |
+| ------------------------------------------------------------------------------------------------------ | :----: | ----------- | ----------------------- |
+| Members can submit formal motion drafts for board review                                               | `[x]`  | Dev         | member auth             |
+| Closed advisory-motion results are available through public history API                                | `[x]`  | Dev         | transparency API        |
+| Persist AGM and board meetings with agenda, notice, attendance, and quorum                             | `[ ]`  | Dev / Board | bylaws                  |
+| Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[ ]`  | Dev / Board | meeting model           |
+| Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[ ]`  | Dev / Legal | bylaws                  |
+| Signed minutes upload, approval, redaction, publication, and immutable history                         | `[ ]`  | Dev / Board | document model          |
+| Organized association document repository for bylaws, policies, notices, reports, minutes, and filings | `[ ]`  | Dev / Board | document model          |
+| Link published decisions to meetings, agenda items, motions, votes, and minutes                        | `[ ]`  | Dev         | official decision model |
+| Member notices, reminders, delivery log, and deadline tracking                                         | `[ ]`  | Dev / Board | member communication    |
+| Board roles, terms, election history, conflicts, recusals, and scoped permissions                      | `[ ]`  | Dev / Board | board records           |
+| Privacy controls and historical membership eligibility records                                         | `[ ]`  | Dev / Legal | GDPR / bylaws           |
+| Replace governance list N+1 requests with detail loading and cursor pagination                         | `[ ]`  | Dev         | API/UI refactor         |
+
 ---
 
 ## Platform backlog still open
