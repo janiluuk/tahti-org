@@ -4963,15 +4963,55 @@
 }
 
 [data-tahti-ui='brand'] .feed-item--card .feed-item__date {
-  display: none;
+  display: inline;
 }
 
 [data-tahti-ui='brand'] .feed-item__art--large {
   width: 100%;
-  height: 150px;
+  height: 210px;
   display: block;
   margin-bottom: 0.65rem;
   border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .feed-item__content--visual {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+[data-tahti-ui='brand'] .feed-item__content--visual .feed-item__art--large {
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .feed-item__overlay {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  gap: 3px;
+  padding: 2.5rem 0.8rem 0.7rem;
+  color: var(--white);
+  background: linear-gradient(transparent, color-mix(in srgb, var(--black) 82%, transparent));
+}
+
+[data-tahti-ui='brand'] .feed-item__overlay .feed-item__title,
+[data-tahti-ui='brand'] .feed-item__overlay .feed-item__text {
+  color: inherit;
+}
+
+[data-tahti-ui='brand'] .feed-item__included-images {
+  display: flex;
+  gap: 5px;
+  margin-top: 0.45rem;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .feed-item__included-images img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 4px;
   object-fit: cover;
 }
 
@@ -5090,6 +5130,16 @@
 
 [data-tahti-ui='brand'] .feed-item__art--ph {
   background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .feed-item__content--visual .feed-item__art--large {
+  width: 100%;
+  height: 210px;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .feed-item--card .feed-item__content--visual .feed-item__art--large {
+  height: 210px;
 }
 
 .track-player-page {

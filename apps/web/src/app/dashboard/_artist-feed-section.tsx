@@ -11,6 +11,15 @@ import {
 } from '@/components/catalog-playback-buttons'
 
 function formatFeedDate(iso: string): string {
+  const age = Date.now() - new Date(iso).getTime()
+  const minute = 60_000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (age < minute) return 'just now'
+  if (age < hour) return `${Math.floor(age / minute)}m ago`
+  if (age < day) return `${Math.floor(age / hour)}h ago`
+  if (age < 7 * day) return `${Math.floor(age / day)}d ago`
+  if (age < 30 * day) return `${Math.floor(age / (7 * day))}w ago`
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
@@ -67,33 +76,57 @@ export function ArtistFeedSection({
                   <span className="feed-item__date">{formatFeedDate(item.date)}</span>
                 </div>
                 {item.kind === 'post' ? (
-                  <Link href={item.url} className="feed-item__content">
-                    {item.artist.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.artist.avatarUrl}
-                        alt=""
-                        className="feed-item__art feed-item__art--large"
-                      />
-                    ) : (
-                      <span
-                        className="feed-item__art feed-item__art--large feed-item__art--ph"
-                        aria-hidden
-                      />
+                  <>
+                    <Link href={item.url} className="feed-item__content feed-item__content--visual">
+                      {(item.images[0] ?? item.artist.avatarUrl) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.images[0] ?? item.artist.avatarUrl!}
+                          alt=""
+                          className="feed-item__art feed-item__art--large"
+                        />
+                      ) : (
+                        <span
+                          className="feed-item__art feed-item__art--large feed-item__art--ph"
+                          aria-hidden
+                        />
+                      )}
+                      <span className="feed-item__overlay">
+                        {item.title && <span className="feed-item__title">{item.title}</span>}
+                        <span className="feed-item__text">{item.body}</span>
+                      </span>
+                    </Link>
+                    {item.images.length > 1 && (
+                      <div className="feed-item__included-images" aria-label="Included images">
+                        {item.images.slice(1).map((src) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={src} src={src} alt="" />
+                        ))}
+                      </div>
                     )}
-                    {item.title && <div className="feed-item__title">{item.title}</div>}
-                    <p className="feed-item__text">{item.body}</p>
-                  </Link>
+                  </>
                 ) : item.kind === 'track' ? (
                   <div className="feed-item__track">
-                    <Link href={item.url} className="feed-item__content feed-item__content--track">
+                    <Link
+                      href={item.url}
+                      className="feed-item__content feed-item__content--track feed-item__content--visual"
+                    >
                       {item.bannerUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.bannerUrl} alt="" className="feed-item__art" />
+                        <img
+                          src={item.bannerUrl}
+                          alt=""
+                          className="feed-item__art feed-item__art--large"
+                        />
                       ) : (
-                        <span className="feed-item__art feed-item__art--ph" aria-hidden />
+                        <span
+                          className="feed-item__art feed-item__art--large feed-item__art--ph"
+                          aria-hidden
+                        />
                       )}
-                      <div className="feed-item__title">{item.title}</div>
+                      <span className="feed-item__overlay">
+                        <span className="feed-item__title">{item.title}</span>
+                      </span>
                     </Link>
                     {horizontal && item.audioUrl && (
                       <CatalogPlaybackButtons
@@ -128,7 +161,10 @@ export function ArtistFeedSection({
                     />
                   </div>
                 ) : (
-                  <Link href={item.url} className="feed-item__content feed-item__content--track">
+                  <Link
+                    href={item.url}
+                    className="feed-item__content feed-item__content--track feed-item__content--visual"
+                  >
                     {item.artworkUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -142,7 +178,9 @@ export function ArtistFeedSection({
                         aria-hidden
                       />
                     )}
-                    <div className="feed-item__title">{item.title}</div>
+                    <span className="feed-item__overlay">
+                      <span className="feed-item__title">{item.title}</span>
+                    </span>
                   </Link>
                 )}
               </div>

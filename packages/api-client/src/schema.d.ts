@@ -1969,6 +1969,9 @@ export interface paths {
               durationSec: number | null
               audioUrl: string | null
               bannerUrl: string | null
+              backgroundUrl?: string | null
+              slideshowUrls?: string[]
+              galleryMode?: string | null
               genre: string | null
               subGenres: string[]
               contentType: string
@@ -15631,6 +15634,39 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/musicbrainz/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/musicbrainz/default': {
     parameters: {
       query?: never
@@ -18383,6 +18419,7 @@ export interface paths {
                     }
                     title: string | null
                     body: string
+                    images: string[]
                     url: string
                   }
                 | {
