@@ -1024,6 +1024,11 @@ export const MotionCommentSchema = z.object({
 
 export const MotionCommentListSchema = z.array(MotionCommentSchema)
 
+// Bulk discussion-thread lookup for a list of motions in one request (used by
+// governance list pages to avoid an N+1 fetch — one request per motion) —
+// keyed by motion id, values in the same shape as MotionCommentListSchema.
+export const MotionCommentsBulkSchema = z.record(z.string(), MotionCommentListSchema)
+
 export const CollectionPublicViewSchema = z
   .object({
     slug: z.string(),
@@ -1508,6 +1513,9 @@ export const ReleaseEmbedViewSchema = z
         position: z.number().int(),
         title: z.string(),
         hasStream: z.boolean(),
+        /** Cached [0..255] amplitude buckets — null until the track's transcode
+         * has run (or for tracks uploaded before ReleaseTrack.peaks existed). */
+        peaks: z.array(z.number()).nullable(),
       }),
     ),
   })
@@ -1530,6 +1538,11 @@ export const EmbedTrackPlaySchema = z.object({
   url: z.string().url(),
   title: z.string(),
   expiresInSec: z.number().int(),
+  /** Cached [0..255] amplitude buckets, returned alongside the signed play URL
+   * so the embed player can render a real waveform without a second request —
+   * embeds have no other (authenticated) route to fetch this. Null if not
+   * cached yet. */
+  peaks: z.array(z.number()).nullable(),
 })
 
 export const CollectionEmbedViewSchema = z.object({
@@ -1550,6 +1563,9 @@ export const CollectionEmbedViewSchema = z.object({
       hasStream: z.boolean(),
       embedProvider: z.enum(['SPOTIFY', 'MIXCLOUD', 'HEARTHIS']).nullable(),
       embedUri: z.string().nullable(),
+      /** Cached [0..255] amplitude buckets — null for embed-only tracks
+       * (no local audio to analyze) or ones transcoded before this existed. */
+      peaks: z.array(z.number()).nullable(),
     }),
   ),
 })

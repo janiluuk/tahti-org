@@ -10,6 +10,7 @@ import { prisma, Prisma } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 import { fingerprintAndIdentify } from '../lib/track-fingerprint.js'
+import { extractWaveformPeaks } from '../lib/waveform.js'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode-release-track' }))
@@ -91,6 +92,8 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
     if (meta.duration < 1) throw new Error('Audio too short (< 1 second)')
     if (meta.duration > 8 * 3600) throw new Error('Audio too long (> 8 hours)')
 
+    const peaks = (await extractWaveformPeaks(srcPath)) ?? undefined
+
     await prisma.releaseTrack.update({
       where: { id: trackId },
       data: {
@@ -141,6 +144,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
         flacKey: flacKey ?? null,
         r2Key: r2?.r2Key ?? null,
         r2SizeBytes: r2?.sizeBytes ?? null,
+        peaks: peaks as Prisma.InputJsonValue | undefined,
         fingerprint,
         fingerprintMatch: match ?? Prisma.JsonNull,
         status: 'READY',

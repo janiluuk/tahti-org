@@ -134,7 +134,14 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           user: { select: { username: true, displayName: true } },
           tracks: {
             orderBy: { position: 'asc' },
-            select: { id: true, position: true, title: true, durationSec: true, streamKey: true },
+            select: {
+              id: true,
+              position: true,
+              title: true,
+              durationSec: true,
+              streamKey: true,
+              peaks: true,
+            },
           },
         },
       })
@@ -156,6 +163,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           title: t.title,
           durationSec: t.durationSec,
           hasStream: !!t.streamKey,
+          peaks: (t.peaks as number[] | null) ?? null,
         })),
         embedUrl: `${config.appUrl}/embed/r/${release.id}`,
         profileUrl: resolveArtistUrl(release.user.username),
@@ -233,6 +241,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
                   flacKey: true,
                   embedProvider: true,
                   embedUri: true,
+                  peaks: true,
                 },
               },
             },
@@ -260,6 +269,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
             hasStream: !!archivePlaybackKey(i.archiveItem!),
             embedProvider: i.archiveItem!.embedProvider,
             embedUri: i.archiveItem!.embedUri,
+            peaks: (i.archiveItem!.peaks as number[] | null) ?? null,
           })),
       })
     },
@@ -289,7 +299,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         where: { collectionId: collection.id, archiveItemId: trackId },
         select: {
           archiveItem: {
-            select: { title: true, mp3Key: true, flacKey: true, status: true },
+            select: { title: true, mp3Key: true, flacKey: true, status: true, peaks: true },
           },
         },
       })
@@ -301,7 +311,12 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (!key) return reply.status(409).send({ error: 'Track file not available yet' })
 
       const url = await presignedGetUrl(key, 300)
-      return reply.send({ url, title: item.archiveItem.title, expiresInSec: 300 })
+      return reply.send({
+        url,
+        title: item.archiveItem.title,
+        expiresInSec: 300,
+        peaks: (item.archiveItem.peaks as number[] | null) ?? null,
+      })
     },
   )
 
@@ -327,7 +342,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
       const track = await fastify.prisma.releaseTrack.findFirst({
         where: { id: trackId, releaseId: release.id, status: 'READY' },
-        select: { streamKey: true, sourceKey: true, title: true },
+        select: { streamKey: true, sourceKey: true, title: true, peaks: true },
       })
       if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
 
@@ -335,7 +350,12 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (!key) return reply.status(409).send({ error: 'Track file not available yet' })
 
       const url = await presignedGetUrl(key, 300)
-      return reply.send({ url, title: track.title, expiresInSec: 300 })
+      return reply.send({
+        url,
+        title: track.title,
+        expiresInSec: 300,
+        peaks: (track.peaks as number[] | null) ?? null,
+      })
     },
   )
 }

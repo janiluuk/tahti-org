@@ -2703,6 +2703,10 @@ model ReleaseTrack {
   sourceBitDepth   Int?
   streamKey        String?     // Opus 256 kbps derivative
   flacKey          String?     // FLAC 16/44 derivative (Studio tier download)
+  peaks            Json?       // [0..255] amplitude buckets, cached at transcode time so
+                                // embed players (which have no separate route to fetch this)
+                                // get a real waveform in the same response as the play URL —
+                                // same shape/purpose as ArchiveItem.peaks.
   fingerprint      String?     // Chromaprint fingerprint (base64), generated on upload
   // AcoustID lookup result against `fingerprint`, generated automatically on upload —
   // { acoustidId, score, recordingId?, title?, artist? } (see AcoustidFullMatch in
