@@ -14,6 +14,9 @@ export const InternetRadioPresetSchema = z.object({
   iconUrl: z.string().nullable(),
   programmingUrl: z.string().nullable(),
   streamUrl: z.string().nullable(),
+  /** Board-set: shown in every listener's Listen page radio feed (including
+   * anonymous visitors) without them adding it to their own library first. */
+  enabled: z.boolean(),
 })
 export type InternetRadioPreset = z.infer<typeof InternetRadioPresetSchema>
 
@@ -28,6 +31,7 @@ export const UpsertInternetRadioPresetSchema = z.object({
   iconUrl: z.string().url().optional(),
   programmingUrl: z.string().url().optional(),
   streamUrl: z.string().url().optional(),
+  enabled: z.boolean().optional(),
 })
 export type UpsertInternetRadioPresetInput = z.infer<typeof UpsertInternetRadioPresetSchema>
 

@@ -3183,6 +3183,10 @@ model InternetRadioPreset {
   /// Optional endpoint some stations expose for "what's on now" — display-only.
   programmingUrl String?
   streamUrl      String?
+  /// Board-set default: shown in every listener's Listen page radio feed
+  /// (anonymous visitors included) without them adding it to their own
+  /// library first. Distinct from a user's own InternetRadioStation copy.
+  enabled        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

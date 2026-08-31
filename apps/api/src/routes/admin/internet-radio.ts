@@ -23,6 +23,7 @@ const PRESET_SELECT = {
   iconUrl: true,
   programmingUrl: true,
   streamUrl: true,
+  enabled: true,
 } as const
 
 function zodError(

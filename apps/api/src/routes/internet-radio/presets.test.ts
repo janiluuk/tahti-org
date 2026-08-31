@@ -62,3 +62,39 @@ describe('GET /api/internet-radio/presets', () => {
     expect(body.presets.some((p) => p.id === presetId && p.name === `${PREFIX}SomaFM`)).toBe(true)
   })
 })
+
+describe('GET /api/v1/internet-radio/presets/enabled', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let enabledId: string
+  let disabledId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+
+    const enabled = await prisma.internetRadioPreset.create({
+      data: { name: `${PREFIX}Enabled`, streamUrl: 'https://example.com/a.m3u', enabled: true },
+    })
+    enabledId = enabled.id
+    const disabled = await prisma.internetRadioPreset.create({
+      data: { name: `${PREFIX}Disabled`, streamUrl: 'https://example.com/b.m3u', enabled: false },
+    })
+    disabledId = disabled.id
+  })
+
+  afterAll(async () => {
+    await prisma.internetRadioPreset.deleteMany({ where: { id: { in: [enabledId, disabledId] } } })
+    await app.close()
+  })
+
+  it('works with no auth and returns only enabled presets', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/internet-radio/presets/enabled',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { presets: Array<{ id: string; enabled: boolean }> }
+    expect(body.presets.some((p) => p.id === enabledId)).toBe(true)
+    expect(body.presets.some((p) => p.id === disabledId)).toBe(false)
+  })
+})
