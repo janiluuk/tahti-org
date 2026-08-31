@@ -108,7 +108,7 @@ function buildPages(seed) {
   const pages = [
     // ── Public (unauthenticated) ──────────────────────────────────────────
     { role: 'public', id: 'home', path: '/', label: 'Home' },
-    { role: 'public', id: 'join', path: '/join', label: 'Join (register)' },
+    { role: 'public', id: 'signup', path: '/signup', label: 'Signup (register)' },
     { role: 'public', id: 'login', path: '/login', label: 'Login' },
     { role: 'public', id: 'verify', path: '/verify', label: 'Verify email (landing)' },
     {
@@ -121,7 +121,7 @@ function buildPages(seed) {
     { role: 'public', id: 'listen', path: '/listen', label: 'Listen hub' },
     { role: 'public', id: 'radio', path: '/radio', label: 'Tahti Radio', prepare: collapseChat },
     { role: 'public', id: 'venues', path: '/venues', label: 'Venues calendar' },
-    { role: 'public', id: 'apply', path: '/apply', label: 'Beta apply' },
+    { role: 'public', id: 'beta-apply', path: '/signup', label: 'Beta apply (signup closed)' },
     { role: 'public', id: 'transparency', path: '/transparency', label: 'Transparency dashboard' },
     {
       role: 'public',

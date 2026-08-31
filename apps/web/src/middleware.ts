@@ -26,6 +26,7 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { resolveServerApiUrl } from '@/lib/api-url'
 
 /** Root domain for artist subdomains (tahti.live / staging.tahti.live). Null on local/dev. */
 function artistRootDomain(hostname: string): string | null {
@@ -109,7 +110,7 @@ export async function middleware(request: NextRequest) {
   // Slow path: custom domain (artist.example.com → /c/slug via API lookup)
   const customHost = request.headers.get('x-tahti-custom-host')
   if (customHost && isRewritableRoot) {
-    const apiUrl = process.env.API_URL ?? 'http://api:3001'
+    const apiUrl = resolveServerApiUrl()
     try {
       const res = await fetch(
         `${apiUrl}/api/v1/custom-domain/resolve?host=${encodeURIComponent(customHost)}`,

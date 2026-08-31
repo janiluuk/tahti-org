@@ -19,7 +19,7 @@ For a current cross-role inventory, see the **[feature catalog](../features.md)*
 | What | URL pattern |
 |------|-------------|
 | Home | `https://tahti.live/` |
-| Sign up | `/join` |
+| Sign up | `/signup` |
 | Log in | `/login` |
 | Your studio | `/dashboard` (after login) |
 | Your live channel | `/c/your-slug` |

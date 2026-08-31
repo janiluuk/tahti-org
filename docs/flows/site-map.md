@@ -18,8 +18,9 @@ flowchart TB
   Status["/status"]:::pub
   Trans["/transparency"]:::pub
   Method["/transparency/methodology"]:::pub
-  Apply["/apply"]:::pub
-  Join["/join · /signup"]:::pub
+  Apply["/apply → /signup"]:::pub
+  Join["/join → /signup"]:::pub
+  Signup["/signup"]:::pub
   Login["/login"]:::pub
   Verify["/verify"]:::pub
   Terms["/terms · /privacy · /agpl"]:::pub

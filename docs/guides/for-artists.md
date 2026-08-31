@@ -6,7 +6,7 @@ This guide is for any artist account with a **channel**. Tahti ry membership add
 
 ## Before you start
 
-1. **Sign up:** `/join` → verify email (`/verify` link in mail).
+1. **Sign up:** `/signup` → verify email (`/verify` link in mail).
 2. **Optional membership:** €40/year supports Tahti ry and adds membership benefits such as lossless artist delivery and unlimited storage display.
 3. **Log in anytime:** `/login` → `/dashboard`.
 

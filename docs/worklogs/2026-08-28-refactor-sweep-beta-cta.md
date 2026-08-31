@@ -50,8 +50,25 @@ sweep (invalid/mock/stale items, refactors, illogicalities), then shipped
 - [x] **R18** — Stop exporting deprecated `Stat` / `StatGrid` from `@tahti/ui`
 - [x] **R23** — `AGENTS.md`: disambiguate `beta.tahti.live` (Nuclear client) vs `[BETA]` seed fixtures
 
+## Shipped — slice 4 (docs routing)
+
+- [x] **R16** — Roadmap PLAT-041/046: `/apply` CTAs → `/signup` / beta client
+- [x] **R19** — E2e manifest + capture script: `/join`/`/apply` → `/signup`
+- [x] **R20** — User flows, guides, flows packs: register at `/signup`
+
+## Shipped — slice 5 (signup + prod guard + helper)
+
+- [x] **R08** — `/signup` when closed shows `BetaApplyForm` (was unreachable orphan)
+- [x] **R17** — `seed-beta-artists.ts` refuses production unless `ALLOW_BETA_SEED=1`
+- [x] **R09** (start) — `apps/web/src/lib/api-url.ts` with `resolveServerApiUrl` / `resolveClientApiUrl`
+
+## Shipped — slice 6 (server API URL migration)
+
+- [x] **R09** — Migrate `lib/*-client.ts`, `session`, `dashboard-session`, `middleware`, `apply/actions`
+
 ## Deferred (next passes)
 
-- R08–R12 refactors (API URL helper, chat hook, seed consolidation)
+- R10 client `NEXT_PUBLIC_API_*` migration (~70 components)
+- R11 duplicate chat panel logic
+- R12 four overlapping e2e seed scripts
 - R13–R14 marketing site / apex cutover (needs explicit `website/` task)
-- R16–R17, R19–R20 doc + prod-guard follow-ups

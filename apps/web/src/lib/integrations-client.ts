@@ -2,8 +2,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
+import { resolveServerApiUrl } from '@/lib/api-url'
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+const apiUrl = resolveServerApiUrl()
 
 export interface IntegrationView {
   slug: string
