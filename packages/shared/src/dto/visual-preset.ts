@@ -233,8 +233,7 @@ export function resolveVisualPresetSettings(
     speed: partial?.speed ?? DEFAULT_VISUAL_PRESET_SETTINGS.speed,
     intensity: partial?.intensity ?? DEFAULT_VISUAL_PRESET_SETTINGS.intensity,
     scale: partial?.scale ?? DEFAULT_VISUAL_PRESET_SETTINGS.scale,
-    audioReactive:
-      partial?.audioReactive ?? DEFAULT_VISUAL_PRESET_SETTINGS.audioReactive,
+    audioReactive: partial?.audioReactive ?? DEFAULT_VISUAL_PRESET_SETTINGS.audioReactive,
   }
 }
 

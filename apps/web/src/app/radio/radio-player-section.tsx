@@ -19,7 +19,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 // defeat it. Pushed past the schema's un-clamped default (1) since this is the
 // flagship 24/7 station and should read as visibly more alive than a typical
 // channel's own visualizer.
-const RADIO_VIZ_SETTINGS: VisualPresetSettings = { speed: 1.15, intensity: 1.8 }
+const RADIO_VIZ_SETTINGS: VisualPresetSettings = {
+  speed: 1.15,
+  intensity: 1.8,
+  scale: 1,
+  audioReactive: true,
+}
 const NOW_PLAYING_POLL_MS = 8_000
 
 interface RadioLiveSlot {
