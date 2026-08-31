@@ -117,3 +117,15 @@ with play and queue actions like the other listening surfaces.
   core-porting change should therefore define a versioned provider/capability
   contract around those existing boundaries, then adapt Google Drive to it;
   duplicating the OAuth or configuration UI would violate the agreed boundary.
+
+### Core contract milestone
+
+- Added the versioned `ImportPluginProvider` contract to `@tahti/shared`, with
+  provider kind, Configure/connection-test/file-list/import capabilities, and
+  OAuth/status paths.
+- Added authenticated `GET /api/me/import-plugins`, currently returning the
+  Google Drive reference adapter. The response is metadata-only and contains
+  no credentials or user configuration values.
+- The next step is to make Nuclear consume this registry and connect its
+  existing Configure modal to the generic contract before adding another
+  provider.

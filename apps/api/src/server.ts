@@ -144,6 +144,7 @@ import mixcloudRoutes from './routes/me/mixcloud.js'
 import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
 import googleDriveRoutes from './routes/me/google-drive.js'
+import meImportPluginRoutes from './routes/me/import-plugins.js'
 import musicbrainzRoutes from './routes/me/musicbrainz.js'
 import spotifyImportRoutes from './routes/imports/spotify.js'
 import spotifyProfileRoute from './routes/me/spotify-profile.js'
@@ -684,6 +685,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(bandcampRoutes)
   await fastify.register(soundcloudRoutes)
   await fastify.register(googleDriveRoutes)
+  await fastify.register(meImportPluginRoutes)
   await fastify.register(musicbrainzRoutes)
   await fastify.register(spotifyImportRoutes)
   await fastify.register(spotifyProfileRoute)
