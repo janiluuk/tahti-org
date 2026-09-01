@@ -193,6 +193,22 @@ export function ArchiveVersionPanel({
                 {v.sourceFormat != null &&
                   ` · ${v.sourceFormat}${
                     v.sourceBitrateKbps != null ? ` ${v.sourceBitrateKbps} kbps` : ' (lossless)'
+                  }${
+                    v.sourceSampleRateHz != null
+                      ? ` · ${(v.sourceSampleRateHz / 1000).toLocaleString(undefined, {
+                          maximumFractionDigits: 1,
+                        })} kHz`
+                      : ''
+                  }${v.sourceBitDepth != null ? `/${v.sourceBitDepth}-bit` : ''}${
+                    v.sourceChannels != null
+                      ? ` · ${
+                          v.sourceChannels === 1
+                            ? 'mono'
+                            : v.sourceChannels === 2
+                              ? 'stereo'
+                              : `${v.sourceChannels}ch`
+                        }`
+                      : ''
                   }`}
                 {v.isActive && <strong className="studio-badge--success"> active</strong>}
                 {v.status !== 'READY' &&

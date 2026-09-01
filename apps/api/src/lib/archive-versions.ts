@@ -12,6 +12,9 @@ export function serializeArchiveVersion(v: {
   durationSec: number | null
   sourceFormat?: string | null
   sourceBitrateKbps?: number | null
+  sourceSampleRateHz?: number | null
+  sourceBitDepth?: number | null
+  sourceChannels?: number | null
   createdAt: Date
 }): ArchiveVersionRow {
   return {
@@ -23,6 +26,9 @@ export function serializeArchiveVersion(v: {
     durationSec: v.durationSec,
     sourceFormat: v.sourceFormat ?? null,
     sourceBitrateKbps: v.sourceBitrateKbps ?? null,
+    sourceSampleRateHz: v.sourceSampleRateHz ?? null,
+    sourceBitDepth: v.sourceBitDepth ?? null,
+    sourceChannels: v.sourceChannels ?? null,
     createdAt: v.createdAt.toISOString(),
   }
 }

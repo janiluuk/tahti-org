@@ -51,6 +51,44 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/version': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Current Tahti release version for support and deployment checks */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              version: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/status': {
     parameters: {
       query?: never
@@ -1270,6 +1308,333 @@ export interface paths {
     }
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/mcp': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Model Context Protocol endpoint (Streamable HTTP, stateless) */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Start a Tahti Jam session from a playlist */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              code: string
+              hostUserId: string
+              collectionId: string | null
+              isPlaying: boolean
+              currentTrack: {
+                id: string
+                title: string
+                artistName: string
+                coverUrl: string | null
+              } | null
+              positionSec: number
+              /** Format: date-time */
+              positionUpdatedAt: string
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              endedAt: string | null
+              participants: {
+                userId: string
+                username: string
+                displayName: string
+                avatarUrl: string | null
+                /** @enum {string} */
+                role: 'HOST' | 'GUEST'
+                canControl: boolean
+                /** Format: date-time */
+                joinedAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam/{code}/join': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Join a Tahti Jam session by its code */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          code: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              code: string
+              hostUserId: string
+              collectionId: string | null
+              isPlaying: boolean
+              currentTrack: {
+                id: string
+                title: string
+                artistName: string
+                coverUrl: string | null
+              } | null
+              positionSec: number
+              /** Format: date-time */
+              positionUpdatedAt: string
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              endedAt: string | null
+              participants: {
+                userId: string
+                username: string
+                displayName: string
+                avatarUrl: string | null
+                /** @enum {string} */
+                role: 'HOST' | 'GUEST'
+                canControl: boolean
+                /** Format: date-time */
+                joinedAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam/{id}/events': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam/{id}/state': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/jam/{id}/leave': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
     delete?: never
     options?: never
     head?: never
@@ -8853,6 +9218,9 @@ export interface paths {
               effectiveKey?: string | null
               sourceFormat?: string | null
               sourceBitrateKbps?: number | null
+              sourceSampleRateHz?: number | null
+              sourceBitDepth?: number | null
+              sourceChannels?: number | null
             } & {
               [key: string]: unknown
             })[]
@@ -8908,6 +9276,9 @@ export interface paths {
               effectiveKey?: string | null
               sourceFormat?: string | null
               sourceBitrateKbps?: number | null
+              sourceSampleRateHz?: number | null
+              sourceBitDepth?: number | null
+              sourceChannels?: number | null
             } & {
               [key: string]: unknown
             }
@@ -20059,6 +20430,9 @@ export interface paths {
               effectiveKey?: string | null
               sourceFormat?: string | null
               sourceBitrateKbps?: number | null
+              sourceSampleRateHz?: number | null
+              sourceBitDepth?: number | null
+              sourceChannels?: number | null
             } & {
               [key: string]: unknown
             })[]
@@ -20147,6 +20521,9 @@ export interface paths {
               effectiveKey?: string | null
               sourceFormat?: string | null
               sourceBitrateKbps?: number | null
+              sourceSampleRateHz?: number | null
+              sourceBitDepth?: number | null
+              sourceChannels?: number | null
             } & {
               [key: string]: unknown
             }
@@ -20205,6 +20582,9 @@ export interface paths {
               effectiveKey?: string | null
               sourceFormat?: string | null
               sourceBitrateKbps?: number | null
+              sourceSampleRateHz?: number | null
+              sourceBitDepth?: number | null
+              sourceChannels?: number | null
             } & {
               [key: string]: unknown
             }
@@ -28503,6 +28883,9 @@ export interface components {
       effectiveKey?: string | null
       sourceFormat?: string | null
       sourceBitrateKbps?: number | null
+      sourceSampleRateHz?: number | null
+      sourceBitDepth?: number | null
+      sourceChannels?: number | null
     } & {
       [key: string]: unknown
     })[]

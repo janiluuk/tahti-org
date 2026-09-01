@@ -62,6 +62,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: true,
           sourceFormat: true,
           sourceBitrateKbps: true,
+          sourceSampleRateHz: true,
+          sourceBitDepth: true,
+          sourceChannels: true,
           createdAt: true,
         },
       })
@@ -96,6 +99,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: true,
           sourceFormat: true,
           sourceBitrateKbps: true,
+          sourceSampleRateHz: true,
+          sourceBitDepth: true,
+          sourceChannels: true,
           createdAt: true,
         },
       })
@@ -372,6 +378,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: true,
           sourceFormat: true,
           sourceBitrateKbps: true,
+          sourceSampleRateHz: true,
+          sourceBitDepth: true,
+          sourceChannels: true,
           createdAt: true,
         },
       })

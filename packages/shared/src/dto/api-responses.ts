@@ -773,6 +773,9 @@ export const ArchiveItemViewSchema = z
     effectiveKey: z.string().nullable().optional(),
     sourceFormat: z.string().nullable().optional(),
     sourceBitrateKbps: z.number().int().nullable().optional(),
+    sourceSampleRateHz: z.number().int().nullable().optional(),
+    sourceBitDepth: z.number().int().nullable().optional(),
+    sourceChannels: z.number().int().nullable().optional(),
   })
   .passthrough()
 

@@ -22,9 +22,15 @@ function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode-version' }))
 }
 
-function ffprobeFormat(
-  filePath: string,
-): Promise<{ duration: number; format: string; codec: string | null; bitrateKbps: number | null }> {
+function ffprobeFormat(filePath: string): Promise<{
+  duration: number
+  format: string
+  codec: string | null
+  bitrateKbps: number | null
+  sampleRateHz: number | null
+  bitDepth: number | null
+  channels: number | null
+}> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
       if (err) return reject(err)
@@ -32,11 +38,18 @@ function ffprobeFormat(
       const stream = metadata.streams.find((s) => s.codec_type === 'audio')
       const rawBitrate = stream?.bit_rate ?? metadata.format.bit_rate
       const bitrateKbps = rawBitrate ? Math.round(Number(rawBitrate) / 1000) : null
+      const toIntOrNull = (value: unknown): number | null => {
+        const parsed = Number(value)
+        return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : null
+      }
       resolve({
         duration: Math.round(metadata.format.duration ?? 0),
         format: fmt,
         codec: stream?.codec_name ?? null,
         bitrateKbps,
+        sampleRateHz: toIntOrNull(stream?.sample_rate),
+        bitDepth: toIntOrNull(stream?.bits_per_raw_sample ?? stream?.bits_per_sample),
+        channels: toIntOrNull(stream?.channels),
       })
     })
   })
@@ -121,6 +134,9 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
           peaks,
           sourceFormat,
           sourceBitrateKbps: null,
+          sourceSampleRateHz: sourceMeta.sampleRateHz,
+          sourceBitDepth: sourceMeta.bitDepth,
+          sourceChannels: sourceMeta.channels,
         },
       })
     } else {
@@ -141,6 +157,9 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
           peaks,
           sourceFormat,
           sourceBitrateKbps: sourceMeta.bitrateKbps,
+          sourceSampleRateHz: sourceMeta.sampleRateHz,
+          sourceBitDepth: sourceMeta.bitDepth,
+          sourceChannels: sourceMeta.channels,
         },
       })
     }

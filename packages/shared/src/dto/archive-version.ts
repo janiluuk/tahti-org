@@ -53,5 +53,8 @@ export interface ArchiveVersionRow {
   durationSec: number | null
   sourceFormat: string | null
   sourceBitrateKbps: number | null
+  sourceSampleRateHz: number | null
+  sourceBitDepth: number | null
+  sourceChannels: number | null
   createdAt: string
 }

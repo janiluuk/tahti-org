@@ -1723,6 +1723,9 @@ model ArchiveItem {
   durationSec   Int?
   sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
   sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
+  sourceSampleRateHz Int?         // detected source sample rate, e.g. 44100 or 96000
+  sourceBitDepth     Int?         // detected source bit depth, e.g. 16 or 24
+  sourceChannels     Int?         // detected source channel count, e.g. 1 or 2
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   visualPreset  VisualPreset      @default(MINIMAL) // M31
   // Per-track visual override (waveform/visualizer accent color) — same shape as
@@ -1880,6 +1883,9 @@ model ArchiveItemVersion {
   durationSec   Int?
   sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
   sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
+  sourceSampleRateHz Int?         // detected source sample rate
+  sourceBitDepth     Int?         // detected source bit depth
+  sourceChannels     Int?         // detected source channel count
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   fileSizeBytes BigInt            @default(0)
   status        ArchiveItemStatus @default(PENDING)
