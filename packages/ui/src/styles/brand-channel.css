@@ -1907,6 +1907,103 @@
   font-size: var(--text-sm);
 }
 
+[data-tahti-ui='brand'] .ch-radio-recent-channels {
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__header h2 {
+  margin: 0;
+  color: var(--muted2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__header span {
+  color: var(--muted2);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__slider {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0.1rem 0.1rem 0.35rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__card {
+  display: flex;
+  align-items: center;
+  flex: 0 0 min(17rem, 78vw);
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius);
+  background: var(--card2);
+  color: var(--text);
+  text-decoration: none;
+  scroll-snap-align: start;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__card:hover {
+  border-color: color-mix(in srgb, var(--cyan) 55%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__body strong,
+[data-tahti-ui='brand'] .ch-radio-recent-channels__body span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__body strong {
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__body span,
+[data-tahti-ui='brand'] .ch-radio-recent-channels__card time {
+  color: var(--muted2);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__card time {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 [data-tahti-ui='brand'] .ch-radio-live-now a {
   color: var(--cyan);
 }

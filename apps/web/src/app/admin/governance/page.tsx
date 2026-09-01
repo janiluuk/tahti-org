@@ -41,12 +41,12 @@ const SECTIONS = [
   },
   {
     href: '/admin/governance/audit',
-    title: 'Audit log viewer',
+    title: 'Governance audit log',
     desc: 'Searchable log of privileged actions across the platform.',
   },
   {
     href: '/api/admin/audit/export.csv',
-    title: 'Audit log export (CSV)',
+    title: 'Governance audit export (CSV)',
     desc: 'Download the full audit trail as a CSV file.',
   },
   {
@@ -62,7 +62,7 @@ const GOVERNANCE_TABS = [
   { href: '/admin/agm', label: 'AGM & meetings' },
   { href: '/admin/governance/resolutions', label: 'Board resolutions' },
   { href: '/admin/governance/report', label: 'Annual reports' },
-  { href: '/admin/governance/audit', label: 'Audit log' },
+  { href: '/admin/governance/audit', label: 'Governance audit' },
   { href: '/governance/venues', label: 'Venue verification' },
   { href: '/transparency', label: 'Transparency' },
 ] as const

@@ -12,6 +12,7 @@ import { RadioPlayerSection } from './radio-player-section'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 import { UpcomingShows } from './upcoming-shows'
 import { RecentlyPlayed, type RecentlyPlayedItem } from './recently-played'
+import { RecentlyPlayedChannels, type RecentlyPlayedChannel } from './recently-played-channels'
 import { RadioTabs } from './_radio-tabs'
 import { RadioInfoOverlay } from './radio-info-overlay'
 
@@ -104,6 +105,17 @@ async function fetchRecentlyPlayed(): Promise<RecentlyPlayedItem[]> {
   }
 }
 
+async function fetchRecentlyPlayedChannels(): Promise<RecentlyPlayedChannel[]> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/radio/history`, { next: { revalidate: 30 } })
+    if (!res.ok) return []
+    return (await res.json()) as RecentlyPlayedChannel[]
+  } catch {
+    return []
+  }
+}
+
 interface RadioChannelPayload {
   hlsUrl: string | null
   chatEnabled?: boolean
@@ -142,16 +154,25 @@ async function fetchRadioChannel(): Promise<RadioChannelPayload> {
 }
 
 export default async function RadioPage() {
-  const [announcements, memberRelay, rotation, upcomingSlots, recentlyPlayed, radioChannel, user] =
-    await Promise.all([
-      fetchAnnouncements(),
-      fetchMemberRelay(),
-      fetchRotation(),
-      fetchUpcomingSlots(),
-      fetchRecentlyPlayed(),
-      fetchRadioChannel(),
-      getSessionUser(),
-    ])
+  const [
+    announcements,
+    memberRelay,
+    rotation,
+    upcomingSlots,
+    recentlyPlayed,
+    recentlyPlayedChannels,
+    radioChannel,
+    user,
+  ] = await Promise.all([
+    fetchAnnouncements(),
+    fetchMemberRelay(),
+    fetchRotation(),
+    fetchUpcomingSlots(),
+    fetchRecentlyPlayed(),
+    fetchRecentlyPlayedChannels(),
+    fetchRadioChannel(),
+    getSessionUser(),
+  ])
   const { hlsUrl: realHlsUrl, nowPlaying, chatEnabled, channelDisplayName } = radioChannel
 
   const playback = realHlsUrl
@@ -260,6 +281,7 @@ export default async function RadioPage() {
                 />
               }
             />
+            <RecentlyPlayedChannels items={recentlyPlayedChannels} />
           </div>
         </div>
       }
