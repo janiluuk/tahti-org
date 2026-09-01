@@ -440,6 +440,11 @@ export const ADMIN_NAV = [
     label: 'System logs',
     icon: <GovernanceNavIcon mark="L" />,
   },
+  {
+    href: '/admin/workers',
+    label: 'Workers',
+    icon: <GovernanceNavIcon mark="W" />,
+  },
 ] as const
 
 export const ADMIN_MENU_GROUPS = [
@@ -497,6 +502,7 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/themes',
       '/admin/settings/vendors',
       '/admin/logs',
+      '/admin/workers',
     ],
   },
 ] as const

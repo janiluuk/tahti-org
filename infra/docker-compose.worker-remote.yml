@@ -55,6 +55,8 @@ services:
       R2_BUCKET: ${R2_BUCKET:-tahti-user-storage}
       # Extra headroom on a dedicated transcode box (vimage7: 15 GB RAM).
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      # Identifies this process on the /admin/workers status page.
+      WORKER_NAME: vimage7-transcode
 
   # GPU-accelerated (see services/stem-separator/Dockerfile) — the only box
   # in the fleet with a GPU, so this doesn't run anywhere else. `docker

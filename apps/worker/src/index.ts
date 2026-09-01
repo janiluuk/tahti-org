@@ -58,6 +58,7 @@ import {
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 import { runWithCronLog } from './lib/cron-run.js'
 import { jobNamesForLanes } from '@tahti/shared'
+import { registerWorker, heartbeat, recordJobEvent, resolveWorkerName } from './lib/worker-registry.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -89,6 +90,10 @@ if (requestedLanes.length > 0) {
     `[worker] lane filter active: ${requestedLanes.join(',')} (${allowedJobNames.size} job names)`,
   )
 }
+
+const WORKER_NAME = resolveWorkerName()
+const WORKER_LANES = requestedLanes.length > 0 ? requestedLanes : ['all']
+const HEARTBEAT_MS = 20_000
 
 const worker = new Worker(
   'media',
@@ -253,12 +258,36 @@ const worker = new Worker(
   { connection, concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? '1', 10) },
 )
 
+worker.on('active', (job) => {
+  void recordJobEvent(WORKER_NAME, {
+    jobId: String(job.id),
+    jobName: job.name,
+    status: 'active',
+    at: Date.now(),
+  })
+})
+
 worker.on('completed', (job) => {
   console.log(`[worker] job ${job.id} (${job.name}) completed`)
+  void recordJobEvent(WORKER_NAME, {
+    jobId: String(job.id),
+    jobName: job.name,
+    status: 'completed',
+    at: Date.now(),
+  })
 })
 
 worker.on('failed', (job, err) => {
   console.error(`[worker] job ${job?.id} (${job?.name}) failed:`, err)
+  if (job) {
+    void recordJobEvent(WORKER_NAME, {
+      jobId: String(job.id),
+      jobName: job.name,
+      status: 'failed',
+      at: Date.now(),
+      errorMessage: err.message,
+    })
+  }
 })
 
 // A stray error anywhere outside the guarded job-processing path above (e.g. a
@@ -300,10 +329,18 @@ registerCrons().catch((err: unknown) => {
   console.error('[worker] failed to register crons:', err)
 })
 
+registerWorker(WORKER_NAME, WORKER_LANES).catch((err: unknown) => {
+  console.error('[worker] failed to register with worker registry:', err)
+})
+const heartbeatInterval = setInterval(() => {
+  void heartbeat(WORKER_NAME)
+}, HEARTBEAT_MS)
+
 process.on('SIGTERM', async () => {
+  clearInterval(heartbeatInterval)
   await worker.close()
   await prisma.$disconnect()
   process.exit(0)
 })
 
-console.log('[worker] started, listening for jobs on media queue')
+console.log(`[worker] started as "${WORKER_NAME}", listening for jobs on media queue`)

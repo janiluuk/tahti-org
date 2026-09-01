@@ -12004,6 +12004,127 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/workers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Board-only: configured worker nodes and their live status */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              workers: {
+                name: string
+                lanes: string[]
+                /** @enum {string} */
+                status: 'online' | 'offline'
+                jobStatus: string | null
+                hostname: string | null
+                pid: number | null
+                /** Format: date-time */
+                startedAt: string | null
+                /** Format: date-time */
+                updatedAt: string | null
+                lastJobName: string | null
+                lastJobId: string | null
+                lastJobStatus: string | null
+                /** Format: date-time */
+                lastJobAt: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/workers/{name}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Board-only: one worker node plus its recent job history */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          name: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              worker: {
+                name: string
+                lanes: string[]
+                /** @enum {string} */
+                status: 'online' | 'offline'
+                jobStatus: string | null
+                hostname: string | null
+                pid: number | null
+                /** Format: date-time */
+                startedAt: string | null
+                /** Format: date-time */
+                updatedAt: string | null
+                lastJobName: string | null
+                lastJobId: string | null
+                lastJobStatus: string | null
+                /** Format: date-time */
+                lastJobAt: string | null
+              }
+              history: {
+                jobId: string
+                jobName: string
+                /** @enum {string} */
+                status: 'active' | 'completed' | 'failed'
+                /** Format: date-time */
+                at: string
+                errorMessage?: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/venues': {
     parameters: {
       query?: never

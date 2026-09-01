@@ -402,6 +402,8 @@ services:
       # channel-watchdog (and other crons) blocked that tick for ~40s —
       # confirmed live as playlist Last-Modified stalls then +10 segment jumps.
       WORKER_CONCURRENCY: '4'
+      # Identifies this process on the /admin/workers status page.
+      WORKER_NAME: vimage-main
     volumes:
       - stack_hls:/hls:ro
       - stack_recordings:/recordings:ro
