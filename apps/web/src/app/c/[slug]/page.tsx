@@ -17,16 +17,13 @@ import { LivePlayerSection } from './live-player-section'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { LiveTabContent } from './_live-tab-content'
 import { ChannelGalleryView } from './channel-gallery'
-import { ArchiveItemGallery } from './archive-item-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { ChannelPageVisualizer } from './_channel-page-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
-import { TracklistView } from '@/components/tracklist/tracklist-view'
-import { ArchiveItemPlayback } from '@/components/archive-item-playback'
-import { LibraryBrowser } from '@/components/library/library-browser'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
+import { ArchiveListSection } from './_archive-list-section'
 import type { PlayerTrack } from '@/contexts/player-context'
 import type {
   ChannelGalleryMode,
@@ -35,15 +32,7 @@ import type {
   TracklistEntry,
 } from '@tahti/shared'
 import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
-import {
-  AvatarTile,
-  Heading,
-  Row,
-  Text,
-  ChannelPageShell,
-  SafePlainText,
-  RankBadge,
-} from '@tahti/ui'
+import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
@@ -53,7 +42,6 @@ import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { ReportButton } from '@/components/report-button'
-import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { FollowButton } from '@/components/follow-button'
 import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
@@ -121,7 +109,7 @@ function resolveHeaderBannerStyle(channel: ChannelResponse): CSSProperties | und
   return { background: preset?.gradient ?? BRAND_ACCENT_PRESETS[0]?.gradient }
 }
 
-interface ArchiveItem {
+export interface ArchiveItem {
   id: string
   title: string
   artistName?: string | null
@@ -326,13 +314,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     } catch {
       listenerCount = null
     }
-  }
-
-  function fmtDuration(secs: number): string {
-    const h = Math.floor(secs / 3600)
-    const m = Math.floor((secs % 3600) / 60)
-    if (h > 0) return `${h}h ${m}m`
-    return `${m}m`
   }
 
   return (
@@ -642,177 +623,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         </div>
                       ) : (
                         <div data-tahti-ui="studio">
-                          <LibraryBrowser
+                          <ArchiveListSection
                             items={items}
-                            getTitle={(item) => item.title}
-                            getCreatedAt={(item) => item.createdAt}
-                            searchPlaceholder="Search sounds…"
-                            emptyMessage="No archive items yet."
-                            noMatchMessage="No sounds match."
-                            showStatusFilters={false}
-                          >
-                            {(visible) => (
-                              <ul className="ch-archive-list">
-                                {visible.map((item) => {
-                                  const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
-                                    item.backgroundUrl,
-                                  )
-                                  return (
-                                    <li
-                                      key={item.id}
-                                      id={`archive-item-${item.id}`}
-                                      className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
-                                      style={
-                                        cssImageUrl
-                                          ? { ['--ch-item-bg' as string]: cssImageUrl }
-                                          : undefined
-                                      }
-                                    >
-                                      {videoEmbedUrl && (
-                                        <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />
-                                      )}
-                                      <div className="ch-archive-item-header">
-                                        <span
-                                          style={{ position: 'relative', display: 'inline-flex' }}
-                                        >
-                                          {item.bannerUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                              src={item.bannerUrl}
-                                              alt=""
-                                              className="ch-archive-item-thumb"
-                                            />
-                                          ) : (
-                                            <AvatarTile size="xs" name={item.title} />
-                                          )}
-                                          {ranks[item.id] && <RankBadge rank={ranks[item.id]!} />}
-                                        </span>
-                                        <div className="ch-archive-item-meta">
-                                          <div className="ch-archive-item-meta-main">
-                                            <div className="ch-archive-item-title">
-                                              {item.title}
-                                            </div>
-                                            {item.artistName ? (
-                                              <div className="ch-archive-item-credit">
-                                                <span>{item.artistName}</span>
-                                              </div>
-                                            ) : null}
-                                          </div>
-                                          <div className="ch-archive-item-date">
-                                            {new Date(item.createdAt).toLocaleDateString(
-                                              undefined,
-                                              {
-                                                year: 'numeric',
-                                                month: 'short',
-                                              },
-                                            )}
-                                            {item.durationSec != null && (
-                                              <> · {fmtDuration(item.durationSec)}</>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      {(() => {
-                                        const hasCredits = Boolean(
-                                          item.credits && item.credits.length > 0,
-                                        )
-                                        const hasGallery = Boolean(
-                                          item.slideshowUrls && item.slideshowUrls.length > 0,
-                                        )
-                                        const hasDesc = Boolean(item.description)
-                                        const hasCommentary = Boolean(item.commentary)
-                                        const hasTracklist = Boolean(
-                                          item.tracklist && item.tracklist.length > 0,
-                                        )
-                                        const hasDetails =
-                                          hasCredits ||
-                                          hasGallery ||
-                                          hasDesc ||
-                                          hasCommentary ||
-                                          hasTracklist
-                                        if (!hasDetails) return null
-                                        return (
-                                          <details className="ch-archive-item-details">
-                                            <summary className="ch-archive-item-details__summary">
-                                              Details
-                                            </summary>
-                                            <div className="ch-archive-item-details__body">
-                                              {hasCredits ? (
-                                                <div className="ch-archive-item-credit ch-archive-item-credit--roles">
-                                                  {item.credits!.map((c, i) => (
-                                                    <span key={`${c.role}-${c.name}-${i}`}>
-                                                      {i > 0 ? ' · ' : null}
-                                                      {c.role}:{' '}
-                                                      {c.artistUsername ? (
-                                                        <a
-                                                          href={`/u/${c.artistUsername}`}
-                                                          className="ch-archive-item-credit__link"
-                                                        >
-                                                          {c.name}
-                                                        </a>
-                                                      ) : (
-                                                        c.name
-                                                      )}
-                                                    </span>
-                                                  ))}
-                                                </div>
-                                              ) : null}
-                                              {hasGallery ? (
-                                                <ArchiveItemGallery
-                                                  itemId={item.id}
-                                                  images={item.slideshowUrls!}
-                                                  galleryMode={item.galleryMode ?? 'NONE'}
-                                                  audioReactive={Boolean(item.galleryAudioReactive)}
-                                                />
-                                              ) : null}
-                                              {hasDesc ? (
-                                                <SafePlainText
-                                                  text={item.description!}
-                                                  className="ch-archive-item-desc"
-                                                />
-                                              ) : null}
-                                              {hasCommentary ? (
-                                                <SafePlainText
-                                                  text={item.commentary!}
-                                                  className="ch-archive-item-commentary"
-                                                />
-                                              ) : null}
-                                              {hasTracklist ? (
-                                                <TracklistView entries={item.tracklist!} />
-                                              ) : null}
-                                            </div>
-                                          </details>
-                                        )
-                                      })()}
-                                      {item.audioUrl ? (
-                                        <ArchiveItemPlayback
-                                          channelSlug={slug}
-                                          artistUsername={channel.user.username}
-                                          artistCredit={item.artistName}
-                                          item={{ ...item, audioUrl: item.audioUrl }}
-                                          colorSchemeJson={channel.colorSchemeJson}
-                                          isLoggedIn={!!user}
-                                          queue={archiveQueue}
-                                        />
-                                      ) : (
-                                        <>
-                                          <TrackCommentsToggle
-                                            archiveItemId={item.id}
-                                            isLoggedIn={!!user}
-                                            commentCount={item.commentCount ?? 0}
-                                          />
-                                          <ReportButton
-                                            targetType="ARCHIVE_ITEM"
-                                            targetId={item.id}
-                                          />
-                                        </>
-                                      )}
-                                    </li>
-                                  )
-                                })}
-                              </ul>
-                            )}
-                          </LibraryBrowser>
+                            ranks={ranks}
+                            slug={slug}
+                            artistUsername={channel.user.username}
+                            colorSchemeJson={channel.colorSchemeJson}
+                            isLoggedIn={!!user}
+                            archiveQueue={archiveQueue}
+                          />
                         </div>
                       )}
                     </section>

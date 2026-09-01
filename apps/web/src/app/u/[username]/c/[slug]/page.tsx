@@ -18,18 +18,12 @@ import {
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
-import type { PlayerTrack } from '@/contexts/player-context'
-import { SpotifyEmbedRow } from './_spotify-embed-row'
-import { MixcloudEmbedRow } from './_mixcloud-embed-row'
-import { HearthisEmbedRow } from './_hearthis-embed-row'
-import { ArchiveTrackRow } from './_archive-track-row'
-import { PlaylistControls } from './_playlist-controls'
 import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
 import { SubscribeButton } from './_subscribe-button'
 import { CollectionGalleryProvider, CollectionCoverButton } from './_collection-gallery'
-import { LibraryBrowser } from '@/components/library/library-browser'
+import { CollectionLibrarySection } from './_collection-library-section'
 
 function IconRss() {
   return (
@@ -54,7 +48,7 @@ async function fetchCollection(slug: string) {
   return (await res.json()) as CollectionResponse
 }
 
-interface CollectionResponse {
+export interface CollectionResponse {
   name: string
   description: string | null
   type: string
@@ -92,10 +86,6 @@ interface CollectionResponse {
     addNote?: string | null
   }>
   links?: { page?: string; rss?: string }
-}
-
-function formatDuration(sec: number): string {
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 }
 
 export async function generateMetadata({
@@ -223,156 +213,7 @@ export default async function CollectionPage({
             </div>
           ) : (
             <div data-tahti-ui="studio">
-              <LibraryBrowser
-                items={data.items}
-                getTitle={(item) => item.archiveItem?.title ?? item.release?.title ?? 'Untitled'}
-                searchPlaceholder="Search playlist…"
-                emptyMessage="This collection is empty."
-                noMatchMessage="No playlist items match."
-                showStatusFilters={false}
-              >
-                {(visible) => {
-                  // Include HearThis embeds so they follow the same shared queue
-                  // as Tahti-hosted tracks, in the currently displayed order.
-                  const queue: PlayerTrack[] = visible
-                    .filter(
-                      (i) =>
-                        i.archiveItem?.audioUrl ||
-                        (i.archiveItem?.source === 'HEARTHIS_EMBED' && i.archiveItem.embedUri),
-                    )
-                    .map((i) => ({
-                      id: i.archiveItem!.id,
-                      kind: 'archive',
-                      url: i.archiveItem!.audioUrl ?? '',
-                      title: i.archiveItem!.title,
-                      durationSec: i.archiveItem!.durationSec,
-                      subtitle: `@${data.user.username}`,
-                      ...(i.archiveItem!.source === 'HEARTHIS_EMBED' && i.archiveItem!.embedUri
-                        ? {
-                            embed: {
-                              provider: 'HEARTHIS' as const,
-                              embedUri: i.archiveItem!.embedUri,
-                            },
-                          }
-                        : {}),
-                    }))
-
-                  return (
-                    <>
-                      {queue.length > 0 && <PlaylistControls queue={queue} />}
-                      <ol className="prof-list prof-collection-items">
-                        {visible.map((item) => {
-                          if (
-                            item.archiveItem?.source === 'SPOTIFY_EMBED' &&
-                            item.archiveItem.embedUri
-                          ) {
-                            return (
-                              <SpotifyEmbedRow
-                                key={item.id}
-                                title={item.archiveItem.title}
-                                embedUri={item.archiveItem.embedUri}
-                              />
-                            )
-                          }
-                          if (
-                            item.archiveItem?.source === 'MIXCLOUD_EMBED' &&
-                            item.archiveItem.embedUri
-                          ) {
-                            return (
-                              <MixcloudEmbedRow
-                                key={item.id}
-                                title={item.archiveItem.title}
-                                embedUri={item.archiveItem.embedUri}
-                              />
-                            )
-                          }
-                          if (
-                            item.archiveItem?.source === 'HEARTHIS_EMBED' &&
-                            item.archiveItem.embedUri
-                          ) {
-                            return (
-                              <HearthisEmbedRow
-                                key={item.id}
-                                title={item.archiveItem.title}
-                                embedUri={item.archiveItem.embedUri}
-                                id={item.archiveItem.id}
-                                durationSec={item.archiveItem.durationSec}
-                                thumbUrl={
-                                  item.archiveItem.bannerUrl ?? item.release?.artworkUrl ?? null
-                                }
-                                queue={queue}
-                              />
-                            )
-                          }
-                          const thumbUrl =
-                            item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
-                          if (item.archiveItem?.audioUrl) {
-                            return (
-                              <ArchiveTrackRow
-                                key={item.id}
-                                id={item.archiveItem.id}
-                                title={item.archiveItem.title}
-                                audioUrl={item.archiveItem.audioUrl}
-                                artistUsername={data.user.username}
-                                channelSlug={item.archiveItem.channel?.slug ?? null}
-                                thumbUrl={thumbUrl}
-                                durationLabel={
-                                  item.archiveItem.durationSec != null
-                                    ? formatDuration(item.archiveItem.durationSec)
-                                    : null
-                                }
-                                addedByDisplayName={
-                                  item.addedBy && item.addedBy.username !== data.user.username
-                                    ? item.addedBy.displayName
-                                    : null
-                                }
-                                addNote={item.addNote}
-                                queue={queue}
-                              />
-                            )
-                          }
-                          return (
-                            <li key={item.id} className="prof-collection-item-row">
-                              <CollectionCoverButton
-                                url={thumbUrl}
-                                className="prof-collection-cover prof-collection-cover--item"
-                                imgWidth={40}
-                                imgHeight={40}
-                              />
-                              <div className="prof-collection-item-body">
-                                {item.archiveItem && (
-                                  <>
-                                    <div className="prof-collection-title">
-                                      {item.archiveItem.title}
-                                    </div>
-                                    {item.archiveItem.durationSec != null && (
-                                      <span className="prof-list-meta">
-                                        {formatDuration(item.archiveItem.durationSec)}
-                                      </span>
-                                    )}
-                                  </>
-                                )}
-                                {item.release && (
-                                  <>
-                                    <Link href={`/r/${item.release.smartLinkSlug}`}>
-                                      {item.release.title}
-                                    </Link>
-                                    <span className="prof-list-meta">
-                                      {' '}
-                                      · {item.release.type} ·{' '}
-                                      {new Date(item.release.releaseDate).toLocaleDateString()}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </li>
-                          )
-                        })}
-                      </ol>
-                    </>
-                  )
-                }}
-              </LibraryBrowser>
+              <CollectionLibrarySection items={data.items} artistUsername={data.user.username} />
             </div>
           )}
         </section>
