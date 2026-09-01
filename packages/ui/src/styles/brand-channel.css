@@ -6140,7 +6140,7 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-playback__title {
-  font-weight: 600;
+  font-weight: 500;
   font-size: var(--text-sm);
   color: #fff;
   overflow: hidden;
@@ -6216,7 +6216,7 @@
 
 [data-tahti-ui='brand'] .ch-countdown-time {
   font-size: var(--text-body);
-  font-weight: 700;
+  font-weight: 500;
   color: var(--text);
   margin: 0 0 0.5rem;
 }
@@ -8432,7 +8432,7 @@
   color: var(--text);
   font-family: var(--font-head, inherit);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
