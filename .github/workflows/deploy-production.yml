@@ -112,6 +112,9 @@ jobs:
             IdentitiesOnly yes
             BatchMode yes
             StrictHostKeyChecking accept-new
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h:%p
+            ControlPersist 15m
 
           Host deploy-prod
             HostName ${DEPLOY_HOST}
@@ -121,6 +124,9 @@ jobs:
             IdentitiesOnly yes
             BatchMode yes
             StrictHostKeyChecking accept-new
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h:%p
+            ControlPersist 15m
           CFG
           chmod 600 ~/.ssh/config
 
@@ -154,6 +160,9 @@ jobs:
 
       - name: Health check
         run: |
-          ssh deploy-prod "curl -sfS http://127.0.0.1:15011/health"
-          ssh deploy-prod "curl -sfS -o /dev/null http://127.0.0.1:17777/"
-          ssh deploy-prod "curl -sfS -o /dev/null http://127.0.0.1:18080/"
+          ssh deploy-prod '
+            set -euo pipefail
+            curl -sfS http://127.0.0.1:15011/health
+            curl -sfS -o /dev/null http://127.0.0.1:17777/
+            curl -sfS -o /dev/null http://127.0.0.1:18080/
+          '
