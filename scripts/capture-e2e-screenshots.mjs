@@ -533,10 +533,21 @@ async function main() {
     await mkdir(join(OUT, role), { recursive: true })
   }
 
-  const browser = await chromium.launch({ headless: true })
+  // --disable-gpu and reducedMotion are defensive: the channel page's
+  // WebGL background canvas already falls back to a static image cleanly
+  // when no WebGL context is available (see bg-canvas.tsx), confirmed
+  // working in a real browser — console shows "[bg-canvas] WebGL context
+  // creation failed, using static fallback". Neither flag fixes the
+  // occasional headless-only "Protocol error: Unable to capture
+  // screenshot" GPU-process crash on that page (root cause still open —
+  // see the worklog), but both are harmless and reduce flakiness
+  // generally, so left in. The per-page try/catch below means one page
+  // crashing no longer takes the rest of the run down with it.
+  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu'] })
   const publicContext = await browser.newContext({
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
   })
 
   /** @type {Map<AuthRole, import('playwright').BrowserContext>} */
@@ -549,6 +560,7 @@ async function main() {
     const ctx = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
+      reducedMotion: 'reduce',
     })
     const cookie = await apiLogin(API, APP, account.email, account.password)
     await ctx.addCookies([cookie])
@@ -557,31 +569,42 @@ async function main() {
   }
 
   const manifest = []
+  const failures = []
 
   for (const page of selectedPages) {
     const ctx = await contextForRole(page.role)
     const tab = await ctx.newPage()
-    const url = `${APP}${page.path}`
-    await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
-    if (page.waitMs) await tab.waitForTimeout(page.waitMs)
-    if (page.role === 'admin') await tab.waitForTimeout(2000)
-    if (page.prepare) await page.prepare(tab)
-    if (page.role !== 'public') {
-      await assertAuthenticated(tab, `${page.role}/${page.id}`)
-    }
-    if (annotateAdmin && page.role === 'admin') await annotateAdminScreenshot(tab, page)
-
     const file = `${page.role}/${page.id}.png`
-    await tab.screenshot({ path: join(OUT, file), fullPage: true })
-    manifest.push({
-      role: page.role,
-      id: page.id,
-      file,
-      url: page.path,
-      label: page.label,
-    })
-    await tab.close()
-    console.log(`✓ ${file} — ${page.label}`)
+    try {
+      const url = `${APP}${page.path}`
+      await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
+      if (page.waitMs) await tab.waitForTimeout(page.waitMs)
+      if (page.role === 'admin') await tab.waitForTimeout(2000)
+      if (page.prepare) await page.prepare(tab)
+      if (page.role !== 'public') {
+        await assertAuthenticated(tab, `${page.role}/${page.id}`)
+      }
+      if (annotateAdmin && page.role === 'admin') await annotateAdminScreenshot(tab, page)
+
+      await tab.screenshot({ path: join(OUT, file), fullPage: true })
+      manifest.push({
+        role: page.role,
+        id: page.id,
+        file,
+        url: page.path,
+        label: page.label,
+      })
+      console.log(`✓ ${file} — ${page.label}`)
+    } catch (err) {
+      // One page's browser/render failure (e.g. the channel page's
+      // occasional headless GPU-process crash — see the comment above
+      // the browser launch) shouldn't take the other ~40 screenshots
+      // down with it. Keep going and report every failure at the end.
+      failures.push({ file, label: page.label, error: err })
+      console.error(`✗ ${file} — ${page.label}: ${err.message.split('\n')[0]}`)
+    } finally {
+      await tab.close().catch(() => {})
+    }
   }
 
   await publicContext.close()
@@ -599,6 +622,11 @@ async function main() {
   })
   await browser.close()
   console.log(`\n${manifest.length} screenshots saved under ${OUT}`)
+  if (failures.length > 0) {
+    console.error(`\n${failures.length} page(s) failed to capture:`)
+    for (const f of failures) console.error(`  - ${f.file} (${f.label})`)
+    process.exitCode = 1
+  }
 }
 
 main().catch((e) => {

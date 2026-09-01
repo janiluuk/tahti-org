@@ -6,8 +6,11 @@
    in the root layout) needs to show through, the same way it does on
    Discover and the homepage. */
 
+/* shell-public__inner (the shared wrapper this page renders inside) only
+   sets max-width/centering, no horizontal padding — every other page on
+   that shell (.home-shell, .listen-shell) adds its own, this one hadn't. */
 [data-tahti-ui='brand'] .about-page {
-  padding: 0 0 72px;
+  padding: var(--tahti-space-8, 32px) var(--tahti-space-6, 24px) 72px;
 }
 
 [data-tahti-ui='brand'] .about-hero {
