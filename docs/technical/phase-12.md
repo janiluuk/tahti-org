@@ -57,11 +57,11 @@ The existing `requireBoard` middleware on the API handles authentication. The fr
 /admin/status                      → service health + infra monitoring
 /admin/support                     → support ticket queue
 /admin/support/[id]                → ticket detail + timeline
-/admin/governance                  → audit log, resolutions, venues, reports
-/admin/governance/audit            → full audit log viewer
-/admin/governance/resolutions      → board resolutions
-/admin/governance/venues           → venue verification queue
-/admin/governance/report           → annual transparency report generator
+/admin/governance                  → resolutions, AGM, venues, reports
+/admin/logs                        → full audit/system log viewer
+/admin/venues                      → venue verification queue
+/admin/agm                         → AGM meetings, quorum, and documents
+/admin/reports                     → annual transparency report generator
 ```
 
 ### Design
@@ -622,7 +622,7 @@ enum SupportStatus {
 
 ## M21-G — Governance (`/admin/governance`)
 
-### Audit log viewer (`/admin/governance/audit`)
+### Audit log viewer (`/admin/logs`)
 
 Full `AuditLog` table as a paginated, filterable UI. Uses the same data as `GET /api/admin/audit/export.csv` (existing) but rendered in the browser.
 
@@ -648,14 +648,14 @@ Full `AuditLog` table as a paginated, filterable UI. Uses the same data as `GET 
 | `USER_UNSUSPEND` | Suspension lifted |
 | `BOARD_ROLE_CHANGE` | Board role changed |
 
-### Board resolutions (`/admin/governance/resolutions`)
+### Board resolutions (`/admin/governance`)
 
 Formal record of board decisions. Required by Finnish association law (`yhdistyslaki`) — minutes must be kept and accessible to members.
 
 ```mermaid
 sequenceDiagram
     participant Dir as Director
-    participant Web as /admin/governance/resolutions
+    participant Web as /admin/governance
     participant API as API
 
     Dir->>Web: Clicks "New resolution"
@@ -710,7 +710,7 @@ enum ResolutionOutcome {
 
 UI for the existing `GET /api/admin/venues` and `POST /api/admin/venues/:slug/verify` endpoints (already implemented in M17). Table of pending venues: name, city, submitter, submitted date, verify button. No new API work needed.
 
-### Annual report generator (`/admin/governance/report`)
+### Annual report generator (`/admin/reports`)
 
 One-click report assembly for the annual transparency report. Selects a year, pulls from ledger + grants + member stats, renders a preview (Markdown), and saves to MinIO as a versioned document.
 

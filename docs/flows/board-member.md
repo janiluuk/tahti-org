@@ -81,9 +81,9 @@ flowchart TD
   Fin --> Ledger["/admin/financial/ledger"]
   Fin --> FanSubs["/admin/financial/fansubs"]
   Fin --> Legacy["/admin/financial/legacy-members"]
-  Gov --> Audit["/admin/governance/audit"]
-  Gov --> Res["/admin/governance/resolutions"]
-  Gov --> Report["/admin/governance/report"]
+  Gov --> Audit["/admin/logs"]
+  Gov --> Res["/admin/governance · board resolutions"]
+  Gov --> Report["/admin/reports · annual reports"]
   Gov --> Venues["/governance/venues verification"]
   Grants --> GrantYear["/admin/grants/:year"]
 ```
@@ -116,10 +116,10 @@ flowchart TD
 | └ Ledger | `/admin/financial/ledger` | Ledger entries |
 | └ Fan subs & payouts | `/admin/financial/fansubs` | Fan-sub money movement |
 | └ Legacy members | `/admin/financial/legacy-members` | Legacy membership queue |
-| **Governance** | `/admin/governance` | Hub: report, resolutions, AGM, audit, CSV exports |
-| └ Audit | `/admin/governance/audit` | Audit log |
-| └ Resolutions | `/admin/governance/resolutions` | Board resolutions |
-| └ Report | `/admin/governance/report` | Annual report generator |
+| **Governance** | `/admin/governance` | Hub: resolutions, AGM, audit, CSV exports |
+| └ Audit | `/admin/logs` | Audit log |
+| └ Resolutions | `/admin/governance` | Board resolutions |
+| └ Report | `/admin/reports` | Annual report generator |
 | **Features** | `/admin/feature-requests` | Feature request board |
 | **Grants** | `/admin/grants` | Grants overview; year drill-down |
 | **AGM** | `/admin/agm` | Agenda builder + persisted meeting/attendance/quorum + document archive — see [how governance works](../guides/governance-explained.md) |
@@ -151,9 +151,9 @@ flowchart TD
 | Fan subs | `/admin/financial/fansubs` | [`admin/financial-fansubs.png`](../e2e-screenshots/admin/financial-fansubs.png) |
 | Legacy members | `/admin/financial/legacy-members` | [`admin/financial-legacy.png`](../e2e-screenshots/admin/financial-legacy.png) |
 | Governance hub | `/admin/governance` | [`admin/governance.png`](../e2e-screenshots/admin/governance.png) |
-| Audit | `/admin/governance/audit` | [`admin/governance-audit.png`](../e2e-screenshots/admin/governance-audit.png) |
-| Resolutions | `/admin/governance/resolutions` | [`admin/governance-resolutions.png`](../e2e-screenshots/admin/governance-resolutions.png) |
-| Annual report | `/admin/governance/report` | [`admin/governance-report.png`](../e2e-screenshots/admin/governance-report.png) |
+| Audit | `/admin/logs` | [`admin/logs.png`](../e2e-screenshots/admin/logs.png) |
+| Resolutions | `/admin/governance` | [`admin/governance.png`](../e2e-screenshots/admin/governance.png) |
+| Annual report | `/admin/reports` | [`admin/reports.png`](../e2e-screenshots/admin/reports.png) |
 | Grants | `/admin/grants` | [`admin/grants.png`](../e2e-screenshots/admin/grants.png) |
 | AGM | `/admin/agm` | [`admin/agm.png`](../e2e-screenshots/admin/agm.png) |
 | Radio | `/admin/radio` | [`admin/radio.png`](../e2e-screenshots/admin/radio.png) |

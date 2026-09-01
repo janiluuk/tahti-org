@@ -35,7 +35,7 @@ flowchart TB
 
   %% Authed listener / member
   Dash["/dashboard"]:::auth
-  Gov["/governance"]:::mem
+  Gov["/governance → /dashboard/governance"]:::mem
   GovTopics["/governance/topics"]:::mem
   GovFeat["/governance/feature-requests"]:::mem
   GovVenues["/governance/venues"]:::board

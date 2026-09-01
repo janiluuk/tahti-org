@@ -290,21 +290,21 @@
     "role": "admin",
     "id": "governance-audit",
     "file": "admin/governance-audit.png",
-    "url": "/admin/governance/audit",
+    "url": "/admin/logs",
     "label": "Audit log"
   },
   {
     "role": "admin",
     "id": "governance-resolutions",
     "file": "admin/governance-resolutions.png",
-    "url": "/admin/governance/resolutions",
+    "url": "/admin/governance",
     "label": "Board resolutions"
   },
   {
     "role": "admin",
     "id": "governance-report",
     "file": "admin/governance-report.png",
-    "url": "/admin/governance/report",
+    "url": "/admin/reports",
     "label": "Annual report generator"
   },
   {
