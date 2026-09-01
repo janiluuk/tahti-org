@@ -180,6 +180,15 @@ services:
     environment:
       MINIO_ROOT_USER: tahti
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
+      # Go's GC defaults let heap grow ~2x the live set before collecting —
+      # with hls-minio-sync PUTting dozens of small HLS segments every 4s
+      # across 3 live channels, that churn keeps pushing RSS up over days of
+      # uptime. GOMEMLIMIT gives the runtime a soft heap target to collect
+      # back down to; GOGC=50 makes ordinary (non-limit-triggered) GC more
+      # eager too. Trades some CPU for materially lower steady-state memory —
+      # tune GOMEMLIMIT up if the extra GC pressure shows up as latency.
+      GOMEMLIMIT: 2GiB
+      GOGC: "50"
     ports:
       - '${MINIO_PORT:-19000}:9000'
       - '${MINIO_CONSOLE_PORT:-19001}:9001'
