@@ -643,6 +643,58 @@ def main() -> None:
     pid += 1
     y += 8
 
+    panels.append(row("Worker nodes (vimage / vimage4 / vimage7) & job queue", y, pid))
+    pid += 1
+    y += 1
+    panels.append(
+        timeseries_panel(
+            pid,
+            "Worker node CPU (cores)",
+            'sum by (instance, name) (rate(container_cpu_usage_seconds_total{instance=~"vimage|vimage4|vimage7",name=~"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*"}[5m]))',
+            y,
+            legend="{{instance}}: {{name}}",
+        )
+    )
+    pid += 1
+    panels.append(
+        timeseries_panel(
+            pid,
+            "Worker node memory",
+            'container_memory_usage_bytes{instance=~"vimage|vimage4|vimage7",name=~"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*"}',
+            y,
+            x=12,
+            unit="bytes",
+            legend="{{instance}}: {{name}}",
+        )
+    )
+    pid += 1
+    y += 8
+    panels.append(
+        timeseries_panel(
+            pid,
+            "Job queue length (waiting + active)",
+            'tahti_queue_jobs{job="tahti_api_metrics"}',
+            y,
+            w=12,
+            legend="{{state}}",
+        )
+    )
+    pid += 1
+    panels.append(
+        timeseries_panel(
+            pid,
+            "Encoding (transcode lane) queue length",
+            'tahti_queue_jobs_by_lane{job="tahti_api_metrics", lane="transcode"}',
+            y,
+            x=12,
+            w=12,
+            legend="{{state}}",
+            description="ffmpeg-heavy jobs — separate-stems, transcode-archive, etc. (see packages/shared/src/worker-job-lanes.ts). These are the jobs vimage7's GPU worker picks up.",
+        )
+    )
+    pid += 1
+    y += 8
+
     panels.append(row("Logs (Loki)", y, pid))
     pid += 1
     y += 1

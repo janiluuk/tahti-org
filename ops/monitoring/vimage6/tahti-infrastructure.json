@@ -1688,7 +1688,7 @@
     {
       "id": 43,
       "type": "row",
-      "title": "Logs (Loki)",
+      "title": "Worker nodes (vimage / vimage4 / vimage7) & job queue",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1699,6 +1699,174 @@
     },
     {
       "id": 44,
+      "type": "timeseries",
+      "title": "Worker node CPU (cores)",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 118
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance, name) (rate(container_cpu_usage_seconds_total{instance=~\"vimage|vimage4|vimage7\",name=~\"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*\"}[5m]))",
+          "legendFormat": "{{instance}}: {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "type": "timeseries",
+      "title": "Worker node memory",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 118
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "container_memory_usage_bytes{instance=~\"vimage|vimage4|vimage7\",name=~\"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*\"}",
+          "legendFormat": "{{instance}}: {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "type": "timeseries",
+      "title": "Job queue length (waiting + active)",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 126
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "tahti_queue_jobs{job=\"tahti_api_metrics\"}",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "type": "timeseries",
+      "title": "Encoding (transcode lane) queue length",
+      "description": "ffmpeg-heavy jobs \u2014 separate-stems, transcode-archive, etc. (see packages/shared/src/worker-job-lanes.ts). These are the jobs vimage7's GPU worker picks up.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 126
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "tahti_queue_jobs_by_lane{job=\"tahti_api_metrics\", lane=\"transcode\"}",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "type": "row",
+      "title": "Logs (Loki)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 134
+      },
+      "collapsed": false
+    },
+    {
+      "id": 49,
       "type": "logs",
       "title": "Container logs \u2014 all services",
       "description": "Every container in the prod stack ships here via the docker loki logging driver. Filter by service in the query editor, e.g. {job=\"tahti\", service=\"tahti-stack-api-1\"}.",
@@ -1706,7 +1874,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 118
+        "y": 135
       },
       "datasource": {
         "type": "loki",
@@ -1734,7 +1902,7 @@
       ]
     },
     {
-      "id": 45,
+      "id": 50,
       "type": "logs",
       "title": "API errors",
       "description": "API container log lines containing \"error\" (case-sensitive substring match).",
@@ -1742,7 +1910,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 130
+        "y": 147
       },
       "datasource": {
         "type": "loki",
