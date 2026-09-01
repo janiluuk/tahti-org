@@ -9318,9 +9318,7 @@ export interface paths {
                 displayName: string
               }[]
               genres: string[]
-              contentTypes: (
-                'TRACK' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
-              )[]
+              contentTypes: ('TRACK' | 'LIVE' | 'DJ_SET' | 'PODCAST' | 'REMIX' | 'RADIO_SHOW')[]
             }
           }
         }
@@ -9365,8 +9363,7 @@ export interface paths {
                 genre: string | null
                 genreCustom: string | null
                 /** @enum {string} */
-                contentType:
-                  'TRACK' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
+                contentType: 'TRACK' | 'LIVE' | 'DJ_SET' | 'PODCAST' | 'REMIX' | 'RADIO_SHOW'
                 status: string
                 isPublic: boolean
                 durationSec: number | null

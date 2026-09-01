@@ -170,7 +170,7 @@ export function UploadInProgress({
         artist: artist || undefined,
         year: year ? Number(year) : undefined,
         genre: genre || undefined,
-        metadata: { contentType: contentType === 'set' ? 'DJ_MIX' : 'TRACK' },
+        metadata: { contentType: contentType === 'set' ? 'DJ_SET' : 'TRACK' },
         collectionSlugs: selectedCollections,
         source: pending?.source,
       })

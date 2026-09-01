@@ -15,7 +15,6 @@ const STYLE_OPTIONS = [
   { value: 'SINGLE', label: 'Single' },
   { value: 'DJ_SET_SERIES', label: 'DJ-set series' },
   { value: 'PODCAST', label: 'Podcast' },
-  { value: 'COMPILATION', label: 'Compilation' },
 ] as const
 
 const VISIBILITY_OPTIONS = [

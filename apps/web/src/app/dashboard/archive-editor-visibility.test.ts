@@ -6,13 +6,13 @@ import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-v
 
 describe('archive editor conditional sections', () => {
   it('shows tracklists only for DJ sets and long-form audio', () => {
-    expect(shouldShowTracklist('DJ_MIX', 180)).toBe(true)
+    expect(shouldShowTracklist('DJ_SET', 180)).toBe(true)
     expect(shouldShowTracklist('TRACK', 20 * 60)).toBe(true)
     expect(shouldShowTracklist('TRACK', 19 * 60 + 59)).toBe(false)
   })
 
   it('shows venue fields only for show-like or broadcast recordings', () => {
-    expect(shouldShowVenueLocation('DJ_MIX')).toBe(true)
+    expect(shouldShowVenueLocation('DJ_SET')).toBe(true)
     expect(shouldShowVenueLocation('LIVE')).toBe(true)
     expect(shouldShowVenueLocation('RADIO_SHOW')).toBe(true)
     expect(shouldShowVenueLocation('PODCAST')).toBe(true)

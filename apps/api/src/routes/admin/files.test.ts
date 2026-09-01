@@ -53,7 +53,7 @@ describe('/api/admin/files', () => {
         channelId: artist.channel!.id,
         title: `${PREFIX} techno track`,
         genre: 'Techno',
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         status: 'READY',
         isPublic: true,
         mp3Key: `${PREFIX}techno.mp3`,

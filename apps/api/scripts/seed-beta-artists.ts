@@ -379,7 +379,7 @@ async function seedArchiveSet(
   channelId: string,
   channelSlug: string,
   title: string,
-  contentType: 'DJ_MIX' | 'LIVE',
+  contentType: 'DJ_SET' | 'LIVE',
   cursor: ReturnType<typeof makeCursor>,
 ): Promise<boolean> {
   const existing = await prisma.archiveItem.findFirst({ where: { channelId, title } })
@@ -389,7 +389,7 @@ async function seedArchiveSet(
   const coverKey = `archive/${channelSlug}/${slugify(title)}-${randomBytes(3).toString('hex')}/cover.svg`
   await putObjectText(coverKey, generateCoverArtSvg(title, spec.displayName), 'image/svg+xml')
 
-  const kind = contentType === 'DJ_MIX' ? 'DJ set' : 'live show'
+  const kind = contentType === 'DJ_SET' ? 'DJ set' : 'live show'
   await prisma.archiveItem.create({
     data: {
       channelId,
@@ -461,7 +461,7 @@ async function main() {
       channelId,
       channelSlug,
       `${spec.displayName.replace(' [BETA]', '')} — DJ Set`,
-      'DJ_MIX',
+      'DJ_SET',
       cursor,
     )
     const liveShow = await seedArchiveSet(

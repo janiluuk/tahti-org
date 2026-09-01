@@ -45,7 +45,7 @@ describe('/api/top-lists', () => {
         title: 'Popular Track',
         status: 'READY',
         isPublic: true,
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         genre: 'Techno',
       },
     })
@@ -57,7 +57,7 @@ describe('/api/top-lists', () => {
         title: 'Quiet Track',
         status: 'READY',
         isPublic: true,
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         genre: 'Techno',
       },
     })
@@ -69,7 +69,7 @@ describe('/api/top-lists', () => {
         title: 'Ineligible Track',
         status: 'READY',
         isPublic: true,
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         topListsEligible: false,
       },
     })
@@ -188,7 +188,7 @@ describe('/api/top-lists', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    const djMixBucket = body.buckets.find((b: { bucket: string }) => b.bucket === 'DJ_MIX')
+    const djMixBucket = body.buckets.find((b: { bucket: string }) => b.bucket === 'DJ_SET')
     expect(djMixBucket).toBeDefined()
     expect(djMixBucket.entries[0].archiveItemId).toBe(popularId)
 
@@ -199,7 +199,7 @@ describe('/api/top-lists', () => {
     })
     const leastBucket = leastRes
       .json()
-      .buckets.find((b: { bucket: string }) => b.bucket === 'DJ_MIX')
+      .buckets.find((b: { bucket: string }) => b.bucket === 'DJ_SET')
     expect(leastBucket.entries[0].archiveItemId).toBe(quietId)
   })
 

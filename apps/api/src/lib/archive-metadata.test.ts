@@ -29,11 +29,11 @@ describe('archive-metadata', () => {
 
   it('metadataForNewUpload merges artist-provided fields', () => {
     const data = metadataForNewUpload({
-      contentType: 'DJ_MIX',
+      contentType: 'DJ_SET',
       recordingLocation: 'Helsinki, Finland',
       repostToDownload: true,
     })
-    expect(data.contentType).toBe('DJ_MIX')
+    expect(data.contentType).toBe('DJ_SET')
     expect(data.recordingLocation).toBe('Helsinki, Finland')
     expect(data.repostToDownload).toBe(true)
   })

@@ -177,9 +177,8 @@ enum AnnouncementRenderStatus {
 enum ArchiveContentType {
   LIVE
   TRACK
-  DJ_MIX
+  DJ_SET
   PODCAST
-  ORIGINAL
   REMIX
   RADIO_SHOW
 
@@ -596,8 +595,7 @@ enum CollectionStyle {
   SINGLE
   DJ_SET_SERIES
   PODCAST
-  LIVE_ARCHIVE
-  COMPILATION
+  RECORDING
   PLAYLIST
 
   @@schema("media")

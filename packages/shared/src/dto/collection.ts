@@ -11,8 +11,7 @@ export const COLLECTION_STYLES = [
   'SINGLE',
   'DJ_SET_SERIES',
   'PODCAST',
-  'LIVE_ARCHIVE',
-  'COMPILATION',
+  'RECORDING',
   'PLAYLIST',
 ] as const
 

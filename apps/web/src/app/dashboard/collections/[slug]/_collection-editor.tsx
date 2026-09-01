@@ -99,15 +99,7 @@ const SORT_MODE_OPTIONS = [
   { value: 'NAME', label: 'By name' },
 ]
 
-const STYLE_OPTIONS = [
-  'PLAYLIST',
-  'ALBUM',
-  'EP',
-  'SINGLE',
-  'DJ_SET_SERIES',
-  'PODCAST',
-  'COMPILATION',
-]
+const STYLE_OPTIONS = ['PLAYLIST', 'ALBUM', 'EP', 'SINGLE', 'DJ_SET_SERIES', 'PODCAST']
 
 function formatDuration(sec: number): string {
   const h = Math.floor(sec / 3600)

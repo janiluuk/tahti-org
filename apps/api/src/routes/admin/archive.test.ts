@@ -82,7 +82,7 @@ describe("admin archive edit — board access to any channel's tracks", () => {
       payload: {
         title: 'Moderated title',
         genre: 'Techno',
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         license: 'ALL_RIGHTS_RESERVED',
         description: '',
         isPublic: false,

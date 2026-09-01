@@ -276,7 +276,7 @@ export function ArchiveBasicsFields({
               </option>
             ))}
           </select>
-          {state.contentType !== 'DJ_MIX' && (
+          {state.contentType !== 'DJ_SET' && (
             <p className="studio-field-note studio-field-note--warning">
               You must own the rights to this music, or have permission from the rights holder, to
               publish it here.

@@ -8,9 +8,8 @@ import { ReleaseCreditSchema } from './release-ops.js'
 export const ARCHIVE_CONTENT_TYPES = [
   'TRACK',
   'LIVE',
-  'DJ_MIX',
+  'DJ_SET',
   'PODCAST',
-  'ORIGINAL',
   'REMIX',
   'RADIO_SHOW',
 ] as const

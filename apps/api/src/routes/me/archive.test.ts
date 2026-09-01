@@ -56,7 +56,7 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
         genre: 'Techno',
         recordingLocation: 'Helsinki, Finland',
         subGenres: ['peak-time', 'melodic'],
-        contentType: 'DJ_MIX',
+        contentType: 'DJ_SET',
         mixVersion: 'Original Mix',
         bpm: 128,
         musicalKey: 'Am',
@@ -69,7 +69,7 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     expect(patch.statusCode).toBe(200)
     expect(patch.json().title).toBe('Renamed set')
     expect(patch.json().genre).toBe('Techno')
-    expect(patch.json().contentType).toBe('DJ_MIX')
+    expect(patch.json().contentType).toBe('DJ_SET')
     expect(patch.json().license).toBe('CC_BY_NC')
     expect(patch.json().isPublic).toBe(false)
     expect(patch.json().isFallback).toBe(true)
@@ -86,7 +86,7 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     const row = list.json().find((i: { id: string }) => i.id === archiveItemId)
     expect(row).toBeTruthy()
     expect(row.license).toBe('CC_BY_NC')
-    expect(row.contentType).toBe('DJ_MIX')
+    expect(row.contentType).toBe('DJ_SET')
     expect(row.genre).toBe('Techno')
   })
 

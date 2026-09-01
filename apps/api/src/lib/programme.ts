@@ -222,7 +222,7 @@ export async function promoteReleaseTrackToProgramme(
       mp3Key: track.streamKey,
       flacKey: track.flacKey,
       status: 'READY',
-      contentType: 'ORIGINAL',
+      contentType: 'TRACK',
       source: 'UPLOAD',
       isPublic: false,
       isFallback: true,
