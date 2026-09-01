@@ -823,7 +823,7 @@
   padding: 0.65rem 0.75rem;
   margin: 0 -0.75rem;
   border-radius: 8px;
-  border-bottom: 1px solid var(--border, #2a2a35);
+  border-bottom: 1px solid var(--border);
 }
 
 .admin-archive-row:last-child {
@@ -834,7 +834,7 @@
    list and the public archive list, so a long channel's archive is just as easy
    to scan here. */
 .admin-archive-row:nth-child(even):not(.admin-archive-row--active) {
-  background: color-mix(in srgb, var(--card2, #1a1a24) 35%, transparent);
+  background: color-mix(in srgb, var(--card2) 35%, transparent);
 }
 
 .admin-archive-row--active {
@@ -1252,7 +1252,7 @@
 .admin-governance-records__lists h3 {
   margin: 0 0 0.5rem;
   font-size: 0.85rem;
-  color: var(--admin-muted, #9ca3af);
+  color: var(--admin-muted);
 }
 
 .admin-governance-records__lists p {

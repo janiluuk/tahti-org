@@ -629,7 +629,7 @@
   padding: 0 5px;
   border-radius: var(--radius-full, 999px);
   background: var(--coral, #ef4444);
-  color: #fff;
+  color: var(--white);
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
@@ -3603,7 +3603,7 @@ html.gpu-limited .nav {
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--white);
   font-size: var(--text-xs);
   padding: 4px 10px;
   border-radius: 999px;
@@ -3611,7 +3611,7 @@ html.gpu-limited .nav {
 }
 
 .presskit-lightbox__caption {
-  color: #fff;
+  color: var(--white);
   font-size: var(--text-sm);
   text-align: center;
 }
@@ -3628,7 +3628,7 @@ html.gpu-limited .nav {
   right: 20px;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--white);
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
@@ -3646,7 +3646,7 @@ html.gpu-limited .nav {
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.08);
   border: none;
-  color: #fff;
+  color: var(--white);
   font-size: 2rem;
   line-height: 1;
   width: 48px;

@@ -71,7 +71,7 @@ export default async function AdminTahtiSelectsPage({
         style={{
           marginBottom: '2rem',
           padding: '1rem',
-          border: '1px solid var(--admin-border, #333)',
+          border: '1px solid var(--admin-border)',
           borderRadius: '8px',
         }}
       >

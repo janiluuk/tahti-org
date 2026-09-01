@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+/* design-token-allow -- user-editable theme palette values, not app styling. */
 /* eslint-disable no-restricted-syntax -- this file's whole purpose is a
  * user-editable palette of hex color VALUES (theme data, not this app's own
  * UI chrome) — the repo-wide "no raw hex" rule exists to keep app styling on

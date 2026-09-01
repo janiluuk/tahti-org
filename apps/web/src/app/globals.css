@@ -24,6 +24,98 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Theme gallery previews use the submitted palette as a dark, glassy stage.
+   The soft ambient layer gives each thumbnail a cover-art-like atmosphere
+   without inventing a separate image asset for a user theme. */
+.theme-preview-card {
+  position: relative;
+  isolation: isolate;
+  background: color-mix(in srgb, var(--background) 78%, var(--foreground));
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, var(--foreground));
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--background) 70%, transparent);
+}
+
+.theme-preview-card__ambience {
+  position: absolute;
+  z-index: -1;
+  inset: -22%;
+  opacity: 0.52;
+  filter: blur(30px) saturate(1.25);
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      color-mix(in srgb, var(--primary) 72%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 82% 78%,
+      color-mix(in srgb, var(--accent) 62%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(135deg, var(--background), var(--card));
+  animation: theme-preview-ambient 16s ease-in-out infinite alternate;
+}
+
+.theme-preview-card__chrome,
+.theme-preview-card__footer {
+  position: relative;
+  background: color-mix(in srgb, var(--card) 74%, transparent);
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.theme-preview-card__content {
+  position: relative;
+  background: color-mix(in srgb, var(--background) 44%, transparent);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--background) 78%, transparent);
+}
+
+.theme-preview-card__thumbnail {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--primary) 76%, var(--background)),
+      color-mix(in srgb, var(--accent) 62%, var(--background))
+    ),
+    var(--background);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
+.theme-preview-card__thumbnail::after {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 32%, transparent),
+    transparent 58%
+  );
+  filter: blur(7px);
+  opacity: 0.72;
+}
+
+@keyframes theme-preview-ambient {
+  from {
+    transform: scale(1) translate3d(-1%, -1%, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(2%, 1%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-preview-card__ambience {
+    animation: none;
+  }
+}
+
 /* ── Persistent mini-player (global "now playing" bar) ────────────────── */
 .tahti-shared-audio {
   display: none;
@@ -1666,8 +1758,8 @@ body:has(.mini-player) {
   overflow-y: auto;
   padding: 6px;
   border-radius: 8px;
-  border: 1px solid var(--border, #2a2a35);
-  background: var(--card, #14141c);
+  border: 1px solid var(--border);
+  background: var(--card);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 

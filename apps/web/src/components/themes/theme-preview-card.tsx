@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+// design-token-allow: preview-only user theme palette values.
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 /* eslint-disable no-restricted-syntax -- decorative mock traffic-light dots
@@ -22,24 +23,22 @@ function cssVars(vars: Record<string, string>): CSSProperties {
 export function ThemePreviewCard({ vars }: { vars: Record<string, string> }) {
   return (
     <div
+      className="theme-preview-card"
       style={{
         ...cssVars(vars),
         borderRadius: 'calc(var(--radius, 10px) + 4px)',
         overflow: 'hidden',
-        background: 'var(--background)',
-        color: 'var(--foreground)',
-        border: '1px solid var(--border)',
         fontFamily: 'inherit',
       }}
     >
+      <div className="theme-preview-card__ambience" aria-hidden />
       <div
+        className="theme-preview-card__chrome"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
           padding: '12px 16px',
-          background: 'var(--card)',
-          borderBottom: '1px solid var(--border)',
         }}
       >
         {['var(--destructive, #e05252)', '#e0c052', '#52e074'].map((c, i) => (
@@ -95,7 +94,7 @@ export function ThemePreviewCard({ vars }: { vars: Record<string, string> }) {
             </div>
           ))}
         </div>
-        <div style={{ padding: 16 }}>
+        <div className="theme-preview-card__content" style={{ padding: 16 }}>
           <h3 style={{ margin: '0 0 12px', fontSize: 14 }}>Up next</h3>
           {[
             { title: 'Midnight Drive', dur: '3:41', playing: true },
@@ -121,7 +120,8 @@ export function ThemePreviewCard({ vars }: { vars: Record<string, string> }) {
                   width: 28,
                   height: 28,
                   borderRadius: 4,
-                  background: 'var(--muted)',
+                  background:
+                    'linear-gradient(135deg, color-mix(in srgb, var(--primary) 60%, var(--foreground)), color-mix(in srgb, var(--accent) 55%, var(--background)))',
                   flexShrink: 0,
                 }}
               />
@@ -133,13 +133,12 @@ export function ThemePreviewCard({ vars }: { vars: Record<string, string> }) {
       </div>
 
       <div
+        className="theme-preview-card__footer"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 14,
           padding: '12px 16px',
-          background: 'var(--card)',
-          borderTop: '1px solid var(--border)',
         }}
       >
         <div

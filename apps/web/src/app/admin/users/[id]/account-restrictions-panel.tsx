@@ -101,7 +101,7 @@ export function AccountRestrictionsPanel({
             style={{
               marginTop: '1rem',
               paddingTop: '1rem',
-              borderTop: '1px solid var(--admin-border, #333)',
+              borderTop: '1px solid var(--admin-border)',
             }}
           >
             <div

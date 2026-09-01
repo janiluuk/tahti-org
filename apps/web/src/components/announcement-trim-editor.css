@@ -75,12 +75,12 @@
 }
 
 .ann-editor-rail__item:hover {
-  background: color-mix(in srgb, var(--cyan, #22d3ee) 8%, transparent);
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
 }
 
 .ann-editor-rail__item--active {
-  border-color: color-mix(in srgb, var(--cyan, #22d3ee) 50%, transparent);
-  background: color-mix(in srgb, var(--cyan, #22d3ee) 10%, transparent);
+  border-color: color-mix(in srgb, var(--cyan) 50%, transparent);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 
 .ann-editor-rail__item-title {
@@ -191,9 +191,9 @@
 }
 
 .ann-editor-status--error {
-  color: #f87171;
+  color: var(--coral);
 }
 
 .ann-editor-status--processing {
-  color: #fbbf24;
+  color: var(--amber);
 }
