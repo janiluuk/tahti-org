@@ -279,7 +279,7 @@ export async function notifyArtistStreamingCopyReady(
       userId: artistUserId,
       type: 'STREAMING_COPY_READY',
       title: `"${item.title}" is ready for low-bandwidth streaming`,
-      body: 'A compressed copy was encoded for listeners on slower connections or clients that can\'t play FLAC.',
+      body: "A compressed copy was encoded for listeners on slower connections or clients that can't play FLAC.",
       url: `/dashboard/archive/${item.id}`,
     },
   })
