@@ -9,7 +9,6 @@ import { getSessionUser } from '@/lib/session'
 import { isSignupOpen } from '@/lib/signup'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { DiscoWidgetFrame } from '@/components/disco-widgets/disco-widget-frame'
-import { IdleAutoScroll } from './_idle-auto-scroll'
 import { DevLinks } from './_dev-links'
 
 interface PlatformStats {
@@ -125,7 +124,6 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
 
   return (
     <div className="home-shell">
-      <IdleAutoScroll />
       <section className="home-hero" data-scroll-section>
         <BrandLogo />
         <h1 className="home-title">
