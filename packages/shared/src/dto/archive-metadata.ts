@@ -11,7 +11,10 @@ export const ARCHIVE_CONTENT_TYPES = [
   'DJ_SET',
   'PODCAST',
   'REMIX',
-  'RADIO_SHOW',
+  'SHOW',
+  'EPISODE',
+  'CLIP',
+  'EMBED',
 ] as const
 
 export const ARCHIVE_LICENSES = [

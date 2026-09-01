@@ -85,10 +85,10 @@ const SECOND_SINGLE_TITLES = [
 
 const ARCHIVE_SET_SPECS: Array<{
   suffix: string
-  contentType: 'RADIO_SHOW' | 'LIVE' | 'TRACK' | 'REMIX'
+  contentType: 'SHOW' | 'LIVE' | 'TRACK' | 'REMIX'
   kind: string
 }> = [
-  { suffix: 'Radio Session', contentType: 'RADIO_SHOW', kind: 'radio session' },
+  { suffix: 'Radio Session', contentType: 'SHOW', kind: 'radio session' },
   { suffix: 'Acoustic Set', contentType: 'LIVE', kind: 'acoustic set' },
   { suffix: 'B-Sides & Demos', contentType: 'TRACK', kind: 'demo session' },
   { suffix: 'Remix Session', contentType: 'REMIX', kind: 'remix session' },
@@ -194,7 +194,7 @@ async function seedArchiveSet(
   channelSlug: string,
   displayName: string,
   title: string,
-  contentType: 'RADIO_SHOW' | 'LIVE' | 'TRACK' | 'REMIX',
+  contentType: 'SHOW' | 'LIVE' | 'TRACK' | 'REMIX',
   kind: string,
   genre: string,
   cursor: ReturnType<typeof makeCursor>,

@@ -14,7 +14,7 @@ describe('archive editor conditional sections', () => {
   it('shows venue fields only for show-like or broadcast recordings', () => {
     expect(shouldShowVenueLocation('DJ_SET')).toBe(true)
     expect(shouldShowVenueLocation('LIVE')).toBe(true)
-    expect(shouldShowVenueLocation('RADIO_SHOW')).toBe(true)
+    expect(shouldShowVenueLocation('SHOW')).toBe(true)
     expect(shouldShowVenueLocation('PODCAST')).toBe(true)
     expect(shouldShowVenueLocation('TRACK', 'BROADCAST')).toBe(true)
     expect(shouldShowVenueLocation('TRACK', 'UPLOAD')).toBe(false)

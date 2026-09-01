@@ -108,7 +108,7 @@ describe('/api/top-lists', () => {
   it('filters by contentTypes', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: '/api/top-lists?period=all_time&contentTypes=RADIO_SHOW',
+      url: '/api/top-lists?period=all_time&contentTypes=SHOW',
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().entries).toEqual([])

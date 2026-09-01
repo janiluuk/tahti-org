@@ -11,7 +11,17 @@ import { presignedGetUrl } from '../../lib/minio.js'
 
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
-const VALID_CONTENT_TYPES = ['LIVE', 'TRACK', 'DJ_SET', 'PODCAST', 'REMIX', 'RADIO_SHOW']
+const VALID_CONTENT_TYPES = [
+  'LIVE',
+  'TRACK',
+  'DJ_SET',
+  'PODCAST',
+  'REMIX',
+  'SHOW',
+  'EPISODE',
+  'CLIP',
+  'EMBED',
+]
 
 // GET /api/discover/latest-tracks?limit=24&genre=Techno&contentTypes=DJ_SET
 // — public, no auth required. Newest public archive items, for the Discover

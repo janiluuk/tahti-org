@@ -188,6 +188,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: track.durationSec,
           source: 'SPOTIFY_EMBED',
           qualityBadge: 'EMBED_ONLY',
+          contentType: 'EMBED',
           embedUri: track.uri,
           embedProvider: 'SPOTIFY',
           status: 'READY',

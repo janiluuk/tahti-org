@@ -162,6 +162,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: track.durationSec,
           source: 'MIXCLOUD_EMBED',
           qualityBadge: 'EMBED_ONLY',
+          contentType: 'EMBED',
           embedUri: track.url,
           embedProvider: 'MIXCLOUD',
           status: 'READY',

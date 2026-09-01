@@ -11,7 +11,17 @@ import {
 } from '@tahti/shared'
 import { buildTopList, periodSince, rankLookup } from '../../lib/top-lists.js'
 
-const VALID_CONTENT_TYPES = ['LIVE', 'TRACK', 'DJ_SET', 'PODCAST', 'REMIX', 'RADIO_SHOW']
+const VALID_CONTENT_TYPES = [
+  'LIVE',
+  'TRACK',
+  'DJ_SET',
+  'PODCAST',
+  'REMIX',
+  'SHOW',
+  'EPISODE',
+  'CLIP',
+  'EMBED',
+]
 
 const topListsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/top-lists?period=week|month&contentTypes=DJ_SET,RADIO_SHOW&sort=asc&genre=Techno

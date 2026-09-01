@@ -175,6 +175,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: result.durationSec,
           source: 'HEARTHIS_EMBED',
           qualityBadge: 'EMBED_ONLY',
+          contentType: 'EMBED',
           embedUri: result.id,
           embedProvider: 'HEARTHIS',
           status: 'READY',

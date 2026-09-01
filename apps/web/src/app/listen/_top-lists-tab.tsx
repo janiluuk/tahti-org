@@ -39,7 +39,7 @@ const KIND_TABS: { value: Kind; label: string }[] = [
 ]
 
 const KIND_CONTENT_TYPES: Record<'shows' | 'dj_sets', string> = {
-  shows: 'RADIO_SHOW,LIVE,PODCAST',
+  shows: 'SHOW,LIVE,PODCAST',
   dj_sets: 'DJ_SET',
 }
 const KIND_RELEASE_TYPES: Record<'albums' | 'singles', string> = {

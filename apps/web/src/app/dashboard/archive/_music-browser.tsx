@@ -66,9 +66,9 @@ export interface CollectionSummary {
   itemCovers: string[]
 }
 
-// DJ_SET/LIVE/RADIO_SHOW read as "played out" recordings; everything else
+// DJ_SET/LIVE/SHOW read as "played out" recordings; everything else
 // (tracks, podcasts, remixes) is a plain Track.
-const DJ_SET_CONTENT_TYPES = new Set(['DJ_SET', 'LIVE', 'RADIO_SHOW'])
+const DJ_SET_CONTENT_TYPES = new Set(['DJ_SET', 'LIVE', 'SHOW'])
 
 type MusicTab = 'tracks' | 'albums' | 'dj-sets' | 'collections' | 'embeds'
 

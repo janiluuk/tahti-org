@@ -180,7 +180,10 @@ enum ArchiveContentType {
   DJ_SET
   PODCAST
   REMIX
-  RADIO_SHOW
+  SHOW
+  EPISODE
+  CLIP
+  EMBED
 
   @@schema("channel")
 }
@@ -597,6 +600,7 @@ enum CollectionStyle {
   PODCAST
   RECORDING
   PLAYLIST
+  SERIES
 
   @@schema("media")
 }
