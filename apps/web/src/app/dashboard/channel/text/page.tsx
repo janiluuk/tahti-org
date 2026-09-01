@@ -2,51 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
-import { PageShell, Text } from '@tahti/ui'
-import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
-import { StudioHeaderActions } from '../../_studio-header-actions'
-import { fetchChannelEditorData } from '../_channel-editor-data'
-import { ChannelTextSections } from './_channel-text-sections'
 
-export default async function ChannelTextPage() {
-  const sessionValue = dashboardSessionCookie()
-  if (!sessionValue) redirect('/login?next=/dashboard/channel/text')
-
-  const user = await getDashboardUser()
-  if (!user) redirect('/login?next=/dashboard/channel/text')
-  if (!user.channel) redirect('/dashboard/setup-channel')
-
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const data = await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
-
-  const isLive = Boolean(user.channel.goneLiveAt)
-
-  return (
-    <PageShell size="lg" className="studio-channel-editor-page">
-      <header className="studio-page-header studio-channel-editor-page__header">
-        <div>
-          <h1 className="studio-page-title">Text overlay</h1>
-          <Text tone="muted" size="sm">
-            A stylized headline shown on your public channel page.
-          </Text>
-        </div>
-        <div className="studio-page-header__actions">
-          <StudioHeaderActions
-            hasChannel
-            isLive={isLive}
-            channelSlug={user.channel.slug}
-            showBack
-            backHref="/dashboard/channel/edit"
-            backLabel="Channel design"
-          />
-        </div>
-      </header>
-
-      <ChannelTextSections
-        channelSlug={user.channel.slug}
-        displayName={user.displayName}
-        {...data}
-      />
-    </PageShell>
-  )
+/** Text overlay editing moved into the channel design page as its own
+ * section — see _channel-editor-sections.tsx (#channel-text-overlay). Keep
+ * this URL working for old bookmarks/links, same as the gallery redirect. */
+export default function ChannelTextRedirect() {
+  redirect('/dashboard/channel/edit#channel-text-overlay')
 }
