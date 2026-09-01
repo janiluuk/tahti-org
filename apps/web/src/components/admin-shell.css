@@ -343,10 +343,33 @@
 
   .admin-log-line {
     grid-template-columns: 4.5rem 1fr;
+    gap: 0.35rem 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   }
 
   .admin-log-line code {
     grid-column: 1 / -1;
+  }
+
+  .admin-log-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-log-controls label,
+  .admin-log-controls select,
+  .admin-log-controls input[type='search'] {
+    width: 100%;
+  }
+
+  .admin-log-controls__toggle {
+    width: fit-content !important;
+  }
+
+  .admin-log-viewer {
+    max-height: 60vh;
+    padding: 0.6rem;
   }
 }
 

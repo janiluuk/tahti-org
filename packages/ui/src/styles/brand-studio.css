@@ -3719,6 +3719,88 @@
   font-weight: var(--weight-medium);
 }
 
+[data-tahti-ui='studio'] .settings-subnav-mobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .settings-subnav {
+    display: none;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile {
+    display: block;
+    margin-bottom: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0.55rem 0.8rem;
+    color: var(--text);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile summary span:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile summary small {
+    color: var(--muted);
+    font-size: var(--text-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile__menu {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0 0.8rem 0.8rem;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile__group {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile__group > span {
+    padding: 0.35rem 0;
+    color: var(--muted);
+    font-size: var(--text-micro);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile__group a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.5rem 0.65rem;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  [data-tahti-ui='studio'] .settings-subnav-mobile__group a:hover,
+  [data-tahti-ui='studio'] .settings-subnav-mobile__item--active {
+    background: var(--card2);
+    color: var(--text) !important;
+  }
+}
+
 /* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */
 
 /* Shared uppercase section label — use for "ICECAST STREAM KEY", "TOP TRACKS", etc. (PLAT-034) */

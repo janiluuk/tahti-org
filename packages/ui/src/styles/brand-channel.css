@@ -2004,6 +2004,27 @@
   white-space: nowrap;
 }
 
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .ch-radio-recent-channels {
+    margin-inline: -0.25rem;
+    padding: 0.75rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-recent-channels__header span {
+    display: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-recent-channels__slider {
+    margin-inline: -0.15rem;
+    padding-inline: 0.15rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-recent-channels__card {
+    flex-basis: min(16rem, 82vw);
+    min-height: 44px;
+  }
+}
+
 [data-tahti-ui='brand'] .ch-radio-live-now a {
   color: var(--cyan);
 }

@@ -13,7 +13,7 @@ export interface RecentlyPlayedChannel {
   featuredAt: string
 }
 
-function formatAgo(iso: string): string {
+export function formatRecentlyPlayedAgo(iso: string): string {
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60_000))
   if (minutes < 1) return 'just now'
   if (minutes < 60) return `${minutes}m ago`
@@ -49,7 +49,7 @@ export function RecentlyPlayedChannels({ items }: { items: RecentlyPlayedChannel
               <strong>{item.artistName}</strong>
               <span>@{item.slug}</span>
             </span>
-            <time dateTime={item.featuredAt}>{formatAgo(item.featuredAt)}</time>
+            <time dateTime={item.featuredAt}>{formatRecentlyPlayedAgo(item.featuredAt)}</time>
           </Link>
         ))}
       </div>

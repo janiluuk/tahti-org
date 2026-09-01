@@ -1,4 +1,4 @@
-# Tahti.live 
+# Tahti.live
 
 A nonprofit broadcasting platform owned and governed by its artist members.
 
@@ -38,9 +38,9 @@ Tahti ships a **channel-first** product: listeners discover and play artist chan
 
 ### Web clients
 
-| Client                                  | Role                                                                                                                                                                 |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/web`** (this repo)              | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                         |
+| Client                                                                                    | Role                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`apps/web`** (this repo)                                                                | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                              |
 | **[Tahti Player](https://github.com/janiluuk/tahti-player)** (`tahti-web`, separate repo) | Next listen + studio SPA on Tahti Player UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
 
 Both clients talk to the same API, chat, and media stack. Prefer the Tahti Player beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
@@ -80,12 +80,12 @@ The current board-admin surface is also captured with review annotations. The cy
 labels identify the admin navigation, main workspace, and page heading; the dark
 callout records the exact route.
 
-|                                                                                         |                                                                                         |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| ![Annotated admin AGM](docs/e2e-screenshots/admin/agm.png)                              | ![Annotated admin governance](docs/e2e-screenshots/admin/governance.png)               |
-| **AGM admin** (`/admin/agm`) - agenda builder, governance records, motions and minutes | **Governance admin** (`/admin/governance`) - board governance operations and records   |
-| ![Annotated admin dashboard](docs/e2e-screenshots/admin/dashboard.png)                 | ![Annotated admin financial ledger](docs/e2e-screenshots/admin/financial-ledger.png)   |
-| **Admin dashboard** (`/admin/dashboard`) - operational overview                        | **Financial ledger** (`/admin/financial/ledger`) - immutable financial records           |
+|                                                                                        |                                                                                      |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| ![Annotated admin AGM](docs/e2e-screenshots/admin/agm.png)                             | ![Annotated admin governance](docs/e2e-screenshots/admin/governance.png)             |
+| **AGM admin** (`/admin/agm`) - agenda builder, governance records, motions and minutes | **Governance admin** (`/admin/governance`) - board governance operations and records |
+| ![Annotated admin dashboard](docs/e2e-screenshots/admin/dashboard.png)                 | ![Annotated admin financial ledger](docs/e2e-screenshots/admin/financial-ledger.png) |
+| **Admin dashboard** (`/admin/dashboard`) - operational overview                        | **Financial ledger** (`/admin/financial/ledger`) - immutable financial records       |
 
 More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
 
@@ -187,6 +187,8 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/t
 ```
 
 ## API documentation
+
+The topic-organized API map is in [`docs/api/README.md`](docs/api/README.md).
 
 Public, unauthenticated reference (Scalar + filtered OpenAPI):
 
