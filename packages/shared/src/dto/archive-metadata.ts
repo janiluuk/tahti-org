@@ -6,7 +6,7 @@ import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
 import { ReleaseCreditSchema } from './release-ops.js'
 
 export const ARCHIVE_CONTENT_TYPES = [
-  'STUDIO',
+  'TRACK',
   'LIVE',
   'DJ_MIX',
   'PODCAST',
@@ -147,7 +147,7 @@ export type ArchiveUploadMetadata = z.infer<typeof ArchiveUploadMetadataSchema>
 /** Sensible defaults for dashboard uploads (hearthis-style). */
 export const ARCHIVE_METADATA_DEFAULTS = {
   genre: 'Electronic',
-  contentType: 'STUDIO' as const,
+  contentType: 'TRACK' as const,
   license: 'ALL_RIGHTS_RESERVED' as const,
   useDetectedBpmKey: true,
   isAiGenerated: false,

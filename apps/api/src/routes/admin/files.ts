@@ -186,6 +186,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
             isPublic: true,
             durationSec: true,
             fileSizeBytes: true,
+            sourceFormat: true,
             bannerUrl: true,
             createdAt: true,
             channel: {
@@ -218,6 +219,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           isPublic: item.isPublic,
           durationSec: item.durationSec,
           sizeBytes: item.fileSizeBytes != null ? Number(item.fileSizeBytes) : null,
+          format: item.sourceFormat,
           bannerUrl: item.bannerUrl,
           createdAt: item.createdAt.toISOString(),
           channelSlug: item.channel.slug,

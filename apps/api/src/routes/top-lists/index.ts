@@ -13,7 +13,7 @@ import { buildTopList, periodSince, rankLookup } from '../../lib/top-lists.js'
 
 const VALID_CONTENT_TYPES = [
   'LIVE',
-  'STUDIO',
+  'TRACK',
   'DJ_MIX',
   'PODCAST',
   'ORIGINAL',

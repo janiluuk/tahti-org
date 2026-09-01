@@ -13,7 +13,7 @@ const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
 const VALID_CONTENT_TYPES = [
   'LIVE',
-  'STUDIO',
+  'TRACK',
   'DJ_MIX',
   'PODCAST',
   'ORIGINAL',

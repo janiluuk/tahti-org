@@ -47,7 +47,7 @@ describe('ArchiveMetadataFieldsSchema', () => {
 
   it('exports sensible defaults', () => {
     expect(ARCHIVE_METADATA_DEFAULTS.genre).toBe('Electronic')
-    expect(ARCHIVE_METADATA_DEFAULTS.contentType).toBe('STUDIO')
+    expect(ARCHIVE_METADATA_DEFAULTS.contentType).toBe('TRACK')
     expect(ARCHIVE_METADATA_DEFAULTS.license).toBe('ALL_RIGHTS_RESERVED')
   })
 })

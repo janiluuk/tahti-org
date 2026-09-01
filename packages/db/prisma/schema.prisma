@@ -176,7 +176,7 @@ enum AnnouncementRenderStatus {
 
 enum ArchiveContentType {
   LIVE
-  STUDIO
+  TRACK
   DJ_MIX
   PODCAST
   ORIGINAL
@@ -1723,7 +1723,7 @@ model ArchiveItem {
   venueId       String?
   venue         Venue?            @relation(fields: [venueId], references: [id], onDelete: SetNull)
   subGenres     String[]          @default([])
-  contentType   ArchiveContentType @default(STUDIO)
+  contentType   ArchiveContentType @default(TRACK)
   mixVersion    String?           // e.g. "Original Mix", "Rok Tek Remix"
   bpm           Int?
   musicalKey    String?

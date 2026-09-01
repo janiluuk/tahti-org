@@ -17,7 +17,7 @@ describe('archive-metadata', () => {
 
   it('metadataForNewUpload applies hearthis-style defaults', () => {
     const data = metadataForNewUpload({})
-    expect(data.contentType).toBe('STUDIO')
+    expect(data.contentType).toBe('TRACK')
     expect(data.genre).toBe('Electronic')
     expect(data.license).toBe('ALL_RIGHTS_RESERVED')
     expect(data.useDetectedBpmKey).toBe(true)

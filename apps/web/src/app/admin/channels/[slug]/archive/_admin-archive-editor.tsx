@@ -17,7 +17,7 @@ export function AdminArchiveEditor({ slug, item }: { slug: string; item: AdminAr
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState(item.title)
   const [genre, setGenre] = useState((item.genre as string | null) ?? ARCHIVE_GENRES[0])
-  const [contentType, setContentType] = useState((item.contentType as string | null) ?? 'STUDIO')
+  const [contentType, setContentType] = useState((item.contentType as string | null) ?? 'TRACK')
   const [license, setLicense] = useState((item.license as string | null) ?? 'ALL_RIGHTS_RESERVED')
   const [description, setDescription] = useState((item.description as string | null) ?? '')
   const [isPublic, setIsPublic] = useState((item.isPublic as boolean | undefined) ?? true)

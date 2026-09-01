@@ -112,7 +112,7 @@ describe('POST /api/uploads/complete', () => {
     expect(item).not.toBeNull()
     expect(item!.title).toBe('Test Track')
     expect(item!.status).toBe('PENDING')
-    expect(item!.contentType).toBe('STUDIO')
+    expect(item!.contentType).toBe('TRACK')
     expect(item!.license).toBe('ALL_RIGHTS_RESERVED')
     expect(item!.genre).toBe('Electronic')
     // Ground-truth size from storage (headObjectSize), never trusted from the client.

@@ -9319,7 +9319,7 @@ export interface paths {
               }[]
               genres: string[]
               contentTypes: (
-                'STUDIO' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
+                'TRACK' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
               )[]
             }
           }
@@ -9366,11 +9366,12 @@ export interface paths {
                 genreCustom: string | null
                 /** @enum {string} */
                 contentType:
-                  'STUDIO' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
+                  'TRACK' | 'LIVE' | 'DJ_MIX' | 'PODCAST' | 'ORIGINAL' | 'REMIX' | 'RADIO_SHOW'
                 status: string
                 isPublic: boolean
                 durationSec: number | null
                 sizeBytes: number | null
+                format: string | null
                 bannerUrl: string | null
                 /** Format: date-time */
                 createdAt: string

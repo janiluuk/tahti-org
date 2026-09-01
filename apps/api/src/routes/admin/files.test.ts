@@ -77,7 +77,7 @@ describe('/api/admin/files', () => {
         channelId: artist.channel!.id,
         title: `${PREFIX} folk track`,
         genre: 'Folk',
-        contentType: 'STUDIO',
+        contentType: 'TRACK',
         status: 'READY',
         isPublic: true,
         mp3Key: `${PREFIX}folk.mp3`,
