@@ -1,0 +1,70 @@
+# Scaffold for running Liquidsoap channels on a remote worker node (vimage4 /
+# vimage7) instead of only on vimage. NOT WIRED UP YET — see the gap below.
+#
+# What this file provides today: the `hls-sync` sidecar a remote channel
+# would need. worker-media's hls-minio-sync job (see apps/worker/src/jobs/
+# hls-minio-sync.ts) only needs local disk + Redis/Postgres/MinIO over LAN —
+# no different from worker-transcode's remote setup in
+# infra/docker-compose.worker-remote.yml. Point it at this host's own
+# /hls volume and it mirrors segments into the same central MinIO
+# `hls-live` bucket that Caddy already serves stream.tahti.live from, same
+# as if the channel had run on vimage.
+#
+# The gap — actually placing a Liquidsoap channel container here:
+# services/orchestrator spawns/manages every channel and its sidecars
+# (recorder, cover-cache, fingerprint-ingest) by shelling out literal
+# `docker ...` argv via node:child_process (see services/orchestrator/src/
+# liquidsoap.ts, recorder.ts, cover-cache.ts, fingerprint-ingest.ts) against
+# the docker.sock mounted into its own container — i.e. it can only ever
+# create containers on the same host it runs on. The Docker CLI honors
+# `DOCKER_HOST` for a remote daemon, so the fix is mechanical rather than a
+# rewrite: expose the Docker Engine API over TLS on vimage4/vimage7,
+# add a per-channel "which node" assignment (e.g. a `hostNode` column,
+# defaulting to the local host), and have orchestrator export
+# `DOCKER_HOST=tcp://<node>:2376` (+ TLS cert env vars) in the `exec()`
+# environment for that channel's spawn/stop/telnet-control calls. Every
+# channel's env currently assumes docker-network hostnames (`api`,
+# `icecast`, `redis`, ...) — a remote channel needs the LAN-published
+# equivalents instead (e.g. `http://192.168.2.100:18100` for icecast,
+# `http://192.168.2.100:15011` for the API), and the orchestrator's telnet
+# graceful_shutdown/pause control needs that port reachable over LAN too
+# (currently internal-only, see infra/liquidsoap-channel.liq.template).
+#
+# None of that orchestrator work is done here — this file only lets you
+# stand up the sync sidecar in advance so it's ready the day a channel
+# actually gets placed on this node.
+#
+#   cp infra/stack.env.liquidsoap-remote.example infra/stack.env.liquidsoap-remote
+#   # fill secrets to match vimage infra/stack.env
+#   docker compose -f infra/docker-compose.liquidsoap-remote.yml \
+#     --env-file infra/stack.env.liquidsoap-remote up -d
+
+name: tahti-liquidsoap-remote
+
+services:
+  hls-sync:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    command: ['tsx', 'apps/worker/src/index.ts', '--queues=media']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-tahti}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-tahti}
+      HLS_SEGMENT_ROOT: /hls
+      HLS_MINIO_BUCKET: hls-live
+      HLS_STALE_SECONDS: '20'
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+      # Extra headroom on a dedicated node — this lane is I/O-bound
+      # (segment PUTs), not CPU-bound like worker-transcode.
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+    volumes:
+      - liquidsoap_remote_hls:/hls:ro
+
+volumes:
+  liquidsoap_remote_hls:
