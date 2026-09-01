@@ -90,3 +90,23 @@ judgment about current org priorities rather than a code cross-check:
 listed above). Worth a second pass if a fuller audit is wanted — these are
 mostly old enough (May–June 2026 commit dates) to be worth at least a
 skim for factual drift even if they don't need a rewrite.
+
+## Follow-up: admin screenshot inventory
+
+The board-member flow had documented several admin routes as capture gaps even
+though their pages already existed. Added the available index routes to both
+`scripts/capture-e2e-screenshots.mjs` and `scripts/capture-mobile-screenshots.mjs`:
+
+- news, announcements, radio submissions, missed shows, and top lists;
+- disco widgets, themes, and internet radio;
+- storage, files, content reports, and feature requests.
+
+Dynamic detail routes remain gaps because they require seeded IDs or a year
+parameter (`/admin/users/:id`, `/admin/support/:id`, and
+`/admin/grants/:year`). The seeded stack was brought up successfully, but the
+full Playwright capture stalled during the public-route pass after capturing
+the home and join pages, so no new screenshot inventory or flow links were
+created (the two existing PNGs touched before the stop remain as incidental
+working-tree changes). Targeted syntax, formatting, lint, and typecheck checks passed;
+the repository CI check still fails at its existing design-token gate because
+of raw hex colors elsewhere in the UI/CSS codebase.
