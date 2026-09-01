@@ -3,14 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert } from '@tahti/ui'
 import { usePlayer } from '@/contexts/player-context'
 import { goLive } from '../actions'
+import { ChannelControlsPanel } from '../channel-controls-panel'
 import { SignalMeters } from './_signal-meters'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 interface SignalStatus {
   connected: boolean
@@ -94,53 +93,18 @@ function AudioCheckPanel({ signal, hlsUrl }: { signal: SignalStatus | null; hlsU
   )
 }
 
-interface Preflight {
-  title: string | null
-  visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
-  showType: 'LIVE_SET' | 'TALK'
-  episodeNumber: number | null
-  tagline: string | null
-  plannedRadioShow: {
-    bookingId: string
-    episodeNumber: number
-    tagline: string | null
-    showType: 'LIVE_SET' | 'TALK'
-  } | null
-}
-
-interface RtmpTarget {
-  id: string
-  label: string
-  enabled: boolean
-}
-
-export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; hlsUrl: string }) {
+export function Step4GoLive({
+  signal,
+  hlsUrl,
+  slug,
+}: {
+  signal: SignalStatus | null
+  hlsUrl: string
+  slug: string
+}) {
   const router = useRouter()
-  const [preflight, setPreflight] = useState<Preflight | null>(null)
-  const [targets, setTargets] = useState<RtmpTarget[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const [preflightRes, targetsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/me/channel/preflight`, { credentials: 'include' }),
-          fetch(`${API_BASE}/api/me/rtmp-targets`, { credentials: 'include' }),
-        ])
-        if (!cancelled && preflightRes.ok) setPreflight((await preflightRes.json()) as Preflight)
-        if (!cancelled && targetsRes.ok) setTargets((await targetsRes.json()) as RtmpTarget[])
-      } catch {
-        // render with defaults
-      }
-    }
-    void load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   async function handleGoLive() {
     setError(null)
@@ -156,8 +120,6 @@ export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; h
       setLoading(false)
     }
   }
-
-  const activeTargets = targets.filter((t) => t.enabled)
 
   return (
     <>
@@ -181,58 +143,11 @@ export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; h
         <p className="broadcast-studio__go-live-hint">
           ⌨ hold space-bar to use a 3-2-1 countdown instead
         </p>
-        <div className="broadcast-studio__summary-card">
-          <span className="broadcast-studio__summary-label">Broadcast summary</span>
-          <dl className="broadcast-studio__summary-list">
-            <div>
-              <dt>Show name</dt>
-              <dd>{preflight?.title || 'Untitled broadcast'}</dd>
-            </div>
-            <div>
-              <dt>Type</dt>
-              <dd className="broadcast-studio__summary-accent">
-                {(preflight?.showType ?? preflight?.plannedRadioShow?.showType) === 'TALK'
-                  ? 'Talk'
-                  : 'Live set'}
-              </dd>
-            </div>
-            {(preflight?.episodeNumber ?? preflight?.plannedRadioShow?.episodeNumber) != null ? (
-              <div>
-                <dt>Episode</dt>
-                <dd className="broadcast-studio__summary-accent">
-                  #{preflight?.episodeNumber ?? preflight?.plannedRadioShow?.episodeNumber}
-                  {(preflight?.tagline ?? preflight?.plannedRadioShow?.tagline)
-                    ? ` — ${preflight?.tagline ?? preflight?.plannedRadioShow?.tagline}`
-                    : ''}
-                </dd>
-              </div>
-            ) : null}
-            <div>
-              <dt>Audio quality</dt>
-              <dd className="broadcast-studio__summary-accent">FLAC 96 kHz / 24-bit</dd>
-            </div>
-            <div>
-              <dt>Visibility</dt>
-              <dd>{preflight?.visibility === 'FAN_ONLY' ? 'Fan-subscribers only' : 'Public'}</dd>
-            </div>
-            <div>
-              <dt>Simulcast to</dt>
-              <dd>
-                {activeTargets.length ? activeTargets.map((t) => t.label).join(' + ') : 'None'}
-              </dd>
-            </div>
-            <div>
-              <dt>Auto-archive</dt>
-              <dd
-                className={preflight?.autoArchive ? 'broadcast-studio__summary-accent' : undefined}
-              >
-                {(preflight?.autoArchive ?? true)
-                  ? 'enabled (you can edit later)'
-                  : 'off — saved as a draft to publish manually'}
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <ChannelControlsPanel
+          slug={slug}
+          title="Active rotation"
+          description="Preview and manage what plays until you go live."
+        />
       </div>
     </>
   )

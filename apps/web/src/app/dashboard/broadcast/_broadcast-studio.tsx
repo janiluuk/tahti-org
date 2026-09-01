@@ -319,7 +319,7 @@ export function BroadcastStudio({
               Manage your stream from the stream manager icon in the top bar.
             </Text>
           ) : isPreview ? (
-            <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} />
+            <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} slug={channelSlug} />
           ) : (
             <Text as="p" tone="muted" size="sm">
               Start streaming in step 1 to unlock going live.

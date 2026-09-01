@@ -11896,47 +11896,6 @@
   color: var(--text-muted);
 }
 
-[data-tahti-ui='studio'] .broadcast-studio__summary-card {
-  text-align: left;
-  max-width: 400px;
-  margin: 0 auto;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-label {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-list {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  line-height: 1.7;
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-list > div {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-list dt {
-  font-weight: var(--weight-regular);
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-list dd {
-  margin: 0;
-  color: var(--text);
-}
-
 /* Audio-readiness panel — shown before "GO LIVE NOW" so the artist can see
  * their levels moving and knows exactly when to start talking/playing. */
 [data-tahti-ui='studio'] .broadcast-studio__audio-check {
@@ -12059,10 +12018,6 @@
 
 [data-tahti-ui='studio'] .broadcast-studio__audio-check .signal-meters {
   margin-bottom: 0;
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__summary-accent {
-  color: var(--green) !important;
 }
 
 /* ── Next-broadcast compact row (/dashboard/schedule) ───────────────────── */
