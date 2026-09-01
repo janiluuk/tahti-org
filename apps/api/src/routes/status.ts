@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { ApiStatusResponseSchema, openApiResponse } from '@tahti/shared'
 import { runDependencyChecks, summarizeChecks } from '../lib/health-checks.js'
+import { config } from '../config.js'
 
 // M11: public status surface (feeds self-hosted Upptime, Grafana, external monitors).
 const statusRoutes: FastifyPluginAsync = async (fastify) => {
@@ -22,7 +23,7 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.status(summary.healthy ? 200 : 503).send({
         status: summary.status,
-        version: process.env.npm_package_version ?? '0.0.1',
+        version: config.releaseVersion,
         uptimeSec: Math.floor(process.uptime()),
         checks: Object.fromEntries(
           checks.map((c) => [

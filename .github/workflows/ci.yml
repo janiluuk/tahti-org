@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "24"
+  NODE_VERSION: '24'
   # GitHub Actions mirror — avoids Docker Hub pull timeouts on ubuntu runners.
   NGINX_BASE_IMAGE: mirror.gcr.io/library/nginx:1.27-alpine
 
@@ -302,7 +302,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
-          path: "**/coverage/"
+          path: '**/coverage/'
           retention-days: 7
 
   vital-flows-e2e:
@@ -341,10 +341,10 @@ jobs:
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
       HCAPTCHA_SECRET: dev
-      PORT: "3001"
+      PORT: '3001'
       API_URL: http://localhost:3001
-      STRIPE_SECRET_KEY: ""
-      STRIPE_WEBHOOK_SECRET: ""
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
 
     steps:
       - uses: actions/checkout@v4
@@ -429,11 +429,11 @@ jobs:
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
       HCAPTCHA_SECRET: dev
-      PORT: "3001"
+      PORT: '3001'
       API_URL: http://localhost:3001
-      STRIPE_SECRET_KEY: ""
-      STRIPE_WEBHOOK_SECRET: ""
-      SEED_JOURNEY_FIXTURES: "1"
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
+      SEED_JOURNEY_FIXTURES: '1'
 
     steps:
       - uses: actions/checkout@v4
@@ -530,7 +530,7 @@ jobs:
           POSTGRES_USER: tahti
           POSTGRES_PASSWORD: tahti_dev
           POSTGRES_DB: tahti_test
-        ports: ["5432:5432"]
+        ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -538,7 +538,7 @@ jobs:
           --health-retries 10
       redis:
         image: redis:7-alpine
-        ports: ["6379:6379"]
+        ports: ['6379:6379']
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
@@ -703,6 +703,8 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           push: true
+          build-args: |
+            RELEASE_VERSION=${{ steps.version.outputs.tag }}
           tags: |
             ${{ env.REGISTRY }}/tahti/api:${{ steps.version.outputs.tag }}
             ${{ env.REGISTRY }}/tahti/api:${{ github.sha }}

@@ -252,6 +252,104 @@
   color: var(--text);
 }
 
+.admin-page-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-page-heading-row .admin-section-title {
+  margin-bottom: 0.35rem;
+}
+
+.admin-log-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-log-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.admin-log-controls select,
+.admin-log-controls input[type='search'] {
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+}
+
+.admin-log-controls__toggle {
+  flex-direction: row !important;
+  align-items: center;
+  min-height: 2rem;
+  padding-bottom: 0.35rem;
+}
+
+.admin-log-meta {
+  margin: 0.75rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.admin-log-viewer {
+  overflow: auto;
+  max-height: 70vh;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 75%, var(--card));
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.admin-log-line {
+  display: grid;
+  grid-template-columns: 5.5rem 8rem minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.2rem 0;
+  color: var(--text);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.admin-log-line time,
+.admin-log-line strong {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.admin-log-line code {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .admin-page-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-log-line {
+    grid-template-columns: 4.5rem 1fr;
+  }
+
+  .admin-log-line code {
+    grid-column: 1 / -1;
+  }
+}
+
 .admin-subsection-title {
   font-family: var(--font-head);
   font-size: 1.05rem;

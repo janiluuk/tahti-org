@@ -14,6 +14,8 @@ import { UpcomingShowNotice, type UpcomingShowInfo } from './UpcomingShowNotice'
 import { HelpTourButton } from './HelpTourButton'
 import { getStudioTourSteps } from './tour-steps'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
@@ -129,6 +131,7 @@ export function StudioTopNav({
 }: StudioTopNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [releaseVersion, setReleaseVersion] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : null
 
@@ -151,6 +154,20 @@ export function StudioTopNav({
   useEffect(() => {
     setOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    if (!open || releaseVersion) return
+    let cancelled = false
+    fetch(`${API_BASE}/api/version`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { version?: string } | null) => {
+        if (!cancelled && data?.version) setReleaseVersion(data.version)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [open, releaseVersion])
 
   return (
     <header className="studio-top-nav">
@@ -247,6 +264,9 @@ export function StudioTopNav({
                   <SidebarNavIconSvg name="settings" />
                   Settings
                 </Link>
+                {releaseVersion && (
+                  <span className="studio-top-nav__menu-version">Tahti {releaseVersion}</span>
+                )}
                 <div className="studio-top-nav__menu-divider" role="separator" />
                 <form action={logoutAction} className="studio-top-nav__menu-form">
                   <button

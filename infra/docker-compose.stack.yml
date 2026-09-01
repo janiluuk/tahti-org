@@ -19,15 +19,16 @@ name: tahti-stack
 x-loki-logging: &loki-logging
   driver: loki
   options:
-    loki-url: "http://192.168.2.105:3100/loki/api/v1/push"
-    loki-external-labels: "service={{.Name}},job=tahti"
-    loki-retries: "3"
-    loki-batch-size: "400"
+    loki-url: 'http://192.168.2.105:3100/loki/api/v1/push'
+    loki-external-labels: 'service={{.Name}},job=tahti'
+    loki-retries: '3'
+    loki-batch-size: '400'
     mode: non-blocking
     max-buffer-size: 4m
 
 x-app-env: &app-env
   NODE_ENV: production
+  RELEASE_VERSION: ${RELEASE_VERSION:-dev}
   # PLAT-003: transaction pool via PgBouncer (migrations use direct postgres in db-push)
   # PROD: set POSTGRES_PASSWORD, SESSION_SECRET, INTERNAL_SECRET, DOCS_PASS, HCAPTCHA_SECRET,
   # MINIO_SECRET_KEY, CENTRIFUGO_JWT_SECRET, CENTRIFUGO_API_KEY in infra/stack.env — see
@@ -188,7 +189,7 @@ services:
       # eager too. Trades some CPU for materially lower steady-state memory —
       # tune GOMEMLIMIT up if the extra GC pressure shows up as latency.
       GOMEMLIMIT: 2GiB
-      GOGC: "50"
+      GOGC: '50'
     ports:
       - '${MINIO_PORT:-19000}:9000'
       - '${MINIO_CONSOLE_PORT:-19001}:9001'
@@ -329,6 +330,8 @@ services:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
+      args:
+        RELEASE_VERSION: ${RELEASE_VERSION:-dev}
     environment:
       <<: *app-env
       PORT: '3001'

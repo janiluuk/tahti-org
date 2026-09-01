@@ -103,6 +103,7 @@ export const config = {
   },
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
+  releaseVersion: process.env.RELEASE_VERSION ?? process.env.npm_package_version ?? 'dev',
   sourceRepoUrl: 'https://github.com/tahtiapp/tahti',
   isProd: process.env.NODE_ENV === 'production',
   /** Filesystem path statfs'd for the admin storage panel's "local server disk" reading —

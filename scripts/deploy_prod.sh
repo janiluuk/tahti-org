@@ -15,6 +15,7 @@ set -euo pipefail
 
 HOST="${DEPLOY_HOST:-vimage}"
 REMOTE_PATH="${DEPLOY_PATH:-/srv/tahti}"
+RELEASE_VERSION="${RELEASE_VERSION:-$(git rev-parse --short HEAD)}"
 
 NO_CACHE=""
 DOWN=""
@@ -75,12 +76,12 @@ else
 fi
 
 ssh_remote "cd '${REMOTE_PATH}' && \
-  ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push"
+  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push"
 
 # ── Up ────────────────────────────────────────────────────────────────────────
 echo "==> Starting stack on ${HOST}"
 ssh_remote "cd '${REMOTE_PATH}' && \
-  ${COMPOSE[*]} up -d --remove-orphans"
+  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} up -d --remove-orphans"
 
 # ── Health ────────────────────────────────────────────────────────────────────
 echo "==> Waiting for API health..."

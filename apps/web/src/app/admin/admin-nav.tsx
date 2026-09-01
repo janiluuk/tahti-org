@@ -340,7 +340,7 @@ export const ADMIN_NAV = [
   },
   {
     href: '/admin/governance/audit',
-    label: 'Audit log',
+    label: 'Governance audit',
     icon: <GovernanceNavIcon mark="A" />,
   },
   {
@@ -435,6 +435,11 @@ export const ADMIN_NAV = [
       </svg>
     ),
   },
+  {
+    href: '/admin/logs',
+    label: 'System logs',
+    icon: <GovernanceNavIcon mark="L" />,
+  },
 ] as const
 
 export const ADMIN_MENU_GROUPS = [
@@ -491,6 +496,7 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/files',
       '/admin/themes',
       '/admin/settings/vendors',
+      '/admin/logs',
     ],
   },
 ] as const

@@ -11,6 +11,7 @@ import basicAuth from '@fastify/basic-auth'
 import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
 import healthRoute from './routes/health.js'
+import versionRoute from './routes/version.js'
 import statusRoutes from './routes/status.js'
 import metricsRoute from './routes/metrics.js'
 import sourceRoute from './routes/source.js'
@@ -514,6 +515,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // Routes
   await fastify.register(healthRoute)
+  await fastify.register(versionRoute)
   await fastify.register(statusRoutes)
   await fastify.register(metricsRoute)
   await fastify.register(sourceRoute)

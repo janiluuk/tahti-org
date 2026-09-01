@@ -261,6 +261,13 @@
   background: var(--border);
 }
 
+[data-tahti-ui='studio'] .studio-top-nav__menu-version {
+  padding: 5px 10px 3px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__menu-form {
   display: contents;
 }

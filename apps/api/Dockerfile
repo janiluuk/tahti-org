@@ -44,7 +44,8 @@ COPY apps/api/scripts    ./apps/api/scripts
 # Generate Prisma client into node_modules/.prisma
 RUN pnpm --filter @tahti/db db:generate
 
-ENV NODE_ENV=production PORT=3001
+ARG RELEASE_VERSION=dev
+ENV NODE_ENV=production PORT=3001 RELEASE_VERSION=${RELEASE_VERSION}
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
