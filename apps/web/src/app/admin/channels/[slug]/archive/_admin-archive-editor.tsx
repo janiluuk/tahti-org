@@ -103,11 +103,13 @@ export function AdminArchiveEditor({ slug, item }: { slug: string; item: AdminAr
                 disabled={isPending}
                 className="studio-input"
               >
-                {Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+                {Object.entries(CONTENT_TYPE_LABELS)
+                  .filter(([value]) => value !== 'LIVE')
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
               </select>
             </label>
           </div>

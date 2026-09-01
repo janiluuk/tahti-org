@@ -10,9 +10,8 @@ export {
 } from '@tahti/shared'
 
 export const CONTENT_TYPE_LABELS: Record<string, string> = {
-  STUDIO: 'Studio recording',
-  LIVE: 'Live recording',
-  DJ_MIX: 'DJ mix',
+  STUDIO: 'Track',
+  DJ_MIX: 'DJ Set',
   PODCAST: 'Podcast',
   ORIGINAL: 'Original',
   REMIX: 'Remix',

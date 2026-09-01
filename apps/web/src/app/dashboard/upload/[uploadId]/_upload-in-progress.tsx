@@ -170,7 +170,7 @@ export function UploadInProgress({
         artist: artist || undefined,
         year: year ? Number(year) : undefined,
         genre: genre || undefined,
-        metadata: { contentType: contentType === 'set' ? 'LIVE' : 'STUDIO' },
+        metadata: { contentType: contentType === 'set' ? 'DJ_MIX' : 'STUDIO' },
         collectionSlugs: selectedCollections,
         source: pending?.source,
       })
@@ -433,11 +433,11 @@ export function UploadInProgress({
                     setContentType(t)
                   }}
                 >
-                  <strong>{t === 'track' ? 'Track' : 'Set / Mix'}</strong>
+                  <strong>{t === 'track' ? 'Track' : 'DJ Set'}</strong>
                   <span>
                     {t === 'track'
                       ? 'A single song or production'
-                      : 'A DJ set, mix, or long-form recording'}
+                      : 'A recorded DJ set with its tracklist'}
                   </span>
                 </button>
               ))}

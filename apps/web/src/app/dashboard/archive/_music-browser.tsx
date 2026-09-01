@@ -180,7 +180,7 @@ export function MusicBrowser({
 
         {tab === 'dj-sets' &&
           (djSets.length === 0 ? (
-            <p className="studio-text-muted-sm">No DJ sets, live recordings, or radio shows yet.</p>
+            <p className="studio-text-muted-sm">No tracks, DJ sets, or radio shows yet.</p>
           ) : (
             <ArchiveList
               items={djSets}

@@ -24,7 +24,7 @@ const HELP_STEPS: HelpSpotlightStep[] = [
     id: 'releases',
     label: 'Releases',
     description:
-      'Every release, DJ mix, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
+      'Every release, DJ Set, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
   },
   {
     id: 'gallery',

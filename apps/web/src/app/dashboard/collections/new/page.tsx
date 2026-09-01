@@ -20,7 +20,7 @@ export default function NewCollectionPage() {
       badgeAbbr="COL"
       badgeTone="collection"
       title="New collection"
-      description="Group albums, EPs, DJ sets, or live archives so listeners can explore your work in curated lists."
+      description="Group tracks, albums, EPs, or DJ sets so listeners can explore your work in curated lists."
       asideTitle="How it works"
       aside={<StudioFlowSteps steps={HOW_IT_WORKS} />}
     >

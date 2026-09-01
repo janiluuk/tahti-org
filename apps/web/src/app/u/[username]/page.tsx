@@ -248,7 +248,7 @@ interface ArtistUpcomingShow {
 }
 
 /** Shared row-list rendering for every Collection sub-group inside the
- * Releases tab (DJ mixes / Playlists / Collections) — same markup the flat
+ * Releases tab (DJ Sets / Playlists / Collections) — same markup the flat
  * "Collections" section used before it was split into these sub-groups. */
 function CollectionRowList({ items }: { items: NonNullable<ProfileResponse['collections']> }) {
   return (
@@ -392,7 +392,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
     : []
   const pinnedReleases = releases.filter((r) => r.pinned)
   // Tahti Releases first, then everything else — same items as before, the
-  // formal-release section just leads instead of trailing behind DJ mixes/
+  // formal-release section just leads instead of trailing behind DJ Sets/
   // playlists/collections/individual tracks.
   const hasOtherReleaseContent =
     tracks.length > 0 ||
@@ -663,7 +663,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
           releases={
             <>
               {/* Tahti Releases leads — formal albums/EPs first, then
-                  everything else (DJ mixes, playlists, collections,
+                  everything else (DJ Sets, playlists, collections,
                   individual tracks). Only formal multi-track Release
                   albums/EPs belong in this first section — an artist with
                   individual uploaded tracks (shown in TracksTab below) but no
@@ -715,7 +715,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
               {djMixCollections.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">DJ mixes</div>
+                    <div className="prof-sec-label">DJ Sets</div>
                     <div className="prof-sec-count">{djMixCollections.length} total</div>
                   </div>
                   <CollectionRowList items={djMixCollections} />

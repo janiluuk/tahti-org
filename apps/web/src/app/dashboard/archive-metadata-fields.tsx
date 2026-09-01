@@ -270,7 +270,7 @@ export function ArchiveBasicsFields({
             onChange={(e) => set({ contentType: e.target.value })}
             className="studio-input"
           >
-            {ARCHIVE_CONTENT_TYPES.map((t) => (
+            {ARCHIVE_CONTENT_TYPES.filter((t) => t !== 'LIVE').map((t) => (
               <option key={t} value={t}>
                 {CONTENT_TYPE_LABELS[t] ?? t}
               </option>
