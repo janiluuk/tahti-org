@@ -55,9 +55,7 @@ export default async function AdminWorkersPage() {
                 <tr key={w.name}>
                   <td>
                     <Link href={`/admin/workers/${encodeURIComponent(w.name)}`}>{w.name}</Link>
-                    {w.hostname ? (
-                      <span className="admin-stat-sub"> · {w.hostname}</span>
-                    ) : null}
+                    {w.hostname ? <span className="admin-stat-sub"> · {w.hostname}</span> : null}
                   </td>
                   <td>{w.lanes.length ? w.lanes.join(', ') : '—'}</td>
                   <td className={w.status === 'online' ? 'admin-ok' : 'admin-err'}>

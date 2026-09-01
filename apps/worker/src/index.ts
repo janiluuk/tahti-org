@@ -59,7 +59,12 @@ import {
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 import { runWithCronLog } from './lib/cron-run.js'
 import { jobNamesForLanes } from '@tahti/shared'
-import { registerWorker, heartbeat, recordJobEvent, resolveWorkerName } from './lib/worker-registry.js'
+import {
+  registerWorker,
+  heartbeat,
+  recordJobEvent,
+  resolveWorkerName,
+} from './lib/worker-registry.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 

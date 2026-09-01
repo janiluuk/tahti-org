@@ -23,12 +23,7 @@ vi.mock('redis', () => ({
   })),
 }))
 
-import {
-  registerWorker,
-  heartbeat,
-  recordJobEvent,
-  resolveWorkerName,
-} from './worker-registry.js'
+import { registerWorker, heartbeat, recordJobEvent, resolveWorkerName } from './worker-registry.js'
 
 describe('resolveWorkerName', () => {
   it('uses WORKER_NAME when set', () => {
