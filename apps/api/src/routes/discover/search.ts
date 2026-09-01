@@ -15,7 +15,11 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
  * kept as one function so the two surfaces can't drift out of sync. */
 export async function performSearch(
   prisma: PrismaClient,
-  { q, type, count }: { q: string; type: 'all' | 'tracks' | 'artists' | 'collections'; count: number },
+  {
+    q,
+    type,
+    count,
+  }: { q: string; type: 'all' | 'tracks' | 'artists' | 'collections'; count: number },
 ): Promise<SearchResponse> {
   const [tracks, artists, collections] = await Promise.all([
     type === 'artists' || type === 'collections'

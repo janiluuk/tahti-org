@@ -4,7 +4,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'jam-test-'
 
@@ -38,7 +42,12 @@ describe('Tahti Jam', () => {
     guestCookie = await sessionCookieFor(prisma, guest.id)
 
     const collection = await prisma.collection.create({
-      data: { userId: hostId, slug: `${PREFIX}playlist`, name: 'Jam Test Playlist', isPublic: true },
+      data: {
+        userId: hostId,
+        slug: `${PREFIX}playlist`,
+        name: 'Jam Test Playlist',
+        isPublic: true,
+      },
     })
     collectionSlug = collection.slug
   })
@@ -148,7 +157,11 @@ describe('Tahti Jam', () => {
       payload: { collectionSlug },
     })
     const { id: sessionId, code } = create.json()
-    await app.inject({ method: 'POST', url: `/api/v1/jam/${code}/join`, headers: { cookie: guestCookie } })
+    await app.inject({
+      method: 'POST',
+      url: `/api/v1/jam/${code}/join`,
+      headers: { cookie: guestCookie },
+    })
 
     const guestPush = await app.inject({
       method: 'POST',
@@ -166,7 +179,11 @@ describe('Tahti Jam', () => {
       payload: { isPlaying: true, currentTrack: track, positionSec: 12.5 },
     })
     expect(hostPush.statusCode).toBe(200)
-    expect(hostPush.json()).toMatchObject({ isPlaying: true, positionSec: 12.5, currentTrack: track })
+    expect(hostPush.json()).toMatchObject({
+      isPlaying: true,
+      positionSec: 12.5,
+      currentTrack: track,
+    })
   })
 
   it('only the host can end the jam', async () => {
@@ -177,7 +194,11 @@ describe('Tahti Jam', () => {
       payload: { collectionSlug },
     })
     const { id: sessionId, code } = create.json()
-    await app.inject({ method: 'POST', url: `/api/v1/jam/${code}/join`, headers: { cookie: guestCookie } })
+    await app.inject({
+      method: 'POST',
+      url: `/api/v1/jam/${code}/join`,
+      headers: { cookie: guestCookie },
+    })
 
     const guestEnd = await app.inject({
       method: 'DELETE',
@@ -209,7 +230,11 @@ describe('Tahti Jam', () => {
       payload: { collectionSlug },
     })
     const { id: sessionId, code } = create.json()
-    await app.inject({ method: 'POST', url: `/api/v1/jam/${code}/join`, headers: { cookie: guestCookie } })
+    await app.inject({
+      method: 'POST',
+      url: `/api/v1/jam/${code}/join`,
+      headers: { cookie: guestCookie },
+    })
 
     const leave = await app.inject({
       method: 'POST',

@@ -6,7 +6,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'mcp-test-'
 

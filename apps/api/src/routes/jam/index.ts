@@ -21,7 +21,9 @@ const sessionWithParticipants = {
   include: {
     participants: {
       where: { leftAt: null },
-      include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      include: {
+        user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+      },
     },
   },
 } satisfies Prisma.JamSessionDefaultArgs
@@ -265,7 +267,8 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       const participant = await fastify.prisma.jamParticipant.findUnique({
         where: { sessionId_userId: { sessionId: id, userId: user.id } },
       })
-      if (!participant || participant.leftAt) return reply.status(404).send({ error: 'Not in this jam' })
+      if (!participant || participant.leftAt)
+        return reply.status(404).send({ error: 'Not in this jam' })
 
       await fastify.prisma.jamParticipant.update({
         where: { id: participant.id },

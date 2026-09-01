@@ -126,7 +126,7 @@ export function AdminAnnouncementsPanel({
         style={{
           marginBottom: '1.5rem',
           padding: '1rem',
-                        border: '1px solid var(--admin-border)',
+          border: '1px solid var(--admin-border)',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
