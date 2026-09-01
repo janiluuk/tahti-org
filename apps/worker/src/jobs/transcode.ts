@@ -19,7 +19,7 @@ import {
 } from '@tahti/shared'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
-import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
+import { enqueueEncodeStreamingCopy, enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
@@ -182,6 +182,11 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           status: 'READY',
           flacKey,
           mp3Key: null,
+          // A lossless upload is playable now, off the FLAC — the
+          // compressed streaming copy for low-bandwidth/non-FLAC clients
+          // runs as a separate background job right after so it doesn't
+          // hold up this one going READY.
+          streamingCopyStatus: 'PENDING',
           durationSec: sourceMeta.duration,
           peaks,
           editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
@@ -196,6 +201,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       })
       await ensureInitialVersion(prisma, itemId)
       await enqueueWarmArchiveFallbackCache(item.channelId)
+      await enqueueEncodeStreamingCopy(itemId)
       logLine(
         { itemId, targetFormat: 'flac', elapsedMs: Date.now() - startedAt },
         `archive item ${itemId} transcode to flac done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,

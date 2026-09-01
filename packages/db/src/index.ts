@@ -28,6 +28,7 @@ export {
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
   notifyArtistOfNewRepost,
+  notifyArtistStreamingCopyReady,
   notifyPlaylistOfNewTrack,
   notifyUserOfNewMessage,
   notifyUsersOfChatMention,

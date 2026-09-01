@@ -52,3 +52,23 @@ export async function enqueueTranscodeArchive(itemId: string): Promise<void> {
     await queue.close()
   }
 }
+
+/** Compressed streaming copy for a lossless upload — see StreamingCopyStatus
+ * on ArchiveItem and apps/api/src/lib/queue.ts's copy of this same helper
+ * (the worker enqueues its own follow-up jobs without depending on apps/api). */
+export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> {
+  const queue = new Queue('media', { connection, defaultJobOptions })
+  try {
+    await queue.add(
+      'encode-streaming-copy',
+      { itemId },
+      {
+        jobId: `encode-streaming-copy-${itemId}`,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 10_000 },
+      },
+    )
+  } finally {
+    await queue.close()
+  }
+}

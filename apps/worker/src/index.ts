@@ -5,6 +5,7 @@ import { Worker, Queue } from 'bullmq'
 import { prisma } from '@tahti/db'
 import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
+import { processEncodeStreamingCopyJob } from './jobs/encode-streaming-copy.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
 import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-trim.js'
@@ -106,6 +107,8 @@ const worker = new Worker(
     return await runWithCronLog(job.name, async () => {
       if (job.name === 'transcode-archive') {
         await processTranscodeJob(job)
+      } else if (job.name === 'encode-streaming-copy') {
+        await processEncodeStreamingCopyJob(job)
       } else if (job.name === 'transcode-archive-version') {
         await processTranscodeVersionJob(job)
       } else if (job.name === 'render-archive-edit') {

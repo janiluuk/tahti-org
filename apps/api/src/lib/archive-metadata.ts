@@ -54,6 +54,7 @@ export const archiveItemMetadataSelect = {
   colorSchemeJson: true,
   paletteJson: true,
   status: true,
+  streamingCopyStatus: true,
   durationSec: true,
   sourceFormat: true,
   sourceBitrateKbps: true,

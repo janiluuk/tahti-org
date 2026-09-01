@@ -15,6 +15,7 @@ export const WORKER_JOB_LANES = {
   /** ffmpeg-heavy jobs — safe on a remote worker with Redis/Postgres/MinIO only. */
   transcode: [
     'transcode-archive',
+    'encode-streaming-copy',
     'transcode-archive-version',
     'transcode-release-track',
     'transcode-release-track-version',

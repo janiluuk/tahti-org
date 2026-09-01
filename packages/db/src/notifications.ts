@@ -266,6 +266,25 @@ export async function notifyUserThemeUnderReview(
   })
 }
 
+/** Sent when a lossless upload's compressed streaming copy finishes
+ * encoding — see ArchiveItem.streamingCopyStatus. The item was already
+ * READY (playable off its FLAC) before this fires. */
+export async function notifyArtistStreamingCopyReady(
+  prisma: PrismaClient,
+  artistUserId: string,
+  item: { id: string; title: string },
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'STREAMING_COPY_READY',
+      title: `"${item.title}" is ready for low-bandwidth streaming`,
+      body: 'A compressed copy was encoded for listeners on slower connections or clients that can\'t play FLAC.',
+      url: `/dashboard/archive/${item.id}`,
+    },
+  })
+}
+
 export async function notifyUserThemeApproved(
   prisma: PrismaClient,
   userId: string,

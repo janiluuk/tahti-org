@@ -27,6 +27,20 @@ export async function enqueueTranscode(itemId: string): Promise<void> {
   await mediaQueue.add('transcode-archive', { itemId })
 }
 
+/** Compressed streaming copy for a lossless upload — see StreamingCopyStatus
+ * on ArchiveItem. Runs after the item is already READY off its FLAC. */
+export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> {
+  await mediaQueue.add(
+    'encode-streaming-copy',
+    { itemId },
+    {
+      jobId: `encode-streaming-copy-${itemId}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 10_000 },
+    },
+  )
+}
+
 export async function enqueueVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-archive-version', { versionId })
 }

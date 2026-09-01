@@ -139,6 +139,21 @@ enum ArchiveItemStatus {
   @@schema("channel")
 }
 
+// A lossless upload (WAV/FLAC) is playable as soon as its FLAC transcode is
+// READY, but low-bandwidth/non-FLAC clients need a compressed streaming
+// copy too — that's encoded as a second background job so it doesn't delay
+// the item going READY. NOT_NEEDED covers lossy sources, which already get
+// a compressed copy as their one and only transcode target.
+enum StreamingCopyStatus {
+  NOT_NEEDED
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+
+  @@schema("channel")
+}
+
 // Scheduling for a system-wide (admin-managed) announcement clip within the
 // rotation. Only meaningful when AnnouncementClip.channelId is null — a
 // channel's own clips don't have a configurable schedule (see
@@ -552,6 +567,9 @@ enum NotificationType {
   /// Sent to every board member when the missed-live-show-scan cron flags a
   /// ScheduledLiveShow whose start time passed with no Broadcast against it.
   MISSED_LIVE_SHOW_FLAGGED
+  /// A lossless upload's compressed streaming copy finished encoding — see
+  /// ArchiveItem.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
+  STREAMING_COPY_READY
 
   @@schema("core")
 }
@@ -1745,6 +1763,9 @@ model ArchiveItem {
   embedUri      String?             // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
   embedProvider ArchiveEmbedProvider?
   status        ArchiveItemStatus @default(PENDING)
+  // Set to PENDING (not NOT_NEEDED) by the transcode job itself once it
+  // knows the source was lossless — see apps/worker/src/jobs/transcode.ts.
+  streamingCopyStatus StreamingCopyStatus @default(NOT_NEEDED)
   isPublic      Boolean           @default(true)
   isFallback           Boolean           @default(false)
   fallbackOrder        Int?              // M27: position in ordered offline rotation

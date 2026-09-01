@@ -1751,6 +1751,25 @@
   font-size: var(--text-body);
 }
 
+[data-tahti-ui='studio'] .studio-processing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-processing-badge svg {
+  animation: studio-processing-spin 1.1s linear infinite;
+}
+
+@keyframes studio-processing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 [data-tahti-ui='studio'] .studio-stat-box-header {
   display: flex;
   justify-content: space-between;

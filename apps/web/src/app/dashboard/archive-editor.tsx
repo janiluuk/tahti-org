@@ -193,7 +193,12 @@ export default function ArchiveEditor({
   play,
   queue,
 }: {
-  item: Record<string, unknown> & { id: string; title: string; status: string }
+  item: Record<string, unknown> & {
+    id: string
+    title: string
+    status: string
+    streamingCopyStatus?: string
+  }
   mixcloudConnected: boolean
   mixcloudConfigured: boolean
   apiUrl: string
@@ -417,7 +422,24 @@ export default function ArchiveEditor({
         </div>
       ) : (
         <div className="studio-card-row">
-          <div className="studio-stat-box-title">{item.title}</div>
+          <div className="studio-stat-box-title">
+            {item.title}
+            {!isReady ? (
+              <span className="studio-processing-badge">
+                <ButtonIcon name="refresh" />
+                Processing…
+              </span>
+            ) : item.streamingCopyStatus === 'PENDING' ||
+              item.streamingCopyStatus === 'PROCESSING' ? (
+              <span
+                className="studio-processing-badge"
+                title="Encoding a compressed copy for low-bandwidth listeners"
+              >
+                <ButtonIcon name="refresh" />
+                Encoding streaming copy…
+              </span>
+            ) : null}
+          </div>
           {open ? (
             <Button onClick={() => setOpen(false)} variant="ghost" size="sm">
               Close
