@@ -8,6 +8,7 @@ import { TahtiRadioCard } from './_tahti-radio-card'
 import { NewToYouSection } from './_new-to-you-section'
 import { YourFeedSection } from './_your-feed-section'
 import { DiscoWidgetsSection } from './_disco-widgets-section'
+import { MobileDisclosure } from './_mobile-disclosure'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -144,11 +145,11 @@ export default async function ListenPage() {
         artworkUrl={radioPreview.artworkUrl}
       />
 
-      <YourFeedSection />
-
-      <NewToYouSection />
-
-      <DiscoWidgetsSection />
+      <MobileDisclosure title="For you">
+        <YourFeedSection />
+        <NewToYouSection />
+        <DiscoWidgetsSection />
+      </MobileDisclosure>
 
       <DiscoverTabs
         live={live}

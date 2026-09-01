@@ -1316,6 +1316,72 @@
   text-overflow: ellipsis;
 }
 
+.listen-mobile-disclosure > summary {
+  display: none;
+}
+
+.listen-mobile-disclosure__content {
+  display: contents;
+}
+
+@media (max-width: 640px) {
+  .listen-shell {
+    padding-top: var(--tahti-space-5);
+  }
+
+  .listen-page-header {
+    margin-bottom: var(--tahti-space-5);
+  }
+
+  .listen-radio-card {
+    margin-bottom: var(--tahti-space-5);
+    padding: var(--tahti-space-3);
+  }
+
+  .listen-mobile-disclosure {
+    margin: 0 0 var(--tahti-space-5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--tahti-radius-lg, 12px);
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .listen-mobile-disclosure > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0.6rem 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    font-size: var(--tahti-text-sm);
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .listen-mobile-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .listen-mobile-disclosure > summary::after {
+    content: '＋';
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .listen-mobile-disclosure[open] > summary::after {
+    content: '−';
+  }
+
+  .listen-mobile-disclosure__content {
+    display: block;
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .listen-mobile-disclosure__content > section {
+    margin: 0.75rem 0 0;
+  }
+}
+
 /* ---- Discover tabs (Live / Tahti Selects / Artists) ---- */
 .discover-tabs {
   display: flex;
