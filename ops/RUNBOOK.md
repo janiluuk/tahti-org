@@ -13,8 +13,11 @@ live in Git; this document covers **data** recovery (Postgres, MinIO).
 
 ## Deploy and rollback
 
-Production deploys run via [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)
-on `v*.*.*` tags after staging smoke. Lab stack: [`deploy-lab-stack.yml`](../.github/workflows/deploy-lab-stack.yml).
+Production (vimage, single-host Compose stack) deploys via
+[`.github/workflows/deploy-production.yml`](../.github/workflows/deploy-production.yml)
+on push to `main`, which runs `scripts/deploy_prod.sh`. `deploy.yml`'s tag-triggered
+Swarm pipeline targets a separate staging/production Swarm cluster that is not the
+currently deployed infrastructure.
 
 **Rollback a single service** (production Swarm):
 

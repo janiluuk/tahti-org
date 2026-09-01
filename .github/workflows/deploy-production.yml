@@ -1,11 +1,13 @@
-# Deploy Tahti website to production via jumphost → root@192.168.2.100.
+# Deploy the full Tahti stack (website, api, web, worker, orchestrator) to
+# production via jumphost → root@192.168.2.100 (vimage), by running the same
+# scripts/deploy_prod.sh a developer runs by hand today.
 #
 # Required repository secret:
 #   DEPLOY_SSH_PRIVATE_KEY — ed25519 private key (authorized on jumphost + production)
 #
 # Optional repository variables (see "Export deploy targets" step for defaults):
 #   DEPLOY_JUMP_HOST, DEPLOY_JUMP_USER, DEPLOY_JUMP_PORT
-#   DEPLOY_HOST, DEPLOY_PATH, DEPLOY_USER, DEPLOY_APP_PORT
+#   DEPLOY_HOST, DEPLOY_PATH, DEPLOY_USER
 #
 # Triggers:
 #   - workflow_dispatch (manual, with optional --no-cache flag)
@@ -71,7 +73,6 @@ jobs:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
-      DEPLOY_APP_PORT: ${{ vars.DEPLOY_APP_PORT }}
 
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +91,6 @@ jobs:
             echo "DEPLOY_HOST=${DEPLOY_HOST:-192.168.2.100}"
             echo "DEPLOY_PATH=${DEPLOY_PATH:-/srv/tahti}"
             echo "DEPLOY_USER=${DEPLOY_USER:-root}"
-            echo "DEPLOY_APP_PORT=${DEPLOY_APP_PORT:-8090}"
             echo "SSH_PROXY_JUMP=${jump_user}@${jump_host}:${jump_port}"
           } >> "$GITHUB_ENV"
 
@@ -137,15 +137,23 @@ jobs:
           ssh deploy-jump 'echo "jumphost ok"'
           ssh deploy-prod "test -d '${DEPLOY_PATH}' && echo 'production ok'"
 
+      # deploy_prod.sh rsyncs the checked-out tree to DEPLOY_HOST:DEPLOY_PATH
+      # (excluding infra/stack.env, which only the copy already on the remote
+      # host is authoritative for), builds website/api/web/worker/orchestrator
+      # with --env-file infra/stack.env, and brings the stack up with
+      # `docker compose up -d --remove-orphans` — no `down` step, so existing
+      # named volumes (postgres, minio, redis) are preserved across deploys.
       - name: Deploy stack
         run: |
           set -euo pipefail
+          args=()
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.no_cache }}" = "true" ]; then
-            ./scripts/lab-stack-up.sh --no-cache
-          else
-            ./scripts/lab-stack-up.sh
+            args+=(--no-cache)
           fi
+          DEPLOY_HOST=deploy-prod ./scripts/deploy_prod.sh "${args[@]}"
 
       - name: Health check
         run: |
-          ssh deploy-prod "curl -sfS http://127.0.0.1:${DEPLOY_APP_PORT}/health"
+          ssh deploy-prod "curl -sfS http://127.0.0.1:15011/health"
+          ssh deploy-prod "curl -sfS -o /dev/null http://127.0.0.1:17777/"
+          ssh deploy-prod "curl -sfS -o /dev/null http://127.0.0.1:18080/"
