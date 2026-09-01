@@ -358,7 +358,7 @@ const ADMIN_TOP_BAR: TourStep[] = [
     body: 'Jump back to your own artist studio without logging out of admin.',
   },
   {
-    selector: '.studio-top-nav__link[href="/governance"]',
+    selector: '.studio-top-nav__link[href="/dashboard/governance"]',
     title: 'Governance',
     body: 'Board motions, votes, and the member governance process — the same page members see, from the admin side.',
   },

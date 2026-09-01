@@ -85,7 +85,7 @@ export function AdminShellHeader({ displayName, username, userInitial }: AdminSh
               </div>
             )}
           </div>
-          <Link href="/governance" className="studio-top-nav__link">
+          <Link href="/dashboard/governance" className="studio-top-nav__link">
             Governance portal
           </Link>
         </div>

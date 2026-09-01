@@ -318,6 +318,38 @@
   line-height: 1.45;
 }
 
+.admin-governance-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: -0.5rem 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-governance-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition:
+    color 0.13s,
+    border-color 0.13s,
+    background 0.13s;
+}
+
+.admin-governance-tabs__link:hover,
+.admin-governance-tabs__link.active {
+  border-color: color-mix(in srgb, var(--cyan) 50%, transparent);
+  background: color-mix(in srgb, var(--cyan) 14%, var(--card));
+  color: var(--cyan);
+}
+
 .admin-search-input {
   flex: 1 1 12rem;
   min-width: 0;

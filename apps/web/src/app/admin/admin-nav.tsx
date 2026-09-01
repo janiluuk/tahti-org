@@ -6,6 +6,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+function GovernanceNavIcon({ mark }: { mark: string }) {
+  return (
+    <span aria-hidden className="db-nav-item__mark">
+      {mark}
+    </span>
+  )
+}
+
 export const ADMIN_NAV = [
   {
     href: '/admin/dashboard',
@@ -316,6 +324,36 @@ export const ADMIN_NAV = [
     ),
   },
   {
+    href: '/dashboard/governance',
+    label: 'Member governance',
+    icon: <GovernanceNavIcon mark="M" />,
+  },
+  {
+    href: '/admin/governance/report',
+    label: 'Annual reports',
+    icon: <GovernanceNavIcon mark="R" />,
+  },
+  {
+    href: '/admin/governance/resolutions',
+    label: 'Board resolutions',
+    icon: <GovernanceNavIcon mark="D" />,
+  },
+  {
+    href: '/admin/governance/audit',
+    label: 'Audit log',
+    icon: <GovernanceNavIcon mark="A" />,
+  },
+  {
+    href: '/governance/venues',
+    label: 'Venue verification',
+    icon: <GovernanceNavIcon mark="V" />,
+  },
+  {
+    href: '/transparency',
+    label: 'Transparency',
+    icon: <GovernanceNavIcon mark="T" />,
+  },
+  {
     href: '/admin/feature-requests',
     label: 'Features',
     icon: (
@@ -407,6 +445,12 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/dashboard',
       '/admin/financial',
       '/admin/governance',
+      '/dashboard/governance',
+      '/admin/governance/report',
+      '/admin/governance/resolutions',
+      '/admin/governance/audit',
+      '/governance/venues',
+      '/transparency',
       '/admin/grants',
       '/admin/agm',
       '/admin/status',

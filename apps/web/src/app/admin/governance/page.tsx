@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 const SECTIONS = [
   {
-    href: '/governance',
+    href: '/dashboard/governance',
     title: 'Member motions & voting',
     desc: 'Open member motions and the public governance portal.',
   },
@@ -56,10 +56,33 @@ const SECTIONS = [
   },
 ] as const
 
+const GOVERNANCE_TABS = [
+  { href: '/admin/governance', label: 'Overview' },
+  { href: '/dashboard/governance', label: 'Member governance' },
+  { href: '/admin/agm', label: 'AGM & meetings' },
+  { href: '/admin/governance/resolutions', label: 'Board resolutions' },
+  { href: '/admin/governance/report', label: 'Annual reports' },
+  { href: '/admin/governance/audit', label: 'Audit log' },
+  { href: '/governance/venues', label: 'Venue verification' },
+  { href: '/transparency', label: 'Transparency' },
+] as const
+
 export default function AdminGovernancePage() {
   return (
     <>
       <h1 className="admin-section-title">Governance</h1>
+      <nav className="admin-governance-tabs" aria-label="Governance tools">
+        {GOVERNANCE_TABS.map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={`admin-governance-tabs__link${tab.href === '/admin/governance' ? ' active' : ''}`}
+            aria-current={tab.href === '/admin/governance' ? 'page' : undefined}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
       <div className="admin-panel-grid">
         {SECTIONS.map((s) => (
           <Link key={s.href} href={s.href} className="admin-card admin-nav-card">

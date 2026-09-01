@@ -100,7 +100,7 @@ export default async function AdminAgmPage() {
         >
           <h2>Motions &amp; proposals</h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Link href="/governance" className="admin-btn">
+            <Link href="/dashboard/governance" className="admin-btn">
               Governance portal →
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default async function AdminAgmPage() {
         {openMotions.length === 0 ? (
           <p className="admin-stat-sub">
             No open or draft motions.{' '}
-            <Link href="/governance" className="admin-inline-link">
+            <Link href="/dashboard/governance" className="admin-inline-link">
               Create one in the governance portal →
             </Link>
           </p>
@@ -199,7 +199,7 @@ export default async function AdminAgmPage() {
           </p>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <Link href="/governance" className="admin-btn">
+            <Link href="/dashboard/governance" className="admin-btn">
               Governance portal
             </Link>
             <a href="/api/admin/members/export.csv" className="admin-btn">
