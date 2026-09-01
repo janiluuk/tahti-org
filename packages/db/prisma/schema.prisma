@@ -813,6 +813,8 @@ model User {
   collectionItemsAdded  CollectionItem[]         @relation("CollectionItemAddedBy")
   archiveItemReposts    ArchiveItemRepost[]
   trackReactions        TrackReaction[]
+  jamSessionsHosted     JamSession[]
+  jamParticipations     JamParticipant[]
   conversationParticipations ConversationParticipant[]
   messagesSent          Message[]
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
@@ -2980,6 +2982,7 @@ model Collection {
   items CollectionItem[]
   subscribers CollectionSubscription[]
   channelsUsingAsFallback Channel[] @relation("ChannelActiveFallbackCollection")
+  jamSessions JamSession[]
 
   @@index([userId, isPublic])
   @@index([userId, publicProfileOrder])
@@ -3007,6 +3010,68 @@ model CollectionItem {
   @@unique([collectionId, position])
   @@index([collectionId, position])
   @@schema("media")
+}
+
+// A synced group-listening session ("Tahti Jam"): one host device is the
+// actual player and the source of truth for what's playing; the session row
+// just mirrors that state so participants' clients (via the /api/v1/jam SSE
+// stream) can render it and, if permitted, send control commands back for
+// the host to act on. The server never plays or streams audio itself.
+model JamSession {
+  id           String      @id @default(cuid())
+  hostUserId   String
+  host         User        @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  // The playlist a jam started from. Nullable so a session can outlive its
+  // source playlist being deleted — the queue by then lives in the host's
+  // own client state, this is only where it started.
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  // Short, shareable, case-insensitive-ish join code (e.g. "BLUE-FOX-42") —
+  // never the session id, which would leak cuid ordering/enumerate sessions.
+  code      String  @unique
+  isPlaying Boolean @default(false)
+  // A snapshot ({id, title, artistName, coverUrl}), not a relation: the host
+  // already has the full track in hand when it pushes state, so a guest
+  // never needs a second round trip just to render "now playing" — and this
+  // stays valid even for a track type that isn't an ArchiveItem later (an
+  // embed, a radio source) without a schema change.
+  currentTrackJson Json?
+  positionSec      Float    @default(0)
+  positionUpdatedAt    DateTime     @default(now())
+  createdAt            DateTime     @default(now())
+  endedAt              DateTime?
+
+  participants JamParticipant[]
+
+  @@index([hostUserId])
+  @@schema("engagement")
+}
+
+model JamParticipant {
+  id        String             @id @default(cuid())
+  sessionId String
+  session   JamSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      JamParticipantRole @default(GUEST)
+  // Guests can add-to-queue and vote by default; only a promoted co-host (or
+  // the host) can pause/skip/reorder. Kept as a plain bool rather than a
+  // permission-tier enum since v1 only needs the one yes/no split — grow
+  // this into tiers later if a real need for more granularity shows up.
+  canControl Boolean   @default(false)
+  joinedAt   DateTime  @default(now())
+  leftAt     DateTime?
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@schema("engagement")
+}
+
+enum JamParticipantRole {
+  HOST
+  GUEST
+
+  @@schema("engagement")
 }
 
 // A listener subscribing to a public playlist — surfaces it in their library

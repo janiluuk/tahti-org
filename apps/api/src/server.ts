@@ -35,6 +35,8 @@ import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js
 import latestTracksRoute from './routes/discover/latest-tracks.js'
 import newToYouRoute from './routes/discover/new-to-you.js'
 import searchRoute from './routes/discover/search.js'
+import mcpRoute from './routes/mcp/index.js'
+import jamRoute from './routes/jam/index.js'
 import channelStatsRoute from './routes/channels/stats.js'
 import newsPublicRoute from './routes/news/public.js'
 import channelManageStatsRoute from './routes/channels/manage-stats.js'
@@ -541,6 +543,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(newToYouRoute)
   await fastify.register(latestTracksRoute)
   await fastify.register(searchRoute)
+  await fastify.register(mcpRoute)
+  await fastify.register(jamRoute)
   await fastify.register(channelStatsRoute)
   await fastify.register(newsPublicRoute)
   await fastify.register(channelManageStatsRoute)

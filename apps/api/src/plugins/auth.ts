@@ -22,6 +22,17 @@ declare module 'fastify' {
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
+declare module 'fastify' {
+  interface FastifyContextConfig {
+    /** Opt out of the method-based read/write gate below. Only for routes
+     * whose transport doesn't map read/write onto HTTP verbs — currently
+     * just the MCP endpoint, which is POST for every call including
+     * read-only tool invocations. Those routes must do their own per-tool
+     * scope check against `request.apiTokenScopes` instead. */
+    methodScopeCheckExempt?: boolean
+  }
+}
+
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest('sessionUser', null)
   fastify.decorateRequest('apiTokenScopes', null)
@@ -39,7 +50,8 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         return reply.status(401).send({ error: 'Invalid or expired API token' })
       }
       // A read-only token can look but not touch: every mutating request needs 'write'.
-      if (!SAFE_METHODS.has(request.method) && !result.token.scopes.includes('write')) {
+      const exempt = request.routeOptions.config?.methodScopeCheckExempt === true
+      if (!exempt && !SAFE_METHODS.has(request.method) && !result.token.scopes.includes('write')) {
         return reply.status(403).send({ error: 'This API token does not have write access' })
       }
       request.sessionUser = result.user

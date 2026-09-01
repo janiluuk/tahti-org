@@ -38,3 +38,5 @@ export const SearchResponseSchema = z.object({
   artists: z.array(SearchArtistResultSchema),
   collections: z.array(SearchCollectionResultSchema),
 })
+
+export type SearchResponse = z.infer<typeof SearchResponseSchema>
