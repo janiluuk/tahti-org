@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button, CopyRow, Panel, Stack, StudioTabs } from '@tahti/ui'
 
 interface StreamSettings {
@@ -36,17 +36,26 @@ export default function StreamSettingsPanel({
   isLive = false,
   onStreamTypeChange,
   defaultCollapsed = false,
+  statusDot,
 }: {
   initial: StreamSettings
   isLive?: boolean
   onStreamTypeChange?: (type: 'rtmp' | 'icecast') => void
   defaultCollapsed?: boolean
+  /** Connection-status dot rendered next to the title — see _broadcast-studio.tsx. */
+  statusDot?: ReactNode
 }) {
   const [settings, setSettings] = useState(initial)
   const [rotating, setRotating] = useState<'rtmp' | 'icecast' | null>(null)
   const [obsPreset, setObsPreset] = useState<ObsPreset | null>(null)
   const [obsPresetLoading, setObsPresetLoading] = useState(false)
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const [activeType, setActiveType] = useState<'rtmp' | 'icecast'>('rtmp')
+
+  function handleTabChange(type: 'rtmp' | 'icecast') {
+    setActiveType(type)
+    onStreamTypeChange?.(type)
+  }
 
   async function downloadObsPreset() {
     setObsPresetLoading(true)
@@ -98,17 +107,35 @@ export default function StreamSettingsPanel({
   if (collapsed) {
     return (
       <div className="stream-settings stream-settings--collapsed">
-        <strong>Connect broadcasting software</strong>
-        <span className="studio-text-muted-sm">RTMP / Icecast credentials ready</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(false)}
-          aria-expanded="false"
-          aria-label="Expand broadcasting software connection"
-        >
-          Expand
-        </Button>
+        <div className="stream-settings__collapse-row">
+          <span className="stream-settings__title-row">
+            {statusDot}
+            <strong>Connect broadcasting software</strong>
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(false)}
+            aria-expanded="false"
+            aria-label="Expand broadcasting software connection"
+          >
+            Expand
+          </Button>
+        </div>
+        <Stack gap={2} className="stream-settings__collapsed-creds">
+          {activeType === 'rtmp' ? (
+            <>
+              <CopyRow label="Server" value={settings.rtmp.server} />
+              <CopyRow label="Stream Key" value={settings.rtmp.streamKey} secret />
+            </>
+          ) : (
+            <>
+              <CopyRow label="Server" value={settings.icecast.server} />
+              <CopyRow label="Mount" value={settings.icecast.mount} />
+              <CopyRow label="Password" value={settings.icecast.password} secret />
+            </>
+          )}
+        </Stack>
       </div>
     )
   }
@@ -116,7 +143,10 @@ export default function StreamSettingsPanel({
   return (
     <div className="stream-settings">
       <div className="stream-settings__collapse-row">
-        <strong>Connect broadcasting software</strong>
+        <span className="stream-settings__title-row">
+          {statusDot}
+          <strong>Connect broadcasting software</strong>
+        </span>
         <Button
           variant="ghost"
           size="sm"
@@ -145,7 +175,7 @@ export default function StreamSettingsPanel({
 
         <StudioTabs
           defaultTab="rtmp"
-          onTabChange={(value) => onStreamTypeChange?.(value as 'rtmp' | 'icecast')}
+          onTabChange={(value) => handleTabChange(value as 'rtmp' | 'icecast')}
         >
           <StudioTabs.List aria-label="Broadcasting tool">
             <StudioTabs.Trigger value="rtmp">OBS / Streamlabs</StudioTabs.Trigger>

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { VISUAL_PRESETS } from './visual-preset.js'
 
 export const RtmpProviderSchema = z.enum([
   'YOUTUBE',
@@ -57,6 +58,8 @@ export const ChannelStreamOverlayPatchSchema = z.object({
   streamOverlayTitle: z.string().trim().max(80).optional(),
   streamOverlaySubtitle: z.string().trim().max(120).optional(),
   streamOverlayCoverUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
+  streamOverlayBackdropUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
+  streamOverlayVisualPreset: z.enum(VISUAL_PRESETS).optional(),
 })
 
 export type ChannelStreamOverlayPatchInput = z.infer<typeof ChannelStreamOverlayPatchSchema>

@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import type { VisualPreset } from '@tahti/shared'
 import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text, Button } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import { usePlayer } from '@/contexts/player-context'
@@ -21,8 +22,8 @@ import { SignalMeters } from './_signal-meters'
 import { RecordingToggle } from './_recording-toggle'
 import { PublishToggle } from './_publish-toggle'
 import { ChannelControlsPanel } from '../channel-controls-panel'
-import { StreamOverlayPanel } from '../settings/multistream/stream-overlay-panel'
-import { StreamStatsCard } from './_stream-stats-card'
+import { ManagePanel, type ManageStats } from '../../c/[slug]/_manage-panel'
+import { StreamDesignerPanel } from './_stream-designer-panel'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -41,6 +42,8 @@ interface StreamOverlay {
   streamOverlayTitle: string | null
   streamOverlaySubtitle: string | null
   streamOverlayCoverUrl: string | null
+  streamOverlayBackdropUrl: string | null
+  streamOverlayVisualPreset: VisualPreset
 }
 
 type LiveStatus = 'offline' | 'preview' | 'live'
@@ -59,6 +62,18 @@ const WIZARD_STEPS = [
   { num: 3, label: 'Go live' },
 ] as const
 
+/** red = no connection, yellow = fallback rotation airing (a "replay") or the
+ * encoder is connected but not yet confirmed live/preview, green = live. */
+function connectionDotTone(
+  status: LiveStatus,
+  signalConnected: boolean,
+  replayPlaying: boolean,
+): 'red' | 'yellow' | 'green' {
+  if (status === 'live') return 'green'
+  if (replayPlaying || signalConnected) return 'yellow'
+  return 'red'
+}
+
 export function BroadcastStudio({
   channelSlug,
   artistUsername,
@@ -68,6 +83,7 @@ export function BroadcastStudio({
   autoRecordEnabled,
   autoPublishBroadcast,
   streamOverlay,
+  manageStats,
 }: {
   channelSlug: string
   artistUsername: string
@@ -77,6 +93,7 @@ export function BroadcastStudio({
   autoRecordEnabled: boolean
   autoPublishBroadcast: boolean
   streamOverlay: StreamOverlay
+  manageStats: ManageStats | null
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -85,6 +102,7 @@ export function BroadcastStudio({
   const [status, setStatus] = useState<LiveStatus>(initialStatus)
   const [signal, setSignal] = useState<SignalStatus | null>(null)
   const [streamType, setStreamType] = useState<'rtmp' | 'icecast'>('rtmp')
+  const [replayPlaying, setReplayPlaying] = useState(false)
 
   const requestedStep = Number(searchParams.get('step'))
   const activeStep = [1, 2, 3].includes(requestedStep)
@@ -147,10 +165,37 @@ export function BroadcastStudio({
     }
   }, [activeStep, status])
 
+  // Whether the 24/7 fallback rotation is currently airing something —
+  // distinct from the artist's own broadcast state, feeds the connection dot.
+  useEffect(() => {
+    if (status === 'live') {
+      setReplayPlaying(false)
+      return
+    }
+    let cancelled = false
+    async function poll() {
+      try {
+        const res = await fetch(`${API_BASE}/api/channels/${channelSlug}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const data = (await res.json()) as { nowPlaying: unknown }
+        if (!cancelled) setReplayPlaying(data.nowPlaying != null)
+      } catch {
+        // ignore polling errors
+      }
+    }
+    poll()
+    const id = window.setInterval(poll, 10000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [channelSlug, status])
+
   const isLive = status === 'live'
   const isPreview = status === 'preview'
   const signalConfirmed = isLive || isPreview || Boolean(signal?.connected)
   const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 2 : 1) : 3
+  const dotTone = connectionDotTone(status, Boolean(signal?.connected), replayPlaying)
 
   function goToStep(step: number) {
     if (step <= maxUnlockedStep) setActiveStep(step)
@@ -180,12 +225,7 @@ export function BroadcastStudio({
               </div>
             }
           />
-        ) : (
-          <BroadcastStatusBar
-            state="offline"
-            offlineMessage="Offline — work through the steps below, then start streaming in OBS or Mixxx."
-          />
-        )}
+        ) : null}
       </div>
 
       <BroadcastUsageBanner usage={broadcastUsage} />
@@ -222,57 +262,80 @@ export function BroadcastStudio({
 
       {activeStep === 1 && (
         <>
-          <StreamSettingsPanel
-            initial={streamSettings}
-            isLive={isLive || isPreview}
-            defaultCollapsed
-            onStreamTypeChange={setStreamType}
-          />
-          <Panel
-            title="Test your signal"
-            headerTight
-            description="Start your selected broadcasting software and confirm the signal here."
-          >
+          {!isLive && !isPreview && (
             <div data-hero>
-              <HlsPlayer
-                url={streamSettings.hlsUrl}
-                title="Studio preview"
-                waitingForSignal={!signal?.connected}
+              <BroadcastStatusBar
+                state="offline"
+                offlineMessage="Offline — work through the steps below, then start streaming in OBS or Mixxx."
               />
             </div>
-            {signal?.connected ? (
-              <>
-                <p className="studio-notice studio-notice--success">
-                  ✓ Signal received — {signal.codec ?? 'unknown codec'} · original quality
-                </p>
-                <SignalMeters
-                  analyserL={analyserL}
-                  analyserR={analyserR}
-                  active={track?.id === streamSettings.hlsUrl && playing}
+          )}
+          <div className="broadcast-studio__setup-grid">
+            <StreamSettingsPanel
+              initial={streamSettings}
+              isLive={isLive || isPreview}
+              defaultCollapsed
+              onStreamTypeChange={setStreamType}
+              statusDot={
+                <span
+                  className={`signal-dot signal-dot--${dotTone}`}
+                  role="status"
+                  aria-label={
+                    dotTone === 'green'
+                      ? 'Live'
+                      : dotTone === 'yellow'
+                        ? 'Connected, not confirmed live'
+                        : 'No connection'
+                  }
                 />
-                {!(track?.id === streamSettings.hlsUrl && playing) && (
-                  <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-                    Press play on the preview above to see input levels.
-                  </Text>
-                )}
-              </>
-            ) : (
-              <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-                Waiting for signal from{' '}
-                {streamType === 'rtmp' ? 'OBS / Streamlabs' : 'Mixxx / Traktor / butt'}.
-              </Text>
-            )}
-            <div className="studio-actions">
-              <Button
-                disabled={!signalConfirmed}
-                onClick={() => setActiveStep(2)}
-                variant="primary"
-              >
-                <ButtonIcon name="arrowRight" />
-                Continue to pre-flight
-              </Button>
-            </div>
-          </Panel>
+              }
+            />
+            <Panel
+              title="Test your signal"
+              headerTight
+              description="Start your selected broadcasting software and confirm the signal here."
+            >
+              <div data-hero>
+                <HlsPlayer
+                  url={streamSettings.hlsUrl}
+                  title="Studio preview"
+                  waitingForSignal={!signal?.connected}
+                />
+              </div>
+              {signal?.connected ? (
+                <>
+                  <p className="studio-notice studio-notice--success">
+                    ✓ Signal received — {signal.codec ?? 'unknown codec'} · original quality
+                  </p>
+                  <SignalMeters
+                    analyserL={analyserL}
+                    analyserR={analyserR}
+                    active={track?.id === streamSettings.hlsUrl && playing}
+                  />
+                  {!(track?.id === streamSettings.hlsUrl && playing) && (
+                    <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                      Press play on the preview above to see input levels.
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                  Waiting for signal from{' '}
+                  {streamType === 'rtmp' ? 'OBS / Streamlabs' : 'Mixxx / Traktor / butt'}.
+                </Text>
+              )}
+              <div className="studio-actions">
+                <Button
+                  disabled={!signalConfirmed}
+                  onClick={() => setActiveStep(2)}
+                  variant="primary"
+                >
+                  <ButtonIcon name="arrowRight" />
+                  Continue to pre-flight
+                </Button>
+              </div>
+            </Panel>
+          </div>
         </>
       )}
 
@@ -338,6 +401,7 @@ export function BroadcastStudio({
               Keep your rotation, live health, and mirror artwork organized in one place.
             </p>
           </div>
+          <StreamDesignerPanel initial={streamOverlay} />
         </div>
         <div className="broadcast-studio__control-grid">
           <ChannelControlsPanel
@@ -346,8 +410,11 @@ export function BroadcastStudio({
             description="Control what plays when you are not broadcasting live."
             defaultCollapsed
           />
-          <StreamStatsCard slug={channelSlug} />
-          <StreamOverlayPanel initial={streamOverlay} />
+          {manageStats && (
+            <div data-tahti-ui="brand" className="broadcast-studio__manage-panel">
+              <ManagePanel slug={channelSlug} initialStats={manageStats} />
+            </div>
+          )}
         </div>
       </section>
     </div>
