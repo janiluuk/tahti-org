@@ -22,6 +22,7 @@ import { collectionRssUrl } from '@/lib/rss-feeds'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
 import { SubscribeButton } from './_subscribe-button'
+import { StartJamButton } from './_start-jam-button'
 import { CollectionGalleryProvider, CollectionCoverButton } from './_collection-gallery'
 import { CollectionLibrarySection } from './_collection-library-section'
 
@@ -174,6 +175,7 @@ export default async function CollectionPage({
                 <div className="prof-collection-top-row__actions">
                   <SubscribeButton slug={params.slug} />
                   {data.collaborative && <AddTrackButton slug={params.slug} />}
+                  {data.items.length > 0 && <StartJamButton slug={params.slug} />}
                   <CollectionEmbedButton slug={params.slug} />
                   <a
                     href={rssUrl}

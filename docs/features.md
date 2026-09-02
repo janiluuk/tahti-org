@@ -15,6 +15,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, and HearThis playback surfaces.
 - **Events:** Upcoming live shows and events appear on profiles in humanized form, such as “Next gig in 3 months at …”.
 - **Sharing and safety:** Share actions and content reporting are available from compact overflow menus.
+- **Tahti Jam:** `/jam/[code]` — synced group listening started from a public playlist (`/u/[username]/c/[slug]` → "Start a Jam"). One host device is the source of truth; guests' own players mirror its track, play state, and position (SSE-pushed, drift-corrected). Requires being signed in.
 
 ## Artist Studio
 

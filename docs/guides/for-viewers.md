@@ -109,6 +109,17 @@ You use those the same way as on Tahti — play audio in the iframe.
 
 When signed in, you can follow artists, like tracks, add playable items to your queue, and message artists you follow or who follow you. Queue actions confirm when an item is added.
 
+## 8b. Listen together (Tahti Jam)
+
+Tahti Jam is a synced group-listening session started from any public playlist.
+
+- The playlist owner clicks **Start a Jam** on a public playlist page (`/u/username/c/slug`) and lands on `/jam/CODE` as the host.
+- The host copies the link (or reads out the code) — anyone signed in who opens `/jam/CODE` joins the same session.
+- One device is the actual player and source of truth: whatever the host plays, pauses, or skips to is what the session shows. Guests aren't a second remote — they can't change what's playing.
+- A guest clicks **Play along** once to start their own player in sync (browsers require that one click before audio can start). Position is corrected automatically if a guest's playback drifts.
+- Embed-only tracks (Mixcloud, Hearthis, Spotify) show as "now playing" for everyone, but only the host's own device is actually playing them — a guest's copy has nothing it can stream.
+- Anyone can **Leave** at any time; the host can **End Jam for everyone**, which closes the session for the whole group.
+
 ## 9. Transparency (where the money goes)
 
 Curious about the cooperative’s finances?
