@@ -733,9 +733,39 @@ const PROFILE_STEPS: TourStep[] = [
     body: 'Follow for free updates, or support the artist directly with a paid subscription.',
   },
   {
-    selector: '.prof-tabs__bar',
-    title: 'Profile sections',
-    body: 'Switch between the artist’s tracks, releases, pinned highlights, and more — everything they’ve chosen to put on their page.',
+    selector: '[data-tour="profile-tab-music"]',
+    title: 'Pinned',
+    body: 'Highlights the artist has chosen to float to the top of their page.',
+  },
+  {
+    selector: '[data-tour="profile-tab-releases"]',
+    title: 'Releases',
+    body: 'Every album, EP, and single the artist has published on Tahti.',
+  },
+  {
+    selector: '[data-tour="profile-tab-djsets"]',
+    title: 'DJ Sets',
+    body: 'Recorded DJ sets and mix series.',
+  },
+  {
+    selector: '[data-tour="profile-tab-playlists"]',
+    title: 'Playlists',
+    body: 'Curated playlists the artist has put together.',
+  },
+  {
+    selector: '[data-tour="profile-tab-collections"]',
+    title: 'Collections',
+    body: 'Other grouped collections.',
+  },
+  {
+    selector: '[data-tour="profile-tab-tracks"]',
+    title: 'Tracks',
+    body: 'Every individual track the artist has uploaded.',
+  },
+  {
+    selector: '[data-tour="profile-tab-gallery"]',
+    title: 'Gallery',
+    body: 'A visual gallery from the artist.',
   },
 ]
 
@@ -749,6 +779,72 @@ const CHANNEL_LIVE_STEPS: TourStep[] = [
     selector: '[aria-label^="View photos"]',
     title: 'Photos',
     body: 'Browse this artist’s gallery images full-size — zoom in and step through them like a slideshow.',
+  },
+  {
+    selector: '[data-tour="channel-tab-live"]',
+    title: 'Live',
+    body: 'What’s playing right now, if the artist is streaming — the visualizer, now-playing info, and chat all live here.',
+  },
+  {
+    selector: '[data-tour="channel-tab-archive"]',
+    title: 'Sounds',
+    body: 'Past broadcasts, DJ sets, and latest releases the artist has kept around to listen back to, plus any external listen embeds.',
+  },
+  {
+    selector: '[data-tour="channel-tab-releases"]',
+    title: 'Releases',
+    body: 'Every release the artist has published on Tahti — albums, EPs, and singles.',
+  },
+  {
+    selector: '[data-tour="channel-tab-feed"]',
+    title: 'Feed',
+    body: 'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements.',
+  },
+  {
+    selector: '.ch-artist-bio',
+    title: 'Bio',
+    body: 'Who the artist is, right under their name — no separate tab to click through to.',
+  },
+]
+
+const DISCOVER_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="discover-tab-live"]',
+    title: 'Live',
+    body: 'Channels streaming or airing their rotation right now.',
+  },
+  {
+    selector: '[data-tour="discover-tab-selects"]',
+    title: 'Tahti Selects',
+    body: 'A curated gallery of standout tracks and sets, picked out from across the platform.',
+  },
+  {
+    selector: '[data-tour="discover-tab-artists"]',
+    title: 'Artists & genres',
+    body: 'Every artist on Tahti, browsable by genre — the place to go digging for something new.',
+  },
+  {
+    selector: '[data-tour="discover-tab-top-lists"]',
+    title: 'Top lists',
+    body: 'The most-played and most-followed artists and tracks on the platform right now.',
+  },
+]
+
+const RADIO_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="radio-player"]',
+    title: 'Now playing',
+    body: 'The live Tahti Radio stream — whoever’s booked for this slot, or the 24/7 curated rotation when nobody is. The visualizer reacts to the audio, and the ♥ loves whatever’s currently playing.',
+  },
+  {
+    selector: '[data-tour="radio-tab-recent"]',
+    title: 'Recently played',
+    body: 'The tracks Tahti Radio has played most recently, in order — missed a track? It’s here.',
+  },
+  {
+    selector: '[data-tour="radio-tab-upcoming"]',
+    title: 'Upcoming',
+    body: 'Booked artist slots coming up on the live schedule, plus what the 24/7 rotation queue will play next when nobody’s booked.',
   },
 ]
 
@@ -807,6 +903,8 @@ const PUBLIC_ROUTES: RouteEntry[] = [
   { test: (p) => /^\/u\/[^/]+\/?$/.test(p), steps: bySteps(PUBLIC_TOP_BAR, PROFILE_STEPS) },
   { test: (p) => p.startsWith('/c/'), steps: bySteps(PUBLIC_TOP_BAR, CHANNEL_LIVE_STEPS) },
   { test: (p) => p.startsWith('/radio/show/'), steps: bySteps(PUBLIC_TOP_BAR, RADIO_SHOW_STEPS) },
+  { test: (p) => p.startsWith('/radio'), steps: bySteps(PUBLIC_TOP_BAR, RADIO_STEPS) },
+  { test: (p) => p.startsWith('/listen'), steps: bySteps(PUBLIC_TOP_BAR, DISCOVER_STEPS) },
   { test: (p) => p.startsWith('/governance'), steps: bySteps(PUBLIC_TOP_BAR, GOVERNANCE_STEPS) },
   {
     test: (p) => p.startsWith('/transparency'),

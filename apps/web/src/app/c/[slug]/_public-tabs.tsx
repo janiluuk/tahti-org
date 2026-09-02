@@ -4,7 +4,6 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { channelTabForHash, type PublicChannelTab } from './channel-tab-routing'
 
 type Tab = PublicChannelTab
@@ -14,32 +13,6 @@ const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'archive', label: 'Sounds' },
   { id: 'releases', label: 'Releases' },
   { id: 'feed', label: 'Feed' },
-]
-
-const HELP_STEPS: HelpSpotlightStep[] = [
-  {
-    id: 'live',
-    label: 'Live',
-    description:
-      'What’s playing right now, if the artist is streaming — the visualizer, now-playing info, and chat all live here.',
-  },
-  {
-    id: 'archive',
-    label: 'Sounds',
-    description:
-      'Past broadcasts, DJ sets, and latest releases the artist has kept around to listen back to, plus any external listen embeds.',
-  },
-  {
-    id: 'releases',
-    label: 'Releases',
-    description: 'Every release the artist has published on Tahti — albums, EPs, and singles.',
-  },
-  {
-    id: 'feed',
-    label: 'Feed',
-    description:
-      'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements.',
-  },
 ]
 
 /** Public tab bar for a channel page — Live is the player/now; Archive holds past
@@ -90,12 +63,6 @@ export function PublicChannelTabs({
 
   return (
     <div className="prof-tabs">
-      <HelpSpotlight
-        steps={hasLive ? HELP_STEPS : HELP_STEPS.filter((step) => step.id !== 'live')}
-        activeId={active}
-        onNavigate={(id) => setActive(id as Tab)}
-        getTargetEl={(step) => panelRefs.current[step.id as Tab]}
-      />
       <div className="prof-tabs__bar" role="tablist" aria-label="Channel sections">
         {TABS.map((tab) => (
           <button
@@ -103,6 +70,7 @@ export function PublicChannelTabs({
             type="button"
             role="tab"
             aria-selected={active === tab.id}
+            data-tour={`channel-tab-${tab.id}`}
             className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
             onClick={() => setActive(tab.id)}
           >
