@@ -14,3 +14,9 @@ export function coverGradientFromId(id: string): CoverGradient {
   }
   return COVER_GRADIENTS[hash % COVER_GRADIENTS.length]!
 }
+
+/** Randomly-chosen gradient — for placeholder covers where a fresh, varied look matters more
+ * than the same row always landing on the same preset (see coverGradientFromId for that case). */
+export function randomCoverGradient(): CoverGradient {
+  return COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]!
+}

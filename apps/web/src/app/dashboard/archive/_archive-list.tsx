@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { resolveColorScheme } from '@tahti/shared'
-import { StudioSwitch } from '@tahti/ui'
+import { randomCoverGradient, StudioSwitch } from '@tahti/ui'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
 
@@ -80,6 +80,12 @@ export function ArchiveList({
     [items, showEmbeds],
   )
   const embedCount = useMemo(() => items.filter((item) => item.embedUri).length, [items])
+  // Assigned once per item (not per render) so a row's placeholder cover doesn't
+  // change every time something else on the page re-renders it.
+  const placeholderGradients = useMemo(
+    () => new Map(items.map((item) => [item.id, randomCoverGradient()])),
+    [items],
+  )
 
   // Shared play queue, in display order — lets playback auto-advance to the
   // next track on 'ended' instead of just stopping, same as public listings.
@@ -143,8 +149,7 @@ export function ArchiveList({
                         <img src={cover} alt="" />
                       ) : (
                         <div
-                          className="archive-list__cover-ph"
-                          style={{ background: scheme.accent }}
+                          className={`archive-list__cover-ph cover-gradient--${placeholderGradients.get(item.id) ?? 'aurora'}`}
                           aria-hidden
                         />
                       )}

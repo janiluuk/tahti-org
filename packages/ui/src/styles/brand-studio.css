@@ -2474,6 +2474,28 @@
   height: 100%;
 }
 
+/* Named placeholder-cover presets (see packages/ui/src/lib/cover-gradient.ts) — a release or
+ * track with no uploaded artwork gets one of these instead of a blank/empty cover. */
+[data-tahti-ui='studio'] .cover-gradient--aurora {
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--coral {
+  background: linear-gradient(135deg, #ff6b6b, var(--amber));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--deep {
+  background: linear-gradient(135deg, #1e2a4a, var(--purple));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--amber {
+  background: linear-gradient(135deg, var(--amber), #ff8a3d);
+}
+
+[data-tahti-ui='studio'] .cover-gradient--violet {
+  background: linear-gradient(135deg, var(--purple), #f472b6);
+}
+
 [data-tahti-ui='studio'] .archive-list__cover-embed-badge {
   position: absolute;
   top: 0.2rem;
@@ -2749,9 +2771,6 @@
   border: 1px solid var(--border);
 }
 
-[data-tahti-ui='studio'] .music-album-row__cover--ph {
-  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
-}
 
 [data-tahti-ui='studio'] .music-album-tracklist {
   list-style: decimal;

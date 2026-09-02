@@ -3,9 +3,10 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { randomCoverGradient } from '@tahti/ui'
 import type { AlbumSummary } from './_music-browser'
 import { AddToPlaylistButton } from '../_add-to-playlist-button'
 import { updateReleasePinned } from '../release-actions'
@@ -22,6 +23,12 @@ export function AlbumsList({ albums }: { albums: AlbumSummary[] }) {
   const router = useRouter()
   const [openId, setOpenId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  // Assigned once per album (not per render) so a row's placeholder cover doesn't
+  // change every time something else on the page re-renders it.
+  const placeholderGradients = useMemo(
+    () => new Map(albums.map((album) => [album.id, randomCoverGradient()])),
+    [albums],
+  )
 
   function togglePin(id: string, pinned: boolean) {
     startTransition(async () => {
@@ -62,7 +69,7 @@ export function AlbumsList({ albums }: { albums: AlbumSummary[] }) {
                       <img src={album.artworkUrl} alt="" className="music-album-row__cover" />
                     ) : (
                       <span
-                        className="music-album-row__cover music-album-row__cover--ph"
+                        className={`music-album-row__cover music-album-row__cover--ph cover-gradient--${placeholderGradients.get(album.id) ?? 'aurora'}`}
                         aria-hidden
                       />
                     )}

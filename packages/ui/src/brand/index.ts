@@ -94,7 +94,12 @@ export {
   type SidebarNavItemProps,
   type SidebarNavIcon,
 } from './SidebarNav'
-export { coverGradientFromId, COVER_GRADIENTS, type CoverGradient } from '../lib/cover-gradient'
+export {
+  coverGradientFromId,
+  randomCoverGradient,
+  COVER_GRADIENTS,
+  type CoverGradient,
+} from '../lib/cover-gradient'
 export { initialsFromName } from '../lib/initials'
 export { chatHandleVariant, CHAT_HANDLE_VARIANTS, type ChatHandleVariant } from '../lib/chat-handle'
 export { WAVEFORM_BAR_HEIGHTS, formatPlayerTime } from '../lib/waveform-player'
