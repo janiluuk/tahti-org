@@ -191,6 +191,15 @@ export function CollectionEditor({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
+  // View vs edit: opening a collection shows its info + tracklist read-only;
+  // the settings form (name/style/cover/visibility/etc.) only mounts on request.
+  const [mode, setMode] = useState<'view' | 'edit'>('view')
+
+  const totalDurationSec = useMemo(
+    () => items.reduce((sum, item) => sum + (item.archiveItem?.durationSec ?? 0), 0),
+    [items],
+  )
+
   const markDirty = useCallback(() => {
     setSettingsDirty(true)
     setSettingsSaved(false)
@@ -274,6 +283,17 @@ export function CollectionEditor({
       ),
     [displayItems],
   )
+
+  const currentTrackInQueue = playbackQueue.find((t) => t.id === track?.id)
+  const isPlayingCollection = Boolean(currentTrackInQueue) && playing
+  const playCollection = useCallback(() => {
+    if (playbackQueue.length === 0) return
+    if (currentTrackInQueue) {
+      void togglePlay()
+      return
+    }
+    load(playbackQueue[0]!, { autoplay: true, queue: playbackQueue })
+  }, [playbackQueue, currentTrackInQueue, togglePlay, load])
 
   const toggleItemPlayback = useCallback(
     async (item: CollectionItem) => {
@@ -499,13 +519,52 @@ export function CollectionEditor({
         <span className={`collections-pill ${STYLE_COLOR[style] ?? 'collections-pill--neutral'}`}>
           {STYLE_LABEL[style] ?? style}
         </span>
-        <span style={{ marginLeft: 'auto' }}>
+        <span style={{ marginLeft: 'auto' }} className="collection-editor__header-actions">
           <CollectionEmbedButton slug={initial.slug} />
+          <Button
+            variant={mode === 'edit' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setMode((m) => (m === 'edit' ? 'view' : 'edit'))}
+          >
+            <ButtonIcon name={mode === 'edit' ? 'check' : 'edit'} />
+            {mode === 'edit' ? 'Done' : 'Edit'}
+          </Button>
         </span>
       </div>
 
-      <div className="collection-editor__body">
-        {/* ── Left: settings ── */}
+      {mode === 'view' && (
+        <div className="collection-view-hero">
+          <div className="collection-view-hero__cover">
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverUrl} alt="" className="collection-view-hero__cover-img" />
+            ) : (
+              <div className="collection-view-hero__cover-ph" aria-hidden />
+            )}
+            {playbackQueue.length > 0 && (
+              <button
+                type="button"
+                className="collection-view-hero__play"
+                onClick={playCollection}
+                aria-label={isPlayingCollection ? 'Pause' : 'Play collection'}
+              >
+                {isPlayingCollection ? '❚❚' : '▶'}
+              </button>
+            )}
+          </div>
+          <div className="collection-view-hero__info">
+            {description && <p className="collection-view-hero__desc">{description}</p>}
+            <p className="collection-view-hero__meta">
+              {items.length} track{items.length === 1 ? '' : 's'}
+              {totalDurationSec > 0 && <> · {formatDuration(totalDurationSec)}</>}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className={`collection-editor__body${mode === 'view' ? ' collection-editor__body--view' : ''}`}>
+        {/* ── Left: settings (edit mode only) ── */}
+        {mode === 'edit' && (
         <aside className="collection-editor__settings">
           <h2 className="collection-editor__section-title">Settings</h2>
 
@@ -725,6 +784,7 @@ export function CollectionEditor({
             )}
           </div>
         </aside>
+        )}
 
         {/* ── Right: tracklist ── */}
         <section className="collection-editor__tracklist">
@@ -733,6 +793,7 @@ export function CollectionEditor({
               Tracks &amp; releases
               <span className="collection-editor__count">{items.length}</span>
             </h2>
+            {mode === 'edit' && (
             <div className="collection-editor__add-buttons">
               <Button onClick={() => setLibraryPickerOpen((v) => !v)} variant="ghost" size="sm">
                 + Tahti library
@@ -780,7 +841,9 @@ export function CollectionEditor({
                 + hearthis.at
               </Button>
             </div>
-            {(!isProviderReady('spotify') ||
+            )}
+            {mode === 'edit' &&
+              (!isProviderReady('spotify') ||
               !isProviderReady('mixcloud-import') ||
               !isProviderReady('hearthis-import')) && (
               <p className="studio-text-muted-sm studio-mt-xs">
@@ -790,7 +853,7 @@ export function CollectionEditor({
             )}
           </div>
 
-          {libraryPickerOpen ? (
+          {mode === 'edit' && libraryPickerOpen ? (
             <div className="collection-editor__library-picker studio-mt-sm">
               <LibraryBrowser
                 items={availableLibraryItems}

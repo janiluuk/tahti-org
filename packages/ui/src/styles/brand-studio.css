@@ -10246,11 +10246,94 @@
   color: var(--text);
 }
 
+[data-tahti-ui='studio'] .collection-editor__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ── View mode: cover + play + summary, above the (read-only) tracklist ── */
+[data-tahti-ui='studio'] .collection-view-hero {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card2);
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover-ph {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
+  background: var(--cyan);
+  color: var(--bg);
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__play:hover {
+  transform: scale(1.06);
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__desc {
+  margin: 0;
+  color: var(--text);
+  max-width: 60ch;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='studio'] .collection-editor__body {
   display: grid;
   grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
+}
+
+[data-tahti-ui='studio'] .collection-editor__body--view {
+  grid-template-columns: 1fr;
 }
 
 [data-tahti-ui='studio'] .collection-editor__settings {
