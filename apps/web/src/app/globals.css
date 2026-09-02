@@ -141,6 +141,17 @@ body {
   box-shadow: 0 -10px 40px color-mix(in srgb, var(--bg) 45%, transparent);
 }
 
+/* The studio dashboard's mobile bottom nav (.db-mobile-nav, z-index 40) sits at the same
+ * fixed bottom:0 as this bar — without this it fully covers the mini-player on any
+ * dashboard page below the nav's 768px breakpoint. .mini-player itself lives outside
+ * [data-tahti-ui='studio'] (mounted once at the app root), so it can't inherit a scoped
+ * offset — :has() detects the studio mobile nav's presence in the DOM instead. */
+@media (max-width: 768px) {
+  body:has([data-tahti-ui='studio'] .db-mobile-nav) .mini-player {
+    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));
+  }
+}
+
 /* Active track stage — also used inside the global mini-player (not always under brand) */
 .active-track-stage {
   position: relative;

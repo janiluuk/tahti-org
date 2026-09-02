@@ -3500,9 +3500,11 @@
     left: 0;
     right: 0;
     z-index: 40;
+    min-height: var(--mobile-nav-h);
     background: var(--card);
     border-top: 1px solid var(--border);
     padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
   }
 
   [data-tahti-ui='studio'] .db-mobile-nav-item {

@@ -118,6 +118,7 @@
   --sidebar-w-collapsed: 64px;
   --chat-w:        300px;
   --topnav-h:      56px;
+  --mobile-nav-h:  64px;
   --admin-strip-h: 24px;
   --content-max:   1080px;
   --public-max:    1140px;
