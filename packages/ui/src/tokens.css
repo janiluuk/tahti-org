@@ -115,6 +115,7 @@
 
   /* ─── Layout (anti-stretch — sync with reference/tokens.css) ───────── */
   --sidebar-w:     220px;
+  --sidebar-w-collapsed: 64px;
   --chat-w:        300px;
   --topnav-h:      56px;
   --admin-strip-h: 24px;

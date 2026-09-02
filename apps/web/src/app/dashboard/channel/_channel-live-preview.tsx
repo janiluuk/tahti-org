@@ -3,7 +3,7 @@
 
 'use client'
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, KeyboardEvent } from 'react'
 import { AvatarTile, Heading, Row, Text } from '@tahti/ui'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
@@ -17,6 +17,7 @@ import {
   ArchiveVideoBackdrop,
   resolveArchiveBackground,
 } from '@/app/c/[slug]/archive-item-backdrop'
+import type { DesignerSectionId } from './_designer-sections'
 import {
   BRAND_ACCENT_PRESETS,
   DEFAULT_COLOR_SCHEME,
@@ -82,9 +83,15 @@ function resolveHeaderBannerStyle(
 export function ChannelLivePreview({
   draft,
   mode = 'full',
+  activeSection,
+  onSectionSelect,
 }: {
   draft: ChannelPreviewDraft
   mode?: 'full' | 'visual'
+  /** The designer section currently open — its matching preview region gets a persistent highlight. */
+  activeSection?: DesignerSectionId
+  /** When set, clicking a highlightable region jumps to that designer section. */
+  onSectionSelect?: (id: DesignerSectionId) => void
 }) {
   const backdrop = resolveArchiveBackground(draft.gallery.videoBackgroundUrl)
   const bannerStyle = resolveHeaderBannerStyle(draft.visual)
@@ -93,6 +100,29 @@ export function ChannelLivePreview({
     draft.visual.visualPreset,
   )
   const showMedia = mode === 'full'
+
+  function regionProps(id: DesignerSectionId, label: string) {
+    if (!onSectionSelect) return {}
+    const active = activeSection === id
+    return {
+      className: `studio-channel-preview__region${active ? ' studio-channel-preview__region--active' : ''}`,
+      role: 'button' as const,
+      tabIndex: 0,
+      onClick: () => onSectionSelect(id),
+      onKeyDown: (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSectionSelect(id)
+        }
+      },
+      'aria-label': `Edit ${label}`,
+    }
+  }
+
+  const headerRegion = regionProps('header', 'header & backdrop')
+  const linksRegion = regionProps('links', 'links')
+  const playerRegion = regionProps('player', 'player overlay text')
+  const slideshowRegion = regionProps('slideshow', 'slideshow transitions')
 
   return (
     <div data-tahti-ui="brand" data-channel-root className="brand-channel studio-channel-preview">
@@ -122,7 +152,11 @@ export function ChannelLivePreview({
               />
             )}
 
-          <div className="ch-header-banner" style={bannerStyle}>
+          <div
+            {...headerRegion}
+            className={`ch-header-banner${headerRegion.className ? ` ${headerRegion.className}` : ''}`}
+            style={bannerStyle}
+          >
             <header className="ch-artist-header">
               <Row className="ui-row--gap-3 ch-artist-header-row">
                 <AvatarTile
@@ -163,7 +197,10 @@ export function ChannelLivePreview({
                 </div>
               )}
               {showMedia && draft.links.length > 0 && (
-                <div className="prof-social-links">
+                <div
+                  {...linksRegion}
+                  className={`prof-social-links${linksRegion.className ? ` ${linksRegion.className}` : ''}`}
+                >
                   {draft.links.map((link) => (
                     <span key={link.label} className="prof-social-link">
                       <SocialLinkIcon label={link.label} url={link.url} /> {link.label}
@@ -175,16 +212,19 @@ export function ChannelLivePreview({
           </div>
 
           {showMedia && (
-            <ChannelTextLayerView
-              mode={draft.textLayer.textLayerMode}
-              text={draft.textLayer.textLayerText}
-              align={draft.textLayer.textLayerAlign}
-            />
+            <div {...playerRegion} className={playerRegion.className}>
+              <ChannelTextLayerView
+                mode={draft.textLayer.textLayerMode}
+                text={draft.textLayer.textLayerText}
+                align={draft.textLayer.textLayerAlign}
+              />
+            </div>
           )}
 
-          {showMedia &&
-            (draft.gallery.galleryMode === 'STATIC_SLIDESHOW' &&
-            draft.gallery.slideshowImages.length > 0 ? (
+          {showMedia && (
+            <div {...slideshowRegion} className={slideshowRegion.className}>
+              {draft.gallery.galleryMode === 'STATIC_SLIDESHOW' &&
+              draft.gallery.slideshowImages.length > 0 ? (
               <ChannelSlideshow
                 images={draft.gallery.slideshowImages}
                 preset={draft.visual.slideshowPreset}
@@ -197,7 +237,9 @@ export function ChannelLivePreview({
                 mode={draft.gallery.galleryMode}
                 images={draft.gallery.slideshowImages}
               />
-            ))}
+              )}
+            </div>
+          )}
         </div>
       </div>
       <Text size="sm" tone="muted" className="studio-channel-preview__caption">

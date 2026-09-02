@@ -4,5 +4,5 @@
 import { redirect } from 'next/navigation'
 
 export default function ChannelGalleryRedirect() {
-  redirect('/dashboard/settings/media#gallery')
+  redirect('/dashboard/channel/edit#channel-header')
 }

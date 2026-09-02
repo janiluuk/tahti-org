@@ -5,6 +5,11 @@ export { ChannelHeader, ChannelPageLayout, type SiteNavId } from './ChannelPageL
 export { ProfileCover, ProfileHero, ProfilePageLayout } from './ProfilePageLayout'
 export { SmartLinkPageLayout } from './SmartLinkPageLayout'
 export { StudioShell } from './StudioShell'
+export {
+  StudioLayoutContext,
+  useAutoCollapseSidebar,
+  type StudioLayoutContextValue,
+} from './useAutoCollapseSidebar'
 export { StudioTopNav } from './StudioTopNav'
 export { NotificationBell, type NotificationBellItem } from './NotificationBell'
 export { MessagesBell, type MessagesBellConversation } from './MessagesBell'

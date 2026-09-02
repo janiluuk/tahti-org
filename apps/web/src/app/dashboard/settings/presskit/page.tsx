@@ -4,5 +4,5 @@
 import { redirect } from 'next/navigation'
 
 export default function PressKitSettingsRedirect() {
-  redirect('/dashboard/channel/edit#presskit')
+  redirect('/dashboard/settings/artist-info#branding')
 }

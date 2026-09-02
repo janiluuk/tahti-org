@@ -4,5 +4,5 @@
 import { redirect } from 'next/navigation'
 
 export default function MediaPressKitSettingsRedirect() {
-  redirect('/dashboard/channel/edit#channel-media')
+  redirect('/dashboard/channel/edit#channel-header')
 }

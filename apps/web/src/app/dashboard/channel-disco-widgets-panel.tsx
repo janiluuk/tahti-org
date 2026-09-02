@@ -15,29 +15,38 @@ import {
 export interface ChannelDiscoWidgetsPanelProps {
   initialWidgets: DiscoWidgetStoreItem[]
   initialInstalls: DiscoWidgetInstallView[]
+  /** Render without the outer Panel/title — used when embedded in the designer's own section chrome. */
+  bare?: boolean
 }
 
 /** Self-contained, like PressKitBuilder next to it: acts immediately (install/
- * toggle/remove take effect right away), not gated behind the channel
- * editor's "Publish changes" button — same reasoning as press kit's images. */
+ * toggle/remove take effect right away), not gated behind a Save button —
+ * same reasoning as press kit's images. */
 export function ChannelDiscoWidgetsPanel({
   initialWidgets,
   initialInstalls,
+  bare = false,
 }: ChannelDiscoWidgetsPanelProps) {
+  const manager = (
+    <DiscoWidgetManagerPanel
+      initialWidgets={initialWidgets}
+      initialInstalls={initialInstalls}
+      actions={{
+        install: installChannelDiscoWidget,
+        patch: patchChannelDiscoWidgetInstall,
+        remove: removeChannelDiscoWidgetInstall,
+      }}
+    />
+  )
+
+  if (bare) return manager
+
   return (
     <Panel
       title="Disco-widgets"
       description="Add widgets to your public channel page — visitors see whatever you enable here."
     >
-      <DiscoWidgetManagerPanel
-        initialWidgets={initialWidgets}
-        initialInstalls={initialInstalls}
-        actions={{
-          install: installChannelDiscoWidget,
-          patch: patchChannelDiscoWidgetInstall,
-          remove: removeChannelDiscoWidgetInstall,
-        }}
-      />
+      {manager}
     </Panel>
   )
 }

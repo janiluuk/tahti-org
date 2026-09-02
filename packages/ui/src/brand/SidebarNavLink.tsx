@@ -38,7 +38,7 @@ export function SidebarNavLink({
         onClick={onClick}
       >
         <SidebarNavIconSvg name={icon} />
-        {children}
+        <span className="db-nav-item__label">{children}</span>
       </Link>
     )
   }
