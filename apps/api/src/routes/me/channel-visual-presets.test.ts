@@ -4,7 +4,11 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'channel-visual-presets-route-'
 
@@ -48,7 +52,10 @@ describe('channel visual preset routes', () => {
       method: 'POST',
       url: '/api/me/channel/visual-presets',
       headers: { cookie },
-      payload: { name: 'Neon night', settings: { visualPreset: 'AURORA', headerStyle: 'GRADIENT' } },
+      payload: {
+        name: 'Neon night',
+        settings: { visualPreset: 'AURORA', headerStyle: 'GRADIENT' },
+      },
     })
     expect(saveRes.statusCode).toBe(200)
     const saved = saveRes.json() as { id: string; name: string; settings: Record<string, unknown> }
@@ -140,7 +147,7 @@ describe('channel visual preset routes', () => {
       method: 'POST',
       url: '/api/me/channel/visual-presets',
       headers: { cookie: otherCookie },
-      payload: { name: "Not yours", settings: {} },
+      payload: { name: 'Not yours', settings: {} },
     })
     const { id } = saveRes.json() as { id: string }
 
