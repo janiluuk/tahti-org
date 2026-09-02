@@ -52,6 +52,7 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
   '/dashboard/archive': [
     { href: '/dashboard/archive', label: 'Discography', icon: 'archive', isRoute: true },
     { href: '/dashboard/releases', label: 'Smart Links', icon: 'links', isRoute: true },
+    { href: '/dashboard/distribution', label: 'Distribution', icon: 'links', isRoute: true },
     { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
     { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
   ],
@@ -194,15 +195,6 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     icon: 'links',
     isRoute: true,
     requiresChannel: true,
-  },
-  {
-    href: '/dashboard/distribution',
-    label: 'Distribution',
-    icon: 'links',
-    isRoute: true,
-    requiresChannel: true,
-    secondary: true,
-    group: 'Distribution',
   },
   {
     href: '/dashboard/stash',
