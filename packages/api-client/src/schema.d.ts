@@ -19276,7 +19276,39 @@ export interface paths {
     }
     options?: never
     head?: never
-    patch?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              title: string | null
+              body: string
+              images: string[]
+              linkUrl: string | null
+              linkLabel: string | null
+              /** Format: date-time */
+              publishAt: string
+              /** Format: date-time */
+              createdAt: string
+            }
+          }
+        }
+      }
+    }
     trace?: never
   }
   '/api/me/posts/{id}/images/prepare': {
@@ -19596,6 +19628,8 @@ export interface paths {
                     title: string | null
                     body: string
                     images: string[]
+                    linkUrl: string | null
+                    linkLabel: string | null
                     url: string
                   }
                 | {
