@@ -14,6 +14,7 @@ import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelTextLayer } from '../channel-text-layer-actions'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
+import { ChannelVisualPresetLibrary } from '../channel-visual-preset-library'
 import { ChannelHeaderPanel } from '../channel-header-panel'
 import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import ChannelLinksPanel from '../channel-links-panel'
@@ -130,6 +131,7 @@ export function ChannelEditorSections({
   })
   const [visibility, setVisibility] = useState({ showJoinDate, showDailyListeners })
   const [activeSection, setActiveSection] = useState<DesignerSectionId>(DESIGNER_SECTIONS[0]!.id)
+  const [presetApplyTick, setPresetApplyTick] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -273,20 +275,30 @@ export function ChannelEditorSections({
             {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
             {activeSection === 'visual' && (
-              <ChannelVisualPresetPanel
-                channelSlug={channelSlug}
-                tier={tier}
-                hasVideoBackground={Boolean(draft.gallery.videoBackgroundUrl)}
-                initial={channelVisual}
-                bare
-                hideHeaderStyle
-                onDraftChange={(visual) =>
-                  setDraft((d) => ({
-                    ...d,
-                    visual: { ...d.visual, ...visual, headerStyle: d.visual.headerStyle },
-                  }))
-                }
-              />
+              <>
+                <ChannelVisualPresetLibrary
+                  current={draft.visual}
+                  onApply={(settings) => {
+                    setDraft((d) => ({ ...d, visual: settings }))
+                    setPresetApplyTick((n) => n + 1)
+                  }}
+                />
+                <ChannelVisualPresetPanel
+                  key={presetApplyTick}
+                  channelSlug={channelSlug}
+                  tier={tier}
+                  hasVideoBackground={Boolean(draft.gallery.videoBackgroundUrl)}
+                  initial={draft.visual}
+                  bare
+                  hideHeaderStyle
+                  onDraftChange={(visual) =>
+                    setDraft((d) => ({
+                      ...d,
+                      visual: { ...d.visual, ...visual, headerStyle: d.visual.headerStyle },
+                    }))
+                  }
+                />
+              </>
             )}
 
             {activeSection === 'header' && (
@@ -316,7 +328,8 @@ export function ChannelEditorSections({
                 </p>
               ) : (
                 <ChannelSlideshowPanel
-                  initial={channelVisual}
+                  key={presetApplyTick}
+                  initial={draft.visual}
                   bare
                   hideSave
                   onDraftChange={(slideshow) =>
