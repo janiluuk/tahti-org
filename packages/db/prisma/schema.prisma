@@ -1300,6 +1300,10 @@ model Channel {
   streamOverlayTitle    String?
   streamOverlaySubtitle String?
   streamOverlayCoverUrl String?
+  // Text shown in place of the generic Tahti top bar when this channel is
+  // viewed via its verified custom domain (see routes/channels/custom-domain.ts).
+  // Null/empty falls back to the artist's display name + avatar.
+  topBarText String?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 

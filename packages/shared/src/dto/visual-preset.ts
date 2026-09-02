@@ -264,6 +264,9 @@ export const ChannelVisualPatchSchema = z
     slideshowIntervalSeconds: z.number().int().min(5).max(30).optional(),
     slideshowTransitionMs: z.number().int().min(300).max(1500).optional(),
     slideshowAutoplay: z.boolean().optional(),
+    /** Shown instead of the generic Tahti top bar when this channel is
+     * viewed via its verified custom domain. Null/empty = artist name + avatar. */
+    topBarText: z.string().max(120).nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const url = data.videoBackgroundUrl

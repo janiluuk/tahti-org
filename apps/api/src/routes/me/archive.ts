@@ -468,6 +468,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,
         slideshowAutoplay: true,
+        topBarText: true,
       },
     })
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -491,6 +492,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       slideshowIntervalSeconds,
       slideshowTransitionMs,
       slideshowAutoplay,
+      topBarText,
     } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -534,6 +536,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         ...(slideshowIntervalSeconds !== undefined ? { slideshowIntervalSeconds } : {}),
         ...(slideshowTransitionMs !== undefined ? { slideshowTransitionMs } : {}),
         ...(slideshowAutoplay !== undefined ? { slideshowAutoplay } : {}),
+        ...(topBarText !== undefined ? { topBarText: topBarText || null } : {}),
       },
       select: {
         colorSchemeJson: true,
@@ -546,6 +549,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,
         slideshowAutoplay: true,
+        topBarText: true,
       },
     })
     return reply.send(updated)
