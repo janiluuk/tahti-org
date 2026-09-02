@@ -17,8 +17,8 @@ import {
 } from '@/app/c/[slug]/archive-item-backdrop'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
+import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { collectionRssUrl } from '@/lib/rss-feeds'
-import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
 import { SubscribeButton } from './_subscribe-button'
@@ -53,6 +53,8 @@ export interface CollectionResponse {
   description: string | null
   type: string
   coverUrl?: string | null
+  paletteJson?: string | null
+  colorSchemeJson?: string | null
   collaborative?: boolean
   galleryMode?: CollectionGalleryMode
   slideshowImages?: string[]
@@ -140,88 +142,102 @@ export default async function CollectionPage({
 
   return (
     <CollectionGalleryProvider images={galleryImages}>
-      <ProfilePageLayout
-        activeNav="discover"
-        hero={
-          <>
-            {data.coverUrl && (
-              <div
-                className="prof-collection-ambient-bg"
-                style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}
-                aria-hidden
-              />
-            )}
-            <div className="prof-collection-open-veil" aria-hidden />
-            {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
-            {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
-              <div
-                className="ch-channel-backdrop"
-                style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
-              />
-            )}
-            <div className="prof-collection-top-row">
-              <Link href={`/u/${data.user.username}`} className="prof-back-link">
-                ← {data.user.displayName}
-              </Link>
-              <div className="prof-collection-top-row__actions">
-                <SubscribeButton slug={params.slug} />
-                {data.collaborative && <AddTrackButton slug={params.slug} />}
-                <CollectionEmbedButton slug={params.slug} />
-                <a href={rssUrl} className="prof-embed-btn" title="RSS feed" aria-label="RSS feed">
-                  <IconRss />
-                  RSS
-                </a>
-              </div>
-            </div>
-            {data.collaborative && (
-              <p className="prof-list-meta prof-collaborative-hint">
-                🤝 Collaborative playlist — anyone can add a track
-              </p>
-            )}
-            <div className="prof-collection-hero-row">
+      {/* Scoped to this page only (not the shared /u/[username] profile
+          layout) — so the cover's extracted palette colors --bg/--card/etc.
+          here, instead of everything on the page reading the generic
+          platform default behind the ambient cover-art wash below. */}
+      <div data-channel-root>
+        <ChannelColorScheme colorSchemeJson={data.colorSchemeJson} paletteJson={data.paletteJson} />
+        <ProfilePageLayout
+          activeNav="discover"
+          hero={
+            <>
               {data.coverUrl && (
-                <CollectionCoverButton url={data.coverUrl} className="prof-collection-hero-cover" />
+                <div
+                  className="prof-collection-ambient-bg"
+                  style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}
+                  aria-hidden
+                />
               )}
-              <div className="prof-collection-hero-info">
-                <h1 className="prof-page-title prof-page-title--collection">{data.name}</h1>
-                <p className="prof-list-meta">
-                  {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
-                </p>
-                {data.description && (
-                  <SafePlainText text={data.description} className="prof-list-meta--spaced" />
-                )}
+              <div className="prof-collection-open-veil" aria-hidden />
+              {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
+              {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
+                <div
+                  className="ch-channel-backdrop"
+                  style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
+                />
+              )}
+              <div className="prof-collection-top-row">
+                <Link href={`/u/${data.user.username}`} className="prof-back-link">
+                  ← {data.user.displayName}
+                </Link>
+                <div className="prof-collection-top-row__actions">
+                  <SubscribeButton slug={params.slug} />
+                  {data.collaborative && <AddTrackButton slug={params.slug} />}
+                  <CollectionEmbedButton slug={params.slug} />
+                  <a
+                    href={rssUrl}
+                    className="prof-embed-btn"
+                    title="RSS feed"
+                    aria-label="RSS feed"
+                  >
+                    <IconRss />
+                    RSS
+                  </a>
+                </div>
               </div>
-            </div>
-          </>
-        }
-      >
-        <ChannelTextLayerView
-          mode={data.textLayerMode ?? 'NONE'}
-          text={data.textLayerText ?? ''}
-          align={data.textLayerAlign ?? 'CENTER'}
-        />
+              {data.collaborative && (
+                <p className="prof-list-meta prof-collaborative-hint">
+                  🤝 Collaborative playlist — anyone can add a track
+                </p>
+              )}
+              <div className="prof-collection-hero-row">
+                {data.coverUrl && (
+                  <CollectionCoverButton
+                    url={data.coverUrl}
+                    className="prof-collection-hero-cover"
+                  />
+                )}
+                <div className="prof-collection-hero-info">
+                  <h1 className="prof-page-title prof-page-title--collection">{data.name}</h1>
+                  <p className="prof-list-meta">
+                    {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
+                  </p>
+                  {data.description && (
+                    <SafePlainText text={data.description} className="prof-list-meta--spaced" />
+                  )}
+                </div>
+              </div>
+            </>
+          }
+        >
+          <ChannelTextLayerView
+            mode={data.textLayerMode ?? 'NONE'}
+            text={data.textLayerText ?? ''}
+            align={data.textLayerAlign ?? 'CENTER'}
+          />
 
-        <ChannelGalleryView mode={data.galleryMode ?? 'NONE'} images={data.slideshowImages ?? []} />
+          <ChannelGalleryView
+            mode={data.galleryMode ?? 'NONE'}
+            images={data.slideshowImages ?? []}
+          />
 
-        <section className="prof-section">
-          {data.items.length === 0 ? (
-            <div className="public-empty-card">
-              <p className="public-empty-card__text">This collection is empty.</p>
-              <p className="public-empty-card__hint">
-                Items appear here when the artist adds them.
-              </p>
-            </div>
-          ) : (
-            <div data-tahti-ui="studio">
-              <CollectionLibrarySection items={data.items} artistUsername={data.user.username} />
-            </div>
-          )}
-        </section>
-
-        <section className="prof-section">
-          <ReportButton targetType="COLLECTION" targetId={params.slug} />
-        </section>
-      </ProfilePageLayout>
+          <section className="prof-section">
+            {data.items.length === 0 ? (
+              <div className="public-empty-card">
+                <p className="public-empty-card__text">This collection is empty.</p>
+                <p className="public-empty-card__hint">
+                  Items appear here when the artist adds them.
+                </p>
+              </div>
+            ) : (
+              <div data-tahti-ui="studio">
+                <CollectionLibrarySection items={data.items} artistUsername={data.user.username} />
+              </div>
+            )}
+          </section>
+        </ProfilePageLayout>
+      </div>
     </CollectionGalleryProvider>
   )
 }

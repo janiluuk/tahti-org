@@ -10,6 +10,7 @@ import {
   parseAvatarTheme,
   parseLogoPlacement,
   parseRouteParams,
+  resolveColorScheme,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -125,6 +126,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           coverUrl: true,
           coverKey: true,
           isFeatured: true,
+          paletteJson: true,
+          colorSchemeJson: true,
           _count: { select: { items: true } },
         },
       },
@@ -295,6 +298,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         style: c.style,
         description: c.description,
         coverUrl: await resolveCollectionCoverUrl(c),
+        colorScheme:
+          c.colorSchemeJson || c.paletteJson
+            ? resolveColorScheme(c.colorSchemeJson, c.paletteJson)
+            : null,
         isFeatured: c.isFeatured,
         itemCount: _count.items,
         url: `/u/${user.username}/c/${c.slug}`,

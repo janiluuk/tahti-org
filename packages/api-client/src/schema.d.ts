@@ -13657,6 +13657,13 @@ export interface paths {
                 style: string
                 description: string | null
                 coverUrl: string | null
+                colorScheme: {
+                  bg: string
+                  accent: string
+                  text: string
+                  muted: string
+                  highlight: string
+                } | null
                 isFeatured: boolean
                 itemCount: number
                 url: string
@@ -29044,6 +29051,13 @@ export interface components {
         style: string
         description: string | null
         coverUrl: string | null
+        colorScheme: {
+          bg: string
+          accent: string
+          text: string
+          muted: string
+          highlight: string
+        } | null
         isFeatured: boolean
         itemCount: number
         url: string

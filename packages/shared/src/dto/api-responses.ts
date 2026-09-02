@@ -910,6 +910,9 @@ export const PublicProfileViewSchema = z.object({
       style: z.string(),
       description: z.string().nullable(),
       coverUrl: z.string().nullable(),
+      /** Extracted-from-cover (or artist-overridden) ambient palette — null
+       * when the cover has no extracted colors yet. */
+      colorScheme: ColorSchemeSchema.nullable(),
       isFeatured: z.boolean(),
       itemCount: z.number().int(),
       url: z.string(),

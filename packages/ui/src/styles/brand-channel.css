@@ -6591,6 +6591,26 @@
   background: var(--card2);
 }
 
+/* Chroma variant — accent/bg/highlight are set inline per-row from the
+   collection cover's extracted palette (see palette-extract.ts), so each
+   row's tint follows its own cover art instead of one fixed brand color. */
+[data-tahti-ui='brand'] .prof-collection-row--chroma {
+  border-bottom-color: color-mix(in srgb, var(--collection-accent) 30%, var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-row--chroma:hover {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--collection-accent) 18%, var(--card2)),
+    var(--card2) 75%
+  );
+  box-shadow: inset 3px 0 0 var(--collection-accent);
+}
+
+[data-tahti-ui='brand'] .prof-collection-row--chroma .prof-collection-title {
+  color: color-mix(in srgb, var(--collection-highlight) 60%, var(--text));
+}
+
 /* The clickable cover+title area of a track row (opens TrackDetailModal) —
    a <button> instead of the row itself so the owner reorder controls beside
    it (also buttons) don't fight it for clicks. */
@@ -6709,7 +6729,9 @@
   background: center/cover no-repeat var(--ambient-cover-image);
   filter: blur(70px) saturate(1.5) brightness(0.5);
   transform: scale(1.25);
-  opacity: 0.85;
+  /* Fully opaque — the ambient wash from the cover art is the page
+     background now, not a tint layered over a flat platform color. */
+  opacity: 1;
   pointer-events: none;
 }
 
