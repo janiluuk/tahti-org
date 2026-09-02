@@ -9,6 +9,7 @@ import { NewToYouSection } from './_new-to-you-section'
 import { YourFeedSection } from './_your-feed-section'
 import { DiscoWidgetsSection } from './_disco-widgets-section'
 import { MobileDisclosure } from './_mobile-disclosure'
+import { getSessionUser } from '@/lib/session'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -119,11 +120,12 @@ async function fetchRanks(archiveItemIds: string[]): Promise<Record<string, numb
 }
 
 export default async function ListenPage() {
-  const [{ live, replaying }, radioPreview, directory, gallery] = await Promise.all([
+  const [{ live, replaying }, radioPreview, directory, gallery, user] = await Promise.all([
     fetchChannels(),
     fetchTahtiRadioPreview(),
     fetchDirectory(),
     fetchSelectsGallery(),
+    getSessionUser(),
   ])
   const listenerCountEntries = await Promise.all(
     live.map(async (ch) => [ch.slug, await fetchListenerCount(ch.slug)] as const),
@@ -146,7 +148,7 @@ export default async function ListenPage() {
       />
 
       <MobileDisclosure title="For you">
-        <YourFeedSection />
+        <YourFeedSection viewerUsername={user?.username ?? null} />
         <NewToYouSection />
         <DiscoWidgetsSection />
       </MobileDisclosure>

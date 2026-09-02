@@ -14,6 +14,17 @@ export const CreateArtistPostSchema = z.object({
 
 export type CreateArtistPostInput = z.infer<typeof CreateArtistPostSchema>
 
+export const UpdateArtistPostSchema = z.object({
+  title: z.string().trim().max(160).nullable().optional(),
+  body: z.string().trim().min(1, 'body is required').max(5000).optional(),
+  linkUrl: z.string().trim().url().max(500).nullable().optional(),
+  linkLabel: z.string().trim().max(100).nullable().optional(),
+  /** Reschedule (future) or re-publish (now/past) by changing this. */
+  publishAt: z.string().datetime().optional(),
+})
+
+export type UpdateArtistPostInput = z.infer<typeof UpdateArtistPostSchema>
+
 export const ArtistPostSchema = z.object({
   id: z.string(),
   title: z.string().nullable(),

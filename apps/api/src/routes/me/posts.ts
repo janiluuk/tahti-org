@@ -12,6 +12,7 @@ import {
   ArtistPostSchema,
   CreateArtistPostSchema,
   IdParamSchema,
+  UpdateArtistPostSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -108,6 +109,43 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.status(201).send(serialize(post))
+    },
+  )
+
+  // PATCH /api/me/posts/:id — edit text/link, or reschedule/republish by changing publishAt
+  fastify.patch(
+    '/api/me/posts/:id',
+    {
+      preHandler: requireAuth,
+      schema: { tags: ['channel'], response: openApiResponse(ArtistPostSchema, 'ArtistPost') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const post = await ownedPost(user.id, routeParams.id)
+      if (!post) return reply.status(404).send({ error: 'Post not found' })
+
+      const parsed = UpdateArtistPostSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+      const body = parsed.data
+
+      const updated = await fastify.prisma.artistPost.update({
+        where: { id: post.id },
+        data: {
+          ...(body.title !== undefined ? { title: body.title?.trim() || null } : {}),
+          ...(body.body !== undefined ? { body: body.body } : {}),
+          ...(body.linkUrl !== undefined ? { linkUrl: body.linkUrl?.trim() || null } : {}),
+          ...(body.linkLabel !== undefined ? { linkLabel: body.linkLabel?.trim() || null } : {}),
+          ...(body.publishAt !== undefined ? { publishAt: new Date(body.publishAt) } : {}),
+        },
+      })
+
+      return reply.send(serialize(updated))
     },
   )
 

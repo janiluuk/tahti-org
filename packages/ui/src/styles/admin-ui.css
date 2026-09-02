@@ -1745,6 +1745,301 @@
   color: var(--tahti-primary, var(--cyan));
 }
 
+/* ---- Feed hero: wide banner cards (left) + compact updates list (right) --- */
+.feed-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: var(--tahti-space-6);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .feed-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feed-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-4);
+  min-width: 0;
+}
+
+.feed-banner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 180px;
+  border-radius: var(--tahti-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+  position: relative;
+}
+
+@media (max-width: 560px) {
+  .feed-banner {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+}
+
+.feed-banner__cover {
+  background-color: color-mix(in srgb, var(--card) 60%, black);
+  background-size: cover;
+  background-position: center;
+  min-height: 140px;
+}
+
+.feed-banner__text {
+  position: relative;
+  padding: var(--tahti-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-2);
+  /* Gradient bleeds from the cover (grid column 1) into this text half,
+   * so the two halves read as one continuous banner rather than a hard split. */
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--card) 40%, transparent) 0%,
+    var(--card) 35%
+  );
+}
+
+.feed-banner__headline {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  font-family: var(--tahti-font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.feed-banner__headline:hover {
+  color: var(--tahti-primary, var(--cyan));
+}
+
+.feed-banner__body {
+  margin: 0;
+  font-size: var(--tahti-text-sm);
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-banner__body--expanded {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.feed-banner__toggle {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--tahti-text-xs);
+  font-weight: 500;
+  color: var(--tahti-primary, var(--cyan));
+  cursor: pointer;
+}
+
+.feed-banner__meta {
+  margin-top: auto;
+  padding-top: var(--tahti-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--tahti-space-2);
+  font-size: var(--tahti-text-xs);
+  color: var(--muted);
+}
+
+.feed-banner__artist {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.feed-banner__artist:hover {
+  text-decoration: underline;
+}
+
+.feed-hero__aside {
+  min-width: 0;
+}
+
+.feed-updates__title {
+  font-family: var(--tahti-font-display);
+  font-size: var(--tahti-text-base);
+  font-weight: 500;
+  color: var(--text);
+  margin: 0 0 var(--tahti-space-3);
+}
+
+.feed-updates-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-1);
+}
+
+.feed-updates-row {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: var(--tahti-space-3) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.feed-updates-row:hover .feed-updates-row__header {
+  color: var(--tahti-primary, var(--cyan));
+}
+
+.feed-updates-row__header {
+  font-size: var(--tahti-text-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.feed-updates-row__teaser {
+  font-size: var(--tahti-text-xs);
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-updates-row__date {
+  font-size: var(--tahti-text-xs);
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* ---- Feed post modal ---- */
+.feed-post-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--tahti-space-4);
+}
+
+.feed-post-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--tahti-radius-lg);
+}
+
+.feed-post-modal__close {
+  position: absolute;
+  top: var(--tahti-space-3);
+  right: var(--tahti-space-3);
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  cursor: pointer;
+}
+
+.feed-post-modal__cover {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  display: block;
+}
+
+.feed-post-modal__body {
+  padding: var(--tahti-space-5);
+}
+
+.feed-post-modal__byline {
+  display: flex;
+  align-items: center;
+  gap: var(--tahti-space-2);
+  margin-bottom: var(--tahti-space-2);
+  font-size: var(--tahti-text-sm);
+}
+
+.feed-post-modal__artist {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.feed-post-modal__artist:hover {
+  text-decoration: underline;
+}
+
+.feed-post-modal__date {
+  color: var(--muted);
+}
+
+.feed-post-modal__title {
+  font-family: var(--tahti-font-display);
+  font-size: var(--tahti-text-xl);
+  font-weight: 500;
+  color: var(--text);
+  margin: 0 0 var(--tahti-space-2);
+}
+
+.feed-post-modal__text {
+  font-size: var(--tahti-text-sm);
+  color: var(--text);
+  white-space: pre-wrap;
+  margin: 0 0 var(--tahti-space-2);
+}
+
+.feed-post-modal__link {
+  display: inline-block;
+  font-size: var(--tahti-text-sm);
+  color: var(--tahti-primary, var(--cyan));
+  margin-bottom: var(--tahti-space-2);
+}
+
+.feed-post-modal__images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tahti-space-2);
+  margin-bottom: var(--tahti-space-2);
+}
+
+.feed-post-modal__images img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--tahti-radius-md);
+}
+
+.feed-post-modal__actions {
+  display: flex;
+  gap: var(--tahti-space-2);
+}
+
 /* ---- Tahti Selects visual gallery ---- */
 .selects-gallery {
   list-style: none;

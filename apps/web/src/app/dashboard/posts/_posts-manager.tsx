@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { ButtonIcon, Button, FileDropzone, Panel } from '@tahti/ui'
 import type { ArtistPostView } from '@tahti/shared'
+import { useToast } from '@/contexts/toast-context'
 import { completePostImageUpload, createPost, deletePost, preparePostImageUpload } from './actions'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -36,6 +37,7 @@ function minDatetimeLocal(): string {
 }
 
 export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] }) {
+  const { showToast } = useToast()
   const [posts, setPosts] = useState(initialPosts)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -89,6 +91,7 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
       setPending(false)
       setError(created.error ?? 'Failed to publish post')
       setStatus(null)
+      showToast(created.error ?? 'Failed to publish post', 'error')
       return
     }
 
@@ -134,11 +137,17 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
     setScheduleAt('')
     setStatus(null)
     setPending(false)
+    showToast(publishAt ? 'Post scheduled' : 'Post published', 'success')
   }
 
   async function remove(id: string) {
     setPosts((prev) => prev.filter((p) => p.id !== id))
-    await deletePost(id)
+    const res = await deletePost(id)
+    if (res.error) {
+      showToast(res.error, 'error')
+      return
+    }
+    showToast('Post removed', 'success')
   }
 
   return (

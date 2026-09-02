@@ -63,6 +63,8 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     title: z.string().nullable(),
     body: z.string(),
     images: z.array(z.string()),
+    linkUrl: z.string().nullable(),
+    linkLabel: z.string().nullable(),
     url: z.string(),
   }),
   z.object({
