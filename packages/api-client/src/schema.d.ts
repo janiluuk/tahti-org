@@ -16684,9 +16684,14 @@ export interface paths {
                   connectionTest: boolean
                   fileList: boolean
                   import: boolean
+                  search: boolean
+                  playback: boolean
                 }
                 oauthStartPath: string | null
-                statusPath: string
+                statusPath: string | null
+                searchPath?: string | null
+                listPath?: string | null
+                importPath?: string | null
               }[]
             }
           }

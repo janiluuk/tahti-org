@@ -27,6 +27,54 @@ describe('import plugin contract', () => {
     })
 
     expect(parsed.providers[0]?.id).toBe('google-drive')
+    expect(parsed.providers[0]?.capabilities.search).toBe(false)
+    expect(parsed.providers[0]?.capabilities.playback).toBe(false)
+  })
+
+  it('accepts search and tool providers without a status or oauth path', () => {
+    const parsed = ImportPluginProviderListSchema.parse({
+      providers: [
+        {
+          contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+          id: 'hearthis',
+          name: 'hearthis.at',
+          description: 'Search public catalogue.',
+          kind: 'search',
+          capabilities: {
+            configure: true,
+            connectionTest: false,
+            fileList: false,
+            import: true,
+            search: true,
+            playback: true,
+          },
+          oauthStartPath: null,
+          statusPath: null,
+          searchPath: '/api/v1/imports/hearthis/search',
+          importPath: '/api/v1/imports/hearthis/add',
+        },
+        {
+          contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+          id: 'url',
+          name: 'URL / DSP paste',
+          description: 'Paste DSP URLs.',
+          kind: 'tool',
+          capabilities: {
+            configure: false,
+            connectionTest: false,
+            fileList: false,
+            import: false,
+          },
+          oauthStartPath: null,
+          statusPath: null,
+        },
+      ],
+    })
+
+    expect(parsed.providers.map((provider) => provider.kind)).toEqual([
+      'search',
+      'tool',
+    ])
   })
 
   it('rejects an unknown contract version', () => {

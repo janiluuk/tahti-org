@@ -5,8 +5,13 @@ import type { ImportPluginProvider } from '@tahti/shared'
 import { IMPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
 
 /**
- * Core-owned provider metadata. Configuration controls remain in Tahti Player's
- * plugin Configure modal; this registry deliberately contains no credentials.
+ * Core-owned provider metadata for Tahti Player / Nuclear clients.
+ * Configuration UI stays in the player Configure modal; this registry
+ * deliberately contains no credentials or per-user state.
+ *
+ * Keep kinds separate: OAuth, search, and tool/upload adapters are not one
+ * universal start/status/import interface. Export/DSP delivery is out of
+ * scope until submit/status/webhook routes exist.
  */
 export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
   {
@@ -20,8 +25,185 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
       connectionTest: true,
       fileList: true,
       import: true,
+      search: false,
+      playback: false,
     },
     oauthStartPath: '/api/me/google-drive/oauth/start',
     statusPath: '/api/me/google-drive',
+    listPath: null,
+    importPath: null,
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'bandcamp',
+    name: 'Bandcamp',
+    description: 'Connect Bandcamp and import albums into the catalog.',
+    kind: 'oauth',
+    capabilities: {
+      configure: true,
+      connectionTest: true,
+      fileList: true,
+      import: true,
+      search: false,
+      playback: true,
+    },
+    oauthStartPath: '/api/me/bandcamp/oauth/start',
+    statusPath: '/api/me/bandcamp',
+    listPath: '/api/me/bandcamp/albums',
+    importPath: '/api/v1/imports/bandcamp/add',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'soundcloud',
+    name: 'SoundCloud',
+    description:
+      'OAuth connect, list downloadable tracks, queue server-side import to archive.',
+    kind: 'oauth',
+    capabilities: {
+      configure: true,
+      connectionTest: true,
+      fileList: true,
+      import: true,
+      search: false,
+      playback: false,
+    },
+    oauthStartPath: '/api/me/soundcloud/oauth/start',
+    statusPath: '/api/me/soundcloud',
+    listPath: '/api/me/soundcloud/tracks',
+    importPath: '/api/me/soundcloud/import',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'mixcloud',
+    name: 'Mixcloud',
+    description: 'Connect Mixcloud for rescue/upload of mixes to/from the archive.',
+    kind: 'oauth',
+    capabilities: {
+      configure: true,
+      connectionTest: true,
+      fileList: false,
+      import: true,
+      search: false,
+      playback: false,
+    },
+    oauthStartPath: '/api/me/mixcloud/oauth/start',
+    statusPath: '/api/me/mixcloud',
+    listPath: null,
+    importPath: null,
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'spotify',
+    name: 'Spotify search',
+    description:
+      'Search Spotify tracks (app token) to add into mixed-source collections.',
+    kind: 'search',
+    capabilities: {
+      configure: true,
+      connectionTest: true,
+      fileList: false,
+      import: true,
+      search: true,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: '/api/me/spotify-profile',
+    searchPath: '/api/v1/imports/spotify/search',
+    importPath: '/api/v1/imports/spotify/add',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'hearthis',
+    name: 'hearthis.at',
+    description:
+      "Search hearthis.at's public catalogue and queue tracks as provider-hosted embeds.",
+    kind: 'search',
+    capabilities: {
+      configure: true,
+      connectionTest: false,
+      fileList: false,
+      import: true,
+      search: true,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+    searchPath: '/api/v1/imports/hearthis/search',
+    importPath: '/api/v1/imports/hearthis/add',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'upload',
+    name: 'Local upload',
+    description: 'Upload audio files into the archive (prepare → object store → complete).',
+    kind: 'upload',
+    capabilities: {
+      configure: false,
+      connectionTest: false,
+      fileList: false,
+      import: true,
+      search: false,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+    importPath: null,
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'stash',
+    name: 'Stash',
+    description:
+      'Private file locker — upload stems/masters without publishing to the channel.',
+    kind: 'upload',
+    capabilities: {
+      configure: false,
+      connectionTest: true,
+      fileList: true,
+      import: true,
+      search: false,
+      playback: false,
+    },
+    oauthStartPath: null,
+    statusPath: '/api/me/stash',
+    listPath: '/api/me/stash',
+    importPath: null,
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'url',
+    name: 'URL / DSP paste',
+    description:
+      'Paste Spotify/Bandcamp/etc. URLs to seed smart-link targets on a release.',
+    kind: 'tool',
+    capabilities: {
+      configure: false,
+      connectionTest: false,
+      fileList: false,
+      import: false,
+      search: false,
+      playback: false,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'radio',
+    name: 'Internet radio',
+    description:
+      'Paste an M3U/M3U8 playlist or direct stream URL to play a station.',
+    kind: 'tool',
+    capabilities: {
+      configure: false,
+      connectionTest: false,
+      fileList: false,
+      import: false,
+      search: true,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+    searchPath: null,
   },
 ]

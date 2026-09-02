@@ -41,6 +41,11 @@ The Tahti Player client/plugin repository is the sibling checkout at
 there, not in Tahti core. Keep Tahti responsible for its API, worker jobs, and
 server-side persistence; the Tahti Player plugin owns its client configuration flow.
 
+The versioned import-provider catalog is `GET /api/me/import-plugins`
+(`docs/technical/import-plugin-contracts.md`). Keep OAuth, search, and
+tool/upload kinds separate. Do not add DSP export submit/status/webhook
+routes until that product contract exists.
+
 For import plugins, all provider configuration must happen from the plugin’s
 Configure action in a modal. The modal must support entering keys/settings,
 testing the connection, and only then saving/enabling the plugin. Do not add a

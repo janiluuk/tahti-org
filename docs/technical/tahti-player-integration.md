@@ -39,6 +39,14 @@ mastered result as archive/version” workflow would require a separately design
 authenticated upload/create or version endpoint and must not be implied by the
 current plugin.
 
+## Import plugin capability contracts
+
+`GET /api/me/import-plugins` is the versioned metadata registry for OAuth,
+search, and tool/upload import sources. See
+[`import-plugin-contracts.md`](import-plugin-contracts.md). DSP export
+submit/status/webhook is not part of this registry.
+
+
 The existing API reference remains the contract source of truth for all other
 Tahti Player calls. Run the client-side freshness check from the Tahti Player
 checkout after an API route change:
