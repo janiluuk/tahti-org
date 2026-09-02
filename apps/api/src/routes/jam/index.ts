@@ -167,7 +167,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
 
       const fresh = await loadActiveSession(session.id)
       const view = serialize(fresh!)
-      publishToJam(session.id, { type: 'state', session: view })
+      void publishToJam(session.id, { type: 'state', session: view })
       return reply.send(view)
     },
   )
@@ -206,9 +206,19 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       })
       reply.raw.write(`data: ${JSON.stringify({ type: 'state', session: serialize(session) })}\n\n`)
 
-      const unsubscribe = subscribeToJam(id, (event) => {
+      const unsubscribe = await subscribeToJam(id, (event) => {
         reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)
       })
+      // subscribeToJam's Redis SUBSCRIBE is an async round-trip — re-send the
+      // freshest state now that it's active, in case a state change landed
+      // in the (sub-ms, but non-zero) gap between the snapshot above and the
+      // subscription actually taking effect.
+      const settled = await loadActiveSession(id)
+      if (settled) {
+        reply.raw.write(
+          `data: ${JSON.stringify({ type: 'state', session: serialize(settled) })}\n\n`,
+        )
+      }
       // Comment-only pings keep intermediaries (proxies, browsers) from
       // treating an idle-but-open jam as a dead connection.
       const keepAlive = setInterval(() => reply.raw.write(': ping\n\n'), 20_000)
@@ -249,7 +259,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const view = serialize(session)
-      publishToJam(id, { type: 'state', session: view })
+      void publishToJam(id, { type: 'state', session: view })
       return reply.send(view)
     },
   )
@@ -276,7 +286,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const fresh = await loadActiveSession(id)
-      if (fresh) publishToJam(id, { type: 'state', session: serialize(fresh) })
+      if (fresh) void publishToJam(id, { type: 'state', session: serialize(fresh) })
       return reply.status(204).send()
     },
   )
@@ -296,7 +306,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       await fastify.prisma.jamSession.update({ where: { id }, data: { endedAt: new Date() } })
-      publishToJam(id, { type: 'ended' })
+      void publishToJam(id, { type: 'ended' })
       return reply.status(204).send()
     },
   )
