@@ -1324,6 +1324,7 @@ model Channel {
   members           ChannelMember[]
   slugRedirects     ChannelSlugRedirect[]
   discoWidgetInstalls DiscoWidgetInstall[]
+  visualPresets     ChannelVisualPreset[]
 
   @@index([state])
   @@schema("channel")
@@ -1341,6 +1342,28 @@ model ChannelSlugRedirect {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([channelId])
+  @@schema("channel")
+}
+
+// A named, owner-saved snapshot of the channel's Look settings (visual preset,
+// color scheme, header, slideshow, overlays, links) so an artist can flip
+// between a few full "looks" without redoing every field by hand. Distinct
+// from Channel's own visual* columns, which are always the single live look —
+// this is a library of saved alternates a channel owner can re-apply. Stores
+// the whole snapshot as one JSON blob (same shape the client already builds
+// for PATCH /api/me/channel/visual) rather than a column per field, since the
+// set of designer fields keeps growing and a preset is just replayed wholesale.
+model ChannelVisualPreset {
+  id          String   @id @default(cuid())
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  name        String
+  settingsJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([channelId, name])
   @@index([channelId])
   @@schema("channel")
 }

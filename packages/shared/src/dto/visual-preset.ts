@@ -299,3 +299,28 @@ export const ArchiveItemVisualPatchSchema = z.object({
 })
 
 export type ArchiveItemVisualPatch = z.infer<typeof ArchiveItemVisualPatchSchema>
+
+/** A named, owner-saved snapshot of the channel's whole Look (see the
+ * `ChannelVisualPreset` Prisma model). `settings` is stored/replayed
+ * wholesale rather than validated field-by-field — it's the same object
+ * shape the client already builds for `PATCH /api/me/channel/visual` (plus a
+ * few designer-only fields not yet persisted on Channel itself), and grows
+ * as the designer grows, so pinning every key here would just fall out of
+ * sync. The channel-visual PATCH route remains the single point that
+ * validates individual fields when a preset is actually applied and saved. */
+export const ChannelVisualPresetSaveSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  settings: z.record(z.unknown()),
+})
+
+export type ChannelVisualPresetSave = z.infer<typeof ChannelVisualPresetSaveSchema>
+
+export const ChannelVisualPresetResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  settings: z.record(z.unknown()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export type ChannelVisualPresetDto = z.infer<typeof ChannelVisualPresetResponseSchema>
