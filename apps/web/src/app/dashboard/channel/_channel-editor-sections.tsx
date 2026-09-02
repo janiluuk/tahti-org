@@ -363,7 +363,11 @@ export function ChannelEditorSections({
         </div>
 
         <div className="studio-channel-editor__preview-col" data-hero>
-          <ChannelLivePreview draft={draft} activeSection={activeSection} onSectionSelect={selectSection} />
+          <ChannelLivePreview
+            draft={draft}
+            activeSection={activeSection}
+            onSectionSelect={selectSection}
+          />
           <div className="studio-row studio-gap-md studio-mt-sm">
             <Link
               href={resolveChannelUrl(channelSlug)}

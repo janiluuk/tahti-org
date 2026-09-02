@@ -7,7 +7,10 @@ import Link from 'next/link'
 import type { ChannelGalleryMode, ChannelHeaderStyle } from '@tahti/shared'
 import { ChannelHeaderStylePanel } from './channel-header-style-panel'
 import ChannelGalleryPanel from './channel-gallery-panel'
-import { VisibilitySettingsPanel, type VisibilitySettings } from './settings/visibility-settings-panel'
+import {
+  VisibilitySettingsPanel,
+  type VisibilitySettings,
+} from './settings/visibility-settings-panel'
 
 interface Props {
   tier: string
@@ -24,7 +27,9 @@ interface Props {
     slideshowImages: string[]
     videoBackgroundUrl?: string | null
   }) => void
-  onVisibilityChange: (visibility: Pick<VisibilitySettings, 'showJoinDate' | 'showDailyListeners'>) => void
+  onVisibilityChange: (
+    visibility: Pick<VisibilitySettings, 'showJoinDate' | 'showDailyListeners'>,
+  ) => void
 }
 
 /** "Header & backdrop" designer section — the top-of-page area artists see on their public
@@ -83,7 +88,10 @@ export function ChannelHeaderPanel({
       </div>
 
       <div className="studio-field--block">
-        <Link href="/dashboard/settings/artist-info" className="ui-btn ui-btn--secondary ui-btn--sm">
+        <Link
+          href="/dashboard/settings/artist-info"
+          className="ui-btn ui-btn--secondary ui-btn--sm"
+        >
           Edit name, avatar & tags →
         </Link>
       </div>

@@ -562,228 +562,230 @@ export function CollectionEditor({
         </div>
       )}
 
-      <div className={`collection-editor__body${mode === 'view' ? ' collection-editor__body--view' : ''}`}>
+      <div
+        className={`collection-editor__body${mode === 'view' ? ' collection-editor__body--view' : ''}`}
+      >
         {/* ── Left: settings (edit mode only) ── */}
         {mode === 'edit' && (
-        <aside className="collection-editor__settings">
-          <h2 className="collection-editor__section-title">Settings</h2>
+          <aside className="collection-editor__settings">
+            <h2 className="collection-editor__section-title">Settings</h2>
 
-          <div className="studio-field">
-            <label className="studio-label" htmlFor={`collection-name-${initial.id}`}>
-              Name
-            </label>
-            <input
-              id={`collection-name-${initial.id}`}
-              className="studio-input"
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                markDirty()
-              }}
-              maxLength={100}
-            />
-          </div>
-
-          {(style === 'DJ_SET_SERIES' || style === 'PODCAST') && (
-            <Link
-              href={`/dashboard/schedule?seriesName=${encodeURIComponent(name)}&format=${style === 'PODCAST' ? 'TALK' : 'LIVE_SET'}${coverUrl ? `&artwork=${encodeURIComponent(coverUrl)}` : ''}`}
-              className="ui-btn ui-btn--secondary"
-            >
-              <ButtonIcon name="plus" />
-              Schedule next episode
-            </Link>
-          )}
-
-          <div className="studio-field">
-            <span className="studio-label">Style</span>
-            <div className="collection-form__style-grid">
-              {STYLE_OPTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className={`collection-form__style-pill${
-                    style === s ? ' collection-form__style-pill--active' : ''
-                  }`}
-                  onClick={() => {
-                    setStyle(s)
-                    markDirty()
-                  }}
-                >
-                  {STYLE_LABEL[s] ?? s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="studio-field">
-            <label className="studio-label" htmlFor={`collection-sort-${initial.id}`}>
-              Track order
-            </label>
-            <select
-              id={`collection-sort-${initial.id}`}
-              className="studio-input"
-              value={trackSortMode}
-              onChange={(e) => {
-                setTrackSortMode(e.target.value)
-                markDirty()
-              }}
-            >
-              {SORT_MODE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="studio-field">
-            <CoverImageUpload
-              currentUrl={coverUrl}
-              label="Cover image"
-              prepare={(args) => prepareCollectionCoverUpload(initial.slug, args)}
-              complete={(uploadKey) => completeCollectionCoverUpload(initial.slug, uploadKey)}
-              fromUrl={(sourceUrl) => fetchCollectionCoverFromUrl(initial.slug, sourceUrl)}
-              onUploaded={(url) => setCoverUrl(url)}
-            />
-          </div>
-
-          <fieldset className="collection-form__vis-fieldset">
-            <legend className="studio-label">Visibility</legend>
-            <div className="collection-form__vis-row">
-              <label className="collection-form__vis-option">
-                <input
-                  type="radio"
-                  name={`vis-${initial.id}`}
-                  checked={isPublic}
-                  onChange={() => {
-                    setIsPublic(true)
-                    markDirty()
-                  }}
-                />
-                <span className="collection-form__vis-copy">
-                  <span className="collection-form__vis-label">Public</span>
-                  <span className="collection-form__vis-desc">Visible on your profile</span>
-                </span>
+            <div className="studio-field">
+              <label className="studio-label" htmlFor={`collection-name-${initial.id}`}>
+                Name
               </label>
-              <label className="collection-form__vis-option">
-                <input
-                  type="radio"
-                  name={`vis-${initial.id}`}
-                  checked={!isPublic}
-                  onChange={() => {
-                    setIsPublic(false)
-                    markDirty()
-                  }}
-                />
-                <span className="collection-form__vis-copy">
-                  <span className="collection-form__vis-label">Draft</span>
-                  <span className="collection-form__vis-desc">Only you can see it</span>
-                </span>
-              </label>
+              <input
+                id={`collection-name-${initial.id}`}
+                className="studio-input"
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  markDirty()
+                }}
+                maxLength={100}
+              />
             </div>
-          </fieldset>
 
-          <label className="collection-form__vis-option collection-form__featured-row">
-            <input
-              type="checkbox"
-              checked={isFeatured}
-              onChange={(e) => {
-                setIsFeatured(e.target.checked)
-                markDirty()
-              }}
-            />
-            <span className="collection-form__vis-label">Featured on profile</span>
-          </label>
+            {(style === 'DJ_SET_SERIES' || style === 'PODCAST') && (
+              <Link
+                href={`/dashboard/schedule?seriesName=${encodeURIComponent(name)}&format=${style === 'PODCAST' ? 'TALK' : 'LIVE_SET'}${coverUrl ? `&artwork=${encodeURIComponent(coverUrl)}` : ''}`}
+                className="ui-btn ui-btn--secondary"
+              >
+                <ButtonIcon name="plus" />
+                Schedule next episode
+              </Link>
+            )}
 
-          {style === 'PLAYLIST' && (
+            <div className="studio-field">
+              <span className="studio-label">Style</span>
+              <div className="collection-form__style-grid">
+                {STYLE_OPTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={`collection-form__style-pill${
+                      style === s ? ' collection-form__style-pill--active' : ''
+                    }`}
+                    onClick={() => {
+                      setStyle(s)
+                      markDirty()
+                    }}
+                  >
+                    {STYLE_LABEL[s] ?? s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="studio-field">
+              <label className="studio-label" htmlFor={`collection-sort-${initial.id}`}>
+                Track order
+              </label>
+              <select
+                id={`collection-sort-${initial.id}`}
+                className="studio-input"
+                value={trackSortMode}
+                onChange={(e) => {
+                  setTrackSortMode(e.target.value)
+                  markDirty()
+                }}
+              >
+                {SORT_MODE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="studio-field">
+              <CoverImageUpload
+                currentUrl={coverUrl}
+                label="Cover image"
+                prepare={(args) => prepareCollectionCoverUpload(initial.slug, args)}
+                complete={(uploadKey) => completeCollectionCoverUpload(initial.slug, uploadKey)}
+                fromUrl={(sourceUrl) => fetchCollectionCoverFromUrl(initial.slug, sourceUrl)}
+                onUploaded={(url) => setCoverUrl(url)}
+              />
+            </div>
+
+            <fieldset className="collection-form__vis-fieldset">
+              <legend className="studio-label">Visibility</legend>
+              <div className="collection-form__vis-row">
+                <label className="collection-form__vis-option">
+                  <input
+                    type="radio"
+                    name={`vis-${initial.id}`}
+                    checked={isPublic}
+                    onChange={() => {
+                      setIsPublic(true)
+                      markDirty()
+                    }}
+                  />
+                  <span className="collection-form__vis-copy">
+                    <span className="collection-form__vis-label">Public</span>
+                    <span className="collection-form__vis-desc">Visible on your profile</span>
+                  </span>
+                </label>
+                <label className="collection-form__vis-option">
+                  <input
+                    type="radio"
+                    name={`vis-${initial.id}`}
+                    checked={!isPublic}
+                    onChange={() => {
+                      setIsPublic(false)
+                      markDirty()
+                    }}
+                  />
+                  <span className="collection-form__vis-copy">
+                    <span className="collection-form__vis-label">Draft</span>
+                    <span className="collection-form__vis-desc">Only you can see it</span>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
             <label className="collection-form__vis-option collection-form__featured-row">
               <input
                 type="checkbox"
-                checked={collaborative}
-                disabled={!isPublic}
+                checked={isFeatured}
                 onChange={(e) => {
-                  setCollaborative(e.target.checked)
+                  setIsFeatured(e.target.checked)
                   markDirty()
                 }}
               />
-              <span className="collection-form__vis-copy">
-                <span className="collection-form__vis-label">Collaborative playlist</span>
-                <span className="collection-form__vis-desc">
-                  {isPublic
-                    ? 'Any logged-in listener can add tracks from the Tahti catalog'
-                    : 'Only public playlists can be collaborative'}
+              <span className="collection-form__vis-label">Featured on profile</span>
+            </label>
+
+            {style === 'PLAYLIST' && (
+              <label className="collection-form__vis-option collection-form__featured-row">
+                <input
+                  type="checkbox"
+                  checked={collaborative}
+                  disabled={!isPublic}
+                  onChange={(e) => {
+                    setCollaborative(e.target.checked)
+                    markDirty()
+                  }}
+                />
+                <span className="collection-form__vis-copy">
+                  <span className="collection-form__vis-label">Collaborative playlist</span>
+                  <span className="collection-form__vis-desc">
+                    {isPublic
+                      ? 'Any logged-in listener can add tracks from the Tahti catalog'
+                      : 'Only public playlists can be collaborative'}
+                  </span>
                 </span>
-              </span>
-            </label>
-          )}
-
-          <div className="studio-field">
-            <label className="studio-label" htmlFor={`collection-desc-${initial.id}`}>
-              Description
-            </label>
-            <textarea
-              id={`collection-desc-${initial.id}`}
-              className="studio-input collection-form__textarea"
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value)
-                markDirty()
-              }}
-              maxLength={1000}
-              rows={4}
-            />
-          </div>
-
-          {settingsError && <p className="studio-text-error studio-text-sm">{settingsError}</p>}
-
-          {settingsDirty && (
-            <Button
-              onClick={() => void saveSettings()}
-              disabled={settingsSaving || isPending}
-              variant="primary"
-            >
-              <ButtonIcon name="save" />
-              {settingsSaving ? 'Saving…' : 'Save settings'}
-            </Button>
-          )}
-          {settingsSaved && !settingsDirty && (
-            <span className="collection-editor__saved">Saved</span>
-          )}
-
-          {/* Danger zone */}
-          <div className="collection-editor__danger">
-            <h3 className="collection-editor__danger-title">Danger zone</h3>
-            {!confirmDelete ? (
-              <Button
-                onClick={() => setConfirmDelete(true)}
-                variant="ghost"
-                size="sm"
-                className="collection-editor__delete-btn"
-              >
-                Delete collection
-              </Button>
-            ) : (
-              <div className="collection-editor__confirm-delete">
-                <p>Delete &ldquo;{initial.name}&rdquo;? This removes it from all smart links.</p>
-                <div className="collection-editor__confirm-btns">
-                  <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => void handleDelete()}
-                    disabled={deleting}
-                    variant="primary"
-                    className="collection-editor__delete-confirm"
-                  >
-                    <ButtonIcon name="trash" />
-                    {deleting ? 'Deleting…' : 'Yes, delete'}
-                  </Button>
-                </div>
-              </div>
+              </label>
             )}
-          </div>
-        </aside>
+
+            <div className="studio-field">
+              <label className="studio-label" htmlFor={`collection-desc-${initial.id}`}>
+                Description
+              </label>
+              <textarea
+                id={`collection-desc-${initial.id}`}
+                className="studio-input collection-form__textarea"
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value)
+                  markDirty()
+                }}
+                maxLength={1000}
+                rows={4}
+              />
+            </div>
+
+            {settingsError && <p className="studio-text-error studio-text-sm">{settingsError}</p>}
+
+            {settingsDirty && (
+              <Button
+                onClick={() => void saveSettings()}
+                disabled={settingsSaving || isPending}
+                variant="primary"
+              >
+                <ButtonIcon name="save" />
+                {settingsSaving ? 'Saving…' : 'Save settings'}
+              </Button>
+            )}
+            {settingsSaved && !settingsDirty && (
+              <span className="collection-editor__saved">Saved</span>
+            )}
+
+            {/* Danger zone */}
+            <div className="collection-editor__danger">
+              <h3 className="collection-editor__danger-title">Danger zone</h3>
+              {!confirmDelete ? (
+                <Button
+                  onClick={() => setConfirmDelete(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="collection-editor__delete-btn"
+                >
+                  Delete collection
+                </Button>
+              ) : (
+                <div className="collection-editor__confirm-delete">
+                  <p>Delete &ldquo;{initial.name}&rdquo;? This removes it from all smart links.</p>
+                  <div className="collection-editor__confirm-btns">
+                    <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => void handleDelete()}
+                      disabled={deleting}
+                      variant="primary"
+                      className="collection-editor__delete-confirm"
+                    >
+                      <ButtonIcon name="trash" />
+                      {deleting ? 'Deleting…' : 'Yes, delete'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
         )}
 
         {/* ── Right: tracklist ── */}
@@ -794,63 +796,63 @@ export function CollectionEditor({
               <span className="collection-editor__count">{items.length}</span>
             </h2>
             {mode === 'edit' && (
-            <div className="collection-editor__add-buttons">
-              <Button onClick={() => setLibraryPickerOpen((v) => !v)} variant="ghost" size="sm">
-                + Tahti library
-              </Button>
-              <Button
-                onClick={() => setSpotifyModalOpen(true)}
-                variant="ghost"
-                size="sm"
-                className="collection-editor__add-btn--spotify"
-                disabled={!isProviderReady('spotify')}
-                title={
-                  isProviderReady('spotify')
-                    ? undefined
-                    : 'Install the Spotify integration in Settings → Integrations first'
-                }
-              >
-                + Spotify
-              </Button>
-              <Button
-                onClick={() => setMixcloudModalOpen(true)}
-                variant="ghost"
-                size="sm"
-                className="collection-editor__add-btn--mixcloud"
-                disabled={!isProviderReady('mixcloud-import')}
-                title={
-                  isProviderReady('mixcloud-import')
-                    ? undefined
-                    : 'Install the Mixcloud integration in Settings → Integrations first'
-                }
-              >
-                + Mixcloud
-              </Button>
-              <Button
-                onClick={() => setHearthisModalOpen(true)}
-                variant="ghost"
-                size="sm"
-                className="collection-editor__add-btn--hearthis"
-                disabled={!isProviderReady('hearthis-import')}
-                title={
-                  isProviderReady('hearthis-import')
-                    ? undefined
-                    : 'Install the hearthis.at integration in Settings → Integrations first'
-                }
-              >
-                + hearthis.at
-              </Button>
-            </div>
+              <div className="collection-editor__add-buttons">
+                <Button onClick={() => setLibraryPickerOpen((v) => !v)} variant="ghost" size="sm">
+                  + Tahti library
+                </Button>
+                <Button
+                  onClick={() => setSpotifyModalOpen(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="collection-editor__add-btn--spotify"
+                  disabled={!isProviderReady('spotify')}
+                  title={
+                    isProviderReady('spotify')
+                      ? undefined
+                      : 'Install the Spotify integration in Settings → Integrations first'
+                  }
+                >
+                  + Spotify
+                </Button>
+                <Button
+                  onClick={() => setMixcloudModalOpen(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="collection-editor__add-btn--mixcloud"
+                  disabled={!isProviderReady('mixcloud-import')}
+                  title={
+                    isProviderReady('mixcloud-import')
+                      ? undefined
+                      : 'Install the Mixcloud integration in Settings → Integrations first'
+                  }
+                >
+                  + Mixcloud
+                </Button>
+                <Button
+                  onClick={() => setHearthisModalOpen(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="collection-editor__add-btn--hearthis"
+                  disabled={!isProviderReady('hearthis-import')}
+                  title={
+                    isProviderReady('hearthis-import')
+                      ? undefined
+                      : 'Install the hearthis.at integration in Settings → Integrations first'
+                  }
+                >
+                  + hearthis.at
+                </Button>
+              </div>
             )}
             {mode === 'edit' &&
               (!isProviderReady('spotify') ||
-              !isProviderReady('mixcloud-import') ||
-              !isProviderReady('hearthis-import')) && (
-              <p className="studio-text-muted-sm studio-mt-xs">
-                Some import sources need installing first —{' '}
-                <Link href="/dashboard/settings/integrations">Settings → Integrations</Link>.
-              </p>
-            )}
+                !isProviderReady('mixcloud-import') ||
+                !isProviderReady('hearthis-import')) && (
+                <p className="studio-text-muted-sm studio-mt-xs">
+                  Some import sources need installing first —{' '}
+                  <Link href="/dashboard/settings/integrations">Settings → Integrations</Link>.
+                </p>
+              )}
           </div>
 
           {mode === 'edit' && libraryPickerOpen ? (

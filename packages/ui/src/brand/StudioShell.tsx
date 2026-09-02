@@ -74,7 +74,9 @@ export function StudioShell({
         logoutAction={logoutAction}
       />
       <StudioLayoutContext.Provider value={{ sidebarCollapsed, setSidebarCollapsed }}>
-        <div className={`db-layout shell-app${sidebarCollapsed ? ' db-layout--sidebar-collapsed' : ''}`}>
+        <div
+          className={`db-layout shell-app${sidebarCollapsed ? ' db-layout--sidebar-collapsed' : ''}`}
+        >
           <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />
           <main className="db-main shell-app__content">{children}</main>
         </div>

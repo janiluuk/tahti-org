@@ -407,7 +407,13 @@ export function VisualPresetPicker({
             setGalleryOpen(true)
           }}
         >
-          <PresetThumb preset={value} scheme={scheme} live={showPreview} settings={stageSettings} size="lg" />
+          <PresetThumb
+            preset={value}
+            scheme={scheme}
+            live={showPreview}
+            settings={stageSettings}
+            size="lg"
+          />
           <span className="visual-preset-picker__stage-name">
             <GalleryIcon />
             {VISUAL_PRESET_LABELS[value]}

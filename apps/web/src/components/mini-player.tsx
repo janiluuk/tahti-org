@@ -255,7 +255,11 @@ function EmbedPlayerModal({
             ×
           </button>
         </header>
-        <HearthisEmbedSurface embedUri={track.embed.embedUri} title={track.title} autoplay={playing} />
+        <HearthisEmbedSurface
+          embedUri={track.embed.embedUri}
+          title={track.title}
+          autoplay={playing}
+        />
       </div>
     </div>
   )

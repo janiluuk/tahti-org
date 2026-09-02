@@ -21,7 +21,12 @@ interface Props {
 
 /** Header banner style tile picker — split out of ChannelVisualPresetPanel so it can live in the
  * Header & backdrop designer section instead, next to the backdrop media it actually controls. */
-export function ChannelHeaderStylePanel({ tier, hasVideoBackground, initial, onDraftChange }: Props) {
+export function ChannelHeaderStylePanel({
+  tier,
+  hasVideoBackground,
+  initial,
+  onDraftChange,
+}: Props) {
   const [headerStyle, setHeaderStyle] = useState<ChannelHeaderStyle>(initial.headerStyle)
   const canUseVideoLoop = tier !== 'FREE'
 

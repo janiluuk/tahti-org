@@ -146,8 +146,8 @@ export function PressKitBuilder({
         <div className="studio-empty-card">
           <p className="studio-empty-card__text">Your press kit is empty.</p>
           <p className="studio-empty-card__hint">
-            Add a bio in the <Link href="/dashboard/settings/artist-info#story">Story</Link> tab
-            and at least one photo below to build a downloadable press kit.
+            Add a bio in the <Link href="/dashboard/settings/artist-info#story">Story</Link> tab and
+            at least one photo below to build a downloadable press kit.
           </p>
         </div>
       )}

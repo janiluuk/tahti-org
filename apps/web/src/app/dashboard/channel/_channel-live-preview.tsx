@@ -225,18 +225,18 @@ export function ChannelLivePreview({
             <div {...slideshowRegion} className={slideshowRegion.className}>
               {draft.gallery.galleryMode === 'STATIC_SLIDESHOW' &&
               draft.gallery.slideshowImages.length > 0 ? (
-              <ChannelSlideshow
-                images={draft.gallery.slideshowImages}
-                preset={draft.visual.slideshowPreset}
-                intervalSeconds={draft.visual.slideshowIntervalSeconds}
-                transitionMs={draft.visual.slideshowTransitionMs}
-                autoplay={draft.visual.slideshowAutoplay}
-              />
-            ) : (
-              <ChannelGalleryView
-                mode={draft.gallery.galleryMode}
-                images={draft.gallery.slideshowImages}
-              />
+                <ChannelSlideshow
+                  images={draft.gallery.slideshowImages}
+                  preset={draft.visual.slideshowPreset}
+                  intervalSeconds={draft.visual.slideshowIntervalSeconds}
+                  transitionMs={draft.visual.slideshowTransitionMs}
+                  autoplay={draft.visual.slideshowAutoplay}
+                />
+              ) : (
+                <ChannelGalleryView
+                  mode={draft.gallery.galleryMode}
+                  images={draft.gallery.slideshowImages}
+                />
               )}
             </div>
           )}
