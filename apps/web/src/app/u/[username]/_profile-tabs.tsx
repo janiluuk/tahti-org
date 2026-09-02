@@ -8,13 +8,7 @@ import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { ProfileTabSwitchProvider } from './_profile-tab-context'
 
 export type ProfileTabId =
-  | 'music'
-  | 'releases'
-  | 'djsets'
-  | 'playlists'
-  | 'collections'
-  | 'tracks'
-  | 'gallery'
+  'music' | 'releases' | 'djsets' | 'playlists' | 'collections' | 'tracks' | 'gallery'
 
 export type ProfileTabSection = {
   id: ProfileTabId

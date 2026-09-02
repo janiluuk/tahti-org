@@ -401,11 +401,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       dangerouslySetInnerHTML={{ __html: bioHtml }}
                     />
                   ) : channel.user.bio ? (
-                    <SafePlainText
-                      text={channel.user.bio}
-                      className="ch-artist-bio"
-                      linkMentions
-                    />
+                    <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
                   ) : null}
                   <div className="ch-artist-cta-row">
                     {user?.username !== channel.user.username && (
@@ -641,11 +637,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <div className="ch-archive-section-head">
                           <h2 className="ch-section-label">All tracks</h2>
                         </div>
-                        <TracksTab
-                          tracks={allTracks}
-                          isOwner={isOwnerOrAdmin}
-                          channelSlug={slug}
-                        />
+                        <TracksTab tracks={allTracks} isOwner={isOwnerOrAdmin} channelSlug={slug} />
                       </section>
                     )}
                   </>
