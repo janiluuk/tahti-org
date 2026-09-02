@@ -25,6 +25,8 @@ interface LibraryBrowserProps<T> {
   emptyMessage?: string
   noMatchMessage?: string
   showStatusFilters?: boolean
+  /** Extra control rendered in the toolbar's right-hand cluster, before sort/search. */
+  toolbarExtra?: ReactNode
   children: (visible: T[]) => ReactNode
 }
 
@@ -73,6 +75,7 @@ export function LibraryBrowser<T>({
   emptyMessage = 'Nothing in your library yet.',
   noMatchMessage = 'No library items match.',
   showStatusFilters = Boolean(getStatus),
+  toolbarExtra,
   children,
 }: LibraryBrowserProps<T>) {
   const [search, setSearch] = useState('')
@@ -131,6 +134,7 @@ export function LibraryBrowser<T>({
           </div>
         ) : null}
         <div className="archive-list__toolbar-right">
+          {toolbarExtra}
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as LibrarySort)}

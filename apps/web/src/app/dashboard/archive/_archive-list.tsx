@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { resolveColorScheme } from '@tahti/shared'
+import { StudioSwitch } from '@tahti/ui'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
 
@@ -73,10 +74,10 @@ export function ArchiveList({
    * way to hide embeds since they're either not embeds or nothing but. */
   showEmbedFilter?: boolean
 }) {
-  const [hideEmbeds, setHideEmbeds] = useState(false)
+  const [showEmbeds, setShowEmbeds] = useState(true)
   const baseItems = useMemo(
-    () => (hideEmbeds ? items.filter((item) => !item.embedUri) : items),
-    [items, hideEmbeds],
+    () => (showEmbeds ? items : items.filter((item) => !item.embedUri)),
+    [items, showEmbeds],
   )
   const embedCount = useMemo(() => items.filter((item) => item.embedUri).length, [items])
 
@@ -91,6 +92,14 @@ export function ArchiveList({
       getStatus={itemFilter}
       searchPlaceholder="Search archive…"
       noMatchMessage="No recordings match."
+      toolbarExtra={
+        showEmbedFilter && embedCount > 0 ? (
+          <label className="archive-list__embed-filter">
+            <StudioSwitch checked={showEmbeds} onChange={setShowEmbeds} label="Show embeds" />
+            Show embeds
+          </label>
+        ) : undefined
+      }
     >
       {(visible) => {
         const queue: PlayerTrack[] = visible
@@ -112,16 +121,6 @@ export function ArchiveList({
           }))
         return (
           <>
-            {showEmbedFilter && embedCount > 0 && (
-              <label className="archive-list__embed-filter">
-                <input
-                  type="checkbox"
-                  checked={hideEmbeds}
-                  onChange={(e) => setHideEmbeds(e.target.checked)}
-                />
-                Hide embeds — show only my own tracks
-              </label>
-            )}
             <ul className="studio-list studio-mt-sm">
               {visible.map((item) => {
                 const play = playable.find((a) => a.id === item.id)

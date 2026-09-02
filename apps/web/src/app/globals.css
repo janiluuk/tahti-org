@@ -1208,6 +1208,91 @@ body:has(.mini-player) {
   padding-bottom: 56px;
 }
 
+/* ── Embed player modal (hearthis.at tracks — see EmbedPlayerModal) ──────── */
+.embed-player-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.72);
+  animation: embed-player-modal-fade-in 0.2s ease;
+}
+
+.embed-player-modal-overlay--closing {
+  animation: embed-player-modal-fade-out 0.2s ease forwards;
+}
+
+@keyframes embed-player-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes embed-player-modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.embed-player-modal {
+  width: min(480px, 100%);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-modal, 0 40px 120px rgba(0, 0, 0, 0.8));
+  overflow: hidden;
+}
+
+.embed-player-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.embed-player-modal__title {
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.embed-player-modal__close {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.embed-player-modal__close:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+}
+
+.embed-player-modal .player-embed-surface {
+  margin: var(--space-4);
+  width: calc(100% - 2 * var(--space-4));
+}
+
 /* ── Full-screen "now playing" sheet ─────────────────────────────────── */
 .full-player {
   position: fixed;

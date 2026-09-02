@@ -1304,6 +1304,19 @@
   margin-bottom: 0.25rem;
 }
 
+/* Visually hidden, still readable by screen readers — e.g. a control's only accessible name. */
+[data-tahti-ui='studio'] .studio-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Typography */
 [data-tahti-ui='studio'] .studio-help {
   margin: 0 0 1rem;
@@ -2426,7 +2439,7 @@
 
 [data-tahti-ui='studio'] .archive-list__row {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.65rem;
   padding: 0.85rem;
   margin-bottom: 0.65rem;
@@ -2441,8 +2454,8 @@
 
 [data-tahti-ui='studio'] .archive-list__cover {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  align-self: stretch;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
@@ -2553,9 +2566,10 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-shrink: 0;
   font-size: var(--text-sm);
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -2726,8 +2740,9 @@
 }
 
 [data-tahti-ui='studio'] .music-album-row__cover {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  min-height: 56px;
+  align-self: stretch;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
@@ -6824,7 +6839,7 @@
   background: var(--card2);
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch {
+[data-tahti-ui='studio'] .studio-switch {
   position: relative;
   flex: 0 0 auto;
   width: 48px;
@@ -6839,12 +6854,12 @@
     border-color 0.16s ease;
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch[aria-checked='true'] {
+[data-tahti-ui='studio'] .studio-switch[aria-checked='true'] {
   border-color: var(--cyan);
   background: var(--cyan);
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch__thumb {
+[data-tahti-ui='studio'] .studio-switch__thumb {
   display: block;
   width: 20px;
   height: 20px;
@@ -6855,8 +6870,8 @@
 }
 
 [data-tahti-ui='studio']
-  .channel-visualizer-switch[aria-checked='true']
-  .channel-visualizer-switch__thumb {
+  .studio-switch[aria-checked='true']
+  .studio-switch__thumb {
   transform: translateX(21px);
 }
 

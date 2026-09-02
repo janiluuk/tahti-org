@@ -19,7 +19,7 @@ import {
   type ColorScheme,
   type VisualSettingsMap,
 } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { Panel, StudioSwitch } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 
 interface Props {
@@ -195,18 +195,11 @@ export default function ChannelVisualPresetPanel({
             <span className="studio-label">Background visualizer</span>
             <p className="studio-help">Add an animated, audio-reactive backdrop to your channel.</p>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={preset !== 'MINIMAL'}
-            className="channel-visualizer-switch"
-            onClick={() => setVisualizerEnabled(preset === 'MINIMAL')}
-          >
-            <span className="channel-visualizer-switch__thumb" aria-hidden />
-            <span className="studio-sr-only">
-              {preset === 'MINIMAL' ? 'Enable visualizer' : 'Disable visualizer'}
-            </span>
-          </button>
+          <StudioSwitch
+            checked={preset !== 'MINIMAL'}
+            onChange={(enabled) => setVisualizerEnabled(enabled)}
+            label={preset === 'MINIMAL' ? 'Enable visualizer' : 'Disable visualizer'}
+          />
         </div>
         {preset !== 'MINIMAL' ? (
           <div className="channel-visualizer-selection studio-mt-sm">
