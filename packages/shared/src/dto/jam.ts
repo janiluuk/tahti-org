@@ -21,14 +21,21 @@ export const JamParticipantViewSchema = z.object({
 })
 export type JamParticipantView = z.infer<typeof JamParticipantViewSchema>
 
-/** A lightweight snapshot of the currently-playing track — the host already
- * has the full track in hand, so it sends just enough for a guest to render
- * "now playing" without a second lookup. */
+/** A snapshot of the currently-playing track — the host already has the
+ * full track in hand, so it sends enough for a guest to both render "now
+ * playing" AND actually stream the same audio in sync, without a second
+ * lookup. streamUrl/protocol are null for embed-only tracks (e.g. a
+ * Mixcloud/Hearthis embed) — guests see "now playing" for those but can't
+ * auto-play them, same as everywhere else embeds show up in the app. */
 export const JamTrackSchema = z.object({
   id: z.string(),
   title: z.string(),
   artistName: z.string(),
   coverUrl: z.string().nullable(),
+  streamUrl: z.string().nullable(),
+  protocol: z.enum(['hls', 'https']).nullable(),
+  channelSlug: z.string().nullable(),
+  durationSec: z.number().nullable(),
 })
 export type JamTrack = z.infer<typeof JamTrackSchema>
 

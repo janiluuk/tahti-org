@@ -171,7 +171,16 @@ describe('Tahti Jam', () => {
     })
     expect(guestPush.statusCode).toBe(403)
 
-    const track = { id: 'track-1', title: 'Test Track', artistName: 'Test Artist', coverUrl: null }
+    const track = {
+      id: 'track-1',
+      title: 'Test Track',
+      artistName: 'Test Artist',
+      coverUrl: null,
+      streamUrl: 'https://cdn.example.com/track-1.mp3',
+      protocol: 'https' as const,
+      channelSlug: 'test-channel',
+      durationSec: 210,
+    }
     const hostPush = await app.inject({
       method: 'POST',
       url: `/api/v1/jam/${sessionId}/state`,

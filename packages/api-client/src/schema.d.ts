@@ -1384,6 +1384,11 @@ export interface paths {
                 title: string
                 artistName: string
                 coverUrl: string | null
+                streamUrl: string | null
+                /** @enum {string|null} */
+                protocol: 'hls' | 'https' | null
+                channelSlug: string | null
+                durationSec: number | null
               } | null
               positionSec: number
               /** Format: date-time */
@@ -1485,6 +1490,11 @@ export interface paths {
                 title: string
                 artistName: string
                 coverUrl: string | null
+                streamUrl: string | null
+                /** @enum {string|null} */
+                protocol: 'hls' | 'https' | null
+                channelSlug: string | null
+                durationSec: number | null
               } | null
               positionSec: number
               /** Format: date-time */
