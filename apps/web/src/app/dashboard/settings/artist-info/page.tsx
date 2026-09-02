@@ -2,11 +2,23 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
-import type { ArtistKind } from '@tahti/shared'
+import type { ArtistKind, PressKitImageItem } from '@tahti/shared'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { fetchChannelEditorData } from '../../channel/_channel-editor-data'
 import { ArtistInfoForm } from './_artist-info-form'
 import { fetchMyMembers } from '../members/actions'
+
+async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
+  try {
+    const response = await fetch(`${apiUrl}${path}`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    })
+    return response.ok ? ((await response.json()) as T) : null
+  } catch {
+    return null
+  }
+}
 
 export default async function ArtistInfoSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -34,10 +46,22 @@ export default async function ArtistInfoSettingsPage() {
     },
     members,
     artistKind,
+    pressKitImages,
+    gallerySettings,
   ] = await Promise.all([
     fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug),
     fetchMyMembers(),
     fetchArtistKind(apiUrl, sessionValue),
+    apiFetch<PressKitImageItem[]>(
+      apiUrl,
+      `tahti_session=${sessionValue}`,
+      '/api/me/press-kit/images',
+    ),
+    apiFetch<{ pressKitGalleryPublic: boolean }>(
+      apiUrl,
+      `tahti_session=${sessionValue}`,
+      '/api/me/press-kit/gallery-settings',
+    ),
   ])
 
   return (
@@ -75,6 +99,12 @@ export default async function ArtistInfoSettingsPage() {
           links,
           streamingLinks,
           artistKind,
+          pressKit: {
+            images: pressKitImages ?? [],
+            galleryPublic: gallerySettings?.pressKitGalleryPublic ?? false,
+            username: user.username,
+            apiUrl,
+          },
         }}
         initialMembers={members}
       />

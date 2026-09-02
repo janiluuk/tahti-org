@@ -96,6 +96,11 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   }, [pathname])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
+  // The channel editor drives its own focused-section nav (designer* keys, see
+  // _designer-sections.ts) off the same hash-sync mechanism StudioTabs uses on /dashboard —
+  // both need `hashSectionsActive` gating active-state and hash-link clicks here.
+  const onDesigner = pathname === '/dashboard/channel/edit'
+  const hashSectionsActive = onDashboard || onDesigner
   const navItems = hasChannel
     ? DASHBOARD_NAV.filter(
         (item) => (!item.adminOnly || isBoard) && (!item.requiresChannel || hasChannel),
@@ -112,7 +117,9 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
     return { primary: primaryItems, secondary: secondaryItems }
   }, [navItems])
 
-  const secondaryOpen = secondary.some((item) => isItemActive(pathname, hash, onDashboard, item))
+  const secondaryOpen = secondary.some((item) =>
+    isItemActive(pathname, hash, hashSectionsActive, item),
+  )
 
   const activePrimary =
     DASHBOARD_PRIMARY_NAV.find((item) => {
@@ -123,7 +130,7 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   const submenu = activePrimary ? (DASHBOARD_SUBMENUS[activePrimary.href] ?? []) : []
 
   function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) {
-    if (!itemHash || !onDashboard) return
+    if (!itemHash || !hashSectionsActive) return
     e.preventDefault()
     navigateDashboardHash(itemHash)
   }
@@ -151,7 +158,7 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
                 items={submenu}
                 pathname={pathname}
                 hash={hash}
-                onDashboard={onDashboard}
+                onDashboard={hashSectionsActive}
                 onHashNavClick={onHashNavClick}
               />
             </div>
@@ -161,7 +168,7 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
             items={primary}
             pathname={pathname}
             hash={hash}
-            onDashboard={onDashboard}
+            onDashboard={hashSectionsActive}
             onHashNavClick={onHashNavClick}
           />
         )}
@@ -172,7 +179,7 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
               items={secondary}
               pathname={pathname}
               hash={hash}
-              onDashboard={onDashboard}
+              onDashboard={hashSectionsActive}
               onHashNavClick={onHashNavClick}
             />
           </details>

@@ -19,7 +19,7 @@ import {
   type ColorScheme,
   type VisualSettingsMap,
 } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { Panel, StudioSwitch } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 
 interface Props {
@@ -69,8 +69,14 @@ export default function ChannelVisualPresetPanel({
   hasVideoBackground,
   initial,
   bare = false,
+  hideHeaderStyle = false,
   onDraftChange,
-}: Props & { bare?: boolean; onDraftChange?: (draft: ChannelVisualDraft) => void }) {
+}: Props & {
+  bare?: boolean
+  /** Header style now lives in the Header & backdrop section (ChannelHeaderStylePanel) — hide it here. */
+  hideHeaderStyle?: boolean
+  onDraftChange?: (draft: ChannelVisualDraft) => void
+}) {
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const lastEnabledPreset = useRef<VisualPreset>(
     initial.visualPreset === 'MINIMAL' ? 'REACTIVE_GRID' : initial.visualPreset,
@@ -154,32 +160,34 @@ export default function ChannelVisualPresetPanel({
         </div>
       </div>
 
-      <div className="studio-field--block">
-        <span className="studio-label">Header style</span>
-        <div className="channel-header-style-tiles">
-          {CHANNEL_HEADER_STYLES.map((style) => {
-            const locked = style === 'VIDEO_LOOP' && !canUseVideoLoop
-            return (
-              <button
-                key={style}
-                type="button"
-                disabled={locked}
-                className={`channel-header-style-tile${headerStyle === style ? ' channel-header-style-tile--active' : ''}`}
-                aria-pressed={headerStyle === style}
-                onClick={() => selectHeaderStyle(style)}
-              >
-                {CHANNEL_HEADER_STYLE_LABELS[style]}
-                {locked ? <span className="channel-header-style-tile__badge">paid</span> : null}
-              </button>
-            )
-          })}
+      {!hideHeaderStyle ? (
+        <div className="studio-field--block">
+          <span className="studio-label">Header style</span>
+          <div className="channel-header-style-tiles">
+            {CHANNEL_HEADER_STYLES.map((style) => {
+              const locked = style === 'VIDEO_LOOP' && !canUseVideoLoop
+              return (
+                <button
+                  key={style}
+                  type="button"
+                  disabled={locked}
+                  className={`channel-header-style-tile${headerStyle === style ? ' channel-header-style-tile--active' : ''}`}
+                  aria-pressed={headerStyle === style}
+                  onClick={() => selectHeaderStyle(style)}
+                >
+                  {CHANNEL_HEADER_STYLE_LABELS[style]}
+                  {locked ? <span className="channel-header-style-tile__badge">paid</span> : null}
+                </button>
+              )
+            })}
+          </div>
+          {headerStyle === 'VIDEO_LOOP' && !hasVideoBackground ? (
+            <p className="studio-text-muted-sm studio-mt-sm">
+              Add the video URL in Header &amp; backdrop.
+            </p>
+          ) : null}
         </div>
-        {headerStyle === 'VIDEO_LOOP' && !hasVideoBackground ? (
-          <p className="studio-text-muted-sm studio-mt-sm">
-            Add the video URL in Background media below.
-          </p>
-        ) : null}
-      </div>
+      ) : null}
 
       <div className="studio-field--block">
         <div className="channel-visualizer-toggle-row">
@@ -187,18 +195,11 @@ export default function ChannelVisualPresetPanel({
             <span className="studio-label">Background visualizer</span>
             <p className="studio-help">Add an animated, audio-reactive backdrop to your channel.</p>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={preset !== 'MINIMAL'}
-            className="channel-visualizer-switch"
-            onClick={() => setVisualizerEnabled(preset === 'MINIMAL')}
-          >
-            <span className="channel-visualizer-switch__thumb" aria-hidden />
-            <span className="studio-sr-only">
-              {preset === 'MINIMAL' ? 'Enable visualizer' : 'Disable visualizer'}
-            </span>
-          </button>
+          <StudioSwitch
+            checked={preset !== 'MINIMAL'}
+            onChange={(enabled) => setVisualizerEnabled(enabled)}
+            label={preset === 'MINIMAL' ? 'Enable visualizer' : 'Disable visualizer'}
+          />
         </div>
         {preset !== 'MINIMAL' ? (
           <div className="channel-visualizer-selection studio-mt-sm">
@@ -217,7 +218,7 @@ export default function ChannelVisualPresetPanel({
               }}
             />
             <p className="studio-help studio-mt-xs">
-              Quick picks above — open Presets for full-size previews and per-visualizer settings.
+              Click the visualizer to browse all presets, or use the gear icon for quick settings.
             </p>
           </div>
         ) : null}

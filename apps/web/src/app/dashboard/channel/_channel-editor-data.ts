@@ -50,7 +50,7 @@ export type ChannelEditorFetchResult = {
   chatEnabled: boolean
   defaultLocation: string | null
   genres: string[]
-  links: Array<{ label: string; url: string }>
+  links: Array<{ id: string; label: string; url: string }>
   streamingLinks: {
     youtube: string
     hearthisAt: string
@@ -91,7 +91,7 @@ export async function fetchChannelEditorData(
   let chatEnabled = true
   let defaultLocation: string | null = null
   let genres: string[] = []
-  let links: Array<{ label: string; url: string }> = []
+  let links: Array<{ id: string; label: string; url: string }> = []
   let streamingLinks: ChannelEditorFetchResult['streamingLinks'] = {
     youtube: '',
     hearthisAt: '',
@@ -161,7 +161,7 @@ export async function fetchChannelEditorData(
           ([key, url]) =>
             key !== 'genres' && !(STREAMING_LINK_KEYS as readonly string[]).includes(key) && url,
         )
-        .map(([label, url]) => ({ label, url }))
+        .map(([label, url]) => ({ id: label, label, url }))
       streamingLinks = {
         youtube: socialLinks.youtube ?? '',
         hearthisAt: socialLinks.hearthisAt ?? '',

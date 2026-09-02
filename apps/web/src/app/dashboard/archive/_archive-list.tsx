@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { resolveColorScheme } from '@tahti/shared'
+import { randomCoverGradient, StudioSwitch } from '@tahti/ui'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
 
@@ -73,12 +74,18 @@ export function ArchiveList({
    * way to hide embeds since they're either not embeds or nothing but. */
   showEmbedFilter?: boolean
 }) {
-  const [hideEmbeds, setHideEmbeds] = useState(false)
+  const [showEmbeds, setShowEmbeds] = useState(true)
   const baseItems = useMemo(
-    () => (hideEmbeds ? items.filter((item) => !item.embedUri) : items),
-    [items, hideEmbeds],
+    () => (showEmbeds ? items : items.filter((item) => !item.embedUri)),
+    [items, showEmbeds],
   )
   const embedCount = useMemo(() => items.filter((item) => item.embedUri).length, [items])
+  // Assigned once per item (not per render) so a row's placeholder cover doesn't
+  // change every time something else on the page re-renders it.
+  const placeholderGradients = useMemo(
+    () => new Map(items.map((item) => [item.id, randomCoverGradient()])),
+    [items],
+  )
 
   // Shared play queue, in display order — lets playback auto-advance to the
   // next track on 'ended' instead of just stopping, same as public listings.
@@ -91,6 +98,14 @@ export function ArchiveList({
       getStatus={itemFilter}
       searchPlaceholder="Search archive…"
       noMatchMessage="No recordings match."
+      toolbarExtra={
+        showEmbedFilter && embedCount > 0 ? (
+          <label className="archive-list__embed-filter">
+            <StudioSwitch checked={showEmbeds} onChange={setShowEmbeds} label="Show embeds" />
+            Show embeds
+          </label>
+        ) : undefined
+      }
     >
       {(visible) => {
         const queue: PlayerTrack[] = visible
@@ -112,16 +127,6 @@ export function ArchiveList({
           }))
         return (
           <>
-            {showEmbedFilter && embedCount > 0 && (
-              <label className="archive-list__embed-filter">
-                <input
-                  type="checkbox"
-                  checked={hideEmbeds}
-                  onChange={(e) => setHideEmbeds(e.target.checked)}
-                />
-                Hide embeds — show only my own tracks
-              </label>
-            )}
             <ul className="studio-list studio-mt-sm">
               {visible.map((item) => {
                 const play = playable.find((a) => a.id === item.id)
@@ -144,8 +149,7 @@ export function ArchiveList({
                         <img src={cover} alt="" />
                       ) : (
                         <div
-                          className="archive-list__cover-ph"
-                          style={{ background: scheme.accent }}
+                          className={`archive-list__cover-ph cover-gradient--${placeholderGradients.get(item.id) ?? 'aurora'}`}
                           aria-hidden
                         />
                       )}

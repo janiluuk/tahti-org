@@ -601,6 +601,25 @@
   min-height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
 }
 
+/* Full-screen editor surfaces (Channel Designer, Audio editor) collapse the sidebar to an
+   icon rail via useAutoCollapseSidebar() — restored to its prior state on unmount. */
+[data-tahti-ui='studio'] .db-layout.db-layout--sidebar-collapsed,
+[data-tahti-ui='studio'] .shell-app.db-layout--sidebar-collapsed {
+  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+}
+
+[data-tahti-ui='studio'] .db-layout--sidebar-collapsed .db-sidebar .db-nav-item__label,
+[data-tahti-ui='studio'] .db-layout--sidebar-collapsed .db-sidebar .db-nav-group-label,
+[data-tahti-ui='studio'] .db-layout--sidebar-collapsed .db-sidebar .db-nav-submenu,
+[data-tahti-ui='studio'] .db-layout--sidebar-collapsed .db-sidebar .db-nav-more {
+  display: none;
+}
+
+[data-tahti-ui='studio'] .db-layout--sidebar-collapsed .db-nav-item {
+  justify-content: center;
+  padding: 9px 0;
+}
+
 [data-tahti-ui='studio'] .db-sidebar {
   background: var(--bg);
   padding: 16px 0 24px;
@@ -1283,6 +1302,19 @@
 [data-tahti-ui='studio'] .studio-my-xs {
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
+}
+
+/* Visually hidden, still readable by screen readers — e.g. a control's only accessible name. */
+[data-tahti-ui='studio'] .studio-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Typography */
@@ -2407,7 +2439,7 @@
 
 [data-tahti-ui='studio'] .archive-list__row {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.65rem;
   padding: 0.85rem;
   margin-bottom: 0.65rem;
@@ -2422,8 +2454,8 @@
 
 [data-tahti-ui='studio'] .archive-list__cover {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  align-self: stretch;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
@@ -2440,6 +2472,28 @@
 [data-tahti-ui='studio'] .archive-list__cover-ph {
   width: 100%;
   height: 100%;
+}
+
+/* Named placeholder-cover presets (see packages/ui/src/lib/cover-gradient.ts) — a release or
+ * track with no uploaded artwork gets one of these instead of a blank/empty cover. */
+[data-tahti-ui='studio'] .cover-gradient--aurora {
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--coral {
+  background: linear-gradient(135deg, #ff6b6b, var(--amber));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--deep {
+  background: linear-gradient(135deg, #1e2a4a, var(--purple));
+}
+
+[data-tahti-ui='studio'] .cover-gradient--amber {
+  background: linear-gradient(135deg, var(--amber), #ff8a3d);
+}
+
+[data-tahti-ui='studio'] .cover-gradient--violet {
+  background: linear-gradient(135deg, var(--purple), #f472b6);
 }
 
 [data-tahti-ui='studio'] .archive-list__cover-embed-badge {
@@ -2534,9 +2588,10 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-shrink: 0;
   font-size: var(--text-sm);
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -2707,17 +2762,15 @@
 }
 
 [data-tahti-ui='studio'] .music-album-row__cover {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  min-height: 56px;
+  align-self: stretch;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid var(--border);
 }
 
-[data-tahti-ui='studio'] .music-album-row__cover--ph {
-  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
-}
 
 [data-tahti-ui='studio'] .music-album-tracklist {
   list-style: decimal;
@@ -3481,9 +3534,11 @@
     left: 0;
     right: 0;
     z-index: 40;
+    min-height: var(--mobile-nav-h);
     background: var(--card);
     border-top: 1px solid var(--border);
     padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
   }
 
   [data-tahti-ui='studio'] .db-mobile-nav-item {
@@ -5152,78 +5207,143 @@
   line-height: 1.5;
 }
 
-/* ── Channel design editor (full page) ──────────────────────────────────── */
-[data-tahti-ui='studio'] .studio-channel-editor-page__header {
-  margin-bottom: var(--space-5);
-}
-
+/* ── Channel design editor (full page, focused-section view) ───────────── */
 [data-tahti-ui='studio'] .studio-channel-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
+  height: calc(100vh - var(--topnav-h) - var(--space-6));
+  min-height: 0;
 }
 
-[data-tahti-ui='studio'] .studio-channel-editor__publish-bar {
+[data-tahti-ui='studio'] .studio-designer-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-designer-topbar__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .studio-designer-topbar__heading {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+[data-tahti-ui='studio'] .studio-channel-editor__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(320px, 38%);
+  gap: var(--space-5);
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+
+[data-tahti-ui='studio'] .studio-designer-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .studio-designer-section-list__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .studio-designer-section-list__item:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--muted) 6%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-designer-section-list__item--active {
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .studio-designer-active-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .studio-designer-active-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6);
+}
+
+[data-tahti-ui='studio'] .studio-designer-panel__footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-top: 1px solid var(--border);
   background: var(--card2);
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 
-[data-tahti-ui='studio'] .studio-channel-editor__publish-bar-notice {
-  min-width: 0;
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__publish-bar-notice p {
-  margin: 0;
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__layout {
-  display: grid;
-  grid-template-columns: 60% 1fr;
-  gap: var(--space-6);
-  align-items: start;
+[data-tahti-ui='studio'] .studio-designer-panel__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
 }
 
 [data-tahti-ui='studio'] .studio-channel-editor__preview-col {
-  position: sticky;
-  top: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  height: 100%;
+  min-height: 0;
 }
 
 [data-tahti-ui='studio'] .studio-channel-editor__preview-link {
   align-self: flex-start;
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__controls-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  min-width: 0;
-  padding-right: var(--space-2);
+  flex-shrink: 0;
 }
 
 [data-tahti-ui='studio'] .studio-channel-editor__preview-col .studio-channel-preview.brand-channel {
   /* .brand-channel (brand-channel.css) sets min-height:100vh for real full-page
    * routes — ChannelLivePreview reuses that class to mirror the public page's
-   * styling exactly, but here it's a boxed widget, not a page, so the 100vh
-   * floor left a few hundred px of empty space and pushed the editor past
-   * Rule 1's 900px budget. Selector specificity here is deliberately padded
-   * (col > preview > .brand-channel) to beat brand-channel.css regardless of
-   * CSS import order. */
+   * styling exactly, but here it's a boxed widget filling one grid column of
+   * a fixed-height layout, not a page. */
   min-height: 0;
 }
 
 [data-tahti-ui='studio'] .studio-channel-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -5231,71 +5351,56 @@
 }
 
 [data-tahti-ui='studio'] .studio-channel-preview__inner {
-  min-height: 22rem;
-  /* Renders the real channel-page header stack (visualizer, artist header,
-   * gallery/slideshow) at full fidelity — on some presets that's naturally
-   * taller than the studio viewport budget. Scrolls internally rather than
-   * pushing the whole editor page past Rule 1's 900px, same treatment as
-   * the controls column; the public channel page itself is allowed to
-   * scroll (ground-rules.md exception list), so this preview matching that
-   * isn't a fidelity loss. */
-  max-height: min(600px, calc(100vh - 320px));
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-5);
 }
 
 [data-tahti-ui='studio'] .studio-channel-preview__caption {
   display: block;
+  flex-shrink: 0;
   padding: var(--space-3) var(--space-5);
   margin: 0;
   border-top: 1px solid var(--border);
 }
 
+[data-tahti-ui='studio'] [role='button'].studio-channel-preview__region {
+  cursor: pointer;
+  outline-offset: 2px;
+  border-radius: var(--radius);
+  transition: outline-color 0.15s;
+}
+
+[data-tahti-ui='studio'] [role='button'].studio-channel-preview__region:hover {
+  outline: 2px solid color-mix(in srgb, var(--cyan) 60%, transparent);
+}
+
+[data-tahti-ui='studio'] [role='button'].studio-channel-preview__region--active {
+  outline: 2px solid var(--cyan);
+}
+
 @media (max-width: 960px) {
+  [data-tahti-ui='studio'] .studio-channel-editor {
+    height: auto;
+  }
+
   [data-tahti-ui='studio'] .studio-channel-editor__layout {
     grid-template-columns: 1fr;
   }
 
-  [data-tahti-ui='studio'] .studio-channel-editor__preview-col {
+  [data-tahti-ui='studio'] .studio-designer-section-list {
     position: static;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-x: auto;
   }
-}
 
-[data-tahti-ui='studio'] .studio-channel-editor__section {
-  padding: var(--space-5) var(--space-6);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__section-header {
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__section-title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-  letter-spacing: -0.01em;
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__section-desc {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--muted);
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__section-desc a {
-  color: var(--cyan);
-}
-
-[data-tahti-ui='studio'] .studio-channel-editor__section-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  [data-tahti-ui='studio'] .studio-designer-active-panel,
+  [data-tahti-ui='studio'] .studio-channel-editor__preview-col {
+    height: auto;
+  }
 }
 
 [data-tahti-ui='studio'] .studio-broadcast-tab__shortcuts {
@@ -6725,8 +6830,7 @@
   font-weight: var(--weight-medium);
 }
 
-[data-tahti-ui='studio'] .channel-header-style-tile--active::after,
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card--active::after {
+[data-tahti-ui='studio'] .channel-header-style-tile--active::after {
   content: '✓';
   position: absolute;
   top: 5px;
@@ -6754,7 +6858,7 @@
   background: var(--card2);
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch {
+[data-tahti-ui='studio'] .studio-switch {
   position: relative;
   flex: 0 0 auto;
   width: 48px;
@@ -6769,12 +6873,12 @@
     border-color 0.16s ease;
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch[aria-checked='true'] {
+[data-tahti-ui='studio'] .studio-switch[aria-checked='true'] {
   border-color: var(--cyan);
   background: var(--cyan);
 }
 
-[data-tahti-ui='studio'] .channel-visualizer-switch__thumb {
+[data-tahti-ui='studio'] .studio-switch__thumb {
   display: block;
   width: 20px;
   height: 20px;
@@ -6785,8 +6889,8 @@
 }
 
 [data-tahti-ui='studio']
-  .channel-visualizer-switch[aria-checked='true']
-  .channel-visualizer-switch__thumb {
+  .studio-switch[aria-checked='true']
+  .studio-switch__thumb {
   transform: translateX(21px);
 }
 
@@ -6795,32 +6899,6 @@
   border: 1px solid color-mix(in srgb, var(--cyan) 28%, var(--border));
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--cyan) 4%, var(--card));
-}
-
-[data-tahti-ui='studio'] .studio-designer-presskit {
-  margin-top: var(--space-6);
-  padding: clamp(var(--space-4), 3vw, var(--space-6));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--purple) 8%, transparent), transparent 38%),
-    var(--card);
-}
-
-[data-tahti-ui='studio'] .studio-designer-section-heading {
-  max-width: 44rem;
-  margin-bottom: var(--space-5);
-}
-
-[data-tahti-ui='studio'] .studio-designer-section-heading h2 {
-  margin: 0.2rem 0 0.35rem;
-  font-size: var(--text-h2);
-}
-
-[data-tahti-ui='studio'] .studio-designer-section-heading p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
 }
 
 [data-tahti-ui='studio'] .channel-header-style-tile__badge {
@@ -6975,18 +7053,89 @@
   }
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip {
+[data-tahti-ui='studio'] .visual-preset-picker__stage-shell {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  flex-wrap: wrap;
   margin-bottom: 0.35rem;
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip-shell {
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card {
+  position: relative;
   display: flex;
-  align-items: stretch;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+  height: 160px;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card:hover:not(:disabled) {
+  border-color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--bg) 65%, transparent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn {
+  flex: 0 0 32px;
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn:hover:not(:disabled),
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn--active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__arrow {
@@ -7022,69 +7171,6 @@
   font-size: var(--text-sm);
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  width: 88px;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--card2);
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card--active {
-  border: 2px solid var(--cyan);
-  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 25%, transparent);
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-name {
-  font-size: var(--text-micro);
-  font-weight: var(--weight-medium);
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  width: 72px;
-  min-height: 76px;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  border: 1px dashed color-mix(in srgb, var(--cyan) 45%, var(--border));
-  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
-  color: var(--cyan);
-  cursor: pointer;
-  font-size: var(--text-micro);
-  font-weight: var(--weight-medium);
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
-  border-style: solid;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 [data-tahti-ui='studio'] .visual-preset-picker__preview {
   position: relative;
   height: 52px;
@@ -7102,6 +7188,11 @@
   min-height: 180px;
   border: none;
   border-radius: 0;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card .visual-preset-picker__preview--lg {
+  flex: 1;
+  min-height: 0;
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__preview--minimal {
@@ -10155,11 +10246,94 @@
   color: var(--text);
 }
 
+[data-tahti-ui='studio'] .collection-editor__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ── View mode: cover + play + summary, above the (read-only) tracklist ── */
+[data-tahti-ui='studio'] .collection-view-hero {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card2);
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__cover-ph {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
+  background: var(--cyan);
+  color: var(--bg);
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__play:hover {
+  transform: scale(1.06);
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__desc {
+  margin: 0;
+  color: var(--text);
+  max-width: 60ch;
+}
+
+[data-tahti-ui='studio'] .collection-view-hero__meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='studio'] .collection-editor__body {
   display: grid;
   grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
+}
+
+[data-tahti-ui='studio'] .collection-editor__body--view {
+  grid-template-columns: 1fr;
 }
 
 [data-tahti-ui='studio'] .collection-editor__settings {

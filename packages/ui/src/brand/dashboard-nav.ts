@@ -14,6 +14,13 @@ export type DashboardSectionKey =
   | 'newsletter'
   | 'broadcast'
   | 'account'
+  // Channel Designer's own focused-section nav (see _designer-sections.ts) — these are only
+  // ever consulted on /dashboard/channel/edit, never against the /dashboard tab map above.
+  | 'designerVisual'
+  | 'designerHeader'
+  | 'designerSlideshow'
+  | 'designerLinks'
+  | 'designerPlayer'
 
 export type DashboardNavDefinition = {
   href: string
@@ -52,6 +59,7 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
   '/dashboard/archive': [
     { href: '/dashboard/archive', label: 'Discography', icon: 'archive', isRoute: true },
     { href: '/dashboard/releases', label: 'Smart Links', icon: 'links', isRoute: true },
+    { href: '/dashboard/distribution', label: 'Distribution', icon: 'links', isRoute: true },
     { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
     { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
   ],
@@ -63,7 +71,41 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
     { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
   ],
   '/dashboard/channel/edit': [
-    { href: '/dashboard/channel/edit', label: 'Channel design', icon: 'appearance', isRoute: true },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Visual style',
+      icon: 'appearance',
+      hash: 'channel-visual',
+      sectionKey: 'designerVisual',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Header & backdrop',
+      icon: 'appearance',
+      hash: 'channel-header',
+      sectionKey: 'designerHeader',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Slideshow transitions',
+      icon: 'appearance',
+      hash: 'channel-slideshow',
+      sectionKey: 'designerSlideshow',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Links',
+      icon: 'links',
+      hash: 'channel-links',
+      sectionKey: 'designerLinks',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Player overlay text',
+      icon: 'appearance',
+      hash: 'channel-text-overlay',
+      sectionKey: 'designerPlayer',
+    },
     {
       href: '/dashboard/channel/playlist',
       label: '24/7 playlist',
@@ -86,6 +128,13 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   broadcast: 'broadcast',
   // Account settings moved to /dashboard/settings/account — old in-page anchor falls back to overview.
   account: 'overview',
+  // Designer section keys are never resolved against the /dashboard tab map (only consulted
+  // on /dashboard/channel/edit, see StudioSidebar's onDesigner branch) — value is unused filler.
+  designerVisual: 'overview',
+  designerHeader: 'overview',
+  designerSlideshow: 'overview',
+  designerLinks: 'overview',
+  designerPlayer: 'overview',
 }
 
 /** Map URL hash keys (without #) to a unique dashboard section for nav highlighting. */
@@ -112,6 +161,14 @@ export const DASHBOARD_HASH_TO_SECTION: Record<string, DashboardSectionKey> = {
   account: 'account',
   membership: 'account',
   settings: 'account',
+  // Channel Designer section hashes (/dashboard/channel/edit#<hash>) — see _designer-sections.ts.
+  'channel-visual': 'designerVisual',
+  'channel-header': 'designerHeader',
+  // Legacy alias: Header & backdrop absorbed the old standalone "Background media" section.
+  'channel-media': 'designerHeader',
+  'channel-slideshow': 'designerSlideshow',
+  'channel-links': 'designerLinks',
+  'channel-text-overlay': 'designerPlayer',
 }
 
 /** @deprecated Use DASHBOARD_HASH_TO_SECTION — kept for StudioTabs hashAliases compat. */
@@ -194,15 +251,6 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     icon: 'links',
     isRoute: true,
     requiresChannel: true,
-  },
-  {
-    href: '/dashboard/distribution',
-    label: 'Distribution',
-    icon: 'links',
-    isRoute: true,
-    requiresChannel: true,
-    secondary: true,
-    group: 'Distribution',
   },
   {
     href: '/dashboard/stash',

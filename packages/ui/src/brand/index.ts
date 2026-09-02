@@ -5,11 +5,17 @@ export { ChannelHeader, ChannelPageLayout, type SiteNavId } from './ChannelPageL
 export { ProfileCover, ProfileHero, ProfilePageLayout } from './ProfilePageLayout'
 export { SmartLinkPageLayout } from './SmartLinkPageLayout'
 export { StudioShell } from './StudioShell'
+export {
+  StudioLayoutContext,
+  useAutoCollapseSidebar,
+  type StudioLayoutContextValue,
+} from './useAutoCollapseSidebar'
 export { StudioTopNav } from './StudioTopNav'
 export { NotificationBell, type NotificationBellItem } from './NotificationBell'
 export { MessagesBell, type MessagesBellConversation } from './MessagesBell'
 export { UpcomingShowNotice, type UpcomingShowInfo } from './UpcomingShowNotice'
 export { StudioSidebar } from './StudioSidebar'
+export { StudioSwitch, type StudioSwitchProps } from './StudioSwitch'
 export { StudioMobileNav } from './StudioMobileNav'
 export { MobileNavSheet } from './MobileNavSheet'
 export type { MobileNavSheetProps } from './MobileNavSheet'
@@ -88,7 +94,12 @@ export {
   type SidebarNavItemProps,
   type SidebarNavIcon,
 } from './SidebarNav'
-export { coverGradientFromId, COVER_GRADIENTS, type CoverGradient } from '../lib/cover-gradient'
+export {
+  coverGradientFromId,
+  randomCoverGradient,
+  COVER_GRADIENTS,
+  type CoverGradient,
+} from '../lib/cover-gradient'
 export { initialsFromName } from '../lib/initials'
 export { chatHandleVariant, CHAT_HANDLE_VARIANTS, type ChatHandleVariant } from '../lib/chat-handle'
 export { WAVEFORM_BAR_HEIGHTS, formatPlayerTime } from '../lib/waveform-player'

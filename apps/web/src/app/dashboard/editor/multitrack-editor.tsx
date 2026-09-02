@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, useAutoCollapseSidebar } from '@tahti/ui'
 import type { ClipTrack } from '@waveform-playlist/browser'
 import {
   PauseButton,
@@ -336,6 +336,7 @@ export function MultitrackEditor({
   timeline: Record<string, unknown>
   sources: EditorSource[]
 }) {
+  useAutoCollapseSidebar()
   const router = useRouter()
   const { tracks, addTracks, removeTrack, isLoading, errors } = useDynamicTracks()
   const seeded = useRef(false)

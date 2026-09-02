@@ -6,12 +6,19 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { AvatarTile, ButtonIcon, Button, Panel, StudioTabs } from '@tahti/ui'
-import type { ArtistKind, AvatarTheme, ChannelMemberView, LogoPlacement } from '@tahti/shared'
+import type {
+  ArtistKind,
+  AvatarTheme,
+  ChannelMemberView,
+  LogoPlacement,
+  PressKitImageItem,
+} from '@tahti/shared'
 import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelIdentityPanel, { type ChannelIdentityDraft } from '../../channel-identity-panel'
 import ChannelBioPanel from '../../channel-bio-panel'
 import type { ChannelLink } from '../../channel-links-panel'
 import { MembersPanel } from '../members/_members-panel'
+import { PressKitBuilder } from '../presskit/_press-kit-builder'
 
 export interface StreamingLinksDraft {
   youtube: string
@@ -45,6 +52,12 @@ export interface ArtistInfoFormData {
   links: ChannelLink[]
   streamingLinks: StreamingLinksDraft
   artistKind: ArtistKind
+  pressKit: {
+    images: PressKitImageItem[]
+    galleryPublic: boolean
+    username: string
+    apiUrl: string
+  }
 }
 
 export function ArtistInfoForm({
@@ -150,6 +163,7 @@ export function ArtistInfoForm({
         <StudioTabs.List aria-label="Artist info sections">
           <StudioTabs.Trigger value="identity">Identity</StudioTabs.Trigger>
           <StudioTabs.Trigger value="story">Story</StudioTabs.Trigger>
+          <StudioTabs.Trigger value="branding">Branding</StudioTabs.Trigger>
           <StudioTabs.Trigger value="people">People</StudioTabs.Trigger>
         </StudioTabs.List>
 
@@ -174,6 +188,23 @@ export function ArtistInfoForm({
             description="Keep it memorable. Lead with what makes the project distinct."
           >
             <ChannelBioPanel initial={{ bio }} onDraftChange={setBio} />
+          </Panel>
+        </StudioTabs.Panel>
+
+        <StudioTabs.Panel value="branding">
+          <Panel
+            title="Press kit"
+            description="Upload, arrange, and publish promoter-ready images."
+            headerTight
+          >
+            <PressKitBuilder
+              initialImages={initial.pressKit.images}
+              initialGalleryPublic={initial.pressKit.galleryPublic}
+              username={initial.pressKit.username}
+              displayName={identity.displayName}
+              bio={bio}
+              apiUrl={initial.pressKit.apiUrl}
+            />
           </Panel>
         </StudioTabs.Panel>
 

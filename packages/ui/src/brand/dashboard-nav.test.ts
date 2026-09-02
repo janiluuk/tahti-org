@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { DASHBOARD_NAV } from './dashboard-nav.js'
+import { DASHBOARD_NAV, DASHBOARD_SUBMENUS } from './dashboard-nav.js'
 
 describe('artist dashboard library navigation', () => {
   it('has no separate Artist feed entry — it lives on the dashboard main page', () => {
@@ -26,12 +26,20 @@ describe('artist dashboard library navigation', () => {
   })
 
   it('groups secondary destinations by the job they support', () => {
-    expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/distribution')?.group).toBe(
-      'Distribution',
-    )
     expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/stash')?.group).toBe('Library')
     expect(DASHBOARD_NAV.find((item) => item.href === '/dashboard/embeds')?.group).toBe(
       'Channel setup',
     )
+  })
+
+  it('surfaces Distribution under the Library tab, alongside releases', () => {
+    const libraryMenu = DASHBOARD_SUBMENUS['/dashboard/archive'] ?? []
+    const releasesIndex = libraryMenu.findIndex((item) => item.href === '/dashboard/releases')
+    const distributionIndex = libraryMenu.findIndex(
+      (item) => item.href === '/dashboard/distribution',
+    )
+    expect(distributionIndex).toBeGreaterThan(-1)
+    expect(distributionIndex).toBeGreaterThan(releasesIndex)
+    expect(DASHBOARD_NAV.some((item) => item.href === '/dashboard/distribution')).toBe(false)
   })
 })

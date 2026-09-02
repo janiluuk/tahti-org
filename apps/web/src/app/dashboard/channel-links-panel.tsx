@@ -7,7 +7,13 @@ import { useEffect, useState } from 'react'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { Button } from '@tahti/ui'
 
-export type ChannelLink = { label: string; url: string }
+export type ChannelLink = { id: string; label: string; url: string }
+
+let linkIdCounter = 0
+function nextLinkId(): string {
+  linkIdCounter += 1
+  return `link-${Date.now()}-${linkIdCounter}`
+}
 
 interface Props {
   initial: ChannelLink[]
@@ -16,7 +22,7 @@ interface Props {
 
 export default function ChannelLinksPanel({ initial, onDraftChange }: Props) {
   const [links, setLinks] = useState<ChannelLink[]>(
-    initial.length > 0 ? initial : [{ label: '', url: '' }],
+    initial.length > 0 ? initial : [{ id: nextLinkId(), label: '', url: '' }],
   )
 
   useEffect(() => {
@@ -33,14 +39,14 @@ export default function ChannelLinksPanel({ initial, onDraftChange }: Props) {
   }
 
   function addLink() {
-    setLinks((prev) => [...prev, { label: '', url: '' }])
+    setLinks((prev) => [...prev, { id: nextLinkId(), label: '', url: '' }])
   }
 
   return (
     <>
       <div className="studio-field--block">
         {links.map((link, i) => (
-          <div key={i} className="studio-row studio-row--wrap studio-mb-sm">
+          <div key={link.id} className="studio-row studio-row--wrap studio-mb-sm">
             <span className="studio-link-row__icon">
               <SocialLinkIcon label={link.label} url={link.url} />
             </span>

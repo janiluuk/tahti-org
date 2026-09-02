@@ -3,23 +3,30 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { useRouter } from 'next/navigation'
+import { Button, ButtonIcon, navigateDashboardHash, useAutoCollapseSidebar } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateChannelVisual } from '../channel-visual-actions'
 import { updateChannelGallery } from '../channel-gallery-actions'
 import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelTextLayer } from '../channel-text-layer-actions'
+import { StudioHeaderActions } from '../_studio-header-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
-import ChannelGalleryPanel from '../channel-gallery-panel'
+import { ChannelHeaderPanel } from '../channel-header-panel'
 import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import ChannelLinksPanel from '../channel-links-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
-import { PressKitBuilder } from '../settings/presskit/_press-kit-builder'
-import { ChannelDiscoWidgetsPanel } from '../channel-disco-widgets-panel'
 import type { ChannelLink } from '../channel-links-panel'
-import { ChannelEditorSection } from './_channel-editor-section'
+import { DesignerSectionList } from './_designer-section-list'
+import {
+  DESIGNER_SECTIONS,
+  designerSectionById,
+  resolveDesignerSection,
+  type DesignerSectionDefinition,
+  type DesignerSectionId,
+} from './_designer-sections'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
 import type {
   ChannelGalleryMode,
@@ -28,12 +35,9 @@ import type {
   ChannelTextLayerMode,
   SlideshowPreset,
   VisualPreset,
-  PressKitImageItem,
-  DiscoWidgetInstallView,
-  DiscoWidgetStoreItem,
 } from '@tahti/shared'
 
-function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
+function linksToSocialLinks(links: Array<{ label: string; url: string }>): Record<string, string> {
   const map: Record<string, string> = {}
   for (const { label, url } of links) {
     const key = label.trim()
@@ -80,19 +84,12 @@ export type ChannelEditorData = {
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
   }
-  pressKit: {
-    images: PressKitImageItem[]
-    galleryPublic: boolean
-    username: string
-    apiUrl: string
-  }
-  discoWidgets: {
-    widgets: DiscoWidgetStoreItem[]
-    installs: DiscoWidgetInstallView[]
-  }
+  isLive: boolean
+  showJoinDate: boolean
+  showDailyListeners: boolean
 }
 
-/** Full-page channel customization studio — live preview beside identity, visual, and link controls. */
+/** Full-page channel customization studio — one focused section at a time, live preview beside it. */
 export function ChannelEditorSections({
   channelSlug,
   tier,
@@ -107,9 +104,13 @@ export function ChannelEditorSections({
   channelGallery,
   channelTextLayer,
   channelVisual,
-  pressKit,
-  discoWidgets,
+  isLive,
+  showJoinDate,
+  showDailyListeners,
 }: ChannelEditorData) {
+  useAutoCollapseSidebar()
+  const router = useRouter()
+
   const [draft, setDraft] = useState<ChannelPreviewDraft>({
     displayName,
     username: channelSlug,
@@ -127,47 +128,27 @@ export function ChannelEditorSections({
     textLayer: channelTextLayer,
     visual: channelVisual,
   })
+  const [visibility, setVisibility] = useState({ showJoinDate, showDailyListeners })
+  const [activeSection, setActiveSection] = useState<DesignerSectionId>(DESIGNER_SECTIONS[0]!.id)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  function publish() {
-    setError(null)
-    setMessage(null)
-    startTransition(async () => {
-      const galleryRes = await updateChannelGallery({
-        galleryMode: draft.gallery.galleryMode,
-        slideshowImages: draft.gallery.slideshowImages,
-        videoBackgroundUrl: draft.gallery.videoBackgroundUrl,
-      })
-      if (galleryRes.error) {
-        setError(galleryRes.error)
-        return
-      }
-      const profileRes = await updateChannelProfile({
-        socialLinks: {
-          genres: draft.genres.join(', '),
-          youtube: streamingLinks.youtube.trim(),
-          hearthisAt: streamingLinks.hearthisAt.trim(),
-          twitch: streamingLinks.twitch.trim(),
-          soundcloud: streamingLinks.soundcloud.trim(),
-          kick: streamingLinks.kick.trim(),
-          ...linksToSocialLinks(draft.links),
-        },
-      })
-      if (profileRes.error) {
-        setError(profileRes.error)
-        return
-      }
-      const textLayerRes = await updateChannelTextLayer({
-        textLayerMode: draft.textLayer.textLayerMode,
-        textLayerText: draft.textLayer.textLayerText.trim(),
-        textLayerAlign: draft.textLayer.textLayerAlign,
-      })
-      if (textLayerRes.error) {
-        setError(textLayerRes.error)
-        return
-      }
+  useEffect(() => {
+    function sync() {
+      setActiveSection(resolveDesignerSection(window.location.hash))
+    }
+    sync()
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+
+  function selectSection(id: DesignerSectionId) {
+    navigateDashboardHash(designerSectionById(id).hash)
+  }
+
+  async function saveSection(section: DesignerSectionDefinition): Promise<boolean> {
+    if (section.saveKind === 'visual' || section.saveKind === 'header') {
       const visualRes = await updateChannelVisual({
         visualPreset: draft.visual.visualPreset,
         colorScheme: draft.visual.colorSchemeJson ? JSON.parse(draft.visual.colorSchemeJson) : null,
@@ -183,27 +164,206 @@ export function ChannelEditorSections({
       })
       if (visualRes.error) {
         setError(visualRes.error)
-        return
+        return false
       }
-      setMessage('Channel published.')
+    }
+    if (section.saveKind === 'header') {
+      const galleryRes = await updateChannelGallery({
+        galleryMode: draft.gallery.galleryMode,
+        slideshowImages: draft.gallery.slideshowImages,
+        videoBackgroundUrl: draft.gallery.videoBackgroundUrl,
+      })
+      if (galleryRes.error) {
+        setError(galleryRes.error)
+        return false
+      }
+      const profileRes = await updateChannelProfile({
+        showJoinDate: visibility.showJoinDate,
+        showDailyListeners: visibility.showDailyListeners,
+      })
+      if (profileRes.error) {
+        setError(profileRes.error)
+        return false
+      }
+    }
+    if (section.saveKind === 'profile') {
+      const profileRes = await updateChannelProfile({
+        socialLinks: {
+          genres: draft.genres.join(', '),
+          youtube: streamingLinks.youtube.trim(),
+          hearthisAt: streamingLinks.hearthisAt.trim(),
+          twitch: streamingLinks.twitch.trim(),
+          soundcloud: streamingLinks.soundcloud.trim(),
+          kick: streamingLinks.kick.trim(),
+          ...linksToSocialLinks(draft.links),
+        },
+      })
+      if (profileRes.error) {
+        setError(profileRes.error)
+        return false
+      }
+    }
+    if (section.saveKind === 'textLayer') {
+      const textLayerRes = await updateChannelTextLayer({
+        textLayerMode: draft.textLayer.textLayerMode,
+        textLayerText: draft.textLayer.textLayerText.trim(),
+        textLayerAlign: draft.textLayer.textLayerAlign,
+      })
+      if (textLayerRes.error) {
+        setError(textLayerRes.error)
+        return false
+      }
+    }
+    return true
+  }
+
+  function handleSave() {
+    const section = designerSectionById(activeSection)
+    setError(null)
+    setMessage(null)
+    startTransition(async () => {
+      const ok = await saveSection(section)
+      if (ok) setMessage('Saved.')
     })
   }
 
+  function handleDone() {
+    const section = designerSectionById(activeSection)
+    setError(null)
+    setMessage(null)
+    startTransition(async () => {
+      const ok = await saveSection(section)
+      if (ok) router.push('/dashboard')
+    })
+  }
+
+  const activeDef = designerSectionById(activeSection)
+
   return (
     <div className="studio-channel-editor">
-      <div className="studio-channel-editor__publish-bar">
-        <div className="studio-channel-editor__publish-bar-notice">
-          {error && <p className="studio-notice studio-notice--error">{error}</p>}
-          {message && <p className="studio-notice studio-notice--success">{message}</p>}
+      <div className="studio-designer-topbar">
+        <div className="studio-designer-topbar__title">
+          <span className="studio-kicker">Now editing</span>
+          <h1 className="studio-designer-topbar__heading">{activeDef.title}</h1>
         </div>
-        <Button onClick={publish} disabled={isPending} variant="primary">
-          <ButtonIcon name="send" />
-          {isPending ? 'Publishing…' : 'Publish changes'}
-        </Button>
+        <StudioHeaderActions
+          hasChannel
+          isLive={isLive}
+          channelSlug={channelSlug}
+          showBack
+          backHref="/dashboard"
+          backLabel="Dashboard"
+          showChannelActions={false}
+        />
       </div>
+
       <div className="studio-channel-editor__layout">
+        <DesignerSectionList
+          sections={DESIGNER_SECTIONS}
+          activeId={activeSection}
+          onSelect={selectSection}
+        />
+
+        <div className="studio-designer-active-panel">
+          <div className="studio-designer-active-panel__body">
+            {activeDef.description ? (
+              <p className="studio-help studio-mb-sm">{activeDef.description}</p>
+            ) : null}
+            {error && <p className="studio-notice studio-notice--error">{error}</p>}
+            {message && <p className="studio-notice studio-notice--success">{message}</p>}
+
+            {activeSection === 'visual' && (
+              <ChannelVisualPresetPanel
+                channelSlug={channelSlug}
+                tier={tier}
+                hasVideoBackground={Boolean(draft.gallery.videoBackgroundUrl)}
+                initial={channelVisual}
+                bare
+                hideHeaderStyle
+                onDraftChange={(visual) =>
+                  setDraft((d) => ({
+                    ...d,
+                    visual: { ...d.visual, ...visual, headerStyle: d.visual.headerStyle },
+                  }))
+                }
+              />
+            )}
+
+            {activeSection === 'header' && (
+              <ChannelHeaderPanel
+                tier={tier}
+                initialHeaderStyle={channelVisual.headerStyle}
+                initialGallery={channelGallery}
+                initialVisibility={visibility}
+                onHeaderStyleChange={(headerStyle) =>
+                  setDraft((d) => ({ ...d, visual: { ...d.visual, headerStyle } }))
+                }
+                onGalleryChange={(gallery) =>
+                  setDraft((d) => ({
+                    ...d,
+                    gallery: { ...gallery, videoBackgroundUrl: gallery.videoBackgroundUrl ?? null },
+                  }))
+                }
+                onVisibilityChange={setVisibility}
+              />
+            )}
+
+            {activeSection === 'slideshow' &&
+              (draft.gallery.galleryMode === 'NONE' ? (
+                <p className="studio-help">
+                  Enable a gallery mode in Header &amp; backdrop first to configure slideshow
+                  transitions.
+                </p>
+              ) : (
+                <ChannelSlideshowPanel
+                  initial={channelVisual}
+                  bare
+                  hideSave
+                  onDraftChange={(slideshow) =>
+                    setDraft((current) => ({
+                      ...current,
+                      visual: { ...current.visual, ...slideshow },
+                    }))
+                  }
+                />
+              ))}
+
+            {activeSection === 'links' && (
+              <ChannelLinksPanel
+                initial={links}
+                onDraftChange={(nextLinks) =>
+                  setDraft((current) => ({ ...current, links: nextLinks }))
+                }
+              />
+            )}
+
+            {activeSection === 'player' && (
+              <ChannelTextLayerPanel
+                initial={channelTextLayer}
+                bare
+                hideSave
+                onDraftChange={(textLayer) => setDraft((current) => ({ ...current, textLayer }))}
+              />
+            )}
+          </div>
+
+          <div className="studio-designer-panel__footer">
+            <div className="studio-designer-panel__footer-notice" />
+            <div className="studio-designer-panel__footer-actions">
+              <Button variant="secondary" onClick={handleDone} disabled={isPending}>
+                <ButtonIcon name="check" />
+                Done
+              </Button>
+              <Button variant="primary" onClick={handleSave} disabled={isPending}>
+                <ButtonIcon name="save" />
+                {isPending ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div className="studio-channel-editor__preview-col" data-hero>
-          <ChannelLivePreview draft={draft} />
+          <ChannelLivePreview draft={draft} activeSection={activeSection} onSectionSelect={selectSection} />
           <div className="studio-row studio-gap-md studio-mt-sm">
             <Link
               href={resolveChannelUrl(channelSlug)}
@@ -213,116 +373,9 @@ export function ChannelEditorSections({
             >
               Open full channel page →
             </Link>
-            <Link
-              href="/dashboard/settings/artist-info"
-              className="ui-btn ui-btn--ghost ui-btn--sm"
-            >
-              Edit name & bio →
-            </Link>
           </div>
         </div>
-
-        <div className="studio-channel-editor__controls-col">
-          <ChannelEditorSection id="channel-visual" title="Visual">
-            <ChannelVisualPresetPanel
-              channelSlug={channelSlug}
-              tier={tier}
-              hasVideoBackground={Boolean(channelGallery.videoBackgroundUrl)}
-              initial={channelVisual}
-              bare
-              onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection
-            id="channel-media"
-            title="Background media"
-            description="Choose a gallery style and provide only the media used by the current design."
-          >
-            <ChannelGalleryPanel
-              initial={channelGallery}
-              bare
-              hideSave
-              showVideoBackground={draft.visual.headerStyle === 'VIDEO_LOOP'}
-              onDraftChange={(gallery) => setDraft((current) => ({ ...current, gallery }))}
-            />
-          </ChannelEditorSection>
-
-          {draft.gallery.galleryMode !== 'NONE' ? (
-            <ChannelEditorSection
-              id="channel-slideshow"
-              title="Slideshow transitions"
-              description="Controls how gallery images move and change on your channel."
-            >
-              <ChannelSlideshowPanel
-                initial={channelVisual}
-                bare
-                hideSave
-                onDraftChange={(slideshow) =>
-                  setDraft((current) => ({
-                    ...current,
-                    visual: { ...current.visual, ...slideshow },
-                  }))
-                }
-              />
-            </ChannelEditorSection>
-          ) : null}
-
-          <ChannelEditorSection
-            id="channel-links"
-            title="Links"
-            description="Add the links shown in your channel banner."
-          >
-            <ChannelLinksPanel
-              initial={links}
-              onDraftChange={(nextLinks) =>
-                setDraft((current) => ({ ...current, links: nextLinks }))
-              }
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection
-            id="channel-text-overlay"
-            title="Text overlay"
-            description="Add a stylized headline or tagline to your channel page."
-          >
-            <ChannelTextLayerPanel
-              initial={channelTextLayer}
-              bare
-              hideSave
-              onDraftChange={(textLayer) => setDraft((current) => ({ ...current, textLayer }))}
-            />
-          </ChannelEditorSection>
-        </div>
       </div>
-
-      <section className="studio-designer-presskit" id="presskit">
-        <div className="studio-designer-section-heading">
-          <span className="studio-kicker">Promotional media</span>
-          <h2>Press kit</h2>
-          <p>Upload, arrange, and publish promoter-ready images without leaving the designer.</p>
-        </div>
-        <PressKitBuilder
-          initialImages={pressKit.images}
-          initialGalleryPublic={pressKit.galleryPublic}
-          username={pressKit.username}
-          displayName={displayName}
-          bio={bio}
-          apiUrl={pressKit.apiUrl}
-        />
-      </section>
-
-      <section className="studio-designer-presskit" id="disco-widgets">
-        <div className="studio-designer-section-heading">
-          <span className="studio-kicker">Discovery</span>
-          <h2>Disco-widgets</h2>
-          <p>Browse the widget store and add widgets to your public channel page.</p>
-        </div>
-        <ChannelDiscoWidgetsPanel
-          initialWidgets={discoWidgets.widgets}
-          initialInstalls={discoWidgets.installs}
-        />
-      </section>
     </div>
   )
 }
