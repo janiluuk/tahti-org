@@ -2418,6 +2418,11 @@
   flex-wrap: nowrap;
   flex-shrink: 1;
   min-width: 0;
+  /* Pushes sort/search to the right edge even when there's no
+     .archive-list__filters sibling (all public pages) — relying on the
+     parent's `justify-content: space-between` alone left it flush-left,
+     since a lone flex child collapses to the start edge. */
+  margin-left: auto;
 }
 
 [data-tahti-ui='studio'] .archive-list__search {
