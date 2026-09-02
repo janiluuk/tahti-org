@@ -101,7 +101,11 @@ function ChannelVisualizerImpl({
   const colorScheme: ColorScheme =
     resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
 
-  const props = { colorScheme, analyser, settingsRef, artworkUrl }
+  // Per-preset "React to audio" toggle (VisualPresetSettings.audioReactive) — withholding the
+  // analyser here, in the one place all ten presets funnel through, makes the toggle apply
+  // uniformly without each preset needing to check it itself.
+  const effectiveAnalyser = settingsRef.current.audioReactive === false ? null : analyser
+  const props = { colorScheme, analyser: effectiveAnalyser, settingsRef, artworkUrl }
 
   return (
     <div

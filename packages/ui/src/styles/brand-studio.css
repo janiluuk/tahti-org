@@ -6794,8 +6794,7 @@
   font-weight: var(--weight-medium);
 }
 
-[data-tahti-ui='studio'] .channel-header-style-tile--active::after,
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card--active::after {
+[data-tahti-ui='studio'] .channel-header-style-tile--active::after {
   content: '✓';
   position: absolute;
   top: 5px;
@@ -7018,18 +7017,89 @@
   }
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip {
+[data-tahti-ui='studio'] .visual-preset-picker__stage-shell {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  flex-wrap: wrap;
   margin-bottom: 0.35rem;
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip-shell {
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card {
+  position: relative;
   display: flex;
-  align-items: stretch;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+  height: 160px;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card:hover:not(:disabled) {
+  border-color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--bg) 65%, transparent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn {
+  flex: 0 0 32px;
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn:hover:not(:disabled),
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn--active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__configure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__arrow {
@@ -7065,69 +7135,6 @@
   font-size: var(--text-sm);
 }
 
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  width: 88px;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--card2);
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card--active {
-  border: 2px solid var(--cyan);
-  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 25%, transparent);
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-card:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__strip-name {
-  font-size: var(--text-micro);
-  font-weight: var(--weight-medium);
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  width: 72px;
-  min-height: 76px;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  border: 1px dashed color-mix(in srgb, var(--cyan) 45%, var(--border));
-  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
-  color: var(--cyan);
-  cursor: pointer;
-  font-size: var(--text-micro);
-  font-weight: var(--weight-medium);
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
-  border-style: solid;
-}
-
-[data-tahti-ui='studio'] .visual-preset-picker__gallery-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 [data-tahti-ui='studio'] .visual-preset-picker__preview {
   position: relative;
   height: 52px;
@@ -7145,6 +7152,11 @@
   min-height: 180px;
   border: none;
   border-radius: 0;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__stage-card .visual-preset-picker__preview--lg {
+  flex: 1;
+  min-height: 0;
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__preview--minimal {

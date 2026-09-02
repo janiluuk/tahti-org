@@ -3,12 +3,11 @@
 
 'use client'
 
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import {
   VISUAL_PRESETS,
   VISUAL_PRESET_LABELS,
   VISUAL_PRESET_DESCRIPTIONS,
-  VISUAL_PRESET_STRIP,
   DEFAULT_COLOR_SCHEME,
   DEFAULT_VISUAL_PRESET_SETTINGS,
   resolveColorScheme,
@@ -275,6 +274,20 @@ function GalleryIcon() {
   )
 }
 
+function ConfigureIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M8 1.8v1.6M8 12.6v1.6M14.2 8h-1.6M3.4 8H1.8M12.1 3.9l-1.13 1.13M5.03 10.97 3.9 12.1M12.1 12.1l-1.13-1.13M5.03 5.03 3.9 3.9"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -287,11 +300,6 @@ function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
       />
     </svg>
   )
-}
-
-function stripPresets(selected: VisualPreset): VisualPreset[] {
-  if (VISUAL_PRESET_STRIP.includes(selected)) return [...VISUAL_PRESET_STRIP]
-  return [...VISUAL_PRESET_STRIP.slice(0, 3), selected]
 }
 
 export function VisualPresetPicker({
@@ -311,12 +319,10 @@ export function VisualPresetPicker({
 }: Props) {
   const scheme = colorScheme ?? resolveColorScheme(colorSchemeJson ?? null, paletteJson ?? null)
   const [galleryOpen, setGalleryOpen] = useState(false)
+  const [configureOpen, setConfigureOpen] = useState(false)
   const [focus, setFocus] = useState<VisualPreset>(value)
-  // PERF-007 stays true — only ever one live instance among the strip cards,
-  // triggered by hover/focus rather than always-on for the selected preset.
-  const [hoveredStripPreset, setHoveredStripPreset] = useState<VisualPreset | null>(null)
   const titleId = useId()
-  const strip = useMemo(() => stripPresets(value), [value])
+  const stageSettings = resolveVisualPresetSettings(settingsMap, value)
 
   function shiftPreset(direction: -1 | 1) {
     const index = VISUAL_PRESETS.indexOf(value)
@@ -348,16 +354,24 @@ export function VisualPresetPicker({
 
   const focusSettings = resolveVisualPresetSettings(settingsMap, focus)
 
-  function updateFocusSetting(key: keyof VisualPresetSettings, raw: number) {
+  function updatePresetSetting(
+    preset: VisualPreset,
+    key: keyof VisualPresetSettings,
+    raw: number | boolean,
+  ) {
     if (!onSettingsChange) return
     const next: VisualSettingsMap = {
       ...(settingsMap ?? {}),
-      [focus]: {
-        ...resolveVisualPresetSettings(settingsMap, focus),
+      [preset]: {
+        ...resolveVisualPresetSettings(settingsMap, preset),
         [key]: raw,
       },
     }
     onSettingsChange(next)
+  }
+
+  function updateFocusSetting(key: keyof VisualPresetSettings, raw: number | boolean) {
+    updatePresetSetting(focus, key, raw)
   }
 
   function selectFromGallery(preset: VisualPreset) {
@@ -367,7 +381,7 @@ export function VisualPresetPicker({
 
   return (
     <div className="visual-preset-picker">
-      <div className="visual-preset-picker__strip-shell">
+      <div className="visual-preset-picker__stage-shell">
         <button
           type="button"
           className="visual-preset-picker__arrow"
@@ -378,55 +392,28 @@ export function VisualPresetPicker({
         >
           <ArrowIcon direction="left" />
         </button>
-        <div className="visual-preset-picker__strip" role="radiogroup" aria-label="Visual preset">
-          {strip.map((preset) => {
-            const active = value === preset
-            return (
-              <button
-                key={preset}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                disabled={disabled}
-                title={VISUAL_PRESET_LABELS[preset]}
-                className={`visual-preset-picker__strip-card${active ? ' visual-preset-picker__strip-card--active' : ''}`}
-                onClick={() => onChange(preset)}
-                onMouseEnter={() => setHoveredStripPreset(preset)}
-                onMouseLeave={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
-                onFocus={() => setHoveredStripPreset(preset)}
-                onBlur={() => setHoveredStripPreset((p) => (p === preset ? null : p))}
-              >
-                <PresetThumb
-                  preset={preset}
-                  scheme={scheme}
-                  live={showPreview && hoveredStripPreset === preset}
-                  settings={resolveVisualPresetSettings(settingsMap, preset)}
-                  size="sm"
-                />
-                <span className="visual-preset-picker__strip-name">
-                  {VISUAL_PRESET_LABELS[preset]}
-                </span>
-              </button>
-            )
-          })}
-          <button
-            type="button"
-            className="visual-preset-picker__gallery-btn"
-            disabled={disabled}
-            aria-haspopup="dialog"
-            aria-expanded={galleryOpen}
-            title="Browse all visualizer presets"
-            onClick={() => {
-              // Set the stage selection before mounting the dialog. This avoids
-              // one frame of the previously-previewed preset when reopening it.
-              setFocus(value)
-              setGalleryOpen(true)
-            }}
-          >
+
+        <button
+          type="button"
+          className="visual-preset-picker__stage-card"
+          disabled={disabled}
+          aria-haspopup="dialog"
+          aria-expanded={galleryOpen}
+          title="Browse all visualizer presets"
+          onClick={() => {
+            // Set the stage selection before mounting the dialog. This avoids
+            // one frame of the previously-previewed preset when reopening it.
+            setFocus(value)
+            setGalleryOpen(true)
+          }}
+        >
+          <PresetThumb preset={value} scheme={scheme} live={showPreview} settings={stageSettings} size="lg" />
+          <span className="visual-preset-picker__stage-name">
             <GalleryIcon />
-            <span>Presets</span>
-          </button>
-        </div>
+            {VISUAL_PRESET_LABELS[value]}
+          </span>
+        </button>
+
         <button
           type="button"
           className="visual-preset-picker__arrow"
@@ -437,7 +424,63 @@ export function VisualPresetPicker({
         >
           <ArrowIcon direction="right" />
         </button>
+
+        {value !== 'MINIMAL' ? (
+          <button
+            type="button"
+            className={`visual-preset-picker__configure-btn${configureOpen ? ' visual-preset-picker__configure-btn--active' : ''}`}
+            disabled={disabled}
+            aria-expanded={configureOpen}
+            aria-label="Configure visualizer"
+            title="Configure visualizer"
+            onClick={() => setConfigureOpen((v) => !v)}
+          >
+            <ConfigureIcon />
+          </button>
+        ) : null}
       </div>
+
+      {configureOpen && value !== 'MINIMAL' ? (
+        <div className="visual-preset-picker__configure">
+          <label className="visual-preset-gallery__slider">
+            <span>
+              Speed <strong>{stageSettings.speed.toFixed(2)}×</strong>
+            </span>
+            <input
+              type="range"
+              min={0.25}
+              max={2}
+              step={0.05}
+              value={stageSettings.speed}
+              disabled={disabled || !onSettingsChange}
+              onChange={(e) => updatePresetSetting(value, 'speed', Number(e.target.value))}
+            />
+          </label>
+          <label className="visual-preset-gallery__slider">
+            <span>
+              Intensity <strong>{stageSettings.intensity.toFixed(2)}×</strong>
+            </span>
+            <input
+              type="range"
+              min={0.25}
+              max={2}
+              step={0.05}
+              value={stageSettings.intensity}
+              disabled={disabled || !onSettingsChange}
+              onChange={(e) => updatePresetSetting(value, 'intensity', Number(e.target.value))}
+            />
+          </label>
+          <label className="studio-social-toggle">
+            <input
+              type="checkbox"
+              checked={stageSettings.audioReactive}
+              disabled={disabled || !onSettingsChange}
+              onChange={(e) => updatePresetSetting(value, 'audioReactive', e.target.checked)}
+            />
+            <span>React to audio</span>
+          </label>
+        </div>
+      ) : null}
 
       {onAudioReactiveChange && audioReactive !== undefined ? (
         <label className="visual-preset-picker__reactive-toggle">
@@ -570,6 +613,15 @@ export function VisualPresetPicker({
                         disabled={disabled}
                         onChange={(e) => updateFocusSetting('intensity', Number(e.target.value))}
                       />
+                    </label>
+                    <label className="studio-social-toggle">
+                      <input
+                        type="checkbox"
+                        checked={focusSettings.audioReactive}
+                        disabled={disabled}
+                        onChange={(e) => updateFocusSetting('audioReactive', e.target.checked)}
+                      />
+                      <span>React to audio</span>
                     </label>
                     <button
                       type="button"
