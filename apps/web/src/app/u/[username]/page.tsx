@@ -250,31 +250,55 @@ interface ArtistUpcomingShow {
 /** Shared row-list rendering for every Collection sub-group inside the
  * Releases tab (DJ Sets / Playlists / Collections) — same markup the flat
  * "Collections" section used before it was split into these sub-groups. */
-function CollectionRowList({ items }: { items: NonNullable<ProfileResponse['collections']> }) {
+function CollectionRowList({
+  items,
+  canEdit = false,
+}: {
+  items: NonNullable<ProfileResponse['collections']>
+  /** Owner or board admin — shows a per-row edit link straight into the studio. */
+  canEdit?: boolean
+}) {
   return (
     <ul className="prof-list prof-collection-list">
       {items.map((c) => (
         <li key={c.slug}>
-          <Link href={c.url} className="prof-collection-row">
-            <div className="prof-collection-cover">
-              {c.coverUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.coverUrl} alt="" width={76} height={76} />
-              ) : (
-                <span className="prof-collection-cover-ph" aria-hidden />
-              )}
-            </div>
-            <div>
-              <div className="prof-collection-title">{c.name}</div>
-              <div className="prof-list-meta prof-list-meta--strong">
-                {c.itemCount} item{c.itemCount === 1 ? '' : 's'}
-                {c.isFeatured && ' · Featured'}
+          <div className="prof-collection-row">
+            <Link href={c.url} className="prof-collection-row__clickarea">
+              <div className="prof-collection-cover">
+                {c.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.coverUrl} alt="" width={76} height={76} />
+                ) : (
+                  <span className="prof-collection-cover-ph" aria-hidden />
+                )}
               </div>
-              {c.description && (
-                <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
-              )}
-            </div>
-          </Link>
+              <div>
+                <div className="prof-collection-title">{c.name}</div>
+                <div className="prof-list-meta prof-list-meta--strong">
+                  {c.itemCount} item{c.itemCount === 1 ? '' : 's'}
+                  {c.isFeatured && ' · Featured'}
+                </div>
+                {c.description && (
+                  <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
+                )}
+              </div>
+            </Link>
+            {canEdit && (
+              <Link
+                href={`/dashboard/collections/${c.slug}`}
+                className="prof-row-edit-btn"
+                aria-label={`Edit ${c.name}`}
+                title="Edit"
+              >
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M11.4 1.6a1.5 1.5 0 0 1 2.1 0l.9.9a1.5 1.5 0 0 1 0 2.1l-7.8 7.8-3.4.9.9-3.4 7.3-7.3z"
+                  />
+                </svg>
+              </Link>
+            )}
+          </div>
         </li>
       ))}
     </ul>
@@ -358,6 +382,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
   )
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
+  const isAdmin = Boolean(user?.isBoard)
+  const canEdit = isOwner || isAdmin
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
   const [{ events, posts, embeds, members, upcomingShows, discoWidgets }, pressKitImages] =
     await Promise.all([fetchChannelExtras(channel?.slug), fetchPressKitImages(artist.username)])
@@ -445,7 +471,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
       <ProfilePageLayout
         isLive={isLive}
         activeNav="discover"
-        logoOnly
         logoutAction={logout}
         user={user}
         cover={
@@ -646,121 +671,154 @@ export default async function ArtistProfilePage({ params }: { params: { username
             </section>
           )
         })()}
-        {/* Tabs sit right below the always-visible intro above. */}
+        {/* Tabs sit right below the always-visible intro above. Each content
+            type gets its own tab now — previously Releases/DJ Sets/
+            Playlists/Collections/Tracks were all stacked inside one
+            "Releases" tab, which read as "everything's missing" the moment
+            that tab wasn't the active one. Only tabs with actual content
+            are included. */}
         <ProfileTabs
-          music={
-            <>
-              {pinnedReleases.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Pinned</div>
-                  </div>
-                  <ReleasesGrid releases={pinnedReleases} />
-                </section>
-              )}
-            </>
-          }
-          releases={
-            <>
-              {/* Tahti Releases leads — formal albums/EPs first, then
-                  everything else (DJ Sets, playlists, collections,
-                  individual tracks). Only formal multi-track Release
-                  albums/EPs belong in this first section — an artist with
-                  individual uploaded tracks (shown in TracksTab below) but no
-                  formal Release isn't "missing" anything, so skip the
-                  discouraging "No published releases yet" card once there's
-                  already content further down this tab. It only appears when
-                  the tab would otherwise be entirely empty. */}
-              {(releases.length > 0 || !hasOtherReleaseContent) && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Tahti Releases</div>
-                    <div className="prof-sec-label-row__actions">
-                      {releases.length > 0 && (
-                        <div className="prof-sec-count">{releases.length} total</div>
+          sections={[
+            pinnedReleases.length > 0
+              ? {
+                  id: 'music' as const,
+                  label: 'Pinned',
+                  description: "The artist's pinned highlights.",
+                  content: (
+                    <section className="prof-section">
+                      <ReleasesGrid releases={pinnedReleases} />
+                    </section>
+                  ),
+                }
+              : null,
+            releases.length > 0 || !hasOtherReleaseContent
+              ? {
+                  id: 'releases' as const,
+                  label: 'Releases',
+                  description: 'Every album, EP, and single the artist has published on Tahti.',
+                  content: (
+                    <section className="prof-section">
+                      <div className="prof-sec-label-row">
+                        <div className="prof-sec-label">Tahti Releases</div>
+                        <div className="prof-sec-label-row__actions">
+                          {releases.length > 0 && (
+                            <div className="prof-sec-count">{releases.length} total</div>
+                          )}
+                          {isOwner && (
+                            <Link
+                              href="/dashboard/releases"
+                              className="prof-sec-add-btn"
+                              aria-label="Create a new release"
+                              title="Create a new release"
+                            >
+                              <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
+                                />
+                              </svg>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                      {releases.length === 0 ? (
+                        <div className="public-empty-card">
+                          <p className="public-empty-card__text">No published releases yet.</p>
+                          <p className="public-empty-card__hint">
+                            {isLive && links.channel ? (
+                              <Link href={links.channel}>Tune in live</Link>
+                            ) : (
+                              'New releases appear here when the artist publishes.'
+                            )}
+                          </p>
+                        </div>
+                      ) : (
+                        <ReleasesGrid releases={releases} />
                       )}
-                      {isOwner && (
-                        <Link
-                          href="/dashboard/releases"
-                          className="prof-sec-add-btn"
-                          aria-label="Create a new release"
-                          title="Create a new release"
-                        >
-                          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                            <path
-                              fill="currentColor"
-                              d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
-                            />
-                          </svg>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                  {releases.length === 0 ? (
-                    <div className="public-empty-card">
-                      <p className="public-empty-card__text">No published releases yet.</p>
-                      <p className="public-empty-card__hint">
-                        {isLive && links.channel ? (
-                          <Link href={links.channel}>Tune in live</Link>
-                        ) : (
-                          'New releases appear here when the artist publishes.'
-                        )}
-                      </p>
-                    </div>
-                  ) : (
-                    <ReleasesGrid releases={releases} />
-                  )}
-                </section>
-              )}
-              {djMixCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">DJ Sets</div>
-                    <div className="prof-sec-count">{djMixCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={djMixCollections} />
-                </section>
-              )}
-              {playlistCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Playlists</div>
-                    <div className="prof-sec-count">{playlistCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={playlistCollections} />
-                </section>
-              )}
-              {otherCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Collections</div>
-                    <div className="prof-sec-count">{otherCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={otherCollections} />
-                </section>
-              )}
-              {tracks.length > 0 && (
-                <section className="prof-section">
-                  <TracksTab
-                    tracks={tracks}
-                    isOwner={isOwner}
-                    channelSlug={channel?.slug ?? null}
-                  />
-                </section>
-              )}
-            </>
-          }
-          gallery={
-            hasProfileGallery ? (
-              <section className="prof-section prof-profile-gallery">
-                <div className="prof-sec-label">Gallery</div>
-                <ChannelGalleryView
-                  mode={channel.galleryMode as Parameters<typeof ChannelGalleryView>[0]['mode']}
-                  images={channel.slideshowImages ?? []}
-                />
-              </section>
-            ) : undefined
-          }
+                    </section>
+                  ),
+                }
+              : null,
+            djMixCollections.length > 0
+              ? {
+                  id: 'djsets' as const,
+                  label: 'DJ Sets',
+                  description: 'Recorded DJ sets and mix series.',
+                  content: (
+                    <section className="prof-section">
+                      <div className="prof-sec-label-row">
+                        <div className="prof-sec-count">{djMixCollections.length} total</div>
+                      </div>
+                      <CollectionRowList items={djMixCollections} canEdit={canEdit} />
+                    </section>
+                  ),
+                }
+              : null,
+            playlistCollections.length > 0
+              ? {
+                  id: 'playlists' as const,
+                  label: 'Playlists',
+                  description: 'Curated playlists the artist has put together.',
+                  content: (
+                    <section className="prof-section">
+                      <div className="prof-sec-label-row">
+                        <div className="prof-sec-count">{playlistCollections.length} total</div>
+                      </div>
+                      <CollectionRowList items={playlistCollections} canEdit={canEdit} />
+                    </section>
+                  ),
+                }
+              : null,
+            otherCollections.length > 0
+              ? {
+                  id: 'collections' as const,
+                  label: 'Collections',
+                  description: 'Other grouped collections.',
+                  content: (
+                    <section className="prof-section">
+                      <div className="prof-sec-label-row">
+                        <div className="prof-sec-count">{otherCollections.length} total</div>
+                      </div>
+                      <CollectionRowList items={otherCollections} canEdit={canEdit} />
+                    </section>
+                  ),
+                }
+              : null,
+            tracks.length > 0
+              ? {
+                  id: 'tracks' as const,
+                  label: 'Tracks',
+                  description: 'Every individual track the artist has uploaded.',
+                  content: (
+                    <section className="prof-section">
+                      <TracksTab
+                        tracks={tracks}
+                        isOwner={isOwner}
+                        isAdmin={isAdmin}
+                        channelSlug={channel?.slug ?? null}
+                      />
+                    </section>
+                  ),
+                }
+              : null,
+            hasProfileGallery
+              ? {
+                  id: 'gallery' as const,
+                  label: 'Gallery',
+                  description: 'A visual gallery from the artist.',
+                  content: (
+                    <section className="prof-section prof-profile-gallery">
+                      <ChannelGalleryView
+                        mode={
+                          channel!.galleryMode as Parameters<typeof ChannelGalleryView>[0]['mode']
+                        }
+                        images={channel!.slideshowImages ?? []}
+                      />
+                    </section>
+                  ),
+                }
+              : null,
+          ].filter((s): s is NonNullable<typeof s> => s !== null)}
         />
       </ProfilePageLayout>
     </>

@@ -2293,19 +2293,6 @@
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
 
-[data-tahti-ui='brand'] .ch-artist-bio-section {
-  max-width: var(--narrow-max, 720px);
-  margin: 1.25rem auto 0;
-  padding: 0 1rem;
-}
-
-[data-tahti-ui='brand'] .ch-artist-bio-section .ch-section-label {
-  margin-bottom: 0.45rem;
-}
-
-[data-tahti-ui='brand'] .ch-artist-bio--empty {
-  color: var(--muted);
-}
 
 [data-tahti-ui='brand'] .ch-live-releases {
   margin-top: 1.5rem;
@@ -6627,6 +6614,32 @@
   border-bottom: none;
 }
 
+/* Per-row edit link — owner/board-admin only, on track and collection rows
+   in the profile tabs (Tracks, DJ Sets, Playlists, Collections). */
+[data-tahti-ui='brand'] .prof-row-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-row-edit-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  color: var(--cyan);
+}
+
 [data-tahti-ui='brand'] .prof-collection-cover {
   width: 76px;
   height: 76px;
@@ -7502,6 +7515,27 @@
   border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
   background: color-mix(in srgb, var(--cyan) 5%, var(--card));
   color: var(--cyan);
+}
+
+/* Artist (channel) page: smaller icons, more legible label text than the
+ * default pill (which was sized for the denser dashboard live-preview). */
+[data-tahti-ui='brand'] .ch-artist-social-section .prof-social-link {
+  gap: 6px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-artist-social-section .prof-social-link svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-artist-social-section .prof-social-link span[aria-hidden] {
+  font-size: 0.75rem;
+  opacity: 0.6;
 }
 
 /* Icon-only row right under the name/meta line, next to the rest of the

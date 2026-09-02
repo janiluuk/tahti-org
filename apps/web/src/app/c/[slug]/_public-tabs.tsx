@@ -11,7 +11,6 @@ type Tab = PublicChannelTab
 
 const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'live', label: 'Live' },
-  { id: 'bio', label: 'Bio' },
   { id: 'archive', label: 'Sounds' },
   { id: 'releases', label: 'Releases' },
   { id: 'feed', label: 'Feed' },
@@ -28,7 +27,7 @@ const HELP_STEPS: HelpSpotlightStep[] = [
     id: 'archive',
     label: 'Sounds',
     description:
-      'Past broadcasts and DJ sets the artist has kept around to listen back to, plus any external listen embeds.',
+      'Past broadcasts, DJ sets, and latest releases the artist has kept around to listen back to, plus any external listen embeds.',
   },
   {
     id: 'releases',
@@ -41,41 +40,34 @@ const HELP_STEPS: HelpSpotlightStep[] = [
     description:
       'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements.',
   },
-  {
-    id: 'bio',
-    label: 'Bio',
-    description: 'Who the artist is — their bio, links, and other ways to find them.',
-  },
 ]
 
 /** Public tab bar for a channel page — Live is the player/now; Archive holds past
- * broadcasts and external listen embeds. Distinct from ChannelTabs (owner Overview/Manage). */
+ * broadcasts, latest releases, and external listen embeds. Distinct from ChannelTabs
+ * (owner Overview/Manage). Bio lives in the header now (always visible, not a tab). */
 export function PublicChannelTabs({
   live,
   archive,
   releases,
   feed,
-  bio,
 }: {
   /** Omit when the channel isn't currently live — the Live tab (and its
    * player) only appears while there's actually something to show, rather
-   * than sitting in the bar permanently empty. Bio (with a latest-releases
-   * preview) is the landing tab the rest of the time. */
+   * than sitting in the bar permanently empty. Sounds is the landing tab
+   * the rest of the time. */
   live?: ReactNode
   archive: ReactNode
   releases: ReactNode
   feed: ReactNode
-  bio: ReactNode
 }) {
   const hasLive = live != null
   const TABS = hasLive ? ALL_TABS : ALL_TABS.filter((tab) => tab.id !== 'live')
-  const [active, setActive] = useState<Tab>(hasLive ? 'live' : 'bio')
+  const [active, setActive] = useState<Tab>(hasLive ? 'live' : 'archive')
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
     live: null,
     archive: null,
     releases: null,
     feed: null,
-    bio: null,
   })
 
   useEffect(() => {
@@ -155,15 +147,6 @@ export function PublicChannelTabs({
         }}
       >
         {feed}
-      </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'bio'}
-        ref={(el) => {
-          panelRefs.current.bio = el
-        }}
-      >
-        {bio}
       </div>
     </div>
   )

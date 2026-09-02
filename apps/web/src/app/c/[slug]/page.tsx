@@ -47,6 +47,7 @@ import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
 import { PublicChannelTabs } from './_public-tabs'
 import { ManagePanel, type ManageStats } from './_manage-panel'
+import { TracksTab, type TrackTabItem } from '@/app/u/[username]/_tracks-tab'
 import { cookies } from 'next/headers'
 import type { CSSProperties } from 'react'
 
@@ -182,9 +183,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       }),
       getSessionUser(),
     ])
-  const releases: ReleaseGridItem[] = profileRes.ok
-    ? ((await profileRes.json()) as { releases: ReleaseGridItem[] }).releases
-    : []
+  const profileData = profileRes.ok
+    ? ((await profileRes.json()) as { releases: ReleaseGridItem[]; tracks: TrackTabItem[] })
+    : null
+  const releases: ReleaseGridItem[] = profileData?.releases ?? []
+  const allTracks: TrackTabItem[] = profileData?.tracks ?? []
   const showSupport = tiersRes.ok
     ? await tiersRes
         .json()
@@ -361,7 +364,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   </Link>
                   <Row className="ui-row--gap-3 ch-artist-header-row">
                     <AvatarTile
-                      size="md"
+                      size="lg"
                       name={channel.user.displayName}
                       src={channel.user.avatarUrl}
                       bordered
@@ -392,6 +395,18 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       </Text>
                     </div>
                   </Row>
+                  {bioHtml ? (
+                    <div
+                      className="ch-artist-bio ch-artist-bio--rich"
+                      dangerouslySetInnerHTML={{ __html: bioHtml }}
+                    />
+                  ) : channel.user.bio ? (
+                    <SafePlainText
+                      text={channel.user.bio}
+                      className="ch-artist-bio"
+                      linkMentions
+                    />
+                  ) : null}
                   <div className="ch-artist-cta-row">
                     {user?.username !== channel.user.username && (
                       <FollowButton artistUsername={channel.user.username} />
@@ -426,7 +441,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   )}
                   {(streamingLinkEntries.length > 0 || socialLinkEntries.length > 0) && (
                     <div className="ch-artist-social-section">
-                      <div className="prof-sec-label">Find the artist elsewhere</div>
                       <div className="prof-social-links">
                         {[
                           ...streamingLinkEntries,
@@ -448,20 +462,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   )}
                 </header>
               </div>
-
-              <section className="ch-artist-bio-section">
-                <div className="ch-section-label">About {channel.user.displayName}</div>
-                {bioHtml ? (
-                  <div
-                    className="ch-artist-bio ch-artist-bio--rich"
-                    dangerouslySetInnerHTML={{ __html: bioHtml }}
-                  />
-                ) : channel.user.bio ? (
-                  <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
-                ) : (
-                  <p className="ch-artist-bio ch-artist-bio--empty">No bio yet.</p>
-                )}
-              </section>
 
               {/* Ambient decoration (text layer + slideshow/gallery) — the
                   artist's own configured backdrop, not tied to whether
@@ -531,14 +531,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                               initialNowPlayingNext={channel.nowPlayingNext}
                             />
                             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-                            {releases.length > 0 && (
-                              <section className="ch-archive-section ch-live-releases">
-                                <div className="ch-archive-section-head">
-                                  <h2 className="ch-section-label">Latest releases</h2>
-                                </div>
-                                <ReleasesGrid releases={releases.slice(0, 4)} />
-                              </section>
-                            )}
                           </>
                         ) : null
                       }
@@ -547,6 +539,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 }
                 archive={
                   <>
+                    {releases.length > 0 && (
+                      <section className="ch-archive-section ch-live-releases">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Latest releases</h2>
+                        </div>
+                        <ReleasesGrid releases={releases.slice(0, 4)} />
+                      </section>
+                    )}
                     {embeds.length > 0 && (
                       <section className="ch-archive-section">
                         <div className="ch-archive-section-head">
@@ -635,6 +635,19 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         </div>
                       )}
                     </section>
+
+                    {allTracks.length > 0 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">All tracks</h2>
+                        </div>
+                        <TracksTab
+                          tracks={allTracks}
+                          isOwner={isOwnerOrAdmin}
+                          channelSlug={slug}
+                        />
+                      </section>
+                    )}
                   </>
                 }
                 releases={
@@ -762,26 +775,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         >
                           View profile →
                         </Link>
-                      </div>
-                    )}
-                  </>
-                }
-                bio={
-                  <>
-                    {bioHtml ? (
-                      <div
-                        className="ch-artist-bio ch-artist-bio--rich"
-                        dangerouslySetInnerHTML={{ __html: bioHtml }}
-                      />
-                    ) : channel.user.bio ? (
-                      <SafePlainText
-                        text={channel.user.bio}
-                        className="ch-artist-bio"
-                        linkMentions
-                      />
-                    ) : (
-                      <div className="public-empty-card">
-                        <p className="public-empty-card__text">No bio yet.</p>
                       </div>
                     )}
                   </>

@@ -138,14 +138,18 @@ function EmbedFrame({ track }: { track: TrackTabItem }) {
 export function TracksTab({
   tracks,
   isOwner,
+  isAdmin = false,
   channelSlug,
 }: {
   tracks: TrackTabItem[]
   isOwner: boolean
+  /** Board admin — same per-row edit access as the owner, moderation use. */
+  isAdmin?: boolean
   /** Needed for the love-button API (scoped to a channel) — null only for the
    * (rare) archive item with no channel at all. */
   channelSlug: string | null
 }) {
+  const canEdit = isOwner || isAdmin
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
   const { track: playerTrack, load, currentTime, duration, seek } = usePlayer()
@@ -224,7 +228,7 @@ export function TracksTab({
         <div className="prof-sec-label">Tracks</div>
         <div className="prof-sec-label-row__actions">
           <div className="prof-sec-count">{tracks.length} total</div>
-          {isOwner && (
+          {canEdit && (
             <Link href="/dashboard/archive" className="prof-tracks-studio-link">
               Manage in Studio
             </Link>
@@ -311,6 +315,21 @@ export function TracksTab({
                             </div>
                           </div>
                         </button>
+                        {canEdit && (
+                          <Link
+                            href={`/dashboard/archive/${t.id}/editor`}
+                            className="prof-row-edit-btn"
+                            aria-label={`Edit ${t.title}`}
+                            title="Edit"
+                          >
+                            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                              <path
+                                fill="currentColor"
+                                d="M11.4 1.6a1.5 1.5 0 0 1 2.1 0l.9.9a1.5 1.5 0 0 1 0 2.1l-7.8 7.8-3.4.9.9-3.4 7.3-7.3z"
+                              />
+                            </svg>
+                          </Link>
+                        )}
                       </div>
                       {t.playUrl &&
                         t.peaks &&

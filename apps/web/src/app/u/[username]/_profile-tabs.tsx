@@ -7,54 +7,41 @@ import { useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { ProfileTabSwitchProvider } from './_profile-tab-context'
 
-type Tab = 'music' | 'releases' | 'gallery'
+export type ProfileTabId =
+  | 'music'
+  | 'releases'
+  | 'djsets'
+  | 'playlists'
+  | 'collections'
+  | 'tracks'
+  | 'gallery'
 
-const BASE_TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'music', label: 'Music' },
-  { id: 'releases', label: 'Releases' },
-]
+export type ProfileTabSection = {
+  id: ProfileTabId
+  label: string
+  description: string
+  content: ReactNode
+}
 
-const HELP_STEPS: HelpSpotlightStep[] = [
-  {
-    id: 'music',
-    label: 'Music',
-    description: 'Pinned highlights and the artist’s most recently published music.',
-  },
-  {
-    id: 'releases',
-    label: 'Releases',
-    description:
-      'Every release, DJ Set, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
-  },
-  {
-    id: 'gallery',
-    label: 'Gallery',
-    description: 'A visual gallery from the artist.',
-  },
-]
+/** Tabbed profile content — each content type (Releases, DJ Sets, Playlists,
+ * Collections, Tracks, ...) gets its own tab instead of being stacked inside
+ * one "Releases" tab. Pass only the sections that actually have content;
+ * empty ones are simply omitted from the bar rather than shown blank. */
+export function ProfileTabs({ sections }: { sections: ProfileTabSection[] }) {
+  const [active, setActiveState] = useState<ProfileTabId | undefined>(sections[0]?.id)
+  const panelRefs = useRef<Partial<Record<ProfileTabId, HTMLDivElement | null>>>({})
 
-export function ProfileTabs({
-  music,
-  releases,
-  gallery,
-}: {
-  music: ReactNode
-  releases: ReactNode
-  gallery?: ReactNode
-}) {
-  const [active, setActiveState] = useState<Tab>('music')
-  const tabs = gallery ? BASE_TABS : BASE_TABS.filter((tab) => tab.id !== 'gallery')
-  const helpSteps = gallery ? HELP_STEPS : HELP_STEPS.filter((step) => step.id !== 'gallery')
-
-  function setActive(tab: Tab) {
+  function setActive(tab: ProfileTabId) {
     setActiveState(tab)
   }
 
-  const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
-    music: null,
-    releases: null,
-    gallery: null,
-  })
+  const helpSteps: HelpSpotlightStep[] = sections.map((s) => ({
+    id: s.id,
+    label: s.label,
+    description: s.description,
+  }))
+
+  if (sections.length === 0) return null
 
   return (
     <div className="prof-tabs">
@@ -62,52 +49,35 @@ export function ProfileTabs({
         <HelpSpotlight
           steps={helpSteps}
           activeId={active}
-          onNavigate={(id) => setActive(id as Tab)}
-          getTargetEl={(step) => panelRefs.current[step.id as Tab]}
+          onNavigate={(id) => setActive(id as ProfileTabId)}
+          getTargetEl={(step) => panelRefs.current[step.id as ProfileTabId] ?? null}
         />
         <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
-          {tabs.map((tab) => (
+          {sections.map((s) => (
             <button
-              key={tab.id}
+              key={s.id}
               type="button"
               role="tab"
-              aria-selected={active === tab.id}
-              className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
-              onClick={() => setActive(tab.id)}
+              aria-selected={active === s.id}
+              className={`prof-tabs__tab${active === s.id ? ' prof-tabs__tab--active' : ''}`}
+              onClick={() => setActive(s.id)}
             >
-              {tab.label}
+              {s.label}
             </button>
           ))}
         </div>
-        <div
-          className="prof-tabs__panel"
-          hidden={active !== 'music'}
-          ref={(el) => {
-            panelRefs.current.music = el
-          }}
-        >
-          {music}
-        </div>
-        <div
-          className="prof-tabs__panel"
-          hidden={active !== 'releases'}
-          ref={(el) => {
-            panelRefs.current.releases = el
-          }}
-        >
-          {releases}
-        </div>
-        {gallery && (
+        {sections.map((s) => (
           <div
+            key={s.id}
             className="prof-tabs__panel"
-            hidden={active !== 'gallery'}
+            hidden={active !== s.id}
             ref={(el) => {
-              panelRefs.current.gallery = el
+              panelRefs.current[s.id] = el
             }}
           >
-            {gallery}
+            {s.content}
           </div>
-        )}
+        ))}
       </ProfileTabSwitchProvider>
     </div>
   )
