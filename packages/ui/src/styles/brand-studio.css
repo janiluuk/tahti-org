@@ -13219,6 +13219,17 @@
   flex-shrink: 0;
 }
 
+[data-tahti-ui='studio'] .disco-widget-configure {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .disco-widget-configure__textarea {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
 [data-tahti-ui='studio'] .schedule-rotation-row__handle {
   border: 0;
   background: transparent;

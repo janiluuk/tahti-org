@@ -14,6 +14,8 @@ import {
   deleteDiscoWidgetInstall,
   fetchDiscoWidgetInstalls,
   patchDiscoWidgetInstall,
+  setDiscoWidgetDefaultConfig,
+  type DiscoWidgetConfig,
 } from '@/lib/disco-widgets-client'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -151,7 +153,7 @@ export async function installHomepageDiscoWidget(
 
 export async function patchHomepageDiscoWidgetInstall(
   id: string,
-  patch: { enabled?: boolean; position?: number },
+  patch: { enabled?: boolean; position?: number; configJson?: DiscoWidgetConfig },
 ): Promise<{ error: string | null; install?: DiscoWidgetInstallView }> {
   return patchDiscoWidgetInstall('/api/admin/disco-widgets/installs', id, patch)
 }
@@ -160,4 +162,13 @@ export async function removeHomepageDiscoWidgetInstall(
   id: string,
 ): Promise<{ error: string | null }> {
   return deleteDiscoWidgetInstall('/api/admin/disco-widgets/installs', id)
+}
+
+/** Board-only: promotes this widget's current per-install configJson to be
+ * the starting config for every future install, across all scopes. */
+export async function saveDiscoWidgetDefaultConfig(
+  widgetId: string,
+  defaultConfigJson: DiscoWidgetConfig,
+): Promise<{ error: string | null; widget?: DiscoWidgetAdminItem }> {
+  return setDiscoWidgetDefaultConfig(widgetId, defaultConfigJson)
 }

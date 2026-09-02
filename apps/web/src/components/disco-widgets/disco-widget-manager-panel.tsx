@@ -12,9 +12,16 @@ export interface DiscoWidgetManagerActions {
   install: (widgetId: string) => Promise<{ error: string | null; install?: DiscoWidgetInstallView }>
   patch: (
     id: string,
-    patch: { enabled?: boolean; position?: number },
+    patch: { enabled?: boolean; position?: number; configJson?: Record<string, unknown> },
   ) => Promise<{ error: string | null; install?: DiscoWidgetInstallView }>
   remove: (id: string) => Promise<{ error: string | null }>
+  /** Board-only. Present only on the admin-facing instance of this panel —
+   * omit entirely for listener/artist surfaces, which hides the "Save as
+   * default" action from DiscoWidgetInstalledList automatically. */
+  saveAsDefault?: (
+    widgetId: string,
+    configJson: Record<string, unknown>,
+  ) => Promise<{ error: string | null }>
 }
 
 export interface DiscoWidgetManagerPanelProps {
@@ -25,7 +32,8 @@ export interface DiscoWidgetManagerPanelProps {
 
 /** The install-management half shared by every scope's settings surface —
  * browse + install, and manage what's already installed (toggle/reorder/
- * remove). Each scope's page supplies its own scope-bound server actions. */
+ * configure/remove). Each scope's page supplies its own scope-bound server
+ * actions. */
 export function DiscoWidgetManagerPanel({
   initialWidgets,
   initialInstalls,
@@ -95,6 +103,29 @@ export function DiscoWidgetManagerPanel({
     setInstalls((prev) => prev.filter((i) => i.id !== id))
   }
 
+  async function handleConfigure(id: string, configJson: Record<string, unknown>) {
+    setError(null)
+    setPendingId(id)
+    const result = await actions.patch(id, { configJson })
+    setPendingId(null)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+    setInstalls((prev) => prev.map((i) => (i.id === id ? { ...i, configJson } : i)))
+  }
+
+  async function handleSaveAsDefault(id: string, configJson: Record<string, unknown>) {
+    if (!actions.saveAsDefault) return
+    const install = installs.find((i) => i.id === id)
+    if (!install) return
+    setError(null)
+    setPendingId(id)
+    const result = await actions.saveAsDefault(install.widget.id, configJson)
+    setPendingId(null)
+    if (result.error) setError(result.error)
+  }
+
   return (
     <div>
       <DiscoWidgetInstalledList
@@ -103,6 +134,12 @@ export function DiscoWidgetManagerPanel({
         onToggle={(id, enabled) => void handleToggle(id, enabled)}
         onReorder={(next) => void handleReorder(next)}
         onRemove={(id) => void handleRemove(id)}
+        onConfigure={(id, configJson) => void handleConfigure(id, configJson)}
+        onSaveAsDefault={
+          actions.saveAsDefault
+            ? (id, configJson) => void handleSaveAsDefault(id, configJson)
+            : undefined
+        }
       />
       <h3 className="studio-mt-lg">Browse the store</h3>
       <DiscoWidgetStore

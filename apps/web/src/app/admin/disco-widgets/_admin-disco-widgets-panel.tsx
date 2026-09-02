@@ -23,6 +23,7 @@ import {
   registerDiscoWidget,
   rejectDiscoWidget,
   removeHomepageDiscoWidgetInstall,
+  saveDiscoWidgetDefaultConfig,
 } from './actions'
 
 function toStoreItem(w: DiscoWidgetAdminItem): DiscoWidgetStoreItem {
@@ -343,6 +344,10 @@ export function AdminDiscoWidgetsPanel({
             install: installHomepageDiscoWidget,
             patch: patchHomepageDiscoWidgetInstall,
             remove: removeHomepageDiscoWidgetInstall,
+            saveAsDefault: async (widgetId, configJson) => {
+              const result = await saveDiscoWidgetDefaultConfig(widgetId, configJson)
+              return { error: result.error }
+            },
           }}
         />
       </Panel>

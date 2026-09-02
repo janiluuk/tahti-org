@@ -8,6 +8,7 @@
 // routes/disco-widgets/public.ts.
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { Prisma } from '@tahti/db'
 import {
   CreateDiscoWidgetInstallSchema,
   DiscoWidgetIdParamSchema,
@@ -92,7 +93,12 @@ const meDiscoWidgetsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const install = await fastify.prisma.discoWidgetInstall.create({
-        data: { widgetId: widget.id, listenerUserId: request.sessionUser!.id, position },
+        data: {
+          widgetId: widget.id,
+          listenerUserId: request.sessionUser!.id,
+          position,
+          configJson: (widget.defaultConfigJson ?? {}) as Prisma.InputJsonValue,
+        },
         include: { widget: { select: STORE_ITEM_SELECT } },
       })
       return reply.status(201).send(install)
@@ -188,7 +194,12 @@ const meDiscoWidgetsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const install = await fastify.prisma.discoWidgetInstall.create({
-        data: { widgetId: widget.id, channelId: request.channel!.id, position },
+        data: {
+          widgetId: widget.id,
+          channelId: request.channel!.id,
+          position,
+          configJson: (widget.defaultConfigJson ?? {}) as Prisma.InputJsonValue,
+        },
         include: { widget: { select: STORE_ITEM_SELECT } },
       })
       return reply.status(201).send(install)

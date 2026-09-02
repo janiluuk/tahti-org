@@ -186,6 +186,14 @@ export const RejectDiscoWidgetSchema = z.object({
 })
 export type RejectDiscoWidgetInput = z.infer<typeof RejectDiscoWidgetSchema>
 
+// Board-only: sets/clears the starting configJson every new install of this
+// widget gets, across all scopes — copied from one install's current
+// configJson by the "Save as default" action, or cleared with null.
+export const SetDiscoWidgetDefaultConfigSchema = z.object({
+  defaultConfigJson: z.record(z.string(), z.unknown()).nullable(),
+})
+export type SetDiscoWidgetDefaultConfigInput = z.infer<typeof SetDiscoWidgetDefaultConfigSchema>
+
 export const DiscoWidgetAdminItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -199,6 +207,7 @@ export const DiscoWidgetAdminItemSchema = z.object({
   currentVersion: z.string(),
   bundleSizeBytes: z.number().int(),
   moderationNote: z.string().nullable(),
+  defaultConfigJson: z.unknown().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
