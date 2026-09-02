@@ -1297,9 +1297,11 @@ model Channel {
   // mirror targets — distinct from nowPlaying* above (in-app metadata, not
   // rendered into video). Falls back to the artist's display name + avatar
   // when unset.
-  streamOverlayTitle    String?
-  streamOverlaySubtitle String?
-  streamOverlayCoverUrl String?
+  streamOverlayTitle        String?
+  streamOverlaySubtitle     String?
+  streamOverlayCoverUrl     String?
+  streamOverlayBackdropUrl  String?
+  streamOverlayVisualPreset VisualPreset @default(MINIMAL)
   // Text shown in place of the generic Tahti top bar when this channel is
   // viewed via its verified custom domain (see routes/channels/custom-domain.ts).
   // Null/empty falls back to the artist's display name + avatar.

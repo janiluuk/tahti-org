@@ -569,6 +569,8 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
           streamOverlayCoverUrl: true,
+          streamOverlayBackdropUrl: true,
+          streamOverlayVisualPreset: true,
         },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -585,7 +587,13 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
-      const { streamOverlayTitle, streamOverlaySubtitle, streamOverlayCoverUrl } = parsed.data
+      const {
+        streamOverlayTitle,
+        streamOverlaySubtitle,
+        streamOverlayCoverUrl,
+        streamOverlayBackdropUrl,
+        streamOverlayVisualPreset,
+      } = parsed.data
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
@@ -605,11 +613,17 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
           ...(streamOverlayCoverUrl !== undefined
             ? { streamOverlayCoverUrl: streamOverlayCoverUrl || null }
             : {}),
+          ...(streamOverlayBackdropUrl !== undefined
+            ? { streamOverlayBackdropUrl: streamOverlayBackdropUrl || null }
+            : {}),
+          ...(streamOverlayVisualPreset !== undefined ? { streamOverlayVisualPreset } : {}),
         },
         select: {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
           streamOverlayCoverUrl: true,
+          streamOverlayBackdropUrl: true,
+          streamOverlayVisualPreset: true,
         },
       })
       return reply.send(updated)

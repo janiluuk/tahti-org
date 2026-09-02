@@ -35,7 +35,7 @@ type PlaylistOption = {
 type CollectionItem = {
   id: string
   position: number
-  archiveItem: { title: string } | null
+  archiveItem: { id: string; title: string } | null
   release: { title: string } | null
 }
 
@@ -132,6 +132,7 @@ export function ChannelControlsPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
+  const [pendingChoice, setPendingChoice] = useState<{ id: string; name: string } | null>(null)
   const [managerExpanded, setManagerExpanded] = useState(!defaultCollapsed)
   const playlistSectionId = useId()
   // Ticks once a second while a track with a known duration is playing, purely
@@ -302,7 +303,7 @@ export function ChannelControlsPanel({
     }
   }
 
-  async function switchPlaylist(collectionId: string) {
+  async function replacePlaylist(collectionId: string) {
     setPending('playlist')
     setError(null)
     setMessage(null)
@@ -326,6 +327,76 @@ export function ChannelControlsPanel({
       setMessage(`Playlist changed to ${selected?.name ?? 'Default rotation'}.`)
     } catch {
       setError('Could not change the channel playlist')
+    } finally {
+      setPending(null)
+    }
+  }
+
+  /** Merges the chosen playlist's tracks onto the end of the current custom
+   * rotation instead of replacing it — only archive-item tracks carry over
+   * (the fallback rotation is archive-item based; release-only collection
+   * rows have nothing to append). Clears any active single-collection source
+   * first, since appending only makes sense against the custom rotation. */
+  async function appendPlaylist(collectionId: string) {
+    setPending('playlist')
+    setError(null)
+    setMessage(null)
+    try {
+      const selected = playlists.find((playlist) => playlist.id === collectionId)
+      if (!selected) throw new Error()
+      const response = await fetch(
+        `${API_URL}/api/me/collections/${encodeURIComponent(selected.slug)}`,
+        { credentials: 'include', cache: 'no-store' },
+      )
+      if (!response.ok) throw new Error()
+      const detail = (await response.json()) as CollectionDetail
+      const newIds = new Set(rotationItems.map((item) => item.id))
+      const additions = detail.items
+        .map((item) => item.archiveItem)
+        .filter((item): item is { id: string; title: string } => item != null)
+        .filter((item) => !newIds.has(item.id))
+
+      if (activePlaylist) {
+        const clearResponse = await fetch(
+          `${API_URL}/api/channels/${encodeURIComponent(slug)}/fallback-collection`,
+          {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collectionId: null }),
+          },
+        )
+        if (!clearResponse.ok) throw new Error()
+        setPlaylists((current) => current.map((playlist) => ({ ...playlist, active: false })))
+        setCollection(null)
+      }
+
+      const mergedTitles = new Map(rotationItems.map((item) => [item.id, item.title]))
+      for (const item of additions) mergedTitles.set(item.id, item.title)
+      const mergedIds = [...rotationItems.map((item) => item.id), ...additions.map((i) => i.id)]
+
+      const programmeResponse = await fetch(`${API_URL}/api/me/channel/programme`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fallbackMode: 'ordered',
+          items: mergedIds.map((archiveItemId, index) => ({
+            archiveItemId,
+            isFallback: true,
+            fallbackOrder: index,
+          })),
+        }),
+      })
+      if (!programmeResponse.ok) throw new Error()
+      setProgramme((await programmeResponse.json()) as Programme)
+      setMessage(
+        additions.length > 0
+          ? `Added ${additions.length} track${additions.length === 1 ? '' : 's'} from ${selected.name}.`
+          : `${selected.name} had no new tracks to add.`,
+      )
+    } catch {
+      setError('Could not append that playlist')
     } finally {
       setPending(null)
     }
@@ -469,13 +540,13 @@ export function ChannelControlsPanel({
       <div className="db-channel-controls__manager-collapse">
         <button
           type="button"
-          className="db-channel-controls__manager-collapse-button"
+          className="db-channel-controls__manager-collapse-button db-channel-controls__manager-collapse-button--icon"
           aria-expanded="true"
           aria-label={`Collapse ${title}`}
           title={`Collapse ${title}`}
           onClick={() => setManagerExpanded(false)}
         >
-          Collapse manager
+          <ChevronIcon expanded />
         </button>
       </div>
       <div className="db-channel-controls__row">
@@ -538,7 +609,15 @@ export function ChannelControlsPanel({
             className="studio-input db-channel-controls__select"
             value={activePlaylist?.id ?? ''}
             disabled={pending !== null}
-            onChange={(event) => void switchPlaylist(event.target.value)}
+            onChange={(event) => {
+              const nextId = event.target.value
+              if (!nextId) {
+                void replacePlaylist('')
+                return
+              }
+              const chosen = playlists.find((playlist) => playlist.id === nextId)
+              if (chosen) setPendingChoice({ id: chosen.id, name: chosen.name })
+            }}
           >
             <option value="">Default rotation ({rotationItems.length})</option>
             {playlists.map((playlist) => (
@@ -610,6 +689,57 @@ export function ChannelControlsPanel({
       )}
       {message ? <p className="studio-text-success studio-text-sm">{message}</p> : null}
       {error ? <p className="studio-text-error studio-text-sm">{error}</p> : null}
+      {pendingChoice && (
+        <div
+          className="db-channel-controls__confirm-overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPendingChoice(null)
+          }}
+        >
+          <div
+            className="db-channel-controls__confirm-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Use ${pendingChoice.name}`}
+          >
+            <h3 className="db-channel-controls__confirm-title">
+              Use &ldquo;{pendingChoice.name}&rdquo;?
+            </h3>
+            <p className="studio-text-muted-sm">
+              Replace swaps the whole rotation for this playlist. Append adds its tracks to the end
+              of your current rotation instead.
+            </p>
+            <div className="db-channel-controls__confirm-actions">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  const id = pendingChoice.id
+                  setPendingChoice(null)
+                  void replacePlaylist(id)
+                }}
+              >
+                Replace
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const id = pendingChoice.id
+                  setPendingChoice(null)
+                  void appendPlaylist(id)
+                }}
+              >
+                Append
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setPendingChoice(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Panel>
   )
 }
