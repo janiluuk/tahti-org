@@ -113,6 +113,7 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
       isRoute: true,
     },
     { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true },
+    { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
     { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
   ],
 }
