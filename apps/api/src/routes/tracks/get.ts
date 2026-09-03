@@ -5,12 +5,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   PublicTrackDetailSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { serializeArchiveItem } from '../../lib/archive-metadata.js'
+import { serializeSound } from '../../lib/sound-metadata.js'
 
 // GET /api/tracks/:id — public, no auth required. Full detail for a
 // standalone track page reached anywhere a track id travels without its
@@ -32,7 +32,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
 
-      const item = await fastify.prisma.archiveItem.findFirst({
+      const item = await fastify.prisma.sound.findFirst({
         where: { id, status: 'READY', isPublic: true },
         select: {
           id: true,
@@ -76,16 +76,16 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       if (!item) return reply.status(404).send({ error: 'Track not found' })
 
       const { channel, mp3Key, flacKey, _count, ...rest } = item
-      const playbackKey = archivePlaybackKey({ mp3Key, flacKey })
+      const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
       const [audioUrl, downloadCount] = await Promise.all([
         playbackKey ? presignedGetUrl(playbackKey, 3600) : Promise.resolve(null),
         fastify.prisma.download.count({
-          where: { archiveItemId: item.id, countedAt: { not: null } },
+          where: { soundId: item.id, countedAt: { not: null } },
         }),
       ])
 
       return reply.send({
-        ...serializeArchiveItem(rest),
+        ...serializeSound(rest),
         artistName: item.artistName ?? channel.user.displayName,
         channelSlug: channel.slug,
         channel: {

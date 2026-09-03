@@ -30,7 +30,7 @@ export async function forceChannelOffline(
       where: { id: broadcast.id },
       data: { endedAt: new Date() },
     })
-    // A session that never went LIVE (preview-only) has no public archive to finalize.
+    // A session that never went LIVE (preview-only) has no public sound to finalize.
     // M35: artist can opt out of auto-recording per channel.
     if (broadcast.wentLiveAt && channel?.autoRecordEnabled) {
       enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>

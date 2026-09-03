@@ -7,7 +7,7 @@ import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
 } from '../../test/helpers.js'
 
@@ -95,7 +95,7 @@ describe('STREAM-011 — Tahti Radio rotation preview', () => {
       displayName: 'Rotation Test Artist',
     })
 
-    const first = await prisma.archiveItem.create({
+    const first = await prisma.sound.create({
       data: {
         channelId: trackArtist.channel!.id,
         title: 'Rotation Track One',
@@ -103,7 +103,7 @@ describe('STREAM-011 — Tahti Radio rotation preview', () => {
         isPublic: true,
       },
     })
-    const second = await prisma.archiveItem.create({
+    const second = await prisma.sound.create({
       data: {
         channelId: trackArtist.channel!.id,
         title: 'Rotation Track Two',
@@ -115,7 +115,7 @@ describe('STREAM-011 — Tahti Radio rotation preview', () => {
     await prisma.curatedRotationItem.create({
       data: {
         channelId: radioChannelId,
-        archiveItemId: second.id,
+        soundId: second.id,
         position: 1,
         addedById: radioArtist.id,
       },
@@ -123,7 +123,7 @@ describe('STREAM-011 — Tahti Radio rotation preview', () => {
     await prisma.curatedRotationItem.create({
       data: {
         channelId: radioChannelId,
-        archiveItemId: first.id,
+        soundId: first.id,
         position: 0,
         addedById: radioArtist.id,
       },
@@ -225,7 +225,7 @@ describe('radio show detail — past episode recording linkage', () => {
     })
     const now = new Date()
 
-    const publishedItem = await createReadyArchiveItem(prisma, artist.channel!.id, 'Published set')
+    const publishedItem = await createReadySound(prisma, artist.channel!.id, 'Published set')
     const airedBooking = await prisma.radioSlotBooking.create({
       data: {
         channelId: artist.channel!.id,
@@ -238,7 +238,7 @@ describe('radio show detail — past episode recording linkage', () => {
         channelId: artist.channel!.id,
         source: 'RTMP',
         radioSlotBookingId: airedBooking.id,
-        archiveItemId: publishedItem.id,
+        soundId: publishedItem.id,
         wentLiveAt: airedBooking.startAt,
         endedAt: airedBooking.endAt,
       },
@@ -262,16 +262,16 @@ describe('radio show detail — past episode recording linkage', () => {
     const body = res.json() as {
       pastEpisodes: Array<{
         id: string
-        recording: { archiveItemId: string; title: string; channelItemUrl: string } | null
+        recording: { soundId: string; title: string; channelItemUrl: string } | null
       }>
     }
     expect(body.pastEpisodes).toHaveLength(2)
 
     const aired = body.pastEpisodes.find((ep) => ep.id === airedBooking.id)
     expect(aired?.recording).toEqual({
-      archiveItemId: publishedItem.id,
+      soundId: publishedItem.id,
       title: 'Published set',
-      channelItemUrl: expect.stringContaining(`archive-item-${publishedItem.id}`),
+      channelItemUrl: expect.stringContaining(`sound-item-${publishedItem.id}`),
     })
 
     const noShow = body.pastEpisodes.find((ep) => ep.id !== airedBooking.id)
@@ -286,8 +286,8 @@ describe('radio show detail — past episode recording linkage', () => {
     })
     const now = new Date()
 
-    const privateItem = await createReadyArchiveItem(prisma, artist.channel!.id, 'Private set')
-    await prisma.archiveItem.update({ where: { id: privateItem.id }, data: { isPublic: false } })
+    const privateItem = await createReadySound(prisma, artist.channel!.id, 'Private set')
+    await prisma.sound.update({ where: { id: privateItem.id }, data: { isPublic: false } })
     const booking = await prisma.radioSlotBooking.create({
       data: {
         channelId: artist.channel!.id,
@@ -300,7 +300,7 @@ describe('radio show detail — past episode recording linkage', () => {
         channelId: artist.channel!.id,
         source: 'RTMP',
         radioSlotBookingId: booking.id,
-        archiveItemId: privateItem.id,
+        soundId: privateItem.id,
         wentLiveAt: booking.startAt,
         endedAt: booking.endAt,
       },

@@ -83,12 +83,12 @@ export async function createEmailVerificationToken(
   return token
 }
 
-export async function createReadyArchiveItem(
+export async function createReadySound(
   prisma: PrismaClient,
   channelId: string,
   title = 'Test track',
 ) {
-  return prisma.archiveItem.create({
+  return prisma.sound.create({
     data: {
       channelId,
       title,

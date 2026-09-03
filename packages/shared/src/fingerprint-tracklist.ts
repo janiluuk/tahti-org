@@ -4,7 +4,7 @@
 import { fingerprintBoundaries, fingerprintsToTracklistEntries } from './broadcast-fingerprint.js'
 import { parseAcoustidLookupResponse } from './acoustid.js'
 import type { LiveFingerprintSegment } from './dto/broadcast-fingerprint.js'
-import type { TracklistEntry } from './dto/archive-metadata.js'
+import type { TracklistEntry } from './dto/sound-metadata.js'
 
 const ACOUSTID_LOOKUP_URL = 'https://api.acoustid.org/v2/lookup'
 

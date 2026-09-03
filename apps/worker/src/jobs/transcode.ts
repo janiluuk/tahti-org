@@ -12,14 +12,14 @@ import {
   deriveQualityBadge,
   isLosslessCodec,
   isLosslessSource,
-  mergeDetectedArchiveMetadata,
-  mergeParsedArchiveTags,
-  parseArchiveFileTags,
+  mergeDetectedSoundMetadata,
+  mergeParsedSoundTags,
+  parseSoundFileTags,
   sourceFormatLabel,
 } from '@tahti/shared'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
-import { enqueueEncodeStreamingCopy, enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
+import { enqueueEncodeStreamingCopy, enqueueWarmSoundFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
@@ -116,7 +116,7 @@ async function buildTagPatch(
   tmpDir: string,
   durationSec: number,
 ): Promise<Record<string, unknown>> {
-  const embedded = parseArchiveFileTags(embeddedTags)
+  const embedded = parseSoundFileTags(embeddedTags)
   let merged = embedded
 
   if (item.useDetectedBpmKey && (embedded.bpm == null || embedded.key == null)) {
@@ -126,11 +126,11 @@ async function buildTagPatch(
       needBpm: embedded.bpm == null,
       needKey: embedded.key == null,
     })
-    merged = mergeParsedArchiveTags(embedded, acoustic)
+    merged = mergeParsedSoundTags(embedded, acoustic)
   }
 
   const patch: Record<string, unknown> = {
-    ...mergeDetectedArchiveMetadata(item, merged),
+    ...mergeDetectedSoundMetadata(item, merged),
   }
   if (merged.bpm != null) patch.bpmDetected = merged.bpm
   if (merged.key != null) patch.keyDetected = merged.key
@@ -141,20 +141,20 @@ export async function processTranscodeJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
   const startedAt = Date.now()
 
-  const item = await prisma.archiveItem.findUnique({
+  const item = await prisma.sound.findUnique({
     where: { id: itemId },
     include: { channel: { select: { slug: true } } },
   })
 
-  if (!item) throw new Error(`ArchiveItem ${itemId} not found`)
-  if (!item.rawKey) throw new Error(`ArchiveItem ${itemId} has no rawKey (embed-only source?)`)
+  if (!item) throw new Error(`Sound ${itemId} not found`)
+  if (!item.rawKey) throw new Error(`Sound ${itemId} has no rawKey (embed-only source?)`)
 
-  await prisma.archiveItem.update({
+  await prisma.sound.update({
     where: { id: itemId },
     data: { status: 'PROCESSING' },
   })
 
-  logLine({ itemId }, `archive item ${itemId} transcode starting`)
+  logLine({ itemId }, `sound item ${itemId} transcode starting`)
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-transcode-'))
 
@@ -176,7 +176,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       const flacKey = `flac/${item.channel.slug}/${itemId}.flac`
       await uploadFile(flacKey, flacPath, 'audio/flac')
 
-      await prisma.archiveItem.update({
+      await prisma.sound.update({
         where: { id: itemId },
         data: {
           status: 'READY',
@@ -200,11 +200,11 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         },
       })
       await ensureInitialVersion(prisma, itemId)
-      await enqueueWarmArchiveFallbackCache(item.channelId)
+      await enqueueWarmSoundFallbackCache(item.channelId)
       await enqueueEncodeStreamingCopy(itemId)
       logLine(
         { itemId, targetFormat: 'flac', elapsedMs: Date.now() - startedAt },
-        `archive item ${itemId} transcode to flac done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+        `sound item ${itemId} transcode to flac done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
       )
       return
     }
@@ -217,7 +217,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     const mp3Key = `mp3/${item.channel.slug}/${itemId}.mp3`
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemId },
       data: {
         status: 'READY',
@@ -236,13 +236,13 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     })
 
     await ensureInitialVersion(prisma, itemId)
-    await enqueueWarmArchiveFallbackCache(item.channelId)
+    await enqueueWarmSoundFallbackCache(item.channelId)
     logLine(
       { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
-      `archive item ${itemId} transcode to mp3 done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      `sound item ${itemId} transcode to mp3 done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
   } catch (err) {
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemId },
       data: { status: 'ERROR' },
     })
@@ -252,7 +252,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         elapsedMs: Date.now() - startedAt,
         error: err instanceof Error ? err.message : String(err),
       },
-      `archive item ${itemId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      `sound item ${itemId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
     throw err
   } finally {

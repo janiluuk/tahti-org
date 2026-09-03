@@ -17,7 +17,7 @@ describe('/api/reactions/track/:id', () => {
   let ownerCookie: string
   let otherCookie: string
   let channelSlug: string
-  let archiveItemId: string
+  let soundId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -39,7 +39,7 @@ describe('/api/reactions/track/:id', () => {
     })
     otherCookie = await sessionCookieFor(prisma, other.id)
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Reaction Test Track',
@@ -50,7 +50,7 @@ describe('/api/reactions/track/:id', () => {
         tracklist: [{ startSec: 0, title: 'Cue one', artist: 'Guest' }],
       },
     })
-    archiveItemId = item.id
+    soundId = item.id
   })
 
   afterAll(async () => {
@@ -63,7 +63,7 @@ describe('/api/reactions/track/:id', () => {
   })
 
   it('returns peaks, identity, and tracklist alongside an empty reaction list', async () => {
-    const res = await app.inject({ method: 'GET', url: `/api/reactions/track/${archiveItemId}` })
+    const res = await app.inject({ method: 'GET', url: `/api/reactions/track/${soundId}` })
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.peaks).toEqual([10, 20, 255, 0])
@@ -76,7 +76,7 @@ describe('/api/reactions/track/:id', () => {
 
   it('includes broadcastReactions when the track was recorded from a broadcast', async () => {
     const owner = await prisma.channel.findUniqueOrThrow({ where: { slug: channelSlug } })
-    const recordedItem = await prisma.archiveItem.create({
+    const recordedItem = await prisma.sound.create({
       data: {
         channelId: owner.id,
         title: 'Recorded Show',
@@ -89,7 +89,7 @@ describe('/api/reactions/track/:id', () => {
       data: {
         channelId: owner.id,
         source: 'ICECAST',
-        archiveItemId: recordedItem.id,
+        soundId: recordedItem.id,
         reactions: {
           createMany: {
             data: [
@@ -114,11 +114,11 @@ describe('/api/reactions/track/:id', () => {
     )
 
     await prisma.broadcast.delete({ where: { id: broadcast.id } })
-    await prisma.archiveItem.delete({ where: { id: recordedItem.id } })
+    await prisma.sound.delete({ where: { id: recordedItem.id } })
   })
 
   it('returns an empty broadcastReactions list for a track with no linked broadcast', async () => {
-    const res = await app.inject({ method: 'GET', url: `/api/reactions/track/${archiveItemId}` })
+    const res = await app.inject({ method: 'GET', url: `/api/reactions/track/${soundId}` })
     expect(res.statusCode).toBe(200)
     expect(res.json().broadcastReactions).toEqual([])
   })
@@ -131,7 +131,7 @@ describe('/api/reactions/track/:id', () => {
   it('requires auth to post a reaction', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/reactions/track/${archiveItemId}`,
+      url: `/api/reactions/track/${soundId}`,
       payload: { type: 'LAUGH', positionSec: 12 },
     })
     expect(res.statusCode).toBe(401)
@@ -142,7 +142,7 @@ describe('/api/reactions/track/:id', () => {
 
     const res = await app.inject({
       method: 'POST',
-      url: `/api/reactions/track/${archiveItemId}`,
+      url: `/api/reactions/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { type: 'HANDS_UP', positionSec: 42 },
     })
@@ -150,7 +150,7 @@ describe('/api/reactions/track/:id', () => {
     expect(res.json()).toMatchObject({ type: 'HANDS_UP', positionSec: 42 })
     expect(fetchSpy).not.toHaveBeenCalled()
 
-    const list = await app.inject({ method: 'GET', url: `/api/reactions/track/${archiveItemId}` })
+    const list = await app.inject({ method: 'GET', url: `/api/reactions/track/${soundId}` })
     expect(list.json().reactions).toHaveLength(1)
     expect(list.json().reactions[0]).toMatchObject({ type: 'HANDS_UP', positionSec: 42 })
   })
@@ -158,7 +158,7 @@ describe('/api/reactions/track/:id', () => {
   it('clamps positionSec to the track duration', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/reactions/track/${archiveItemId}`,
+      url: `/api/reactions/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { type: 'SURPRISE', positionSec: 500 },
     })
@@ -169,7 +169,7 @@ describe('/api/reactions/track/:id', () => {
   it('rejects an invalid reaction type', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/reactions/track/${archiveItemId}`,
+      url: `/api/reactions/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { type: 'ANGRY', positionSec: 1 },
     })
@@ -181,7 +181,7 @@ describe('/api/reactions/track/:id', () => {
 
     const res = await app.inject({
       method: 'POST',
-      url: `/api/reactions/track/${archiveItemId}`,
+      url: `/api/reactions/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { type: 'LOVE', positionSec: 5 },
     })
@@ -196,7 +196,7 @@ describe('/api/reactions/track/:id', () => {
     expect(body.params.channel).toBe(`channel:${channelSlug}`)
     expect(body.params.data.text).toBe('Reaction Test Other loved Reaction Test Track')
     expect(body.params.data.href).toBe(
-      `http://localhost:3000/c/${channelSlug}#archive-item-${archiveItemId}`,
+      `http://localhost:3000/c/${channelSlug}#sound-item-${soundId}`,
     )
     expect(body.params.data.system).toBe(true)
   })
@@ -208,7 +208,7 @@ describe('/api/reactions/track/:id', () => {
     for (let i = 0; i < 21; i++) {
       last = await app.inject({
         method: 'POST',
-        url: `/api/reactions/track/${archiveItemId}`,
+        url: `/api/reactions/track/${soundId}`,
         headers: { cookie: ownerCookie, 'content-type': 'application/json' },
         payload: { type: 'LAUGH', positionSec: i },
       })

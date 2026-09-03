@@ -48,7 +48,7 @@ describe('/api/admin/files', () => {
     artistCookie = await sessionCookieFor(prisma, artist.id)
     artistUserId = artist.id
 
-    const techno = await prisma.archiveItem.create({
+    const techno = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: `${PREFIX} techno track`,
@@ -62,9 +62,9 @@ describe('/api/admin/files', () => {
     })
     technoId = techno.id
 
-    await prisma.archiveItemVersion.create({
+    await prisma.soundVersion.create({
       data: {
-        archiveItemId: technoId,
+        soundId: technoId,
         versionNumber: 1,
         versionLabel: 'Original upload',
         rawKey: `${PREFIX}techno-v1.wav`,
@@ -72,7 +72,7 @@ describe('/api/admin/files', () => {
       },
     })
 
-    const folk = await prisma.archiveItem.create({
+    const folk = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: `${PREFIX} folk track`,
@@ -132,7 +132,7 @@ describe('/api/admin/files', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ updated: 1 })
 
-    const row = await prisma.archiveItem.findUnique({ where: { id: folkId } })
+    const row = await prisma.sound.findUnique({ where: { id: folkId } })
     expect(row?.contentType).toBe('PODCAST')
     expect(row?.genre).toBe('Podcast')
   })
@@ -147,13 +147,13 @@ describe('/api/admin/files', () => {
     expect(res.json()).toMatchObject({ audioUrl: 'https://minio.test/get' })
   })
 
-  it('deletes an archive file', async () => {
+  it('deletes an sound file', async () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/api/admin/files/${folkId}`,
       headers: { cookie: boardCookie },
     })
     expect(res.statusCode).toBe(204)
-    expect(await prisma.archiveItem.findUnique({ where: { id: folkId } })).toBeNull()
+    expect(await prisma.sound.findUnique({ where: { id: folkId } })).toBeNull()
   })
 })

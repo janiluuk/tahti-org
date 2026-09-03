@@ -15,7 +15,7 @@ const FEATURES = [
   },
   {
     icon: 'upload' as const,
-    title: 'Archive & releases',
+    title: 'Sounds & releases',
     body: 'Upload sets, publish smart links, and keep your channel playing when you are offline.',
   },
   {

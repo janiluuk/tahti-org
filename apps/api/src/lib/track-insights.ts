@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // M37: per-track "Show insights" — country breakdown + daily downloads for a
-// single ArchiveItem or ReleaseTrack, time-filterable. "Plays" mirrors the
+// single Sound or ReleaseTrack, time-filterable. "Plays" mirrors the
 // platform-wide convention elsewhere (artist-stats.ts): there is no separate
 // play-event log, so plays === counted downloads at track granularity (no
 // per-track smart-link click data exists to add on top, unlike the
@@ -30,7 +30,7 @@ function utcDaysBack(n: number): string[] {
 
 async function buildInsights(
   prisma: PrismaClient,
-  trackWhere: { archiveItemId: string } | { releaseTrackId: string },
+  trackWhere: { soundId: string } | { releaseTrackId: string },
   period: InsightsPeriod,
   title: string,
 ) {
@@ -79,18 +79,18 @@ async function buildInsights(
   }
 }
 
-export async function buildArchiveItemInsights(
+export async function buildSoundInsights(
   prisma: PrismaClient,
   userId: string,
-  archiveItemId: string,
+  soundId: string,
   period: InsightsPeriod,
 ) {
-  const item = await prisma.archiveItem.findFirst({
-    where: { id: archiveItemId, channel: { userId } },
+  const item = await prisma.sound.findFirst({
+    where: { id: soundId, channel: { userId } },
     select: { id: true, title: true },
   })
   if (!item) return null
-  return buildInsights(prisma, { archiveItemId: item.id }, period, item.title)
+  return buildInsights(prisma, { soundId: item.id }, period, item.title)
 }
 
 export async function buildReleaseTrackInsights(

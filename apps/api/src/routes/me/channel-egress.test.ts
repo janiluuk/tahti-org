@@ -38,7 +38,7 @@ describe('GET /api/me/channel-egress', () => {
     })
     channelId = channel.id
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Egress mix',
@@ -54,7 +54,7 @@ describe('GET /api/me/channel-egress', () => {
     await prisma.download.create({
       data: {
         channelId,
-        archiveItemId: itemId,
+        soundId: itemId,
         format: 'mp3_320',
         byFingerprint: 'egress-fp-1',
         byIpHash: 'egress-ip-1',

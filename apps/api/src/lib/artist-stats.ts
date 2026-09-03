@@ -235,10 +235,9 @@ export async function buildTopTracksStats(
     where: { userId },
     select: { id: true },
   })
-  if (!channel)
-    return { items: [] as Array<{ archiveItemId: string; title: string; plays: number }> }
+  if (!channel) return { items: [] as Array<{ soundId: string; title: string; plays: number }> }
 
-  const items = await prisma.archiveItem.findMany({
+  const items = await prisma.sound.findMany({
     where: { channelId: channel.id, status: 'READY' },
     select: { id: true, title: true },
     orderBy: { createdAt: 'desc' },
@@ -251,9 +250,9 @@ export async function buildTopTracksStats(
   const since = days != null ? utcDayKeys(days).since : undefined
 
   const counts = await prisma.download.groupBy({
-    by: ['archiveItemId'],
+    by: ['soundId'],
     where: {
-      archiveItemId: { in: itemIds },
+      soundId: { in: itemIds },
       countedAt: { not: null },
       ...(since ? { createdAt: { gte: since } } : {}),
     },
@@ -261,12 +260,12 @@ export async function buildTopTracksStats(
   })
 
   const countById = new Map(
-    counts.filter((c) => c.archiveItemId != null).map((c) => [c.archiveItemId!, c._count._all]),
+    counts.filter((c) => c.soundId != null).map((c) => [c.soundId!, c._count._all]),
   )
 
   const ranked = items
     .map((item) => ({
-      archiveItemId: item.id,
+      soundId: item.id,
       title: item.title,
       plays: countById.get(item.id) ?? 0,
     }))

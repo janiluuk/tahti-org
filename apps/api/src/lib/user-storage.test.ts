@@ -6,7 +6,7 @@ import { buildApp } from '../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../test/helpers.js'
@@ -32,7 +32,7 @@ describe('computeUserStorageUsedBytes via /api/auth/me', () => {
       memberNumber: 99101,
     })
     memberCookie = await sessionCookieFor(prisma, member.id)
-    await createReadyArchiveItem(prisma, member.channel!.id, 'Member track')
+    await createReadySound(prisma, member.channel!.id, 'Member track')
 
     const free = await createTestArtist(prisma, {
       email: `${PREFIX}free@example.com`,
@@ -49,7 +49,7 @@ describe('computeUserStorageUsedBytes via /api/auth/me', () => {
     await app.close()
   })
 
-  it('returns live archive usage for members without a cap display', async () => {
+  it('returns live sound usage for members without a cap display', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/auth/me',
@@ -86,14 +86,14 @@ describe('computeAllUsersStorageUsedBytes', () => {
     await cleanupUsersByEmailPrefix(prisma, BULK_PREFIX)
   })
 
-  it('attributes archive bytes (via channel) and stash bytes (direct) to the right user, and omits users with no usage', async () => {
+  it('attributes sound bytes (via channel) and stash bytes (direct) to the right user, and omits users with no usage', async () => {
     await cleanupUsersByEmailPrefix(prisma, BULK_PREFIX)
 
-    const withArchive = await createTestArtist(prisma, {
-      email: `${BULK_PREFIX}archive@example.com`,
-      username: `${BULK_PREFIX}archive`,
+    const withSound = await createTestArtist(prisma, {
+      email: `${BULK_PREFIX}sound@example.com`,
+      username: `${BULK_PREFIX}sound`,
     })
-    await createReadyArchiveItem(prisma, withArchive.channel!.id, 'Bulk archive track')
+    await createReadySound(prisma, withSound.channel!.id, 'Bulk sound track')
 
     const withStash = await createTestArtist(prisma, {
       email: `${BULK_PREFIX}stash@example.com`,
@@ -116,7 +116,7 @@ describe('computeAllUsersStorageUsedBytes', () => {
 
     const totals = await computeAllUsersStorageUsedBytes(prisma)
 
-    expect(totals.get(withArchive.id)).toBe(5_000_000n)
+    expect(totals.get(withSound.id)).toBe(5_000_000n)
     expect(totals.get(withStash.id)).toBe(4_321n)
     expect(totals.has(withNothing.id)).toBe(false)
   })

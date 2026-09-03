@@ -103,7 +103,7 @@ export function TahtiRadioPanel() {
       <p className="studio-text-muted-sm studio-mt-sm">
         While included, your published releases are announced on followers&apos; feeds. Opting out
         removes your channel from the meta-stream rotation. Individual archive items can also be
-        excluded in the Archive editor.
+        excluded in the Sound editor.
       </p>
     </Panel>
   )

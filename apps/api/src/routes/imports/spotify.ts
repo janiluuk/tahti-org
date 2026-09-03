@@ -129,7 +129,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/imports/spotify/add — creates a spotify_embed ArchiveItem, appends to the collection.
+  // POST /api/v1/imports/spotify/add — creates a spotify_embed Sound, appends to the collection.
   fastify.post(
     '/api/v1/imports/spotify/add',
     {
@@ -181,7 +181,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(502).send({ error: 'Could not fetch track from Spotify' })
       }
 
-      const archiveItem = await fastify.prisma.archiveItem.create({
+      const sound = await fastify.prisma.sound.create({
         data: {
           channelId: channel.id,
           title: track.title,
@@ -202,14 +202,14 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {
           collectionId: collection.id,
-          archiveItemId: archiveItem.id,
+          soundId: sound.id,
           position: collection._count.items + 1,
         },
         select: { id: true },
       })
 
       return reply.status(201).send({
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         collectionItemId: collectionItem.id,
         track,
       })

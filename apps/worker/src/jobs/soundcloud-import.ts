@@ -8,7 +8,7 @@ import { prisma } from '@tahti/db'
 import { extensionFromDriveFile, mapGenre } from '@tahti/shared'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
 import { uploadStream } from '../lib/minio.js'
-import { enqueueTranscodeArchive } from '../lib/queue.js'
+import { enqueueTranscodeSound } from '../lib/queue.js'
 
 interface SoundcloudTrack {
   id: number
@@ -98,7 +98,7 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
 
     await uploadStream(rawKey, nodeStream, contentType || 'application/octet-stream', contentLength)
 
-    const archiveItem = await prisma.archiveItem.create({
+    const sound = await prisma.sound.create({
       data: {
         channelId: channel.id,
         title: track.title,
@@ -117,13 +117,13 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
       data: {
         status: 'DONE',
         fileName: track.title,
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         bytesTransferred: contentLength !== undefined ? BigInt(contentLength) : null,
         completedAt: new Date(),
       },
     })
 
-    await enqueueTranscodeArchive(archiveItem.id)
+    await enqueueTranscodeSound(sound.id)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     const reconnect = /401|403|token|connect/i.test(message)

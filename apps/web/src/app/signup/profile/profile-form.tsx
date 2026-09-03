@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ARCHIVE_GENRES } from '@tahti/shared'
+import { SOUND_GENRES } from '@tahti/shared'
 import {
   Alert,
   BrandLogo,
@@ -134,7 +134,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
               <fieldset className="signup-fieldset">
                 <legend className="signup-fieldset__legend">Genre tags (up to 6)</legend>
                 <div className="signup-genre-grid">
-                  {ARCHIVE_GENRES.map((genre) => (
+                  {SOUND_GENRES.map((genre) => (
                     <label key={genre} className="signup-genre-chip">
                       <input
                         type="checkbox"

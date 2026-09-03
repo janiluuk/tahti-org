@@ -101,7 +101,7 @@ export function buildMetricBreakdown(stats: ManageStats, key: ManageMetricKey): 
             note: 'Demo plays',
           },
           { label: 'Channel page', value: '64%', note: 'Started directly here' },
-          { label: 'Artist profile', value: '23%', note: 'Started from Archive' },
+          { label: 'Artist profile', value: '23%', note: 'Started from Sounds' },
           { label: 'Average completion', value: '73%', note: 'For completed recordings' },
         ],
       }

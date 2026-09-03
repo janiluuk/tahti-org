@@ -104,7 +104,7 @@ export default function HlsPlayer({
   // reports Infinity/NaN as expected, but Firefox's MSE implementation reports a
   // finite duration matching the currently buffered window (confirmed live against
   // production — ~16s, matching the segment window size). Treating that as "this
-  // is a short, finite, seekable track" flipped the UI into archive-player mode
+  // is a short, finite, seekable track" flipped the UI into sound-player mode
   // and made playback appear to end once currentTime caught up to that number.
   const isLive = true
   // Real quality once hls.js reports it (see player-context.tsx); every listener

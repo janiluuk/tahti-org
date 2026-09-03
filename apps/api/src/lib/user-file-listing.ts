@@ -2,18 +2,18 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
-import { archivePlaybackKey } from '@tahti/shared'
+import { soundPlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from './minio.js'
 
 // Everything that counts against a user's storage usage (see
-// computeUserStorageUsedBytes) lives in one of two tables: ArchiveItem (public
-// broadcast/track archive — always audio) or StashFile (private uploads —
+// computeUserStorageUsedBytes) lives in one of two tables: Sound (public
+// broadcast/track sound — always audio) or StashFile (private uploads —
 // arbitrary content, e.g. a WAV master, a ZIP of stems, a cover image).
 const AUDIO_EXTENSIONS = new Set(['mp3', 'flac', 'wav', 'ogg', 'aac', 'm4a', 'aiff', 'aif'])
 
 /** Whether a stash file is a playable audio file — gates the Files admin panel's
- * play button so a ZIP or image upload never gets a fake one. Archive items don't
- * need this check: every ArchiveContentType is audio, so archivePlaybackKey()
+ * play button so a ZIP or image upload never gets a fake one. Sound items don't
+ * need this check: every SoundContentType is audio, so soundPlaybackKey()
  * returning a key is the only gate they need. */
 export function isAudioStashFile(file: { contentType: string; format: string | null }): boolean {
   if (file.contentType.toLowerCase().startsWith('audio/')) return true
@@ -24,7 +24,7 @@ export function isAudioStashFile(file: { contentType: string; format: string | n
 /** Cumulative sizeBytes total, in the order the caller passes files in. Callers
  * order oldest-first so the sequence reads as "usage accumulating over time" —
  * the last entry always equals the sum of every entry. Null sizes count as 0
- * (never observed in practice, but *_EMBED archive items have no file at all). */
+ * (never observed in practice, but *_EMBED sound items have no file at all). */
 export function computeRunningTotals(sizesBytes: Array<number | null>): number[] {
   let total = 0
   return sizesBytes.map((size) => {
@@ -35,7 +35,7 @@ export function computeRunningTotals(sizesBytes: Array<number | null>): number[]
 
 export interface UserFileRow {
   id: string
-  kind: 'archive' | 'stash'
+  kind: 'sound' | 'stash'
   title: string
   sizeBytes: number | null
   createdAt: Date
@@ -45,7 +45,7 @@ export interface UserFileRow {
   previewUrl: string | null
 }
 
-/** One user's full file list — archive items and stash files merged, oldest
+/** One user's full file list — sound items and stash files merged, oldest
  * first, each carrying a running total of bytes used up to that point. This is
  * the admin Files panel's per-user detail view; the presigned preview URLs are
  * only generated for playable (audio) rows. */
@@ -53,8 +53,8 @@ export async function listUserFilesWithRunningTotal(
   prisma: PrismaClient,
   userId: string,
 ): Promise<Array<UserFileRow & { runningTotalBytes: number }>> {
-  const [archiveItems, stashFiles] = await Promise.all([
-    prisma.archiveItem.findMany({
+  const [sounds, stashFiles] = await Promise.all([
+    prisma.sound.findMany({
       where: { channel: { userId } },
       select: {
         id: true,
@@ -81,12 +81,12 @@ export async function listUserFilesWithRunningTotal(
     }),
   ])
 
-  const archiveRows: UserFileRow[] = await Promise.all(
-    archiveItems.map(async (item) => {
-      const key = archivePlaybackKey(item)
+  const soundRows: UserFileRow[] = await Promise.all(
+    sounds.map(async (item) => {
+      const key = soundPlaybackKey(item)
       return {
         id: item.id,
-        kind: 'archive' as const,
+        kind: 'sound' as const,
         title: item.title,
         sizeBytes: item.fileSizeBytes != null ? Number(item.fileSizeBytes) : null,
         createdAt: item.createdAt,
@@ -115,7 +115,7 @@ export async function listUserFilesWithRunningTotal(
     }),
   )
 
-  const merged = [...archiveRows, ...stashRows].sort(
+  const merged = [...soundRows, ...stashRows].sort(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   )
   const totals = computeRunningTotals(merged.map((f) => f.sizeBytes))

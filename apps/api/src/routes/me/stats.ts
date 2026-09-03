@@ -66,7 +66,7 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'PLAT-030: top archive tracks by counted downloads',
+        description: 'PLAT-030: top sound tracks by counted downloads',
         response: openApiResponse(StatsTopTracksResponseSchema, 'StatsTopTracks'),
       },
     },

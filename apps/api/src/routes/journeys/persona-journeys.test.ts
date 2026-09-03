@@ -183,12 +183,12 @@ describe('Persona journeys', () => {
       expect(stream.statusCode).toBe(200)
       expect(stream.json().rtmp?.server).toBeTruthy()
 
-      const archive = await app.inject({
+      const sound = await app.inject({
         method: 'GET',
-        url: '/api/me/archive',
+        url: '/api/me/sound',
         headers: { cookie },
       })
-      expect(archive.statusCode).toBe(200)
+      expect(sound.statusCode).toBe(200)
 
       const gates = await app.inject({
         method: 'GET',

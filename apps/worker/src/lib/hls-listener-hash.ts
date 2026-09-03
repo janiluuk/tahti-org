@@ -14,7 +14,7 @@ function sha256(input: string): string {
 /**
  * Anonymized, non-reversible, daily-rotating listener identifier for distinct-listener
  * counting from HLS access logs (mirrors the download-fraud `dailySalt`+`sha256(ip:salt)`
- * pattern in apps/api/src/routes/downloads/archive.ts). The salt rotates per UTC day so
+ * pattern in apps/api/src/routes/downloads/sound.ts). The salt rotates per UTC day so
  * the same listener cannot be tracked across days, only counted within one.
  */
 export function hashHlsListenerId(clientIp: string, utcDate: string): string {

@@ -6,15 +6,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
 import type {
-  ArchiveItemSource,
+  SoundSource,
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
 } from '@tahti/shared'
-import {
-  ArchiveVideoBackdrop,
-  resolveArchiveBackground,
-} from '@/app/c/[slug]/archive-item-backdrop'
+import { SoundVideoBackdrop, resolveSoundBackground } from '@/app/c/[slug]/sound-item-backdrop'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
@@ -64,12 +61,12 @@ export interface CollectionResponse {
   items: Array<{
     id: string
     position: number
-    archiveItem: {
+    sound: {
       id: string
       title: string
       durationSec: number | null
       bannerUrl: string | null
-      source: ArchiveItemSource
+      source: SoundSource
       embedUri: string | null
       audioUrl: string | null
       channel: { slug: string } | null
@@ -127,14 +124,14 @@ export default async function CollectionPage({
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const rssUrl = data.links?.rss ?? collectionRssUrl(apiUrl, params.slug)
-  const backdrop = resolveArchiveBackground(data.videoBackgroundUrl ?? null)
+  const backdrop = resolveSoundBackground(data.videoBackgroundUrl ?? null)
 
   // Browsable/zoomable gallery: hero cover first, then every item's own art,
   // deduped by URL so re-used artwork (e.g. an EP's tracks sharing one cover)
   // doesn't create duplicate slideshow stops.
   const galleryUrls = [
     data.coverUrl,
-    ...data.items.map((item) => item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null),
+    ...data.items.map((item) => item.sound?.bannerUrl ?? item.release?.artworkUrl ?? null),
   ].filter((url, i, arr): url is string => Boolean(url) && arr.indexOf(url) === i)
   const galleryImages = galleryUrls.map((url) => ({ url }))
 
@@ -152,7 +149,7 @@ export default async function CollectionPage({
               />
             )}
             <div className="prof-collection-open-veil" aria-hidden />
-            {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
+            {backdrop.videoEmbedUrl && <SoundVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
             {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
               <div
                 className="ch-channel-backdrop"

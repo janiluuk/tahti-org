@@ -91,7 +91,7 @@ describe('hearthis.at mixed-source import', () => {
   afterAll(async () => {
     await prisma.collectionItem.deleteMany({ where: { collectionId } })
     await prisma.collection.deleteMany({ where: { userId } })
-    await prisma.archiveItem.deleteMany({ where: { channel: { userId } } })
+    await prisma.sound.deleteMany({ where: { channel: { userId } } })
     await prisma.integrationCredential.deleteMany({ where: { userId } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
@@ -167,7 +167,7 @@ describe('hearthis.at mixed-source import', () => {
     expect(res.statusCode).toBe(400)
   })
 
-  it('adds a track to a collection as an embed-only archive item', async () => {
+  it('adds a track to a collection as an embed-only sound item', async () => {
     mockGetTrackByUrl.mockResolvedValueOnce(SAMPLE_TRACK)
     const res = await app.inject({
       method: 'POST',
@@ -179,10 +179,10 @@ describe('hearthis.at mixed-source import', () => {
     const body = res.json()
     expect(body.track.title).toBe('Credo')
 
-    const archiveItem = await prisma.archiveItem.findUnique({ where: { id: body.archiveItemId } })
-    expect(archiveItem?.source).toBe('HEARTHIS_EMBED')
-    expect(archiveItem?.embedProvider).toBe('HEARTHIS')
-    expect(archiveItem?.qualityBadge).toBe('EMBED_ONLY')
+    const sound = await prisma.sound.findUnique({ where: { id: body.soundId } })
+    expect(sound?.source).toBe('HEARTHIS_EMBED')
+    expect(sound?.embedProvider).toBe('HEARTHIS')
+    expect(sound?.qualityBadge).toBe('EMBED_ONLY')
   })
 
   it('rejects add with an invalid trackUrl', async () => {

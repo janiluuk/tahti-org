@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import type { TracklistEntry } from '@tahti/shared'
-import { searchTahtiUsers } from './archive-actions'
+import { searchTahtiUsers } from './sound-actions'
 import { Button } from '@tahti/ui'
 
 type Row = { startSec: string; title: string; artist: string }

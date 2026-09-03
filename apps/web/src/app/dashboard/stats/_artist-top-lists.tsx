@@ -5,7 +5,7 @@ import NextLink from 'next/link'
 import { ProgressBar } from '@tahti/ui'
 
 export interface ArtistTopListEntry {
-  archiveItemId: string
+  soundId: string
   listens: number
   title: string
   contentType: string
@@ -101,7 +101,7 @@ export function ArtistTopLists({
                 <h3>{bucketLabel(bucket.bucket)}</h3>
                 {bucket.entries.map((entry, index) => (
                   <ProgressBar
-                    key={entry.archiveItemId}
+                    key={entry.soundId}
                     label={`#${index + 1} ${entry.title}`}
                     amount={`${entry.listens} ${entry.listens === 1 ? 'listen' : 'listens'}`}
                     percent={(entry.listens / max) * 100}

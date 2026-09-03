@@ -43,7 +43,7 @@ export async function updateAdminChannelProgramme(
     fallbackEnabled?: boolean
     fallbackAutoEnroll?: boolean
     announcementsEnabled?: boolean
-    items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
+    items?: Array<{ soundId: string; isFallback: boolean; fallbackOrder?: number }>
   },
 ): Promise<{ data: ProgrammeView | null; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/admin/channels/${slug}/programme`, {

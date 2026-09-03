@@ -3,8 +3,8 @@
 
 import { describe, it, expect } from 'vitest'
 import {
-  ArchiveVersionParamsSchema,
-  ChannelArchiveParamsSchema,
+  SoundVersionParamsSchema,
+  ChannelSoundParamsSchema,
   ReleaseIdTrackIdParamsSchema,
   ReleaseTrackDownloadParamsSchema,
   ReleaseTrackParamsSchema,
@@ -14,8 +14,8 @@ import {
 } from './params.js'
 
 describe('route param schemas', () => {
-  it('parses channel archive params', () => {
-    const parsed = parseRouteParams(ChannelArchiveParamsSchema, {
+  it('parses channel sound params', () => {
+    const parsed = parseRouteParams(ChannelSoundParamsSchema, {
       slug: 'my-channel',
       itemId: 'clxyz123',
     })
@@ -54,9 +54,10 @@ describe('route param schemas', () => {
     })
   })
 
-  it('parses archive version params', () => {
-    expect(
-      parseRouteParams(ArchiveVersionParamsSchema, { id: 'item1', versionId: 'ver1' }),
-    ).toEqual({ id: 'item1', versionId: 'ver1' })
+  it('parses sound version params', () => {
+    expect(parseRouteParams(SoundVersionParamsSchema, { id: 'item1', versionId: 'ver1' })).toEqual({
+      id: 'item1',
+      versionId: 'ver1',
+    })
   })
 })

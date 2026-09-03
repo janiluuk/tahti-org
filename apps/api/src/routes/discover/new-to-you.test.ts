@@ -59,7 +59,7 @@ describe('/api/discover/new-to-you', () => {
       displayName: 'Other Artist',
     })
 
-    const seedListen = await prisma.archiveItem.create({
+    const seedListen = await prisma.sound.create({
       data: {
         channelId: technoArtist.channel!.id,
         title: 'Seed techno listen',
@@ -72,14 +72,14 @@ describe('/api/discover/new-to-you', () => {
     })
     await prisma.listenEvent.create({
       data: {
-        archiveItemId: seedListen.id,
+        soundId: seedListen.id,
         dedupeKey: `user:${listener.id}`,
         dayBucket: '2024-01-01',
       },
     })
     heardId = seedListen.id
 
-    const genreMatch = await prisma.archiveItem.create({
+    const genreMatch = await prisma.sound.create({
       data: {
         channelId: technoArtist.channel!.id,
         title: 'Unheard techno',
@@ -92,7 +92,7 @@ describe('/api/discover/new-to-you', () => {
     })
     genreMatchId = genreMatch.id
 
-    const followedTrack = await prisma.archiveItem.create({
+    const followedTrack = await prisma.sound.create({
       data: {
         channelId: followed.channel!.id,
         title: 'From followed',
@@ -108,7 +108,7 @@ describe('/api/discover/new-to-you', () => {
       data: { followerUserId: listener.id, artistUserId: followed.id },
     })
 
-    const otherTrack = await prisma.archiveItem.create({
+    const otherTrack = await prisma.sound.create({
       data: {
         channelId: other.channel!.id,
         title: 'Unrelated folk',
@@ -143,12 +143,12 @@ describe('/api/discover/new-to-you', () => {
     const body = res.json() as {
       authenticated: boolean
       preferenceGenres: string[]
-      items: Array<{ archiveItemId: string; title: string }>
+      items: Array<{ soundId: string; title: string }>
     }
     expect(body.authenticated).toBe(true)
     expect(body.preferenceGenres.map((g) => g.toLowerCase())).toContain('techno')
 
-    const ids = body.items.map((i) => i.archiveItemId)
+    const ids = body.items.map((i) => i.soundId)
     expect(ids).not.toContain(heardId)
     expect(ids).toContain(genreMatchId)
     expect(ids).toContain(followedMatchId)

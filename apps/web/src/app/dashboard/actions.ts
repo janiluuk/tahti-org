@@ -62,10 +62,10 @@ export async function completeUpload(params: {
   return response.json()
 }
 
-export async function getArchiveItemStatus(
+export async function getSoundItemStatus(
   itemId: string,
 ): Promise<{ status: string; title: string }> {
-  const response = await fetch(`${apiUrl}/api/me/archive/${itemId}`, {
+  const response = await fetch(`${apiUrl}/api/me/sound/${itemId}`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
   })

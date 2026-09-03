@@ -4,12 +4,12 @@
 import React from 'react'
 import { cn } from '../lib/cn'
 
-export type PillVariant = 'live' | 'flac' | 'archive' | 'recommended' | 'default'
+export type PillVariant = 'live' | 'flac' | 'sound' | 'recommended' | 'default'
 
 const PILL_DEFAULT_LABEL: Partial<Record<PillVariant, string>> = {
   live: 'LIVE',
   flac: 'FLAC',
-  archive: 'ARCHIVE',
+  sound: 'SOUND',
   recommended: 'RECOMMENDED',
 }
 

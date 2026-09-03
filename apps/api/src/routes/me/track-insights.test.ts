@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -17,7 +17,7 @@ describe('M37 — per-track insights', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let otherCookie: string
-  let archiveItemId: string
+  let soundId: string
   let releaseTrackId: string
   let channelId: string
 
@@ -39,8 +39,8 @@ describe('M37 — per-track insights', () => {
     })
     otherCookie = await sessionCookieFor(prisma, other.id)
 
-    const item = await createReadyArchiveItem(prisma, channelId, 'Insights Test Track')
-    archiveItemId = item.id
+    const item = await createReadySound(prisma, channelId, 'Insights Test Track')
+    soundId = item.id
 
     const release = await prisma.release.create({
       data: {
@@ -61,7 +61,7 @@ describe('M37 — per-track insights', () => {
       data: [
         {
           channelId,
-          archiveItemId,
+          soundId,
           format: 'mp3',
           byFingerprint: 'ti-fp-1',
           byIpHash: 'ti-ip-1',
@@ -71,7 +71,7 @@ describe('M37 — per-track insights', () => {
         },
         {
           channelId,
-          archiveItemId,
+          soundId,
           format: 'mp3',
           byFingerprint: 'ti-fp-2',
           byIpHash: 'ti-ip-2',
@@ -98,10 +98,10 @@ describe('M37 — per-track insights', () => {
     await app.close()
   })
 
-  it('GET /api/me/archive/:id/insights returns totals + country breakdown', async () => {
+  it('GET /api/me/sound/:id/insights returns totals + country breakdown', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/insights`,
+      url: `/api/me/sound/${soundId}/insights`,
       headers: { cookie },
     })
     expect(res.statusCode).toBe(200)
@@ -137,7 +137,7 @@ describe('M37 — per-track insights', () => {
   it('rejects a track owned by someone else', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/insights`,
+      url: `/api/me/sound/${soundId}/insights`,
       headers: { cookie: otherCookie },
     })
     expect(res.statusCode).toBe(404)
@@ -146,7 +146,7 @@ describe('M37 — per-track insights', () => {
   it('requires auth', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/insights`,
+      url: `/api/me/sound/${soundId}/insights`,
     })
     expect(res.statusCode).toBe(401)
   })
@@ -154,7 +154,7 @@ describe('M37 — per-track insights', () => {
   it('404s for an unknown track id', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: '/api/me/archive/nonexistent-id/insights',
+      url: '/api/me/sound/nonexistent-id/insights',
       headers: { cookie },
     })
     expect(res.statusCode).toBe(404)

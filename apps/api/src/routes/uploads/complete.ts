@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
-import { metadataForNewUpload } from '../../lib/archive-metadata.js'
+import { metadataForNewUpload } from '../../lib/sound-metadata.js'
 import { headObjectSize } from '../../lib/minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
 import { auditLog } from '../../lib/audit.js'
@@ -66,7 +66,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
             }
           : {}
 
-      const item = await fastify.prisma.archiveItem.create({
+      const item = await fastify.prisma.sound.create({
         data: {
           channelId: channel.id,
           title,
@@ -77,7 +77,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           ...metadataForNewUpload(metadata),
           ...autoEnrollData,
           // Always the account default at creation time — commentsEnabled isn't
-          // client-settable until the track exists (PATCH /api/me/archive/:id).
+          // client-settable until the track exists (PATCH /api/me/sound/:id).
           commentsEnabled: channel.user.defaultTrackCommentsEnabled,
           topListsEligible: !channel.user.topListsOptOut,
         },

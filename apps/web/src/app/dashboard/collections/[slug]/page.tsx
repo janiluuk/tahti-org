@@ -3,7 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
-import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
+import type { SoundSource, SoundQualityBadge } from '@tahti/shared'
 import { CollectionEditor } from './_collection-editor'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -11,15 +11,15 @@ const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 interface CollectionItem {
   id: string
   position: number
-  archiveItem: {
+  sound: {
     id: string
     title: string
     durationSec: number | null
     mp3Key: string | null
     bannerUrl: string | null
     createdAt: string
-    source: ArchiveItemSource
-    qualityBadge: ArchiveQualityBadge
+    source: SoundSource
+    qualityBadge: SoundQualityBadge
   } | null
   release: {
     id: string
@@ -67,7 +67,7 @@ async function fetchCollection(slug: string): Promise<CollectionDetail | null> {
   return res.json()
 }
 
-export interface LibraryArchiveItem {
+export interface LibrarySoundItem {
   id: string
   title: string
   status: string
@@ -79,8 +79,8 @@ export interface LibraryRelease {
   state: string
 }
 
-async function fetchMyArchiveItems(): Promise<LibraryArchiveItem[]> {
-  const res = await fetch(`${apiUrl}/api/me/archive`, {
+async function fetchMySoundItems(): Promise<LibrarySoundItem[]> {
+  const res = await fetch(`${apiUrl}/api/me/sound`, {
     headers: { Cookie: sessionCookieHeader() },
     cache: 'no-store',
   })
@@ -102,18 +102,14 @@ async function fetchMyReleases(): Promise<LibraryRelease[]> {
 }
 
 export default async function CollectionDetailPage({ params }: { params: { slug: string } }) {
-  const [collection, myArchiveItems, myReleases] = await Promise.all([
+  const [collection, mySoundItems, myReleases] = await Promise.all([
     fetchCollection(params.slug),
-    fetchMyArchiveItems(),
+    fetchMySoundItems(),
     fetchMyReleases(),
   ])
   if (!collection) notFound()
 
   return (
-    <CollectionEditor
-      collection={collection}
-      myArchiveItems={myArchiveItems}
-      myReleases={myReleases}
-    />
+    <CollectionEditor collection={collection} mySoundItems={mySoundItems} myReleases={myReleases} />
   )
 }

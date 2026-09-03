@@ -17,9 +17,9 @@ const connection = {
 // on the right worker instead of losing the job on first mismatch.
 const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
 
-/** PERF-04: enqueue editorPeaks backfill for READY archives missing the column. */
+/** PERF-04: enqueue editorPeaks backfill for READY sounds missing the column. */
 export async function processSweepEditorPeaksBackfillJob(_job: Job): Promise<{ enqueued: number }> {
-  const items = await prisma.archiveItem.findMany({
+  const items = await prisma.sound.findMany({
     where: { status: 'READY', editorPeaks: { equals: Prisma.DbNull } },
     select: { id: true },
     take: BATCH_SIZE,

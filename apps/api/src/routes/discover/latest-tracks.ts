@@ -2,11 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import {
-  TahtiSelectsGalleryResponseSchema,
-  archivePlaybackKey,
-  openApiResponse,
-} from '@tahti/shared'
+import { TahtiSelectsGalleryResponseSchema, soundPlaybackKey, openApiResponse } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 
 const DEFAULT_LIMIT = 24
@@ -24,7 +20,7 @@ const VALID_CONTENT_TYPES = [
 ]
 
 // GET /api/discover/latest-tracks?limit=24&genre=Techno&contentTypes=DJ_SET
-// — public, no auth required. Newest public archive items, for the Discover
+// — public, no auth required. Newest public sound items, for the Discover
 // "Latest tracks" widget — chronological, not ranked by listens (that's
 // /api/top-lists).
 const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
@@ -54,7 +50,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
         }
       }
 
-      const rows = await fastify.prisma.archiveItem.findMany({
+      const rows = await fastify.prisma.sound.findMany({
         where: {
           isPublic: true,
           status: 'READY',
@@ -80,10 +76,10 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
 
       const items = await Promise.all(
         rows.map(async (item) => {
-          const playbackKey = archivePlaybackKey(item)
+          const playbackKey = soundPlaybackKey(item)
           const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
           return {
-            archiveItemId: item.id,
+            soundId: item.id,
             title: item.title,
             artistName: item.artistName ?? item.channel.user.displayName,
             artistUsername: item.artistName ? null : item.channel.user.username,

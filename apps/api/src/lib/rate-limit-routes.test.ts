@@ -37,12 +37,12 @@ describe('usesAuthRateLimit', () => {
 
 describe('editorRateLimitTier', () => {
   it('applies heavy tier to render', () => {
-    expect(editorRateLimitTier('/api/me/archive/x/editor/render', 'POST')).toBe('heavy')
+    expect(editorRateLimitTier('/api/me/sound/x/editor/render', 'POST')).toBe('heavy')
   })
 
   it('applies draft tier to PATCH draft only', () => {
-    expect(editorRateLimitTier('/api/me/archive/x/editor/draft', 'PATCH')).toBe('draft')
-    expect(editorRateLimitTier('/api/me/archive/x/editor/draft', 'GET')).toBeNull()
-    expect(editorRateLimitTier('/api/me/archive/x/editor/source', 'GET')).toBeNull()
+    expect(editorRateLimitTier('/api/me/sound/x/editor/draft', 'PATCH')).toBe('draft')
+    expect(editorRateLimitTier('/api/me/sound/x/editor/draft', 'GET')).toBeNull()
+    expect(editorRateLimitTier('/api/me/sound/x/editor/source', 'GET')).toBeNull()
   })
 })

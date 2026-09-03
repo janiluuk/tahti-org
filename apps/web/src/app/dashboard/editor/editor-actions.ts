@@ -32,7 +32,7 @@ export async function fetchEditorProjects(): Promise<{
 
 export async function createEditorProject(body: {
   title?: string
-  archiveItemId?: string
+  soundId?: string
 }): Promise<{ project?: EditorProjectRow; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/editor/projects`, {
     method: 'POST',
@@ -51,10 +51,10 @@ export async function fetchEditorProject(id: string): Promise<{
   project?: {
     id: string
     title: string
-    archiveItemId: string | null
+    soundId: string | null
     timeline: Record<string, unknown>
     sources: Array<{
-      archiveItemId: string
+      soundId: string
       title: string
       url: string
       durationSec: number | null

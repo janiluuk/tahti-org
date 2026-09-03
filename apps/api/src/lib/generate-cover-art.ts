@@ -208,7 +208,7 @@ function motifBody(
   }
 }
 
-/** Square (500×500) album/archive cover — genre-motif art behind title +
+/** Square (500×500) album/sound cover — genre-motif art behind title +
  * subtitle, colored from the artist's own brand accent/highlight so a
  * placeholder catalog reads as art-directed rather than randomly gradiented. */
 export function generateAlbumArtSvg(

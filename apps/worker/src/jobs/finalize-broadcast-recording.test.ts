@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Job } from 'bullmq'
 
-const { stat, prismaMock, findChannelBroadcastRecording, uploadFile, enqueueArchiveBroadcast } =
+const { stat, prismaMock, findChannelBroadcastRecording, uploadFile, enqueueSoundBroadcast } =
   vi.hoisted(() => ({
     stat: vi.fn(),
     prismaMock: {
@@ -15,14 +15,14 @@ const { stat, prismaMock, findChannelBroadcastRecording, uploadFile, enqueueArch
     },
     findChannelBroadcastRecording: vi.fn(),
     uploadFile: vi.fn(),
-    enqueueArchiveBroadcast: vi.fn(),
+    enqueueSoundBroadcast: vi.fn(),
   }))
 
 vi.mock('node:fs/promises', () => ({ stat }))
 vi.mock('@tahti/db', () => ({ prisma: prismaMock }))
 vi.mock('../lib/channel-recording.js', () => ({ findChannelBroadcastRecording }))
 vi.mock('../lib/minio.js', () => ({ uploadFile }))
-vi.mock('../lib/queue.js', () => ({ enqueueArchiveBroadcast }))
+vi.mock('../lib/queue.js', () => ({ enqueueSoundBroadcast }))
 
 import { processFinalizeBroadcastRecordingJob } from './finalize-broadcast-recording.js'
 
@@ -36,10 +36,10 @@ describe('processFinalizeBroadcastRecordingJob', () => {
     process.env.BROADCAST_RECORDING_MIN_BYTES = '100'
   })
 
-  it('uploads recording and enqueues archive when WAV is large enough', async () => {
+  it('uploads recording and enqueues sound when WAV is large enough', async () => {
     prismaMock.broadcast.findUnique.mockResolvedValue({
       id: 'bc-1',
-      archiveItemId: null,
+      soundId: null,
       recordingKey: null,
       startedAt: new Date('2026-06-01T12:00:00Z'),
       source: 'RTMP',
@@ -59,13 +59,13 @@ describe('processFinalizeBroadcastRecordingJob', () => {
       where: { id: 'bc-1' },
       data: { recordingKey: 'recordings/artist-one/broadcast-bc-1.wav' },
     })
-    expect(enqueueArchiveBroadcast).toHaveBeenCalledWith('bc-1')
+    expect(enqueueSoundBroadcast).toHaveBeenCalledWith('bc-1')
   })
 
-  it('skips when archive is already linked', async () => {
+  it('skips when sound is already linked', async () => {
     prismaMock.broadcast.findUnique.mockResolvedValue({
       id: 'bc-2',
-      archiveItemId: 'item-1',
+      soundId: 'item-1',
       recordingKey: null,
       startedAt: new Date(),
       source: 'ICECAST',

@@ -6,12 +6,12 @@ import { prisma } from '@tahti/db'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
 
-/** Usage is now computed live from real ArchiveItem/StashFile rows (see
+/** Usage is now computed live from real Sound/StashFile rows (see
  * lib/user-storage.ts) rather than the disused UserStorageQuota cache —
  * these tests seed a stash file of the desired size instead of the old
  * recordUsageDelta helper, which nothing in the app calls any more. */
@@ -105,7 +105,7 @@ describe('GET /api/admin/storage', () => {
   })
 })
 
-describe('GET /api/admin/storage/users/:id/files (merged archive + stash)', () => {
+describe('GET /api/admin/storage/users/:id/files (merged sound + stash)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let boardCookie: string
   let artistId: string
@@ -129,7 +129,7 @@ describe('GET /api/admin/storage/users/:id/files (merged archive + stash)', () =
     })
     artistId = artist.id
 
-    await createReadyArchiveItem(prisma, artist.channel!.id, 'Merged Test Track')
+    await createReadySound(prisma, artist.channel!.id, 'Merged Test Track')
     await prisma.stashFile.create({
       data: {
         userId: artistId,
@@ -154,7 +154,7 @@ describe('GET /api/admin/storage/users/:id/files (merged archive + stash)', () =
     expect(res.statusCode).toBe(401)
   })
 
-  it('merges archive items and stash files, oldest first, with a running total', async () => {
+  it('merges sound items and stash files, oldest first, with a running total', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/api/admin/storage/users/${artistId}/files`,
@@ -168,7 +168,7 @@ describe('GET /api/admin/storage/users/:id/files (merged archive + stash)', () =
 
     const [first, second] = body.files
     expect(first.title).toBe('Merged Test Track')
-    expect(first.kind).toBe('archive')
+    expect(first.kind).toBe('sound')
     expect(first.isAudio).toBe(true)
     expect(first.runningTotalBytes).toBe(5_000_000)
 

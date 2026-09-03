@@ -7,7 +7,7 @@ import { cn } from '../lib/cn'
 export type SidebarNavIcon =
   | 'channel'
   | 'stats'
-  | 'archive'
+  | 'sound'
   | 'upload'
   | 'collections'
   | 'revenue'
@@ -52,7 +52,7 @@ export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
           <rect x="11" y="2" width="3" height="12" rx="0.75" fill="currentColor" />
         </svg>
       )
-    case 'archive':
+    case 'sound':
       return (
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <rect

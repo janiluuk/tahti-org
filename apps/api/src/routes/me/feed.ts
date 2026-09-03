@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { FeedItem } from '@tahti/shared'
-import { MyFeedResponseSchema, archivePlaybackKey, openApiResponse } from '@tahti/shared'
+import { MyFeedResponseSchema, soundPlaybackKey, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -44,7 +44,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           take: FEED_LIMIT,
           include: { user: { select: { username: true, displayName: true, avatarUrl: true } } },
         }),
-        fastify.prisma.archiveItem.findMany({
+        fastify.prisma.sound.findMany({
           where: { channel: { userId: { in: artistIds } }, isPublic: true, status: 'READY' },
           orderBy: { createdAt: 'desc' },
           take: FEED_LIMIT,
@@ -89,24 +89,24 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
 
       const trackIds = tracks.map((t) => t.id)
       const myLikes = trackIds.length
-        ? await fastify.prisma.archiveItemLike.findMany({
-            where: { userId: user.id, archiveItemId: { in: trackIds } },
-            select: { archiveItemId: true },
+        ? await fastify.prisma.soundLike.findMany({
+            where: { userId: user.id, soundId: { in: trackIds } },
+            select: { soundId: true },
           })
         : []
-      const likedIds = new Set(myLikes.map((l) => l.archiveItemId))
+      const likedIds = new Set(myLikes.map((l) => l.soundId))
       const likeCounts = trackIds.length
-        ? await fastify.prisma.archiveItemLike.groupBy({
-            by: ['archiveItemId'],
-            where: { archiveItemId: { in: trackIds } },
+        ? await fastify.prisma.soundLike.groupBy({
+            by: ['soundId'],
+            where: { soundId: { in: trackIds } },
             _count: true,
           })
         : []
-      const likeCountById = new Map(likeCounts.map((l) => [l.archiveItemId, l._count]))
+      const likeCountById = new Map(likeCounts.map((l) => [l.soundId, l._count]))
       const audioUrlByTrackId = new Map<string, string | null>(
         await Promise.all(
           tracks.map(async (track) => {
-            const key = archivePlaybackKey(track)
+            const key = soundPlaybackKey(track)
             return [track.id, key ? await presignedGetUrl(key, 3600) : null] as const
           }),
         ),
@@ -149,7 +149,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           channelSlug: t.channel.slug,
           liked: likedIds.has(t.id),
           likeCount: likeCountById.get(t.id) ?? 0,
-          url: resolveChannelUrl(t.channel.slug, { hash: `archive-item-${t.id}` }),
+          url: resolveChannelUrl(t.channel.slug, { hash: `sound-item-${t.id}` }),
         })),
         ...releaseItems,
       ]

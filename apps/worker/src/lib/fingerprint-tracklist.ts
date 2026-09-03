@@ -19,7 +19,7 @@ const defaultLookup: AcoustidLookupFn = (seg) =>
     apiKey: readSecret('ACOUSTID_API_KEY', 'ACOUSTID_API_KEY_FILE'),
   })
 
-/** Worker archive job: optional AcoustID when ACOUSTID_API_KEY is set. */
+/** Worker sound job: optional AcoustID when ACOUSTID_API_KEY is set. */
 export async function buildTracklistFromFingerprints(
   segments: LiveFingerprintSegment[],
   lookup: AcoustidLookupFn = defaultLookup,

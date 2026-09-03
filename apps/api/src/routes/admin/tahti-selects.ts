@@ -9,16 +9,14 @@ import { buildTopList } from '../../lib/top-lists.js'
 
 const AUTO_PLAYLIST_SIZE = 10
 
-async function selectTopPlayedArchiveIds(
+async function selectTopPlayedSoundIds(
   prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
   limit: number,
   excludedIds: string[] = [],
 ): Promise<string[]> {
   const ranked = await buildTopList(prisma, { limit: 100 })
-  const rankedIds = ranked
-    .map((entry) => entry.archiveItemId)
-    .filter((id) => !excludedIds.includes(id))
-  const playableRanked = await prisma.archiveItem.findMany({
+  const rankedIds = ranked.map((entry) => entry.soundId).filter((id) => !excludedIds.includes(id))
+  const playableRanked = await prisma.sound.findMany({
     where: {
       id: { in: rankedIds },
       isPublic: true,
@@ -31,7 +29,7 @@ async function selectTopPlayedArchiveIds(
   const selected = rankedIds.filter((id) => playableSet.has(id)).slice(0, limit)
 
   if (selected.length < limit) {
-    const fallback = await prisma.archiveItem.findMany({
+    const fallback = await prisma.sound.findMany({
       where: {
         id: { notIn: [...excludedIds, ...selected] },
         isPublic: true,
@@ -57,10 +55,10 @@ async function generateTopPlayedRotation(
   const current = await prisma.curatedRotationItem.findMany({
     where: { channelId },
     orderBy: { position: 'asc' },
-    select: { archiveItemId: true },
+    select: { soundId: true },
   })
-  const retainedIds = mode === 'add' ? current.map((item) => item.archiveItemId) : []
-  const pickedIds = await selectTopPlayedArchiveIds(prisma, AUTO_PLAYLIST_SIZE, retainedIds)
+  const retainedIds = mode === 'add' ? current.map((item) => item.soundId) : []
+  const pickedIds = await selectTopPlayedSoundIds(prisma, AUTO_PLAYLIST_SIZE, retainedIds)
 
   await prisma.$transaction(async (transaction) => {
     if (mode === 'replace') {
@@ -69,9 +67,9 @@ async function generateTopPlayedRotation(
     const startPosition = mode === 'add' ? current.length : 0
     if (pickedIds.length > 0) {
       await transaction.curatedRotationItem.createMany({
-        data: pickedIds.map((archiveItemId, index) => ({
+        data: pickedIds.map((soundId, index) => ({
           channelId,
-          archiveItemId,
+          soundId,
           position: startPosition + index,
           addedById,
         })),
@@ -109,7 +107,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           position: true,
           createdAt: true,
           addedBy: { select: { displayName: true } },
-          archiveItem: {
+          sound: {
             select: {
               id: true,
               title: true,
@@ -128,24 +126,24 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           position: item.position,
           addedAt: item.createdAt,
           addedBy: item.addedBy.displayName,
-          archiveItemId: item.archiveItem.id,
-          title: item.archiveItem.title,
-          durationSec: item.archiveItem.durationSec,
-          license: item.archiveItem.license,
-          artistName: item.archiveItem.artistName ?? item.archiveItem.channel.user.displayName,
-          channelSlug: item.archiveItem.channel.slug,
+          soundId: item.sound.id,
+          title: item.sound.title,
+          durationSec: item.sound.durationSec,
+          license: item.sound.license,
+          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          channelSlug: item.sound.channel.slug,
         })),
       })
     },
   )
 
-  // GET /api/admin/tahti-selects/browse?q= — search public archive items to add
+  // GET /api/admin/tahti-selects/browse?q= — search public sound items to add
   fastify.get(
     '/api/admin/tahti-selects/browse',
     { preHandler: requireBoard, schema: { tags: ['admin'] } },
     async (request, reply) => {
       const { q } = request.query as { q?: string }
-      const items = await fastify.prisma.archiveItem.findMany({
+      const items = await fastify.prisma.sound.findMany({
         where: {
           isPublic: true,
           status: 'READY',
@@ -176,28 +174,28 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/admin/tahti-selects/items — add { archiveItemId } to the rotation
+  // POST /api/admin/tahti-selects/items — add { soundId } to the rotation
   fastify.post(
     '/api/admin/tahti-selects/items',
     { preHandler: requireBoard, schema: { tags: ['admin'] } },
     async (request, reply) => {
-      const { archiveItemId } = request.body as { archiveItemId?: string }
-      if (!archiveItemId) return reply.status(400).send({ error: 'archiveItemId required' })
+      const { soundId } = request.body as { soundId?: string }
+      if (!soundId) return reply.status(400).send({ error: 'soundId required' })
 
       const channelId = await getTahtiSelectsChannelId(fastify.prisma)
       if (!channelId) return reply.status(404).send({ error: 'Tahti Selects channel not found' })
 
-      const archiveItem = await fastify.prisma.archiveItem.findUnique({
-        where: { id: archiveItemId },
+      const sound = await fastify.prisma.sound.findUnique({
+        where: { id: soundId },
         select: { isPublic: true },
       })
-      if (!archiveItem) return reply.status(404).send({ error: 'Archive item not found' })
-      if (!archiveItem.isPublic) {
-        return reply.status(400).send({ error: 'Only public archive items can be curated' })
+      if (!sound) return reply.status(404).send({ error: 'Sound item not found' })
+      if (!sound.isPublic) {
+        return reply.status(400).send({ error: 'Only public sound items can be curated' })
       }
 
       const existing = await fastify.prisma.curatedRotationItem.findUnique({
-        where: { channelId_archiveItemId: { channelId, archiveItemId } },
+        where: { channelId_soundId: { channelId, soundId } },
       })
       if (existing) return reply.status(409).send({ error: 'Already in rotation' })
 
@@ -210,7 +208,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
       const item = await fastify.prisma.curatedRotationItem.create({
         data: {
           channelId,
-          archiveItemId,
+          soundId,
           position: (last?.position ?? -1) + 1,
           addedById: request.sessionUser!.id,
         },

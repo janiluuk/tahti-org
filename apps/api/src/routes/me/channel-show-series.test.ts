@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -59,20 +59,20 @@ describe('Show series and episodes', () => {
     expect(patch.json().scheduleNote).toBe('Saturdays 21:00')
     expect(patch.json().name).toBe('Midnight Cartography')
 
-    const archiveItem = await createReadyArchiveItem(prisma, channelId, 'Episode 1 master')
+    const sound = await createReadySound(prisma, channelId, 'Episode 1 master')
 
     const uploadEpisode = await app.inject({
       method: 'POST',
       url: `/api/me/channel/show-series/${series.id}/live-show-episodes`,
       headers: { cookie },
-      payload: { source: 'UPLOAD', archiveItemId: archiveItem.id },
+      payload: { source: 'UPLOAD', soundId: sound.id },
     })
     expect(uploadEpisode.statusCode).toBe(201)
     const uploadBody = uploadEpisode.json()
     expect(uploadBody.status).toBe('DRAFT')
     expect(uploadBody.episodeNumber).toBe(1)
     expect(uploadBody.title).toBe('Midnight Cartography #1')
-    expect(uploadBody.archiveItemId).toBe(archiveItem.id)
+    expect(uploadBody.soundId).toBe(sound.id)
 
     const broadcastEpisode = await app.inject({
       method: 'POST',
@@ -123,13 +123,13 @@ describe('Show series and episodes', () => {
     ).toBe(3)
   })
 
-  it("rejects an episode create with someone else's archive item", async () => {
+  it("rejects an episode create with someone else's sound item", async () => {
     const otherArtist = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,
       username: 'show-series-other',
       tier: 'ARTIST',
     })
-    const otherItem = await createReadyArchiveItem(prisma, otherArtist.channel!.id, 'Not mine')
+    const otherItem = await createReadySound(prisma, otherArtist.channel!.id, 'Not mine')
 
     const series = await app.inject({
       method: 'POST',
@@ -143,10 +143,10 @@ describe('Show series and episodes', () => {
       method: 'POST',
       url: `/api/me/channel/show-series/${seriesId}/live-show-episodes`,
       headers: { cookie },
-      payload: { source: 'UPLOAD', archiveItemId: otherItem.id },
+      payload: { source: 'UPLOAD', soundId: otherItem.id },
     })
     expect(attempt.statusCode).toBe(400)
-    expect(attempt.json().error).toMatch(/archive item/i)
+    expect(attempt.json().error).toMatch(/sound item/i)
   })
 
   it('404s for a series that does not belong to the caller', async () => {

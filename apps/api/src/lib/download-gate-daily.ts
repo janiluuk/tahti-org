@@ -42,7 +42,7 @@ function bucketRows(rows: DailyCountRow[], keys: string[]): Record<string, numbe
 
 /**
  * PERF-005: SQL-side count-by-day instead of pulling every matching row (plus,
- * previously, *every archive item the channel owns* just to get IDs for an `in:`
+ * previously, *every sound item the channel owns* just to get IDs for an `in:`
  * filter) into Node to bucket in a loop. Same DATE_TRUNC approach as
  * buildEgressDailySeries — Prisma groupBy can't truncate a timestamp to a day, so
  * this needs a raw query. The repost-ack join replaces the old two-step
@@ -58,8 +58,8 @@ export async function buildGateDailySeries(
   const [repostRows, blockedRows, countedRows] = await Promise.all([
     prisma.$queryRaw<DailyCountRow[]>`
       SELECT DATE_TRUNC('day', ra."createdAt") AS day, COUNT(*) AS count
-      FROM engagement."ArchiveRepostAck" ra
-      JOIN channel."ArchiveItem" ai ON ai.id = ra."archiveItemId"
+      FROM engagement."SoundRepostAck" ra
+      JOIN channel."Sound" ai ON ai.id = ra."soundId"
       WHERE ai."channelId" = ${channelId} AND ra."createdAt" >= ${since}
       GROUP BY DATE_TRUNC('day', ra."createdAt")
     `,

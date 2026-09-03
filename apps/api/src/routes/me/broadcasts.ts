@@ -35,26 +35,26 @@ const meBroadcastRoutes: FastifyPluginAsync = async (fastify) => {
         startedAt: true,
         endedAt: true,
         recordingKey: true,
-        archiveItemId: true,
+        soundId: true,
       },
     })
 
-    const archiveItems = await fastify.prisma.archiveItem.findMany({
-      where: { id: { in: rows.flatMap((row) => (row.archiveItemId ? [row.archiveItemId] : [])) } },
+    const sounds = await fastify.prisma.sound.findMany({
+      where: { id: { in: rows.flatMap((row) => (row.soundId ? [row.soundId] : [])) } },
       select: { id: true, title: true, status: true, durationSec: true },
     })
-    const archiveById = new Map(archiveItems.map((item) => [item.id, item]))
+    const soundById = new Map(sounds.map((item) => [item.id, item]))
     const visibleRows = rows
       .filter((row) => {
         if (parsed.data.unpublished !== 'true') return true
-        if (!row.archiveItemId) return true
-        return archiveById.get(row.archiveItemId)?.status !== 'READY'
+        if (!row.soundId) return true
+        return soundById.get(row.soundId)?.status !== 'READY'
       })
       .slice(0, parsed.data.limit)
 
     return reply.send({
       broadcasts: visibleRows.map((row) => {
-        const archiveItem = row.archiveItemId ? archiveById.get(row.archiveItemId) : undefined
+        const sound = row.soundId ? soundById.get(row.soundId) : undefined
         return {
           id: row.id,
           title: row.title,
@@ -62,11 +62,11 @@ const meBroadcastRoutes: FastifyPluginAsync = async (fastify) => {
           startedAt: row.startedAt.toISOString(),
           endedAt: row.endedAt?.toISOString() ?? null,
           recordingKey: row.recordingKey,
-          archiveItemId: row.archiveItemId,
-          archiveItemTitle: archiveItem?.title,
-          archiveItemStatus: archiveItem?.status,
+          soundId: row.soundId,
+          soundTitle: sound?.title,
+          soundStatus: sound?.status,
           durationSec:
-            archiveItem?.durationSec ??
+            sound?.durationSec ??
             (row.endedAt
               ? Math.max(0, Math.round((row.endedAt.getTime() - row.startedAt.getTime()) / 1000))
               : undefined),

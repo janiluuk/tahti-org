@@ -16,7 +16,7 @@ import {
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
-import { pruneArchiveRevisions } from '../lib/archive-version-retention.js'
+import { pruneSoundRevisions } from '../lib/sound-version-retention.js'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode-version' }))
@@ -86,25 +86,25 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
   const { versionId } = job.data as { versionId: string }
   const startedAt = Date.now()
 
-  const version = await prisma.archiveItemVersion.findUnique({
+  const version = await prisma.soundVersion.findUnique({
     where: { id: versionId },
     include: {
-      archiveItem: { include: { channel: { select: { slug: true } } } },
+      sound: { include: { channel: { select: { slug: true } } } },
     },
   })
 
-  if (!version) throw new Error(`ArchiveItemVersion ${versionId} not found`)
+  if (!version) throw new Error(`SoundVersion ${versionId} not found`)
 
-  await prisma.archiveItemVersion.update({
+  await prisma.soundVersion.update({
     where: { id: versionId },
     data: { status: 'PROCESSING' },
   })
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-vtranscode-'))
-  const itemId = version.archiveItemId
-  const slug = version.archiveItem.channel.slug
+  const itemId = version.soundId
+  const slug = version.sound.channel.slug
 
-  logLine({ itemId, versionId }, `archive item ${itemId} version ${versionId} transcode starting`)
+  logLine({ itemId, versionId }, `sound item ${itemId} version ${versionId} transcode starting`)
 
   let targetFormat: 'flac' | 'mp3' = 'mp3'
 
@@ -124,7 +124,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
       const flacKey = `flac/${slug}/${itemId}-v${version.versionNumber}.flac`
       await uploadFile(flacKey, flacPath, 'audio/flac')
 
-      await prisma.archiveItemVersion.update({
+      await prisma.soundVersion.update({
         where: { id: versionId },
         data: {
           status: 'READY',
@@ -148,7 +148,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
       const mp3Key = `mp3/${slug}/${itemId}-v${version.versionNumber}.mp3`
       await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
-      await prisma.archiveItemVersion.update({
+      await prisma.soundVersion.update({
         where: { id: versionId },
         data: {
           status: 'READY',
@@ -167,13 +167,13 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
     if (version.isActive) {
       await syncActiveVersionToItem(prisma, itemId)
     }
-    await pruneArchiveRevisions(prisma, itemId)
+    await pruneSoundRevisions(prisma, itemId)
     logLine(
       { itemId, versionId, targetFormat, elapsedMs: Date.now() - startedAt },
-      `archive item ${itemId} version ${versionId} transcode to ${targetFormat} done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      `sound item ${itemId} version ${versionId} transcode to ${targetFormat} done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
   } catch (err) {
-    await prisma.archiveItemVersion.update({
+    await prisma.soundVersion.update({
       where: { id: versionId },
       data: { status: 'ERROR' },
     })
@@ -184,7 +184,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
         elapsedMs: Date.now() - startedAt,
         error: err instanceof Error ? err.message : String(err),
       },
-      `archive item ${itemId} version ${versionId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      `sound item ${itemId} version ${versionId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
     throw err
   } finally {

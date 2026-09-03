@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { buildPeaksPyramid, type PeaksPyramid } from '@tahti/audio-edit'
 
-/** PERF-04: build editor PeaksPyramid during archive ingest. */
+/** PERF-04: build editor PeaksPyramid during sound ingest. */
 export async function extractEditorPeaksPyramid(
   inputPath: string,
   durationSec: number,

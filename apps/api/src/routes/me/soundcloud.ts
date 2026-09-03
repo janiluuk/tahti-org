@@ -187,7 +187,7 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Queue SoundCloud tracks for server-side import to archive',
+        description: 'Queue SoundCloud tracks for server-side import to sound',
         response: openApiResponse(SoundcloudImportResponseSchema, 'SoundcloudImportResponse'),
       },
     },

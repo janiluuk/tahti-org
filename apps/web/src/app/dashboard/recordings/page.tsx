@@ -58,10 +58,9 @@ export default async function RecordingsPage() {
         ) : (
           <ol className="import-page__broadcast-list studio-mt-sm">
             {shows.map((show) => {
-              const title =
-                show.title || show.archiveItemTitle || `Show ${formatDate(show.startedAt)}`
-              const href = show.archiveItemId
-                ? `/dashboard/archive/${show.archiveItemId}`
+              const title = show.title || show.soundTitle || `Show ${formatDate(show.startedAt)}`
+              const href = show.soundId
+                ? `/dashboard/sounds/${show.soundId}`
                 : `/dashboard/upload/from-broadcast?id=${show.id}`
               return (
                 <li key={show.id} className="import-page__broadcast-row">
@@ -74,10 +73,10 @@ export default async function RecordingsPage() {
                     </span>
                   </div>
                   <span className="import-page__broadcast-status import-page__broadcast-status--ready">
-                    {show.archiveItemStatus === 'READY' ? 'Published' : 'Recorded'}
+                    {show.soundStatus === 'READY' ? 'Published' : 'Recorded'}
                   </span>
                   <Link href={href} className="ui-btn ui-btn--ghost ui-btn--sm">
-                    {show.archiveItemId ? 'Open' : 'Edit & publish'}
+                    {show.soundId ? 'Open' : 'Edit & publish'}
                   </Link>
                 </li>
               )

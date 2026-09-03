@@ -40,7 +40,7 @@ export const HearthisAddTrackRequestSchema = z.object({
 })
 
 export const HearthisAddTrackResponseSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   collectionItemId: z.string(),
   track: HearthisTrackResultSchema,
 })

@@ -31,7 +31,7 @@ export type ProgrammeLibraryTrackRow = {
   releaseTitle: string
   trackTitle: string
   durationSec: number | null
-  archiveItemId: string | null
+  soundId: string | null
 }
 
 export type ProgrammeView = {
@@ -70,7 +70,7 @@ export async function updateChannelProgramme(payload: {
   fallbackAutoEnroll?: boolean
   announcementsEnabled?: boolean
   items?: Array<{
-    archiveItemId: string
+    soundId: string
     isFallback: boolean
     fallbackOrder?: number
   }>

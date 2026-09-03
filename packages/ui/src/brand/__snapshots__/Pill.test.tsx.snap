@@ -1,15 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Pill > (Snapshot) renders correctly for variant=archive with its default label 1`] = `
-<div>
-  <span
-    class="pill pill--archive"
-  >
-    ARCHIVE
-  </span>
-</div>
-`;
-
 exports[`Pill > (Snapshot) renders correctly for variant=default with its default label 1`] = `
 <div>
   <span
@@ -51,6 +41,16 @@ exports[`Pill > (Snapshot) renders correctly for variant=recommended with its de
     class="pill pill--recommended"
   >
     RECOMMENDED
+  </span>
+</div>
+`;
+
+exports[`Pill > (Snapshot) renders correctly for variant=sound with its default label 1`] = `
+<div>
+  <span
+    class="pill pill--sound"
+  >
+    SOUND
   </span>
 </div>
 `;

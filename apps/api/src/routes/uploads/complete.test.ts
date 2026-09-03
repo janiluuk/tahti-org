@@ -95,7 +95,7 @@ describe('POST /api/uploads/complete', () => {
     expect(res.statusCode).toBe(403)
   })
 
-  it('creates ArchiveItem and enqueues job', async () => {
+  it('creates Sound and enqueues job', async () => {
     const uploadId = `raw/${channelSlug}/validfile.mp3`
     const res = await app.inject({
       method: 'POST',
@@ -108,7 +108,7 @@ describe('POST /api/uploads/complete', () => {
     expect(body.itemId).toBeDefined()
     expect(body.status).toBe('pending')
 
-    const item = await prisma.archiveItem.findUnique({ where: { id: body.itemId } })
+    const item = await prisma.sound.findUnique({ where: { id: body.itemId } })
     expect(item).not.toBeNull()
     expect(item!.title).toBe('Test Track')
     expect(item!.status).toBe('PENDING')
@@ -136,7 +136,7 @@ describe('POST /api/uploads/complete', () => {
       },
     })
     expect(res.statusCode).toBe(201)
-    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    const item = await prisma.sound.findUnique({ where: { id: res.json().itemId } })
     expect(item!.isFallback).toBe(false)
   })
 
@@ -155,7 +155,7 @@ describe('POST /api/uploads/complete', () => {
       payload: { uploadId, etag: 'etagabc', title: 'Manual only' },
     })
     expect(res.statusCode).toBe(201)
-    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    const item = await prisma.sound.findUnique({ where: { id: res.json().itemId } })
     expect(item!.isFallback).toBe(false)
 
     await prisma.channel.update({
@@ -166,12 +166,12 @@ describe('POST /api/uploads/complete', () => {
 
   it('skips auto-enroll once the rotation is already at capacity', async () => {
     const channel = await prisma.channel.findUniqueOrThrow({ where: { slug: channelSlug } })
-    await prisma.archiveItem.updateMany({
+    await prisma.sound.updateMany({
       where: { channelId: channel.id },
       data: { isFallback: false },
     })
     for (let i = 0; i < 5; i++) {
-      await prisma.archiveItem.create({
+      await prisma.sound.create({
         data: {
           channelId: channel.id,
           title: `Cap filler ${i}`,
@@ -189,7 +189,7 @@ describe('POST /api/uploads/complete', () => {
       payload: { uploadId, etag: 'etagdef', title: 'Sixth upload' },
     })
     expect(res.statusCode).toBe(201)
-    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    const item = await prisma.sound.findUnique({ where: { id: res.json().itemId } })
     expect(item!.isFallback).toBe(false)
   })
 
@@ -214,7 +214,7 @@ describe('POST /api/uploads/complete', () => {
       },
     })
     expect(res.statusCode).toBe(201)
-    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    const item = await prisma.sound.findUnique({ where: { id: res.json().itemId } })
     expect(item!.genre).toBe('Techno')
     expect(item!.contentType).toBe('LIVE')
     expect(item!.recordingLocation).toBe('Helsinki, Finland')

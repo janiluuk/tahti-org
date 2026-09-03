@@ -76,7 +76,7 @@ async function publishLovedMessage(params: {
           handle: 'Tahti',
           text: `${actorDisplayName} loved ${trackTitle}`,
           system: true,
-          href: resolveChannelUrl(slug, { hash: `archive-item-${trackId}` }),
+          href: resolveChannelUrl(slug, { hash: `sound-item-${trackId}` }),
           ts: Date.now(),
         },
       },
@@ -94,7 +94,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id: routeParams.id },
         select: {
           id: true,
@@ -111,17 +111,17 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
 
       const reactions = await fastify.prisma.trackReaction.findMany({
-        where: { archiveItemId: routeParams.id },
+        where: { soundId: routeParams.id },
         orderBy: { createdAt: 'asc' },
         take: 500,
         select: { id: true, type: true, positionSec: true, createdAt: true },
       })
 
-      // Broadcast.archiveItemId is a plain unique column, not a declared
-      // Prisma relation (no matching field exists on ArchiveItem) — an
+      // Broadcast.soundId is a plain unique column, not a declared
+      // Prisma relation (no matching field exists on Sound) — an
       // explicit lookup instead of a nested select.
       const broadcast = await fastify.prisma.broadcast.findUnique({
-        where: { archiveItemId: routeParams.id },
+        where: { soundId: routeParams.id },
         select: { reactions: { select: { emoji: true, elapsedSec: true } } },
       })
 
@@ -152,7 +152,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(429).send({ error: 'Slow down' })
     }
 
-    const item = await fastify.prisma.archiveItem.findUnique({
+    const item = await fastify.prisma.sound.findUnique({
       where: { id: routeParams.id },
       select: {
         id: true,
@@ -170,7 +170,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const reaction = await fastify.prisma.trackReaction.create({
       data: {
-        archiveItemId: item.id,
+        soundId: item.id,
         userId: user.id,
         type: parsed.data.type,
         positionSec,

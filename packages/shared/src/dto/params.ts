@@ -15,7 +15,7 @@ export const UsernameParamSchema = z.object({
   username: z.string().min(1).max(32),
 })
 
-export const ChannelArchiveParamsSchema = z.object({
+export const ChannelSoundParamsSchema = z.object({
   slug: SlugParamSchema.shape.slug,
   itemId: IdParamSchema.shape.id,
 })
@@ -43,12 +43,12 @@ export const ReleaseTrackVersionParamsSchema = ReleaseIdTrackIdParamsSchema.exte
   versionId: IdParamSchema.shape.id,
 })
 
-export const ArchiveVersionParamsSchema = z.object({
+export const SoundVersionParamsSchema = z.object({
   id: IdParamSchema.shape.id,
   versionId: IdParamSchema.shape.id,
 })
 
-export const ArchiveItemIdParamSchema = z.object({
+export const SoundIdParamSchema = z.object({
   itemId: IdParamSchema.shape.id,
 })
 

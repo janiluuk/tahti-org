@@ -17,15 +17,15 @@ import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import {
   cleanupUsersByEmailPrefix,
   allocateMemberNumber,
-  createReadyArchiveItem,
+  createReadySound,
   createTahtiRadioChannel,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
 
-const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
+const { enqueueFinalizeBroadcastRecording, enqueueWarmSoundFallbackCache } = vi.hoisted(() => ({
   enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
-  enqueueWarmArchiveFallbackCache: vi.fn().mockResolvedValue(undefined),
+  enqueueWarmSoundFallbackCache: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../lib/queue.js', async (importOriginal) => {
@@ -33,7 +33,7 @@ vi.mock('../../lib/queue.js', async (importOriginal) => {
   return {
     ...actual,
     enqueueFinalizeBroadcastRecording,
-    enqueueWarmArchiveFallbackCache,
+    enqueueWarmSoundFallbackCache,
   }
 })
 
@@ -59,7 +59,7 @@ describe('Tahti Radio live-show journey', () => {
     radioUserId = radio.id
     radioChannelId = radio.channel!.id
 
-    await createReadyArchiveItem(prisma, radioChannelId, TRACK_TITLE)
+    await createReadySound(prisma, radioChannelId, TRACK_TITLE)
 
     const clip = await prisma.announcementClip.create({
       data: {

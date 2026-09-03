@@ -11,9 +11,9 @@ import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
 import { sessionCookieFor } from '../../test/helpers.js'
 
-const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
+const { enqueueFinalizeBroadcastRecording, enqueueWarmSoundFallbackCache } = vi.hoisted(() => ({
   enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
-  enqueueWarmArchiveFallbackCache: vi.fn().mockResolvedValue(undefined),
+  enqueueWarmSoundFallbackCache: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../lib/queue.js', async (importOriginal) => {
@@ -21,7 +21,7 @@ vi.mock('../../lib/queue.js', async (importOriginal) => {
   return {
     ...actual,
     enqueueFinalizeBroadcastRecording,
-    enqueueWarmArchiveFallbackCache,
+    enqueueWarmSoundFallbackCache,
   }
 })
 
@@ -38,7 +38,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
 
   beforeAll(async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
-    enqueueWarmArchiveFallbackCache.mockClear()
+    enqueueWarmSoundFallbackCache.mockClear()
     app = await buildApp({ logger: false })
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
@@ -179,7 +179,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('PREVIEW')
     expect(channel?.goneLiveAt).toBeNull()
-    expect(enqueueWarmArchiveFallbackCache).not.toHaveBeenCalled()
+    expect(enqueueWarmSoundFallbackCache).not.toHaveBeenCalled()
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({
@@ -215,7 +215,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('go-live promotes a preview session to public LIVE and warms the archive cache', async () => {
+  it('go-live promotes a preview session to public LIVE and warms the sound cache', async () => {
     await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
@@ -233,7 +233,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('LIVE')
     expect(channel?.goneLiveAt).toBeTruthy()
-    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
+    expect(enqueueWarmSoundFallbackCache).toHaveBeenCalledWith(channelId)
 
     const broadcast = await prisma.broadcast.findFirst({
       where: { channelId, endedAt: null },
@@ -257,7 +257,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(res.statusCode).toBe(409)
   })
 
-  it('ends broadcast on RTMP on_done and enqueues partial archive finalize when it had gone live', async () => {
+  it('ends broadcast on RTMP on_done and enqueues partial sound finalize when it had gone live', async () => {
     await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
@@ -293,7 +293,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
   })
 
-  it('ends a preview-only RTMP session on on_done without enqueuing archive finalize', async () => {
+  it('ends a preview-only RTMP session on on_done without enqueuing sound finalize', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
 
     await app.inject({
@@ -316,7 +316,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
   })
 
-  it('ends broadcast on Icecast disconnect and enqueues partial archive finalize when it had gone live', async () => {
+  it('ends broadcast on Icecast disconnect and enqueues partial sound finalize when it had gone live', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
 
     await app.inject({
@@ -353,7 +353,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('ends a preview-only Icecast session on disconnect without enqueuing archive finalize', async () => {
+  it('ends a preview-only Icecast session on disconnect without enqueuing sound finalize', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
 
     await app.inject({
@@ -373,7 +373,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
   })
 
-  it('M35: does not enqueue archive finalize when the channel has auto-record turned off', async () => {
+  it('M35: does not enqueue sound finalize when the channel has auto-record turned off', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
     await prisma.channel.update({ where: { id: channelId }, data: { autoRecordEnabled: false } })
 
@@ -405,7 +405,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
   })
 
   it('allows Icecast on_connect with urlencoded mount and pass, entering private preview', async () => {
-    enqueueWarmArchiveFallbackCache.mockClear()
+    enqueueWarmSoundFallbackCache.mockClear()
 
     const res = await app.inject({
       method: 'POST',
@@ -417,7 +417,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
 
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('PREVIEW')
-    expect(enqueueWarmArchiveFallbackCache).not.toHaveBeenCalled()
+    expect(enqueueWarmSoundFallbackCache).not.toHaveBeenCalled()
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({

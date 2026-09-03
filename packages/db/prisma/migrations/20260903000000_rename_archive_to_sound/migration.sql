@@ -14,6 +14,16 @@ ALTER TYPE "channel"."ArchiveQualityBadge" RENAME TO "SoundQualityBadge";
 ALTER TYPE "channel"."ArchiveEmbedProvider" RENAME TO "SoundEmbedProvider";
 ALTER TYPE "channel"."ArchiveLicense" RENAME TO "SoundLicense";
 
+-- Enum values on unrelated enums that describe actions/targets on the renamed
+-- model (audit-log action names, content-report target type) -- these follow
+-- this repo existing RENAME VALUE precedent for enum value changes.
+ALTER TYPE "governance"."AuditAction" RENAME VALUE 'ARCHIVE_EDIT_RENDER' TO 'SOUND_EDIT_RENDER';
+ALTER TYPE "governance"."AuditAction" RENAME VALUE 'ARCHIVE_EDIT_BOUNCE' TO 'SOUND_EDIT_BOUNCE';
+ALTER TYPE "governance"."AuditAction" RENAME VALUE 'ARCHIVE_EDIT_PUBLISH' TO 'SOUND_EDIT_PUBLISH';
+ALTER TYPE "governance"."AuditAction" RENAME VALUE 'ARCHIVE_METADATA_ADMIN_EDIT' TO 'SOUND_METADATA_ADMIN_EDIT';
+ALTER TYPE "governance"."AuditAction" RENAME VALUE 'ARCHIVE_ITEM_LIKE' TO 'SOUND_ITEM_LIKE';
+ALTER TYPE "admin"."ContentReportTargetType" RENAME VALUE 'ARCHIVE_ITEM' TO 'SOUND_ITEM';
+
 -- Tables
 ALTER TABLE "channel"."ArchiveItem" RENAME TO "Sound";
 ALTER TABLE "channel"."ArchiveItemStemJob" RENAME TO "SoundStemJob";

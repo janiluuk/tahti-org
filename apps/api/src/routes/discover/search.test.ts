@@ -25,7 +25,7 @@ describe('GET /api/v1/search', () => {
     })
     channelId = artist.channel!.id
 
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId,
         title: 'Midnight Ambient Set',
@@ -37,7 +37,7 @@ describe('GET /api/v1/search', () => {
         fileSizeBytes: BigInt(1000),
       },
     })
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId,
         title: 'Private Rehearsal',
@@ -59,7 +59,7 @@ describe('GET /api/v1/search', () => {
   })
 
   afterAll(async () => {
-    await prisma.archiveItem.deleteMany({ where: { channelId } })
+    await prisma.sound.deleteMany({ where: { channelId } })
     await prisma.collection.deleteMany({ where: { slug: 'search-test-moonlight-mixes' } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { archivePlaybackKey } from './archive-playback.js'
+import { soundPlaybackKey } from './sound-playback.js'
 import type { FallbackMode } from './dto/channel-programme.js'
 
 export type FallbackSourceRow = {
@@ -25,7 +25,7 @@ export type FallbackPlaybackRow = {
 
 /** Items eligible for 24/7 offline rotation (M27). */
 export function selectFallbackPool(items: FallbackSourceRow[]): FallbackSourceRow[] {
-  const withPlayback = items.filter((i) => archivePlaybackKey(i))
+  const withPlayback = items.filter((i) => soundPlaybackKey(i))
   if (withPlayback.length === 0) return []
   const flagged = withPlayback.filter((i) => i.isFallback)
   return flagged.length > 0 ? flagged : withPlayback
@@ -71,7 +71,7 @@ export function buildFallbackPlaybackRows(
   const ordered = orderFallbackPool(items, fallbackMode)
   const rows: FallbackPlaybackRow[] = []
   for (const item of ordered) {
-    const playbackKey = archivePlaybackKey(item)
+    const playbackKey = soundPlaybackKey(item)
     if (!playbackKey) continue
     rows.push({
       id: item.id,
@@ -164,7 +164,7 @@ export type FallbackM3uEntry = {
   url: string
 }
 
-// The tahti/mp3 prefix is not publicly readable (unlike covers/avatars/archive
+// The tahti/mp3 prefix is not publicly readable (unlike covers/avatars/sound
 // banners — mp3/flac audio may be gated catalog content), so each entry's URL is
 // caller-supplied (a presigned GET) rather than built from a public endpoint here.
 export function renderFallbackM3u(entries: FallbackM3uEntry[], seekOffsetSec?: number): string {
@@ -261,7 +261,7 @@ export function playbackKeyFromLocalCacheBasename(basename: string): string | nu
   return key
 }
 
-export function channelArchiveCacheDir(cacheRoot: string, channelId: string): string {
+export function channelSoundCacheDir(cacheRoot: string, channelId: string): string {
   return `${cacheRoot.replace(/\/$/, '')}/${channelId}`
 }
 

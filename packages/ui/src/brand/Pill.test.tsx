@@ -8,7 +8,7 @@ import { Pill, type PillVariant } from './Pill.js'
 describe('Pill', () => {
   afterEach(() => cleanup())
 
-  it.each(['live', 'flac', 'archive', 'recommended', 'default'] as PillVariant[])(
+  it.each(['live', 'flac', 'sound', 'recommended', 'default'] as PillVariant[])(
     '(Snapshot) renders correctly for variant=%s with its default label',
     (variant) => {
       const { container } = render(<Pill variant={variant} />)

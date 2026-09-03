@@ -15,7 +15,7 @@ import {
 } from '@tahti/shared'
 import { decryptStreamKey, encryptStreamKey } from '../lib/stream-key-enc.js'
 import { uploadStream } from '../lib/minio.js'
-import { enqueueTranscodeArchive } from '../lib/queue.js'
+import { enqueueTranscodeSound } from '../lib/queue.js'
 
 const GOOGLE_DRIVE_CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID ?? ''
 const GOOGLE_DRIVE_CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET ?? ''
@@ -141,7 +141,7 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
     )
 
     const title = titleFromDriveFileName(fileName)
-    const archiveItem = await prisma.archiveItem.create({
+    const sound = await prisma.sound.create({
       data: {
         channelId: channel.id,
         title,
@@ -157,13 +157,13 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
       where: { id: cloudImportJobId },
       data: {
         status: 'DONE',
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         bytesTransferred: contentLength !== undefined ? BigInt(contentLength) : null,
         completedAt: new Date(),
       },
     })
 
-    await enqueueTranscodeArchive(archiveItem.id)
+    await enqueueTranscodeSound(sound.id)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     const reconnect = /401|403|token|connect/i.test(message)

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
-import { archivePlaybackKey, type ChannelProgrammePatch } from '@tahti/shared'
+import { soundPlaybackKey, type ChannelProgrammePatch } from '@tahti/shared'
 import { presignedGetUrl } from './minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from './fallback-rotation.js'
 
@@ -11,7 +11,7 @@ import { MAX_FALLBACK_ITEMS, fallbackCount } from './fallback-rotation.js'
  * logic either way, only how `channelId`/`userId` get resolved differs (session
  * user vs. :slug route param). */
 
-const ARCHIVE_ITEM_SELECT = {
+const SOUND_ITEM_SELECT = {
   id: true,
   title: true,
   status: true,
@@ -33,7 +33,7 @@ const PROGRAMME_PREVIEW_URL_TTL_SEC = 60 * 60
 // list client-side to derive "in rotation" vs "available" — it needs to see
 // the whole set to do that, so real page/limit pagination would break the
 // editor's UX. This caps worst-case query cost instead (matching the
-// precedent in routes/me/archive.ts's own take: 100), rather than the
+// precedent in routes/me/sound.ts's own take: 100), rather than the
 // unbounded findManys this had before.
 const PROGRAMME_ITEM_CAP = 500
 
@@ -48,11 +48,11 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
         announcementsEnabled: true,
       },
     }),
-    prisma.archiveItem.findMany({
+    prisma.sound.findMany({
       where: { channelId, status: 'READY' },
       orderBy: [{ fallbackOrder: 'asc' }, { createdAt: 'asc' }],
       take: PROGRAMME_ITEM_CAP,
-      select: ARCHIVE_ITEM_SELECT,
+      select: SOUND_ITEM_SELECT,
     }),
     prisma.releaseTrack.findMany({
       where: { release: { userId }, status: 'READY' },
@@ -62,7 +62,7 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
         id: true,
         title: true,
         durationSec: true,
-        archiveItemId: true,
+        soundId: true,
         release: { select: { id: true, title: true } },
       },
     }),
@@ -70,7 +70,7 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
 
   const itemsWithAudio = await Promise.all(
     items.map(async ({ mp3Key, flacKey, ...rest }) => {
-      const playbackKey = archivePlaybackKey({ mp3Key, flacKey })
+      const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
       return {
         ...rest,
         audioUrl: playbackKey
@@ -92,14 +92,14 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
       releaseTitle: t.release.title,
       trackTitle: t.title,
       durationSec: t.durationSec,
-      archiveItemId: t.archiveItemId,
+      soundId: t.soundId,
     })),
   }
 }
 
 /** Applies a fallbackMode/fallbackEnabled/items patch to an already-resolved,
  * already-authorized channel. Returns an error message on the one caller-facing
- * failure mode (an archiveItemId that doesn't belong to this channel) — every
+ * failure mode (an soundId that doesn't belong to this channel) — every
  * other precondition (auth, channel ownership) is the caller's responsibility. */
 export async function applyProgrammePatch(
   prisma: PrismaClient,
@@ -128,22 +128,22 @@ export async function applyProgrammePatch(
   }
 
   if (patch.items !== undefined) {
-    const ids = patch.items.map((i) => i.archiveItemId)
-    const owned = await prisma.archiveItem.findMany({
+    const ids = patch.items.map((i) => i.soundId)
+    const owned = await prisma.sound.findMany({
       where: { channelId, id: { in: ids } },
       select: { id: true, isFallback: true },
     })
     const ownedState = new Map(owned.map((o) => [o.id, o.isFallback]))
     for (const row of patch.items) {
-      if (!ownedState.has(row.archiveItemId)) {
-        return { error: `Unknown archive item ${row.archiveItemId}` }
+      if (!ownedState.has(row.soundId)) {
+        return { error: `Unknown sound item ${row.soundId}` }
       }
     }
 
     const currentTotal = await fallbackCount(prisma, channelId)
     let delta = 0
     for (const row of patch.items) {
-      const was = ownedState.get(row.archiveItemId)!
+      const was = ownedState.get(row.soundId)!
       if (was && !row.isFallback) delta -= 1
       if (!was && row.isFallback) delta += 1
     }
@@ -155,8 +155,8 @@ export async function applyProgrammePatch(
 
     await prisma.$transaction(
       patch.items.map((row) =>
-        prisma.archiveItem.update({
-          where: { id: row.archiveItemId },
+        prisma.sound.update({
+          where: { id: row.soundId },
           data: {
             isFallback: row.isFallback,
             ...(row.fallbackOrder !== undefined ? { fallbackOrder: row.fallbackOrder } : {}),
@@ -169,8 +169,8 @@ export async function applyProgrammePatch(
   return { error: null }
 }
 
-/** Pulls a published release track into the 24/7 rotation alongside archive sets
- * (M33) — reuses ArchiveItem as the single rotation/playback source of truth, so
+/** Pulls a published release track into the 24/7 rotation alongside sound sets
+ * (M33) — reuses Sound as the single rotation/playback source of truth, so
  * the worker's fallback cache and Liquidsoap never need to know a row originated
  * from the release library. `channel` must already be resolved and authorized. */
 export async function promoteReleaseTrackToProgramme(
@@ -186,7 +186,7 @@ export async function promoteReleaseTrackToProgramme(
       durationSec: true,
       streamKey: true,
       flacKey: true,
-      archiveItemId: true,
+      soundId: true,
       release: { select: { title: true } },
     },
   })
@@ -197,9 +197,9 @@ export async function promoteReleaseTrackToProgramme(
     return { error: `Rotation is limited to ${MAX_FALLBACK_ITEMS} tracks — remove one first.` }
   }
 
-  if (track.archiveItemId) {
-    await prisma.archiveItem.update({
-      where: { id: track.archiveItemId },
+  if (track.soundId) {
+    await prisma.sound.update({
+      where: { id: track.soundId },
       data: { isFallback: true },
     })
     return { error: null }
@@ -209,12 +209,12 @@ export async function promoteReleaseTrackToProgramme(
     return { error: 'Track has no playable audio yet' }
   }
 
-  const maxOrder = await prisma.archiveItem.aggregate({
+  const maxOrder = await prisma.sound.aggregate({
     where: { channelId: channel.id },
     _max: { fallbackOrder: true },
   })
 
-  const archiveItem = await prisma.archiveItem.create({
+  const sound = await prisma.sound.create({
     data: {
       channelId: channel.id,
       title: `${track.release.title} — ${track.title}`,
@@ -232,7 +232,7 @@ export async function promoteReleaseTrackToProgramme(
   })
   await prisma.releaseTrack.update({
     where: { id: track.id },
-    data: { archiveItemId: archiveItem.id },
+    data: { soundId: sound.id },
   })
 
   return { error: null }

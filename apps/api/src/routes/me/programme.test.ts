@@ -8,7 +8,7 @@ import { config } from '../../config.js'
 import {
   cleanupUsersByEmailPrefix,
   createPublishedReleaseWithTrack,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -40,8 +40,8 @@ describe('M27 — channel fallback programme', () => {
     channelId = artist.channel!.id
     userId = artist.id
 
-    const a = await createReadyArchiveItem(prisma, channelId, 'Set A')
-    const b = await createReadyArchiveItem(prisma, channelId, 'Set B')
+    const a = await createReadySound(prisma, channelId, 'Set A')
+    const b = await createReadySound(prisma, channelId, 'Set B')
     itemA = a.id
     itemB = b.id
 
@@ -56,7 +56,7 @@ describe('M27 — channel fallback programme', () => {
     await app.close()
   })
 
-  it('GET programme lists ready archive items and library tracks', async () => {
+  it('GET programme lists ready sound items and library tracks', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/channel/programme',
@@ -65,9 +65,9 @@ describe('M27 — channel fallback programme', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().fallbackMode).toBe('shuffle')
     expect(res.json().items.length).toBeGreaterThanOrEqual(2)
-    const library = res.json().library as Array<{ releaseTrackId: string; archiveItemId: null }>
+    const library = res.json().library as Array<{ releaseTrackId: string; soundId: null }>
     expect(library.some((t) => t.releaseTrackId === releaseTrackId)).toBe(true)
-    expect(library.find((t) => t.releaseTrackId === releaseTrackId)?.archiveItemId).toBeNull()
+    expect(library.find((t) => t.releaseTrackId === releaseTrackId)?.soundId).toBeNull()
   })
 
   it('POST programme/library promotes a release track into the rotation', async () => {
@@ -80,14 +80,14 @@ describe('M27 — channel fallback programme', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json() as {
       items: Array<{ id: string; isFallback: boolean }>
-      library: Array<{ releaseTrackId: string; archiveItemId: string | null }>
+      library: Array<{ releaseTrackId: string; soundId: string | null }>
     }
     const libraryRow = body.library.find((t) => t.releaseTrackId === releaseTrackId)
-    expect(libraryRow?.archiveItemId).not.toBeNull()
-    const promotedItem = body.items.find((i) => i.id === libraryRow?.archiveItemId)
+    expect(libraryRow?.soundId).not.toBeNull()
+    const promotedItem = body.items.find((i) => i.id === libraryRow?.soundId)
     expect(promotedItem?.isFallback).toBe(true)
 
-    // idempotent: promoting again just re-flags the same archive item, no duplicate.
+    // idempotent: promoting again just re-flags the same sound item, no duplicate.
     const again = await app.inject({
       method: 'POST',
       url: '/api/me/channel/programme/library',
@@ -95,10 +95,8 @@ describe('M27 — channel fallback programme', () => {
       payload: { releaseTrackId },
     })
     expect(again.statusCode).toBe(200)
-    const againBody = again.json() as { library: Array<{ archiveItemId: string | null }> }
-    expect(
-      againBody.library.filter((t) => t.archiveItemId === libraryRow?.archiveItemId),
-    ).toHaveLength(1)
+    const againBody = again.json() as { library: Array<{ soundId: string | null }> }
+    expect(againBody.library.filter((t) => t.soundId === libraryRow?.soundId)).toHaveLength(1)
   })
 
   it('PATCH programme sets rotation flags and ordered mode', async () => {
@@ -109,8 +107,8 @@ describe('M27 — channel fallback programme', () => {
       payload: {
         fallbackMode: 'ordered',
         items: [
-          { archiveItemId: itemA, isFallback: true, fallbackOrder: 1 },
-          { archiveItemId: itemB, isFallback: true, fallbackOrder: 0 },
+          { soundId: itemA, isFallback: true, fallbackOrder: 1 },
+          { soundId: itemB, isFallback: true, fallbackOrder: 0 },
         ],
       },
     })
@@ -132,7 +130,7 @@ describe('M27 — channel fallback programme', () => {
   })
 
   it('excludes non-fallback items when at least one is flagged', async () => {
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemA },
       data: { isFallback: false },
     })
@@ -194,9 +192,7 @@ describe('M27 — channel fallback programme', () => {
   it('rejects a bulk PATCH that would exceed the rotation cap', async () => {
     // itemA/itemB already exist; create enough extra READY items to reach the cap.
     const extra = await Promise.all(
-      Array.from({ length: 4 }, (_, i) =>
-        createReadyArchiveItem(prisma, channelId, `Cap filler ${i}`),
-      ),
+      Array.from({ length: 4 }, (_, i) => createReadySound(prisma, channelId, `Cap filler ${i}`)),
     )
     const capPatch = await app.inject({
       method: 'PATCH',
@@ -204,9 +200,9 @@ describe('M27 — channel fallback programme', () => {
       headers: { cookie },
       payload: {
         items: [
-          { archiveItemId: itemA, isFallback: true },
-          { archiveItemId: itemB, isFallback: true },
-          ...extra.map((i) => ({ archiveItemId: i.id, isFallback: true })),
+          { soundId: itemA, isFallback: true },
+          { soundId: itemB, isFallback: true },
+          ...extra.map((i) => ({ soundId: i.id, isFallback: true })),
         ],
       },
     })

@@ -10,12 +10,12 @@ import { createEmptyEditorProject, fetchEditorProjects } from './editor-actions'
 export default async function EditorIndexPage({
   searchParams,
 }: {
-  searchParams: { archiveItemId?: string }
+  searchParams: { soundId?: string }
 }) {
   const cookieStore = cookies()
   if (!cookieStore.get('tahti_session')) redirect('/login')
 
-  if (searchParams.archiveItemId) {
+  if (searchParams.soundId) {
     const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
     const session = cookieStore.get('tahti_session')!
     const res = await fetch(`${apiUrl}/api/me/editor/projects`, {
@@ -24,7 +24,7 @@ export default async function EditorIndexPage({
         'Content-Type': 'application/json',
         Cookie: `tahti_session=${session.value}`,
       },
-      body: JSON.stringify({ archiveItemId: searchParams.archiveItemId }),
+      body: JSON.stringify({ soundId: searchParams.soundId }),
       cache: 'no-store',
     })
     if (res.ok) {

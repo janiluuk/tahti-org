@@ -10,7 +10,7 @@ import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import { ChannelControlsPanel } from './channel-controls-panel'
 
-interface ArchiveItem {
+interface SoundItem {
   id: string
   title: string
   durationSec?: number | null
@@ -39,7 +39,7 @@ export type DashboardOverviewProps = {
     downloadsToday: number
     downloadsTotal: number
   }
-  archiveItems: ArchiveItem[]
+  sounds: SoundItem[]
   downloadGateSummary: ComponentProps<typeof DownloadGateSummaryPanel>['summary']
   channelLiveStats: ComponentProps<typeof ChannelLiveStatsPanel>['stats']
   otherModeratedChannels: ModeratedChannel[]
@@ -80,7 +80,7 @@ export function DashboardOverview({
   statDlCount,
   revenueCents,
   statsSummary,
-  archiveItems,
+  sounds,
   downloadGateSummary,
   channelLiveStats,
   otherModeratedChannels,
@@ -124,8 +124,8 @@ export function DashboardOverview({
   }
 
   const lastBroadcast =
-    archiveItems[0] && typeof archiveItems[0].createdAt === 'string'
-      ? { title: archiveItems[0].title, ago: agoLabel(archiveItems[0].createdAt) }
+    sounds[0] && typeof sounds[0].createdAt === 'string'
+      ? { title: sounds[0].title, ago: agoLabel(sounds[0].createdAt) }
       : null
 
   return (
@@ -186,10 +186,10 @@ export function DashboardOverview({
 
       <Panel
         title={
-          <div className="db-recent-archive__header">
+          <div className="db-recent-sound__header">
             <h2 className="ui-heading ui-heading--2">Recent broadcasts</h2>
-            {archiveItems.length > 0 ? (
-              <NextLink href="/dashboard/archive" className="db-recent-archive__view-all">
+            {sounds.length > 0 ? (
+              <NextLink href="/dashboard/sounds" className="db-recent-sound__view-all">
                 View all →
               </NextLink>
             ) : null}
@@ -197,7 +197,7 @@ export function DashboardOverview({
         }
         headerTight
       >
-        {archiveItems.length === 0 ? (
+        {sounds.length === 0 ? (
           <div className="studio-empty-card studio-mb-0">
             <p className="studio-empty-card__text">No archive items yet</p>
             <p className="studio-empty-card__hint">
@@ -213,24 +213,24 @@ export function DashboardOverview({
             </NextLink>
           </div>
         ) : (
-          <ul className="db-recent-archive__list">
-            {archiveItems.slice(0, 2).map((item) => {
+          <ul className="db-recent-sound__list">
+            {sounds.slice(0, 2).map((item) => {
               const dur = typeof item.durationSec === 'number' ? item.durationSec : null
               const durationMin = dur ? `${Math.floor(dur / 60)}m` : null
               const ago = typeof item.createdAt === 'string' ? agoLabel(item.createdAt) : null
               return (
-                <li key={item.id} className="db-recent-archive__item">
-                  <div className="db-recent-archive__icon" aria-hidden>
+                <li key={item.id} className="db-recent-sound__item">
+                  <div className="db-recent-sound__icon" aria-hidden>
                     ◉
                   </div>
-                  <div className="db-recent-archive__body">
-                    <div className="db-recent-archive__title">{item.title}</div>
-                    <div className="db-recent-archive__meta">
+                  <div className="db-recent-sound__body">
+                    <div className="db-recent-sound__title">{item.title}</div>
+                    <div className="db-recent-sound__meta">
                       {[durationMin, ago].filter(Boolean).join(' · ')}
                     </div>
                   </div>
-                  <div className="db-recent-archive__actions">
-                    <NextLink href="/dashboard/archive" className="db-recent-archive__link">
+                  <div className="db-recent-sound__actions">
+                    <NextLink href="/dashboard/sounds" className="db-recent-sound__link">
                       Polish & publish →
                     </NextLink>
                   </div>

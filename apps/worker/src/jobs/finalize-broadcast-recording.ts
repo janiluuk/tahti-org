@@ -7,10 +7,10 @@ import { prisma } from '@tahti/db'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import { findChannelBroadcastRecording } from '../lib/channel-recording.js'
 import { uploadFile } from '../lib/minio.js'
-import { enqueueArchiveBroadcast } from '../lib/queue.js'
+import { enqueueSoundBroadcast } from '../lib/queue.js'
 
 const RECORDINGS_ROOT = process.env.RECORDINGS_ROOT ?? '/recordings'
-/** Skip accidental connect blips; partial disconnects above this are archived (ARTIST-001). */
+/** Skip accidental connect blips; partial disconnects above this are soundd (ARTIST-001). */
 const MIN_BYTES = parseInt(process.env.BROADCAST_RECORDING_MIN_BYTES ?? '262144', 10)
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
@@ -34,8 +34,8 @@ export async function processFinalizeBroadcastRecordingJob(job: Job): Promise<vo
     source: broadcast.source,
   })
 
-  if (broadcast.archiveItemId) {
-    logLine(base, 'archive already linked, skipping')
+  if (broadcast.soundId) {
+    logLine(base, 'sound already linked, skipping')
     return
   }
 
@@ -58,7 +58,7 @@ export async function processFinalizeBroadcastRecordingJob(job: Job): Promise<vo
 
   const st = await stat(localPath)
   if (st.size < MIN_BYTES) {
-    logLine({ ...base, bytes: st.size }, 'recording too small, skipping archive')
+    logLine({ ...base, bytes: st.size }, 'recording too small, skipping sound')
     return
   }
 
@@ -71,5 +71,5 @@ export async function processFinalizeBroadcastRecordingJob(job: Job): Promise<vo
   })
 
   logLine({ ...base, recordingKey, bytes: st.size }, 'recording uploaded to MinIO')
-  await enqueueArchiveBroadcast(broadcastId)
+  await enqueueSoundBroadcast(broadcastId)
 }

@@ -6,7 +6,7 @@ import { prisma } from '@tahti/db'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -27,7 +27,7 @@ describe('GET /api/me/broadcasts/recent', () => {
       username: 'recorded-shows-test-artist',
     })
     cookie = await sessionCookieFor(prisma, artist.id)
-    const archiveItem = await createReadyArchiveItem(prisma, artist.channel!.id, 'Published show')
+    const sound = await createReadySound(prisma, artist.channel!.id, 'Published show')
     const startedAt = new Date('2026-08-17T18:00:00.000Z')
 
     await prisma.broadcast.createMany({
@@ -39,7 +39,7 @@ describe('GET /api/me/broadcasts/recent', () => {
           startedAt,
           endedAt: new Date('2026-08-17T19:00:00.000Z'),
           recordingKey: 'recordings/published.wav',
-          archiveItemId: archiveItem.id,
+          soundId: sound.id,
         },
         {
           channelId: artist.channel!.id,
@@ -65,7 +65,7 @@ describe('GET /api/me/broadcasts/recent', () => {
     await app.close()
   })
 
-  it('lists every recorded show and resolves linked archive details', async () => {
+  it('lists every recorded show and resolves linked sound details', async () => {
     const response = await app.inject({
       method: 'GET',
       url: '/api/me/broadcasts/recent?limit=50',
@@ -76,8 +76,8 @@ describe('GET /api/me/broadcasts/recent', () => {
     expect(response.json().broadcasts).toEqual([
       expect.objectContaining({
         title: 'Published broadcast',
-        archiveItemTitle: 'Published show',
-        archiveItemStatus: 'READY',
+        soundTitle: 'Published show',
+        soundStatus: 'READY',
         durationSec: 3600,
       }),
       expect.objectContaining({ title: 'Unpublished broadcast', durationSec: 1800 }),
@@ -93,7 +93,7 @@ describe('GET /api/me/broadcasts/recent', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json().broadcasts).toEqual([
-      expect.objectContaining({ title: 'Unpublished broadcast', archiveItemId: null }),
+      expect.objectContaining({ title: 'Unpublished broadcast', soundId: null }),
     ])
   })
 })

@@ -35,7 +35,7 @@ type PlaylistOption = {
 type CollectionItem = {
   id: string
   position: number
-  archiveItem: { title: string } | null
+  sound: { title: string } | null
   release: { title: string } | null
 }
 
@@ -46,7 +46,7 @@ type CollectionDetail = {
 }
 
 function itemTitle(item: CollectionItem): string {
-  return item.archiveItem?.title ?? item.release?.title ?? 'Untitled track'
+  return item.sound?.title ?? item.release?.title ?? 'Untitled track'
 }
 
 function TransportIcon({ direction }: { direction: 'previous' | 'next' }) {
@@ -354,7 +354,7 @@ export function ChannelControlsPanel({
         body: JSON.stringify({
           fallbackMode: 'ordered',
           items: optimistic.items.map((item) => ({
-            archiveItemId: item.id,
+            soundId: item.id,
             isFallback: item.isFallback,
             ...(item.isFallback && item.fallbackOrder != null
               ? { fallbackOrder: item.fallbackOrder }

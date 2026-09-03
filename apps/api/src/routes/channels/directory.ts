@@ -16,7 +16,7 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['channel'],
-        description: 'Discover → Artists tab: every channel with a public archive item',
+        description: 'Discover → Artists tab: every channel with a public sound item',
         response: openApiResponse(ChannelDirectoryResponseSchema, 'ChannelDirectory'),
       },
     },
@@ -24,7 +24,7 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
       const result = await getCachedJson('channels:directory', 60, async () => {
         const channels = await fastify.prisma.channel.findMany({
           where: {
-            archiveItems: { some: { status: 'READY', isPublic: true } },
+            sounds: { some: { status: 'READY', isPublic: true } },
             user: { deletedAt: null },
           },
           orderBy: { user: { displayName: 'asc' } },

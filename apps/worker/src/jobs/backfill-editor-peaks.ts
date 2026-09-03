@@ -9,11 +9,11 @@ import { prisma, Prisma } from '@tahti/db'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
 
-/** PERF-04 backfill: compute editorPeaks for archives ingested before the column existed. */
+/** PERF-04 backfill: compute editorPeaks for sounds ingested before the column existed. */
 export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
 
-  const item = await prisma.archiveItem.findUnique({
+  const item = await prisma.sound.findUnique({
     where: { id: itemId },
     select: {
       id: true,
@@ -38,7 +38,7 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
     const editorPeaks = await extractEditorPeaksPyramid(rawPath, durationSec)
     if (!editorPeaks) return
 
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemId },
       data: { editorPeaks: editorPeaks as unknown as Prisma.InputJsonValue },
     })

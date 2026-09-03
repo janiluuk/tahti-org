@@ -14,8 +14,8 @@ import {
 } from 'react'
 import Link from 'next/link'
 import {
-  ARCHIVE_CONTENT_TYPES,
-  ARCHIVE_GENRES,
+  SOUND_CONTENT_TYPES,
+  SOUND_GENRES,
   type AdminFileRow,
   type AdminFilesFacetsResponse,
   type AdminFilesListResponse,
@@ -187,7 +187,7 @@ function FileRow({
 
       const playerTrack: PlayerTrack = {
         id: row.id,
-        kind: 'archive',
+        kind: 'sound',
         url: data.audioUrl,
         title: data.title,
         subtitle: data.artistName,
@@ -379,7 +379,7 @@ export function AdminFilesBrowser() {
   }, [facets])
 
   const genreOptions = useMemo(() => {
-    const set = new Set<string>([...ARCHIVE_GENRES, ...(facets?.genres ?? [])])
+    const set = new Set<string>([...SOUND_GENRES, ...(facets?.genres ?? [])])
     return [...set].sort((a, b) => a.localeCompare(b))
   }, [facets])
 
@@ -389,7 +389,7 @@ export function AdminFilesBrowser() {
     if (selected.size === 0) return
     const body: Record<string, unknown> = { ids: [...selected] }
     if (bulkGenre) {
-      if ((ARCHIVE_GENRES as readonly string[]).includes(bulkGenre)) {
+      if ((SOUND_GENRES as readonly string[]).includes(bulkGenre)) {
         body.genre = bulkGenre
         body.genreCustom = null
       } else {
@@ -438,7 +438,7 @@ export function AdminFilesBrowser() {
       contentType: payload.contentType,
       isPublic: payload.isPublic,
     }
-    if ((ARCHIVE_GENRES as readonly string[]).includes(payload.genre)) {
+    if ((SOUND_GENRES as readonly string[]).includes(payload.genre)) {
       body.genre = payload.genre
       body.genreCustom = null
     } else if (payload.genre) {
@@ -584,7 +584,7 @@ export function AdminFilesBrowser() {
         />
         <MultiFilter
           label="Types"
-          options={[...(facets?.contentTypes ?? ARCHIVE_CONTENT_TYPES)]}
+          options={[...(facets?.contentTypes ?? SOUND_CONTENT_TYPES)]}
           selected={types}
           onChange={(next) => {
             setTypes(next)
@@ -675,7 +675,7 @@ export function AdminFilesBrowser() {
             aria-label="Assign type"
           >
             <option value="">Type…</option>
-            {ARCHIVE_CONTENT_TYPES.map((t) => (
+            {SOUND_CONTENT_TYPES.map((t) => (
               <option key={t} value={t}>
                 {t.replace(/_/g, ' ')}
               </option>
@@ -824,11 +824,9 @@ function EditModal({
           Type
           <select
             value={contentType}
-            onChange={(e) =>
-              setContentType(e.target.value as (typeof ARCHIVE_CONTENT_TYPES)[number])
-            }
+            onChange={(e) => setContentType(e.target.value as (typeof SOUND_CONTENT_TYPES)[number])}
           >
-            {ARCHIVE_CONTENT_TYPES.map((t) => (
+            {SOUND_CONTENT_TYPES.map((t) => (
               <option key={t} value={t}>
                 {t.replace(/_/g, ' ')}
               </option>

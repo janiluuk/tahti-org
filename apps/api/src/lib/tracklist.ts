@@ -47,7 +47,7 @@ export async function recordTracklistMentions(
   prisma: PrismaClient,
   mentionerUserId: string,
   tracklist: TracklistEntry[],
-  archiveItemId: string,
+  soundId: string,
 ): Promise<void> {
   const handles = [
     ...new Set(
@@ -56,7 +56,7 @@ export async function recordTracklistMentions(
   ]
   if (handles.length === 0) return
   const text = handles.map((h) => `@${h}`).join(' ')
-  await recordMentions(prisma, mentionerUserId, text, 'TRACKLIST', archiveItemId)
+  await recordMentions(prisma, mentionerUserId, text, 'TRACKLIST', soundId)
 }
 
 export function formatTracklistTimestamp(sec: number): string {

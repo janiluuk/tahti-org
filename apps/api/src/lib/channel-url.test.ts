@@ -13,8 +13,8 @@ describe('resolveChannelUrl', () => {
 
   it('appends a hash fragment on the subdomain form', async () => {
     const { resolveChannelUrl } = await import('./channel-url.js')
-    expect(resolveChannelUrl('someartist', { hash: 'archive-item-123' })).toBe(
-      'https://someartist.tahti.live#archive-item-123',
+    expect(resolveChannelUrl('someartist', { hash: 'sound-item-123' })).toBe(
+      'https://someartist.tahti.live#sound-item-123',
     )
   })
 })

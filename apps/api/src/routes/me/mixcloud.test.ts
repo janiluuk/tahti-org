@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -35,7 +35,7 @@ describe('M7 — Mixcloud upload routes', () => {
       memberNumber: 98380,
     })
     cookie = await sessionCookieFor(prisma, artist.id)
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Friday mix')
+    const item = await createReadySound(prisma, artist.channel!.id, 'Friday mix')
     itemId = item.id
   })
 
@@ -44,10 +44,10 @@ describe('M7 — Mixcloud upload routes', () => {
     await app.close()
   })
 
-  it('queues a Mixcloud upload for a READY archive item', async () => {
+  it('queues a Mixcloud upload for a READY sound item', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${itemId}/mixcloud`,
+      url: `/api/me/sound/${itemId}/mixcloud`,
       headers: { cookie },
     })
     expect(res.statusCode).toBe(202)
@@ -55,7 +55,7 @@ describe('M7 — Mixcloud upload routes', () => {
 
     const status = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${itemId}/mixcloud`,
+      url: `/api/me/sound/${itemId}/mixcloud`,
       headers: { cookie },
     })
     expect(status.statusCode).toBe(200)
@@ -65,23 +65,23 @@ describe('M7 — Mixcloud upload routes', () => {
   it('rejects duplicate queue requests', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${itemId}/mixcloud`,
+      url: `/api/me/sound/${itemId}/mixcloud`,
       headers: { cookie },
     })
     expect(res.statusCode).toBe(409)
     expect(res.json().error).toContain('Already queued')
   })
 
-  it('returns 404 for another user’s archive item', async () => {
+  it('returns 404 for another user’s sound item', async () => {
     const other = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,
       username: 'mixcloud-other',
     })
-    const otherItem = await createReadyArchiveItem(prisma, other.channel!.id)
+    const otherItem = await createReadySound(prisma, other.channel!.id)
 
     const res = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${otherItem.id}/mixcloud`,
+      url: `/api/me/sound/${otherItem.id}/mixcloud`,
       headers: { cookie },
     })
     expect(res.statusCode).toBe(404)

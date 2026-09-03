@@ -10,10 +10,10 @@ import { downloadToFile } from '../lib/minio.js'
 import { uploadTrackToHearthis, HearthisPremiumRequiredError } from '@tahti/hearthis'
 
 export async function processHearthisExportJob(job: Job): Promise<void> {
-  const { archiveItemId } = job.data as { archiveItemId: string }
+  const { soundId } = job.data as { soundId: string }
 
-  const item = await prisma.archiveItem.findUnique({
-    where: { id: archiveItemId },
+  const item = await prisma.sound.findUnique({
+    where: { id: soundId },
     select: {
       id: true,
       title: true,
@@ -23,10 +23,10 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
       channel: { select: { userId: true } },
     },
   })
-  if (!item) throw new Error(`ArchiveItem ${archiveItemId} not found`)
+  if (!item) throw new Error(`Sound ${soundId} not found`)
 
   const sourceKey = item.rawKey ?? item.flacKey ?? item.mp3Key
-  if (!sourceKey) throw new Error(`ArchiveItem ${archiveItemId} has no audio file to export`)
+  if (!sourceKey) throw new Error(`Sound ${soundId} has no audio file to export`)
 
   const credential = await getUserIntegrationCredential(
     prisma,
@@ -34,11 +34,11 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
     'hearthis-export',
   )
   if (!credential?.key || !credential.secret) {
-    await prisma.archiveItem.update({
-      where: { id: archiveItemId },
+    await prisma.sound.update({
+      where: { id: soundId },
       data: { hearthisExportStatus: 'failed' },
     })
-    throw new Error(`ArchiveItem ${archiveItemId}: hearthis-export credential not installed`)
+    throw new Error(`Sound ${soundId}: hearthis-export credential not installed`)
   }
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-hearthis-export-'))
@@ -53,8 +53,8 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
       { title: item.title, audioBuffer, filename: `${item.id}.${ext}` },
     )
 
-    await prisma.archiveItem.update({
-      where: { id: archiveItemId },
+    await prisma.sound.update({
+      where: { id: soundId },
       data: {
         hearthisExportId: result.remoteId,
         hearthisExportStatus: 'delivered',
@@ -62,17 +62,17 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
       },
     })
   } catch (err) {
-    await prisma.archiveItem.update({
-      where: { id: archiveItemId },
+    await prisma.sound.update({
+      where: { id: soundId },
       data: { hearthisExportStatus: 'failed' },
     })
-    // Surfaced in job logs, not persisted (ArchiveItem has no error-message
+    // Surfaced in job logs, not persisted (Sound has no error-message
     // column — same convention as Release.revelatorStatus) — but distinguish
     // the Premium-lapsed case in the message so ops can tell it apart from a
     // transient/network failure at a glance.
     if (err instanceof HearthisPremiumRequiredError) {
       throw new Error(
-        `ArchiveItem ${archiveItemId}: hearthis.at Premium is required (account may have lapsed) — ${err.message}`,
+        `Sound ${soundId}: hearthis.at Premium is required (account may have lapsed) — ${err.message}`,
       )
     }
     throw err

@@ -25,8 +25,8 @@ function IconArtist() {
 
 function toTrack(item: TahtiSelectsGalleryItem): PlayerTrack {
   return {
-    id: item.archiveItemId,
-    kind: 'archive',
+    id: item.soundId,
+    kind: 'sound',
     url: item.audioUrl ?? '',
     title: item.title,
     subtitle: item.artistName,
@@ -45,7 +45,7 @@ function GalleryTile({
   rank?: number
 }) {
   const { track, playing, analyser, load, togglePlay } = usePlayer()
-  const isCurrent = track?.id === item.archiveItemId
+  const isCurrent = track?.id === item.soundId
 
   function handleClick() {
     if (!item.audioUrl) return
@@ -137,8 +137,8 @@ export function SelectsGallery({
   return (
     <ul className="selects-gallery">
       {items.map((item) => (
-        <li key={item.archiveItemId}>
-          <GalleryTile item={item} queue={items} rank={ranks[item.archiveItemId]} />
+        <li key={item.soundId}>
+          <GalleryTile item={item} queue={items} rank={ranks[item.soundId]} />
         </li>
       ))}
     </ul>

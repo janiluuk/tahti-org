@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -17,8 +17,8 @@ describe('M21 v1 — editor projects', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let otherCookie: string
-  let archiveItemId: string
-  let otherArchiveItemId: string
+  let soundId: string
+  let otherSoundId: string
   let projectId: string
 
   beforeAll(async () => {
@@ -34,8 +34,8 @@ describe('M21 v1 — editor projects', () => {
       memberNumber: 98522,
     })
     cookie = await sessionCookieFor(prisma, artist.id)
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Editor seed')
-    archiveItemId = item.id
+    const item = await createReadySound(prisma, artist.channel!.id, 'Editor seed')
+    soundId = item.id
 
     const other = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,
@@ -45,8 +45,8 @@ describe('M21 v1 — editor projects', () => {
       memberNumber: 98523,
     })
     otherCookie = await sessionCookieFor(prisma, other.id)
-    const otherItem = await createReadyArchiveItem(prisma, other.channel!.id, 'Other seed')
-    otherArchiveItemId = otherItem.id
+    const otherItem = await createReadySound(prisma, other.channel!.id, 'Other seed')
+    otherSoundId = otherItem.id
   })
 
   afterAll(async () => {
@@ -54,17 +54,17 @@ describe('M21 v1 — editor projects', () => {
     await app.close()
   })
 
-  it('POST /api/me/editor/projects seeds from archive item', async () => {
+  it('POST /api/me/editor/projects seeds from sound item', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/editor/projects',
       headers: { cookie },
-      payload: { archiveItemId },
+      payload: { soundId },
     })
     expect(res.statusCode).toBe(201)
-    const body = res.json() as { id: string; title: string; archiveItemId: string }
+    const body = res.json() as { id: string; title: string; soundId: string }
     projectId = body.id
-    expect(body.archiveItemId).toBe(archiveItemId)
+    expect(body.soundId).toBe(soundId)
     expect(body.title).toContain('Editor seed')
   })
 
@@ -90,12 +90,12 @@ describe('M21 v1 — editor projects', () => {
     expect(res.statusCode).toBe(200)
   })
 
-  it('POST /api/me/editor/projects rejects an archive item owned by another user', async () => {
+  it('POST /api/me/editor/projects rejects an sound item owned by another user', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/editor/projects',
       headers: { cookie },
-      payload: { archiveItemId: otherArchiveItemId },
+      payload: { soundId: otherSoundId },
     })
     expect(res.statusCode).toBe(404)
   })

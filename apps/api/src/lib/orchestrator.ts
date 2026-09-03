@@ -5,7 +5,7 @@ import { config } from '../config.js'
 
 export type LiquidsoapTemplateKind = 'channel' | 'rotation'
 
-/** Ensure per-channel Liquidsoap is running (HLS + archive fallback + multistream). */
+/** Ensure per-channel Liquidsoap is running (HLS + sound fallback + multistream). */
 export async function spawnChannelLiquidsoap(
   channelId: string,
   slug: string,

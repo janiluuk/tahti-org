@@ -4,7 +4,7 @@
 import { Panel, Text } from '@/components/ui'
 
 export interface GateSummaryItem {
-  archiveItemId: string
+  soundId: string
   title: string
   repostToDownload: boolean
   followToDownload: boolean
@@ -66,7 +66,7 @@ export function DownloadGateSummaryPanel({
         </thead>
         <tbody>
           {summary.items.map((row) => (
-            <tr key={row.archiveItemId}>
+            <tr key={row.soundId}>
               <td>{row.title}</td>
               <td className="studio-text-muted-sm">
                 {[row.repostToDownload ? 'repost' : null, row.followToDownload ? 'follow' : null]

@@ -6,7 +6,7 @@ import type { Job } from 'bullmq'
 
 const { prismaMock, queueAdd, queueClose } = vi.hoisted(() => ({
   prismaMock: {
-    archiveItem: {
+    sound: {
       findMany: vi.fn(),
     },
   },
@@ -32,7 +32,7 @@ describe('processSweepEditorPeaksBackfillJob', () => {
   })
 
   it('enqueues backfill jobs for items missing editorPeaks', async () => {
-    prismaMock.archiveItem.findMany.mockResolvedValue([{ id: 'item-a' }, { id: 'item-b' }])
+    prismaMock.sound.findMany.mockResolvedValue([{ id: 'item-a' }, { id: 'item-b' }])
 
     const summary = await processSweepEditorPeaksBackfillJob({} as Job)
 
@@ -46,7 +46,7 @@ describe('processSweepEditorPeaksBackfillJob', () => {
   })
 
   it('returns zero when nothing needs backfill', async () => {
-    prismaMock.archiveItem.findMany.mockResolvedValue([])
+    prismaMock.sound.findMany.mockResolvedValue([])
     const summary = await processSweepEditorPeaksBackfillJob({} as Job)
     expect(summary.enqueued).toBe(0)
     expect(queueAdd).not.toHaveBeenCalled()

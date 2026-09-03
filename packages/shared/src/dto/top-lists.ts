@@ -10,7 +10,7 @@ export const TopListDimensionSchema = z.enum(['type', 'genre'])
 export const TopListSortSchema = z.enum(['desc', 'asc'])
 
 export const TopListEntrySchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   listens: z.number().int(),
   title: z.string(),
   artistName: z.string(),

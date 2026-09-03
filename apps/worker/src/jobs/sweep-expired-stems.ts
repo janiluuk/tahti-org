@@ -7,7 +7,7 @@ import { deleteObject } from '../lib/minio.js'
 const STEM_KEY_FIELDS = ['vocalsKey', 'instrumentalKey', 'drumsKey', 'bassKey', 'otherKey'] as const
 
 export async function processSweepExpiredStemsJob(): Promise<{ deleted: number }> {
-  const expired = await prisma.archiveItemStemJob.findMany({
+  const expired = await prisma.soundStemJob.findMany({
     where: { status: 'READY', expiresAt: { lte: new Date() } },
   })
 
@@ -19,7 +19,7 @@ export async function processSweepExpiredStemsJob(): Promise<{ deleted: number }
   }
 
   if (expired.length > 0) {
-    await prisma.archiveItemStemJob.deleteMany({
+    await prisma.soundStemJob.deleteMany({
       where: { id: { in: expired.map((j) => j.id) } },
     })
   }

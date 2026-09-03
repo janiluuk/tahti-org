@@ -105,7 +105,7 @@ export interface PlayerTrack {
   /** Unique id used to detect "is this the track currently loaded". */
   id: string
   /** 'live' streams report no duration and cannot be seeked. */
-  kind: 'live' | 'archive'
+  kind: 'live' | 'sound'
   url: string
   title: string
   subtitle?: string
@@ -117,7 +117,7 @@ export interface PlayerTrack {
    * now, nobody's on air — mini-player shows "REPLAY" instead of "LIVE". */
   isReplay?: boolean
   /** Set on 'live' tracks so the listen-heartbeat effect can identify which
-   * channel to attribute minutes to — 'archive' tracks don't need this, the
+   * channel to attribute minutes to — 'sound' tracks don't need this, the
    * server resolves the channel from the archive item id instead. */
   channelSlug?: string
   /** Set when this track has no locally-hosted audio at all — playback lives
@@ -263,7 +263,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * on close(). */
   const radioResumeRef = useRef<PlayerTrack | null>(null)
   const embedTimerRef = useRef<number | null>(null)
-  /** Archive track ids a listen-event has already been recorded for this
+  /** Sound track ids a listen-event has already been recorded for this
    * session, so the threshold check below only ever fires once per track. */
   const recordedListenRef = useRef<Set<string>>(new Set())
   const pathname = usePathname()
@@ -793,7 +793,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   // at most once per track per session; the API dedupes per listener/day too.
   useEffect(() => {
     const track = state.track
-    if (!track || track.kind !== 'archive') return
+    if (!track || track.kind !== 'sound') return
     if (recordedListenRef.current.has(track.id)) return
     const threshold = state.duration > 0 ? Math.min(30, state.duration * 0.5) : 30
     if (state.currentTime < threshold) return
@@ -802,7 +802,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ archiveItemId: track.id }),
+      body: JSON.stringify({ soundId: track.id }),
     }).catch(() => undefined)
   }, [state.track, state.currentTime, state.duration])
 
@@ -821,7 +821,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const source = classifyListenSource(pathname)
     const ping = () => {
       const body: Record<string, unknown> = { source }
-      if (track.kind === 'archive') body.archiveItemId = track.id
+      if (track.kind === 'sound') body.soundId = track.id
       else body.channelSlug = track.channelSlug
       fetch(`${API_URL}/api/v1/listen/heartbeat`, {
         method: 'POST',
@@ -1006,8 +1006,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const testId =
     state.track?.kind === 'live'
       ? 'channel-live-player'
-      : state.track?.kind === 'archive'
-        ? 'channel-archive-player'
+      : state.track?.kind === 'sound'
+        ? 'channel-sound-player'
         : 'tahti-shared-audio'
 
   return (

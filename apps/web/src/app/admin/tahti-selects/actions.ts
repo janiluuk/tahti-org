@@ -15,11 +15,11 @@ function adminFetch(path: string, init?: RequestInit) {
   })
 }
 
-export async function addToRotation(archiveItemId: string) {
+export async function addToRotation(soundId: string) {
   await adminFetch('/api/admin/tahti-selects/items', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ archiveItemId }),
+    body: JSON.stringify({ soundId }),
   })
   revalidatePath('/admin/tahti-selects')
 }

@@ -34,7 +34,7 @@ function EmbedPlayer({ track }: { track: TrackTabItem }) {
  * way onward: to the actual Release (when this track belongs to one), to
  * love it, or to the artist's bio (switches ProfileTabs' own tab instead of
  * navigating, since we're already on this artist's page). Playback mirrors
- * ArchiveTrackRow (the collection page's track row): the shared mini-player
+ * SoundTrackRow (the collection page's track row): the shared mini-player
  * for a real audio file, the matching embed widget for a *_EMBED item. */
 export function TrackDetailModal({
   track,
@@ -64,7 +64,7 @@ export function TrackDetailModal({
       load(
         {
           id: track.id,
-          kind: 'archive',
+          kind: 'sound',
           url: track.playUrl,
           title: track.title,
           subtitle: track.artistName ?? undefined,
@@ -163,7 +163,7 @@ export function TrackDetailModal({
                 <LoveButton channelSlug={channelSlug} itemId={track.id} />
               </div>
             )}
-            <ReportButton targetType="ARCHIVE_ITEM" targetId={track.id} variant="icon" />
+            <ReportButton targetType="SOUND_ITEM" targetId={track.id} variant="icon" />
             {track.releaseSlug ? (
               <Link href={`/r/${track.releaseSlug}`} className="prof-track-modal__primary">
                 View release

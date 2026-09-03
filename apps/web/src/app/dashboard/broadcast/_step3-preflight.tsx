@@ -47,7 +47,7 @@ interface ShowSeriesOption {
 interface Preflight {
   title: string | null
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   showType: BroadcastShowType
   episodeNumber: number | null
   tagline: string | null

@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ChannelTransportOkResponseSchema,
   SlugParamSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -19,7 +19,7 @@ import {
 } from '../../lib/orchestrator.js'
 
 /** Owner/board-only transport controls for the channel page's "Manage" tab —
- * skip/previous/pause/resume act on the channel's archive rotation only; a
+ * skip/previous/pause/resume act on the channel's sound rotation only; a
  * real live broadcast always takes priority regardless of pause state (see
  * infra/liquidsoap-channel.liq.template's radio_out switch). Slug-scoped like
  * manage-stats.ts, for the same reason (board members manage any channel). */
@@ -106,12 +106,12 @@ const channelTransportRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Current track = most recent RadioPlayLog row, previous = second-most-recent.
       const [, previous] = await fastify.prisma.radioPlayLog.findMany({
-        where: { channelId: result.channel.id, archiveItemId: { not: null } },
+        where: { channelId: result.channel.id, soundId: { not: null } },
         orderBy: { playedAt: 'desc' },
         take: 2,
-        select: { archiveItem: { select: { mp3Key: true, flacKey: true } } },
+        select: { sound: { select: { mp3Key: true, flacKey: true } } },
       })
-      const playbackKey = previous?.archiveItem ? archivePlaybackKey(previous.archiveItem) : null
+      const playbackKey = previous?.sound ? soundPlaybackKey(previous.sound) : null
       if (!playbackKey) {
         return reply.status(404).send({ error: 'No previous track available' })
       }

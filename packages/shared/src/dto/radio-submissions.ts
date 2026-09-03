@@ -9,7 +9,7 @@ export const RADIO_SUBMISSION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as 
 export type RadioSubmissionStatus = (typeof RADIO_SUBMISSION_STATUSES)[number]
 
 export const SubmitRadioTracksSchema = z.object({
-  archiveItemIds: z
+  soundIds: z
     .array(z.string().min(1))
     .min(1, 'Select at least one track')
     .max(
@@ -32,7 +32,7 @@ export const RadioSubmissionItemViewSchema = z.object({
   rejectionNote: z.string().nullable(),
   reviewedAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date(),
-  archiveItem: z.object({
+  sound: z.object({
     id: z.string(),
     title: z.string(),
     artistName: z.string().nullable(),

@@ -63,7 +63,7 @@ describe('broadcast-cap', () => {
     expect(canAcceptSourceConnect(cap, 'PREVIEW')).toBe(true)
   })
 
-  it('isFallbackOnlyLiveSession is true for 24/7 archive placeholder broadcasts', () => {
+  it('isFallbackOnlyLiveSession is true for 24/7 sound placeholder broadcasts', () => {
     expect(isFallbackOnlyLiveSession('LIVE', { wentLiveAt: null })).toBe(true)
     expect(isFallbackOnlyLiveSession('LIVE', { wentLiveAt: new Date() })).toBe(false)
     expect(isFallbackOnlyLiveSession('PREVIEW', { wentLiveAt: null })).toBe(false)

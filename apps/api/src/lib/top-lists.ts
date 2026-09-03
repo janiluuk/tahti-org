@@ -20,7 +20,7 @@ export function periodSince(period: TopListPeriod): Date | undefined {
 }
 
 export interface TopListEntry {
-  archiveItemId: string
+  soundId: string
   listens: number
   title: string
   artistName: string
@@ -37,21 +37,21 @@ export interface TopListEntry {
 async function rankedEntriesSince(
   prisma: PrismaClient,
   since: Date | undefined,
-  extraWhere: Prisma.ArchiveItemWhereInput = {},
+  extraWhere: Prisma.SoundWhereInput = {},
 ): Promise<TopListEntry[]> {
   const grouped = await prisma.listenEvent.groupBy({
-    by: ['archiveItemId'],
+    by: ['soundId'],
     where: {
       ...(since ? { playedAt: { gte: since } } : {}),
-      archiveItem: { isPublic: true, status: 'READY', topListsEligible: true, ...extraWhere },
+      sound: { isPublic: true, status: 'READY', topListsEligible: true, ...extraWhere },
     },
     _count: { _all: true },
   })
   if (grouped.length === 0) return []
-  const countById = new Map(grouped.map((g) => [g.archiveItemId, g._count._all]))
+  const countById = new Map(grouped.map((g) => [g.soundId, g._count._all]))
 
-  const items = await prisma.archiveItem.findMany({
-    where: { id: { in: grouped.map((g) => g.archiveItemId) } },
+  const items = await prisma.sound.findMany({
+    where: { id: { in: grouped.map((g) => g.soundId) } },
     select: {
       id: true,
       title: true,
@@ -65,7 +65,7 @@ async function rankedEntriesSince(
 
   return items
     .map((item) => ({
-      archiveItemId: item.id,
+      soundId: item.id,
       listens: countById.get(item.id) ?? 0,
       title: item.title,
       artistName: item.artistName ?? item.channel.user.displayName,
@@ -89,9 +89,9 @@ export async function buildTopList(
     sort?: 'desc' | 'asc'
   } = {},
 ): Promise<TopListEntry[]> {
-  const where: Prisma.ArchiveItemWhereInput = {}
+  const where: Prisma.SoundWhereInput = {}
   if (opts.contentTypes && opts.contentTypes.length > 0) {
-    where.contentType = { in: opts.contentTypes as Prisma.EnumArchiveContentTypeFilter['in'] }
+    where.contentType = { in: opts.contentTypes as Prisma.EnumSoundContentTypeFilter['in'] }
   }
   if (opts.genre) where.genre = opts.genre
   const ranked = await rankedEntriesSince(prisma, opts.since, where)
@@ -139,9 +139,9 @@ export async function buildTopListsByDimension(
  * top 50 — or undefined if it doesn't place in either. */
 export async function rankLookup(
   prisma: PrismaClient,
-  archiveItemIds: string[],
+  soundIds: string[],
 ): Promise<Map<string, number>> {
-  if (archiveItemIds.length === 0) return new Map()
+  if (soundIds.length === 0) return new Map()
 
   const [monthList, allTimeList] = await Promise.all([
     buildTopList(prisma, { since: periodSince('month'), limit: 50 }),
@@ -151,10 +151,10 @@ export async function rankLookup(
   const best = new Map<string, number>()
   for (const list of [monthList, allTimeList]) {
     list.forEach((entry, i) => {
-      if (!archiveItemIds.includes(entry.archiveItemId)) return
+      if (!soundIds.includes(entry.soundId)) return
       const rank = i + 1
-      const existing = best.get(entry.archiveItemId)
-      if (existing === undefined || rank < existing) best.set(entry.archiveItemId, rank)
+      const existing = best.get(entry.soundId)
+      if (existing === undefined || rank < existing) best.set(entry.soundId, rank)
     })
   }
   return best

@@ -19,14 +19,14 @@ function openDb(): Promise<IDBDatabase> {
 }
 
 export async function loadPeaksCache(
-  archiveId: string,
+  soundId: string,
   sourceKey: string,
 ): Promise<PeaksPyramid | null> {
   try {
     const db = await openDb()
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, 'readonly')
-      const req = tx.objectStore(STORE).get(peaksCacheKey(archiveId, sourceKey))
+      const req = tx.objectStore(STORE).get(peaksCacheKey(soundId, sourceKey))
       req.onsuccess = () => resolve((req.result as PeaksPyramid) ?? null)
       req.onerror = () => reject(req.error)
     })
@@ -36,14 +36,14 @@ export async function loadPeaksCache(
 }
 
 export async function savePeaksCache(
-  archiveId: string,
+  soundId: string,
   sourceKey: string,
   pyramid: PeaksPyramid,
 ): Promise<void> {
   const db = await openDb()
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite')
-    tx.objectStore(STORE).put(pyramid, peaksCacheKey(archiveId, sourceKey))
+    tx.objectStore(STORE).put(pyramid, peaksCacheKey(soundId, sourceKey))
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
   })

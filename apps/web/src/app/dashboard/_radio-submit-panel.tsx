@@ -10,7 +10,7 @@ import { LibraryBrowser } from '@/components/library/library-browser'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
-type ArchiveRow = {
+type SoundRow = {
   id: string
   title: string
   status: string
@@ -20,7 +20,7 @@ type ArchiveRow = {
 type SubmissionRow = {
   id: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  archiveItem: { id: string; title: string }
+  sound: { id: string; title: string }
   rejectionNote: string | null
   createdAt: string
 }
@@ -33,7 +33,7 @@ function fmtDuration(sec: number | null) {
 }
 
 export function RadioSubmitPanel() {
-  const [tracks, setTracks] = useState<ArchiveRow[]>([])
+  const [tracks, setTracks] = useState<SoundRow[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [note, setNote] = useState('')
   const [submissions, setSubmissions] = useState<SubmissionRow[]>([])
@@ -43,12 +43,12 @@ export function RadioSubmitPanel() {
   const [loaded, setLoaded] = useState(false)
 
   async function refresh() {
-    const [archiveRes, subRes] = await Promise.all([
-      fetch(`${API_BASE}/api/me/archive`, { credentials: 'include' }),
+    const [soundRes, subRes] = await Promise.all([
+      fetch(`${API_BASE}/api/me/sound`, { credentials: 'include' }),
       fetch(`${API_BASE}/api/me/radio-submissions`, { credentials: 'include' }),
     ])
-    if (archiveRes.ok) {
-      const data = (await archiveRes.json()) as ArchiveRow[]
+    if (soundRes.ok) {
+      const data = (await soundRes.json()) as SoundRow[]
       setTracks(data.filter((t) => t.status === 'READY'))
     }
     if (subRes.ok) {
@@ -81,7 +81,7 @@ export function RadioSubmitPanel() {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          archiveItemIds: selected,
+          soundIds: selected,
           note: note.trim() || undefined,
         }),
       })
@@ -104,7 +104,7 @@ export function RadioSubmitPanel() {
   if (!loaded) return null
 
   const pendingIds = new Set(
-    submissions.filter((s) => s.status === 'PENDING').map((s) => s.archiveItem.id),
+    submissions.filter((s) => s.status === 'PENDING').map((s) => s.sound.id),
   )
 
   return (
@@ -202,7 +202,7 @@ export function RadioSubmitPanel() {
             {submissions.slice(0, 12).map((s) => (
               <li key={s.id} className="studio-programme-row">
                 <span className="studio-programme-label">
-                  {s.archiveItem.title}
+                  {s.sound.title}
                   <span className="studio-text-muted-sm"> · {s.status.toLowerCase()}</span>
                 </span>
                 {s.status === 'REJECTED' && s.rejectionNote ? (

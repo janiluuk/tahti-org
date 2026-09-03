@@ -16,7 +16,7 @@ export function buildDistributionIntegrationsStatus() {
         configured: mixcloudConfigured,
         mode: mixcloudConfigured ? ('live' as const) : ('stub' as const),
         detail: mixcloudConfigured
-          ? 'OAuth + archive upload enabled'
+          ? 'OAuth + sound upload enabled'
           : 'Set MIXCLOUD_CLIENT_ID and mixcloud_client_secret Swarm secret',
       },
       {

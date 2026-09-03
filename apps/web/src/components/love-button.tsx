@@ -51,7 +51,7 @@ export function LoveButton({
     let cancelled = false
     void (async () => {
       const res = await fetch(
-        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/archive/${itemId}/like`,
+        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/sounds/${itemId}/like`,
         { credentials: 'include' },
       )
       if (!res.ok || cancelled) return
@@ -75,7 +75,7 @@ export function LoveButton({
     setPending(true)
     try {
       const res = await fetch(
-        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/archive/${itemId}/like`,
+        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/sounds/${itemId}/like`,
         { method: liked ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {

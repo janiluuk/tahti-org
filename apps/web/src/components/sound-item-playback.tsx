@@ -1,0 +1,253 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+'use client'
+
+import type { ReactNode } from 'react'
+import type { VisualPreset } from '@tahti/shared'
+import { ActiveTrackStage } from '@/components/active-track-stage'
+import { SoundWaveform } from '@/components/sound-waveform'
+import { TrackCommentsToggle } from '@/components/track-comments-toggle'
+import { ReportButton } from '@/components/report-button'
+import { LoveButton } from '@/components/love-button'
+import { RepostButton } from '@/components/repost-button'
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { useToast } from '@/contexts/toast-context'
+import { useMomentaryPulse } from '@/lib/use-momentary-pulse'
+import { SoundDownloadButton } from './sound-download-button'
+import { resolveChannelUrl } from '@/lib/app-url'
+
+interface Props {
+  channelSlug: string
+  artistUsername: string
+  /** Per-track credit override — shown in the player instead of @username when set. */
+  artistCredit?: string | null
+  item: {
+    id: string
+    title: string
+    audioUrl: string
+    bannerUrl?: string | null
+    peaks?: number[] | null
+    visualPreset?: VisualPreset | string | null
+    repostToDownload?: boolean
+    followToDownload?: boolean
+    commentCount?: number
+    downloadCount?: number
+    accentColor?: string | null
+  }
+  colorSchemeJson?: string | null
+  isLoggedIn: boolean
+  /** Every playable track on the page, in display order — passed to load() so
+   * 'ended' auto-advances to the next track instead of just stopping. */
+  queue?: PlayerTrack[]
+  /** Dashboard-only: prints title/artist directly over the waveform instead
+   * of a separate header line above it — opt-in so public listings (which
+   * already show the title elsewhere) are unaffected. */
+  titleOverlay?: { title: string; subtitle?: string | null }
+  /** Dashboard-only: extra icon buttons (pin, rotation, tools, …) rendered
+   * inline with this row's own controls so management actions and playback
+   * actions read as one button cluster instead of two stacked rows. */
+  extraControls?: ReactNode
+}
+
+export function SoundItemPlayback({
+  channelSlug,
+  artistUsername,
+  artistCredit,
+  item,
+  colorSchemeJson,
+  isLoggedIn,
+  queue,
+  titleOverlay,
+  extraControls,
+}: Props) {
+  const { track, playing, analyser, load, togglePlay, addToQueue, currentTime, duration, seek } =
+    usePlayer()
+  const { showToast } = useToast()
+  const [queuePulsing, pulseQueue] = useMomentaryPulse()
+  const isCurrent = track?.id === item.id
+  const progress = isCurrent && duration > 0 ? currentTime / duration : 0
+
+  const playerTrack = {
+    id: item.id,
+    kind: 'sound' as const,
+    url: item.audioUrl,
+    title: item.title,
+    subtitle: artistCredit?.trim() || `@${artistUsername}`,
+    href: `${resolveChannelUrl(channelSlug)}#archive-item-${item.id}`,
+    artworkUrl: item.bannerUrl,
+  }
+
+  async function handleTogglePlay() {
+    if (!isCurrent) {
+      load(playerTrack, { autoplay: true, queue })
+      return
+    }
+    await togglePlay()
+  }
+
+  function handleAddToQueue() {
+    pulseQueue()
+    const added = addToQueue(playerTrack)
+    showToast(
+      added ? `Added “${item.title}” to the queue.` : `“${item.title}” is already in the queue.`,
+      added ? 'success' : 'info',
+    )
+  }
+
+  return (
+    <div
+      className={`ch-sound-playback${isCurrent ? ' ch-sound-playback--current' : ''}${isCurrent && playing ? ' ch-sound-playback--playing' : ''}`}
+    >
+      <div className={titleOverlay ? 'ch-sound-playback__wf-wrap' : undefined}>
+        {isCurrent ? (
+          <ActiveTrackStage
+            playing={playing}
+            preset={item.visualPreset}
+            colorSchemeJson={colorSchemeJson}
+            analyser={analyser}
+            peaks={item.peaks}
+            progress={progress}
+            onSeek={seek}
+            accentColor={item.accentColor}
+            artworkUrl={item.bannerUrl}
+            size="large"
+            className="ch-sound-playback__stage"
+          />
+        ) : (
+          item.peaks &&
+          item.peaks.length > 0 && (
+            // Inactive rows still show their waveform (flat, unplayed) so the full
+            // list reads as a scannable set of tracks rather than just the one
+            // that's currently playing — click anywhere on it to start playback.
+            <button
+              type="button"
+              className="ch-sound-playback__wf-btn"
+              onClick={() => void handleTogglePlay()}
+              aria-label={`Play ${item.title}`}
+            >
+              <SoundWaveform peaks={item.peaks} accentColor={item.accentColor} size="large" />
+            </button>
+          )
+        )}
+        {titleOverlay && (
+          <div className="ch-sound-playback__title-overlay" aria-hidden>
+            <div className="ch-sound-playback__title">{titleOverlay.title}</div>
+            {titleOverlay.subtitle && (
+              <div className="ch-sound-playback__subtitle">{titleOverlay.subtitle}</div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="ch-sound-controls-row">
+        <div className="ch-sound-controls">
+          <button
+            type="button"
+            className="ch-sound-controls__play"
+            onClick={() => void handleTogglePlay()}
+            aria-label={isCurrent && playing ? 'Pause' : 'Play'}
+            data-testid="channel-sound-play-toggle"
+          >
+            {isCurrent && playing ? '❚❚' : '▶'}
+          </button>
+          <LoveButton channelSlug={channelSlug} itemId={item.id} />
+        </div>
+        <button
+          type="button"
+          className={`ch-sound-controls__queue${queuePulsing ? ' ch-sound-controls__queue--pulsing' : ''}`}
+          onClick={handleAddToQueue}
+          disabled={queuePulsing}
+          title="Add to queue"
+          aria-label="Add to queue"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2.5 4h11M2.5 8h11M2.5 12h7"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+            <path
+              d="M12 10.5v4M10 12.5h4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+        <SoundDownloadButton
+          channelSlug={channelSlug}
+          artistUsername={artistUsername}
+          itemId={item.id}
+          repostToDownload={Boolean(item.repostToDownload)}
+          followToDownload={Boolean(item.followToDownload)}
+          downloadCount={item.downloadCount ?? 0}
+        />
+        <RepostButton channelSlug={channelSlug} itemId={item.id} />
+        <TrackCommentsToggle
+          soundId={item.id}
+          isLoggedIn={isLoggedIn}
+          commentCount={item.commentCount ?? 0}
+        />
+        {isCurrent && <ReportButton targetType="SOUND_ITEM" targetId={item.id} variant="icon" />}
+        {extraControls}
+      </div>
+    </div>
+  )
+}
+
+export function HearthisSoundItemPlayback({
+  id,
+  title,
+  artistName,
+  embedUri,
+  queue,
+}: {
+  id: string
+  title: string
+  artistName?: string | null
+  embedUri: string
+  queue?: PlayerTrack[]
+}) {
+  const { track, playing, load, togglePlay, addToQueue } = usePlayer()
+  const { showToast } = useToast()
+  const playerTrack: PlayerTrack = {
+    id,
+    kind: 'sound',
+    url: '',
+    title,
+    subtitle: artistName?.trim() || undefined,
+    embed: { provider: 'HEARTHIS', embedUri },
+  }
+  const isCurrent = track?.id === playerTrack.id
+
+  async function handlePlay() {
+    if (!isCurrent) {
+      load(playerTrack, { autoplay: true, queue })
+      return
+    }
+    await togglePlay()
+  }
+
+  function handleQueue() {
+    const added = addToQueue(playerTrack)
+    showToast(
+      added ? `Added “${title}” to the queue.` : `“${title}” is already in the queue.`,
+      added ? 'success' : 'info',
+    )
+  }
+
+  return (
+    <div className="ch-sound-controls-row">
+      <div className="ch-sound-controls">
+        <button type="button" className="ch-sound-controls__play" onClick={() => void handlePlay()}>
+          {isCurrent && playing ? '❚❚' : '▶'}
+        </button>
+        <span className="mini-player__badge">HEARTHIS</span>
+      </div>
+      <button type="button" className="ch-sound-controls__queue" onClick={handleQueue}>
+        +
+      </button>
+    </div>
+  )
+}

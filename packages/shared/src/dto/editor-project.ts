@@ -6,7 +6,7 @@ import { z } from 'zod'
 export const EditorProjectRowSchema = z.object({
   id: z.string(),
   title: z.string(),
-  archiveItemId: z.string().nullable(),
+  soundId: z.string().nullable(),
   updatedAt: z.string(),
 })
 
@@ -14,7 +14,7 @@ export const EditorProjectListSchema = z.array(EditorProjectRowSchema)
 
 export const EditorProjectCreateSchema = z.object({
   title: z.string().trim().min(1).max(160).optional(),
-  archiveItemId: z.string().optional(),
+  soundId: z.string().optional(),
 })
 
 /** Defense in depth against pathological timeline payloads stored as JSON. */
@@ -28,11 +28,11 @@ const TimelineSchema = z
 export const EditorProjectDetailSchema = z.object({
   id: z.string(),
   title: z.string(),
-  archiveItemId: z.string().nullable(),
+  soundId: z.string().nullable(),
   timeline: z.record(z.unknown()),
   sources: z.array(
     z.object({
-      archiveItemId: z.string(),
+      soundId: z.string(),
       title: z.string(),
       url: z.string().url(),
       durationSec: z.number().int().nullable(),
@@ -47,7 +47,7 @@ export const EditorProjectUpdateSchema = z.object({
 })
 
 export const EditorProjectExportSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   versionLabel: z.string().trim().min(1).max(120),
   activate: z.boolean().default(true),
   uploadId: z.string(),

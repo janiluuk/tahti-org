@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-/** M35: per-channel opt-out of auto-recording a finished broadcast to the archive. */
+/** M35: per-channel opt-out of auto-recording a finished broadcast to the sound. */
 export const AutoRecordEnabledPatchSchema = z.object({
   autoRecordEnabled: z.boolean(),
 })

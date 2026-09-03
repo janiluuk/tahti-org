@@ -21,13 +21,13 @@ const itemReadyRoute: FastifyPluginAsync = async (fastify) => {
       }
       const { itemId } = parsed.data
 
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id: itemId },
         select: { id: true },
       })
 
       if (!item) {
-        return reply.status(404).send({ error: 'ArchiveItem not found' })
+        return reply.status(404).send({ error: 'Sound not found' })
       }
 
       return reply.status(200).send({ ok: true })

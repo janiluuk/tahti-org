@@ -31,7 +31,7 @@ describe('/api/discover/latest-tracks', () => {
       displayName: 'Latest Tracks Artist',
     })
 
-    const older = await prisma.archiveItem.create({
+    const older = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Older track',
@@ -44,7 +44,7 @@ describe('/api/discover/latest-tracks', () => {
     })
     olderId = older.id
 
-    const newest = await prisma.archiveItem.create({
+    const newest = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Newest track',
@@ -57,7 +57,7 @@ describe('/api/discover/latest-tracks', () => {
     })
     newestId = newest.id
 
-    const unlisted = await prisma.archiveItem.create({
+    const unlisted = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Private track',
@@ -70,7 +70,7 @@ describe('/api/discover/latest-tracks', () => {
     })
     unlistedId = unlisted.id
 
-    const otherGenre = await prisma.archiveItem.create({
+    const otherGenre = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Ambient track',
@@ -92,7 +92,7 @@ describe('/api/discover/latest-tracks', () => {
   it('lists public ready tracks newest-first, excluding unlisted ones', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/discover/latest-tracks' })
     expect(res.statusCode).toBe(200)
-    const ids = res.json().items.map((i: { archiveItemId: string }) => i.archiveItemId)
+    const ids = res.json().items.map((i: { soundId: string }) => i.soundId)
     expect(ids).not.toContain(unlistedId)
     expect(ids.indexOf(differentGenreId)).toBeLessThan(ids.indexOf(newestId))
     expect(ids.indexOf(newestId)).toBeLessThan(ids.indexOf(olderId))
@@ -104,7 +104,7 @@ describe('/api/discover/latest-tracks', () => {
       url: '/api/discover/latest-tracks?genre=Ambient',
     })
     expect(res.statusCode).toBe(200)
-    const ids = res.json().items.map((i: { archiveItemId: string }) => i.archiveItemId)
+    const ids = res.json().items.map((i: { soundId: string }) => i.soundId)
     expect(ids).toEqual([differentGenreId])
   })
 

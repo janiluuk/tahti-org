@@ -13,7 +13,7 @@ import {
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import {
-  archivePlaybackKey,
+  soundPlaybackKey,
   buildFallbackPlaybackRows,
   interleaveAnnouncements,
   renderFallbackM3u,
@@ -27,7 +27,7 @@ import type { AnnouncementPlaybackRow, FallbackM3uEntry, FallbackPlaybackRow } f
 // time between refetches for a small pool (300 rounds through a handful of tracks),
 // so the presigned URLs handed out here need to comfortably outlive that — a short
 // TTL would silently start 403ing again mid-rotation, exactly like the bug this
-// replaced (tahti/mp3 isn't publicly readable, unlike covers/avatars/archive banners).
+// replaced (tahti/mp3 isn't publicly readable, unlike covers/avatars/sound banners).
 const FALLBACK_URL_TTL_SEC = 24 * 60 * 60
 
 async function curatedRows(
@@ -38,27 +38,27 @@ async function curatedRows(
     where: { channelId },
     orderBy: { position: 'asc' },
     select: {
-      archiveItem: {
+      sound: {
         select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
       },
     },
   })
 
   const rows: FallbackPlaybackRow[] = []
-  for (const { archiveItem } of curated) {
-    const playbackKey = archivePlaybackKey(archiveItem)
+  for (const { sound } of curated) {
+    const playbackKey = soundPlaybackKey(sound)
     if (!playbackKey) continue
     rows.push({
-      id: archiveItem.id,
-      title: archiveItem.title,
+      id: sound.id,
+      title: sound.title,
       playbackKey,
-      durationSec: archiveItem.durationSec,
+      durationSec: sound.durationSec,
     })
   }
   return rows
 }
 
-// Manage panel playlist switch: a Collection's archive-item-backed entries, in
+// Manage panel playlist switch: a Collection's sound-item-backed entries, in
 // position order. Release-backed entries have no single playback file of their
 // own (a release is itself a multi-track grouping) so they're skipped here —
 // same limitation as any other single-file rotation source.
@@ -67,25 +67,25 @@ async function collectionRows(
   collectionId: string,
 ): Promise<FallbackPlaybackRow[]> {
   const items = await prisma.collectionItem.findMany({
-    where: { collectionId, archiveItemId: { not: null } },
+    where: { collectionId, soundId: { not: null } },
     orderBy: { position: 'asc' },
     select: {
-      archiveItem: {
+      sound: {
         select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
       },
     },
   })
 
   const rows: FallbackPlaybackRow[] = []
-  for (const { archiveItem } of items) {
-    if (!archiveItem) continue
-    const playbackKey = archivePlaybackKey(archiveItem)
+  for (const { sound } of items) {
+    if (!sound) continue
+    const playbackKey = soundPlaybackKey(sound)
     if (!playbackKey) continue
     rows.push({
-      id: archiveItem.id,
-      title: archiveItem.title,
+      id: sound.id,
+      title: sound.title,
       playbackKey,
-      durationSec: archiveItem.durationSec,
+      durationSec: sound.durationSec,
     })
   }
   return rows
@@ -152,7 +152,7 @@ async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEnt
 }
 
 // Liquidsoap calls this to get the current fallback playlist for a channel.
-// Returns an extended M3U with presigned HTTP URLs to archive playback files (MP3 or FLAC).
+// Returns an extended M3U with presigned HTTP URLs to sound playback files (MP3 or FLAC).
 const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/internal/channels/:channelId/fallback.m3u',
@@ -223,7 +223,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       } else if (channel.activeFallbackCollectionId) {
         // Manage panel playlist switch: repoints the rotation at a chosen Collection
         // instead of the default isFallback set. An empty collection (or one with no
-        // playable archive-item entries) falls through to the default rotation below
+        // playable sound-item entries) falls through to the default rotation below
         // rather than going silent.
         const chosen = await collectionRows(fastify.prisma, channel.activeFallbackCollectionId)
         if (chosen.length > 0) {
@@ -234,7 +234,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
       if (rows.length === 0) {
         const items = channel.fallbackEnabled
-          ? await fastify.prisma.archiveItem.findMany({
+          ? await fastify.prisma.sound.findMany({
               where: {
                 channelId,
                 status: 'READY',
@@ -257,7 +257,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         playlistOrderStable = channel.fallbackMode !== 'shuffle'
       }
 
-      // Tahti Radio has no archive of its own — when nobody's booked a live slot and
+      // Tahti Radio has no sound of its own — when nobody's booked a live slot and
       // it has no fallback tracks either, relay the Tahti Selects rotation live (read
       // fresh each request, not a static snapshot) instead of falling through to
       // Liquidsoap's blank() and going silent while still reporting as LIVE.

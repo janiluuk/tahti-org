@@ -35,7 +35,7 @@ export default function TierLimitsHelpPage() {
         <li>
           Listeners hear <strong>MP3 192 kbps</strong> HLS (<code>stream-mp3-192</code>)
         </li>
-        <li>Archive fallback plays when you are offline</li>
+        <li>Sound fallback plays when you are offline</li>
       </ul>
 
       <Heading level={2}>Tahti ry member (€40/year)</Heading>

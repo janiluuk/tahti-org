@@ -49,7 +49,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
           // broadcasting right now" — channel-fallback-reconciler.ts also sets
           // state:'LIVE' when it bootstraps a fallbackEnabled channel's 24/7
           // rotation, without touching goneLiveAt, so state alone can't tell a
-          // real broadcast from the archive just looping (same distinction as
+          // real broadcast from the sound just looping (same distinction as
           // dashboard/layout.tsx's isOnline vs isReallyLive). Without the
           // goneLiveAt filter here, a rotation-only channel would show up
           // labeled "Live now" on Discover instead of "Replay".
@@ -59,7 +59,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
             take: 20,
             select: cardSelect,
           }),
-          // Not really live, but airing their 24/7 archive rotation right now —
+          // Not really live, but airing their 24/7 sound rotation right now —
           // the "REPLAY" tier, same concept as Tahti Radio's own REPLAY badge.
           // Covers both the ordinary case (state left OFFLINE while fallback
           // audio streams) and the state:'LIVE'-but-goneLiveAt-null case above.

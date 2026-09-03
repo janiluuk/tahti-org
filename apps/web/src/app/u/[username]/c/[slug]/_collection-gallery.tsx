@@ -14,7 +14,7 @@ const Ctx = createContext<CollectionGalleryCtx | null>(null)
 
 /** Wraps a collection page so its hero cover and item thumbnails — rendered
  * in separate trees (hero prop vs. page children, some inside their own
- * client components like ArchiveTrackRow) — can all open the same browsable,
+ * client components like SoundTrackRow) — can all open the same browsable,
  * zoomable lightbox at the right image. Look-up is by URL rather than a
  * pre-threaded index so callers don't need to know their position in the
  * flattened image list. */

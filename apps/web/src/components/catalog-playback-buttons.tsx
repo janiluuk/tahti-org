@@ -88,7 +88,7 @@ export function CatalogPlaybackButtons({
 function toPlayerTrack(item: CatalogPlaybackTrack): PlayerTrack {
   return {
     id: item.id,
-    kind: 'archive',
+    kind: 'sound',
     url: item.audioUrl,
     title: item.title,
     subtitle: item.subtitle,

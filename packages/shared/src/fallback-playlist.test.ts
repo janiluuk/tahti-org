@@ -10,7 +10,7 @@ import {
   renderLocalFallbackM3u,
   buildFallbackPlaybackRows,
   renderFallbackM3u,
-  channelArchiveCacheDir,
+  channelSoundCacheDir,
   interleaveAnnouncements,
   type AnnouncementPlaybackRow,
   type FallbackPlaybackRow,
@@ -138,10 +138,10 @@ describe('renderLocalFallbackM3u', () => {
   it('emits absolute paths under the channel cache dir', () => {
     const body = renderLocalFallbackM3u(
       [{ id: '1', title: 'Set A', playbackKey: 'mp3/artist/a.mp3', durationSec: 3600 }],
-      '/archive-cache/ch-1',
+      '/sound-cache/ch-1',
     )
     expect(body).toContain('#EXTINF:3600,Set A')
-    expect(body).toContain('/archive-cache/ch-1/mp3__artist__a.mp3')
+    expect(body).toContain('/sound-cache/ch-1/mp3__artist__a.mp3')
   })
 
   it('sanitizes nested playback keys', () => {
@@ -154,7 +154,7 @@ describe('renderLocalFallbackM3u', () => {
   })
 
   it('returns empty playlist marker when pool is empty', () => {
-    expect(renderLocalFallbackM3u([], '/archive-cache/ch-1')).toContain('# no items yet')
+    expect(renderLocalFallbackM3u([], '/sound-cache/ch-1')).toContain('# no items yet')
   })
 })
 
@@ -206,9 +206,9 @@ describe('renderFallbackM3u', () => {
   })
 })
 
-describe('channelArchiveCacheDir', () => {
+describe('channelSoundCacheDir', () => {
   it('joins root and channel id without trailing slash on root', () => {
-    expect(channelArchiveCacheDir('/archive-cache/', 'ch-1')).toBe('/archive-cache/ch-1')
+    expect(channelSoundCacheDir('/sound-cache/', 'ch-1')).toBe('/sound-cache/ch-1')
   })
 })
 

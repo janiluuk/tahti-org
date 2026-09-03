@@ -57,7 +57,7 @@ export default async function AdminTahtiSelectsPage({
   ])
   const items = rotation?.items ?? []
   const browseItems = browse?.items ?? []
-  const inRotationIds = new Set(items.map((i) => i.archiveItemId))
+  const inRotationIds = new Set(items.map((i) => i.soundId))
 
   return (
     <>

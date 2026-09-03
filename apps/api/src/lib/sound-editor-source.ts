@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import type { PrismaClient } from '@tahti/db'
+import { ensureInitialVersion } from '@tahti/db'
+
+export async function resolveSoundEditorSource(
+  prisma: PrismaClient,
+  soundId: string,
+): Promise<{
+  sourceKey: string
+  durationSec: number | null
+  title: string
+  fileSizeBytes: bigint | null
+} | null> {
+  const item = await prisma.sound.findUnique({
+    where: { id: soundId },
+    select: {
+      title: true,
+      durationSec: true,
+      rawKey: true,
+      mp3Key: true,
+      flacKey: true,
+      fileSizeBytes: true,
+      status: true,
+    },
+  })
+  if (!item || item.status !== 'READY') return null
+
+  await ensureInitialVersion(prisma, soundId)
+
+  const active = await prisma.soundVersion.findFirst({
+    where: { soundId, isActive: true, status: 'READY' },
+    select: {
+      rawKey: true,
+      flacKey: true,
+      mp3Key: true,
+      durationSec: true,
+      fileSizeBytes: true,
+    },
+  })
+
+  const sourceKey =
+    active?.rawKey ??
+    active?.flacKey ??
+    active?.mp3Key ??
+    item.rawKey ??
+    item.flacKey ??
+    item.mp3Key ??
+    null
+
+  if (!sourceKey) return null
+
+  const fileSizeBytes = active?.fileSizeBytes ?? item.fileSizeBytes ?? null
+
+  return {
+    sourceKey,
+    durationSec: active?.durationSec ?? item.durationSec,
+    title: item.title,
+    fileSizeBytes,
+  }
+}

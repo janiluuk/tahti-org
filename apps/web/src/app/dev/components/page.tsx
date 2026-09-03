@@ -78,7 +78,7 @@ export default function ComponentsPlaygroundPage() {
         <div className="playground-row">
           <Pill variant="live" />
           <Pill variant="flac" />
-          <Pill variant="archive" />
+          <Pill variant="sound" />
           <Pill variant="recommended" />
           <Pill variant="default">Draft</Pill>
         </div>
@@ -111,7 +111,7 @@ export default function ComponentsPlaygroundPage() {
         <PlaygroundCoverUploadDemo />
         <BrandText tone="tertiary" size="xs">
           Drag/drop, click-to-browse, or the 🔗 URL toggle to fetch-and-rehost an external image.
-          The same component now backs release artwork, archive banners, collection covers, and
+          The same component now backs release artwork, sound banners, collection covers, and
           avatars.
         </BrandText>
       </PlaygroundSection>
@@ -166,8 +166,8 @@ export default function ComponentsPlaygroundPage() {
           <SidebarNavItem href="#stats" icon="stats">
             Stats
           </SidebarNavItem>
-          <SidebarNavItem href="#archive" icon="archive">
-            Archive
+          <SidebarNavItem href="#sound" icon="sound">
+            Sounds
           </SidebarNavItem>
           <SidebarNavItem href="#revenue" icon="revenue">
             Revenue

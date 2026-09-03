@@ -23,7 +23,7 @@ describe('buildGateDailySeries', () => {
     })
     channelId = artist.channel!.id
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Daily Gate Mix',
@@ -37,8 +37,8 @@ describe('buildGateDailySeries', () => {
     })
     gatedItemId = item.id
 
-    await prisma.archiveRepostAck.create({
-      data: { archiveItemId: gatedItemId, byFingerprint: 'fp-daily-today' },
+    await prisma.soundRepostAck.create({
+      data: { soundId: gatedItemId, byFingerprint: 'fp-daily-today' },
     })
   })
 

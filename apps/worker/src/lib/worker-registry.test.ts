@@ -67,7 +67,7 @@ describe('worker-registry', () => {
   it('recordJobEvent updates the hash and pushes onto the capped history list', async () => {
     await recordJobEvent('vimage-main', {
       jobId: '123',
-      jobName: 'transcode-archive',
+      jobName: 'transcode-sound',
       status: 'completed',
       at: 1_700_000_000_000,
     })
@@ -75,14 +75,14 @@ describe('worker-registry', () => {
       'worker:vimage-main',
       expect.objectContaining({
         status: 'idle',
-        lastJobName: 'transcode-archive',
+        lastJobName: 'transcode-sound',
         lastJobId: '123',
         lastJobStatus: 'completed',
       }),
     )
     expect(mockLPush).toHaveBeenCalledWith(
       'worker:vimage-main:history',
-      expect.stringContaining('transcode-archive'),
+      expect.stringContaining('transcode-sound'),
     )
     expect(mockLTrim).toHaveBeenCalledWith('worker:vimage-main:history', 0, 19)
   })

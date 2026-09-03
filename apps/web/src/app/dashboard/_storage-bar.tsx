@@ -8,7 +8,7 @@ export function formatStorageBytes(bytes: number): string {
   return `${Math.round(bytes / 1024)} KB`
 }
 
-/** Archive track count + optional bytes — primary label is always track count. */
+/** Sound track count + optional bytes — primary label is always track count. */
 export function StorageBar({
   trackCount,
   usedBytes,

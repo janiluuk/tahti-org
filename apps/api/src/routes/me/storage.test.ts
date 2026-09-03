@@ -6,7 +6,7 @@ import { prisma } from '@tahti/db'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -68,13 +68,13 @@ describe('GET /api/me/storage', () => {
     expect(res.json()).toMatchObject({ quotaBytes: null, unlimited: true, usedBytes: 0 })
   })
 
-  it('reflects real archive usage, even well past the soft target — never blocked', async () => {
+  it('reflects real sound usage, even well past the soft target — never blocked', async () => {
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}heavy@example.com`,
       username: `${PREFIX}heavy`,
     })
     const cookie = await sessionCookieFor(prisma, artist.id)
-    await createReadyArchiveItem(prisma, artist.channel!.id, 'Track one')
+    await createReadySound(prisma, artist.channel!.id, 'Track one')
 
     const res = await app.inject({
       method: 'GET',

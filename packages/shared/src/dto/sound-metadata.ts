@@ -1,0 +1,187 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import { z } from 'zod'
+import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
+import { ReleaseCreditSchema } from './release-ops.js'
+
+export const SOUND_CONTENT_TYPES = [
+  'TRACK',
+  'LIVE',
+  'DJ_SET',
+  'PODCAST',
+  'REMIX',
+  'SHOW',
+  'EPISODE',
+  'CLIP',
+  'EMBED',
+] as const
+
+/** What kind of file a Sound row holds — see SoundMediaKind in schema.prisma. */
+export const SOUND_MEDIA_KINDS = ['AUDIO', 'IMAGE', 'VIDEO'] as const
+
+export const SOUND_LICENSES = [
+  'ALL_RIGHTS_RESERVED',
+  'CC_BY',
+  'CC_BY_NC',
+  'CC_BY_NC_SA',
+  'CC_BY_NC_ND',
+  'CC_BY_SA',
+  'CC0',
+] as const
+
+/** Preset genres (hearthis-style); artists can pick custom via genreCustom. */
+export const SOUND_GENRES = [
+  'Electronic',
+  'House',
+  'Techno',
+  'Trance',
+  'Drum & Bass',
+  'Dubstep',
+  'Ambient',
+  'Hip-Hop',
+  'Pop',
+  'Rock',
+  'Jazz',
+  'Classical',
+  'Podcast',
+  'Other',
+] as const
+
+/** A channel's genre tags live as a comma-joined string inside the User.socialLinks JSON bag. */
+export function parseSocialLinksGenres(socialLinks: unknown): string[] {
+  if (!socialLinks || typeof socialLinks !== 'object') return []
+  const raw = (socialLinks as Record<string, unknown>).genres
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  return raw
+    .split(',')
+    .map((g) => g.trim())
+    .filter(Boolean)
+}
+
+/** Same shape as parseSocialLinksGenres, for the artist's self-selected roles
+ * (dj/producer/band/etc — see ARTIST_ROLE_OPTIONS in tahti-web's
+ * SettingsPanels.tsx), also comma-joined inside the same JSON bag. */
+export function parseSocialLinksArtistRoles(socialLinks: unknown): string[] {
+  if (!socialLinks || typeof socialLinks !== 'object') return []
+  const raw = (socialLinks as Record<string, unknown>).artistRoles
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  return raw
+    .split(',')
+    .map((r) => r.trim())
+    .filter(Boolean)
+}
+
+export const SOUND_LICENSE_LABELS: Record<(typeof SOUND_LICENSES)[number], string> = {
+  ALL_RIGHTS_RESERVED: 'All rights reserved',
+  CC_BY: 'Creative Commons — Attribution (CC BY)',
+  CC_BY_NC: 'CC BY-NC',
+  CC_BY_NC_SA: 'CC BY-NC-SA',
+  CC_BY_NC_ND: 'CC BY-NC-ND',
+  CC_BY_SA: 'CC BY-SA',
+  CC0: 'CC0 — Public domain',
+}
+
+export const TracklistEntrySchema = z.object({
+  startSec: z.number().min(0),
+  title: z.string().min(1).max(200),
+  /** Plain-text artist credit (ACRCloud, external guests). */
+  artist: z.string().max(120).optional(),
+  /** Tahti @handle when the played artist is a member (M22 + M15). */
+  artistUsername: z
+    .string()
+    .regex(/^[a-z0-9_-]{2,32}$/i)
+    .optional(),
+})
+
+export type TracklistEntry = z.infer<typeof TracklistEntrySchema>
+
+export const SoundMetadataFieldsSchema = z.object({
+  description: z.string().max(2000).optional(),
+  /** Display credit override — leave empty to use the channel / band artist name. */
+  artistName: z.string().trim().max(120).nullable().optional(),
+  /** Role-based credits when this track differs from the channel Members/Credits roster. */
+  credits: z.array(ReleaseCreditSchema).max(20).nullable().optional(),
+  tracklist: z.array(TracklistEntrySchema).max(200).nullable().optional(),
+  bannerUrl: z.string().max(2048).nullable().optional(),
+  backgroundUrl: z.string().max(2048).nullable().optional(),
+  slideshowUrls: z.array(z.string().max(2048)).max(10).optional(),
+  /** WebGL/static transition preset used to switch between slideshowUrls images. */
+  galleryMode: z.enum(CHANNEL_GALLERY_MODES).optional(),
+  /** When true, the gallery preset reacts to this track's own playback audio. */
+  galleryAudioReactive: z.boolean().optional(),
+  commentary: z.string().max(5000).nullable().optional(),
+  taggedNote: z.string().max(500).nullable().optional(),
+  genre: z.string().max(80).nullable().optional(),
+  genreCustom: z.string().max(80).nullable().optional(),
+  recordingLocation: z.string().max(120).nullable().optional(),
+  venueId: z.string().max(64).nullable().optional(),
+  subGenres: z.array(z.string().max(40).trim()).max(12).optional(),
+  /** Free-form artist labels — no preset list, unlike genre/subGenres. */
+  tags: z.array(z.string().max(40).trim()).max(20).optional(),
+  contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
+  mediaKind: z.enum(SOUND_MEDIA_KINDS).optional(),
+  mixVersion: z.string().max(120).nullable().optional(),
+  bpm: z.number().int().min(40).max(300).nullable().optional(),
+  musicalKey: z.string().max(12).nullable().optional(),
+  useDetectedBpmKey: z.boolean().optional(),
+  isAiGenerated: z.boolean().optional(),
+  releasedAt: z.string().datetime().optional(),
+  license: z.enum(SOUND_LICENSES).optional(),
+  repostToDownload: z.boolean().optional(),
+  followToDownload: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+  isFallback: z.boolean().optional(),
+  commentsEnabled: z.boolean().optional(),
+  selectsOptIn: z.boolean().optional(),
+  topListsEligible: z.boolean().optional(),
+  /** Public "Stage" showcase (PLAT-Stage): pin/unpin this track at the top of the
+   * artist's profile Stage tab. Server converts to/from Sound.pinnedAt. */
+  pinned: z.boolean().optional(),
+})
+
+export type SoundMetadataFields = z.infer<typeof SoundMetadataFieldsSchema>
+
+export const SoundMetadataPatchSchema = SoundMetadataFieldsSchema.extend({
+  title: z.string().min(1).max(200).trim().optional(),
+}).partial()
+
+export type SoundMetadataPatch = z.infer<typeof SoundMetadataPatchSchema>
+
+export const SoundUploadMetadataSchema = SoundMetadataFieldsSchema.partial()
+
+export type SoundUploadMetadata = z.infer<typeof SoundUploadMetadataSchema>
+
+/** Sensible defaults for dashboard uploads (hearthis-style). */
+export const SOUND_METADATA_DEFAULTS = {
+  genre: 'Electronic',
+  contentType: 'TRACK' as const,
+  mediaKind: 'AUDIO' as const,
+  license: 'ALL_RIGHTS_RESERVED' as const,
+  useDetectedBpmKey: true,
+  isAiGenerated: false,
+  repostToDownload: false,
+  followToDownload: false,
+  isPublic: true,
+  isFallback: false,
+  selectsOptIn: false,
+  subGenres: [] as string[],
+  tags: [] as string[],
+  slideshowUrls: [] as string[],
+}
+
+/** Sort options for GET /api/me/sound (defaults to `newest`). */
+export const SOUND_LIST_SORTS = ['newest', 'oldest', 'title', 'duration', 'bpm', 'genre'] as const
+
+export const SoundListQuerySchema = z.object({
+  sort: z.enum(SOUND_LIST_SORTS).optional(),
+})
+
+export type SoundListQuery = z.infer<typeof SoundListQuerySchema>
+
+/** Manual-sort reorder for the public "Tracks" tab (all sound items for a channel). */
+export const ReorderSoundsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, 'ids array is required'),
+})
+
+export type ReorderSoundsInput = z.infer<typeof ReorderSoundsSchema>

@@ -21,7 +21,7 @@ export type RadioSubmissionRow = {
   batchId?: string
   batchNote?: string | null
   submitter?: { id: string; username: string; displayName: string }
-  archiveItem: {
+  sound: {
     id: string
     title: string
     artistName: string | null
@@ -54,8 +54,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
   const [error, setError] = useState<string | null>(null)
 
   const active = items.find((i) => i.id === activeId) ?? items[0] ?? null
-  const isPlayingActive =
-    active != null && track?.id === `radio-sub-${active.archiveItem.id}` && playing
+  const isPlayingActive = active != null && track?.id === `radio-sub-${active.sound.id}` && playing
 
   async function playItem(row: RadioSubmissionRow) {
     setActiveId(row.id)
@@ -75,12 +74,12 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
         artistName: string
       }
       const playerTrack: PlayerTrack = {
-        id: `radio-sub-${row.archiveItem.id}`,
-        kind: 'archive',
+        id: `radio-sub-${row.sound.id}`,
+        kind: 'sound',
         title: data.title,
         subtitle: data.artistName,
         url: data.audioUrl,
-        artworkUrl: row.archiveItem.bannerUrl,
+        artworkUrl: row.sound.bannerUrl,
       }
       load(playerTrack, { autoplay: true, queue: [playerTrack] })
     } finally {
@@ -122,11 +121,11 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
         <section className="admin-radio-audit__player" aria-label="Submission player">
           <div className="admin-radio-audit__meta">
             <p className="admin-radio-audit__eyebrow">Auditing</p>
-            <h2 className="admin-radio-audit__title">{active.archiveItem.title}</h2>
+            <h2 className="admin-radio-audit__title">{active.sound.title}</h2>
             <p className="admin-text-muted">
-              {active.archiveItem.artistName ?? active.submitter?.displayName ?? 'Unknown artist'}
+              {active.sound.artistName ?? active.submitter?.displayName ?? 'Unknown artist'}
               {' · '}
-              {fmtDuration(active.archiveItem.durationSec)}
+              {fmtDuration(active.sound.durationSec)}
               {active.submitter ? (
                 <>
                   {' · '}
@@ -146,7 +145,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
               type="button"
               variant="primary"
               onClick={() => {
-                if (track?.id === `radio-sub-${active.archiveItem.id}`) {
+                if (track?.id === `radio-sub-${active.sound.id}`) {
                   void togglePlay()
                 } else {
                   void playItem(active)
@@ -164,7 +163,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
                 max={1}
                 step={0.001}
                 value={
-                  track?.id === `radio-sub-${active.archiveItem.id}` && duration > 0
+                  track?.id === `radio-sub-${active.sound.id}` && duration > 0
                     ? currentTime / duration
                     : 0
                 }
@@ -172,7 +171,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
                 aria-label="Seek"
               />
               <span className="admin-text-muted">
-                {fmtTime(duration || active.archiveItem.durationSec || 0)}
+                {fmtTime(duration || active.sound.durationSec || 0)}
               </span>
             </div>
           </div>
@@ -227,7 +226,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
                 className={row.id === active?.id ? 'admin-radio-audit__row--active' : undefined}
               >
                 <td>{new Date(row.createdAt).toLocaleString()}</td>
-                <td>{row.archiveItem.title}</td>
+                <td>{row.sound.title}</td>
                 <td>
                   {row.submitter ? (
                     <a href={`/u/${row.submitter.username}`} className="admin-link">
@@ -237,7 +236,7 @@ export function RadioSubmissionsPanel({ items }: { items: RadioSubmissionRow[] }
                     '—'
                   )}
                 </td>
-                <td>{fmtDuration(row.archiveItem.durationSec)}</td>
+                <td>{fmtDuration(row.sound.durationSec)}</td>
                 <td className={row.status === 'PENDING' ? 'admin-warn' : ''}>{row.status}</td>
                 <td>
                   <Button

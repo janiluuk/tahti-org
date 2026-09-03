@@ -75,7 +75,7 @@ export default async function DashboardPage() {
       countedDownloads: number
     }>
     items: Array<{
-      archiveItemId: string
+      soundId: string
       title: string
       repostToDownload: boolean
       followToDownload: boolean
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
   } | null = null
   let fanPayoutStats = { thisMonthNetCents: 0 }
   let statsSummary = { playsToday: 0, playsTotal: 0, downloadsToday: 0, downloadsTotal: 0 }
-  let recentArchiveItems: Array<{
+  let recentSoundItems: Array<{
     id: string
     title: string
     durationSec: number | null
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
       broadcastUsageRes,
       funnelRes,
       fanPayoutsSummaryRes,
-      recentArchiveRes,
+      recentSoundRes,
       preflightRes,
       statsSummaryRes,
     ] = await Promise.all([
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
       slug ? get('/api/me/broadcast-usage') : null,
       slug ? get('/api/me/channel-funnel-stats') : null,
       slug ? get('/api/me/fan-sub-payouts/summary') : null,
-      slug ? get('/api/me/archive/recent') : null,
+      slug ? get('/api/me/sound/recent') : null,
       slug && isOnAir ? get('/api/me/channel/preflight') : null,
       slug ? get('/api/me/stats/summary') : null,
     ])
@@ -139,8 +139,8 @@ export default async function DashboardPage() {
     if (fanPayoutsSummaryRes?.ok) {
       fanPayoutStats = (await fanPayoutsSummaryRes.json()) as typeof fanPayoutStats
     }
-    if (recentArchiveRes?.ok) {
-      recentArchiveItems = (await recentArchiveRes.json()) as typeof recentArchiveItems
+    if (recentSoundRes?.ok) {
+      recentSoundItems = (await recentSoundRes.json()) as typeof recentSoundItems
     }
     if (preflightRes?.ok) {
       const preflight = (await preflightRes.json()) as { title: string | null }
@@ -302,7 +302,7 @@ export default async function DashboardPage() {
         statDlCount={statDlCount}
         revenueCents={fanPayoutStats.thisMonthNetCents}
         statsSummary={statsSummary}
-        archiveItems={recentArchiveItems}
+        sounds={recentSoundItems}
         downloadGateSummary={downloadGateSummary}
         channelLiveStats={channelLiveStats}
         otherModeratedChannels={otherModeratedChannels}

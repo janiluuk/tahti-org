@@ -10,7 +10,7 @@ import { CollectionCoverButton } from './_collection-gallery'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { HearthisEmbedRow } from './_hearthis-embed-row'
-import { ArchiveTrackRow } from './_archive-track-row'
+import { SoundTrackRow } from './_sound-track-row'
 import { PlaylistControls } from './_playlist-controls'
 import type { CollectionResponse } from './page'
 
@@ -34,7 +34,7 @@ export function CollectionLibrarySection({
   return (
     <LibraryBrowser
       items={items}
-      getTitle={(item) => item.archiveItem?.title ?? item.release?.title ?? 'Untitled'}
+      getTitle={(item) => item.sound?.title ?? item.release?.title ?? 'Untitled'}
       searchPlaceholder="Search playlist…"
       emptyMessage="This collection is empty."
       noMatchMessage="No playlist items match."
@@ -45,22 +45,20 @@ export function CollectionLibrarySection({
         // as Tahti-hosted tracks, in the currently displayed order.
         const queue: PlayerTrack[] = visible
           .filter(
-            (i) =>
-              i.archiveItem?.audioUrl ||
-              (i.archiveItem?.source === 'HEARTHIS_EMBED' && i.archiveItem.embedUri),
+            (i) => i.sound?.audioUrl || (i.sound?.source === 'HEARTHIS_EMBED' && i.sound.embedUri),
           )
           .map((i) => ({
-            id: i.archiveItem!.id,
-            kind: 'archive',
-            url: i.archiveItem!.audioUrl ?? '',
-            title: i.archiveItem!.title,
-            durationSec: i.archiveItem!.durationSec,
+            id: i.sound!.id,
+            kind: 'sound',
+            url: i.sound!.audioUrl ?? '',
+            title: i.sound!.title,
+            durationSec: i.sound!.durationSec,
             subtitle: `@${artistUsername}`,
-            ...(i.archiveItem!.source === 'HEARTHIS_EMBED' && i.archiveItem!.embedUri
+            ...(i.sound!.source === 'HEARTHIS_EMBED' && i.sound!.embedUri
               ? {
                   embed: {
                     provider: 'HEARTHIS' as const,
-                    embedUri: i.archiveItem!.embedUri,
+                    embedUri: i.sound!.embedUri,
                   },
                 }
               : {}),
@@ -71,51 +69,51 @@ export function CollectionLibrarySection({
             {queue.length > 0 && <PlaylistControls queue={queue} />}
             <ol className="prof-list prof-collection-items">
               {visible.map((item) => {
-                if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
+                if (item.sound?.source === 'SPOTIFY_EMBED' && item.sound.embedUri) {
                   return (
                     <SpotifyEmbedRow
                       key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
+                      title={item.sound.title}
+                      embedUri={item.sound.embedUri}
                     />
                   )
                 }
-                if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
+                if (item.sound?.source === 'MIXCLOUD_EMBED' && item.sound.embedUri) {
                   return (
                     <MixcloudEmbedRow
                       key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
+                      title={item.sound.title}
+                      embedUri={item.sound.embedUri}
                     />
                   )
                 }
-                if (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri) {
+                if (item.sound?.source === 'HEARTHIS_EMBED' && item.sound.embedUri) {
                   return (
                     <HearthisEmbedRow
                       key={item.id}
-                      title={item.archiveItem.title}
-                      embedUri={item.archiveItem.embedUri}
-                      id={item.archiveItem.id}
-                      durationSec={item.archiveItem.durationSec}
-                      thumbUrl={item.archiveItem.bannerUrl ?? item.release?.artworkUrl ?? null}
+                      title={item.sound.title}
+                      embedUri={item.sound.embedUri}
+                      id={item.sound.id}
+                      durationSec={item.sound.durationSec}
+                      thumbUrl={item.sound.bannerUrl ?? item.release?.artworkUrl ?? null}
                       queue={queue}
                     />
                   )
                 }
-                const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
-                if (item.archiveItem?.audioUrl) {
+                const thumbUrl = item.sound?.bannerUrl ?? item.release?.artworkUrl ?? null
+                if (item.sound?.audioUrl) {
                   return (
-                    <ArchiveTrackRow
+                    <SoundTrackRow
                       key={item.id}
-                      id={item.archiveItem.id}
-                      title={item.archiveItem.title}
-                      audioUrl={item.archiveItem.audioUrl}
+                      id={item.sound.id}
+                      title={item.sound.title}
+                      audioUrl={item.sound.audioUrl}
                       artistUsername={artistUsername}
-                      channelSlug={item.archiveItem.channel?.slug ?? null}
+                      channelSlug={item.sound.channel?.slug ?? null}
                       thumbUrl={thumbUrl}
                       durationLabel={
-                        item.archiveItem.durationSec != null
-                          ? formatDuration(item.archiveItem.durationSec)
+                        item.sound.durationSec != null
+                          ? formatDuration(item.sound.durationSec)
                           : null
                       }
                       addedByDisplayName={
@@ -137,12 +135,12 @@ export function CollectionLibrarySection({
                       imgHeight={40}
                     />
                     <div className="prof-collection-item-body">
-                      {item.archiveItem && (
+                      {item.sound && (
                         <>
-                          <div className="prof-collection-title">{item.archiveItem.title}</div>
-                          {item.archiveItem.durationSec != null && (
+                          <div className="prof-collection-title">{item.sound.title}</div>
+                          {item.sound.durationSec != null && (
                             <span className="prof-list-meta">
-                              {formatDuration(item.archiveItem.durationSec)}
+                              {formatDuration(item.sound.durationSec)}
                             </span>
                           )}
                         </>

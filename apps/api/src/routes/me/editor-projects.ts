@@ -14,7 +14,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
+import { resolveSoundEditorSource } from '../../lib/sound-editor-source.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 
 const EMPTY_TIMELINE = { tracks: [] as unknown[] }
@@ -26,8 +26,8 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
     })
   }
 
-  async function ownedArchiveItem(userId: string, itemId: string) {
-    return fastify.prisma.archiveItem.findFirst({
+  async function ownedSound(userId: string, itemId: string) {
+    return fastify.prisma.sound.findFirst({
       where: { id: itemId, channel: { userId }, status: 'READY' },
       select: { id: true, title: true },
     })
@@ -48,7 +48,7 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       const rows = await fastify.prisma.editorProject.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
-        select: { id: true, title: true, archiveItemId: true, updatedAt: true },
+        select: { id: true, title: true, soundId: true, updatedAt: true },
       })
       return reply.send(
         rows.map((row) => ({
@@ -65,7 +65,7 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'M21 v1: create editor project (optionally seed from archive item)',
+        description: 'M21 v1: create editor project (optionally seed from sound item)',
         response: openApiResponse(EditorProjectRowSchema, 'EditorProjectRow'),
       },
     },
@@ -78,17 +78,17 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { archiveItemId } = parsed.data
+      const { soundId } = parsed.data
       let title = parsed.data.title?.trim()
       let timeline: Record<string, unknown> = { ...EMPTY_TIMELINE }
 
-      if (archiveItemId) {
-        const item = await ownedArchiveItem(user.id, archiveItemId)
-        if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (soundId) {
+        const item = await ownedSound(user.id, soundId)
+        if (!item) return reply.status(404).send({ error: 'Sound item not found' })
         title = title ?? `${item.title} — edit`
         timeline = {
           tracks: [],
-          seedArchiveItemId: archiveItemId,
+          seedSoundId: soundId,
         }
       }
 
@@ -98,10 +98,10 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           userId: user.id,
           title,
-          archiveItemId: archiveItemId ?? null,
+          soundId: soundId ?? null,
           timeline: timeline as Prisma.InputJsonValue,
         },
-        select: { id: true, title: true, archiveItemId: true, updatedAt: true },
+        select: { id: true, title: true, soundId: true, updatedAt: true },
       })
 
       return reply.status(201).send({
@@ -131,27 +131,27 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       if (!project) return reply.status(404).send({ error: 'Editor project not found' })
 
       const timeline = project.timeline as Record<string, unknown>
-      const archiveIds = new Set<string>()
-      if (project.archiveItemId) archiveIds.add(project.archiveItemId)
-      const seedId = timeline.seedArchiveItemId
-      if (typeof seedId === 'string') archiveIds.add(seedId)
+      const soundIds = new Set<string>()
+      if (project.soundId) soundIds.add(project.soundId)
+      const seedId = timeline.seedSoundId
+      if (typeof seedId === 'string') soundIds.add(seedId)
 
       type EditorProjectSource = {
-        archiveItemId: string
+        soundId: string
         title: string
         url: string
         durationSec: number | null
       }
 
       const resolvedSources = await Promise.all(
-        Array.from(archiveIds).map(async (archiveItemId): Promise<EditorProjectSource | null> => {
+        Array.from(soundIds).map(async (soundId): Promise<EditorProjectSource | null> => {
           const [item, source] = await Promise.all([
-            ownedArchiveItem(user.id, archiveItemId),
-            resolveArchiveEditorSource(fastify.prisma, archiveItemId),
+            ownedSound(user.id, soundId),
+            resolveSoundEditorSource(fastify.prisma, soundId),
           ])
           if (!item || !source) return null
           const url = await presignedGetUrl(source.sourceKey, 3600)
-          return { archiveItemId, title: item.title, url, durationSec: source.durationSec }
+          return { soundId, title: item.title, url, durationSec: source.durationSec }
         }),
       )
       const sources = resolvedSources.filter((s): s is EditorProjectSource => s !== null)
@@ -159,7 +159,7 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         id: project.id,
         title: project.title,
-        archiveItemId: project.archiveItemId,
+        soundId: project.soundId,
         timeline,
         sources,
         updatedAt: project.updatedAt.toISOString(),
@@ -201,7 +201,7 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
             ? { timeline: parsed.data.timeline as Prisma.InputJsonValue }
             : {}),
         },
-        select: { id: true, title: true, archiveItemId: true, updatedAt: true },
+        select: { id: true, title: true, soundId: true, updatedAt: true },
       })
 
       return reply.send({

@@ -18,7 +18,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BA
 type Tab = 'mine' | 'search' | 'url'
 
 type AddedResult = {
-  archiveItemId: string
+  soundId: string
   collectionItemId: string
   track: SpotifyTrackResult
 }
@@ -116,13 +116,13 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
       setAddingUri(track.uri)
       const res = await addSpotifyTrackToCollection(collectionId, track.uri)
       setAddingUri(null)
-      if (res.error || !res.archiveItemId || !res.collectionItemId || !res.track) {
+      if (res.error || !res.soundId || !res.collectionItemId || !res.track) {
         setError(res.error ?? 'Failed to add track')
         return
       }
       setAddedUris((prev) => new Set(prev).add(track.uri))
       onAdded({
-        archiveItemId: res.archiveItemId,
+        soundId: res.soundId,
         collectionItemId: res.collectionItemId,
         track: res.track,
       })

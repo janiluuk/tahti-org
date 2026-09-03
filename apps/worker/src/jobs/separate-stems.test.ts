@@ -8,8 +8,8 @@ import AdmZip from 'adm-zip'
 
 const { prismaMock, minioMock } = vi.hoisted(() => ({
   prismaMock: {
-    archiveItem: { findUnique: vi.fn() },
-    archiveItemStemJob: { update: vi.fn() },
+    sound: { findUnique: vi.fn() },
+    soundStemJob: { update: vi.fn() },
   },
   minioMock: {
     downloadToFile: vi.fn(),
@@ -35,7 +35,7 @@ describe('processSeparateStemsJob', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    prismaMock.archiveItem.findUnique.mockResolvedValue({
+    prismaMock.sound.findUnique.mockResolvedValue({
       channel: { slug: 'test-artist' },
     })
     minioMock.downloadToFile.mockImplementation(async (_key: string, destPath: string) => {
@@ -61,14 +61,14 @@ describe('processSeparateStemsJob', () => {
     await processSeparateStemsJob({
       data: {
         stemJobId: 'job-1',
-        archiveItemId: 'item-1',
+        soundId: 'item-1',
         sourceKey: 'raw/test-artist/track.wav',
         stemSet: 'TWO_STEM',
       },
     } as unknown as Job)
 
     expect(minioMock.uploadFile).toHaveBeenCalledTimes(2)
-    const readyCall = prismaMock.archiveItemStemJob.update.mock.calls.find(
+    const readyCall = prismaMock.soundStemJob.update.mock.calls.find(
       (call: unknown[]) => (call[0] as { data: { status?: string } }).data.status === 'READY',
     )
     expect(readyCall).toBeDefined()
@@ -89,14 +89,14 @@ describe('processSeparateStemsJob', () => {
       processSeparateStemsJob({
         data: {
           stemJobId: 'job-2',
-          archiveItemId: 'item-1',
+          soundId: 'item-1',
           sourceKey: 'raw/test-artist/track.wav',
           stemSet: 'FOUR_STEM',
         },
       } as unknown as Job),
     ).rejects.toThrow()
 
-    const errorCall = prismaMock.archiveItemStemJob.update.mock.calls.find(
+    const errorCall = prismaMock.soundStemJob.update.mock.calls.find(
       (call: unknown[]) => (call[0] as { data: { status?: string } }).data.status === 'ERROR',
     )
     expect(errorCall).toBeDefined()

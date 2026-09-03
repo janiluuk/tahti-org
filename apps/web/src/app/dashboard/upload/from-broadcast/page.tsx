@@ -21,14 +21,14 @@ function formatDuration(sec: number): string {
   return `${m}m`
 }
 
-function statusLabel(b: { archiveItemId: string | null; archiveItemStatus?: string }): {
+function statusLabel(b: { soundId: string | null; soundStatus?: string }): {
   text: string
   tone: 'ready' | 'processing' | 'pending'
 } {
-  if (!b.archiveItemId) return { text: 'Unprocessed', tone: 'pending' }
-  if (b.archiveItemStatus === 'READY') return { text: 'Ready', tone: 'ready' }
-  if (b.archiveItemStatus === 'PROCESSING') return { text: 'Processing', tone: 'processing' }
-  return { text: b.archiveItemStatus ?? 'Pending', tone: 'pending' }
+  if (!b.soundId) return { text: 'Unprocessed', tone: 'pending' }
+  if (b.soundStatus === 'READY') return { text: 'Ready', tone: 'ready' }
+  if (b.soundStatus === 'PROCESSING') return { text: 'Processing', tone: 'processing' }
+  return { text: b.soundStatus ?? 'Pending', tone: 'pending' }
 }
 
 const HOW_IT_WORKS = [
@@ -69,11 +69,11 @@ export default async function FromBroadcastPage() {
           <ol className="import-page__broadcast-list">
             {broadcasts.map((b) => {
               const { text, tone } = statusLabel(b)
-              const href = b.archiveItemId
-                ? `/dashboard/archive/${b.archiveItemId}/editor`
+              const href = b.soundId
+                ? `/dashboard/sounds/${b.soundId}/editor`
                 : `/dashboard/upload/from-broadcast?id=${b.id}`
-              const label = b.archiveItemId
-                ? b.archiveItemStatus === 'READY'
+              const label = b.soundId
+                ? b.soundStatus === 'READY'
                   ? 'Polish & publish'
                   : 'View progress'
                 : 'Edit & publish'
@@ -81,7 +81,7 @@ export default async function FromBroadcastPage() {
                 <li key={b.id} className="import-page__broadcast-row">
                   <div className="import-page__broadcast-info">
                     <span className="import-page__broadcast-name">
-                      {b.archiveItemTitle ?? `Broadcast ${formatDate(b.startedAt)}`}
+                      {b.soundTitle ?? `Broadcast ${formatDate(b.startedAt)}`}
                     </span>
                     <span className="import-page__broadcast-meta">
                       {formatDate(b.startedAt)}

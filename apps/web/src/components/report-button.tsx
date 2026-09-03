@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
 
-type TargetType = 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION'
+type TargetType = 'SOUND_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION'
 
 const REASONS: { value: string; label: string }[] = [
   { value: 'COPYRIGHT', label: 'Copyright infringement' },

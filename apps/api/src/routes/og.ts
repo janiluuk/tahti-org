@@ -97,7 +97,7 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
       ogPage({
         title: `${name} live on Tahti`,
         description:
-          channel.user.bio || `Listen to ${name}'s live channel, archive, and programme on Tahti.`,
+          channel.user.bio || `Listen to ${name}'s live channel, sound, and programme on Tahti.`,
         image: channel.user.avatarUrl,
         url,
       }),

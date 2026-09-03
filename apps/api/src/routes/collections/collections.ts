@@ -8,7 +8,7 @@ import {
   AddCollectionItemSchema,
   CatalogTrackSearchQuerySchema,
   CatalogTrackSearchResponseSchema,
-  ChannelArchiveParamsSchema,
+  ChannelSoundParamsSchema,
   CollectionGalleryPatchSchema,
   CollectionListQuerySchema,
   CollectionSubscriptionResponseSchema,
@@ -20,7 +20,7 @@ import {
   CollectionPublicViewSchema,
   SlugParamSchema,
   UsernameParamSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -40,7 +40,7 @@ function zodError(
 }
 
 const collectionItemInclude = {
-  archiveItem: {
+  sound: {
     select: {
       id: true,
       title: true,
@@ -82,7 +82,7 @@ const collectionItemInclude = {
 async function addManagementPlayback<
   T extends {
     items: Array<{
-      archiveItem: { mp3Key: string | null; flacKey: string | null } | null
+      sound: { mp3Key: string | null; flacKey: string | null } | null
       release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
     }>
   },
@@ -91,10 +91,10 @@ async function addManagementPlayback<
     ...collection,
     items: await Promise.all(
       collection.items.map(async (item) => {
-        const archiveKey = item.archiveItem ? archivePlaybackKey(item.archiveItem) : null
+        const soundKey = item.sound ? soundPlaybackKey(item.sound) : null
         const releaseTrack = item.release?.tracks[0]
         const releaseKey = releaseTrack?.streamKey ?? releaseTrack?.sourceKey ?? null
-        const playbackKey = archiveKey ?? releaseKey
+        const playbackKey = soundKey ?? releaseKey
         return {
           ...item,
           audioUrl: playbackKey ? await presignedGetUrl(playbackKey, 60 * 60) : null,
@@ -106,14 +106,14 @@ async function addManagementPlayback<
 
 type SortableItem = {
   position: number
-  archiveItem: { title: string; createdAt: Date } | null
+  sound: { title: string; createdAt: Date } | null
   release: { title: string; releaseDate: Date } | null
 }
 
 /** MANUAL keeps drag-reordered position; TIME/NAME are computed for display, not persisted. */
 function sortCollectionItems<T extends SortableItem>(items: T[], mode: string): T[] {
-  const itemTitle = (i: T) => i.archiveItem?.title ?? i.release?.title ?? ''
-  const itemTime = (i: T) => i.archiveItem?.createdAt ?? i.release?.releaseDate ?? new Date(0)
+  const itemTitle = (i: T) => i.sound?.title ?? i.release?.title ?? ''
+  const itemTime = (i: T) => i.sound?.createdAt ?? i.release?.releaseDate ?? new Date(0)
   if (mode === 'NAME') {
     return [...items].sort((a, b) => itemTitle(a).localeCompare(itemTitle(b)))
   }
@@ -123,7 +123,7 @@ function sortCollectionItems<T extends SortableItem>(items: T[], mode: string): 
   return items
 }
 
-// M23 — Collections: named groupings of archive items / releases
+// M23 — Collections: named groupings of sound items / releases
 const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── Artist-facing management ─────────────────────────────────────────────
 
@@ -312,7 +312,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/me/collections/:slug/items — add archive item or release
+  // POST /api/me/collections/:slug/items — add sound item or release
   fastify.post(
     '/api/me/collections/:slug/items',
     { preHandler: requireAuth },
@@ -331,18 +331,18 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
-      if (body.archiveItemId) {
+      if (body.soundId) {
         // Own tracks (any visibility) or anyone's public track — this is the
         // "save a track I'm listening to" path, not just the uploader managing
-        // their own archive.
-        const archive = await fastify.prisma.archiveItem.findFirst({
+        // their own sound.
+        const sound = await fastify.prisma.sound.findFirst({
           where: {
-            id: body.archiveItemId,
+            id: body.soundId,
             status: 'READY',
             OR: [{ channel: { userId: user.id } }, { isPublic: true }],
           },
         })
-        if (!archive) return reply.status(400).send({ error: 'Archive item not found' })
+        if (!sound) return reply.status(400).send({ error: 'Sound item not found' })
       }
 
       if (body.releaseId) {
@@ -352,13 +352,11 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         if (!release) return reply.status(400).send({ error: 'Published release not found' })
       }
 
-      if (body.archiveItemId || body.releaseId) {
+      if (body.soundId || body.releaseId) {
         const existing = await fastify.prisma.collectionItem.findFirst({
           where: {
             collectionId: col.id,
-            ...(body.archiveItemId
-              ? { archiveItemId: body.archiveItemId }
-              : { releaseId: body.releaseId }),
+            ...(body.soundId ? { soundId: body.soundId } : { releaseId: body.releaseId }),
           },
           select: { id: true },
         })
@@ -377,7 +375,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           return tx.collectionItem.create({
             data: {
               collectionId: col.id,
-              archiveItemId: body.archiveItemId ?? null,
+              soundId: body.soundId ?? null,
               releaseId: body.releaseId ?? null,
               position,
             },
@@ -450,7 +448,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const routeParams = parseRouteParams(ChannelArchiveParamsSchema, request.params)
+      const routeParams = parseRouteParams(ChannelSoundParamsSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { slug, itemId } = routeParams
 
@@ -684,10 +682,10 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
       const items = await Promise.all(
         ordered.map(async (colItem) => {
-          if (!colItem.archiveItem) return colItem
-          const playbackKey = archivePlaybackKey(colItem.archiveItem)
+          if (!colItem.sound) return colItem
+          const playbackKey = soundPlaybackKey(colItem.sound)
           const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-          return { ...colItem, archiveItem: { ...colItem.archiveItem, audioUrl } }
+          return { ...colItem, sound: { ...colItem.sound, audioUrl } }
         }),
       )
 
@@ -705,7 +703,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   // POST /api/v1/collections/:slug/items — any logged-in user adds a track to a
   // collaborative public playlist. Distinct from the owner-only
-  // /api/me/collections/:slug/items above: no ownership check on the archive
+  // /api/me/collections/:slug/items above: no ownership check on the sound
   // item (any public, READY track in the catalog), always appended at the end,
   // and gated on collection.collaborative rather than collection.userId.
   fastify.post(
@@ -717,7 +715,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
       const parsed = AddCollaborativeTrackSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
-      const { archiveItemId, note } = parsed.data
+      const { soundId, note } = parsed.data
       const user = request.sessionUser!
 
       const col = await fastify.prisma.collection.findFirst({
@@ -729,14 +727,14 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
-      const archive = await fastify.prisma.archiveItem.findFirst({
-        where: { id: archiveItemId, status: 'READY', isPublic: true },
+      const sound = await fastify.prisma.sound.findFirst({
+        where: { id: soundId, status: 'READY', isPublic: true },
         select: { id: true, title: true },
       })
-      if (!archive) return reply.status(400).send({ error: 'Track not found' })
+      if (!sound) return reply.status(400).send({ error: 'Track not found' })
 
       const existing = await fastify.prisma.collectionItem.findFirst({
-        where: { collectionId: col.id, archiveItemId },
+        where: { collectionId: col.id, soundId },
         select: { id: true },
       })
       if (existing) return reply.status(409).send({ error: 'Already in this playlist' })
@@ -745,7 +743,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         const item = await fastify.prisma.collectionItem.create({
           data: {
             collectionId: col.id,
-            archiveItemId,
+            soundId,
             position: col._count.items + 1,
             addedByUserId: user.id,
             addNote: note || null,
@@ -761,7 +759,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
             ownerUserId: col.user.id,
           },
           user,
-          { title: archive.title },
+          { title: sound.title },
         ).catch((err: unknown) => fastify.log.warn({ err }, 'playlist-add notification failed'))
         return reply.status(201).send(item)
       } catch (err) {
@@ -776,7 +774,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/v1/collections/:slug/subscribe — public: reports subscribed: false
-  // when there's no session instead of 401ing, same as the archive-item like route.
+  // when there's no session instead of 401ing, same as the sound-item like route.
   fastify.get(
     '/api/v1/collections/:slug/subscribe',
     {
@@ -882,7 +880,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       const { q, offset = 0 } = parsedQuery.data
       const PAGE_SIZE = 20
 
-      const items = await fastify.prisma.archiveItem.findMany({
+      const items = await fastify.prisma.sound.findMany({
         where: {
           isPublic: true,
           status: 'READY',
@@ -944,21 +942,21 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.header('Content-Type', 'application/rss+xml; charset=utf-8').send(xml)
   })
 
-  // GET /api/v1/c/:slug/rss.xml — channel archive RSS feed
+  // GET /api/v1/c/:slug/rss.xml — channel sound RSS feed
   fastify.get('/api/v1/c/:slug/rss.xml', async (request, reply) => {
     const routeParams = parseRouteParams(SlugParamSchema, request.params)
     if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
     const { slug } = routeParams
 
-    const channel = await loadChannelArchiveRssSource(fastify, slug)
+    const channel = await loadChannelSoundRssSource(fastify, slug)
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
     return reply
       .header('Content-Type', 'application/rss+xml; charset=utf-8')
-      .send(buildChannelArchiveRssXml(channel))
+      .send(buildChannelSoundRssXml(channel))
   })
 
-  // GET /api/v1/u/:username/rss.xml — artist archive RSS (podcast clients use @handle)
+  // GET /api/v1/u/:username/rss.xml — artist sound RSS (podcast clients use @handle)
   fastify.get('/api/v1/u/:username/rss.xml', async (request, reply) => {
     const routeParams = parseRouteParams(UsernameParamSchema, request.params)
     if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -970,19 +968,19 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!user?.channel) return reply.status(404).send({ error: 'Artist not found' })
 
-    const channel = await loadChannelArchiveRssSource(fastify, user.channel.slug)
+    const channel = await loadChannelSoundRssSource(fastify, user.channel.slug)
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
     return reply
       .header('Content-Type', 'application/rss+xml; charset=utf-8')
-      .send(buildChannelArchiveRssXml(channel))
+      .send(buildChannelSoundRssXml(channel))
   })
 }
 
-type ChannelArchiveRssSource = {
+type ChannelSoundRssSource = {
   slug: string
   user: { username: string; displayName: string; bio: string | null }
-  archiveItems: Array<{
+  sounds: Array<{
     id: string
     title: string
     description: string | null
@@ -993,16 +991,16 @@ type ChannelArchiveRssSource = {
   }>
 }
 
-async function loadChannelArchiveRssSource(
+async function loadChannelSoundRssSource(
   fastify: Pick<FastifyInstance, 'prisma'>,
   slug: string,
-): Promise<ChannelArchiveRssSource | null> {
+): Promise<ChannelSoundRssSource | null> {
   return fastify.prisma.channel.findUnique({
     where: { slug },
     select: {
       slug: true,
       user: { select: { username: true, displayName: true, bio: true } },
-      archiveItems: {
+      sounds: {
         where: { status: 'READY', isPublic: true },
         orderBy: { createdAt: 'desc' },
         take: 50,
@@ -1020,17 +1018,17 @@ async function loadChannelArchiveRssSource(
   })
 }
 
-function buildChannelArchiveRssXml(channel: ChannelArchiveRssSource): string {
+function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
   return buildRss({
     title: `${channel.user.displayName} — Tahti`,
     description: channel.user.bio ?? `${channel.user.displayName} on Tahti`,
     link: resolveArtistUrl(channel.user.username),
-    items: channel.archiveItems.map((i) => ({
+    items: channel.sounds.map((i) => ({
       title: i.title,
       description: i.description ?? '',
       pubDate: i.createdAt,
       duration: i.durationSec ?? 0,
-      enclosureUrl: publicMediaUrl(archivePlaybackKey(i)),
+      enclosureUrl: publicMediaUrl(soundPlaybackKey(i)),
       guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
     })),
   })
@@ -1046,7 +1044,7 @@ interface RssItem {
 }
 
 type CollectionItemRow = {
-  archiveItem: {
+  sound: {
     id: string
     title: string
     description: string | null
@@ -1066,14 +1064,14 @@ type CollectionItemRow = {
 function collectionRssItems(items: CollectionItemRow[], username: string): RssItem[] {
   const out: RssItem[] = []
   for (const i of items) {
-    if (i.archiveItem) {
+    if (i.sound) {
       out.push({
-        title: i.archiveItem.title,
-        description: i.archiveItem.description ?? '',
-        pubDate: i.archiveItem.createdAt,
-        duration: i.archiveItem.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(archivePlaybackKey(i.archiveItem)),
-        guid: `${config.appUrl}/u/${username}/c/item/${i.archiveItem.id}`,
+        title: i.sound.title,
+        description: i.sound.description ?? '',
+        pubDate: i.sound.createdAt,
+        duration: i.sound.durationSec ?? 0,
+        enclosureUrl: publicMediaUrl(soundPlaybackKey(i.sound)),
+        guid: `${config.appUrl}/u/${username}/c/item/${i.sound.id}`,
       })
     } else if (i.release) {
       out.push({

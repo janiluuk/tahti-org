@@ -5,13 +5,13 @@ import type { FastifyPluginAsync } from 'fastify'
 import type { Prisma } from '@tahti/db'
 import { Prisma as PrismaNS } from '@tahti/db'
 import {
-  ARCHIVE_CONTENT_TYPES,
+  SOUND_CONTENT_TYPES,
   AdminFileAudioResponseSchema,
   AdminFilesBulkPatchResponseSchema,
   AdminFilesBulkPatchSchema,
   AdminFilesFacetsResponseSchema,
   AdminFilesListResponseSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
@@ -54,25 +54,25 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'Filter facets for the board-wide archive file browser',
+        description: 'Filter facets for the board-wide sound file browser',
         response: openApiResponse(AdminFilesFacetsResponseSchema, 'AdminFilesFacets'),
       },
     },
     async (_request, reply) => {
       const [users, genreRows, customRows] = await Promise.all([
         fastify.prisma.user.findMany({
-          where: { channel: { archiveItems: { some: {} } } },
+          where: { channel: { sounds: { some: {} } } },
           orderBy: { displayName: 'asc' },
           take: 500,
           select: { id: true, username: true, displayName: true },
         }),
-        fastify.prisma.archiveItem.findMany({
+        fastify.prisma.sound.findMany({
           where: { genre: { not: null } },
           distinct: ['genre'],
           select: { genre: true },
           take: 200,
         }),
-        fastify.prisma.archiveItem.findMany({
+        fastify.prisma.sound.findMany({
           where: { genreCustom: { not: null } },
           distinct: ['genreCustom'],
           select: { genreCustom: true },
@@ -90,19 +90,19 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         users,
         genres,
-        contentTypes: [...ARCHIVE_CONTENT_TYPES],
+        contentTypes: [...SOUND_CONTENT_TYPES],
       })
     },
   )
 
-  // Paginated cross-user archive browser.
+  // Paginated cross-user sound browser.
   fastify.get(
     '/api/admin/files',
     {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'List archive files across all users with multi-filters',
+        description: 'List sound files across all users with multi-filters',
         response: openApiResponse(AdminFilesListResponseSchema, 'AdminFilesList'),
       },
     },
@@ -111,7 +111,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       const userIds = splitCsv(q.userIds)
       const genres = splitCsv(q.genres)
       const contentTypes = splitCsv(q.contentTypes).filter((t) =>
-        (ARCHIVE_CONTENT_TYPES as readonly string[]).includes(t),
+        (SOUND_CONTENT_TYPES as readonly string[]).includes(t),
       )
       const search = typeof q.q === 'string' ? q.q.trim().slice(0, 120) : ''
       const limitRaw = typeof q.limit === 'string' ? Number(q.limit) : DEFAULT_LIMIT
@@ -120,14 +120,14 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         : DEFAULT_LIMIT
       const cursor = typeof q.cursor === 'string' && q.cursor ? decodeCursor(q.cursor) : null
 
-      const and: Prisma.ArchiveItemWhereInput[] = []
+      const and: Prisma.SoundWhereInput[] = []
 
       if (userIds.length > 0) {
         and.push({ channel: { userId: { in: userIds } } })
       }
       if (contentTypes.length > 0) {
         and.push({
-          contentType: { in: contentTypes as (typeof ARCHIVE_CONTENT_TYPES)[number][] },
+          contentType: { in: contentTypes as (typeof SOUND_CONTENT_TYPES)[number][] },
         })
       }
       if (genres.length > 0) {
@@ -154,7 +154,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const cursorClause: Prisma.ArchiveItemWhereInput | null = cursor
+      const cursorClause: Prisma.SoundWhereInput | null = cursor
         ? {
             OR: [
               { createdAt: { lt: cursor.createdAt } },
@@ -163,15 +163,15 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           }
         : null
 
-      const filterWhere: Prisma.ArchiveItemWhereInput = and.length > 0 ? { AND: and } : {}
-      const where: Prisma.ArchiveItemWhereInput =
+      const filterWhere: Prisma.SoundWhereInput = and.length > 0 ? { AND: and } : {}
+      const where: Prisma.SoundWhereInput =
         and.length > 0 || cursorClause
           ? { AND: [...and, ...(cursorClause ? [cursorClause] : [])] }
           : {}
 
       const [total, rows] = await Promise.all([
-        fastify.prisma.archiveItem.count({ where: filterWhere }),
-        fastify.prisma.archiveItem.findMany({
+        fastify.prisma.sound.count({ where: filterWhere }),
+        fastify.prisma.sound.findMany({
           where,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           take: limit + 1,
@@ -239,13 +239,13 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'Presigned playback URL for an archive file (board preview)',
+        description: 'Presigned playback URL for an sound file (board preview)',
         response: openApiResponse(AdminFileAudioResponseSchema, 'AdminFileAudio'),
       },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string }
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id },
         select: {
           id: true,
@@ -260,9 +260,9 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           },
         },
       })
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
-      const key = archivePlaybackKey(item)
+      const key = soundPlaybackKey(item)
       const audioUrl = key ? await presignedGetUrl(key, 3600) : null
       return reply.send({
         audioUrl,
@@ -282,7 +282,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'Bulk-patch metadata on selected archive files',
+        description: 'Bulk-patch metadata on selected sound files',
         response: openApiResponse(AdminFilesBulkPatchResponseSchema, 'AdminFilesBulkPatch'),
       },
     },
@@ -296,7 +296,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const { ids, ...fields } = parsed.data
-      const data: Prisma.ArchiveItemUpdateManyMutationInput = {}
+      const data: Prisma.SoundUpdateManyMutationInput = {}
       if (fields.genre !== undefined) data.genre = fields.genre
       if (fields.genreCustom !== undefined) data.genreCustom = fields.genreCustom
       if (fields.contentType !== undefined) data.contentType = fields.contentType
@@ -307,13 +307,13 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'No fields to update' })
       }
 
-      const result = await fastify.prisma.archiveItem.updateMany({
+      const result = await fastify.prisma.sound.updateMany({
         where: { id: { in: ids } },
         data,
       })
 
       await auditLog(fastify.prisma, {
-        action: 'ARCHIVE_METADATA_ADMIN_EDIT',
+        action: 'SOUND_METADATA_ADMIN_EDIT',
         actorId: actor.id,
         targetId: ids[0]!,
         meta: { ids, fields: Object.keys(data), updated: result.count, via: 'files-browser-bulk' },
@@ -328,20 +328,20 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/files/:id',
     {
       preHandler: requireBoard,
-      schema: { tags: ['admin'], description: 'Patch one archive file by id (board)' },
+      schema: { tags: ['admin'], description: 'Patch one sound file by id (board)' },
     },
     async (request, reply) => {
       const actor = request.sessionUser!
       const { id } = request.params as { id: string }
       const body = request.body as Record<string, unknown>
 
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id },
         select: { id: true, title: true, channel: { select: { slug: true } } },
       })
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
-      const data: Prisma.ArchiveItemUpdateInput = {}
+      const data: Prisma.SoundUpdateInput = {}
       if (typeof body.title === 'string') {
         const t = body.title.trim()
         if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
@@ -355,9 +355,9 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (
         typeof body.contentType === 'string' &&
-        (ARCHIVE_CONTENT_TYPES as readonly string[]).includes(body.contentType)
+        (SOUND_CONTENT_TYPES as readonly string[]).includes(body.contentType)
       ) {
-        data.contentType = body.contentType as (typeof ARCHIVE_CONTENT_TYPES)[number]
+        data.contentType = body.contentType as (typeof SOUND_CONTENT_TYPES)[number]
       }
       if (typeof body.isPublic === 'boolean') data.isPublic = body.isPublic
 
@@ -365,9 +365,9 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'No fields to update' })
       }
 
-      await fastify.prisma.archiveItem.update({ where: { id }, data })
+      await fastify.prisma.sound.update({ where: { id }, data })
       await auditLog(fastify.prisma, {
-        action: 'ARCHIVE_METADATA_ADMIN_EDIT',
+        action: 'SOUND_METADATA_ADMIN_EDIT',
         actorId: actor.id,
         targetId: id,
         meta: {
@@ -385,19 +385,19 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/files/:id',
     {
       preHandler: requireBoard,
-      schema: { tags: ['admin'], description: 'Delete an archive file (board)' },
+      schema: { tags: ['admin'], description: 'Delete an sound file (board)' },
     },
     async (request, reply) => {
       const actor = request.sessionUser!
       const { id } = request.params as { id: string }
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id },
         select: { id: true, title: true, channel: { select: { slug: true } } },
       })
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
       try {
-        await fastify.prisma.archiveItem.delete({ where: { id } })
+        await fastify.prisma.sound.delete({ where: { id } })
       } catch (err) {
         if (err instanceof PrismaNS.PrismaClientKnownRequestError && err.code === 'P2003') {
           return reply.status(409).send({
@@ -408,7 +408,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       await auditLog(fastify.prisma, {
-        action: 'ARCHIVE_METADATA_ADMIN_EDIT',
+        action: 'SOUND_METADATA_ADMIN_EDIT',
         actorId: actor.id,
         targetId: id,
         meta: {

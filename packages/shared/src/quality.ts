@@ -7,7 +7,7 @@
  * through these functions instead of re-deriving the rule ad hoc.
  */
 
-export type ArchiveItemSource =
+export type SoundSource =
   | 'UPLOAD'
   | 'BROADCAST'
   | 'BANDCAMP'
@@ -20,42 +20,39 @@ export type ArchiveItemSource =
   | 'HEARTHIS_EMBED'
   | 'URL_EMBED'
 
-export type ArchiveQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
+export type SoundQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
 
-export type ArchiveEmbedProvider =
+export type SoundEmbedProvider =
   'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
 
-const EMBED_ONLY_SOURCES: ReadonlySet<ArchiveItemSource> = new Set([
+const EMBED_ONLY_SOURCES: ReadonlySet<SoundSource> = new Set([
   'SPOTIFY_EMBED',
   'MIXCLOUD_EMBED',
   'HEARTHIS_EMBED',
   'URL_EMBED',
 ])
 
-export function isEmbedOnlySource(source: ArchiveItemSource): boolean {
+export function isEmbedOnlySource(source: SoundSource): boolean {
   return EMBED_ONLY_SOURCES.has(source)
 }
 
 /**
- * Quality badge for a newly-created (or re-probed) ArchiveItem.
+ * Quality badge for a newly-created (or re-probed) Sound.
  * `hasFlac` is the caller's own determination of whether a lossless
  * FLAC/WAV-derived file exists — this function only encodes the matrix,
- * not the ffprobe analysis that produces `hasFlac` (see archive-playback.ts).
+ * not the ffprobe analysis that produces `hasFlac` (see sound-playback.ts).
  */
-export function deriveQualityBadge(
-  source: ArchiveItemSource,
-  hasFlac: boolean,
-): ArchiveQualityBadge {
+export function deriveQualityBadge(source: SoundSource, hasFlac: boolean): SoundQualityBadge {
   if (isEmbedOnlySource(source)) return 'EMBED_ONLY'
   // Mixcloud only ever serves transcoded M4A — there is no source to make a lossless copy from.
   if (source === 'MIXCLOUD_RESCUE') return 'TRANSCODED'
   return hasFlac ? 'LOSSLESS' : 'TRANSCODED'
 }
 
-export type ArchivePlayerKind =
+export type SoundPlayerKind =
   'TAHTI' | 'SPOTIFY_EMBED' | 'MIXCLOUD_EMBED' | 'HEARTHIS_EMBED' | 'GENERIC_EMBED'
 
-export function playerKindForSource(source: ArchiveItemSource): ArchivePlayerKind {
+export function playerKindForSource(source: SoundSource): SoundPlayerKind {
   switch (source) {
     case 'SPOTIFY_EMBED':
       return 'SPOTIFY_EMBED'
@@ -70,13 +67,13 @@ export function playerKindForSource(source: ArchiveItemSource): ArchivePlayerKin
   }
 }
 
-export const QUALITY_BADGE_LABEL: Record<ArchiveQualityBadge, string> = {
+export const QUALITY_BADGE_LABEL: Record<SoundQualityBadge, string> = {
   LOSSLESS: 'Lossless',
   TRANSCODED: 'Transcoded',
   EMBED_ONLY: 'Embed only',
 }
 
 /** Whether this item should count toward "Download FLAC (N tracks)" on a public collection page. */
-export function countsTowardFlacDownload(qualityBadge: ArchiveQualityBadge): boolean {
+export function countsTowardFlacDownload(qualityBadge: SoundQualityBadge): boolean {
   return qualityBadge === 'LOSSLESS'
 }

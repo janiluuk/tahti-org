@@ -205,7 +205,7 @@ export default async function DashboardGovernancePage() {
         )}
       </section>
 
-      <section className="brand-section governance-archive-section">
+      <section className="brand-section governance-sound-section">
         <div className="gov-header-row">
           <div>
             <h2 className="brand-section__title brand-section-heading">Association records</h2>
@@ -220,14 +220,14 @@ export default async function DashboardGovernancePage() {
             Public history →
           </Link>
         </div>
-        <div className="governance-archive-grid">
-          <div className="brand-card governance-archive-card">
+        <div className="governance-sound-grid">
+          <div className="brand-card governance-sound-card">
             <h3>Meetings</h3>
             {meetings.length === 0 ? (
               <p className="brand-muted">No meetings published yet.</p>
             ) : (
               meetings.slice(0, 5).map((meeting) => (
-                <div key={meeting.id} className="governance-archive-row">
+                <div key={meeting.id} className="governance-sound-row">
                   <strong>{meeting.title}</strong>
                   <span className="brand-muted">
                     {meeting.state.toLowerCase().replace('_', ' ')}
@@ -240,13 +240,13 @@ export default async function DashboardGovernancePage() {
               ))
             )}
           </div>
-          <div className="brand-card governance-archive-card">
+          <div className="brand-card governance-sound-card">
             <h3>Documents</h3>
             {documents.length === 0 ? (
               <p className="brand-muted">No documents published yet.</p>
             ) : (
               documents.slice(0, 5).map((document) => (
-                <div key={document.id} className="governance-archive-row">
+                <div key={document.id} className="governance-sound-row">
                   {document.downloadUrl || document.externalUrl ? (
                     <a href={document.downloadUrl ?? document.externalUrl ?? '#'}>
                       {document.title}

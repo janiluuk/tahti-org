@@ -107,7 +107,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/imports/mixcloud/add — creates a mixcloud_embed ArchiveItem, appends to the collection.
+  // POST /api/v1/imports/mixcloud/add — creates a mixcloud_embed Sound, appends to the collection.
   fastify.post(
     '/api/v1/imports/mixcloud/add',
     {
@@ -155,7 +155,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(502).send({ error: 'Could not fetch cloudcast from Mixcloud' })
       }
 
-      const archiveItem = await fastify.prisma.archiveItem.create({
+      const sound = await fastify.prisma.sound.create({
         data: {
           channelId: channel.id,
           title: track.title,
@@ -176,14 +176,14 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {
           collectionId: collection.id,
-          archiveItemId: archiveItem.id,
+          soundId: sound.id,
           position: collection._count.items + 1,
         },
         select: { id: true },
       })
 
       return reply.status(201).send({
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         collectionItemId: collectionItem.id,
         track,
       })

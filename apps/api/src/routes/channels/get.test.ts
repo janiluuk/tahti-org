@@ -157,7 +157,7 @@ describe('GET /api/channels/:slug', () => {
       data: {
         nowPlayingTitle: 'Monster Parade',
         nowPlayingArtistName: 'Tahti Selects',
-        nowPlayingArtworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
+        nowPlayingArtworkUrl: 'https://cdn.tahti.live/tahti/sound/x/banner.jpg',
         nowPlayingUpdatedAt: syncedAt,
       },
     })
@@ -172,7 +172,7 @@ describe('GET /api/channels/:slug', () => {
       title: 'Monster Parade',
       artistName: 'Tahti Selects',
       artistUsername: null,
-      artworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
+      artworkUrl: 'https://cdn.tahti.live/tahti/sound/x/banner.jpg',
       // Remaining-time support for the Channel Controls panel — durationSec is
       // whatever nowPlayingDurationSec last synced to (unset here, so null),
       // startedAt mirrors nowPlayingUpdatedAt.

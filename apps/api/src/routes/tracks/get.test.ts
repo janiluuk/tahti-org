@@ -73,7 +73,7 @@ describe('GET /api/tracks/:id', () => {
   })
 
   it('returns full detail with real peaks and channel info for a ready public track', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Full Detail Track',
@@ -110,7 +110,7 @@ describe('GET /api/tracks/:id', () => {
   })
 
   it('does not serve a private track', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Private Track',
@@ -127,7 +127,7 @@ describe('GET /api/tracks/:id', () => {
   })
 
   it('does not serve a track that is not yet READY', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Pending Track',

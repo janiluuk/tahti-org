@@ -36,7 +36,7 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           createdAt: true,
           batchId: true,
           batch: { select: { note: true } },
-          archiveItem: {
+          sound: {
             select: {
               id: true,
               title: true,
@@ -57,7 +57,7 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           createdAt: item.createdAt,
           batchId: item.batchId,
           batchNote: item.batch.note,
-          archiveItem: item.archiveItem,
+          sound: item.sound,
         })),
       })
     },
@@ -70,7 +70,7 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Submit up to 5 READY archive tracks for Tahti Radio board audit',
+        description: 'Submit up to 5 READY sound tracks for Tahti Radio board audit',
       },
     },
     async (request, reply) => {
@@ -88,14 +88,14 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const ids = [...new Set(parsed.data.archiveItemIds)]
+      const ids = [...new Set(parsed.data.soundIds)]
       if (ids.length > RADIO_SUBMISSION_MAX_TRACKS) {
         return reply
           .status(400)
           .send({ error: `You can submit at most ${RADIO_SUBMISSION_MAX_TRACKS} tracks at once` })
       }
 
-      const owned = await fastify.prisma.archiveItem.findMany({
+      const owned = await fastify.prisma.sound.findMany({
         where: {
           id: { in: ids },
           channelId: channel.id,
@@ -105,16 +105,16 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (owned.length !== ids.length) {
         return reply.status(400).send({
-          error: 'Every track must be a READY archive item you own',
+          error: 'Every track must be a READY sound item you own',
         })
       }
 
       const pending = await fastify.prisma.radioTrackSubmissionItem.findMany({
         where: {
-          archiveItemId: { in: ids },
+          soundId: { in: ids },
           status: 'PENDING',
         },
-        select: { archiveItemId: true },
+        select: { soundId: true },
       })
       if (pending.length > 0) {
         return reply.status(409).send({
@@ -128,8 +128,8 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           channelId: channel.id,
           note: parsed.data.note?.trim() || null,
           items: {
-            create: ids.map((archiveItemId, positionInBatch) => ({
-              archiveItemId,
+            create: ids.map((soundId, positionInBatch) => ({
+              soundId,
               positionInBatch,
             })),
           },
@@ -143,7 +143,7 @@ const meRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
               positionInBatch: true,
               rejectionNote: true,
               createdAt: true,
-              archiveItem: {
+              sound: {
                 select: {
                   id: true,
                   title: true,

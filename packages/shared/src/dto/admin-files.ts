@@ -2,16 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
-import { ARCHIVE_CONTENT_TYPES } from './archive-metadata.js'
+import { SOUND_CONTENT_TYPES } from './sound-metadata.js'
 
-/** Board-wide archive browser — one compact row per track across all users. */
+/** Board-wide sound browser — one compact row per track across all users. */
 export const AdminFileRowSchema = z.object({
   id: z.string(),
   title: z.string(),
   artistName: z.string(),
   genre: z.string().nullable(),
   genreCustom: z.string().nullable(),
-  contentType: z.enum(ARCHIVE_CONTENT_TYPES),
+  contentType: z.enum(SOUND_CONTENT_TYPES),
   status: z.string(),
   isPublic: z.boolean(),
   durationSec: z.number().int().nullable(),
@@ -23,7 +23,7 @@ export const AdminFileRowSchema = z.object({
   userId: z.string(),
   username: z.string(),
   displayName: z.string(),
-  /** Count of ArchiveItemVersion rows (re-renders/edits kept as history). */
+  /** Count of SoundVersion rows (re-renders/edits kept as history). */
   revisionCount: z.number().int(),
 })
 
@@ -46,7 +46,7 @@ export const AdminFilesFacetsResponseSchema = z.object({
     }),
   ),
   genres: z.array(z.string()),
-  contentTypes: z.array(z.enum(ARCHIVE_CONTENT_TYPES)),
+  contentTypes: z.array(z.enum(SOUND_CONTENT_TYPES)),
 })
 
 export type AdminFilesFacetsResponse = z.infer<typeof AdminFilesFacetsResponseSchema>
@@ -55,7 +55,7 @@ export const AdminFilesBulkPatchSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(200),
   genre: z.string().max(80).nullable().optional(),
   genreCustom: z.string().max(80).nullable().optional(),
-  contentType: z.enum(ARCHIVE_CONTENT_TYPES).optional(),
+  contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
   isPublic: z.boolean().optional(),
   license: z
     .enum([

@@ -48,7 +48,7 @@ function ChatLoveButton() {
   const [pending, setPending] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
 
-  if (!track || track.kind !== 'archive') return null
+  if (!track || track.kind !== 'sound') return null
 
   async function love() {
     if (pending) return

@@ -56,7 +56,7 @@ export async function collectPlatformMetrics(
     prisma.userStorageQuota.aggregate({
       _sum: { usedBytes: true, quotaBytes: true },
     }),
-    prisma.archiveItem.count(),
+    prisma.sound.count(),
     prisma.release.count({ where: { state: 'PUBLISHED' } }),
     prisma.user.count({ where: { createdAt: { gte: dayStart } } }),
   ])
@@ -90,7 +90,7 @@ export function renderPlatformMetricLines(snapshot: PlatformMetricSnapshot): str
     '# HELP tahti_storage_quota_bytes Sum of user storage quota bytes.',
     '# TYPE tahti_storage_quota_bytes gauge',
     `tahti_storage_quota_bytes ${snapshot.storageQuotaBytes}`,
-    '# HELP tahti_tracks_total Total archive items (tracks).',
+    '# HELP tahti_tracks_total Total sound items (tracks).',
     '# TYPE tahti_tracks_total gauge',
     `tahti_tracks_total ${snapshot.tracksTotal}`,
     '# HELP tahti_releases_published_total Published releases.',

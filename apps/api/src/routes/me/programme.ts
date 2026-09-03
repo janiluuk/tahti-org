@@ -79,7 +79,7 @@ const meProgrammeRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // M33: pull a published release track into the 24/7 rotation alongside archive sets.
+  // M33: pull a published release track into the 24/7 rotation alongside sound sets.
   fastify.post(
     '/api/me/channel/programme/library',
     {

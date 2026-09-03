@@ -6,13 +6,13 @@ import { z } from 'zod'
 export const FALLBACK_MODES = ['shuffle', 'ordered', 'time', 'name'] as const
 export type FallbackMode = (typeof FALLBACK_MODES)[number]
 
-/** Artist-facing cap on the 24/7 rotation (isFallback=true archive items) —
+/** Artist-facing cap on the 24/7 rotation (isFallback=true sound items) —
  * keeps a single channel's offline loop from growing unbounded and keeps the
  * "which track gets swapped out" UX tractable (one candidate, not a list). */
 export const MAX_FALLBACK_ITEMS = 5
 
 export const ChannelProgrammeItemPatchSchema = z.object({
-  archiveItemId: z.string().min(1),
+  soundId: z.string().min(1),
   isFallback: z.boolean(),
   fallbackOrder: z.number().int().min(0).optional(),
 })

@@ -6,12 +6,9 @@
 import Link from 'next/link'
 import type { ChannelGalleryMode } from '@tahti/shared'
 import { usePlayer } from '@/contexts/player-context'
-import { ArchiveWaveform } from '@/components/archive-waveform'
+import { SoundWaveform } from '@/components/sound-waveform'
 import { ChannelGalleryView } from '@/components/gallery'
-import {
-  ArchiveVideoBackdrop,
-  resolveArchiveBackground,
-} from '@/app/c/[slug]/archive-item-backdrop'
+import { SoundVideoBackdrop, resolveSoundBackground } from '@/app/c/[slug]/sound-item-backdrop'
 
 export interface TrackPlayerData {
   id: string
@@ -35,7 +32,7 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
   const { track: playerTrack, playing, load, togglePlay, currentTime, duration, seek } = usePlayer()
   const isCurrent = playerTrack?.id === track.id
   const progress = isCurrent && duration > 0 ? currentTime / duration : 0
-  const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(track.backgroundUrl)
+  const { cssImageUrl, videoEmbedUrl } = resolveSoundBackground(track.backgroundUrl)
   const hasGallery = track.galleryMode !== null && track.slideshowUrls.length > 0
 
   async function toggle() {
@@ -44,7 +41,7 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
       load(
         {
           id: track.id,
-          kind: 'archive',
+          kind: 'sound',
           url: track.audioUrl,
           title: track.title,
           subtitle: track.artistName,
@@ -62,7 +59,7 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
       className={`track-player-page${cssImageUrl ? ' track-player-page--backdrop' : ''}`}
       style={cssImageUrl ? { ['--track-player-bg' as string]: cssImageUrl } : undefined}
     >
-      {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
+      {videoEmbedUrl && <SoundVideoBackdrop embedUrl={videoEmbedUrl} />}
       {hasGallery && <ChannelGalleryView mode={track.galleryMode!} images={track.slideshowUrls} />}
       <Link href={`/c/${track.channelSlug}`} className="track-player-page__back">
         ← {track.channel.displayName}
@@ -80,7 +77,7 @@ export function TrackPlayerView({ track }: { track: TrackPlayerData }) {
           {track.artistName}
         </Link>
         {track.peaks && track.peaks.length > 0 && (
-          <ArchiveWaveform
+          <SoundWaveform
             peaks={track.peaks}
             progress={progress}
             onSeek={isCurrent ? seek : undefined}

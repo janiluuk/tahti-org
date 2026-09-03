@@ -27,7 +27,7 @@ export function isBulkImportRoute(url: string, method: string): boolean {
 
 export type EditorRateLimitTier = 'heavy' | 'draft'
 
-/** Expensive ffmpeg enqueue + autosave storm protection for archive editor. */
+/** Expensive ffmpeg enqueue + autosave storm protection for sound editor. */
 export function editorRateLimitTier(url: string, method: string): EditorRateLimitTier | null {
   const path = url.split('?')[0] ?? url
   if (!path.includes('/editor/')) return null

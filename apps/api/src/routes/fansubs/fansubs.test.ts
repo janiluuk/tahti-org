@@ -201,7 +201,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
   })
 
   it('M18: an active fan-subscriber download is weighted 5×', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Mix',
@@ -218,7 +218,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     await prisma.download.create({
       data: {
         channelId: artist.channel!.id,
-        archiveItemId: item.id,
+        soundId: item.id,
         format: 'mp3_320',
         byFingerprint: 'fansub-ip-seed',
         byIpHash,
@@ -231,7 +231,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     })
     const res = await app.inject({
       method: 'GET',
-      url: `/api/v1/c/fansub-artist/archive/${item.id}/download?fp=fan-fp`,
+      url: `/api/v1/c/fansub-artist/sounds/${item.id}/download?fp=fan-fp`,
       headers: { cookie: fanCookie },
     })
     expect(res.statusCode).toBe(200)

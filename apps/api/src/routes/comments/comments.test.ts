@@ -17,7 +17,7 @@ describe('/api/comments — tracks and channels', () => {
   let ownerCookie: string
   let otherCookie: string
   let channelSlug: string
-  let archiveItemId: string
+  let soundId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -39,7 +39,7 @@ describe('/api/comments — tracks and channels', () => {
     })
     otherCookie = await sessionCookieFor(prisma, other.id)
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Comment Test Track',
@@ -47,7 +47,7 @@ describe('/api/comments — tracks and channels', () => {
         isPublic: true,
       },
     })
-    archiveItemId = item.id
+    soundId = item.id
   })
 
   afterAll(async () => {
@@ -56,7 +56,7 @@ describe('/api/comments — tracks and channels', () => {
   })
 
   it('lists an empty, enabled comment section for a fresh track', async () => {
-    const res = await app.inject({ method: 'GET', url: `/api/comments/track/${archiveItemId}` })
+    const res = await app.inject({ method: 'GET', url: `/api/comments/track/${soundId}` })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ comments: [], commentsEnabled: true })
   })
@@ -64,7 +64,7 @@ describe('/api/comments — tracks and channels', () => {
   it('requires auth to post a track comment', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       payload: { body: 'nice track' },
     })
     expect(res.statusCode).toBe(401)
@@ -73,7 +73,7 @@ describe('/api/comments — tracks and channels', () => {
   it('posts and lists a track comment', async () => {
     const post = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { body: 'nice track' },
     })
@@ -81,27 +81,27 @@ describe('/api/comments — tracks and channels', () => {
     expect(post.json().body).toBe('nice track')
     expect(post.json().authorUsername).toBe(`${PREFIX}other`)
 
-    const list = await app.inject({ method: 'GET', url: `/api/comments/track/${archiveItemId}` })
+    const list = await app.inject({ method: 'GET', url: `/api/comments/track/${soundId}` })
     expect(list.json().comments).toHaveLength(1)
     expect(list.json().comments[0].body).toBe('nice track')
   })
 
-  it('lets the track owner disable comments via the archive metadata patch', async () => {
+  it('lets the track owner disable comments via the sound metadata patch', async () => {
     const patch = await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${archiveItemId}`,
+      url: `/api/me/sound/${soundId}`,
       headers: { cookie: ownerCookie, 'content-type': 'application/json' },
       payload: { commentsEnabled: false },
     })
     expect(patch.statusCode).toBe(200)
     expect(patch.json().commentsEnabled).toBe(false)
 
-    const list = await app.inject({ method: 'GET', url: `/api/comments/track/${archiveItemId}` })
+    const list = await app.inject({ method: 'GET', url: `/api/comments/track/${soundId}` })
     expect(list.json().commentsEnabled).toBe(false)
 
     const post = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { body: 'still trying' },
     })
@@ -110,7 +110,7 @@ describe('/api/comments — tracks and channels', () => {
     // re-enable for the rest of the suite
     await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${archiveItemId}`,
+      url: `/api/me/sound/${soundId}`,
       headers: { cookie: ownerCookie, 'content-type': 'application/json' },
       payload: { commentsEnabled: true },
     })
@@ -119,7 +119,7 @@ describe('/api/comments — tracks and channels', () => {
   it('lets the comment author delete their own comment', async () => {
     const post = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { body: 'delete me' },
     })
@@ -136,7 +136,7 @@ describe('/api/comments — tracks and channels', () => {
   it('forbids a third party from deleting someone else’s comment', async () => {
     const post = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { body: 'not yours to delete' },
     })
@@ -160,7 +160,7 @@ describe('/api/comments — tracks and channels', () => {
   it('lets the channel owner delete any comment on their track', async () => {
     const post = await app.inject({
       method: 'POST',
-      url: `/api/comments/track/${archiveItemId}`,
+      url: `/api/comments/track/${soundId}`,
       headers: { cookie: otherCookie, 'content-type': 'application/json' },
       payload: { body: 'owner will remove this' },
     })
@@ -259,7 +259,7 @@ describe('/api/comments — tracks and channels', () => {
     })
     expect(complete.statusCode).toBe(201)
 
-    const created = await prisma.archiveItem.findUniqueOrThrow({
+    const created = await prisma.sound.findUniqueOrThrow({
       where: { id: complete.json().itemId },
       select: { commentsEnabled: true },
     })
