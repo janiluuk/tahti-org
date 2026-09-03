@@ -24,8 +24,8 @@ Settings → Add-ons (Radio). The configure surface is board-only.
   `AdminDiscordBotSettings`, `UpdateDiscordBotSettings`,
   `InternalDiscordBotCredentials`.
 - Tahti Player (`packages/tahti-web`) wires `DiscordBotAddonCard` into
-  Settings → Add-ons → Radio. Board-only Configure dialog for Client ID +
-  token.
+  Settings → Add-ons → Tools. Board-only Configure dialog for Client ID +
+  token. The Tools category is hidden from non-board accounts.
 
 ## Not done
 

@@ -1,7 +1,7 @@
 # Tahti Radio Discord bot — API contracts
 
 Board admins configure the Discord application Client ID and bot token from
-Tahti Player → Settings → Add-ons → Radio. The bot process loads the same
+Tahti Player → Settings → Add-ons → Tools. The bot process loads the same
 values over an internal endpoint so redeploys pick up admin saves without
 baking secrets into the bot image.
 
@@ -56,7 +56,7 @@ Bot env: `TAHTI_API_BASE` + `INTERNAL_SECRET` (see
 ## Player UI
 
 `packages/tahti-web` (Tahti Player): `DiscordBotAddonCard` under Settings →
-Add-ons → Radio. Board-only; Configure opens a dialog for Client ID + token.
+Add-ons → Tools. Board-only; Configure opens a dialog for Client ID + token.
 
 ## Migration
 
