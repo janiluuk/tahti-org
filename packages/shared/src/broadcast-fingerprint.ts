@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { LiveFingerprintSegment } from './dto/broadcast-fingerprint.js'
-import type { TracklistEntry } from './dto/archive-metadata.js'
+import type { TracklistEntry } from './dto/sound-metadata.js'
 
 export function broadcastFingerprintRedisKey(broadcastId: string): string {
   return `broadcast:fp:${broadcastId}`
@@ -35,7 +35,7 @@ export function fingerprintBoundaries(
   return boundaries
 }
 
-/** Collapse consecutive identical fingerprints into track-boundary hints for archive tracklists. */
+/** Collapse consecutive identical fingerprints into track-boundary hints for sound tracklists. */
 export function fingerprintsToTracklistEntries(
   segments: LiveFingerprintSegment[],
   identifications?: Array<FingerprintTrackIdentification | null | undefined>,

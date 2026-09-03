@@ -40,7 +40,7 @@ describe('POST /internal/webhooks/item-ready', () => {
     })
     channelId = user.channel!.id
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Test mix',
@@ -86,7 +86,7 @@ describe('POST /internal/webhooks/item-ready', () => {
     expect(res.statusCode).toBe(404)
   })
 
-  it('acknowledges a known archive item', async () => {
+  it('acknowledges a known sound item', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/internal/webhooks/item-ready',

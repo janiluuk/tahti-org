@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+export {
+  SOUND_GENRES,
+  SOUND_CONTENT_TYPES,
+  SOUND_LICENSES,
+  SOUND_LICENSE_LABELS,
+  SOUND_METADATA_DEFAULTS,
+} from '@tahti/shared'
+
+export const CONTENT_TYPE_LABELS: Record<string, string> = {
+  TRACK: 'Track',
+  DJ_SET: 'DJ Set',
+  PODCAST: 'Podcast',
+  REMIX: 'Remix',
+  SHOW: 'Radio show',
+  EPISODE: 'Episode',
+  CLIP: 'Clip',
+  EMBED: 'Embed',
+}

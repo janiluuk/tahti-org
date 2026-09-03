@@ -296,12 +296,12 @@ export const ReleaseVisualPatchSchema = z.object({
 
 export type ReleaseVisualPatch = z.infer<typeof ReleaseVisualPatchSchema>
 
-export const ArchiveItemVisualPatchSchema = z.object({
+export const SoundVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
   colorScheme: ColorSchemeSchema.nullable().optional(),
 })
 
-export type ArchiveItemVisualPatch = z.infer<typeof ArchiveItemVisualPatchSchema>
+export type SoundVisualPatch = z.infer<typeof SoundVisualPatchSchema>
 
 /** A named, owner-saved snapshot of the channel's whole Look (see the
  * `ChannelVisualPreset` Prisma model). `settings` is stored/replayed

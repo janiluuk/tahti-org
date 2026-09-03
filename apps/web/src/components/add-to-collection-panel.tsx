@@ -15,11 +15,11 @@ import {
 } from '@/app/dashboard/collection-actions'
 
 export function AddToCollectionPanel({
-  archiveItemId,
+  soundId,
   trackTitle,
   onClose,
 }: {
-  archiveItemId: string
+  soundId: string
   trackTitle: string
   onClose: () => void
 }) {
@@ -54,7 +54,7 @@ export function AddToCollectionPanel({
   async function addTo(slug: string, name: string) {
     setAddingSlug(slug)
     try {
-      const { error } = await addCollectionItem(slug, { archiveItemId })
+      const { error } = await addCollectionItem(slug, { soundId })
       if (error) {
         showToast(
           error === 'Already in this playlist' ? error : `Couldn't add track — ${error}`,
@@ -79,7 +79,7 @@ export function AddToCollectionPanel({
         showToast(error ?? "Couldn't create playlist", 'error')
         return
       }
-      const addRes = await addCollectionItem(slug, { archiveItemId })
+      const addRes = await addCollectionItem(slug, { soundId })
       if (addRes.error) {
         showToast(addRes.error, 'error')
         return

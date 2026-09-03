@@ -89,7 +89,7 @@ function AddTrackModal({ slug, onClose }: { slug: string; onClose: () => void })
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ archiveItemId: track.id, note: note.trim() || undefined }),
+        body: JSON.stringify({ soundId: track.id, note: note.trim() || undefined }),
       })
       if (res.status === 401) {
         router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)

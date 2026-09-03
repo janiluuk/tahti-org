@@ -48,14 +48,14 @@ export const AdminStorageOverviewSchema = z.object({
 })
 
 // Every file/item that counts against a user's quota (see
-// lib/user-storage.ts#computeUserStorageUsedBytes): archive items (the public
-// broadcast/track archive) and stash files (private uploads). `kind`
-// disambiguates which table a row came from. Only archive items and
+// lib/user-storage.ts#computeUserStorageUsedBytes): sound items (the public
+// broadcast/track sound) and stash files (private uploads). `kind`
+// disambiguates which table a row came from. Only sound items and
 // audio-shaped stash files are playable — `isAudio` gates the Files UI's play
 // button so non-audio uploads (zips, images) never get a fake one.
 export const AdminUserFileSchema = z.object({
   id: z.string(),
-  kind: z.enum(['archive', 'stash']),
+  kind: z.enum(['sound', 'stash']),
   title: z.string(),
   sizeBytes: z.number().nullable(),
   createdAt: z.string().datetime(),

@@ -20,12 +20,12 @@ import {
   usePlaylistData,
 } from '@waveform-playlist/browser'
 import {
-  completeArchiveVersionUpload,
-  fetchArchiveStems,
-  prepareArchiveVersionUpload,
-  requestArchiveStems,
+  completeSoundVersionUpload,
+  fetchSoundStems,
+  prepareSoundVersionUpload,
+  requestSoundStems,
   type StemJobRow,
-} from '../archive-actions'
+} from '../sound-actions'
 import { saveEditorProject } from './editor-actions'
 
 const STEM_POLL_MS = 4000
@@ -36,12 +36,12 @@ const STEM_SET_LABELS: Record<StemJobRow['stemSet'], string> = {
 }
 
 function StemSeparationPanel({
-  archiveItemId,
+  soundId,
   tracks,
   addTracks,
   removeTrack,
 }: {
-  archiveItemId: string | null
+  soundId: string | null
   tracks: ClipTrack[]
   addTracks: (sources: { src: string; name?: string }[]) => void
   removeTrack: (trackId: string) => void
@@ -70,7 +70,7 @@ function StemSeparationPanel({
   async function separate(stemSet: StemJobRow['stemSet']) {
     setError(null)
     setReadyFiles(null)
-    if (!archiveItemId) {
+    if (!soundId) {
       setError('Link this session to an archive item before separating stems')
       return
     }
@@ -80,14 +80,14 @@ function StemSeparationPanel({
     // user adds afterward while a separation is still in flight.
     const replacingIds = tracksRef.current.map((t) => t.id)
 
-    const kicked = await requestArchiveStems(archiveItemId, stemSet)
+    const kicked = await requestSoundStems(soundId, stemSet)
     if (kicked.error) {
       setError(kicked.error)
       setPendingSet(null)
       return
     }
     if (kicked.status === 'READY') {
-      const result = await fetchArchiveStems(archiveItemId)
+      const result = await fetchSoundStems(soundId)
       const job = 'jobs' in result ? result.jobs.find((j) => j.stemSet === stemSet) : undefined
       if (job) applyReadyStems(job, replacingIds)
       else setPendingSet(null)
@@ -95,7 +95,7 @@ function StemSeparationPanel({
     }
 
     pollRef.current = setInterval(async () => {
-      const result = await fetchArchiveStems(archiveItemId)
+      const result = await fetchSoundStems(soundId)
       if ('error' in result) {
         setError(result.error)
         if (pollRef.current) clearInterval(pollRef.current)
@@ -126,7 +126,7 @@ function StemSeparationPanel({
           <Button
             key={stemSet}
             onClick={() => void separate(stemSet)}
-            disabled={pendingSet !== null || !archiveItemId}
+            disabled={pendingSet !== null || !soundId}
             variant="secondary"
             size="sm"
           >
@@ -164,26 +164,20 @@ function StemSeparationPanel({
 }
 
 type EditorSource = {
-  archiveItemId: string
+  soundId: string
   title: string
   url: string
   durationSec: number | null
 }
 
-function ExportPanel({
-  archiveItemId,
-  versionLabel,
-}: {
-  archiveItemId: string | null
-  versionLabel: string
-}) {
+function ExportPanel({ soundId, versionLabel }: { soundId: string | null; versionLabel: string }) {
   const { tracks, trackStates } = usePlaylistData()
   const { exportWav, isExporting, progress, error } = useExportWav()
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  async function exportToArchive() {
-    if (!archiveItemId) {
+  async function exportToSound() {
+    if (!soundId) {
       setUploadError('Link this session to an archive item before exporting')
       return
     }
@@ -202,7 +196,7 @@ function ExportPanel({
         applyEffects: true,
       })
       const file = new File([result.blob], 'mixdown.wav', { type: 'audio/wav' })
-      const prep = await prepareArchiveVersionUpload(archiveItemId, {
+      const prep = await prepareSoundVersionUpload(soundId, {
         filename: file.name,
         contentType: 'audio/wav',
       })
@@ -215,7 +209,7 @@ function ExportPanel({
         headers: { 'Content-Type': 'audio/wav' },
         body: file,
       })
-      const complete = await completeArchiveVersionUpload(archiveItemId, {
+      const complete = await completeSoundVersionUpload(soundId, {
         uploadId: prep.uploadId,
         versionLabel: label,
         fileSizeBytes: file.size,
@@ -233,8 +227,8 @@ function ExportPanel({
   return (
     <div className="studio-row studio-row--wrap studio-mt-md">
       <Button
-        disabled={isExporting || !archiveItemId}
-        onClick={() => void exportToArchive()}
+        disabled={isExporting || !soundId}
+        onClick={() => void exportToSound()}
         variant="primary"
       >
         <ButtonIcon name="save" />
@@ -273,14 +267,14 @@ function EditorWorkspace({
   tracks,
   deferEngineRebuild,
   onTracksChange,
-  archiveItemId,
+  soundId,
   versionLabel,
 }: {
   projectId: string
   tracks: ClipTrack[]
   deferEngineRebuild: boolean
   onTracksChange: (tracks: ClipTrack[]) => void
-  archiveItemId: string | null
+  soundId: string | null
   versionLabel: string
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -318,7 +312,7 @@ function EditorWorkspace({
         showClipHeaders
         className="studio-playlist-viz"
       />
-      <ExportPanel archiveItemId={archiveItemId} versionLabel={versionLabel} />
+      <ExportPanel soundId={soundId} versionLabel={versionLabel} />
     </WaveformPlaylistProvider>
   )
 }
@@ -326,13 +320,13 @@ function EditorWorkspace({
 export function MultitrackEditor({
   projectId,
   title: initialTitle,
-  archiveItemId,
+  soundId,
   timeline,
   sources,
 }: {
   projectId: string
   title: string
-  archiveItemId: string | null
+  soundId: string | null
   timeline: Record<string, unknown>
   sources: EditorSource[]
 }) {
@@ -386,7 +380,7 @@ export function MultitrackEditor({
           />
         </label>
         <label className="studio-field studio-field--grow studio-m-0">
-          <span className="studio-label">Archive version label</span>
+          <span className="studio-label">Sound version label</span>
           <input
             type="text"
             value={versionLabel}
@@ -420,7 +414,7 @@ export function MultitrackEditor({
       </div>
 
       <StemSeparationPanel
-        archiveItemId={archiveItemId}
+        soundId={soundId}
         tracks={readyTracks}
         addTracks={addTracks}
         removeTrack={removeTrack}
@@ -432,7 +426,7 @@ export function MultitrackEditor({
           tracks={readyTracks}
           deferEngineRebuild={isLoading}
           onTracksChange={setDisplayTracks}
-          archiveItemId={archiveItemId}
+          soundId={soundId}
           versionLabel={versionLabel}
         />
       )}

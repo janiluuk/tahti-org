@@ -17,7 +17,7 @@ function keyFromOwnUrl(url: string): string | null {
 }
 
 /** Collection covers aren't gated by isPublic at upload time, so — unlike
- * avatars/press-kit/archive banners — the tahti/collections prefix is NOT
+ * avatars/press-kit/sound banners — the tahti/collections prefix is NOT
  * publicly readable. Every read path must resolve through here instead of
  * using collection.coverUrl directly. */
 export async function resolveCollectionCoverUrl(collection: {

@@ -7,7 +7,7 @@ import { MAX_FALLBACK_ITEMS } from '@tahti/shared'
 export { MAX_FALLBACK_ITEMS }
 
 export async function fallbackCount(prisma: PrismaClient, channelId: string): Promise<number> {
-  return prisma.archiveItem.count({ where: { channelId, isFallback: true } })
+  return prisma.sound.count({ where: { channelId, isFallback: true } })
 }
 
 /** The item that would be evicted to make room for one more — oldest by
@@ -17,7 +17,7 @@ export async function oldestFallbackItem(
   channelId: string,
   excludeId?: string,
 ): Promise<{ id: string; title: string } | null> {
-  return prisma.archiveItem.findFirst({
+  return prisma.sound.findFirst({
     where: { channelId, isFallback: true, ...(excludeId ? { id: { not: excludeId } } : {}) },
     orderBy: [{ fallbackOrder: 'asc' }, { createdAt: 'asc' }],
     select: { id: true, title: true },

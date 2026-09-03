@@ -15,8 +15,33 @@ const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'feed', label: 'Feed' },
 ]
 
-/** Public tab bar for a channel page — Live is the player/now; Archive holds past
- * broadcasts, latest releases, and external listen embeds. Distinct from ChannelTabs
+const HELP_STEPS: HelpSpotlightStep[] = [
+  {
+    id: 'live',
+    label: 'Live',
+    description:
+      'What’s playing right now, if the artist is streaming — the visualizer, now-playing info, and chat all live here.',
+  },
+  {
+    id: 'archive',
+    label: 'Sounds',
+    description:
+      'Past broadcasts, DJ sets, and latest releases the artist has kept around to listen back to, plus any external listen embeds.',
+  },
+  {
+    id: 'releases',
+    label: 'Releases',
+    description: 'Every release the artist has published on Tahti — albums, EPs, and singles.',
+  },
+  {
+    id: 'feed',
+    label: 'Feed',
+    description:
+      'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements.',
+  },
+]
+
+/** Public tab bar for a channel page — Live is the player/now; Sounds holds past * broadcasts, latest releases, and external listen embeds. Distinct from ChannelTabs
  * (owner Overview/Manage). Bio lives in the header now (always visible, not a tab). */
 export function PublicChannelTabs({
   live,

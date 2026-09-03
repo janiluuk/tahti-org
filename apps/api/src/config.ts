@@ -286,7 +286,7 @@ export const config = {
       process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/social/instagram/oauth/callback`,
   },
-  /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
+  /** STREAM-008: optional AcoustID key for live + sound tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
   acrcloud: {
     /** Post-production: set ACRCLOUD_ENABLED=true plus keys/secrets to enable identify at ingest. */

@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { config } from '../../config.js'
 import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
-import { createReadyArchiveItem, createTestArtist } from '../../test/helpers.js'
+import { createReadySound, createTestArtist } from '../../test/helpers.js'
 
 const PREFIX = 'channel-fallback-'
 
@@ -27,7 +27,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
       memberNumber: 98392,
     })
     channelId = artist.channel!.id
-    await createReadyArchiveItem(prisma, channelId, 'Fallback track')
+    await createReadySound(prisma, channelId, 'Fallback track')
   })
 
   afterAll(async () => {
@@ -44,7 +44,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
     expect(res.body).toBe('unauthorized')
   })
 
-  it('returns extended M3U for ready archive items', async () => {
+  it('returns extended M3U for ready sound items', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/internal/channels/${channelId}/fallback.m3u`,
@@ -98,7 +98,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
   })
 
   it('Manage tab playlist switch: plays the chosen Collection instead of the default isFallback set', async () => {
-    const collectionItem = await createReadyArchiveItem(prisma, channelId, 'Collection-only track')
+    const collectionItem = await createReadySound(prisma, channelId, 'Collection-only track')
     const artist = await prisma.channel.findUniqueOrThrow({
       where: { id: channelId },
       select: { userId: true },
@@ -107,7 +107,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
       data: { userId: artist.userId, slug: `${PREFIX}collection`, name: 'Switched playlist' },
     })
     await prisma.collectionItem.create({
-      data: { collectionId: collection.id, archiveItemId: collectionItem.id, position: 0 },
+      data: { collectionId: collection.id, soundId: collectionItem.id, position: 0 },
     })
     await prisma.channel.update({
       where: { id: channelId },
@@ -186,7 +186,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays 
       where: { id: selects.channel!.id },
       data: { slug: TAHTI_SELECTS_SLUG },
     })
-    const rotationTrack = await createReadyArchiveItem(
+    const rotationTrack = await createReadySound(
       prisma,
       selects.channel!.id,
       'Selects rotation track',
@@ -194,7 +194,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays 
     await prisma.curatedRotationItem.create({
       data: {
         channelId: selects.channel!.id,
-        archiveItemId: rotationTrack.id,
+        soundId: rotationTrack.id,
         position: 0,
         addedById: selects.id,
       },
@@ -206,7 +206,7 @@ describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays 
     await app.close()
   })
 
-  it('relays the Tahti Selects rotation when Tahti Radio has no bookings or archive', async () => {
+  it('relays the Tahti Selects rotation when Tahti Radio has no bookings or sound', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/internal/channels/${radioChannelId}/fallback.m3u`,
@@ -253,8 +253,8 @@ describe('GET /internal/channels/:channelId/fallback.m3u — announcements', () 
       tier: 'ARTIST',
     })
     channelId = artist.channel!.id
-    await createReadyArchiveItem(prisma, channelId, 'Announce track one')
-    await createReadyArchiveItem(prisma, channelId, 'Announce track two')
+    await createReadySound(prisma, channelId, 'Announce track one')
+    await createReadySound(prisma, channelId, 'Announce track two')
   })
 
   afterAll(async () => {

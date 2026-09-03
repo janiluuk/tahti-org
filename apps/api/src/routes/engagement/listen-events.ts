@@ -36,7 +36,7 @@ function todayUtcBucket(): string {
 }
 
 const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /api/listen-events { archiveItemId } — fired by the player once a
+  // POST /api/listen-events { soundId } — fired by the player once a
   // track has played long enough to count as a real listen. Never errors on
   // "not eligible"/"already counted" — those just return recorded: false.
   fastify.post(
@@ -61,8 +61,8 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.send({ recorded: false })
       }
 
-      const item = await fastify.prisma.archiveItem.findUnique({
-        where: { id: parsed.data.archiveItemId },
+      const item = await fastify.prisma.sound.findUnique({
+        where: { id: parsed.data.soundId },
         select: { id: true, isPublic: true, status: true, topListsEligible: true },
       })
       if (!item || !item.isPublic || item.status !== 'READY' || !item.topListsEligible) {
@@ -71,7 +71,7 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         await fastify.prisma.listenEvent.create({
-          data: { archiveItemId: item.id, dedupeKey, dayBucket: todayUtcBucket() },
+          data: { soundId: item.id, dedupeKey, dayBucket: todayUtcBucket() },
         })
         return reply.send({ recorded: true })
       } catch (err) {

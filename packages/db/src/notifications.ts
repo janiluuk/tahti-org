@@ -34,7 +34,7 @@ export async function notifyFollowersOfNewPost(
 }
 
 /** Fan out a NEW_TRACK notification to everyone following the artist, when a
- * track/set goes public (ArchiveItem.isPublic flips false -> true). */
+ * track/set goes public (Sound.isPublic flips false -> true). */
 export async function notifyFollowersOfNewTrack(
   prisma: PrismaClient,
   artist: { id: string; username: string; displayName: string },
@@ -266,7 +266,7 @@ export async function notifyUserThemeUnderReview(
 }
 
 /** Sent when a lossless upload's compressed streaming copy finishes
- * encoding — see ArchiveItem.streamingCopyStatus. The item was already
+ * encoding — see Sound.streamingCopyStatus. The item was already
  * READY (playable off its FLAC) before this fires. */
 export async function notifyArtistStreamingCopyReady(
   prisma: PrismaClient,
@@ -279,7 +279,7 @@ export async function notifyArtistStreamingCopyReady(
       type: 'STREAMING_COPY_READY',
       title: `"${item.title}" is ready for low-bandwidth streaming`,
       body: "A compressed copy was encoded for listeners on slower connections or clients that can't play FLAC.",
-      url: `/dashboard/archive/${item.id}`,
+      url: `/dashboard/sound/${item.id}`,
     },
   })
 }

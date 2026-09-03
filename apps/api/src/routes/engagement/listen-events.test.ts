@@ -24,7 +24,7 @@ describe('/api/listen-events', () => {
       displayName: 'Listen Test Owner',
     })
 
-    const eligible = await prisma.archiveItem.create({
+    const eligible = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Eligible Track',
@@ -34,7 +34,7 @@ describe('/api/listen-events', () => {
     })
     eligibleItemId = eligible.id
 
-    const ineligible = await prisma.archiveItem.create({
+    const ineligible = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Ineligible Track',
@@ -55,12 +55,12 @@ describe('/api/listen-events', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/listen-events',
-      payload: { archiveItemId: eligibleItemId },
+      payload: { soundId: eligibleItemId },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ recorded: true })
 
-    const count = await prisma.listenEvent.count({ where: { archiveItemId: eligibleItemId } })
+    const count = await prisma.listenEvent.count({ where: { soundId: eligibleItemId } })
     expect(count).toBe(1)
   })
 
@@ -68,12 +68,12 @@ describe('/api/listen-events', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/listen-events',
-      payload: { archiveItemId: eligibleItemId },
+      payload: { soundId: eligibleItemId },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ recorded: false })
 
-    const count = await prisma.listenEvent.count({ where: { archiveItemId: eligibleItemId } })
+    const count = await prisma.listenEvent.count({ where: { soundId: eligibleItemId } })
     expect(count).toBe(1)
   })
 
@@ -81,12 +81,12 @@ describe('/api/listen-events', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/listen-events',
-      payload: { archiveItemId: ineligibleItemId },
+      payload: { soundId: ineligibleItemId },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ recorded: false })
 
-    const count = await prisma.listenEvent.count({ where: { archiveItemId: ineligibleItemId } })
+    const count = await prisma.listenEvent.count({ where: { soundId: ineligibleItemId } })
     expect(count).toBe(0)
   })
 
@@ -94,13 +94,13 @@ describe('/api/listen-events', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/listen-events',
-      payload: { archiveItemId: 'does-not-exist' },
+      payload: { soundId: 'does-not-exist' },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ recorded: false })
   })
 
-  it('rejects a missing archiveItemId', async () => {
+  it('rejects a missing soundId', async () => {
     const res = await app.inject({ method: 'POST', url: '/api/listen-events', payload: {} })
     expect(res.statusCode).toBe(400)
   })

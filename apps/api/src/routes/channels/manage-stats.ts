@@ -51,6 +51,7 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Not authorized to manage this channel' })
       }
 
+
       // Polled every 15s while the Manage tab is open — a short cache
       // collapses that poller (and a board member viewing the same channel
       // concurrently) into one round trip of counts/signal-status checks.
@@ -62,13 +63,13 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
           fetch(`${config.apiUrl}/api/channels/${slug}/presence`)
             .then((r) => (r.ok ? r.json() : { numClients: 0 }))
             .catch(() => ({ numClients: 0 })),
-          fastify.prisma.archiveItemLike.count({
-            where: { archiveItem: { channelId: channel.id } },
+          fastify.prisma.soundLike.count({
+            where: { sound: { channelId: channel.id } },
           }),
-          fastify.prisma.archiveItemRepost.count({
-            where: { archiveItem: { channelId: channel.id } },
+          fastify.prisma.soundRepost.count({
+            where: { sound: { channelId: channel.id } },
           }),
-          fastify.prisma.archiveItem.count({ where: { channelId: channel.id, isFallback: true } }),
+          fastify.prisma.sound.count({ where: { channelId: channel.id, isFallback: true } }),
         ])
 
         const liveDurationSec =

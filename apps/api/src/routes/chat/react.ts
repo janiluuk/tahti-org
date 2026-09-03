@@ -74,7 +74,7 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
 
       // Anchor to the currently-live broadcast (if any) so this reaction can
       // later be replayed at the right moment against the recording —
-      // Broadcast.archiveItemId links a finished broadcast to its archive
+      // Broadcast.soundId links a finished broadcast to its sound
       // item. Reactions fired with nothing live (e.g. a stale tab) have no
       // meaningful show timeline to anchor to, so they're only broadcast
       // live via Centrifugo below, not persisted.

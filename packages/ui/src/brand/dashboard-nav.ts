@@ -7,7 +7,7 @@ export type DashboardTabId = 'overview' | 'broadcast' | 'audience'
 
 export type DashboardSectionKey =
   | 'overview'
-  | 'archive'
+  | 'sound'
   | 'releases'
   | 'collections'
   | 'distribution'
@@ -43,7 +43,7 @@ export type DashboardNavDefinition = {
 /** The four stable destinations used by the artist studio navigation. */
 export const DASHBOARD_PRIMARY_NAV: DashboardNavDefinition[] = [
   { href: '/dashboard', label: 'Studio', icon: 'channel', isRoute: true },
-  { href: '/dashboard/archive', label: 'Library', icon: 'archive', isRoute: true },
+  { href: '/dashboard/sounds', label: 'Library', icon: 'sound', isRoute: true },
   { href: '/dashboard/broadcast', label: 'Perform', icon: 'distribution', isRoute: true },
   { href: '/dashboard/channel/edit', label: 'Manage', icon: 'appearance', isRoute: true },
 ]
@@ -56,8 +56,8 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
     { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
     { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
   ],
-  '/dashboard/archive': [
-    { href: '/dashboard/archive', label: 'Discography', icon: 'archive', isRoute: true },
+  '/dashboard/sounds': [
+    { href: '/dashboard/sounds', label: 'Discography', icon: 'sound', isRoute: true },
     { href: '/dashboard/releases', label: 'Smart Links', icon: 'links', isRoute: true },
     { href: '/dashboard/distribution', label: 'Distribution', icon: 'links', isRoute: true },
     { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
@@ -66,7 +66,7 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
   '/dashboard/broadcast': [
     { href: '/dashboard/broadcast', label: 'Broadcast', icon: 'distribution', isRoute: true },
     { href: '/dashboard/schedule', label: 'Schedule', icon: 'schedule', isRoute: true },
-    { href: '/dashboard/recordings', label: 'Recordings', icon: 'archive', isRoute: true },
+    { href: '/dashboard/recordings', label: 'Recordings', icon: 'sound', isRoute: true },
     { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
     { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
   ],
@@ -120,8 +120,8 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
 
 export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabId> = {
   overview: 'overview',
-  // Archive, releases, and collections all moved to dedicated routes — old in-page anchors fall back to overview.
-  archive: 'overview',
+  // Sound, releases, and collections all moved to dedicated routes — old in-page anchors fall back to overview.
+  sound: 'overview',
   releases: 'overview',
   collections: 'overview',
   distribution: 'overview',
@@ -143,9 +143,10 @@ export const DASHBOARD_HASH_TO_SECTION: Record<string, DashboardSectionKey> = {
   overview: 'overview',
   'studio-overview': 'overview',
   'studio-stats': 'overview',
-  catalog: 'archive',
-  archive: 'archive',
-  'studio-archive': 'archive',
+  catalog: 'sound',
+  archive: 'sound',
+  sound: 'sound',
+  'studio-archive': 'sound',
   releases: 'releases',
   collections: 'collections',
   'smart-links': 'releases',
@@ -238,9 +239,9 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     group: 'My Library',
   },
   {
-    href: '/dashboard/archive',
+    href: '/dashboard/sounds',
     label: 'Discography',
-    icon: 'archive',
+    icon: 'sound',
     isRoute: true,
     requiresChannel: true,
   },
@@ -275,7 +276,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   {
     href: '/dashboard/recordings',
     label: 'Recordings',
-    icon: 'archive',
+    icon: 'sound',
     isRoute: true,
     requiresChannel: true,
   },

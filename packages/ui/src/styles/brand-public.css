@@ -39,27 +39,27 @@
   background: color-mix(in srgb, var(--cyan) 14%, transparent);
 }
 
-[data-tahti-ui='brand'] .governance-archive-section {
+[data-tahti-ui='brand'] .governance-sound-section {
   margin-top: 2.5rem;
 }
 
-[data-tahti-ui='brand'] .governance-archive-grid {
+[data-tahti-ui='brand'] .governance-sound-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
-[data-tahti-ui='brand'] .governance-archive-card {
+[data-tahti-ui='brand'] .governance-sound-card {
   display: grid;
   gap: 0.6rem;
 }
 
-[data-tahti-ui='brand'] .governance-archive-card h3 {
+[data-tahti-ui='brand'] .governance-sound-card h3 {
   margin: 0;
   font-size: 0.9rem;
 }
 
-[data-tahti-ui='brand'] .governance-archive-row {
+[data-tahti-ui='brand'] .governance-sound-row {
   display: grid;
   gap: 0.15rem;
   padding-top: 0.55rem;
@@ -67,13 +67,13 @@
   font-size: 0.82rem;
 }
 
-[data-tahti-ui='brand'] .governance-archive-row a {
+[data-tahti-ui='brand'] .governance-sound-row a {
   color: var(--cyan);
   text-decoration: none;
 }
 
 @media (max-width: 700px) {
-  [data-tahti-ui='brand'] .governance-archive-grid {
+  [data-tahti-ui='brand'] .governance-sound-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -3,7 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import {
-  archivePlaybackKey,
+  soundPlaybackKey,
   parseSocialLinksGenres,
   type TahtiSelectsGalleryItem,
 } from '@tahti/shared'
@@ -58,17 +58,17 @@ export async function resolvePreferenceGenres(
       orderBy: { playedAt: 'desc' },
       take: 200,
       select: {
-        archiveItem: {
+        sound: {
           select: { genre: true, genreCustom: true, subGenres: true },
         },
       },
     }),
-    prisma.archiveItemLike.findMany({
+    prisma.soundLike.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: 100,
       select: {
-        archiveItem: {
+        sound: {
           select: { genre: true, genreCustom: true, subGenres: true },
         },
       },
@@ -81,10 +81,10 @@ export async function resolvePreferenceGenres(
   ])
 
   for (const row of listened) {
-    for (const g of itemGenres(row.archiveItem)) bump(g)
+    for (const g of itemGenres(row.sound)) bump(g)
   }
   for (const row of liked) {
-    for (const g of itemGenres(row.archiveItem)) bump(g)
+    for (const g of itemGenres(row.sound)) bump(g)
   }
   for (const row of following) {
     for (const g of parseSocialLinksGenres(row.artist.socialLinks)) bump(g)
@@ -107,8 +107,8 @@ export async function buildNewToYou(
   const [heardRows, followedRows] = await Promise.all([
     prisma.listenEvent.findMany({
       where: { dedupeKey: `user:${userId}` },
-      select: { archiveItemId: true },
-      distinct: ['archiveItemId'],
+      select: { soundId: true },
+      distinct: ['soundId'],
       take: MAX_HEARD,
     }),
     prisma.artistFollow.findMany({
@@ -117,10 +117,10 @@ export async function buildNewToYou(
     }),
   ])
 
-  const heardIds = heardRows.map((r) => r.archiveItemId)
+  const heardIds = heardRows.map((r) => r.soundId)
   const followedUserIds = new Set(followedRows.map((r) => r.artistUserId))
 
-  const candidates = await prisma.archiveItem.findMany({
+  const candidates = await prisma.sound.findMany({
     where: {
       isPublic: true,
       status: 'READY',
@@ -169,10 +169,10 @@ export async function buildNewToYou(
 
   const items = await Promise.all(
     picked.map(async (item) => {
-      const playbackKey = archivePlaybackKey(item)
+      const playbackKey = soundPlaybackKey(item)
       const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
       return {
-        archiveItemId: item.id,
+        soundId: item.id,
         title: item.title,
         artistName: item.artistName ?? item.channel.user.displayName,
         artistUsername: item.artistName ? null : item.channel.user.username,

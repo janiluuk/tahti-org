@@ -23,18 +23,18 @@ export const ListenSourceSchema = z.enum(LISTEN_SOURCES)
  * a ping either extends the caller's current open ListenSession or opens a
  * new one; a server cron closes sessions that stop pinging, so "minutes
  * listened" is always a plain (endedAt - startedAt) computed server-side.
- * `archiveItemId` identifies an on-demand track (the server resolves its
+ * `soundId` identifies an on-demand track (the server resolves its
  * channel); `channelSlug` identifies a live stream directly. At least one
  * is required. */
 export const ListenHeartbeatBodySchema = z
   .object({
     channelSlug: z.string().min(1).max(64).optional(),
-    archiveItemId: z.string().optional(),
+    soundId: z.string().optional(),
     source: ListenSourceSchema,
     fp: z.string().max(128).optional(),
   })
-  .refine((body) => Boolean(body.channelSlug || body.archiveItemId), {
-    message: 'channelSlug or archiveItemId is required',
+  .refine((body) => Boolean(body.channelSlug || body.soundId), {
+    message: 'channelSlug or soundId is required',
   })
 
 export type ListenHeartbeatBody = z.infer<typeof ListenHeartbeatBodySchema>

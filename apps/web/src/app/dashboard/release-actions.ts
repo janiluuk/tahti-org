@@ -30,7 +30,7 @@ export async function createRelease(params: {
   tracks?: Array<{
     title: string
     durationSec?: number
-    archiveItemId?: string
+    soundId?: string
     genre?: string
     genreCustom?: string
   }>

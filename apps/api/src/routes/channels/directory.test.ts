@@ -25,7 +25,7 @@ describe('GET /api/v1/channels/directory', () => {
       tier: 'ARTIST',
     })
     artistSlug = artist.channel!.slug
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId: artist.channel!.id,
         title: 'Directory Test Track',
@@ -34,7 +34,7 @@ describe('GET /api/v1/channels/directory', () => {
       },
     })
 
-    // Account deletion anonymizes the user but leaves the channel + archive
+    // Account deletion anonymizes the user but leaves the channel + sound
     // items in place — must not surface in the public artist directory.
     const deletedArtist = await createTestArtist(prisma, {
       email: `${PREFIX}deleted@example.com`,
@@ -42,7 +42,7 @@ describe('GET /api/v1/channels/directory', () => {
       tier: 'ARTIST',
     })
     deletedSlug = deletedArtist.channel!.slug
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId: deletedArtist.channel!.id,
         title: 'Deleted Artist Track',
@@ -66,7 +66,7 @@ describe('GET /api/v1/channels/directory', () => {
     await app.close()
   })
 
-  it('includes an active artist with a public archive item', async () => {
+  it('includes an active artist with a public sound item', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/channels/directory' })
     expect(res.statusCode).toBe(200)
     const body = res.json() as { items: Array<{ slug: string; username: string }> }

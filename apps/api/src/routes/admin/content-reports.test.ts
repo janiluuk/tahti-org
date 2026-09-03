@@ -41,8 +41,8 @@ describe('content moderation reports', () => {
       method: 'POST',
       url: '/api/v1/reports',
       payload: {
-        targetType: 'ARCHIVE_ITEM',
-        targetId: 'some-archive-item-id',
+        targetType: 'SOUND_ITEM',
+        targetId: 'some-sound-item-id',
         reason: 'COPYRIGHT',
         details: 'This is a re-upload of my track without permission.',
       },
@@ -75,9 +75,9 @@ describe('content moderation reports', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as { reports: Array<{ id: string; targetId: string }> }
-    expect(
-      body.reports.some((r) => r.id === reportId && r.targetId === 'some-archive-item-id'),
-    ).toBe(true)
+    expect(body.reports.some((r) => r.id === reportId && r.targetId === 'some-sound-item-id')).toBe(
+      true,
+    )
   })
 
   it('GET /api/admin/content-reports/:id returns the detail', async () => {
@@ -95,7 +95,7 @@ describe('content moderation reports', () => {
       method: 'PATCH',
       url: `/api/admin/content-reports/${reportId}`,
       headers: { cookie: boardCookie },
-      payload: { status: 'ACTIONED', resolutionNote: 'Archive item removed by artist.' },
+      payload: { status: 'ACTIONED', resolutionNote: 'Sound item removed by artist.' },
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as {

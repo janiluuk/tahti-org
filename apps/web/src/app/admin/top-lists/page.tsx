@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { ProgressBar } from '@tahti/ui'
 
 interface TopListEntry {
-  archiveItemId: string
+  soundId: string
   listens: number
   title: string
   artistName: string
@@ -120,7 +120,7 @@ export default async function AdminTopListsPage({
                 <h2 className="top-lists-bucket__title">{bucket.bucket}</h2>
                 {bucket.entries.map((entry, i) => (
                   <ProgressBar
-                    key={entry.archiveItemId}
+                    key={entry.soundId}
                     label={`#${i + 1} ${entry.title} — ${entry.artistName}`}
                     amount={`${entry.listens} ${entry.listens === 1 ? 'listen' : 'listens'}`}
                     percent={(entry.listens / max) * 100}

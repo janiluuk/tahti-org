@@ -735,7 +735,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Presigned URL for archive source upload */
+    /** @description Presigned URL for sound source upload */
     post: {
       parameters: {
         query?: never
@@ -1077,7 +1077,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Discover → Artists tab: every channel with a public archive item */
+    /** @description Discover → Artists tab: every channel with a public sound item */
     get: {
       parameters: {
         query?: never
@@ -1142,7 +1142,7 @@ export interface paths {
           content: {
             'application/json': {
               items: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 artistName: string
                 artistUsername: string | null
@@ -1191,7 +1191,7 @@ export interface paths {
               authenticated: boolean
               preferenceGenres: string[]
               items: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 artistName: string
                 artistUsername: string | null
@@ -1238,7 +1238,7 @@ export interface paths {
           content: {
             'application/json': {
               items: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 artistName: string
                 artistUsername: string | null
@@ -2278,7 +2278,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Public archive items for channel page */
+    /** @description Public sound items for channel page */
     get: {
       parameters: {
         query?: never
@@ -6164,6 +6164,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/c/{slug}/sounds/{itemId}/download': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description M18: presigned sound download with anti-fraud accounting */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uri */
+              url: string
+              counted: boolean
+              format?: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/c/{slug}/archive/{itemId}/download': {
     parameters: {
       query?: never
@@ -6171,7 +6215,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description M18: presigned archive download with anti-fraud accounting */
+    /** @description M18: presigned sound download with anti-fraud accounting */
     get: {
       parameters: {
         query?: never
@@ -6384,14 +6428,13 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/c/{slug}/archive/{itemId}/download-gates': {
+  '/api/v1/c/{slug}/sounds/{itemId}/repost': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description M22: public download gate requirements for a track */
     get: {
       parameters: {
         query?: never
@@ -6411,34 +6454,15 @@ export interface paths {
           }
           content: {
             'application/json': {
-              repostRequired: boolean
-              followRequired: boolean
-              repostSatisfied: boolean
-              followSatisfied: boolean
-              canDownload: boolean
+              reposted: boolean
+              repostCount: number
             }
           }
         }
       }
     }
     put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/c/{slug}/archive/{itemId}/repost-ack': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** @description M22: acknowledge repost to satisfy download gate */
+    /** @description Repost/share a track */
     post: {
       parameters: {
         query?: never
@@ -6458,13 +6482,226 @@ export interface paths {
           }
           content: {
             'application/json': {
-              acknowledged: boolean
+              reposted: boolean
+              repostCount: number
             }
           }
         }
       }
     }
-    delete?: never
+    /** @description Remove a repost */
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              reposted: boolean
+              repostCount: number
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/c/{slug}/archive/{itemId}/repost': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              reposted: boolean
+              repostCount: number
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    /** @description Repost/share a track */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              reposted: boolean
+              repostCount: number
+            }
+          }
+        }
+      }
+    }
+    /** @description Remove a repost */
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              reposted: boolean
+              repostCount: number
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/c/{slug}/sounds/{itemId}/like': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              liked: boolean
+              likeCount: number
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    /** @description M40: love a track */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              liked: boolean
+              likeCount: number
+            }
+          }
+        }
+      }
+    }
+    /** @description M40: un-love a track */
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              liked: boolean
+              likeCount: number
+            }
+          }
+        }
+      }
+    }
     options?: never
     head?: never
     patch?: never
@@ -6633,13 +6870,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/c/{slug}/archive/{itemId}/repost': {
+  '/api/v1/c/{slug}/sounds/{itemId}/download-gates': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
+    /** @description M22: public download gate requirements for a track */
     get: {
       parameters: {
         query?: never
@@ -6659,15 +6897,79 @@ export interface paths {
           }
           content: {
             'application/json': {
-              reposted: boolean
-              repostCount: number
+              repostRequired: boolean
+              followRequired: boolean
+              repostSatisfied: boolean
+              followSatisfied: boolean
+              canDownload: boolean
             }
           }
         }
       }
     }
     put?: never
-    /** @description Repost/share a track */
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/c/{slug}/archive/{itemId}/download-gates': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description M22: public download gate requirements for a track */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+          itemId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              repostRequired: boolean
+              followRequired: boolean
+              repostSatisfied: boolean
+              followSatisfied: boolean
+              canDownload: boolean
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/c/{slug}/sounds/{itemId}/repost-ack': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description M22: acknowledge repost to satisfy download gate */
     post: {
       parameters: {
         query?: never
@@ -6687,15 +6989,29 @@ export interface paths {
           }
           content: {
             'application/json': {
-              reposted: boolean
-              repostCount: number
+              acknowledged: boolean
             }
           }
         }
       }
     }
-    /** @description Remove a repost */
-    delete: {
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/c/{slug}/archive/{itemId}/repost-ack': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description M22: acknowledge repost to satisfy download gate */
+    post: {
       parameters: {
         query?: never
         header?: never
@@ -6714,13 +7030,13 @@ export interface paths {
           }
           content: {
             'application/json': {
-              reposted: boolean
-              repostCount: number
+              acknowledged: boolean
             }
           }
         }
       }
     }
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -8586,7 +8902,7 @@ export interface paths {
                 reviewedAt?: string | null
                 /** Format: date-time */
                 createdAt: string
-                archiveItem: {
+                sound: {
                   id: string
                   title: string
                   artistName: string | null
@@ -9397,7 +9713,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -9451,7 +9767,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -9512,7 +9828,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -9525,14 +9841,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/channels/{slug}/archive': {
+  '/api/admin/channels/{slug}/sound': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description Board access to any channel's archive items, for moderation edits */
+    /** @description Board access to any channel's sound items, for moderation edits */
     get: {
       parameters: {
         query?: never
@@ -9576,7 +9892,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/channels/{slug}/archive/{itemId}': {
+  '/api/admin/channels/{slug}/sound/{itemId}': {
     parameters: {
       query?: never
       header?: never
@@ -9589,7 +9905,7 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
-    /** @description Board access: patch archive item metadata for any channel's track */
+    /** @description Board access: patch sound item metadata for any channel's track */
     patch: {
       parameters: {
         query?: never
@@ -9635,7 +9951,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Filter facets for the board-wide archive file browser */
+    /** @description Filter facets for the board-wide sound file browser */
     get: {
       parameters: {
         query?: never
@@ -9689,7 +10005,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description List archive files across all users with multi-filters */
+    /** @description List sound files across all users with multi-filters */
     get: {
       parameters: {
         query?: never
@@ -9759,7 +10075,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Presigned playback URL for an archive file (board preview) */
+    /** @description Presigned playback URL for an sound file (board preview) */
     get: {
       parameters: {
         query?: never
@@ -9810,7 +10126,7 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
-    /** @description Bulk-patch metadata on selected archive files */
+    /** @description Bulk-patch metadata on selected sound files */
     patch: {
       parameters: {
         query?: never
@@ -9845,7 +10161,7 @@ export interface paths {
     get?: never
     put?: never
     post?: never
-    /** @description Delete an archive file (board) */
+    /** @description Delete an sound file (board) */
     delete: {
       parameters: {
         query?: never
@@ -9868,7 +10184,7 @@ export interface paths {
     }
     options?: never
     head?: never
-    /** @description Patch one archive file by id (board) */
+    /** @description Patch one sound file by id (board) */
     patch: {
       parameters: {
         query?: never
@@ -10556,7 +10872,7 @@ export interface paths {
               buckets: {
                 bucket: string
                 entries: {
-                  archiveItemId: string
+                  soundId: string
                   listens: number
                   title: string
                   artistName: string
@@ -10605,7 +10921,7 @@ export interface paths {
               /** @enum {string} */
               period: 'week' | 'month' | 'half_year' | 'all_time'
               entries: {
-                archiveItemId: string
+                soundId: string
                 listens: number
                 title: string
                 artistName: string
@@ -11881,7 +12197,7 @@ export interface paths {
               reports: {
                 id: string
                 /** @enum {string} */
-                targetType: 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
+                targetType: 'SOUND_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
                 targetId: string
                 /** @enum {string} */
                 reason: 'COPYRIGHT' | 'HARASSMENT' | 'SPAM' | 'ILLEGAL_CONTENT' | 'OTHER'
@@ -11936,7 +12252,7 @@ export interface paths {
             'application/json': {
               id: string
               /** @enum {string} */
-              targetType: 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
+              targetType: 'SOUND_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
               targetId: string
               /** @enum {string} */
               reason: 'COPYRIGHT' | 'HARASSMENT' | 'SPAM' | 'ILLEGAL_CONTENT' | 'OTHER'
@@ -11980,7 +12296,7 @@ export interface paths {
             'application/json': {
               id: string
               /** @enum {string} */
-              targetType: 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
+              targetType: 'SOUND_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
               targetId: string
               /** @enum {string} */
               reason: 'COPYRIGHT' | 'HARASSMENT' | 'SPAM' | 'ILLEGAL_CONTENT' | 'OTHER'
@@ -12978,7 +13294,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Report a channel, release, archive item, or collection for review (auth optional) */
+    /** @description Report a channel, release, sound item, or collection for review (auth optional) */
     post: {
       parameters: {
         query?: never
@@ -14088,7 +14404,7 @@ export interface paths {
                 channel: string | null
                 subscribe: string
                 feeds: {
-                  archive: string | null
+                  sound: string | null
                 }
                 presskit: string
               }
@@ -16352,7 +16668,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{itemId}/mixcloud': {
+  '/api/me/sound/{itemId}/mixcloud': {
     parameters: {
       query?: never
       header?: never
@@ -16388,7 +16704,7 @@ export interface paths {
       }
     }
     put?: never
-    /** @description M7: queue archive mix upload to Mixcloud */
+    /** @description M7: queue sound mix upload to Mixcloud */
     post: {
       parameters: {
         query?: never
@@ -16728,7 +17044,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Queue SoundCloud tracks for server-side import to archive */
+    /** @description Queue SoundCloud tracks for server-side import to sound */
     post: {
       parameters: {
         query?: never
@@ -16938,7 +17254,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Queue Google Drive files for server-side import to archive */
+    /** @description Queue Google Drive files for server-side import to sound */
     post: {
       parameters: {
         query?: never
@@ -17002,7 +17318,7 @@ export interface paths {
                 fileName: string | null
                 status: string
                 error: string | null
-                archiveItemId: string | null
+                soundId: string | null
                 bytesTransferred: number | null
                 /** Format: date-time */
                 queuedAt: string
@@ -17053,7 +17369,7 @@ export interface paths {
               fileName: string | null
               status: string
               error: string | null
-              archiveItemId: string | null
+              soundId: string | null
               bytesTransferred: number | null
               /** Format: date-time */
               queuedAt: string
@@ -17494,7 +17810,7 @@ export interface paths {
           }
           content: {
             'application/json': {
-              archiveItemId: string
+              soundId: string
               collectionItemId: string
               track: {
                 uri: string
@@ -17801,7 +18117,7 @@ export interface paths {
           }
           content: {
             'application/json': {
-              archiveItemId: string
+              soundId: string
               collectionItemId: string
               track: {
                 url: string
@@ -18028,7 +18344,7 @@ export interface paths {
           }
           content: {
             'application/json': {
-              archiveItemId: string
+              soundId: string
               collectionItemId: string
               track: {
                 id: string
@@ -19109,7 +19425,7 @@ export interface paths {
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
                 recording: {
-                  archiveItemId: string
+                  soundId: string
                   title: string
                   channelItemUrl: string
                 } | null
@@ -19122,7 +19438,7 @@ export interface paths {
                 /** @enum {string} */
                 showType: 'LIVE_SET' | 'TALK'
                 recording: {
-                  archiveItemId: string
+                  soundId: string
                   title: string
                   channelItemUrl: string
                 } | null
@@ -20470,14 +20786,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/insights': {
+  '/api/me/sound/{id}/insights': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description M37: per-track insights (downloads, geo, daily) for an archive item */
+    /** @description M37: per-track insights (downloads, geo, daily) for an sound item */
     get: {
       parameters: {
         query?: never
@@ -21076,14 +21392,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive': {
+  '/api/me/sound': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description M22: list channel archive items with metadata */
+    /** @description M22: list channel sound items with metadata */
     get: {
       parameters: {
         query?: never
@@ -21125,7 +21441,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/recent': {
+  '/api/me/sound/recent': {
     parameters: {
       query?: never
       header?: never
@@ -21166,7 +21482,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}': {
+  '/api/me/sound/{id}': {
     parameters: {
       query?: never
       header?: never
@@ -21210,7 +21526,7 @@ export interface paths {
     }
     put?: never
     post?: never
-    /** @description Delete an archive item and its versions/rotation entries */
+    /** @description Delete an sound item and its versions/rotation entries */
     delete: {
       parameters: {
         query?: never
@@ -21233,7 +21549,7 @@ export interface paths {
     }
     options?: never
     head?: never
-    /** @description M22: patch archive item metadata (ArchiveMetadataPatchSchema body) */
+    /** @description M22: patch sound item metadata (SoundMetadataPatchSchema body) */
     patch: {
       parameters: {
         query?: never
@@ -21271,7 +21587,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/reorder': {
+  '/api/me/sound/reorder': {
     parameters: {
       query?: never
       header?: never
@@ -21537,7 +21853,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/{id}/visual': {
+  '/api/me/sound/{id}/visual': {
     parameters: {
       query?: never
       header?: never
@@ -21572,7 +21888,8 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/{id}/access': {
+
+  '/api/me/sound/{id}/access': {
     parameters: {
       query?: never
       header?: never
@@ -21608,6 +21925,8 @@ export interface paths {
     trace?: never
   }
   '/api/me/archive/{id}/export/hearthis': {
+
+  '/api/me/sound/{id}/export/hearthis': {
     parameters: {
       query?: never
       header?: never
@@ -21747,7 +22066,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/banner/prepare': {
+  '/api/me/sound/{id}/banner/prepare': {
     parameters: {
       query?: never
       header?: never
@@ -21790,7 +22109,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/banner/complete': {
+  '/api/me/sound/{id}/banner/complete': {
     parameters: {
       query?: never
       header?: never
@@ -21829,7 +22148,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/banner/from-url': {
+  '/api/me/sound/{id}/banner/from-url': {
     parameters: {
       query?: never
       header?: never
@@ -21916,7 +22235,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -21968,7 +22287,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -22027,7 +22346,7 @@ export interface paths {
                 releaseTitle: string
                 trackTitle: string
                 durationSec: number | null
-                archiveItemId: string | null
+                soundId: string | null
               }[]
             }
           }
@@ -22073,7 +22392,7 @@ export interface paths {
                 reviewedAt?: string | null
                 /** Format: date-time */
                 createdAt: string
-                archiveItem: {
+                sound: {
                   id: string
                   title: string
                   artistName: string | null
@@ -22094,7 +22413,7 @@ export interface paths {
       }
     }
     put?: never
-    /** @description Submit up to 5 READY archive tracks for Tahti Radio board audit */
+    /** @description Submit up to 5 READY sound tracks for Tahti Radio board audit */
     post: {
       parameters: {
         query?: never
@@ -24907,7 +25226,7 @@ export interface paths {
               files: {
                 id: string
                 /** @enum {string} */
-                kind: 'archive' | 'stash'
+                kind: 'sound' | 'stash'
                 title: string
                 sizeBytes: number | null
                 /** Format: date-time */
@@ -24974,7 +25293,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/{id}/download': {
+  '/api/me/sound/{id}/download': {
     parameters: {
       query?: never
       header?: never
@@ -25016,7 +25335,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/stems': {
+  '/api/me/sound/{id}/stems': {
     parameters: {
       query?: never
       header?: never
@@ -25067,7 +25386,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/stems/render': {
+  '/api/me/sound/{id}/stems/render': {
     parameters: {
       query?: never
       header?: never
@@ -25827,7 +26146,7 @@ export interface paths {
                  */
                 visibility: 'PUBLIC' | 'FAN_ONLY'
                 /** @default true */
-                autoArchive: boolean
+                autoPublish: boolean
                 /** @default true */
                 episodeNumberEnabled: boolean
                 /** @default 1 */
@@ -25864,7 +26183,7 @@ export interface paths {
                 showType: 'LIVE_SET' | 'TALK'
                 /** @enum {string} */
                 visibility: 'PUBLIC' | 'FAN_ONLY'
-                autoArchive: boolean
+                autoPublish: boolean
               }[]
             }
           }
@@ -26037,7 +26356,7 @@ export interface paths {
                 status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
                 /** @enum {string} */
                 source: 'UPLOAD' | 'BROADCAST'
-                archiveItemId: string | null
+                soundId: string | null
                 radioSlotBookingId: string | null
                 /** Format: date-time */
                 createdAt: string
@@ -26076,7 +26395,7 @@ export interface paths {
               status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
               /** @enum {string} */
               source: 'UPLOAD' | 'BROADCAST'
-              archiveItemId: string | null
+              soundId: string | null
               radioSlotBookingId: string | null
               /** Format: date-time */
               createdAt: string
@@ -26126,7 +26445,7 @@ export interface paths {
               status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
               /** @enum {string} */
               source: 'UPLOAD' | 'BROADCAST'
-              archiveItemId: string | null
+              soundId: string | null
               radioSlotBookingId: string | null
               /** Format: date-time */
               createdAt: string
@@ -26168,7 +26487,7 @@ export interface paths {
               status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
               /** @enum {string} */
               source: 'UPLOAD' | 'BROADCAST'
-              archiveItemId: string | null
+              soundId: string | null
               radioSlotBookingId: string | null
               /** Format: date-time */
               createdAt: string
@@ -26212,7 +26531,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions': {
+  '/api/me/sound/{id}/versions': {
     parameters: {
       query?: never
       header?: never
@@ -26259,7 +26578,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/{versionId}': {
+  '/api/me/sound/{id}/versions/{versionId}': {
     parameters: {
       query?: never
       header?: never
@@ -26307,7 +26626,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/{versionId}/download': {
+  '/api/me/sound/{id}/versions/{versionId}/download': {
     parameters: {
       query?: never
       header?: never
@@ -26349,7 +26668,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/{versionId}/progress': {
+  '/api/me/sound/{id}/versions/{versionId}/progress': {
     parameters: {
       query?: never
       header?: never
@@ -26385,7 +26704,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/prepare': {
+  '/api/me/sound/{id}/versions/prepare': {
     parameters: {
       query?: never
       header?: never
@@ -26427,7 +26746,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/complete': {
+  '/api/me/sound/{id}/versions/complete': {
     parameters: {
       query?: never
       header?: never
@@ -26469,7 +26788,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/versions/{versionId}/activate': {
+  '/api/me/sound/{id}/versions/{versionId}/activate': {
     parameters: {
       query?: never
       header?: never
@@ -26517,7 +26836,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/draft': {
+  '/api/me/sound/{id}/editor/draft': {
     parameters: {
       query?: never
       header?: never
@@ -26685,14 +27004,14 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/{id}/editor/source': {
+  '/api/me/sound/{id}/editor/source': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description M21 v0: presigned URL to preview archive audio for trim editor */
+    /** @description M21 v0: presigned URL to preview sound audio for trim editor */
     get: {
       parameters: {
         query?: never
@@ -26730,7 +27049,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/stream': {
+  '/api/me/sound/{id}/editor/stream': {
     parameters: {
       query?: never
       header?: never
@@ -26766,7 +27085,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/bounce': {
+  '/api/me/sound/{id}/editor/bounce': {
     parameters: {
       query?: never
       header?: never
@@ -26802,7 +27121,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/render': {
+  '/api/me/sound/{id}/editor/render': {
     parameters: {
       query?: never
       header?: never
@@ -26846,7 +27165,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/create-clip': {
+  '/api/me/sound/{id}/editor/create-clip': {
     parameters: {
       query?: never
       header?: never
@@ -26855,7 +27174,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Cut a short announcement clip (max 60s) from an archive track for radio station IDs */
+    /** @description Cut a short announcement clip (max 60s) from an sound track for radio station IDs */
     post: {
       parameters: {
         query?: never
@@ -26892,7 +27211,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/editor/publish-to-release': {
+  '/api/me/sound/{id}/editor/publish-to-release': {
     parameters: {
       query?: never
       header?: never
@@ -26901,7 +27220,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** @description Publish an archive recording (or one of its versions) as a release track */
+    /** @description Publish an sound recording (or one of its versions) as a release track */
     post: {
       parameters: {
         query?: never
@@ -26961,7 +27280,7 @@ export interface paths {
             'application/json': {
               id: string
               title: string
-              archiveItemId: string | null
+              soundId: string | null
               updatedAt: string
             }[]
           }
@@ -26969,7 +27288,7 @@ export interface paths {
       }
     }
     put?: never
-    /** @description M21 v1: create editor project (optionally seed from archive item) */
+    /** @description M21 v1: create editor project (optionally seed from sound item) */
     post: {
       parameters: {
         query?: never
@@ -26988,7 +27307,7 @@ export interface paths {
             'application/json': {
               id: string
               title: string
-              archiveItemId: string | null
+              soundId: string | null
               updatedAt: string
             }
           }
@@ -27029,12 +27348,12 @@ export interface paths {
             'application/json': {
               id: string
               title: string
-              archiveItemId: string | null
+              soundId: string | null
               timeline: {
                 [key: string]: unknown
               }
               sources: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 /** Format: uri */
                 url: string
@@ -27091,7 +27410,7 @@ export interface paths {
             'application/json': {
               id: string
               title: string
-              archiveItemId: string | null
+              soundId: string | null
               updatedAt: string
             }
           }
@@ -27126,7 +27445,7 @@ export interface paths {
             'application/json': {
               artistFollowerCount: number
               items: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 repostToDownload: boolean
                 followToDownload: boolean
@@ -27158,14 +27477,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/archive/{id}/download-gate-stats': {
+  '/api/me/sound/{id}/download-gate-stats': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** @description M22: per-archive-item download gate funnel (14-day counted downloads) */
+    /** @description M22: per-sound-item download gate funnel (14-day counted downloads) */
     get: {
       parameters: {
         query?: never
@@ -27373,7 +27692,7 @@ export interface paths {
               downloadGates: {
                 artistFollowerCount: number
                 items: {
-                  archiveItemId: string
+                  soundId: string
                   title: string
                   repostToDownload: boolean
                   followToDownload: boolean
@@ -27521,7 +27840,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description PLAT-030: top archive tracks by counted downloads */
+    /** @description PLAT-030: top sound tracks by counted downloads */
     get: {
       parameters: {
         query?: never
@@ -27539,7 +27858,7 @@ export interface paths {
           content: {
             'application/json': {
               items: {
-                archiveItemId: string
+                soundId: string
                 title: string
                 plays: number
               }[]
@@ -27589,7 +27908,7 @@ export interface paths {
               buckets: {
                 bucket: string
                 entries: {
-                  archiveItemId: string
+                  soundId: string
                   listens: number
                   title: string
                   artistName: string
@@ -27810,7 +28129,7 @@ export interface paths {
               title: string | null
               /** @enum {string} */
               visibility: 'PUBLIC' | 'FAN_ONLY'
-              autoArchive: boolean
+              autoPublish: boolean
               /** @enum {string} */
               showType: 'LIVE_SET' | 'TALK'
               episodeNumber: number | null
@@ -27864,7 +28183,7 @@ export interface paths {
               title: string | null
               /** @enum {string} */
               visibility: 'PUBLIC' | 'FAN_ONLY'
-              autoArchive: boolean
+              autoPublish: boolean
               /** @enum {string} */
               showType: 'LIVE_SET' | 'TALK'
               episodeNumber: number | null
@@ -29420,7 +29739,7 @@ export interface components {
       downloadGates: {
         artistFollowerCount: number
         items: {
-          archiveItemId: string
+          soundId: string
           title: string
           repostToDownload: boolean
           followToDownload: boolean
@@ -29456,7 +29775,7 @@ export interface components {
     DownloadGateStats: {
       artistFollowerCount: number
       items: {
-        archiveItemId: string
+        soundId: string
         title: string
         repostToDownload: boolean
         followToDownload: boolean
@@ -29721,7 +30040,7 @@ export interface components {
         channel: string | null
         subscribe: string
         feeds: {
-          archive: string | null
+          sound: string | null
         }
         presskit: string
       }
@@ -29836,7 +30155,7 @@ export interface components {
     } & {
       [key: string]: unknown
     }
-    ArchiveItemList: ({
+    SoundList: ({
       id: string
       title: string
       status: string
@@ -29850,7 +30169,7 @@ export interface components {
     } & {
       [key: string]: unknown
     })[]
-    ChannelArchiveItems: {
+    ChannelSounds: {
       [key: string]: unknown
     }[]
     AuthMe: {
@@ -30025,7 +30344,7 @@ export interface components {
         releaseTitle: string
         trackTitle: string
         durationSec: number | null
-        archiveItemId: string | null
+        soundId: string | null
       }[]
     }
     StreamSettings: {

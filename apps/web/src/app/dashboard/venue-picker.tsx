@@ -9,7 +9,7 @@ import {
   fetchMyDefaultLocation,
   fetchVenuesForPicker,
   type VenuePickerOption,
-} from './archive-actions'
+} from './sound-actions'
 
 export function VenuePicker({
   venueId,

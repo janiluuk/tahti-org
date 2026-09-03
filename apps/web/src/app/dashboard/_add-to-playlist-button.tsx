@@ -33,11 +33,11 @@ function IconPlaylist() {
 }
 
 export function AddToPlaylistButton({
-  archiveItemId,
+  soundId,
   variant = 'text',
 }: {
-  archiveItemId: string
-  /** Icon-only trigger for compact toolbars (see archive-editor.tsx's row
+  soundId: string
+  /** Icon-only trigger for compact toolbars (see sound-editor.tsx's row
    * actions) — the picker menu itself is unchanged. */
   variant?: 'text' | 'icon'
 }) {
@@ -68,7 +68,7 @@ export function AddToPlaylistButton({
 
   async function add(slug: string) {
     setError(null)
-    const res = await addCollectionItem(slug, { archiveItemId })
+    const res = await addCollectionItem(slug, { soundId })
     if (res.error) {
       setError(res.error)
       return

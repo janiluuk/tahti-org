@@ -74,7 +74,7 @@ export async function assembleAnnualReportMarkdown(
   const yearStart = new Date(Date.UTC(year, 0, 1))
   const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
 
-  const [memberTotal, newMembers, lapsed, boardCount, fanSubCount, liveHoursAgg, archiveCount] =
+  const [memberTotal, newMembers, lapsed, boardCount, fanSubCount, liveHoursAgg, soundCount] =
     await Promise.all([
       prisma.user.count({ where: { isMember: true } }),
       prisma.user.count({
@@ -86,7 +86,7 @@ export async function assembleAnnualReportMarkdown(
       prisma.user.count({ where: { isBoard: true } }),
       prisma.fanSubscription.count({ where: { state: 'ACTIVE' } }),
       prisma.channel.aggregate({ _sum: { totalLiveHours: true } }),
-      prisma.archiveItem.count({
+      prisma.sound.count({
         where: { releasedAt: { gte: yearStart, lt: yearEnd } },
       }),
     ])
@@ -172,7 +172,7 @@ export async function assembleAnnualReportMarkdown(
   lines.push(
     `- Cumulative channel live hours (all time): **${(liveHoursAgg._sum.totalLiveHours ?? 0).toFixed(1)}**`,
   )
-  lines.push(`- Archive items published in ${year}: **${archiveCount}**`)
+  lines.push(`- Sound items published in ${year}: **${soundCount}**`)
   lines.push('')
 
   lines.push('## 5. Board resolutions', '')

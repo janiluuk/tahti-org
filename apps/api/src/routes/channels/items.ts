@@ -3,15 +3,15 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
-  ChannelArchiveItemsResponseSchema,
+  ChannelSoundsResponseSchema,
   SlugParamSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseColorScheme,
   parseRouteParams,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { serializeArchiveItem } from '../../lib/archive-metadata.js'
+import { serializeSound } from '../../lib/sound-metadata.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 
 const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
@@ -20,8 +20,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['channel'],
-        description: 'Public archive items for channel page',
-        response: openApiResponse(ChannelArchiveItemsResponseSchema, 'ChannelArchiveItems'),
+        description: 'Public sound items for channel page',
+        response: openApiResponse(ChannelSoundsResponseSchema, 'ChannelSounds'),
       },
     },
     async (request, reply) => {
@@ -39,7 +39,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       const itemsWithUrls = await getCachedJson(`channel:items:${slug}`, 15, async () => {
-        const items = await fastify.prisma.archiveItem.findMany({
+        const items = await fastify.prisma.sound.findMany({
           where: { channelId: channel.id, status: 'READY', isPublic: true },
           orderBy: { createdAt: 'desc' },
           take: 50,
@@ -88,25 +88,25 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         const downloadCounts =
           itemIds.length > 0
             ? await fastify.prisma.download.groupBy({
-                by: ['archiveItemId'],
-                where: { archiveItemId: { in: itemIds }, countedAt: { not: null } },
+                by: ['soundId'],
+                where: { soundId: { in: itemIds }, countedAt: { not: null } },
                 _count: { _all: true },
               })
             : []
         const downloadCountById = new Map(
           downloadCounts
-            .filter((row) => row.archiveItemId != null)
-            .map((row) => [row.archiveItemId!, row._count._all]),
+            .filter((row) => row.soundId != null)
+            .map((row) => [row.soundId!, row._count._all]),
         )
 
         return Promise.all(
           items.map(async (item) => {
             const { _count, colorSchemeJson, ...rest } = item
-            const playbackKey = archivePlaybackKey(item)
+            const playbackKey = soundPlaybackKey(item)
             const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
             const accentColor = parseColorScheme(colorSchemeJson)?.accent ?? null
             return {
-              ...serializeArchiveItem(rest),
+              ...serializeSound(rest),
               fileSizeBytes: Number(item.fileSizeBytes),
               audioUrl,
               commentCount: _count.comments,

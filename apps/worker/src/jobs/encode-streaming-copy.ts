@@ -36,14 +36,14 @@ export async function processEncodeStreamingCopyJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
   const startedAt = Date.now()
 
-  const item = await prisma.archiveItem.findUnique({
+  const item = await prisma.sound.findUnique({
     where: { id: itemId },
     include: { channel: { select: { slug: true, userId: true } } },
   })
-  if (!item) throw new Error(`ArchiveItem ${itemId} not found`)
-  if (!item.rawKey) throw new Error(`ArchiveItem ${itemId} has no rawKey`)
+  if (!item) throw new Error(`Sound ${itemId} not found`)
+  if (!item.rawKey) throw new Error(`Sound ${itemId} has no rawKey`)
 
-  await prisma.archiveItem.update({
+  await prisma.sound.update({
     where: { id: itemId },
     data: { streamingCopyStatus: 'PROCESSING' },
   })
@@ -64,7 +64,7 @@ export async function processEncodeStreamingCopyJob(job: Job): Promise<void> {
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
     await job.updateProgress(95)
 
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemId },
       data: { mp3Key, streamingCopyStatus: 'READY' },
     })
@@ -79,7 +79,7 @@ export async function processEncodeStreamingCopyJob(job: Job): Promise<void> {
       `streaming copy done for ${itemId} in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
   } catch (err) {
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: itemId },
       data: { streamingCopyStatus: 'ERROR' },
     })

@@ -3,13 +3,13 @@
 
 import type { PrismaClient } from '@tahti/db'
 
-/** Sum archive + stash bytes for dashboard display (storage-policy.md — track usage, no hard cap for members). */
+/** Sum sound + stash bytes for dashboard display (storage-policy.md — track usage, no hard cap for members). */
 export async function computeUserStorageUsedBytes(
   prisma: PrismaClient,
   userId: string,
 ): Promise<bigint> {
-  const [archiveAgg, stashAgg] = await Promise.all([
-    prisma.archiveItem.aggregate({
+  const [soundAgg, stashAgg] = await Promise.all([
+    prisma.sound.aggregate({
       where: { channel: { userId } },
       _sum: { fileSizeBytes: true },
     }),
@@ -19,26 +19,26 @@ export async function computeUserStorageUsedBytes(
     }),
   ])
 
-  return (archiveAgg._sum.fileSizeBytes ?? 0n) + (stashAgg._sum.sizeBytes ?? 0n)
+  return (soundAgg._sum.fileSizeBytes ?? 0n) + (stashAgg._sum.sizeBytes ?? 0n)
 }
 
 /**
- * Same as computeUserStorageUsedBytes, but for every user with archive or
+ * Same as computeUserStorageUsedBytes, but for every user with sound or
  * stash content, in 3 queries total instead of 2-per-user — the admin
  * storage overview needs every user's usage at once, and looping
  * computeUserStorageUsedBytes per user would be an N+1 query pattern (fine
  * for one user's own /api/me/storage, not for a platform-wide dashboard).
  *
- * ArchiveItem has no direct userId column (it hangs off Channel, which is
- * 1:1 with User), so archive bytes are grouped by channelId first and then
+ * Sound has no direct userId column (it hangs off Channel, which is
+ * 1:1 with User), so sound bytes are grouped by channelId first and then
  * remapped to userId via a channelId->userId lookup; stash bytes already
  * have a direct userId column and group straight from that.
  */
 export async function computeAllUsersStorageUsedBytes(
   prisma: PrismaClient,
 ): Promise<Map<string, bigint>> {
-  const [archiveByChannel, stashByUser, channels] = await Promise.all([
-    prisma.archiveItem.groupBy({
+  const [soundByChannel, stashByUser, channels] = await Promise.all([
+    prisma.sound.groupBy({
       by: ['channelId'],
       _sum: { fileSizeBytes: true },
     }),
@@ -52,7 +52,7 @@ export async function computeAllUsersStorageUsedBytes(
   const channelToUser = new Map(channels.map((c) => [c.id, c.userId]))
   const totals = new Map<string, bigint>()
 
-  for (const row of archiveByChannel) {
+  for (const row of soundByChannel) {
     const userId = channelToUser.get(row.channelId)
     if (!userId) continue
     const bytes = row._sum.fileSizeBytes ?? 0n

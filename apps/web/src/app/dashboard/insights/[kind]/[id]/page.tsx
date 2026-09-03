@@ -9,7 +9,7 @@ import { StudioHeaderActions } from '../../../_studio-header-actions'
 import { TrackInsightsView, type TrackInsightsPayload } from './_track-insights-view'
 
 const KIND_TO_API_SEGMENT = {
-  archive: 'archive',
+  sound: 'sound',
   'release-track': 'release-tracks',
 } as const
 
@@ -53,8 +53,8 @@ export default async function TrackInsightsPage({
             isLive={Boolean(user?.channel?.goneLiveAt)}
             channelSlug={user?.channel?.slug}
             showBack
-            backHref={params.kind === 'archive' ? '/dashboard/archive' : '/dashboard/releases'}
-            backLabel={params.kind === 'archive' ? 'Music' : 'Releases'}
+            backHref={params.kind === 'sound' ? '/dashboard/sounds' : '/dashboard/releases'}
+            backLabel={params.kind === 'sound' ? 'Music' : 'Releases'}
           />
         </div>
       </div>

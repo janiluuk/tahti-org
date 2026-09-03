@@ -69,12 +69,12 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
       </div>
       {level === 'grace' ? (
         <p className="studio-text-warn studio-mt-sm">
-          Weekly hour reached — wrapping up live (about a minute). Archive plays until Monday 00:00
-          UTC.
+          Weekly hour reached — wrapping up live (about a minute). Recorded shows play until Monday
+          00:00 UTC.
         </p>
       ) : level === 'blocked' ? (
         <p className="studio-text-warn studio-mt-sm">
-          Your weekly hour is up — archive plays until Monday 00:00 UTC.{' '}
+          Your weekly hour is up — recorded shows play until Monday 00:00 UTC.{' '}
           <Link href="/help/tier-limits">Free tier vs membership benefits</Link>
           {' · '}
           <Link href="/dashboard/settings/account">View membership →</Link>

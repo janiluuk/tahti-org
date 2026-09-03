@@ -31,7 +31,7 @@ function IconRepost() {
 
 /** Repost/share a track to your own followers — the artist gets a NEW_REPOST
  * notification the first time each listener reposts it. Distinct from
- * ArchiveDownloadButton's repost-to-download acknowledgment, which gates a
+ * SoundDownloadButton's repost-to-download acknowledgment, which gates a
  * download rather than sharing anything. */
 export function RepostButton({
   channelSlug,
@@ -53,7 +53,7 @@ export function RepostButton({
     let cancelled = false
     void (async () => {
       const res = await fetch(
-        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/archive/${itemId}/repost`,
+        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/sounds/${itemId}/repost`,
         { credentials: 'include' },
       )
       if (!res.ok || cancelled) return
@@ -72,7 +72,7 @@ export function RepostButton({
     setPending(true)
     try {
       const res = await fetch(
-        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/archive/${itemId}/repost`,
+        `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/sounds/${itemId}/repost`,
         { method: reposted ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {

@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 interface AdminUserFile {
   id: string
-  kind: 'archive' | 'stash'
+  kind: 'sound' | 'stash'
   title: string
   sizeBytes: number | null
   createdAt: string
@@ -98,7 +98,7 @@ export default async function AdminUserStoragePage({ params }: { params: { userI
                 <tr key={file.id}>
                   <td>{file.title}</td>
                   <td style={{ opacity: 0.7 }}>
-                    {file.kind === 'archive' ? (file.contentType ?? 'archive') : 'stash'}
+                    {file.kind === 'sound' ? (file.contentType ?? 'sound') : 'stash'}
                   </td>
                   <td style={{ opacity: 0.6 }}>{formatDate(file.createdAt)}</td>
                   <td style={{ opacity: 0.6 }}>{formatBytes(file.sizeBytes)}</td>

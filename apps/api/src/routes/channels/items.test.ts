@@ -54,7 +54,7 @@ describe('GET /api/channels/:slug/items', () => {
 
     channelId = user.channel!.id
 
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId,
         title: 'Ready Track',
@@ -69,7 +69,7 @@ describe('GET /api/channels/:slug/items', () => {
       },
     })
 
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId,
         title: 'Pending Track',
@@ -109,7 +109,7 @@ describe('GET /api/channels/:slug/items', () => {
   })
 
   it('serves flac when item has no mp3', async () => {
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId,
         title: 'Lossless Track',

@@ -69,7 +69,7 @@ const DASHBOARD_HOME: TourStep[] = [
     body: 'This week’s listeners, downloads, and fan-subscription revenue at a glance — the same numbers behind the fuller breakdown on the Stats page.',
   },
   {
-    selector: '.db-recent-archive__header',
+    selector: '.db-recent-sound__header',
     title: 'Recent broadcasts',
     body: 'Your latest archived sets and shows — open one to edit it, or view your full discography.',
   },
@@ -134,7 +134,7 @@ const REVENUE_STEPS: TourStep[] = [
 
 const ARCHIVE_STEPS: TourStep[] = [
   {
-    selector: '.archive-list__toolbar',
+    selector: '.sound-list__toolbar',
     title: 'Filter and sort',
     body: 'Filter your discography by type or search, and switch between list views.',
   },

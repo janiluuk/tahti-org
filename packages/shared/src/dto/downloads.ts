@@ -3,10 +3,11 @@
 
 import { z } from 'zod'
 
-/** Public archive / release download query (`?fp=&format=`). */
+
+/** Public sound / release download query (`?fp=&format=`). */
 export const DownloadFormatSchema = z.enum(['mp3_320', 'opus256', 'flac', 'source'])
 
-export const ArchiveDownloadQuerySchema = z.object({
+export const SoundDownloadQuerySchema = z.object({
   fp: z.string().max(128).optional(),
   format: DownloadFormatSchema.optional(),
 })

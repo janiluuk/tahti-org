@@ -39,7 +39,7 @@ describe('/api/top-lists', () => {
     boardCookie = await sessionCookieFor(prisma, board.id)
     plainCookie = await sessionCookieFor(prisma, owner.id)
 
-    const popular = await prisma.archiveItem.create({
+    const popular = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Popular Track',
@@ -51,7 +51,7 @@ describe('/api/top-lists', () => {
     })
     popularId = popular.id
 
-    const quiet = await prisma.archiveItem.create({
+    const quiet = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Quiet Track',
@@ -63,7 +63,7 @@ describe('/api/top-lists', () => {
     })
     quietId = quiet.id
 
-    const ineligible = await prisma.archiveItem.create({
+    const ineligible = await prisma.sound.create({
       data: {
         channelId: owner.channel!.id,
         title: 'Ineligible Track',
@@ -80,11 +80,11 @@ describe('/api/top-lists', () => {
     // rules are the API route's job, not this fixture's.
     await prisma.listenEvent.createMany({
       data: [
-        { archiveItemId: popularId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
-        { archiveItemId: popularId, dedupeKey: 'l2', dayBucket: '2026-07-01' },
-        { archiveItemId: popularId, dedupeKey: 'l3', dayBucket: '2026-07-01' },
-        { archiveItemId: quietId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
-        { archiveItemId: ineligibleId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
+        { soundId: popularId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
+        { soundId: popularId, dedupeKey: 'l2', dayBucket: '2026-07-01' },
+        { soundId: popularId, dedupeKey: 'l3', dayBucket: '2026-07-01' },
+        { soundId: quietId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
+        { soundId: ineligibleId, dedupeKey: 'l1', dayBucket: '2026-07-01' },
       ],
     })
   })
@@ -98,7 +98,7 @@ describe('/api/top-lists', () => {
     const res = await app.inject({ method: 'GET', url: '/api/top-lists?period=all_time' })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    const ids = body.entries.map((e: { archiveItemId: string }) => e.archiveItemId)
+    const ids = body.entries.map((e: { soundId: string }) => e.soundId)
     expect(ids).toContain(popularId)
     expect(ids).toContain(quietId)
     expect(ids).not.toContain(ineligibleId)
@@ -125,7 +125,7 @@ describe('/api/top-lists', () => {
       url: '/api/top-lists?period=all_time&sort=asc',
     })
     expect(res.statusCode).toBe(200)
-    const ids = res.json().entries.map((e: { archiveItemId: string }) => e.archiveItemId)
+    const ids = res.json().entries.map((e: { soundId: string }) => e.soundId)
     expect(ids.indexOf(quietId)).toBeLessThan(ids.indexOf(popularId))
   })
 
@@ -143,7 +143,7 @@ describe('/api/top-lists', () => {
       url: '/api/top-lists?period=all_time&genre=Techno',
     })
     expect(res.statusCode).toBe(200)
-    const ids = res.json().entries.map((e: { archiveItemId: string }) => e.archiveItemId)
+    const ids = res.json().entries.map((e: { soundId: string }) => e.soundId)
     expect(ids).toEqual(expect.arrayContaining([popularId, quietId]))
 
     const noneRes = await app.inject({
@@ -190,7 +190,7 @@ describe('/api/top-lists', () => {
     const body = res.json()
     const djMixBucket = body.buckets.find((b: { bucket: string }) => b.bucket === 'DJ_SET')
     expect(djMixBucket).toBeDefined()
-    expect(djMixBucket.entries[0].archiveItemId).toBe(popularId)
+    expect(djMixBucket.entries[0].soundId).toBe(popularId)
 
     const leastRes = await app.inject({
       method: 'GET',
@@ -200,7 +200,7 @@ describe('/api/top-lists', () => {
     const leastBucket = leastRes
       .json()
       .buckets.find((b: { bucket: string }) => b.bucket === 'DJ_SET')
-    expect(leastBucket.entries[0].archiveItemId).toBe(quietId)
+    expect(leastBucket.entries[0].soundId).toBe(quietId)
   })
 
   it('admin top-lists buckets by genre', async () => {
@@ -212,7 +212,7 @@ describe('/api/top-lists', () => {
     expect(res.statusCode).toBe(200)
     const technoBucket = res.json().buckets.find((b: { bucket: string }) => b.bucket === 'Techno')
     expect(technoBucket).toBeDefined()
-    expect(technoBucket.entries.map((e: { archiveItemId: string }) => e.archiveItemId)).toEqual([
+    expect(technoBucket.entries.map((e: { soundId: string }) => e.soundId)).toEqual([
       popularId,
       quietId,
     ])
@@ -226,9 +226,6 @@ describe('/api/top-lists', () => {
     })
     expect(res.statusCode).toBe(200)
     const entries = res.json().buckets.flatMap((bucket: { entries: unknown[] }) => bucket.entries)
-    expect(entries.map((entry: { archiveItemId: string }) => entry.archiveItemId)).toEqual([
-      popularId,
-      quietId,
-    ])
+    expect(entries.map((entry: { soundId: string }) => entry.soundId)).toEqual([popularId, quietId])
   })
 })

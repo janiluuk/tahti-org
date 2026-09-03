@@ -31,7 +31,7 @@ export function PublishToggle({ initialEnabled }: { initialEnabled: boolean }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ autoArchive: next }),
+        body: JSON.stringify({ autoPublish: next }),
       })
       if (!preflightResponse.ok) {
         setError('Publishing default saved, but this broadcast could not be updated.')

@@ -119,7 +119,7 @@ export function canAcceptSourceConnect(cap: BroadcastCapResult, channelState: st
   return true
 }
 
-/** True when the channel is airing 24/7 archive fallback, not an artist live show.
+/** True when the channel is airing 24/7 sound fallback, not an artist live show.
  * Fallback reconciler keeps state LIVE with a placeholder broadcast that never
  * gets wentLiveAt — only real go-live / ingest sessions set that field. */
 export function isFallbackOnlyLiveSession(
@@ -132,7 +132,7 @@ export function isFallbackOnlyLiveSession(
 }
 
 /** Increment live seconds for FREE-tier users actively broadcasting (preview or public live).
- * 24/7 archive fallback channels stay LIVE but never went live — they are excluded. */
+ * 24/7 sound fallback channels stay LIVE but never went live — they are excluded. */
 export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<number> {
   const liveChannels = await prisma.channel.findMany({
     where: { state: { in: ['LIVE', 'PREVIEW'] } },

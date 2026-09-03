@@ -28,7 +28,7 @@ import { PlaygroundWaveformDemo } from './playground-demos'
 const DASHBOARD_NAV = [
   { href: '#channel', icon: 'channel' as const, label: 'Channel', active: true },
   { href: '#stats', icon: 'stats' as const, label: 'Stats' },
-  { href: '#archive', icon: 'archive' as const, label: 'Archive' },
+  { href: '#sound', icon: 'sound' as const, label: 'Sounds' },
   { href: '#revenue', icon: 'revenue' as const, label: 'Revenue' },
   { href: '#settings', icon: 'settings' as const, label: 'Settings' },
 ]
@@ -88,7 +88,7 @@ export function PlaygroundComposites() {
             main={
               <div className="playground-channel-main">
                 <BrandHeading level={2}>Moonrise Sessions — Live</BrandHeading>
-                <BrandText tone="secondary">Ambient · originals · 24/7 archive rotation</BrandText>
+                <BrandText tone="secondary">Ambient · originals · 24/7 sound rotation</BrandText>
                 <PlaygroundWaveformDemo />
               </div>
             }
@@ -170,7 +170,7 @@ export function PlaygroundComposites() {
           <TierCard
             name="Supporter"
             priceLabel="€3.00"
-            perks={['Fan chat access', 'Early archive drops']}
+            perks={['Fan chat access', 'Early sound drops']}
           />
           <TierCard
             name="Backer"

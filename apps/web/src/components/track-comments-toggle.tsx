@@ -25,11 +25,11 @@ function IconComment() {
 
 /** Comments are fetched lazily on expand — a channel page can list dozens of tracks. */
 export function TrackCommentsToggle({
-  archiveItemId,
+  soundId,
   isLoggedIn,
   commentCount = 0,
 }: {
-  archiveItemId: string
+  soundId: string
   isLoggedIn: boolean
   commentCount?: number
 }) {
@@ -43,7 +43,7 @@ export function TrackCommentsToggle({
     if (comments !== null) return
     setLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/api/comments/track/${archiveItemId}`)
+      const res = await fetch(`${API_BASE}/api/comments/track/${soundId}`)
       if (res.ok) {
         const data = (await res.json()) as { comments: CommentItem[]; commentsEnabled: boolean }
         setComments(data.comments)
@@ -86,7 +86,7 @@ export function TrackCommentsToggle({
         <p className="comments-section__empty">Loading…</p>
       ) : (
         <CommentsSection
-          target={{ type: 'track', id: archiveItemId }}
+          target={{ type: 'track', id: soundId }}
           isLoggedIn={isLoggedIn}
           initialComments={comments}
           initialCommentsEnabled={commentsEnabled}

@@ -18,7 +18,7 @@ export const CreateLiveShowSeriesSchema = z.object({
   artworkUrl: z.string().url().max(2_000).nullable().optional(),
   showType: BroadcastShowTypeSchema.default('LIVE_SET'),
   visibility: BroadcastVisibilitySchema.default('PUBLIC'),
-  autoArchive: z.boolean().default(true),
+  autoPublish: z.boolean().default(true),
   episodeNumberEnabled: z.boolean().default(true),
   nextEpisodeNumber: z.number().int().min(1).max(100_000).default(1),
   /// Preferred length for this show's radio-slot bookings, hours.
@@ -69,7 +69,7 @@ export const LiveShowEpisodeStatusSchema = z.enum([
 export const CreateLiveShowEpisodeSchema = z.object({
   source: LiveShowEpisodeSourceSchema,
   title: z.string().trim().max(200).optional(),
-  archiveItemId: z.string().nullable().optional(),
+  soundId: z.string().nullable().optional(),
   radioSlotBookingId: z.string().nullable().optional(),
 })
 
@@ -78,7 +78,7 @@ export const PatchLiveShowEpisodeSchema = z.object({
   description: z.string().trim().max(2_000).nullable().optional(),
   artworkUrl: z.string().url().max(2_000).nullable().optional(),
   status: LiveShowEpisodeStatusSchema.optional(),
-  archiveItemId: z.string().nullable().optional(),
+  soundId: z.string().nullable().optional(),
   radioSlotBookingId: z.string().nullable().optional(),
 })
 
@@ -91,7 +91,7 @@ export const LiveShowEpisodeViewSchema = z.object({
   artworkUrl: z.string().nullable(),
   status: LiveShowEpisodeStatusSchema,
   source: LiveShowEpisodeSourceSchema,
-  archiveItemId: z.string().nullable(),
+  soundId: z.string().nullable(),
   radioSlotBookingId: z.string().nullable(),
   createdAt: z.string().datetime(),
 })
@@ -113,7 +113,7 @@ export const ScheduledLiveShowViewSchema = z.object({
   artworkUrl: z.string().nullable(),
   showType: BroadcastShowTypeSchema,
   visibility: BroadcastVisibilitySchema,
-  autoArchive: z.boolean(),
+  autoPublish: z.boolean(),
 })
 
 export const LiveShowSeriesListSchema = z.object({

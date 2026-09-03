@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AutoRecordEnabledPatchSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
-// M35: per-channel opt-out of auto-recording a finished broadcast to the archive.
+// M35: per-channel opt-out of auto-recording a finished broadcast to the sound.
 const meRecordingSettings: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/channel/recording',

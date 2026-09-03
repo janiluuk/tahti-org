@@ -13,10 +13,7 @@ import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
-import {
-  ArchiveVideoBackdrop,
-  resolveArchiveBackground,
-} from '@/app/c/[slug]/archive-item-backdrop'
+import { SoundVideoBackdrop, resolveSoundBackground } from '@/app/c/[slug]/sound-item-backdrop'
 import type { DesignerSectionId } from './_designer-sections'
 import {
   BRAND_ACCENT_PRESETS,
@@ -93,7 +90,7 @@ export function ChannelLivePreview({
   /** When set, clicking a highlightable region jumps to that designer section. */
   onSectionSelect?: (id: DesignerSectionId) => void
 }) {
-  const backdrop = resolveArchiveBackground(draft.gallery.videoBackgroundUrl)
+  const backdrop = resolveSoundBackground(draft.gallery.videoBackgroundUrl)
   const bannerStyle = resolveHeaderBannerStyle(draft.visual)
   const visualSettings = resolveVisualPresetSettings(
     parseVisualSettingsMap(draft.visual.visualSettingsJson),
@@ -140,7 +137,7 @@ export function ChannelLivePreview({
 
         <div className="ch-page-foreground">
           {showMedia && draft.visual.headerStyle === 'VIDEO_LOOP' && backdrop.videoEmbedUrl && (
-            <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />
+            <SoundVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />
           )}
           {showMedia &&
             draft.visual.headerStyle === 'VIDEO_LOOP' &&

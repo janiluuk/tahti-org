@@ -546,7 +546,7 @@
   color: var(--cyan);
 }
 
-.pill--archive {
+.pill--sound {
   background: color-mix(in srgb, var(--muted) 15%, transparent);
   color: var(--muted);
 }

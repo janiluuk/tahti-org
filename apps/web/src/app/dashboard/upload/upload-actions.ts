@@ -76,9 +76,9 @@ export interface RecentBroadcast {
   startedAt: string
   endedAt?: string | null
   recordingKey: string | null
-  archiveItemId: string | null
-  archiveItemTitle?: string
-  archiveItemStatus?: string
+  soundId: string | null
+  soundTitle?: string
+  soundStatus?: string
   durationSec?: number
 }
 

@@ -186,7 +186,7 @@ export function UploadInProgress({
       for (let i = 0; i < 90; i++) {
         await new Promise((r) => setTimeout(r, 2000))
         try {
-          const res = await fetch(`${API_BASE}/api/me/archive/${result.itemId}`, {
+          const res = await fetch(`${API_BASE}/api/me/sound/${result.itemId}`, {
             credentials: 'include',
           })
           if (res.ok) {
@@ -477,7 +477,7 @@ export function UploadInProgress({
             <Link href="/dashboard/releases" className="ui-btn ui-btn--ghost ui-btn--sm">
               Add smart links →
             </Link>
-            <Link href={`/dashboard/archive/${itemId}`} className="ui-btn ui-btn--primary">
+            <Link href={`/dashboard/sounds/${itemId}`} className="ui-btn ui-btn--primary">
               <ButtonIcon name="send" />
               Preview & publish →
             </Link>

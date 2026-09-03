@@ -8,7 +8,7 @@ import { prisma } from '@tahti/db'
 import { extensionFromDriveFile } from '@tahti/shared'
 import { createHearthisClient } from '@tahti/hearthis'
 import { uploadStream } from '../lib/minio.js'
-import { enqueueTranscodeArchive } from '../lib/queue.js'
+import { enqueueTranscodeSound } from '../lib/queue.js'
 
 const hearthis = createHearthisClient()
 
@@ -86,7 +86,7 @@ export async function processHearthisImportJob(job: Job): Promise<void> {
 
     await uploadStream(rawKey, nodeStream, contentType || 'application/octet-stream', contentLength)
 
-    const archiveItem = await prisma.archiveItem.create({
+    const sound = await prisma.sound.create({
       data: {
         channelId: channel.id,
         title: track.title,
@@ -103,13 +103,13 @@ export async function processHearthisImportJob(job: Job): Promise<void> {
       data: {
         status: 'DONE',
         fileName: track.title,
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         bytesTransferred: contentLength !== undefined ? BigInt(contentLength) : null,
         completedAt: new Date(),
       },
     })
 
-    await enqueueTranscodeArchive(archiveItem.id)
+    await enqueueTranscodeSound(sound.id)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     await prisma.cloudImportJob.update({

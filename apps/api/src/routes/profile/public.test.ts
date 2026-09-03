@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
 } from '../../test/helpers.js'
 
@@ -80,13 +80,13 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(collection!.style).toBe('DJ_SET_SERIES')
   })
 
-  it('lists all ready archive items under tracks, flagging pinned ones', async () => {
+  it('lists all ready sound items under tracks, flagging pinned ones', async () => {
     const artist = await prisma.user.findUniqueOrThrow({
       where: { username: 'public-profile-artist' },
       select: { id: true, channel: { select: { id: true } } },
     })
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Pinned track')
-    await prisma.archiveItem.update({ where: { id: item.id }, data: { pinnedAt: new Date() } })
+    const item = await createReadySound(prisma, artist.channel!.id, 'Pinned track')
+    await prisma.sound.update({ where: { id: item.id }, data: { pinnedAt: new Date() } })
 
     const res = await app.inject({
       method: 'GET',
@@ -107,7 +107,7 @@ describe('GET /api/v1/u/:username/profile', () => {
       where: { username: 'public-profile-artist' },
       select: { id: true, channel: { select: { id: true } } },
     })
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Album track')
+    const item = await createReadySound(prisma, artist.channel!.id, 'Album track')
     const release = await prisma.release.create({
       data: {
         userId: artist.id,
@@ -117,7 +117,7 @@ describe('GET /api/v1/u/:username/profile', () => {
         smartLinkSlug: `${PREFIX}test-album`,
         state: 'PUBLISHED',
         tracks: {
-          create: { position: 1, title: 'Album track', archiveItemId: item.id },
+          create: { position: 1, title: 'Album track', soundId: item.id },
         },
       },
     })

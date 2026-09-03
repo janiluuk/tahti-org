@@ -77,10 +77,10 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-006: aggregate Caddy HLS access log bytes into Redis (edge worker only)',
   },
   {
-    name: 'archive-fallback-cache-sync',
+    name: 'sound-fallback-cache-sync',
     pattern: '*/10 * * * *',
-    jobId: 'archive-fallback-cache-sync-cron',
-    description: 'STREAM-009: refresh local archive fallback cache for Liquidsoap',
+    jobId: 'sound-fallback-cache-sync-cron',
+    description: 'STREAM-009: refresh local sound fallback cache for Liquidsoap',
   },
   {
     name: 'weekly-broadcast-reset',
@@ -165,8 +165,7 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     name: 'sweep-editor-peaks-backfill',
     pattern: '0 3 * * *',
     jobId: 'sweep-editor-peaks-backfill-cron',
-    description:
-      'PERF-04: backfill editorPeaks for READY archives missing pyramid data (03:00 UTC)',
+    description: 'PERF-04: backfill editorPeaks for READY sounds missing pyramid data (03:00 UTC)',
   },
   {
     name: 'sweep-expired-stems',

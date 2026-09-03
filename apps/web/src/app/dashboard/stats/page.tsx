@@ -16,7 +16,7 @@ import { ListenerMapPanel } from './listener-map-panel'
 import type { GeoPoint } from '@/components/country-choropleth-map'
 
 interface TopTrack {
-  archiveItemId: string
+  soundId: string
   title: string
   plays: number
 }

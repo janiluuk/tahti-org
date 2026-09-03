@@ -158,7 +158,7 @@ describe('M18 — release track downloads', () => {
     expect(dl?.weight).toBe(5)
   })
 
-  it('allows FLAC for member artists (parity with archive) and fan subs', async () => {
+  it('allows FLAC for member artists (parity with sound) and fan subs', async () => {
     const anon = await app.inject({
       method: 'GET',
       url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=flac&fp=x`,

@@ -1208,7 +1208,7 @@
   font-family: var(--font-head);
 }
 
-[data-tahti-ui='studio'] .studio-archive-section {
+[data-tahti-ui='studio'] .studio-sound-section {
   margin-top: 0;
   padding: 0;
   border: none;
@@ -2482,7 +2482,7 @@
   border-color: color-mix(in srgb, var(--green) 35%, var(--border));
 }
 
-[data-tahti-ui='studio'] .archive-list__toolbar {
+[data-tahti-ui='studio'] .sound-list__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2500,7 +2500,7 @@
   overflow-x: auto;
 }
 
-[data-tahti-ui='studio'] .archive-list__filters {
+[data-tahti-ui='studio'] .sound-list__filters {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -2508,7 +2508,7 @@
   flex-shrink: 0;
 }
 
-[data-tahti-ui='studio'] .archive-list__filter {
+[data-tahti-ui='studio'] .sound-list__filter {
   font-size: var(--text-xs);
   padding: 0.3rem 0.55rem;
   border-radius: var(--radius-full, 999px);
@@ -2519,7 +2519,7 @@
   white-space: nowrap;
 }
 
-[data-tahti-ui='studio'] .archive-list__filter--active {
+[data-tahti-ui='studio'] .sound-list__filter--active {
   border-color: var(--cyan);
   color: var(--bg);
   background: var(--cyan);
@@ -2532,7 +2532,7 @@
   flex-wrap: wrap;
 }
 
-[data-tahti-ui='studio'] .archive-list__toolbar-right {
+[data-tahti-ui='studio'] .sound-list__toolbar-right {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2546,36 +2546,36 @@
   margin-left: auto;
 }
 
-[data-tahti-ui='studio'] .archive-list__search {
+[data-tahti-ui='studio'] .sound-list__search {
   max-width: 180px;
   min-width: 80px;
   flex-shrink: 1;
 }
 
-[data-tahti-ui='studio'] .archive-list__sort {
+[data-tahti-ui='studio'] .sound-list__sort {
   width: auto;
   max-width: 130px;
   flex-shrink: 1;
 }
 
 @media (max-width: 640px) {
-  [data-tahti-ui='studio'] .archive-list__toolbar {
+  [data-tahti-ui='studio'] .sound-list__toolbar {
     flex-wrap: wrap;
   }
 
-  [data-tahti-ui='studio'] .archive-list__toolbar-right {
+  [data-tahti-ui='studio'] .sound-list__toolbar-right {
     flex-shrink: 0;
     min-width: 100%;
   }
 
-  [data-tahti-ui='studio'] .archive-list__search,
-  [data-tahti-ui='studio'] .archive-list__sort {
+  [data-tahti-ui='studio'] .sound-list__search,
+  [data-tahti-ui='studio'] .sound-list__sort {
     max-width: none;
     flex: 1;
   }
 }
 
-[data-tahti-ui='studio'] .archive-list__row {
+[data-tahti-ui='studio'] .sound-list__row {
   display: flex;
   align-items: stretch;
   gap: 0.65rem;
@@ -2586,11 +2586,11 @@
   background: color-mix(in srgb, var(--card2) 55%, transparent);
 }
 
-[data-tahti-ui='studio'] .archive-list__row:last-child {
+[data-tahti-ui='studio'] .sound-list__row:last-child {
   margin-bottom: 0;
 }
 
-[data-tahti-ui='studio'] .archive-list__cover {
+[data-tahti-ui='studio'] .sound-list__cover {
   position: relative;
   width: 96px;
   align-self: stretch;
@@ -2600,14 +2600,14 @@
   border: 1px solid var(--border);
 }
 
-[data-tahti-ui='studio'] .archive-list__cover img {
+[data-tahti-ui='studio'] .sound-list__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-[data-tahti-ui='studio'] .archive-list__cover-ph {
+[data-tahti-ui='studio'] .sound-list__cover-ph {
   width: 100%;
   height: 100%;
 }
@@ -2634,7 +2634,7 @@
   background: linear-gradient(135deg, var(--purple), #f472b6);
 }
 
-[data-tahti-ui='studio'] .archive-list__cover-embed-badge {
+[data-tahti-ui='studio'] .sound-list__cover-embed-badge {
   position: absolute;
   top: 0.2rem;
   right: 0.2rem;
@@ -2647,46 +2647,46 @@
   white-space: nowrap;
 }
 
-[data-tahti-ui='studio'] .archive-list__row-body {
+[data-tahti-ui='studio'] .sound-list__row-body {
   flex: 1;
   min-width: 0;
 }
 
-[data-tahti-ui='studio'] .archive-list__embed,
-[data-tahti-ui='studio'] .archive-list__embed-row {
+[data-tahti-ui='studio'] .sound-list__embed,
+[data-tahti-ui='studio'] .sound-list__embed-row {
   list-style: none;
   margin: 0.5rem 0 0;
   padding: 0;
 }
 
-[data-tahti-ui='studio'] .archive-list__playback-row {
+[data-tahti-ui='studio'] .sound-list__playback-row {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-[data-tahti-ui='studio'] .archive-list__row-actions {
+[data-tahti-ui='studio'] .sound-list__row-actions {
   display: flex;
   align-items: center;
   gap: 0.2rem;
   flex-wrap: wrap;
 }
 
-[data-tahti-ui='studio'] .archive-list__tools {
+[data-tahti-ui='studio'] .sound-list__tools {
   position: relative;
   display: inline-block;
 }
 
-[data-tahti-ui='studio'] .archive-list__tools > summary {
+[data-tahti-ui='studio'] .sound-list__tools > summary {
   list-style: none;
   cursor: pointer;
 }
 
-[data-tahti-ui='studio'] .archive-list__tools > summary::-webkit-details-marker {
+[data-tahti-ui='studio'] .sound-list__tools > summary::-webkit-details-marker {
   display: none;
 }
 
-[data-tahti-ui='studio'] .archive-list__tools-menu {
+[data-tahti-ui='studio'] .sound-list__tools-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 0.25rem);
@@ -2701,8 +2701,8 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-[data-tahti-ui='studio'] .archive-list__tools-menu a,
-[data-tahti-ui='studio'] .archive-list__tools-menu button {
+[data-tahti-ui='studio'] .sound-list__tools-menu a,
+[data-tahti-ui='studio'] .sound-list__tools-menu button {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2717,12 +2717,12 @@
   text-decoration: none;
 }
 
-[data-tahti-ui='studio'] .archive-list__tools-menu a:hover,
-[data-tahti-ui='studio'] .archive-list__tools-menu button:hover {
+[data-tahti-ui='studio'] .sound-list__tools-menu a:hover,
+[data-tahti-ui='studio'] .sound-list__tools-menu button:hover {
   background: color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 
-[data-tahti-ui='studio'] .archive-list__embed-filter {
+[data-tahti-ui='studio'] .sound-list__embed-filter {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2778,12 +2778,12 @@
 
 /* Tiger-striped rows — same alternating-tint pattern as the public archive list
    and admin rotation list, so a long library is just as easy to scan here.
-   Second selector covers ArchiveEditor's usage, where .studio-item-row--list is
+   Second selector covers SoundEditor's usage, where .studio-item-row--list is
    the sole child of its own wrapper (so it's never itself :nth-child(even)) —
    stripe off the real list-item ancestor's position instead. */
 [data-tahti-ui='studio'] .studio-item-row--list:nth-child(even):not(.studio-item-row--list--active),
 [data-tahti-ui='studio']
-  .archive-list__row:nth-child(even)
+  .sound-list__row:nth-child(even)
   .studio-item-row--list:not(.studio-item-row--list--active) {
   background: color-mix(in srgb, var(--card2) 35%, transparent);
 }
@@ -5860,7 +5860,7 @@
   margin-top: 0.75rem;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__header {
+[data-tahti-ui='studio'] .db-recent-sound__header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -5868,13 +5868,13 @@
   margin-bottom: 0.5rem;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__view-all {
+[data-tahti-ui='studio'] .db-recent-sound__view-all {
   font-size: var(--text-xs);
   color: var(--muted);
   text-decoration: none;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__view-all:hover {
+[data-tahti-ui='studio'] .db-recent-sound__view-all:hover {
   color: var(--cyan);
 }
 
@@ -7094,7 +7094,7 @@
   text-decoration: underline;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__list {
+[data-tahti-ui='studio'] .db-recent-sound__list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -7103,7 +7103,7 @@
   gap: 2px;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__item {
+[data-tahti-ui='studio'] .db-recent-sound__item {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -7114,11 +7114,11 @@
   transition: border-color 0.12s;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__item:hover {
+[data-tahti-ui='studio'] .db-recent-sound__item:hover {
   border-color: color-mix(in srgb, var(--muted) 30%, transparent);
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__icon {
+[data-tahti-ui='studio'] .db-recent-sound__icon {
   width: 32px;
   height: 32px;
   border-radius: 6px;
@@ -7131,12 +7131,12 @@
   font-size: var(--text-body);
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__body {
+[data-tahti-ui='studio'] .db-recent-sound__body {
   flex: 1;
   min-width: 0;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__title {
+[data-tahti-ui='studio'] .db-recent-sound__title {
   font-size: var(--text-body);
   font-weight: 500;
   color: var(--text);
@@ -7145,19 +7145,19 @@
   text-overflow: ellipsis;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__meta {
+[data-tahti-ui='studio'] .db-recent-sound__meta {
   font-size: var(--text-xs);
   color: var(--muted2);
   margin-top: 1px;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__actions {
+[data-tahti-ui='studio'] .db-recent-sound__actions {
   display: flex;
   gap: 0.4rem;
   flex-shrink: 0;
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__link {
+[data-tahti-ui='studio'] .db-recent-sound__link {
   font-size: var(--text-xs);
   color: var(--cyan);
   text-decoration: none;
@@ -7166,7 +7166,7 @@
   border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
 }
 
-[data-tahti-ui='studio'] .db-recent-archive__link:hover {
+[data-tahti-ui='studio'] .db-recent-sound__link:hover {
   background: color-mix(in srgb, var(--cyan) 8%, transparent);
 }
 
@@ -9584,7 +9584,7 @@
 
 /* ── Upload in-progress (View 2) ───────────────────────────────────────────── */
 
-[data-tahti-ui='studio'] .archive-preview-page {
+[data-tahti-ui='studio'] .sound-preview-page {
   max-width: 720px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4);
@@ -9593,31 +9593,31 @@
   gap: var(--space-5);
 }
 
-[data-tahti-ui='studio'] .archive-preview-page__header {
+[data-tahti-ui='studio'] .sound-preview-page__header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-[data-tahti-ui='studio'] .archive-preview-page__back {
+[data-tahti-ui='studio'] .sound-preview-page__back {
   font-size: var(--text-sm);
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
 }
 
-[data-tahti-ui='studio'] .archive-preview-page__back:hover {
+[data-tahti-ui='studio'] .sound-preview-page__back:hover {
   color: var(--fg);
 }
 
-[data-tahti-ui='studio'] .archive-preview-page__title {
+[data-tahti-ui='studio'] .sound-preview-page__title {
   font-size: var(--text-lg);
   font-weight: var(--weight-medium);
   color: var(--fg);
   margin: 0;
 }
 
-[data-tahti-ui='studio'] .archive-preview-page__actions {
+[data-tahti-ui='studio'] .sound-preview-page__actions {
   display: flex;
   gap: var(--space-3);
 }

@@ -163,7 +163,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         take: 20,
         select: {
           id: true,
-          archiveItem: {
+          sound: {
             select: {
               title: true,
               artistName: true,
@@ -177,12 +177,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         items.map((item) => ({
           id: item.id,
-          title: item.archiveItem.title,
-          artistName: item.archiveItem.artistName ?? item.archiveItem.channel.user.displayName,
-          artistUsername: item.archiveItem.artistName
-            ? null
-            : item.archiveItem.channel.user.username,
-          artworkUrl: item.archiveItem.bannerUrl,
+          title: item.sound.title,
+          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
+          artworkUrl: item.sound.bannerUrl,
         })),
       )
     },
@@ -319,10 +317,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             endAt: true,
             note: true,
             showType: true,
-            // Broadcast.archiveItemId is a bare scalar column (no Prisma
-            // relation to ArchiveItem declared on either model) — resolved
+            // Broadcast.soundId is a bare scalar column (no Prisma
+            // relation to Sound declared on either model) — resolved
             // via a second batch query below, not a nested select.
-            broadcasts: { select: { archiveItemId: true }, take: 1 },
+            broadcasts: { select: { soundId: true }, take: 1 },
           },
         }),
         fastify.prisma.radioSlotBooking.findMany({
@@ -332,22 +330,20 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       ])
 
-      const archiveItemIds = [
-        ...new Set(
-          pastRows.flatMap((r) => r.broadcasts.map((b) => b.archiveItemId).filter((id) => id)),
-        ),
+      const soundIds = [
+        ...new Set(pastRows.flatMap((r) => r.broadcasts.map((b) => b.soundId).filter((id) => id))),
       ] as string[]
       // Only a *published* recording counts as "the artist published it" —
-      // an archived-but-still-private item shouldn't show up as a public
+      // an soundd-but-still-private item shouldn't show up as a public
       // recording link on this no-auth page.
       const recordingRows =
-        archiveItemIds.length === 0
+        soundIds.length === 0
           ? []
-          : await fastify.prisma.archiveItem.findMany({
-              where: { id: { in: archiveItemIds }, isPublic: true, status: 'READY' },
+          : await fastify.prisma.sound.findMany({
+              where: { id: { in: soundIds }, isPublic: true, status: 'READY' },
               select: { id: true, title: true, channel: { select: { slug: true } } },
             })
-      const recordingByArchiveItemId = new Map(recordingRows.map((r) => [r.id, r]))
+      const recordingBySoundId = new Map(recordingRows.map((r) => [r.id, r]))
 
       const toEpisode = (r: {
         id: string
@@ -355,10 +351,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         endAt: Date
         note: string | null
         showType: 'LIVE_SET' | 'TALK'
-        broadcasts?: { archiveItemId: string | null }[]
+        broadcasts?: { soundId: string | null }[]
       }) => {
-        const archiveItemId = r.broadcasts?.[0]?.archiveItemId
-        const recordingItem = archiveItemId ? recordingByArchiveItemId.get(archiveItemId) : null
+        const soundId = r.broadcasts?.[0]?.soundId
+        const recordingItem = soundId ? recordingBySoundId.get(soundId) : null
         return {
           id: r.id,
           startAt: r.startAt.toISOString(),
@@ -367,10 +363,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           showType: r.showType,
           recording: recordingItem
             ? {
-                archiveItemId: recordingItem.id,
+                soundId: recordingItem.id,
                 title: recordingItem.title,
                 channelItemUrl: resolveChannelUrl(recordingItem.channel.slug, {
-                  hash: `archive-item-${recordingItem.id}`,
+                  hash: `sound-item-${recordingItem.id}`,
                 }),
               }
             : null,

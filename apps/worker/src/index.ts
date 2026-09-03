@@ -7,7 +7,7 @@ import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processEncodeStreamingCopyJob } from './jobs/encode-streaming-copy.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
-import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
+import { processRenderSoundEditJob } from './jobs/render-sound-edit.js'
 import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-trim.js'
 import { processOpenThemePullRequestJob } from './jobs/open-theme-pull-request.js'
 import { processSeparateStemsJob } from './jobs/separate-stems.js'
@@ -25,7 +25,7 @@ import { processSoundcloudImportJob } from './jobs/soundcloud-import.js'
 import { processHearthisImportJob } from './jobs/hearthis-import.js'
 import { processHearthisEmbedLocalizationJob } from './jobs/hearthis-embed-localize.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
-import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
+import { processSoundBroadcastJob } from './jobs/sound-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
@@ -53,9 +53,9 @@ import { processSidecarCleanupJob } from './jobs/sidecar-cleanup.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
-  processArchiveFallbackCacheSyncJob,
-  processWarmArchiveFallbackCacheJob,
-} from './jobs/archive-fallback-cache.js'
+  processSoundFallbackCacheSyncJob,
+  processWarmSoundFallbackCacheJob,
+} from './jobs/sound-fallback-cache.js'
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 import { runWithCronLog } from './lib/cron-run.js'
 import { jobNamesForLanes } from '@tahti/shared'
@@ -110,14 +110,14 @@ const worker = new Worker(
       throw new Error(`lane-mismatch: ${job.name} is not handled by this worker's --queues`)
     }
     return await runWithCronLog(job.name, async () => {
-      if (job.name === 'transcode-archive') {
+      if (job.name === 'transcode-sound') {
         await processTranscodeJob(job)
       } else if (job.name === 'encode-streaming-copy') {
         await processEncodeStreamingCopyJob(job)
-      } else if (job.name === 'transcode-archive-version') {
+      } else if (job.name === 'transcode-sound-version') {
         await processTranscodeVersionJob(job)
-      } else if (job.name === 'render-archive-edit') {
-        await processRenderArchiveEditJob(job)
+      } else if (job.name === 'render-sound-edit') {
+        await processRenderSoundEditJob(job)
       } else if (job.name === 'render-announcement-trim') {
         await processRenderAnnouncementTrimJob(job)
       } else if (job.name === 'open-theme-pull-request') {
@@ -156,8 +156,8 @@ const worker = new Worker(
         await processNewsletterDispatch(job)
       } else if (job.name === 'finalize-broadcast-recording') {
         await processFinalizeBroadcastRecordingJob(job)
-      } else if (job.name === 'archive-broadcast') {
-        await processArchiveBroadcastJob(job)
+      } else if (job.name === 'sound-broadcast') {
+        await processSoundBroadcastJob(job)
       } else if (job.name === 'monthly-ledger-rollup') {
         await processMonthlyLedgerRollup(job)
       } else if (job.name === 'channel-watchdog') {
@@ -188,13 +188,13 @@ const worker = new Worker(
         if (summary.lines > 0) {
           console.log('[worker] hls-caddy-egress-sync:', JSON.stringify(summary))
         }
-      } else if (job.name === 'warm-archive-fallback-cache') {
-        const summary = await processWarmArchiveFallbackCacheJob(prisma, job)
+      } else if (job.name === 'warm-sound-fallback-cache') {
+        const summary = await processWarmSoundFallbackCacheJob(prisma, job)
         if (summary.downloaded > 0) {
-          console.log('[worker] warm-archive-fallback-cache:', JSON.stringify(summary))
+          console.log('[worker] warm-sound-fallback-cache:', JSON.stringify(summary))
         }
-      } else if (job.name === 'archive-fallback-cache-sync') {
-        await processArchiveFallbackCacheSyncJob(prisma, job)
+      } else if (job.name === 'sound-fallback-cache-sync') {
+        await processSoundFallbackCacheSyncJob(prisma, job)
       } else if (job.name === 'broadcast-cap-tick') {
         const summary = await processBroadcastCapTick(prisma)
         console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))

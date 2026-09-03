@@ -233,6 +233,20 @@ enum SoundEmbedProvider {
   @@schema("channel")
 }
 
+// What kind of file this Sound row actually holds. AUDIO (the default) keeps the
+// existing rawKey/mp3Key/flacKey + transcode pipeline; IMAGE/VIDEO reuse the same
+// catalog row (title, genre, tags, collections, likes/reposts/comments) for a
+// standalone visual clip instead of duplicating that machinery in a new model —
+// see imageKey/videoKey below. Orthogonal to SoundContentType, which still
+// describes what the clip *is* (e.g. a video CLIP vs an audio one).
+enum SoundMediaKind {
+  AUDIO
+  IMAGE
+  VIDEO
+
+  @@schema("channel")
+}
+
 enum SoundLicense {
   ALL_RIGHTS_RESERVED
   CC_BY
@@ -364,23 +378,23 @@ enum AuditAction {
   STREAM_FORCE_OFFLINE
   STREAM_RESTART
   ACCOUNT_DELETE
-  ARCHIVE_EDIT_RENDER
-  ARCHIVE_EDIT_BOUNCE
-  ARCHIVE_EDIT_PUBLISH
+  SOUND_EDIT_RENDER
+  SOUND_EDIT_BOUNCE
+  SOUND_EDIT_PUBLISH
   FEATURE_REQUEST_CREATE
   FEATURE_REQUEST_VOTE
   FEATURE_REQUEST_UNVOTE
   FEATURE_REQUEST_COMMENT_CREATE
   FEATURE_REQUEST_STATUS_UPDATE
   FEATURE_REQUEST_QUARTERLY_REPORT
-  ARCHIVE_METADATA_ADMIN_EDIT
+  SOUND_METADATA_ADMIN_EDIT
   API_TOKEN_CREATE
   API_TOKEN_REVOKE
   USER_LOGIN
   USER_REGISTER
   CONTENT_UPLOAD
   RELEASE_PUBLISH
-  ARCHIVE_ITEM_LIKE
+  SOUND_ITEM_LIKE
   ARTIST_FOLLOW
   FAN_SUBSCRIPTION_CREATE
   RADIO_SLOT_BOOKING_CREATE
@@ -1785,6 +1799,9 @@ model Sound {
   venueId              String?
   venue                Venue?                @relation(fields: [venueId], references: [id], onDelete: SetNull)
   subGenres            String[]              @default([])
+  // Free-form artist-defined labels (mood, series, anything genre/subGenres don't
+  // cover) — unlike genre there is no preset list; filterable via array-contains.
+  tags                 String[]              @default([])
   contentType          SoundContentType      @default(TRACK)
   mixVersion           String? // e.g. "Original Mix", "Rok Tek Remix"
   bpm                  Int?
@@ -1797,7 +1814,13 @@ model Sound {
   license              SoundLicense          @default(ALL_RIGHTS_RESERVED)
   repostToDownload     Boolean               @default(false)
   followToDownload     Boolean               @default(false)
-  rawKey               String? // null for *_EMBED sources — no audio file exists
+  // What kind of file this row actually holds — see SoundMediaKind. AUDIO (the
+  // default) uses rawKey/mp3Key/flacKey + the transcode pipeline below as before;
+  // IMAGE/VIDEO instead populate imageKey/videoKey and skip transcoding.
+  mediaKind            SoundMediaKind        @default(AUDIO)
+  imageKey             String? // mediaKind = IMAGE
+  videoKey             String? // mediaKind = VIDEO
+  rawKey               String? // null for *_EMBED sources, and for mediaKind IMAGE/VIDEO
   mp3Key               String?
   flacKey              String?
   durationSec          Int?
@@ -2852,6 +2875,13 @@ model ReleaseTrack {
   soundId                String?
   genre                  String?
   genreCustom            String? // when not in preset genre list
+  // Metadata parity with Sound (a track only gets these if catalogued as a
+  // ReleaseTrack instead of/in addition to a Sound row — see soundId above).
+  subGenres              String[]            @default([])
+  tags                   String[]            @default([])
+  bpm                    Int?
+  musicalKey             String?
+  mixVersion             String? // e.g. "Original Mix", "Rok Tek Remix"
   credits                Json? // per-song credits [{ role, name, artistUsername? }], distinct from Release.credits
   // M12 — audio file pipeline
   sourceKey              String? // original uploaded file in MinIO
@@ -3286,7 +3316,7 @@ enum SupportStatus {
 }
 
 enum ContentReportTargetType {
-  ARCHIVE_ITEM
+  SOUND_ITEM
   RELEASE
   CHANNEL
   COLLECTION

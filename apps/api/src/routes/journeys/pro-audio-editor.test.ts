@@ -3,7 +3,7 @@
 
 /**
  * E2E journey: pro audio editor — load source, autosave EditList draft, server render,
- * multitrack editor project, publish edited archive to a release track.
+ * multitrack editor project, publish edited sound to a release track.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { editListFromV0Trim } from '@tahti/audio-edit'
@@ -12,14 +12,14 @@ import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
   createPublishedReleaseWithTrack,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
 
 vi.mock('../../lib/queue.js', () => ({
   enqueueVersionTranscode: vi.fn().mockResolvedValue(undefined),
-  enqueueRenderArchiveEdit: vi.fn().mockResolvedValue(undefined),
+  enqueueRenderSoundEdit: vi.fn().mockResolvedValue(undefined),
   enqueueBackfillEditorPeaks: vi.fn().mockResolvedValue(undefined),
   mediaQueue: { add: vi.fn() },
 }))
@@ -42,7 +42,7 @@ const PREFIX = 'journey-editor-'
 describe('Pro audio editor journey', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let artistCookie: string
-  let archiveItemId: string
+  let soundId: string
   let projectId: string
 
   beforeAll(async () => {
@@ -59,10 +59,10 @@ describe('Pro audio editor journey', () => {
     })
     artistCookie = await sessionCookieFor(prisma, artist.id)
 
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Live set for edit')
-    archiveItemId = item.id
-    await prisma.archiveItem.update({
-      where: { id: archiveItemId },
+    const item = await createReadySound(prisma, artist.channel!.id, 'Live set for edit')
+    soundId = item.id
+    await prisma.sound.update({
+      where: { id: soundId },
       data: { durationSec: 3600 },
     })
   })
@@ -75,7 +75,7 @@ describe('Pro audio editor journey', () => {
   it('loads source, saves trim draft, renders, opens multitrack project, and publishes to release', async () => {
     const source = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/editor/source`,
+      url: `/api/me/sound/${soundId}/editor/source`,
       headers: { cookie: artistCookie },
     })
     expect(source.statusCode).toBe(200)
@@ -83,7 +83,7 @@ describe('Pro audio editor journey', () => {
 
     const stream = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/editor/stream`,
+      url: `/api/me/sound/${soundId}/editor/stream`,
       headers: { cookie: artistCookie },
     })
     expect(stream.statusCode).toBe(200)
@@ -91,7 +91,7 @@ describe('Pro audio editor journey', () => {
 
     const draftLoad = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      url: `/api/me/sound/${soundId}/editor/draft`,
       headers: { cookie: artistCookie },
     })
     expect(draftLoad.statusCode).toBe(200)
@@ -114,7 +114,7 @@ describe('Pro audio editor journey', () => {
 
     const saveDraft = await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      url: `/api/me/sound/${soundId}/editor/draft`,
       headers: { cookie: artistCookie },
       payload: { editList: trimmed, expectedUpdatedAt: updatedAt },
     })
@@ -122,7 +122,7 @@ describe('Pro audio editor journey', () => {
 
     const draftReload = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      url: `/api/me/sound/${soundId}/editor/draft`,
       headers: { cookie: artistCookie },
     })
     expect(draftReload.statusCode).toBe(200)
@@ -132,12 +132,12 @@ describe('Pro audio editor journey', () => {
     expect(reloaded.editList.cuts.length).toBeGreaterThan(0)
     expect(reloaded.editList.loudnorm.enabled).toBe(true)
 
-    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
-    vi.mocked(enqueueRenderArchiveEdit).mockClear()
+    const { enqueueRenderSoundEdit } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderSoundEdit).mockClear()
 
     const render = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      url: `/api/me/sound/${soundId}/editor/render`,
       headers: { cookie: artistCookie },
       payload: {
         editList: reloaded.editList,
@@ -147,13 +147,13 @@ describe('Pro audio editor journey', () => {
       },
     })
     expect(render.statusCode).toBe(202)
-    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
-      expect.objectContaining({ archiveItemId, format: 'flac', activate: true }),
+    expect(enqueueRenderSoundEdit).toHaveBeenCalledWith(
+      expect.objectContaining({ soundId, format: 'flac', activate: true }),
     )
 
     const bounceRemoved = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
+      url: `/api/me/sound/${soundId}/editor/bounce`,
       headers: { cookie: artistCookie },
       payload: { startSec: 0, endSec: 60, versionLabel: 'Legacy', activate: true },
     })
@@ -163,7 +163,7 @@ describe('Pro audio editor journey', () => {
       method: 'POST',
       url: '/api/me/editor/projects',
       headers: { cookie: artistCookie },
-      payload: { archiveItemId },
+      payload: { soundId },
     })
     expect(projectCreate.statusCode).toBe(201)
     projectId = projectCreate.json().id as string
@@ -174,8 +174,8 @@ describe('Pro audio editor journey', () => {
       headers: { cookie: artistCookie },
     })
     expect(projectLoad.statusCode).toBe(200)
-    const detail = projectLoad.json() as { sources: Array<{ archiveItemId: string; url: string }> }
-    expect(detail.sources.some((s) => s.archiveItemId === archiveItemId)).toBe(true)
+    const detail = projectLoad.json() as { sources: Array<{ soundId: string; url: string }> }
+    expect(detail.sources.some((s) => s.soundId === soundId)).toBe(true)
 
     const autosave = await app.inject({
       method: 'PATCH',
@@ -183,8 +183,8 @@ describe('Pro audio editor journey', () => {
       headers: { cookie: artistCookie },
       payload: {
         timeline: {
-          tracks: [{ id: 'main', clips: [{ archiveItemId, startSec: 0, durationSec: 3600 }] }],
-          seedArchiveItemId: archiveItemId,
+          tracks: [{ id: 'main', clips: [{ soundId, startSec: 0, durationSec: 3600 }] }],
+          seedSoundId: soundId,
         },
       },
     })
@@ -200,7 +200,7 @@ describe('Pro audio editor journey', () => {
 
     const publish = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/publish-to-release`,
+      url: `/api/me/sound/${soundId}/editor/publish-to-release`,
       headers: { cookie: artistCookie },
       payload: { releaseId: release.id, title: 'Edited live cut' },
     })
@@ -212,12 +212,12 @@ describe('Pro audio editor journey', () => {
     const audit = await prisma.auditLog.findMany({
       where: {
         actorId: artist!.id,
-        action: { in: ['ARCHIVE_EDIT_RENDER', 'ARCHIVE_EDIT_PUBLISH'] },
+        action: { in: ['SOUND_EDIT_RENDER', 'SOUND_EDIT_PUBLISH'] },
       },
       orderBy: { createdAt: 'desc' },
       take: 5,
     })
-    expect(audit.some((row) => row.action === 'ARCHIVE_EDIT_RENDER')).toBe(true)
-    expect(audit.some((row) => row.action === 'ARCHIVE_EDIT_PUBLISH')).toBe(true)
+    expect(audit.some((row) => row.action === 'SOUND_EDIT_RENDER')).toBe(true)
+    expect(audit.some((row) => row.action === 'SOUND_EDIT_PUBLISH')).toBe(true)
   })
 })

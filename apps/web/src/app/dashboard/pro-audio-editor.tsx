@@ -43,17 +43,17 @@ import { EqPanel } from '@/lib/audio-editor/panels/EqPanel'
 import { CompPanel } from '@/lib/audio-editor/panels/CompPanel'
 import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
 import { FilterPanel } from '@/lib/audio-editor/panels/FilterPanel'
-import { ARCHIVE_CLIP_MAX_DURATION_SEC, type TracklistEntry } from '@tahti/shared'
+import { SOUND_CLIP_MAX_DURATION_SEC, type TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import {
-  completeArchiveVersionUpload,
-  createArchiveClip,
-  prepareArchiveVersionUpload,
-  renderArchiveEditList,
-  fetchArchiveVersionDownloadUrl,
-  saveArchiveEditListDraft,
-  updateArchiveMetadata,
-} from './archive-actions'
+  completeSoundVersionUpload,
+  createSoundClip,
+  prepareSoundVersionUpload,
+  renderSoundEditList,
+  fetchSoundVersionDownloadUrl,
+  saveSoundEditListDraft,
+  updateSoundMetadata,
+} from './sound-actions'
 import { TracklistEditor } from './tracklist-editor'
 import {
   generatePeaksFromFfmpeg,
@@ -246,7 +246,7 @@ function ChainTile({
 }
 
 export function ProAudioEditor({
-  archiveId,
+  soundId,
   title,
   sourceUrl,
   sourceKey,
@@ -256,7 +256,7 @@ export function ProAudioEditor({
   initialTracklist,
   initialEditorPeaks,
 }: {
-  archiveId: string
+  soundId: string
   title: string
   sourceUrl: string
   sourceKey: string
@@ -302,7 +302,7 @@ export function ProAudioEditor({
   const [clipDialogOpen, setClipDialogOpen] = useState(false)
   const [clipTitle, setClipTitle] = useState('')
   const [clipStartSec, setClipStartSec] = useState(0)
-  const [clipEndSec, setClipEndSec] = useState(Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, 30))
+  const [clipEndSec, setClipEndSec] = useState(Math.min(SOUND_CLIP_MAX_DURATION_SEC, 30))
   const [clipBusy, setClipBusy] = useState(false)
   const [clipError, setClipError] = useState<string | null>(null)
   const [clipSuccess, setClipSuccess] = useState<{ clipId: string; title: string } | null>(null)
@@ -383,7 +383,7 @@ export function ProAudioEditor({
   const flushDraftSave = useCallback(async () => {
     autosavePendingRef.current = true
     const v1 = v2ToV1(editListRef.current)
-    const res = await saveArchiveEditListDraft(archiveId, v1, draftUpdatedAtRef.current)
+    const res = await saveSoundEditListDraft(soundId, v1, draftUpdatedAtRef.current)
     autosavePendingRef.current = false
     if (res.conflict) {
       setDraftConflict(true)
@@ -407,7 +407,7 @@ export function ProAudioEditor({
       setLastSavedAt(ts)
       setAutosaveLabel('just now')
     }
-  }, [archiveId])
+  }, [soundId])
 
   useEffect(() => {
     setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)
@@ -432,7 +432,7 @@ export function ProAudioEditor({
       void flushDraftSave()
     }, delay)
     return () => clearTimeout(t)
-  }, [archiveId, editList, knobDragging, flushDraftSave])
+  }, [soundId, editList, knobDragging, flushDraftSave])
 
   useEffect(() => {
     if (!knobDragging) return
@@ -485,13 +485,13 @@ export function ProAudioEditor({
         // whether ffmpeg.wasm loads, which browser-support issues (e.g. some
         // Firefox configurations don't expose the SharedArrayBuffer/WASM
         // threading ffmpeg.wasm wants) can otherwise block indefinitely.
-        const cached = await loadPeaksCache(archiveId, sourceKey)
+        const cached = await loadPeaksCache(soundId, sourceKey)
         if (cached) {
           setPeaks(cached)
           setPeaksLoading(false)
         } else if (initialEditorPeaks?.levels?.length) {
           setPeaks(initialEditorPeaks)
-          await savePeaksCache(archiveId, sourceKey, initialEditorPeaks)
+          await savePeaksCache(soundId, sourceKey, initialEditorPeaks)
           setPeaksLoading(false)
         }
         if (cancelled) return
@@ -529,7 +529,7 @@ export function ProAudioEditor({
 
         if (!cached && !initialEditorPeaks?.levels?.length) {
           const pyramid = await generatePeaksFromFfmpeg(ff, path, editList.sourceDuration)
-          await savePeaksCache(archiveId, sourceKey, pyramid)
+          await savePeaksCache(soundId, sourceKey, pyramid)
           if (!cancelled) setPeaks(pyramid)
         }
       } catch (e) {
@@ -550,7 +550,7 @@ export function ProAudioEditor({
       void ffmpeg?.terminate()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount once per source
-  }, [archiveId, sourceKey, sourceUrl])
+  }, [soundId, sourceKey, sourceUrl])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -735,14 +735,14 @@ export function ProAudioEditor({
     const sel = snappedSelection()
     const sourceDur = editList.sourceDuration || 0
     let start = sel?.start ?? 0
-    let end = sel?.end ?? Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, sourceDur || 30)
-    if (end - start > ARCHIVE_CLIP_MAX_DURATION_SEC) {
-      end = start + ARCHIVE_CLIP_MAX_DURATION_SEC
+    let end = sel?.end ?? Math.min(SOUND_CLIP_MAX_DURATION_SEC, sourceDur || 30)
+    if (end - start > SOUND_CLIP_MAX_DURATION_SEC) {
+      end = start + SOUND_CLIP_MAX_DURATION_SEC
     }
     if (sourceDur > 0 && end > sourceDur) end = sourceDur
     if (end <= start) {
       start = 0
-      end = Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, sourceDur || 30)
+      end = Math.min(SOUND_CLIP_MAX_DURATION_SEC, sourceDur || 30)
     }
     setClipStartSec(Math.round(start * 10) / 10)
     setClipEndSec(Math.round(end * 10) / 10)
@@ -761,13 +761,13 @@ export function ProAudioEditor({
       setClipError('End must be after start')
       return
     }
-    if (end - start > ARCHIVE_CLIP_MAX_DURATION_SEC) {
-      setClipError(`Clip must be ${ARCHIVE_CLIP_MAX_DURATION_SEC} seconds or less`)
+    if (end - start > SOUND_CLIP_MAX_DURATION_SEC) {
+      setClipError(`Clip must be ${SOUND_CLIP_MAX_DURATION_SEC} seconds or less`)
       return
     }
     setClipBusy(true)
     try {
-      const result = await createArchiveClip(archiveId, {
+      const result = await createSoundClip(soundId, {
         startSec: start,
         endSec: end,
         title: clipTitle.trim() || undefined,
@@ -835,7 +835,7 @@ export function ProAudioEditor({
   async function saveTracklist() {
     setTracklistSaving(true)
     setTracklistError(null)
-    const res = await updateArchiveMetadata(archiveId, { tracklist })
+    const res = await updateSoundMetadata(soundId, { tracklist })
     setTracklistSaving(false)
     if (res.error) setTracklistError(res.error)
   }
@@ -938,7 +938,7 @@ export function ProAudioEditor({
         return
       }
 
-      const res = await renderArchiveEditList(archiveId, {
+      const res = await renderSoundEditList(soundId, {
         editList: v1,
         versionLabel: `Preview ${new Date().toISOString().slice(0, 16)}`,
         activate: false,
@@ -948,14 +948,14 @@ export function ProAudioEditor({
       })
       if (res.error || !res.versionId) throw new Error(res.error ?? 'Server preview failed')
 
-      await waitForRenderViaProgress(archiveId, res.versionId, (event) => {
+      await waitForRenderViaProgress(soundId, res.versionId, (event) => {
         if (typeof event.pct === 'number') setExportProgress(event.pct)
         if (event.phase) setExportPhase(event.phase)
       })
       setExportProgress(null)
       setExportPhase(null)
 
-      const dl = await fetchArchiveVersionDownloadUrl(archiveId, res.versionId)
+      const dl = await fetchSoundVersionDownloadUrl(soundId, res.versionId)
       if (dl.error || !dl.url) throw new Error(dl.error ?? 'Preview download unavailable')
 
       const a = document.createElement('a')
@@ -979,7 +979,7 @@ export function ProAudioEditor({
 
     try {
       if (!browserRender) {
-        const res = await renderArchiveEditList(archiveId, {
+        const res = await renderSoundEditList(soundId, {
           editList: v1,
           versionLabel: label,
           activate: true,
@@ -987,7 +987,7 @@ export function ProAudioEditor({
         })
         if (res.error || !res.versionId) throw new Error(res.error ?? 'Server render failed')
 
-        const done = await waitForRenderViaProgress(archiveId, res.versionId, (event) => {
+        const done = await waitForRenderViaProgress(soundId, res.versionId, (event) => {
           if (typeof event.pct === 'number') setExportProgress(event.pct)
           if (event.phase) setExportPhase(event.phase)
         })
@@ -1028,7 +1028,7 @@ export function ProAudioEditor({
       const filename = `edit.${format}`
       const bytes = new Uint8Array(out)
       const blob = new Blob([bytes], { type: contentType })
-      const prep = await prepareArchiveVersionUpload(archiveId, { filename, contentType })
+      const prep = await prepareSoundVersionUpload(soundId, { filename, contentType })
       if (prep.error || !prep.uploadUrl || !prep.uploadId)
         throw new Error(prep.error ?? 'Prepare failed')
 
@@ -1037,7 +1037,7 @@ export function ProAudioEditor({
         body: blob,
         headers: { 'Content-Type': contentType },
       })
-      const done = await completeArchiveVersionUpload(archiveId, {
+      const done = await completeSoundVersionUpload(soundId, {
         uploadId: prep.uploadId,
         versionLabel: label,
         fileSizeBytes: blob.size,
@@ -1822,9 +1822,8 @@ export function ProAudioEditor({
               Create clip
             </h2>
             <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
-              Cut up to {ARCHIVE_CLIP_MAX_DURATION_SEC} seconds from this track for radio station
-              IDs / announcements. Drag a selection on the waveform first, or set begin and end
-              below.
+              Cut up to {SOUND_CLIP_MAX_DURATION_SEC} seconds from this track for radio station IDs
+              / announcements. Drag a selection on the waveform first, or set begin and end below.
             </p>
             <label className="pro-editor-field">
               <span className="pro-editor-field__label">Title</span>
@@ -1866,8 +1865,8 @@ export function ProAudioEditor({
             <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
               Length:{' '}
               <strong>{formatDurationDecimal(Math.max(0, clipEndSec - clipStartSec))}</strong>
-              {clipEndSec - clipStartSec > ARCHIVE_CLIP_MAX_DURATION_SEC
-                ? ` — max ${ARCHIVE_CLIP_MAX_DURATION_SEC}s`
+              {clipEndSec - clipStartSec > SOUND_CLIP_MAX_DURATION_SEC
+                ? ` — max ${SOUND_CLIP_MAX_DURATION_SEC}s`
                 : ''}
             </p>
             {clipError && <p className="studio-text-error">{clipError}</p>}
@@ -1897,7 +1896,7 @@ export function ProAudioEditor({
                   disabled={
                     clipBusy ||
                     !(clipEndSec > clipStartSec) ||
-                    clipEndSec - clipStartSec > ARCHIVE_CLIP_MAX_DURATION_SEC
+                    clipEndSec - clipStartSec > SOUND_CLIP_MAX_DURATION_SEC
                   }
                 >
                   {clipBusy ? 'Creating…' : 'Create clip'}

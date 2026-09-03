@@ -12,7 +12,7 @@ import { MobileNavSheet } from './MobileNavSheet'
 import { SidebarNavIconSvg } from './SidebarNav'
 
 const LISTENER_MOBILE_NAV: DashboardNavDefinition[] = [
-  { href: '/feed', label: 'Feed', icon: 'archive', isRoute: true },
+  { href: '/feed', label: 'Feed', icon: 'sound', isRoute: true },
   { href: '/dashboard/messages', label: 'Messages', icon: 'newsletter', isRoute: true },
   { href: '/dashboard/settings/account', label: 'Account', icon: 'settings', isRoute: true },
 ]

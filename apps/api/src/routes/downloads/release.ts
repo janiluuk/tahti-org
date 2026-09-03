@@ -21,7 +21,7 @@ import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
-// archive-item downloads. Reuses the Download table (releaseTrackId column).
+// sound-item downloads. Reuses the Download table (releaseTrackId column).
 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
@@ -119,7 +119,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
 
       const servedFormat = wantSource ? 'source' : wantFlac ? 'flac' : 'opus'
 
-      // Anti-fraud — same logic as archive downloads
+      // Anti-fraud — same logic as sound downloads
       const salt = dailySalt()
       const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
       const fpInput = query.fp?.trim() || (request.headers['user-agent'] ?? 'unknown')

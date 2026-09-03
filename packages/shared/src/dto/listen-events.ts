@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 export const RecordListenSchema = z.object({
-  archiveItemId: z.string().min(1).max(64),
+  soundId: z.string().min(1).max(64),
 })
 export type RecordListenInput = z.infer<typeof RecordListenSchema>
 

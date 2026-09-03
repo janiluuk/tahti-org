@@ -35,7 +35,7 @@ describe('MCP endpoint', () => {
 
     // Public data for the search tool to find.
     const channel = await prisma.channel.findUniqueOrThrow({ where: { userId: artist.id } })
-    await prisma.archiveItem.create({
+    await prisma.sound.create({
       data: {
         channelId: channel.id,
         title: `${PREFIX}unique track title`,

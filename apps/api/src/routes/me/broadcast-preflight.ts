@@ -17,7 +17,7 @@ type BroadcastRow = {
   id: string
   title: string | null
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   showType: BroadcastShowType
   episodeNumber: number | null
   tagline: string | null
@@ -36,7 +36,7 @@ type ScheduledLiveShowRow = {
   tagline: string | null
   showType: BroadcastShowType
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   artworkUrl: string | null
 }
 
@@ -48,7 +48,7 @@ type LiveShowSeriesAttachRow = {
   artworkUrl: string | null
   showType: BroadcastShowType
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   episodeNumberEnabled: boolean
   nextEpisodeNumber: number
 }
@@ -80,7 +80,7 @@ const broadcastSelect = {
   id: true,
   title: true,
   visibility: true,
-  autoArchive: true,
+  autoPublish: true,
   showType: true,
   episodeNumber: true,
   tagline: true,
@@ -92,7 +92,7 @@ const broadcastSelect = {
 function toView(
   broadcast: Pick<
     BroadcastRow,
-    'title' | 'visibility' | 'autoArchive' | 'showType' | 'episodeNumber' | 'tagline'
+    'title' | 'visibility' | 'autoPublish' | 'showType' | 'episodeNumber' | 'tagline'
   >,
   planned: BroadcastPreflightView['plannedRadioShow'],
   plannedLiveShow: BroadcastPreflightView['plannedLiveShow'] = null,
@@ -100,7 +100,7 @@ function toView(
   return {
     title: broadcast.title,
     visibility: broadcast.visibility,
-    autoArchive: broadcast.autoArchive,
+    autoPublish: broadcast.autoPublish,
     showType: broadcast.showType,
     episodeNumber: broadcast.episodeNumber,
     tagline: broadcast.tagline,
@@ -175,7 +175,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
               tagline: broadcast.tagline ?? scheduled.tagline,
               showType: scheduled.showType,
               visibility: scheduled.visibility,
-              autoArchive: scheduled.autoArchive,
+              autoPublish: scheduled.autoPublish,
               artworkUrl: scheduled.artworkUrl,
             } as never,
             select: broadcastSelect as never,
@@ -260,7 +260,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
     }
   }
 
-  // GET /api/me/channel/preflight — show name / visibility / auto-archive for the
+  // GET /api/me/channel/preflight — show name / visibility / auto-sound for the
   // active (PREVIEW or LIVE) broadcast session. Broadcasting Setup step 3.
   // When a Tahti Radio slot is in the go-live window, auto-fills episode # + tagline.
   fastify.get(
@@ -293,7 +293,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
             {
               title: null,
               visibility: 'PUBLIC',
-              autoArchive: channel.autoPublishBroadcast,
+              autoPublish: channel.autoPublishBroadcast,
               showType: planned?.showType ?? 'LIVE_SET',
               episodeNumber: planned?.episodeNumber ?? null,
               tagline: planned?.tagline ?? null,
@@ -309,7 +309,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // PATCH /api/me/channel/preflight — set show name / visibility / auto-archive
+  // PATCH /api/me/channel/preflight — set show name / visibility / auto-sound
   // on the active broadcast session before going live.
   fastify.patch(
     '/api/me/channel/preflight',
@@ -366,7 +366,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
               tagline: series.tagline,
               showType: series.showType,
               visibility: series.visibility,
-              autoArchive: series.autoArchive,
+              autoPublish: series.autoPublish,
               artworkUrl: series.artworkUrl,
             },
           })
@@ -386,7 +386,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
               tagline: scheduled.tagline,
               showType: scheduled.showType,
               visibility: scheduled.visibility,
-              autoArchive: scheduled.autoArchive,
+              autoPublish: scheduled.autoPublish,
               artworkUrl: scheduled.artworkUrl,
             },
             select: broadcastSelect,
@@ -417,10 +417,10 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
         tagline?: string | null
         showType?: BroadcastShowType
         visibility?: 'PUBLIC' | 'FAN_ONLY'
-        autoArchive?: boolean
+        autoPublish?: boolean
       } = {}
       if (body.visibility !== undefined) data.visibility = body.visibility
-      if (body.autoArchive !== undefined) data.autoArchive = body.autoArchive
+      if (body.autoPublish !== undefined) data.autoPublish = body.autoPublish
       if (body.showType !== undefined) data.showType = body.showType
 
       const nextShowType = body.showType ?? broadcast.showType

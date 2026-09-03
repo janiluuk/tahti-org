@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 
-/** Number of amplitude buckets rendered as static waveform bars on public archive pages. */
+/** Number of amplitude buckets rendered as static waveform bars on public sound pages. */
 export const WAVEFORM_BUCKET_COUNT = 600
 
 const PEAK_SAMPLE_RATE = 8000

@@ -14,7 +14,7 @@ const STEM_RETENTION_DAYS = 7
 
 export interface SeparateStemsPayload {
   stemJobId: string
-  archiveItemId: string
+  soundId: string
   sourceKey: string
   stemSet: 'TWO_STEM' | 'FOUR_STEM'
 }
@@ -31,15 +31,15 @@ const STEM_MATCHERS: Record<string, RegExp> = {
 }
 
 export async function processSeparateStemsJob(job: Job): Promise<void> {
-  const { stemJobId, archiveItemId, sourceKey, stemSet } = job.data as SeparateStemsPayload
+  const { stemJobId, soundId, sourceKey, stemSet } = job.data as SeparateStemsPayload
 
-  const item = await prisma.archiveItem.findUnique({
-    where: { id: archiveItemId },
+  const item = await prisma.sound.findUnique({
+    where: { id: soundId },
     select: { channel: { select: { slug: true } } },
   })
-  if (!item) throw new Error(`ArchiveItem ${archiveItemId} not found`)
+  if (!item) throw new Error(`Sound ${soundId} not found`)
 
-  await prisma.archiveItemStemJob.update({
+  await prisma.soundStemJob.update({
     where: { id: stemJobId },
     data: { status: 'PROCESSING' },
   })
@@ -72,7 +72,7 @@ export async function processSeparateStemsJob(job: Job): Promise<void> {
     const zip = new AdmZip(zipPath)
     const entries = zip.getEntries()
 
-    const base = `stems/${item.channel.slug}/${archiveItemId}/${stemJobId}`
+    const base = `stems/${item.channel.slug}/${soundId}/${stemJobId}`
     const keys: Partial<Record<keyof typeof STEM_MATCHERS, string>> = {}
 
     for (const entry of entries) {
@@ -93,12 +93,12 @@ export async function processSeparateStemsJob(job: Job): Promise<void> {
     }
 
     const expiresAt = new Date(Date.now() + STEM_RETENTION_DAYS * 24 * 60 * 60 * 1000)
-    await prisma.archiveItemStemJob.update({
+    await prisma.soundStemJob.update({
       where: { id: stemJobId },
       data: { ...keys, status: 'READY', expiresAt, errorMessage: null },
     })
   } catch (err) {
-    await prisma.archiveItemStemJob.update({
+    await prisma.soundStemJob.update({
       where: { id: stemJobId },
       data: { status: 'ERROR', errorMessage: err instanceof Error ? err.message : String(err) },
     })

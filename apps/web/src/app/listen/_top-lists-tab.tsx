@@ -13,7 +13,7 @@ type Period = 'week' | 'month'
 type Kind = 'shows' | 'dj_sets' | 'albums' | 'singles'
 
 interface TopListEntry {
-  archiveItemId: string
+  soundId: string
   listens: number
   title: string
   artistName: string
@@ -210,7 +210,7 @@ export function TopListsTab() {
       ) : (
         <ol className="top-lists-ranked-list">
           {entries.map((e, i) => (
-            <li key={e.archiveItemId} className="top-lists-ranked-item">
+            <li key={e.soundId} className="top-lists-ranked-item">
               <span className="top-lists-ranked-item__rank">{i + 1}</span>
               {e.bannerUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -224,7 +224,7 @@ export function TopListsTab() {
                 <span className="top-lists-ranked-item__art top-lists-ranked-item__art--fallback" />
               )}
               <Link
-                href={`${resolveChannelUrl(e.channelSlug)}#archive-item-${e.archiveItemId}`}
+                href={`${resolveChannelUrl(e.channelSlug)}#archive-item-${e.soundId}`}
                 className="top-lists-ranked-item__meta"
               >
                 <span className="top-lists-ranked-item__title">{e.title}</span>

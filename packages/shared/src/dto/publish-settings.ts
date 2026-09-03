@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-/** Persistent per-channel default for a new broadcast's autoArchive value —
+/** Persistent per-channel default for a new broadcast's autoPublish value —
  * pairs with AutoRecordEnabledPatchSchema (recording-settings.ts) as the two
  * "what happens to a finished show" toggles. */
 export const AutoPublishBroadcastPatchSchema = z.object({

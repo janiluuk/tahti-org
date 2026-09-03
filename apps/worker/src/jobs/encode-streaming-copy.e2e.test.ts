@@ -78,7 +78,7 @@ describe('processEncodeStreamingCopyJob (e2e)', () => {
     const channel = await prisma.channel.findUniqueOrThrow({ where: { userId: user.id } })
     channelId = channel.id
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'E2E Streaming Copy Track',
@@ -103,7 +103,7 @@ describe('processEncodeStreamingCopyJob (e2e)', () => {
 
     await processEncodeStreamingCopyJob(fakeJob(itemId))
 
-    const item = await prisma.archiveItem.findUniqueOrThrow({ where: { id: itemId } })
+    const item = await prisma.sound.findUniqueOrThrow({ where: { id: itemId } })
     expect(item.streamingCopyStatus).toBe('READY')
     expect(item.mp3Key).toBe(`mp3/${PREFIX}artist/${itemId}.mp3`)
 
@@ -116,11 +116,11 @@ describe('processEncodeStreamingCopyJob (e2e)', () => {
     const notification = await prisma.notification.findFirstOrThrow({
       where: { userId, type: 'STREAMING_COPY_READY' },
     })
-    expect(notification.url).toBe(`/dashboard/archive/${itemId}`)
+    expect(notification.url).toBe(`/dashboard/sound/${itemId}`)
   }, 20_000)
 
   it('marks the item ERROR if downloading the source fails', async () => {
-    const failItem = await prisma.archiveItem.create({
+    const failItem = await prisma.sound.create({
       data: {
         channelId,
         title: 'E2E Streaming Copy Failure',
@@ -133,7 +133,7 @@ describe('processEncodeStreamingCopyJob (e2e)', () => {
 
     await expect(processEncodeStreamingCopyJob(fakeJob(failItem.id))).rejects.toThrow()
 
-    const item = await prisma.archiveItem.findUniqueOrThrow({ where: { id: failItem.id } })
+    const item = await prisma.sound.findUniqueOrThrow({ where: { id: failItem.id } })
     expect(item.streamingCopyStatus).toBe('ERROR')
   })
 })

@@ -13,7 +13,7 @@ import {
   ReleaseTrackParamsSchema,
   SlugParamSchema,
   SlugTrackIdParamsSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -232,7 +232,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           items: {
             orderBy: { position: 'asc' },
             select: {
-              archiveItem: {
+              sound: {
                 select: {
                   id: true,
                   title: true,
@@ -257,19 +257,19 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         embedUrl: `${config.appUrl}/embed/col/${collection.slug}`,
         profileUrl: resolveArtistUrl(collection.user.username),
         artist: collection.user,
-        // Only archive-item-backed entries have a single playable file (a release
+        // Only sound-item-backed entries have a single playable file (a release
         // is itself a multi-track grouping) — same limitation as the Manage panel
         // playlist-switch feature (apps/api/src/routes/internal/channel-fallback.ts).
         tracks: collection.items
-          .filter((i) => i.archiveItem)
+          .filter((i) => i.sound)
           .map((i) => ({
-            id: i.archiveItem!.id,
-            title: i.archiveItem!.title,
-            durationSec: i.archiveItem!.durationSec,
-            hasStream: !!archivePlaybackKey(i.archiveItem!),
-            embedProvider: i.archiveItem!.embedProvider,
-            embedUri: i.archiveItem!.embedUri,
-            peaks: (i.archiveItem!.peaks as number[] | null) ?? null,
+            id: i.sound!.id,
+            title: i.sound!.title,
+            durationSec: i.sound!.durationSec,
+            hasStream: !!soundPlaybackKey(i.sound!),
+            embedProvider: i.sound!.embedProvider,
+            embedUri: i.sound!.embedUri,
+            peaks: (i.sound!.peaks as number[] | null) ?? null,
           })),
       })
     },
@@ -296,26 +296,26 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (!collection) return reply.status(404).send({ error: 'Collection not found' })
 
       const item = await fastify.prisma.collectionItem.findFirst({
-        where: { collectionId: collection.id, archiveItemId: trackId },
+        where: { collectionId: collection.id, soundId: trackId },
         select: {
-          archiveItem: {
+          sound: {
             select: { title: true, mp3Key: true, flacKey: true, status: true, peaks: true },
           },
         },
       })
-      if (!item?.archiveItem || item.archiveItem.status !== 'READY') {
+      if (!item?.sound || item.sound.status !== 'READY') {
         return reply.status(404).send({ error: 'Track not found or not ready' })
       }
 
-      const key = archivePlaybackKey(item.archiveItem)
+      const key = soundPlaybackKey(item.sound)
       if (!key) return reply.status(409).send({ error: 'Track file not available yet' })
 
       const url = await presignedGetUrl(key, 300)
       return reply.send({
         url,
-        title: item.archiveItem.title,
+        title: item.sound.title,
         expiresInSec: 300,
-        peaks: (item.archiveItem.peaks as number[] | null) ?? null,
+        peaks: (item.sound.peaks as number[] | null) ?? null,
       })
     },
   )

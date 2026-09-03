@@ -37,7 +37,7 @@ export const GateDailyPointSchema = z.object({
 })
 
 export const DownloadGateItemStatsSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   title: z.string(),
   repostToDownload: z.boolean(),
   followToDownload: z.boolean(),
@@ -205,13 +205,13 @@ export const ChannelManageStatsSchema = z.object({
   listeners: z.number().int(),
   /** All-time highest concurrent-listener count observed. */
   listenerPeak: z.number().int(),
-  /** All-time rotation/archive play-start count. */
+  /** All-time rotation/sound play-start count. */
   plays: z.number().int(),
   likes: z.number().int(),
   reposts: z.number().int(),
   /** Seconds since the current live broadcast started; null when not live. */
   liveDurationSec: z.number().int().nullable(),
-  /** How many archive tracks are flagged for the 24/7 fallback rotation —
+  /** How many sound tracks are flagged for the 24/7 fallback rotation —
    * 0 means there's nothing to play when the channel isn't actually live. */
   rotationTrackCount: z.number().int(),
 })
@@ -277,11 +277,11 @@ export const RadioShowEpisodeSchema = z.object({
   note: z.string().nullable(),
   showType: z.enum(['LIVE_SET', 'TALK']),
   /** Set only for a past episode the artist actually broadcast AND published
-   * to their archive afterward — null for a past slot with no broadcast (a
+   * to their sound afterward — null for a past slot with no broadcast (a
    * no-show) or one the artist hasn't published a recording of. */
   recording: z
     .object({
-      archiveItemId: z.string(),
+      soundId: z.string(),
       title: z.string(),
       channelItemUrl: z.string(),
     })
@@ -325,8 +325,8 @@ export const ChannelProgrammeLibraryTrackViewSchema = z.object({
   releaseTitle: z.string(),
   trackTitle: z.string(),
   durationSec: z.number().nullable(),
-  /** Set once this library track has been added to rotation (mirrors an ArchiveItem). */
-  archiveItemId: z.string().nullable(),
+  /** Set once this library track has been added to rotation (mirrors an Sound). */
+  soundId: z.string().nullable(),
 })
 
 export const ChannelProgrammeViewSchema = z.object({
@@ -573,7 +573,7 @@ export const PublicChannelViewSchema = z.object({
       artistName: z.string(),
       artistUsername: z.string().nullable(),
       artworkUrl: z.string().nullable(),
-      /** Source ArchiveItem.durationSec — null for an item with no known
+      /** Source Sound.durationSec — null for an item with no known
        * duration, e.g. one that came in as an embed rather than a real file. */
       durationSec: z.number().nullable(),
       /** When this track started — remaining time is durationSec minus the
@@ -631,10 +631,11 @@ export const ArtistFollowResponseSchema = z.object({
   followerCount: z.number().int(),
 })
 
-export const ArchiveItemLikeResponseSchema = z.object({
+export const SoundLikeResponseSchema = z.object({
   liked: z.boolean(),
   likeCount: z.number().int(),
 })
+
 
 export const LikedTrackSchema = z.object({
   id: z.string(),
@@ -662,7 +663,7 @@ export const LikedPlaylistResponseSchema = z.object({
   items: z.array(LikedTrackSchema),
 })
 
-export const ArchiveItemRepostResponseSchema = z.object({
+export const SoundRepostResponseSchema = z.object({
   reposted: z.boolean(),
   repostCount: z.number().int(),
 })
@@ -674,7 +675,7 @@ export const TrackReactionItemSchema = z.object({
   createdAt: z.coerce.date(),
 })
 
-/** M22 tracklist entry — mirrors the shape already stored in ArchiveItem.tracklist. */
+/** M22 tracklist entry — mirrors the shape already stored in Sound.tracklist. */
 export const TrackTracklistEntrySchema = z.object({
   startSec: z.number(),
   title: z.string(),
@@ -694,7 +695,7 @@ export const TrackPlaybackDetailsSchema = z.object({
   reactions: z.array(TrackReactionItemSchema),
   /** Flying-emoji reactions fired live during the original broadcast, if this
    * track was recorded from one — replayed at the matching elapsedSec while
-   * scrubbing/playing the archive so the "show" feels alive again. Empty for
+   * scrubbing/playing the sound so the "show" feels alive again. Empty for
    * tracks with no linked broadcast (e.g. uploaded, not recorded live). */
   broadcastReactions: z.array(z.object({ emoji: z.string(), elapsedSec: z.number() })),
 })
@@ -712,7 +713,7 @@ export const ChannelCardSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
   genres: z.array(z.string()),
-  /** Channel is actively airing its 24/7 archive rotation right now (not
+  /** Channel is actively airing its 24/7 sound rotation right now (not
    * live) — shown as "REPLAY" on the Discover page, same convention as the
    * mini-player's REPLAY badge for Tahti Radio's own rotation. */
   fallbackEnabled: z.boolean(),
@@ -728,7 +729,7 @@ export const ChannelCardSchema = z.object({
 
 export const ChannelListResponseSchema = z.object({
   live: z.array(ChannelCardSchema),
-  /** Not live, but currently airing their archive rotation (fallbackEnabled) — REPLAY. */
+  /** Not live, but currently airing their sound rotation (fallbackEnabled) — REPLAY. */
   replaying: z.array(ChannelCardSchema),
   recent: z.array(ChannelCardSchema),
 })
@@ -736,7 +737,7 @@ export const ChannelListResponseSchema = z.object({
 export type ChannelCard = z.infer<typeof ChannelCardSchema>
 export type ChannelListResponse = z.infer<typeof ChannelListResponseSchema>
 
-/** Discover → "Artists" tab: every channel with a public archive item, not just
+/** Discover → "Artists" tab: every channel with a public sound item, not just
  * currently live/recent ones. */
 export const ChannelDirectoryEntrySchema = z.object({
   slug: z.string(),
@@ -765,7 +766,7 @@ export type ChannelDirectoryEntry = z.infer<typeof ChannelDirectoryEntrySchema>
  * tracks, for a browsable thumbnail grid (distinct from the raw fallback M3U
  * the internal Liquidsoap route serves). */
 export const TahtiSelectsGalleryItemSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   title: z.string(),
   artistName: z.string(),
   artistUsername: z.string().nullable(),
@@ -807,7 +808,7 @@ export const TransparencyCategoriesResponseSchema = z.object({
   disbursements: z.array(z.object({ code: z.string(), label: z.string() })),
 })
 
-export const ArchiveItemViewSchema = z
+export const SoundViewSchema = z
   .object({
     id: z.string(),
     title: z.string(),
@@ -822,11 +823,11 @@ export const ArchiveItemViewSchema = z
   })
   .passthrough()
 
-export const ArchiveItemListSchema = z.array(ArchiveItemViewSchema)
+export const SoundListSchema = z.array(SoundViewSchema)
 
 // PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to
-// pull the full 100-item, full-metadata payload GET /api/me/archive returns.
-export const ArchiveItemRecentSchema = z.array(
+// pull the full 100-item, full-metadata payload GET /api/me/sound returns.
+export const SoundRecentSchema = z.array(
   z.object({
     id: z.string(),
     title: z.string(),
@@ -835,11 +836,11 @@ export const ArchiveItemRecentSchema = z.array(
   }),
 )
 
-/** Public channel archive list (includes presigned audioUrl and full metadata). */
-export const ChannelArchiveItemsResponseSchema = z.array(z.record(z.string(), z.unknown()))
+/** Public channel sound list (includes presigned audioUrl and full metadata). */
+export const ChannelSoundsResponseSchema = z.array(z.record(z.string(), z.unknown()))
 
 /** GET /api/tracks/:id — public single-track detail page. Unlike
- * ChannelArchiveItemsResponseSchema (a list scoped to an already-known
+ * ChannelSoundsResponseSchema (a list scoped to an already-known
  * channel) or TahtiSelectsGalleryItemSchema (gallery-tile summary), this is
  * the full-detail payload for a standalone track page reached only by
  * track id — includes the real waveform `peaks` buckets and the owning
@@ -976,7 +977,7 @@ export const PublicProfileViewSchema = z.object({
     channel: z.string().nullable(),
     subscribe: z.string(),
     feeds: z.object({
-      archive: z.string().nullable(),
+      sound: z.string().nullable(),
     }),
     presskit: z.string(),
   }),

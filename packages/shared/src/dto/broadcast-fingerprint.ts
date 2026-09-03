@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
-import { TracklistEntrySchema } from './archive-metadata.js'
+import { TracklistEntrySchema } from './sound-metadata.js'
 
 export const BroadcastIdParamSchema = z.object({
   broadcastId: z.string().min(1),

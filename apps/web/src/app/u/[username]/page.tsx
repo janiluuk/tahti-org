@@ -171,7 +171,7 @@ interface ProfileResponse {
       position: number
       title: string
       durationSec: number | null
-      archiveItemId?: string | null
+      soundId?: string | null
       playUrl?: string | null
       channelItemUrl?: string | null
     }>

@@ -36,8 +36,7 @@ export default async function UploadPage() {
   ])
 
   const unpublishedBroadcasts = broadcasts.filter(
-    (b) =>
-      !b.archiveItemId || b.archiveItemStatus === 'PENDING' || b.archiveItemStatus === 'PROCESSING',
+    (b) => !b.soundId || b.soundStatus === 'PENDING' || b.soundStatus === 'PROCESSING',
   )
 
   const usedPct =
@@ -110,7 +109,7 @@ export default async function UploadPage() {
                     <li key={b.id} className="upload-entry__broadcast-row">
                       <div className="upload-entry__broadcast-info">
                         <span className="upload-entry__broadcast-name">
-                          {b.archiveItemTitle ?? `Broadcast ${formatDate(b.startedAt)}`}
+                          {b.soundTitle ?? `Broadcast ${formatDate(b.startedAt)}`}
                         </span>
                         <span className="upload-entry__broadcast-meta">
                           {formatDate(b.startedAt)}
@@ -119,13 +118,13 @@ export default async function UploadPage() {
                       </div>
                       <NextLink
                         href={
-                          b.archiveItemId
-                            ? `/dashboard/archive/${b.archiveItemId}/editor`
+                          b.soundId
+                            ? `/dashboard/sounds/${b.soundId}/editor`
                             : `/dashboard/upload/from-broadcast?id=${b.id}`
                         }
                         className="ui-btn ui-btn--ghost ui-btn--sm"
                       >
-                        {b.archiveItemId ? 'Polish & publish' : 'Edit & publish'} →
+                        {b.soundId ? 'Polish & publish' : 'Edit & publish'} →
                       </NextLink>
                     </li>
                   ))}

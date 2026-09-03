@@ -15,7 +15,7 @@ export interface RotationItem {
   id: string
   position: number
   addedBy: string
-  archiveItemId: string
+  soundId: string
   title: string
   durationSec: number | null
   license: string

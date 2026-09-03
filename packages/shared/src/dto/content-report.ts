@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 export const ContentReportTargetTypeSchema = z.enum([
-  'ARCHIVE_ITEM',
+  'SOUND_ITEM',
   'RELEASE',
   'CHANNEL',
   'COLLECTION',

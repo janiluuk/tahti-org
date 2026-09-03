@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   TAHTI_SELECTS_SLUG,
   TahtiSelectsGalleryResponseSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
 } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
@@ -33,7 +33,7 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
           where: { channelId: channel.id },
           orderBy: { position: 'asc' },
           select: {
-            archiveItem: {
+            sound: {
               select: {
                 id: true,
                 title: true,
@@ -51,11 +51,11 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
         })
 
         const items = await Promise.all(
-          rows.map(async ({ archiveItem: item }) => {
-            const playbackKey = archivePlaybackKey(item)
+          rows.map(async ({ sound: item }) => {
+            const playbackKey = soundPlaybackKey(item)
             const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
             return {
-              archiveItemId: item.id,
+              soundId: item.id,
               title: item.title,
               artistName: item.artistName ?? item.channel.user.displayName,
               artistUsername: item.artistName ? null : item.channel.user.username,

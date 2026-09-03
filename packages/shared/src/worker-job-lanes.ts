@@ -5,7 +5,7 @@
  * Which BullMQ job names belong to which worker lane — must cover every job name
  * used anywhere (see apps/worker/src/index.ts's dispatch and packages/shared's
  * WORKER_CRON_JOBS). infra/docker-stack.yml runs one differently-resourced
- * container per lane (worker-media: ffmpeg-heavy, recordings/hls/archive-cache
+ * container per lane (worker-media: ffmpeg-heavy, recordings/hls/sound-cache
  * volumes; worker-dist: external distribution APIs; worker-light: cheap DB-only
  * cron work; worker-edge-log: Caddy access-log aggregation on the edge node only).
  * A job name missing from every lane here would never run on any container once
@@ -14,12 +14,12 @@
 export const WORKER_JOB_LANES = {
   /** ffmpeg-heavy jobs — safe on a remote worker with Redis/Postgres/MinIO only. */
   transcode: [
-    'transcode-archive',
+    'transcode-sound',
     'encode-streaming-copy',
-    'transcode-archive-version',
+    'transcode-sound-version',
     'transcode-release-track',
     'transcode-release-track-version',
-    'render-archive-edit',
+    'render-sound-edit',
     'render-announcement-trim',
     'separate-stems',
     'sweep-expired-stems',
@@ -29,13 +29,13 @@ export const WORKER_JOB_LANES = {
     'cloud-import-soundcloud',
     'cloud-import-hearthis',
     'hearthis-embed-localize',
-    'archive-broadcast',
+    'sound-broadcast',
   ],
-  /** Streaming stack jobs — need local HLS / recordings / archive-cache volumes on the ingest host. */
+  /** Streaming stack jobs — need local HLS / recordings / sound-cache volumes on the ingest host. */
   media: [
     'finalize-broadcast-recording',
-    'warm-archive-fallback-cache',
-    'archive-fallback-cache-sync',
+    'warm-sound-fallback-cache',
+    'sound-fallback-cache-sync',
     'hls-minio-sync',
     'channel-watchdog',
     'channel-fallback-reconciler',

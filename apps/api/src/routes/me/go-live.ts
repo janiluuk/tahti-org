@@ -4,7 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
-import { enqueueWarmArchiveFallbackCache } from '../../lib/queue.js'
+import { enqueueWarmSoundFallbackCache } from '../../lib/queue.js'
 import { queueChannelLiveSocialPost } from '../../lib/social-post.js'
 
 const meGoLiveRoutes: FastifyPluginAsync = async (fastify) => {
@@ -63,10 +63,10 @@ const meGoLiveRoutes: FastifyPluginAsync = async (fastify) => {
           fastify.log.warn({ err, slug: channel.slug }, 'channel live social post failed'),
       )
 
-      enqueueWarmArchiveFallbackCache(channel.id).catch((err: unknown) =>
+      enqueueWarmSoundFallbackCache(channel.id).catch((err: unknown) =>
         fastify.log.error(
           { err, channelId: channel.id },
-          'archive fallback cache warm enqueue failed',
+          'sound fallback cache warm enqueue failed',
         ),
       )
 
