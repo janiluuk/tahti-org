@@ -76,6 +76,7 @@ async function loadVisibilitySettings(
     showFollowing: true,
     showDailyListeners: true,
     chatEnabled: true,
+    showPageHero: true,
   }
   try {
     const response = await fetch(`${apiUrl}/api/me/profile`, {
@@ -90,6 +91,7 @@ async function loadVisibilitySettings(
       showFollowing: profile.showFollowing,
       showDailyListeners: profile.showDailyListeners,
       chatEnabled: profile.chatEnabled,
+      showPageHero: profile.showPageHero,
     }
   } catch {
     return fallback

@@ -8427,3 +8427,134 @@ html.gpu-limited [data-tahti-ui='brand'] .ch-player-art-backdrop {
   color: var(--muted);
   cursor: default;
 }
+
+/* ── PageHero — shared artist/channel/release page header ─────────────────
+   One avatar/cover tile + title/subtitle/meta + quick-facts stats row +
+   action row, over an optional ambient backdrop. See packages/ui/src/brand/
+   PageHero.tsx for the component this styles. */
+[data-tahti-ui='brand'] .page-hero {
+  position: relative;
+  margin-bottom: var(--space-6, 1.5rem);
+}
+
+[data-tahti-ui='brand'] .page-hero__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: center/cover no-repeat var(--page-hero-backdrop);
+  filter: blur(70px) saturate(1.5) brightness(0.5);
+  transform: scale(1.25);
+  opacity: 1;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .page-hero__card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5, 1.25rem);
+  padding: var(--space-6, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .page-hero__card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-5, 1.25rem);
+  }
+}
+
+[data-tahti-ui='brand'] .page-hero__avatar {
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .page-hero__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+[data-tahti-ui='brand'] .page-hero__title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.25rem);
+  font-weight: var(--weight-semibold);
+  line-height: 1.15;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='brand'] .page-hero__subtitle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .page-hero__meta {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 42rem;
+}
+
+[data-tahti-ui='brand'] .page-hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5, 1.25rem);
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .page-hero__stats {
+    justify-content: center;
+  }
+}
+
+[data-tahti-ui='brand'] .page-hero__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+[data-tahti-ui='brand'] a.page-hero__stat:hover .page-hero__stat-value {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .page-hero__stat-value {
+  font-family: var(--font-head);
+  font-size: 1.125rem;
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  transition: color 0.15s;
+}
+
+[data-tahti-ui='brand'] .page-hero__stat-label {
+  font-size: 0.6875rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .page-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .page-hero__actions {
+    justify-content: center;
+  }
+}

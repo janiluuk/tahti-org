@@ -13,6 +13,7 @@ export type VisibilitySettings = {
   showFollowing: boolean
   showDailyListeners: boolean
   chatEnabled: boolean
+  showPageHero: boolean
 }
 
 const FIELD_LABELS: Record<keyof VisibilitySettings, string> = {
@@ -21,6 +22,7 @@ const FIELD_LABELS: Record<keyof VisibilitySettings, string> = {
   showFollowing: 'Show who I follow on my profile',
   showDailyListeners: 'Show today’s listener count in my chat',
   chatEnabled: 'Enable live chat on my channel',
+  showPageHero: 'Show the header card (avatar, quick facts, actions) on my profile and channel',
 }
 
 const ALL_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof VisibilitySettings>

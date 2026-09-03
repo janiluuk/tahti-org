@@ -764,6 +764,10 @@ model User {
   showFollowing                  Boolean    @default(true)
   showDailyListeners             Boolean    @default(true)
   showLikes                      Boolean    @default(true)
+  // Shows/hides the shared PageHero block (avatar/cover, title, quick-facts
+  // stats row, actions) at the top of the artist profile and channel pages.
+  // Default on; an artist who wants a bare page can hide it.
+  showPageHero                   Boolean    @default(true)
   chatEnabled                    Boolean    @default(true)
   stripeCustomerId               String?
   stripeMembershipSubscriptionId String?    @unique

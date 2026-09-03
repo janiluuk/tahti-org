@@ -71,6 +71,7 @@ export function ChannelHeaderPanel({
             showFollowers: true,
             showFollowing: true,
             chatEnabled: true,
+            showPageHero: true,
           }}
           bare
           hideSave
