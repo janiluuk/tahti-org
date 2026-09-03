@@ -2,6 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient, Prisma } from '@tahti/db'
+import { getCachedJson } from './json-cache.js'
+
+const CACHE_TTL_SEC = 30
+
+/** Buckets `since` to a fixed cache-key granularity — the underlying query
+ * still uses the precise Date, this only controls how often the cache key
+ * rotates (every CACHE_TTL_SEC, independent of exact request timing). */
+function sinceBucketKey(since: Date | undefined): string {
+  if (!since) return 'all'
+  return String(Math.floor(since.getTime() / (CACHE_TTL_SEC * 1000)))
+}
 
 export type TopListPeriod = 'week' | 'month' | 'half_year' | 'all_time'
 
@@ -89,14 +100,21 @@ export async function buildTopList(
     sort?: 'desc' | 'asc'
   } = {},
 ): Promise<TopListEntry[]> {
-  const where: Prisma.ArchiveItemWhereInput = {}
-  if (opts.contentTypes && opts.contentTypes.length > 0) {
-    where.contentType = { in: opts.contentTypes as Prisma.EnumArchiveContentTypeFilter['in'] }
-  }
-  if (opts.genre) where.genre = opts.genre
-  const ranked = await rankedEntriesSince(prisma, opts.since, where)
-  if (opts.sort === 'asc') ranked.reverse()
-  return ranked.slice(0, opts.limit ?? 20)
+  // Rankings don't need per-request freshness — a short cache collapses
+  // every visitor hitting the same period/filter combination (the vast
+  // majority of traffic, since the UI only offers a handful of presets)
+  // into one groupBy+findMany instead of one per request.
+  const key = `top-list:${sinceBucketKey(opts.since)}:${(opts.contentTypes ?? []).slice().sort().join(',')}:${opts.genre ?? ''}:${opts.sort ?? 'desc'}:${opts.limit ?? 20}`
+  return getCachedJson(key, CACHE_TTL_SEC, async () => {
+    const where: Prisma.ArchiveItemWhereInput = {}
+    if (opts.contentTypes && opts.contentTypes.length > 0) {
+      where.contentType = { in: opts.contentTypes as Prisma.EnumArchiveContentTypeFilter['in'] }
+    }
+    if (opts.genre) where.genre = opts.genre
+    const ranked = await rankedEntriesSince(prisma, opts.since, where)
+    if (opts.sort === 'asc') ranked.reverse()
+    return ranked.slice(0, opts.limit ?? 20)
+  })
 }
 
 export interface TopListBucket {
@@ -116,22 +134,28 @@ export async function buildTopListsByDimension(
     userId?: string
   },
 ): Promise<TopListBucket[]> {
-  const ranked = await rankedEntriesSince(
-    prisma,
-    opts.since,
-    opts.userId ? { channel: { userId: opts.userId } } : {},
-  )
-  if (opts.sort === 'asc') ranked.reverse()
-  const buckets = new Map<string, TopListEntry[]>()
-  for (const entry of ranked) {
-    const key = opts.dimension === 'type' ? entry.contentType : (entry.genre ?? 'Unspecified')
-    const list = buckets.get(key) ?? []
-    list.push(entry)
-    buckets.set(key, list)
-  }
-  return [...buckets.entries()]
-    .map(([bucket, entries]) => ({ bucket, entries: entries.slice(0, opts.limitPerBucket ?? 10) }))
-    .sort((a, b) => (b.entries[0]?.listens ?? 0) - (a.entries[0]?.listens ?? 0))
+  const key = `top-list-dim:${sinceBucketKey(opts.since)}:${opts.dimension}:${opts.userId ?? ''}:${opts.sort ?? 'desc'}:${opts.limitPerBucket ?? 10}`
+  return getCachedJson(key, CACHE_TTL_SEC, async () => {
+    const ranked = await rankedEntriesSince(
+      prisma,
+      opts.since,
+      opts.userId ? { channel: { userId: opts.userId } } : {},
+    )
+    if (opts.sort === 'asc') ranked.reverse()
+    const buckets = new Map<string, TopListEntry[]>()
+    for (const entry of ranked) {
+      const key = opts.dimension === 'type' ? entry.contentType : (entry.genre ?? 'Unspecified')
+      const list = buckets.get(key) ?? []
+      list.push(entry)
+      buckets.set(key, list)
+    }
+    return [...buckets.entries()]
+      .map(([bucket, entries]) => ({
+        bucket,
+        entries: entries.slice(0, opts.limitPerBucket ?? 10),
+      }))
+      .sort((a, b) => (b.entries[0]?.listens ?? 0) - (a.entries[0]?.listens ?? 0))
+  })
 }
 
 /** Best (lowest) 1-based rank for each requested track across the two lists

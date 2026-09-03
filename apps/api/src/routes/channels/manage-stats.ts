@@ -11,6 +11,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { fetchMountSignalStatus } from '../../lib/icecast-status.js'
+import { getCachedJson } from '../../lib/json-cache.js'
 
 /** Owner/board-only stats snapshot for the channel page's "Manage" tab. Slug-scoped
  * (not /api/me/...) since a board member needs to view any artist's channel, not
@@ -50,36 +51,45 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Not authorized to manage this channel' })
       }
 
-      const [signal, presenceRes, likes, reposts, rotationTrackCount] = await Promise.all([
-        channel.state === 'LIVE'
-          ? fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)
-          : Promise.resolve(null),
-        fetch(`${config.apiUrl}/api/channels/${slug}/presence`)
-          .then((r) => (r.ok ? r.json() : { numClients: 0 }))
-          .catch(() => ({ numClients: 0 })),
-        fastify.prisma.archiveItemLike.count({ where: { archiveItem: { channelId: channel.id } } }),
-        fastify.prisma.archiveItemRepost.count({
-          where: { archiveItem: { channelId: channel.id } },
-        }),
-        fastify.prisma.archiveItem.count({ where: { channelId: channel.id, isFallback: true } }),
-      ])
+      // Polled every 15s while the Manage tab is open — a short cache
+      // collapses that poller (and a board member viewing the same channel
+      // concurrently) into one round trip of counts/signal-status checks.
+      const result = await getCachedJson(`manage-stats:${slug}`, 10, async () => {
+        const [signal, presenceRes, likes, reposts, rotationTrackCount] = await Promise.all([
+          channel.state === 'LIVE'
+            ? fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)
+            : Promise.resolve(null),
+          fetch(`${config.apiUrl}/api/channels/${slug}/presence`)
+            .then((r) => (r.ok ? r.json() : { numClients: 0 }))
+            .catch(() => ({ numClients: 0 })),
+          fastify.prisma.archiveItemLike.count({
+            where: { archiveItem: { channelId: channel.id } },
+          }),
+          fastify.prisma.archiveItemRepost.count({
+            where: { archiveItem: { channelId: channel.id } },
+          }),
+          fastify.prisma.archiveItem.count({ where: { channelId: channel.id, isFallback: true } }),
+        ])
 
-      const liveDurationSec =
-        channel.state === 'LIVE' && channel.goneLiveAt
-          ? Math.max(0, Math.floor((Date.now() - channel.goneLiveAt.getTime()) / 1000))
-          : null
+        const liveDurationSec =
+          channel.state === 'LIVE' && channel.goneLiveAt
+            ? Math.max(0, Math.floor((Date.now() - channel.goneLiveAt.getTime()) / 1000))
+            : null
 
-      return reply.send({
-        audioBitrateKbps: signal?.bitrateKbps ?? null,
-        signalConnected: signal?.connected ?? false,
-        listeners: (presenceRes as { numClients: number }).numClients,
-        listenerPeak: channel.listenerPeak,
-        plays: channel.totalPlays,
-        likes,
-        reposts,
-        liveDurationSec,
-        rotationTrackCount,
+        return {
+          audioBitrateKbps: signal?.bitrateKbps ?? null,
+          signalConnected: signal?.connected ?? false,
+          listeners: (presenceRes as { numClients: number }).numClients,
+          listenerPeak: channel.listenerPeak,
+          plays: channel.totalPlays,
+          likes,
+          reposts,
+          liveDurationSec,
+          rotationTrackCount,
+        }
       })
+
+      return reply.send(result)
     },
   )
 }
