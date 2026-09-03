@@ -44,3 +44,7 @@ ops define them.
    to cover search/tool behavior.
 4. Cover registry parsing in `@tahti/shared` tests and the provider list in
    API tests when behavior is added.
+5. If the provider is (or should be) listed in the player Store, update
+   sibling `../tahti-registry` in the same work: new row when added, version
+   bump in `plugins.json` when changed. Users see Store listings from that
+   repo, not from this API catalog. See root `AGENTS.md`.

@@ -1,0 +1,17 @@
+---
+description: Store plugins/themes live in github.com/janiluuk/tahti-registry. After add/change, check that catalog and bump versions.
+globs: "**/import-plugin*"
+alwaysApply: false
+---
+
+# tahti-registry (player Store catalog)
+
+This monorepo owns the API (`GET /api/me/import-plugins`). The **Store** catalog users browse in Tahti Player is [janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry), sibling `../tahti-registry`.
+
+After any plugin that has or needs a Store listing:
+
+- **Added** — add a `plugins.json` row; users must see it in that repo.
+- **Changed** — bump the plugin version and the catalog `version`/`downloadUrl`.
+- Validate with `pnpm validate` / `pnpm check-plugins` in `tahti-registry`.
+
+Do not treat the API import-plugin list as a substitute for the Store catalog. See root `AGENTS.md` → Official marketplace catalog.

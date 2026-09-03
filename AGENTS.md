@@ -58,6 +58,28 @@ connection-test contract and error states; and whether Save and Enable are one
 atomic action or separate actions. Record the decision in both repositories’
 agent instructions when settled.
 
+### Official marketplace catalog (`tahti-registry`)
+
+What users see in Tahti Player’s plugin/theme **Store** is **not** this
+monorepo and not the player’s on-disk install list. The catalog is
+[github.com/janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry)
+(`plugins.json`, `themes/`, generated `themes.json`), fetched by the player from
+`https://raw.githubusercontent.com/janiluuk/tahti-registry/master`.
+
+Sibling checkouts (same parent as this repo): `../tahti-registry` (catalog),
+`../tahti-player` or `../tahti-nuclear` (player + beta web). `GET
+/api/me/import-plugins` is the **API** import-provider list; it does not
+replace the Store catalog.
+
+After any plugin add or change that has (or should have) a Store listing:
+
+1. Open `../tahti-registry` and inspect `plugins.json` (themes under `themes/`).
+2. **Added** — add a catalog row. Users must see the plugin in that repo.
+3. **Changed** — bump the plugin `package.json` version **and** the matching
+   catalog `version` / `downloadUrl` (player auto-update uses those fields).
+4. Run `pnpm validate` / `pnpm check-plugins` in `tahti-registry`.
+5. Do not finish with a store plugin that exists only in player or API code.
+
 ### Plugin registry extraction guardrail
 
 Begin separating the plugin registry as an independently owned boundary, but do
