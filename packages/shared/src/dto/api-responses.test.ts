@@ -107,6 +107,8 @@ describe('api response schemas', () => {
       releases: [],
       tracks: [],
       fanTiers: [],
+      purchaseTiers: [],
+      storePaymentsReady: false,
       collections: [],
       links: {
         channel: '/c/dj1',
