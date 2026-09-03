@@ -52,6 +52,27 @@ describe('M21-B — admin users API', () => {
     expect(body.users.some((u) => u.username === 'admin-users-target')).toBe(true)
   })
 
+  it('PATCH writes USER_TIER_CHANGE when the account tier changes', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/users/${targetId}`,
+      headers: { cookie: boardCookie },
+      payload: { tier: 'STUDIO' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().tier).toBe('STUDIO')
+
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'USER_TIER_CHANGE', targetId },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(audit?.meta).toMatchObject({
+      from: 'FREE',
+      to: 'STUDIO',
+      reason: 'admin_patch',
+    })
+  })
+
   it('POST suspend and unsuspend', async () => {
     const suspend = await app.inject({
       method: 'POST',

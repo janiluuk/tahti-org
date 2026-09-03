@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 /** Public archive / release download query (`?fp=&format=`). */
-export const DownloadFormatSchema = z.enum(['mp3_320', 'opus256', 'flac'])
+export const DownloadFormatSchema = z.enum(['mp3_320', 'opus256', 'flac', 'source'])
 
 export const ArchiveDownloadQuerySchema = z.object({
   fp: z.string().max(128).optional(),

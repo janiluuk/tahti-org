@@ -359,6 +359,7 @@ enum AuditAction {
   USER_SUSPEND
   USER_UNSUSPEND
   BOARD_ROLE_CHANGE
+  USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
   STREAM_RESTART
@@ -762,6 +763,7 @@ model User {
   showFollowers                  Boolean    @default(true)
   showFollowing                  Boolean    @default(true)
   showDailyListeners             Boolean    @default(true)
+  showLikes                      Boolean    @default(true)
   chatEnabled                    Boolean    @default(true)
   stripeCustomerId               String?
   stripeMembershipSubscriptionId String?    @unique
@@ -2446,6 +2448,7 @@ model ArchiveItemLike {
 
   @@id([userId, archiveItemId])
   @@index([archiveItemId])
+  @@index([userId, createdAt])
   @@schema("engagement")
 }
 
@@ -3421,6 +3424,19 @@ model NewsPost {
   updatedAt   DateTime  @updatedAt
 
   @@index([publishedAt])
+  @@schema("admin")
+}
+
+/// Singleton row (`id = "default"`) for the Tahti Radio Discord bot. Token is
+/// AES-GCM encrypted at rest. Board edits via `/api/admin/discord-bot`; the
+/// bot process reads plaintext via `/api/v1/internal/discord-bot/credentials`.
+model DiscordBotSettings {
+  id          String   @id @default("default")
+  clientId    String
+  tokenEnc    String
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
   @@schema("admin")
 }
 

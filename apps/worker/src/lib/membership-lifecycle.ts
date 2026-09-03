@@ -74,6 +74,14 @@ export async function processMembershipLapse(prisma: PrismaClient) {
           targetId: user.id,
         },
       }),
+      prisma.auditLog.create({
+        data: {
+          action: 'USER_TIER_CHANGE',
+          actorId: 'system',
+          targetId: user.id,
+          meta: { from: 'ARTIST', to: 'FREE', reason: 'membership_lapse' },
+        },
+      }),
     ])
     lapsed++
   }

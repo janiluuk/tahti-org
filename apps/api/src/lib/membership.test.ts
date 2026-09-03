@@ -57,6 +57,16 @@ describe('activateMembership', () => {
     expect(updated?.isMember).toBe(true)
     expect(updated?.tier).toBe('ARTIST')
 
+    const tierAudit = await prisma.auditLog.findFirst({
+      where: { action: 'USER_TIER_CHANGE', targetId: user.id },
+    })
+    expect(tierAudit?.actorId).toBe(user.id)
+    expect(tierAudit?.meta).toMatchObject({
+      from: 'FREE',
+      to: 'ARTIST',
+      reason: 'membership_activate',
+    })
+
     const r2 = await activateMembership(prisma, user.id, {
       stripeSessionId: 'cs_lib_2',
     })
@@ -143,6 +153,18 @@ describe('recordMembershipRenewal', () => {
     expect(updated?.isMember).toBe(true)
     expect(updated?.tier).toBe('ARTIST')
     expect(updated?.memberSince?.toISOString()).toBe(periodStart.toISOString())
+
+    const tierAudit = await prisma.auditLog.findFirst({
+      where: {
+        action: 'USER_TIER_CHANGE',
+        targetId: user.id,
+      },
+    })
+    expect(tierAudit?.meta).toMatchObject({
+      from: 'FREE',
+      to: 'ARTIST',
+      reason: 'membership_renewal',
+    })
 
     const ledgerCount = await prisma.ledgerEntry.count({
       where: { externalRef: 'membership-invoice:in_renew_1' },

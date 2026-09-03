@@ -619,6 +619,32 @@ export const ArchiveItemLikeResponseSchema = z.object({
   likeCount: z.number().int(),
 })
 
+export const LikedTrackSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  bannerUrl: z.string().nullable(),
+  audioUrl: z.string().nullable(),
+  channelSlug: z.string(),
+  artistUsername: z.string(),
+  artistDisplayName: z.string(),
+  likedAt: z.string().datetime(),
+  url: z.string(),
+  embedProvider: z.string().nullable().optional(),
+  embedUri: z.string().nullable().optional(),
+})
+
+export const LikedPlaylistResponseSchema = z.object({
+  owner: z.object({
+    username: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
+  }),
+  showLikes: z.boolean(),
+  itemCount: z.number().int(),
+  coverUrl: z.string().nullable(),
+  items: z.array(LikedTrackSchema),
+})
+
 export const ArchiveItemRepostResponseSchema = z.object({
   reposted: z.boolean(),
   repostCount: z.number().int(),
@@ -939,6 +965,15 @@ export const PublicProfileViewSchema = z.object({
   }),
   /** Short-lived URL for looping page ambient music (from an assigned clip). */
   backgroundMusicUrl: z.string().url().nullable().optional(),
+  likedPlaylist: z
+    .object({
+      name: z.string(),
+      itemCount: z.number().int(),
+      coverUrl: z.string().nullable(),
+      url: z.string(),
+    })
+    .nullable()
+    .optional(),
 })
 
 export const SmartLinkViewSchema = z.object({
@@ -1144,6 +1179,7 @@ export const ProfileFieldsSchema = z.object({
   showFollowers: z.boolean(),
   showFollowing: z.boolean(),
   showDailyListeners: z.boolean(),
+  showLikes: z.boolean(),
   chatEnabled: z.boolean(),
   createdAt: z.string().datetime(),
   /** Solo DJ/artist vs collective/band. Defaults to SINGLE when no channel. */

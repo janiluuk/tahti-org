@@ -19,7 +19,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { executeAccountDeletion } from '../../lib/account-deletion.js'
-import { auditLog } from '../../lib/audit.js'
+import { auditLog, auditUserTierChange } from '../../lib/audit.js'
 import { sendCsv } from '../../lib/csv.js'
 
 async function fetchUserDetail(prisma: Parameters<typeof computeEngagementUnits>[0], id: string) {
@@ -298,7 +298,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.user.findUnique({
         where: { id },
-        select: { isBoard: true, isMember: true, memberSince: true },
+        select: { isBoard: true, isMember: true, memberSince: true, tier: true },
       })
       if (!existing) return reply.status(404).send({ error: 'User not found' })
 
@@ -309,6 +309,15 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           actorId: actor.id,
           targetId: id,
           meta: { isBoard: data.isBoard },
+        })
+      }
+      if (data.tier !== undefined && data.tier !== existing.tier) {
+        await auditUserTierChange(fastify.prisma, {
+          actorId: actor.id,
+          targetId: id,
+          from: existing.tier,
+          to: data.tier,
+          reason: 'admin_patch',
         })
       }
 

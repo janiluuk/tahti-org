@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { auditLog } from './audit.js'
+import { auditLog, auditUserTierChange } from './audit.js'
 import { prisma } from '@tahti/db'
 
 describe('auditLog', () => {
@@ -24,5 +24,19 @@ describe('auditLog', () => {
     if (row) {
       await prisma.auditLog.delete({ where: { id: row.id } })
     }
+  })
+
+  it('skips USER_TIER_CHANGE when the tier is unchanged', async () => {
+    await auditUserTierChange(prisma, {
+      actorId: 'system',
+      targetId: 'tier-unchanged',
+      from: 'ARTIST',
+      to: 'ARTIST',
+      reason: 'admin_patch',
+    })
+    const row = await prisma.auditLog.findFirst({
+      where: { action: 'USER_TIER_CHANGE', targetId: 'tier-unchanged' },
+    })
+    expect(row).toBeNull()
   })
 })

@@ -236,4 +236,14 @@ describe('M18 — archive downloads + engagement units', () => {
     expect(blocked.statusCode).toBe(429)
     expect(blocked.headers['retry-after']).toBeDefined()
   })
+
+  it('accepts format=source so listeners can fetch the original upload', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/${SLUG}/archive/${itemId}/download?format=source&fp=source-format`,
+      headers: dlHeaders,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().url).toBeTruthy()
+  })
 })

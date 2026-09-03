@@ -90,6 +90,18 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     artworkUrl: z.string().nullable(),
     url: z.string(),
   }),
+  z.object({
+    kind: z.literal('like'),
+    id: z.string(),
+    date: z.string().datetime(),
+    artist: FeedArtistSchema,
+    title: z.string(),
+    bannerUrl: z.string().nullable(),
+    audioUrl: z.string().nullable(),
+    channelSlug: z.string(),
+    trackArtist: FeedArtistSchema,
+    url: z.string(),
+  }),
 ])
 
 export type FeedItem = z.infer<typeof FeedItemSchema>

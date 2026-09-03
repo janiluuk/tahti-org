@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { config } from '../config.js'
+import { auditUserTierChange } from './audit.js'
 
 const MEMBERSHIP_TERM_MS = 365 * 24 * 60 * 60 * 1000
 
@@ -32,7 +33,7 @@ export async function activateMembership(
   periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1)
   const recordLedger = opts.recordLedger !== false
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: { id: userId },
       select: {
@@ -40,6 +41,7 @@ export async function activateMembership(
         isMember: true,
         memberNumber: true,
         stripeMembershipSubscriptionId: true,
+        tier: true,
       },
     })
     if (!user) throw new Error('User not found')
@@ -98,8 +100,24 @@ export async function activateMembership(
       }
     }
 
-    return { alreadyActive: false as const, membership, memberNumber: memberNumber! }
+    return { alreadyActive: false as const, membership, memberNumber: memberNumber!, previousTier: user.tier }
   })
+
+  if (!result.alreadyActive) {
+    await auditUserTierChange(prisma, {
+      actorId: userId,
+      targetId: userId,
+      from: result.previousTier,
+      to: 'ARTIST',
+      reason: 'membership_activate',
+    })
+    return {
+      alreadyActive: false as const,
+      membership: result.membership,
+      memberNumber: result.memberNumber,
+    }
+  }
+  return result
 }
 
 /** Stripe subscription renewal — invoice.paid for tahtiMembershipSubscriptionId. */
@@ -118,10 +136,10 @@ export async function recordMembershipRenewal(
   const periodStart = opts.periodStart ?? new Date()
   const periodEnd = opts.periodEnd ?? new Date(periodStart.getTime() + MEMBERSHIP_TERM_MS)
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: { id: userId },
-      select: { id: true, memberNumber: true },
+      select: { id: true, memberNumber: true, tier: true },
     })
     if (!user) throw new Error('User not found')
 
@@ -166,6 +184,15 @@ export async function recordMembershipRenewal(
       })
     }
 
-    return { membership, memberNumber: memberNumber! }
+    return { membership, memberNumber: memberNumber!, previousTier: user.tier }
   })
+
+  await auditUserTierChange(prisma, {
+    actorId: userId,
+    targetId: userId,
+    from: result.previousTier,
+    to: 'ARTIST',
+    reason: 'membership_renewal',
+  })
+  return { membership: result.membership, memberNumber: result.memberNumber }
 }

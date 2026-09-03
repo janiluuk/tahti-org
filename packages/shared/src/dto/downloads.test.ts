@@ -7,6 +7,7 @@ import { ArchiveDownloadQuerySchema, ReleaseDownloadQuerySchema } from './downlo
 describe('download query schemas', () => {
   it('accepts known formats', () => {
     expect(ArchiveDownloadQuerySchema.safeParse({ format: 'flac' }).success).toBe(true)
+    expect(ArchiveDownloadQuerySchema.safeParse({ format: 'source' }).success).toBe(true)
   })
 
   it('rejects unknown format', () => {

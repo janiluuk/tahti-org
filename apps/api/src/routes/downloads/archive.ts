@@ -82,6 +82,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           id: true,
           title: true,
+          rawKey: true,
           mp3Key: true,
           flacKey: true,
           fileSizeBytes: true,
@@ -142,12 +143,18 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
+      const wantSource = query.format === 'source' || query.format == null
       const wantFlac = query.format === 'flac' && item.flacKey && channel.user.tier !== 'FREE'
-      const objectKey = wantFlac ? item.flacKey! : archivePlaybackKey(item)
+      const objectKey = wantSource
+        ? (item.rawKey ?? item.flacKey ?? archivePlaybackKey(item))
+        : wantFlac
+          ? item.flacKey!
+          : archivePlaybackKey(item) ?? item.rawKey
       if (!objectKey) {
         return reply.status(409).send({ error: 'No downloadable file for this item' })
       }
-      const servedFlac = wantFlac || (!item.mp3Key && Boolean(item.flacKey))
+      const servedSource = Boolean(item.rawKey) && objectKey === item.rawKey
+      const servedFlac = !servedSource && (wantFlac || (!item.mp3Key && Boolean(item.flacKey)))
 
       const byIpHash = sha256(`${clientIp}:${salt}`)
 
@@ -238,7 +245,13 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           channelId: channel.id,
           archiveItemId: item.id,
-          format: servedFlac ? 'flac' : query.format === 'opus256' ? 'opus256' : 'mp3_320',
+          format: servedSource
+            ? 'source'
+            : servedFlac
+              ? 'flac'
+              : query.format === 'opus256'
+                ? 'opus256'
+                : 'mp3_320',
           byUserId,
           byFingerprint,
           byIpHash,

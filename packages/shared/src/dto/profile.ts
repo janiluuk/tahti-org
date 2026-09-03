@@ -30,6 +30,7 @@ export const ProfilePatchSchema = z
     showFollowers: z.boolean().optional(),
     showFollowing: z.boolean().optional(),
     showDailyListeners: z.boolean().optional(),
+    showLikes: z.boolean().optional(),
     chatEnabled: z.boolean().optional(),
     /** Solo DJ/artist vs collective/band. */
     artistKind: z.enum(ARTIST_KINDS).optional(),
