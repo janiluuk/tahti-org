@@ -47,3 +47,16 @@ export async function getCachedJson<T>(
     if (inFlight.get(key) === pending) inFlight.delete(key)
   }
 }
+
+/** Evicts a single cached key ahead of its TTL — for the rare case where a
+ * write must be reflected immediately (e.g. session invalidation on logout)
+ * rather than waiting out a short cache window. No-op if Redis is down. */
+export async function invalidateCachedJson(key: string): Promise<void> {
+  const redis = await getRedisClient()
+  if (!redis) return
+  try {
+    await redis.del(key)
+  } catch {
+    // best-effort — a failed delete just means the TTL runs its course
+  }
+}

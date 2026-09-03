@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import {
   PublicChannelViewSchema,
   SlugParamSchema,
@@ -11,6 +11,7 @@ import {
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 import { resolveColorScheme } from '@tahti/shared'
+import { getCachedJson } from '../../lib/json-cache.js'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -27,134 +28,145 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { slug } = routeParams
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          slug: true,
-          state: true,
-          nextBroadcastAt: true,
-          nextBroadcastNote: true,
-          galleryMode: true,
-          slideshowImages: true,
-          textLayerMode: true,
-          textLayerText: true,
-          textLayerAlign: true,
-          videoBackgroundUrl: true,
-          headerStyle: true,
-          brandAccentPreset: true,
-          colorSchemeJson: true,
-          visualPreset: true,
-          visualSettingsJson: true,
-          slideshowPreset: true,
-          slideshowIntervalSeconds: true,
-          slideshowTransitionMs: true,
-          slideshowAutoplay: true,
-          nowPlayingTitle: true,
-          nowPlayingArtistName: true,
-          nowPlayingArtistUsername: true,
-          nowPlayingArtworkUrl: true,
-          nowPlayingDurationSec: true,
-          nowPlayingUpdatedAt: true,
-          user: {
-            select: {
-              username: true,
-              displayName: true,
-              bio: true,
-              avatarUrl: true,
-              avatarPosterUrl: true,
-              countryCode: true,
-              pronouns: true,
-              socialLinks: true,
-              tier: true,
-              showJoinDate: true,
-              chatEnabled: true,
-              createdAt: true,
-            },
-          },
-        },
-      })
-
-      if (!channel) {
-        return reply.status(404).send({ error: 'Channel not found' })
-      }
-
-      const hlsUrl =
-        channel.state === 'LIVE'
-          ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
-          : null
-
-      const { showJoinDate, createdAt, ...userRest } = channel.user
-
-      // Stale poller data (orchestrator down, channel not actually running) is
-      // worse than none — a "now playing" that hasn't moved in minutes reads as
-      // broken, not just outdated.
-      const NOW_PLAYING_STALE_MS = 2 * 60 * 1000
-      const nowPlayingFresh =
-        channel.nowPlayingUpdatedAt != null &&
-        Date.now() - channel.nowPlayingUpdatedAt.getTime() < NOW_PLAYING_STALE_MS
-      const nowPlaying =
-        nowPlayingFresh && channel.nowPlayingTitle && channel.nowPlayingArtistName
-          ? {
-              title: channel.nowPlayingTitle,
-              artistName: channel.nowPlayingArtistName,
-              artistUsername: channel.nowPlayingArtistUsername,
-              artworkUrl: channel.nowPlayingArtworkUrl,
-              durationSec: channel.nowPlayingDurationSec,
-              startedAt: channel.nowPlayingUpdatedAt!.toISOString(),
-            }
-          : null
-
-      // Curated-rotation channels (Tahti Selects) play a fixed, ordered playlist —
-      // find the currently-playing entry by title and report the one after it.
-      let nowPlayingNext: {
-        title: string
-        artistName: string
-        artistUsername: string | null
-      } | null = null
-      if (nowPlaying) {
-        const curated = await fastify.prisma.curatedRotationItem.findMany({
-          where: { channelId: channel.id },
-          orderBy: { position: 'asc' },
-          select: {
-            archiveItem: {
-              select: {
-                title: true,
-                artistName: true,
-                channel: {
-                  select: { user: { select: { displayName: true, username: true } } },
-                },
-              },
-            },
-          },
-        })
-        if (curated.length > 1) {
-          const idx = curated.findIndex((c) => c.archiveItem.title === nowPlaying.title)
-          if (idx !== -1) {
-            const next = curated[(idx + 1) % curated.length]!.archiveItem
-            nowPlayingNext = {
-              title: next.title,
-              artistName: next.artistName ?? next.channel.user.displayName,
-              artistUsername: next.artistName ? null : next.channel.user.username,
-            }
-          }
-        }
-      }
-
-      return reply.send({
-        ...channel,
-        user: {
-          ...userRest,
-          joinDate: showJoinDate ? createdAt.toISOString() : null,
-        },
-        nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
-        hlsUrl,
-        colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
-        nowPlaying,
-        nowPlayingNext,
-      })
+      // Several listener-facing components each poll this endpoint
+      // independently on their own timer (mini-player, live-player-section,
+      // sticky-live-bar, radio-player-section, dashboard channel-controls) —
+      // a short cache collapses all of a popular channel's concurrent
+      // pollers into one DB round trip instead of one per client. TTL stays
+      // well under the ~20s orchestrator now-playing sync cadence so this
+      // never makes the payload noticeably staler than it already is.
+      const result = await getCachedJson(`channel:${slug}`, 5, () =>
+        computeChannelView(fastify, slug),
+      )
+      if (!result) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send(result)
     },
   )
+}
+
+async function computeChannelView(fastify: FastifyInstance, slug: string) {
+  const channel = await fastify.prisma.channel.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      slug: true,
+      state: true,
+      nextBroadcastAt: true,
+      nextBroadcastNote: true,
+      galleryMode: true,
+      slideshowImages: true,
+      textLayerMode: true,
+      textLayerText: true,
+      textLayerAlign: true,
+      videoBackgroundUrl: true,
+      headerStyle: true,
+      brandAccentPreset: true,
+      colorSchemeJson: true,
+      visualPreset: true,
+      visualSettingsJson: true,
+      slideshowPreset: true,
+      slideshowIntervalSeconds: true,
+      slideshowTransitionMs: true,
+      slideshowAutoplay: true,
+      nowPlayingTitle: true,
+      nowPlayingArtistName: true,
+      nowPlayingArtistUsername: true,
+      nowPlayingArtworkUrl: true,
+      nowPlayingDurationSec: true,
+      nowPlayingUpdatedAt: true,
+      user: {
+        select: {
+          username: true,
+          displayName: true,
+          bio: true,
+          avatarUrl: true,
+          avatarPosterUrl: true,
+          countryCode: true,
+          pronouns: true,
+          socialLinks: true,
+          tier: true,
+          showJoinDate: true,
+          chatEnabled: true,
+          createdAt: true,
+        },
+      },
+    },
+  })
+
+  if (!channel) return null
+
+  const hlsUrl =
+    channel.state === 'LIVE' ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier) : null
+
+  const { showJoinDate, createdAt, ...userRest } = channel.user
+
+  // Stale poller data (orchestrator down, channel not actually running) is
+  // worse than none — a "now playing" that hasn't moved in minutes reads as
+  // broken, not just outdated.
+  const NOW_PLAYING_STALE_MS = 2 * 60 * 1000
+  const nowPlayingFresh =
+    channel.nowPlayingUpdatedAt != null &&
+    Date.now() - channel.nowPlayingUpdatedAt.getTime() < NOW_PLAYING_STALE_MS
+  const nowPlaying =
+    nowPlayingFresh && channel.nowPlayingTitle && channel.nowPlayingArtistName
+      ? {
+          title: channel.nowPlayingTitle,
+          artistName: channel.nowPlayingArtistName,
+          artistUsername: channel.nowPlayingArtistUsername,
+          artworkUrl: channel.nowPlayingArtworkUrl,
+          durationSec: channel.nowPlayingDurationSec,
+          startedAt: channel.nowPlayingUpdatedAt!.toISOString(),
+        }
+      : null
+
+  // Curated-rotation channels (Tahti Selects) play a fixed, ordered playlist —
+  // find the currently-playing entry by title and report the one after it.
+  let nowPlayingNext: {
+    title: string
+    artistName: string
+    artistUsername: string | null
+  } | null = null
+  if (nowPlaying) {
+    const curated = await fastify.prisma.curatedRotationItem.findMany({
+      where: { channelId: channel.id },
+      orderBy: { position: 'asc' },
+      select: {
+        archiveItem: {
+          select: {
+            title: true,
+            artistName: true,
+            channel: {
+              select: { user: { select: { displayName: true, username: true } } },
+            },
+          },
+        },
+      },
+    })
+    if (curated.length > 1) {
+      const idx = curated.findIndex((c) => c.archiveItem.title === nowPlaying.title)
+      if (idx !== -1) {
+        const next = curated[(idx + 1) % curated.length]!.archiveItem
+        nowPlayingNext = {
+          title: next.title,
+          artistName: next.artistName ?? next.channel.user.displayName,
+          artistUsername: next.artistName ? null : next.channel.user.username,
+        }
+      }
+    }
+  }
+
+  return {
+    ...channel,
+    user: {
+      ...userRest,
+      joinDate: showJoinDate ? createdAt.toISOString() : null,
+    },
+    nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+    hlsUrl,
+    colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
+    nowPlaying,
+    nowPlayingNext,
+  }
 }
 
 export default channelGetRoute
