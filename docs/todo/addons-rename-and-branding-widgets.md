@@ -73,25 +73,121 @@ CI provisions its own, so CI is the real gate; see session notes).
 
 ## Workstream B — artist branding: logo, bio/story, Channel Designer sizing
 
-Independent of the rename except for sharing the Channel Designer's
-widget-placement grid.
+### B.0 — findings that changed the original scope (session discoveries)
 
-- **Artist logo**: new upload separate from gallery/avatar. Store as PNG/
-  WebP preserving alpha (no flattening onto a background) so it composites
-  over channel background art. Needs size variants — mirror however avatar/
-  cover already generate derived sizes (check existing upload pipeline
-  before inventing a new one).
-- **Bio + Story**: `bio` (existing, short) stays; add a longer `story` field
-  (rich/long text). Any surface rendering long text (story, and reuse for
-  bio if also long) truncates at a cutoff with a "more…" expand affordance
-  rather than hard-cutting.
-- **Channel Designer sizing**: logo (and likely other Channel Designer
-  widgets generally, not just the logo) gets width variants — full, half,
-  1/3 — and the grid packs multiple widgets per row when their combined
-  width fits (i.e. a real flex/grid layout, not a fixed single-column
-  stack). Check whether the Channel Designer's existing panel/grid system
-  (`channel-header-panel.tsx`, brand/PageHero work from the prior worktree)
-  already has a layout primitive this can reuse before building a new one.
+Before building anything, checked what already exists — it's more than the
+original request assumed:
+
+- **A logo already exists.** Settings → Artist info → Identity tab has a
+  "drop a transparent PNG/WebP logo" uploader (`channel-identity-panel.tsx`,
+  `prepareLogoUpload`) — alpha-preserving PNG/WebP already required, so the
+  "can be alpha RGBA" ask was already true. But it's an *overlay stamp*:
+  `User.logoUrl` + `logoPlacement` (`AVATAR` | `COVER` | `BOTH`, see
+  `packages/shared/src/dto/avatar-theme.ts`) composites the logo onto the
+  avatar and/or cover image. It is not a placeable Channel Designer element
+  and has no size variants. Decision (asked): keep this feature exactly as
+  it is; the new logo is a **separate** upload/field/section used only as a
+  Channel Designer block — not a replacement.
+- **Bio already supports long-form text.** `User.bio`, up to 5000 chars,
+  edited in Settings → Artist info → Story tab (`ChannelBioPanel`). There
+  was never a second "story" field. Decision (asked): don't add one — the
+  actual gap was that public pages (`c/[slug]`, `u/[username]`) rendered
+  the full bio with no cutoff. **Done and shipped** (see Status): added
+  `ExpandableText` (`@tahti/ui`) — measures rendered height client-side,
+  clamps to 160px with a "more…" toggle only when actually overflowing,
+  wired into both bio render sites. No DB change.
+- **The Channel Designer has no block/grid concept at all.**
+  `_designer-sections.ts` is a hardcoded array of exactly 5 single-instance
+  sections (Visual style, Header & backdrop, Slideshow, Links, Player
+  overlay text) — each backed by its own dedicated settings on
+  `User`/`Channel`, not by rows in a table. There is nothing resembling
+  "add N items, size each, pack them into rows" anywhere in this app today.
+  What was asked for (full/half/third-width blocks, multiple packed per
+  row, starting with the new logo) means building that from scratch.
+  Decision (asked, given the size of this): **full generalized block
+  system** — not a logo-only special case — chosen over stopping here or
+  over a single-purpose "logo section". The design below is deliberately
+  type-extensible (logo and addons as the first two block types) but does
+  **not** retrofit the existing 5 sections into blocks — they're stable,
+  live, non-repositionable-by-nature settings (a color scheme isn't a
+  "block"), and forcing them into a generic shape would be pure risk for
+  no user-facing benefit. "Generalized" here means the block system itself
+  is reusable for future block types, not that everything becomes a block.
+
+### B.1 — Channel Designer block system (not started — this is the big one)
+
+**Data model** — new table, additive, no touch to existing Designer
+sections' storage:
+
+```prisma
+enum ChannelBlockType {
+  LOGO
+  ADDON        // references an existing AddonInstall (channel-scope)
+}
+
+enum ChannelBlockWidth {
+  FULL
+  HALF
+  THIRD
+}
+
+model ChannelBlock {
+  id        String            @id @default(cuid())
+  channelId String
+  channel   Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  type      ChannelBlockType
+  width     ChannelBlockWidth @default(FULL)
+  position  Int               @default(0)   // flat order; row-packing is
+                                             // computed at render time from
+                                             // (position order, width), not
+                                             // stored as an explicit row/col
+  configJson Json             @default("{}") // type-specific: LOGO -> { assetId }, ADDON -> { addonInstallId }
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([channelId, position])
+  @@schema("core")
+}
+```
+
+Row-packing is a pure function of the ordered `(width)` sequence — greedily
+fill a row (FULL alone; HALF+HALF; THIRD+THIRD+THIRD; THIRD+THIRD+... with
+leftover space unfilled) rather than storing row/col explicitly, so
+reordering never needs a second write to fix up row numbers. Same function
+runs client-side (editor preview) and server-side/SSR (public channel page)
+— put it in `packages/shared` so both import the identical implementation
+rather than risking drift between an editor preview and the real render.
+
+**Logo asset**: new `ChannelBlockAsset` upload (or a `blockLogoUrl` +
+size-variant columns on a per-block basis, since configJson can't hold
+binary) — mirror the *existing* avatar/cover derived-size pipeline (find
+and reuse whatever generates their size variants today; don't invent a
+second image-processing path). Alpha-preserving PNG/WebP, same validation
+as the existing logo uploader.
+
+**Editor UI**: new Designer section (e.g. "Brand blocks", `id: 'blocks'` in
+`_designer-sections.ts`) — a list of blocks with add/remove, a width
+selector (Full/Half/Third) per block, and reordering (the repo already has
+a tuned drag-reorder primitive — `packages/ui/src/brand/SortableList.tsx`,
+used by Addons installs and the broadcast rotation queue — reuse it rather
+than building another one). "Add block" starts with the two types above.
+
+**Public rendering**: on `c/[slug]/page.tsx`, fetch the channel's
+`ChannelBlock` rows, run the shared packing function, render a CSS grid/flex
+row per packed group. `LOGO` blocks render the sized logo image; `ADDON`
+blocks render `AddonFrame` (reused from the Addons work) pointed at that
+`AddonInstall`.
+
+**API surface**: `apps/api/src/routes/me/channel/blocks.ts` — list/create/
+patch(width, position, configJson)/delete, artist-owned (`requireArtist`),
+same shape as the existing `me/addons.ts` channel-install routes.
+
+**Phasing if picked up fresh**: (1) migration + shared packing function +
+its own unit tests (pure function, easy to test thoroughly without a DB);
+(2) API CRUD; (3) editor UI; (4) public rendering; (5) logo upload +
+size-variant pipeline wired into a LOGO block. Steps 1–2 and 5 can run
+before there's any UI to exercise them, verified via API tests, like the
+rest of this session's work.
 
 ## Status
 
@@ -113,5 +209,12 @@ widget-placement grid.
   suppressing it. Typecheck/lint/format green; local Postgres unavailable
   this session (port 5432 already held) so these new test cases are
   unverified locally — CI is the real gate.
-- Workstream B (branding: logo, bio/story, Channel Designer sizing): not
-  started.
+- Workstream B: bio truncation (see B.0) done and merged — `ExpandableText`
+  (`packages/ui/src/lib/ExpandableText.tsx`) wired into `c/[slug]` and
+  `u/[username]`. Typecheck/lint/format green.
+- Workstream B.1 (Channel Designer block system: logo + addon blocks,
+  full/half/third width, row-packing) — scoped in detail above, not started.
+  This is the large remaining piece; treat it as its own effort (new
+  migration, shared packing function, API CRUD, editor UI, public
+  rendering, logo upload pipeline) rather than a quick add-on to this
+  branch.
