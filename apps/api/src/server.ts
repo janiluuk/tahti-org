@@ -52,6 +52,7 @@ import channelFallbackRoute from './routes/internal/channel-fallback.js'
 import tlsAskRoute from './routes/internal/tls-ask.js'
 import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
 import internalRadioRoutes from './routes/internal/radio.js'
+import internalDiscordBotRoutes from './routes/internal/discord-bot.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
 import channelSlugRoutes from './routes/me/channel-slug.js'
 import chatTokenRoute from './routes/chat/token.js'
@@ -128,6 +129,7 @@ import supportContactRoutes from './routes/support/contact.js'
 import contentReportsRoute from './routes/reports/submit.js'
 import adminBetaRoutes from './routes/admin/beta.js'
 import adminIntegrationsRoutes from './routes/admin/integrations.js'
+import adminDiscordBotRoutes from './routes/admin/discord-bot.js'
 import betaApplyRoutes from './routes/beta/apply.js'
 import setupPasswordRoute from './routes/auth/setup-password.js'
 import resendVerificationRoute from './routes/auth/resend-verification.js'
@@ -172,6 +174,7 @@ import channelMembersRoute from './routes/channels/members.js'
 import meTrackInsightsRoutes from './routes/me/track-insights.js'
 import meMessagesRoutes from './routes/me/messages.js'
 import meEmbedRoutes from './routes/me/embeds.js'
+import meRssFeedRoutes from './routes/me/rss-feed.js'
 import channelEmbedsRoute from './routes/channels/embeds.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
@@ -303,6 +306,9 @@ import {
   RtmpTargetViewSchema,
   ApiTokenListSchema,
   ApiTokenCreatedSchema,
+  AdminDiscordBotSettingsSchema,
+  UpdateDiscordBotSettingsSchema,
+  InternalDiscordBotCredentialsSchema,
   SmartLinkViewSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
@@ -458,6 +464,9 @@ export async function buildApp(opts: BuildOptions = {}) {
           EmbedTrackPlay: EmbedTrackPlaySchema,
           ApiTokenList: ApiTokenListSchema,
           ApiTokenCreated: ApiTokenCreatedSchema,
+          AdminDiscordBotSettings: AdminDiscordBotSettingsSchema,
+          UpdateDiscordBotSettings: UpdateDiscordBotSettingsSchema,
+          InternalDiscordBotCredentials: InternalDiscordBotCredentialsSchema,
         }),
       },
       tags: [
@@ -567,6 +576,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(tlsAskRoute)
   await fastify.register(broadcastFingerprintInternalRoutes)
   await fastify.register(internalRadioRoutes)
+  await fastify.register(internalDiscordBotRoutes)
   await fastify.register(streamSettingsRoutes)
   await fastify.register(channelSlugRoutes)
 
@@ -663,6 +673,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminVenueRoutes)
   await fastify.register(adminBetaRoutes)
   await fastify.register(adminIntegrationsRoutes)
+  await fastify.register(adminDiscordBotRoutes)
   await fastify.register(supportContactRoutes)
   await fastify.register(contentReportsRoute)
   await fastify.register(betaApplyRoutes)
@@ -731,6 +742,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meTrackInsightsRoutes)
   await fastify.register(meMessagesRoutes)
   await fastify.register(meEmbedRoutes)
+  await fastify.register(meRssFeedRoutes)
   await fastify.register(channelEmbedsRoute)
 
   // M18: public release-track downloads with anti-fraud

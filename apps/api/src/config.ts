@@ -265,6 +265,11 @@ export const config = {
     clientId: process.env.SPOTIFY_CLIENT_ID ?? '',
     clientSecret: readSecret('SPOTIFY_CLIENT_SECRET', 'SPOTIFY_CLIENT_SECRET_FILE', ''),
   },
+  /** Tahti Radio Discord bot — env fallback when no DiscordBotSettings row exists. */
+  discordBot: {
+    clientId: process.env.DISCORD_CLIENT_ID ?? '',
+    token: readSecret('DISCORD_TOKEN', 'DISCORD_TOKEN_FILE', ''),
+  },
   /** M14: Twitter / X OAuth 2.0 PKCE (optional — set TWITTER_CLIENT_ID). */
   twitter: {
     clientId: process.env.TWITTER_CLIENT_ID ?? '',

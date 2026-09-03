@@ -2912,6 +2912,45 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/v1/internal/discord-bot/credentials': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Plaintext Discord bot credentials for the Tahti Radio Discord bot process. INTERNAL_SECRET only. */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              clientId: string
+              token: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/stream-settings': {
     parameters: {
       query?: never
@@ -12813,6 +12852,83 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/discord-bot': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Tahti Radio Discord bot application ID and whether a bot token is stored. Never returns the token. */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              clientId: string
+              tokenConfigured: boolean
+              tokenHint: string | null
+              /** @enum {string} */
+              source: 'database' | 'env' | 'none'
+            }
+          }
+        }
+      }
+    }
+    /** @description Save Discord application ID and optional bot token. Omit token to keep the current secret. */
+    put: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody: {
+        content: {
+          'application/json': {
+            /** @description Discord application / client ID (snowflake) */
+            clientId: string
+            /** @description Bot token. Omit to keep the currently stored secret. */
+            token?: string
+          }
+        }
+      }
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              clientId: string
+              tokenConfigured: boolean
+              tokenHint: string | null
+              /** @enum {string} */
+              source: 'database' | 'env' | 'none'
+            }
+          }
+        }
+      }
+    }
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/support/contact': {
     parameters: {
       query?: never
@@ -20829,6 +20945,40 @@ export interface paths {
         }
       }
     }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/rss-feed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Proxy a public RSS or Atom feed */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -30256,6 +30406,21 @@ export interface components {
       expiresAt: string | null
       /** Format: date-time */
       createdAt: string
+      token: string
+    }
+    AdminDiscordBotSettings: {
+      clientId: string
+      tokenConfigured: boolean
+      tokenHint: string | null
+      /** @enum {string} */
+      source: 'database' | 'env' | 'none'
+    }
+    UpdateDiscordBotSettings: {
+      clientId: string
+      token?: string
+    }
+    InternalDiscordBotCredentials: {
+      clientId: string
       token: string
     }
   }
