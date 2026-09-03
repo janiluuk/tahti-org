@@ -114,7 +114,7 @@ original request assumed:
   no user-facing benefit. "Generalized" here means the block system itself
   is reusable for future block types, not that everything becomes a block.
 
-### B.1 — Channel Designer block system (this is the big one; phase 1 of 5 done, see Status)
+### B.1 — Channel Designer block system (this is the big one; phases 1–2 of 5 done, see Status)
 
 **Data model** — new table, additive, no touch to existing Designer
 sections' storage:
@@ -213,25 +213,46 @@ rest of this session's work.
   (`packages/ui/src/lib/ExpandableText.tsx`) wired into `c/[slug]` and
   `u/[username]`. Typecheck/lint/format green.
 - Workstream B.1 (Channel Designer block system: logo + addon blocks,
-  full/half/third width, row-packing) — phase 1 of 5 done (see B.1 phasing
-  above), on branch `addons-branding-blocks` (worktree
-  `../tahti-org-worktree-addons-branding-blocks`): migration
-  `20260904020000_channel_blocks` (`ChannelBlock` table +
-  `ChannelBlockType`/`ChannelBlockWidth` enums, both `core` schema, FK to
-  `channel.Channel`, matches the `AddonInstall`/`ChannelVisualPreset`
-  cross-schema-FK precedent already in this schema) and the shared
-  `packBlocks` row-packing function (`packages/shared/src/channel-blocks.ts`
-  - DTO/zod schemas in `dto/channel-blocks.ts`), with 8 unit tests covering
+  full/half/third width, row-packing) — on branch `addons-branding-blocks`
+  (worktree `../tahti-org-worktree-addons-branding-blocks`).
+
+  - **Phase 1 (migration + shared packing function) — done.** Migration
+    `20260904020000_channel_blocks` (`ChannelBlock` table +
+    `ChannelBlockType`/`ChannelBlockWidth` enums, both `core` schema, FK to
+    `channel.Channel`, matches the `AddonInstall`/`ChannelVisualPreset`
+    cross-schema-FK precedent already in this schema) and the shared
+    `packBlocks` row-packing function (`packages/shared/src/channel-blocks.ts`,
+    DTO/zod schemas in `dto/channel-blocks.ts`), with 8 unit tests covering
     FULL-alone, HALF/HALF, THIRD/THIRD/THIRD, the "leftover space unfilled"
-    case, a width-change mid-list, and input-order preservation. Verified:
-    `prisma validate`/`generate` succeed, `packages/shared` typecheck/lint/
-    test green (8/8), `packages/db` typecheck green. `prisma migrate deploy`
-    could not be exercised against a real Postgres this session — the local
-    instance has no schemas bootstrapped (`stack-up.sh --seed` never run
-    here) and fails replaying an unrelated 2026-06-05 migration before it
-    even reaches this one; same class of local-DB limitation as A.2's
-    session note. CI is the real gate for the migration SQL itself.
-    Remaining: phase 2 (API CRUD, `apps/api/src/routes/me/channel/blocks.ts`),
-    phase 3 (editor UI, reuse `packages/ui/src/brand/SortableList.tsx`),
-    phase 4 (public rendering on `c/[slug]`), phase 5 (logo upload +
-    size-variant pipeline, reuse the existing avatar/cover pipeline).
+    case, a width-change mid-list, and input-order preservation.
+  - **Phase 2 (API CRUD) — done.** `apps/api/src/routes/me/channel-blocks.ts`
+    (flat file, not the `me/channel/` subfolder originally sketched above —
+    matches this codebase's actual convention, e.g. `routes/me/addons.ts`
+    serving both `/api/me/addons/*` and `/api/me/channel/addons/*`):
+    `GET|POST /api/me/channel/blocks`, `PATCH|DELETE /api/me/channel/blocks/:id`,
+    `requireArtist`-gated, same shape as `me/addons.ts`'s channel-install
+    routes. `packages/api-client`'s `schema.d.ts` regenerated
+    (`pnpm --filter @tahti/api-client generate`). 8 integration tests
+    (`channel-blocks.test.ts`) covering auth-required, empty list, create +
+    appended position + default width, invalid type rejected, patch of
+    width/position/configJson, empty-patch rejected, and cross-artist 404s
+    on both patch and delete — **all passing against a real local Postgres**
+    (see verification note below).
+  - Verified this session: `prisma validate`/`generate` succeed; `packages/shared`,
+    `packages/db`, `apps/api`, `packages/api-client` typecheck green;
+    `packages/shared` unit tests 8/8 and `apps/api`'s new integration tests
+    8/8 **actually ran and passed** — `prisma db push --accept-data-loss`
+    (this package's own `db:migrate:test` script) bootstraps a clean local
+    Postgres directly from `schema.prisma`, sidestepping the migration-
+    history replay issue noted below. `prisma migrate deploy` (the real
+    migration path) still could not be exercised: this local instance has
+    no schemas bootstrapped via `stack-up.sh --seed`, so replaying migration
+    history from scratch fails on an unrelated 2026-06-05 migration before
+    reaching mine (same class of limitation as A.2's session note) — CI,
+    which does provision via migration history, remains the real gate for
+    the migration SQL file itself; the schema/logic it produces is verified
+    correct via `db push` + integration tests above.
+  - Remaining: phase 3 (editor UI, new Designer section reusing
+    `packages/ui/src/brand/SortableList.tsx`), phase 4 (public rendering on
+    `c/[slug]`), phase 5 (logo upload + size-variant pipeline, reuse the
+    existing avatar/cover pipeline).
