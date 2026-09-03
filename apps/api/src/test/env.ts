@@ -2,4 +2,4 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Runs before any app modules load in Vitest (via setupFiles).
-process.env.RTMP_KEY_ENC_KEY = 'dev0000000000000000000000000000000000000000000000000000000000000'
+process.env.RTMP_KEY_ENC_KEY = 'de00000000000000000000000000000000000000000000000000000000000000'

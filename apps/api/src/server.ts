@@ -52,6 +52,7 @@ import channelFallbackRoute from './routes/internal/channel-fallback.js'
 import tlsAskRoute from './routes/internal/tls-ask.js'
 import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
 import internalRadioRoutes from './routes/internal/radio.js'
+import internalDiscordBotRoutes from './routes/internal/discord-bot.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
 import channelSlugRoutes from './routes/me/channel-slug.js'
 import chatTokenRoute from './routes/chat/token.js'
@@ -128,6 +129,7 @@ import supportContactRoutes from './routes/support/contact.js'
 import contentReportsRoute from './routes/reports/submit.js'
 import adminBetaRoutes from './routes/admin/beta.js'
 import adminIntegrationsRoutes from './routes/admin/integrations.js'
+import adminDiscordBotRoutes from './routes/admin/discord-bot.js'
 import betaApplyRoutes from './routes/beta/apply.js'
 import setupPasswordRoute from './routes/auth/setup-password.js'
 import resendVerificationRoute from './routes/auth/resend-verification.js'
@@ -303,6 +305,7 @@ import {
   RtmpTargetViewSchema,
   ApiTokenListSchema,
   ApiTokenCreatedSchema,
+  AdminDiscordBotSettingsSchema,
   SmartLinkViewSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
@@ -458,6 +461,7 @@ export async function buildApp(opts: BuildOptions = {}) {
           EmbedTrackPlay: EmbedTrackPlaySchema,
           ApiTokenList: ApiTokenListSchema,
           ApiTokenCreated: ApiTokenCreatedSchema,
+          AdminDiscordBotSettings: AdminDiscordBotSettingsSchema,
         }),
       },
       tags: [
@@ -567,6 +571,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(tlsAskRoute)
   await fastify.register(broadcastFingerprintInternalRoutes)
   await fastify.register(internalRadioRoutes)
+  await fastify.register(internalDiscordBotRoutes)
   await fastify.register(streamSettingsRoutes)
   await fastify.register(channelSlugRoutes)
 
@@ -663,6 +668,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminVenueRoutes)
   await fastify.register(adminBetaRoutes)
   await fastify.register(adminIntegrationsRoutes)
+  await fastify.register(adminDiscordBotRoutes)
   await fastify.register(supportContactRoutes)
   await fastify.register(contentReportsRoute)
   await fastify.register(betaApplyRoutes)

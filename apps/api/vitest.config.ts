@@ -14,7 +14,7 @@ export default defineConfig({
       // CI overrides this via workflow-level env vars.
       DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://tahti:tahti_dev@localhost:5432/tahti',
       // Valid 32-byte hex key (invalid values in the shell env break RTMP target tests).
-      RTMP_KEY_ENC_KEY: 'dev0000000000000000000000000000000000000000000000000000000000000',
+      RTMP_KEY_ENC_KEY: 'de00000000000000000000000000000000000000000000000000000000000000',
     },
     coverage: {
       provider: 'v8',
