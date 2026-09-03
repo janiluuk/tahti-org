@@ -12894,7 +12894,16 @@ export interface paths {
         path?: never
         cookie?: never
       }
-      requestBody?: never
+      requestBody: {
+        content: {
+          'application/json': {
+            /** @description Discord application / client ID (snowflake) */
+            clientId: string
+            /** @description Bot token. Omit to keep the currently stored secret. */
+            token?: string
+          }
+        }
+      }
       responses: {
         /** @description Default Response */
         200: {
@@ -20936,6 +20945,40 @@ export interface paths {
         }
       }
     }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/rss-feed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Proxy a public RSS or Atom feed */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -30371,6 +30414,14 @@ export interface components {
       tokenHint: string | null
       /** @enum {string} */
       source: 'database' | 'env' | 'none'
+    }
+    UpdateDiscordBotSettings: {
+      clientId: string
+      token?: string
+    }
+    InternalDiscordBotCredentials: {
+      clientId: string
+      token: string
     }
   }
   responses: never

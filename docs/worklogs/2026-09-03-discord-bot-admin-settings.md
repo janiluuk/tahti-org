@@ -19,12 +19,16 @@ Settings → Add-ons (Radio). The configure surface is board-only.
   `GET /api/v1/internal/discord-bot/credentials` returns the plaintext token
   to the bot with `INTERNAL_SECRET`. Env `DISCORD_CLIENT_ID` /
   `DISCORD_TOKEN` on the API are a fallback when no row exists.
-- Tahti Player (`packages/tahti-web`) adds a Radio add-on card owned by
-  `src/plugins/discord-bot`. It is rendered only for board accounts.
+- Contract doc: `docs/technical/discord-bot-credentials.md` (also linked from
+  `docs/api/README.md`). OpenAPI components:
+  `AdminDiscordBotSettings`, `UpdateDiscordBotSettings`,
+  `InternalDiscordBotCredentials`.
+- Tahti Player (`packages/tahti-web`) wires `DiscordBotAddonCard` into
+  Settings → Add-ons → Radio. Board-only Configure dialog for Client ID +
+  token.
 
 ## Not done
 
 The bot still plays its local `tracks.txt` playlist. Wiring playback to
-Tahti Radio (`GET /api/v1/radio`) is a follow-up. Fly still needs
-`INTERNAL_SECRET` set as a secret if the deployed bot should read API-saved
-credentials.
+Tahti Radio (`GET /api/v1/radio`) is a follow-up. Ensure the bot host has
+`INTERNAL_SECRET` matching the API if it should read API-saved credentials.

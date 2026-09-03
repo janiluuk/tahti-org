@@ -40,6 +40,22 @@ const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['admin'],
         description:
           'Save Discord application ID and optional bot token. Omit token to keep the current secret.',
+        body: {
+          type: 'object',
+          required: ['clientId'],
+          properties: {
+            clientId: {
+              type: 'string',
+              pattern: '^\\d{17,20}$',
+              description: 'Discord application / client ID (snowflake)',
+            },
+            token: {
+              type: 'string',
+              minLength: 20,
+              description: 'Bot token. Omit to keep the currently stored secret.',
+            },
+          },
+        },
         response: openApiResponse(AdminDiscordBotSettingsSchema, 'AdminDiscordBotSettings'),
       },
     },

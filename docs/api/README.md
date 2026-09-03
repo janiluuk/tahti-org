@@ -26,7 +26,7 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 ### Health, release, and discovery
 
 | Purpose                        | Endpoints                                                         |
-| ------------------------------- | ------------------------------------------------------------------ |
+| ------------------------------ | ----------------------------------------------------------------- |
 | API release                    | `GET /api/version`                                                |
 | Service health                 | `GET /api/v1/status`                                              |
 | Browse live/replaying channels | `GET /api/v1/channels`, `GET /api/v1/channels/directory`          |
@@ -38,52 +38,52 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 
 ### Listening, channels, and radio
 
-| Purpose                            | Endpoints                                                                                                                 |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Channel and now-playing data       | `GET /api/channels/:slug`, `GET /api/channels/:slug/presence`                                                            |
-| Channel archive                    | `GET /api/channels/:slug/items`                                                                                          |
-| Channel archive downloads          | `GET /api/v1/c/:slug/archive/:itemId/download`                                                                           |
-| Tahti Radio now playing            | `GET /api/v1/radio`                                                                                                      |
-| Radio history, schedule, and slots | `GET /api/v1/radio/history`, `GET /api/v1/radio/recently-played`, `GET /api/v1/radio/rotation`, `GET /api/v1/radio/slots` |
+| Purpose                            | Endpoints                                                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Channel and now-playing data       | `GET /api/channels/:slug`, `GET /api/channels/:slug/presence`                                                                                                       |
+| Channel archive                    | `GET /api/channels/:slug/items`                                                                                                                                     |
+| Channel archive downloads          | `GET /api/v1/c/:slug/archive/:itemId/download`                                                                                                                      |
+| Tahti Radio now playing            | `GET /api/v1/radio`                                                                                                                                                 |
+| Radio history, schedule, and slots | `GET /api/v1/radio/history`, `GET /api/v1/radio/recently-played`, `GET /api/v1/radio/rotation`, `GET /api/v1/radio/slots`                                           |
 | Internet-radio presets             | `GET /api/v1/internet-radio/presets/enabled` (public); `GET /api/internet-radio/presets` (artist, requires auth — do not confuse the two, paths are easy to mix up) |
-| Live chat                          | `POST /api/chat/message`, `GET /api/chat/:slug/{access,history,token,viewer-token,announcements}`, `POST /api/chat/:slug/react` |
-| Addons                      | `GET /api/v1/channels/:slug/addons`, `GET /api/v1/addons/{homepage,discover,bundle/:bundleHash}`, `GET /api/addons/store` |
-| Theme gallery                      | `GET /api/v1/themes/gallery`                                                                                             |
-| Embeds                             | `GET /api/v1/embed/c/:slug` (channel), `GET /api/v1/embed/r/:id` (release), `GET /api/v1/embed/col/:slug` (collection) — each has its own play-tracking sub-routes |
+| Live chat                          | `POST /api/chat/message`, `GET /api/chat/:slug/{access,history,token,viewer-token,announcements}`, `POST /api/chat/:slug/react`                                     |
+| Addons                             | `GET /api/v1/channels/:slug/addons`, `GET /api/v1/addons/{homepage,discover,bundle/:bundleHash}`, `GET /api/addons/store`                                           |
+| Theme gallery                      | `GET /api/v1/themes/gallery`                                                                                                                                        |
+| Embeds                             | `GET /api/v1/embed/c/:slug` (channel), `GET /api/v1/embed/r/:id` (release), `GET /api/v1/embed/col/:slug` (collection) — each has its own play-tracking sub-routes  |
 
 ### Artists, profiles, catalog, and collections
 
-| Purpose                       | Endpoints                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Public artist profile         | `GET /api/v1/u/:username/profile`                                                                           |
-| Artist mentions and fan tiers | `GET /api/v1/u/:username/mentions`, `GET /api/v1/u/:username/tiers`                                         |
-| Fan subscription checkout     | `POST /api/v1/u/:username/subscribe`, `GET /api/v1/fansubs/portal`                                          |
-| Collections and feeds         | `GET /api/v1/collections/:slug`, `GET /api/v1/collections/:slug/rss.xml`, `GET /api/v1/u/:username/rss.xml` |
-| Collection subscribe          | `POST /api/v1/collections/:slug/subscribe`                                                                  |
-| Smart links                   | `GET /api/v1/r/:slug`, click tracking via `POST /api/smartlink/click`                                       |
+| Purpose                       | Endpoints                                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Public artist profile         | `GET /api/v1/u/:username/profile`                                                                                                  |
+| Artist mentions and fan tiers | `GET /api/v1/u/:username/mentions`, `GET /api/v1/u/:username/tiers`                                                                |
+| Fan subscription checkout     | `POST /api/v1/u/:username/subscribe`, `GET /api/v1/fansubs/portal`                                                                 |
+| Collections and feeds         | `GET /api/v1/collections/:slug`, `GET /api/v1/collections/:slug/rss.xml`, `GET /api/v1/u/:username/rss.xml`                        |
+| Collection subscribe          | `POST /api/v1/collections/:slug/subscribe`                                                                                         |
+| Smart links                   | `GET /api/v1/r/:slug`, click tracking via `POST /api/smartlink/click`                                                              |
 | Public releases/tracks        | `GET /api/v1/releases/:id`, `GET /api/v1/tracks/:id`, downloads via `GET /api/v1/releases/:smartLinkSlug/tracks/:trackId/download` |
 
 ### Venues, collab, and other public features
 
-| Purpose                     | Endpoints                                                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Venue directory and calendar | `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics` |
+| Purpose                      | Endpoints                                                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Venue directory and calendar | `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`                                         |
 | TahtiJam (synced listening)  | `POST /api/v1/jam`, `POST /api/v1/jam/:code/join`, `GET /api/v1/jam/:id`, `GET /api/v1/jam/:id/events` (SSE), `POST /api/v1/jam/:id/state`, `POST /api/v1/jam/:id/leave` |
-| Support contact form         | `POST /api/support/contact`                                                                                          |
-| Newsletter public subscribe  | `POST /api/newsletter/subscribe`, `GET /api/newsletter/confirm/:token`, `GET /api/newsletter/unsubscribe/:token`     |
-| MCP (Model Context Protocol) | `/api/v1/mcp`                                                                                                        |
+| Support contact form         | `POST /api/support/contact`                                                                                                                                              |
+| Newsletter public subscribe  | `POST /api/newsletter/subscribe`, `GET /api/newsletter/confirm/:token`, `GET /api/newsletter/unsubscribe/:token`                                                         |
+| MCP (Model Context Protocol) | `/api/v1/mcp`                                                                                                                                                            |
 
 ### Engagement and community
 
-| Purpose            | Endpoints                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
+| Purpose            | Endpoints                                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Artist follows     | `POST`/`DELETE`/`GET /api/v1/artists/:username/follow` (note: singular `follow`, not `followers` — the endpoint returns the resulting `followerCount`) |
-| Track likes        | `POST /api/v1/c/:slug/archive/:itemId/like`                                                      |
-| Reposts             | `POST /api/v1/c/:slug/archive/:itemId/repost`, `POST /api/v1/c/:slug/archive/:itemId/repost-ack` |
-| Comments            | `GET/POST /api/comments/track/:id`, `GET/POST /api/comments/channel/:slug`, `DELETE /api/comments/:id` |
-| Track reactions     | `GET/POST /api/reactions/track/:id`                                                              |
-| Listen measurement | `POST /api/listen-events`, `POST /api/v1/listen/heartbeat`                                       |
-| Abuse reports      | `POST /api/v1/reports`                                                                           |
+| Track likes        | `POST /api/v1/c/:slug/archive/:itemId/like`                                                                                                            |
+| Reposts            | `POST /api/v1/c/:slug/archive/:itemId/repost`, `POST /api/v1/c/:slug/archive/:itemId/repost-ack`                                                       |
+| Comments           | `GET/POST /api/comments/track/:id`, `GET/POST /api/comments/channel/:slug`, `DELETE /api/comments/:id`                                                 |
+| Track reactions    | `GET/POST /api/reactions/track/:id`                                                                                                                    |
+| Listen measurement | `POST /api/listen-events`, `POST /api/v1/listen/heartbeat`                                                                                             |
+| Abuse reports      | `POST /api/v1/reports`                                                                                                                                 |
 
 ### Governance and transparency
 
@@ -97,13 +97,13 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 
 ### Authentication and member/artist studio
 
-| Purpose                                     | Endpoint family                                                   |
-| ------------------------------------------- | ----------------------------------------------------------------- |
-| Sign in/session                             | `/api/auth/*`                                                     |
-| Current member                              | `/api/me/*`                                                       |
-| Artist channel/broadcast                    | `/api/me/channel/*` (see below), `/api/me/stream-settings/*`      |
-| Releases, collections, and uploads          | `/api/me/releases`, `/api/me/collections`, `/api/uploads/*`       |
-| Comments, fan subscriptions, and newsletter | `/api/me/comments/*`, `/api/me/fan-tiers`, `/api/me/newsletter/*` |
+| Purpose                                     | Endpoint family                                                                                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign in/session                             | `/api/auth/*`                                                                                                                                        |
+| Current member                              | `/api/me/*`                                                                                                                                          |
+| Artist channel/broadcast                    | `/api/me/channel/*` (see below), `/api/me/stream-settings/*`                                                                                         |
+| Releases, collections, and uploads          | `/api/me/releases`, `/api/me/collections`, `/api/uploads/*`                                                                                          |
+| Comments, fan subscriptions, and newsletter | `/api/me/comments/*`, `/api/me/fan-tiers`, `/api/me/newsletter/*`                                                                                    |
 | Catalog imports                             | `/api/v1/imports/{hearthis,mixcloud,spotify}/*` (`requireAuth`; note this family lives outside the `/api/me/*` prefix the rest of this section uses) |
 
 These families contain authenticated mutations. Consult the generated
@@ -123,7 +123,7 @@ preflight. The two most relevant to client channel-design work:
   (`packages/shared/src/dto/visual-preset.ts`): `visualPreset`, `colorScheme`
   (`{bg,accent,text,muted,highlight}` hex), `visualSettings`, `headerStyle`
   (`GRADIENT`/`SOLID`/`VIDEO_LOOP`, `VIDEO_LOOP` requires a paid tier),
-  `videoBackgroundUrl`, `brandAccentPreset` (also returned on the *public*
+  `videoBackgroundUrl`, `brandAccentPreset` (also returned on the _public_
   `GET /api/channels/:slug`), `slideshowPreset`/`slideshowIntervalSeconds`/
   `slideshowTransitionMs`/`slideshowAutoplay`, `topBarText`.
 - `GET`/`PATCH /api/me/channel/text-layer` — a stylized headline on the
@@ -159,6 +159,13 @@ They are grouped in the full `/docs` reference and in the source by topic:
   delivery flows. (`downloads/` is **public**, not admin/internal-only — see
   "Channel archive downloads" and "Public releases/tracks" above; it was
   miscategorized here previously.)
+
+| Purpose                                           | Endpoints                                      | Notes                                           |
+| ------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------- |
+| Tahti Radio Discord bot credentials (board)       | `GET`/`PUT /api/admin/discord-bot`             | Session + board. Never returns the raw token.   |
+| Tahti Radio Discord bot credentials (bot process) | `GET /api/v1/internal/discord-bot/credentials` | Bearer `INTERNAL_SECRET` only; plaintext token. |
+
+Full contract: [`docs/technical/discord-bot-credentials.md`](../technical/discord-bot-credentials.md).
 
 ## Change process
 

@@ -174,6 +174,7 @@ import channelMembersRoute from './routes/channels/members.js'
 import meTrackInsightsRoutes from './routes/me/track-insights.js'
 import meMessagesRoutes from './routes/me/messages.js'
 import meEmbedRoutes from './routes/me/embeds.js'
+import meRssFeedRoutes from './routes/me/rss-feed.js'
 import channelEmbedsRoute from './routes/channels/embeds.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
@@ -306,6 +307,8 @@ import {
   ApiTokenListSchema,
   ApiTokenCreatedSchema,
   AdminDiscordBotSettingsSchema,
+  UpdateDiscordBotSettingsSchema,
+  InternalDiscordBotCredentialsSchema,
   SmartLinkViewSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
@@ -462,6 +465,8 @@ export async function buildApp(opts: BuildOptions = {}) {
           ApiTokenList: ApiTokenListSchema,
           ApiTokenCreated: ApiTokenCreatedSchema,
           AdminDiscordBotSettings: AdminDiscordBotSettingsSchema,
+          UpdateDiscordBotSettings: UpdateDiscordBotSettingsSchema,
+          InternalDiscordBotCredentials: InternalDiscordBotCredentialsSchema,
         }),
       },
       tags: [
@@ -737,6 +742,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meTrackInsightsRoutes)
   await fastify.register(meMessagesRoutes)
   await fastify.register(meEmbedRoutes)
+  await fastify.register(meRssFeedRoutes)
   await fastify.register(channelEmbedsRoute)
 
   // M18: public release-track downloads with anti-fraud
