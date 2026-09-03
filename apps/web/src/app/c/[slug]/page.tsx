@@ -32,7 +32,15 @@ import type {
   TracklistEntry,
 } from '@tahti/shared'
 import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
-import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
+import {
+  AvatarTile,
+  Heading,
+  Row,
+  Text,
+  ChannelPageShell,
+  SafePlainText,
+  ExpandableText,
+} from '@tahti/ui'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
@@ -396,12 +404,20 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     </div>
                   </Row>
                   {bioHtml ? (
-                    <div
-                      className="ch-artist-bio ch-artist-bio--rich"
-                      dangerouslySetInnerHTML={{ __html: bioHtml }}
-                    />
+                    <ExpandableText className="ch-artist-bio-wrap">
+                      <div
+                        className="ch-artist-bio ch-artist-bio--rich"
+                        dangerouslySetInnerHTML={{ __html: bioHtml }}
+                      />
+                    </ExpandableText>
                   ) : channel.user.bio ? (
-                    <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
+                    <ExpandableText className="ch-artist-bio-wrap">
+                      <SafePlainText
+                        text={channel.user.bio}
+                        className="ch-artist-bio"
+                        linkMentions
+                      />
+                    </ExpandableText>
                   ) : null}
                   <div className="ch-artist-cta-row">
                     {user?.username !== channel.user.username && (

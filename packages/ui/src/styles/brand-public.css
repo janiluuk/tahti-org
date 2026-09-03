@@ -1551,3 +1551,19 @@
   line-height: 1.55;
   margin: 0;
 }
+
+[data-tahti-ui='brand'] .ui-expandable-text__toggle {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cyan);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ui-expandable-text__toggle:hover {
+  text-decoration: underline;
+}

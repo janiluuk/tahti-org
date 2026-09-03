@@ -40,6 +40,7 @@ export type { SectionHeaderProps } from './marketing/SectionHeader'
 // Shared utilities
 export { cn } from './lib/cn'
 export { SafePlainText } from './lib/safe-plain-text'
+export { ExpandableText, type ExpandableTextProps } from './lib/ExpandableText'
 export { escapeHtml, plainTextToHtml } from './lib/escape-html'
 
 /** v8 brand design tokens — see docs/design/README.md */

@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
+import { ProfileCover, ProfileHero, ProfilePageLayout, ExpandableText } from '@tahti/ui'
 import {
   avatarThemeCss,
   logoShowsOnAvatar,
@@ -583,10 +583,12 @@ export default async function ArtistProfilePage({ params }: { params: { username
           <section className="prof-section">
             <div className="prof-sec-label">Biography</div>
             {bioHtml ? (
-              <div
-                className="prof-bio prof-bio--rich"
-                dangerouslySetInnerHTML={{ __html: bioHtml }}
-              />
+              <ExpandableText className="prof-bio-wrap">
+                <div
+                  className="prof-bio prof-bio--rich"
+                  dangerouslySetInnerHTML={{ __html: bioHtml }}
+                />
+              </ExpandableText>
             ) : null}
           </section>
         )}
