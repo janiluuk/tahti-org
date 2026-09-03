@@ -250,6 +250,45 @@ export async function createFanSubCheckoutSession(params: {
   return { id: data.id, url: data.url }
 }
 
+/** One-time purchase-tier Checkout — destination charge with 2% application fee
+ * (same split as fan-subs, just `mode: 'payment'` instead of `'subscription'`). */
+export async function createPurchaseCheckoutSession(params: {
+  customerId: string
+  connectedAccountId: string
+  successUrl: string
+  cancelUrl: string
+  tierName: string
+  amountCents: number
+  metadata: Record<string, string>
+}): Promise<CheckoutSessionResult> {
+  const productName = `${params.tierName} — one-time purchase`
+  const fields: Record<string, string> = {
+    mode: 'payment',
+    customer: params.customerId,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    'line_items[0][price_data][currency]': 'eur',
+    'line_items[0][price_data][unit_amount]': String(params.amountCents),
+    'line_items[0][price_data][product_data][name]': productName,
+    'line_items[0][quantity]': '1',
+    'payment_intent_data[transfer_data][destination]': params.connectedAccountId,
+    'payment_intent_data[application_fee_amount]': String(
+      Math.round(params.amountCents * (ORG_FEE_PERCENT / 100)),
+    ),
+  }
+  for (const [k, v] of Object.entries(params.metadata)) {
+    fields[`metadata[${k}]`] = v
+    fields[`payment_intent_data[metadata][${k}]`] = v
+  }
+
+  const data = (await stripePost('/checkout/sessions', fields)) as {
+    id?: string
+    url?: string
+  }
+  if (!data.id || !data.url) throw new Error('Stripe Checkout returned an incomplete session')
+  return { id: data.id, url: data.url }
+}
+
 /** Fetch subscription metadata (membership invoice.paid fallback before checkout completes). */
 export async function fetchSubscriptionMetadata(
   subscriptionId: string,

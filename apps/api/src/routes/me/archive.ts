@@ -9,6 +9,7 @@ import {
   ChannelTextLayerPatchSchema,
   ChannelVisualPatchSchema,
   ArchiveItemVisualPatchSchema,
+  ArchiveItemAccessPatchSchema,
   ArchiveItemListSchema,
   ArchiveItemRecentSchema,
   ArchiveItemViewSchema,
@@ -665,6 +666,50 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
             : {}),
         },
         select: { visualPreset: true, colorSchemeJson: true },
+      })
+      return reply.send(updated)
+    },
+  )
+
+  // Per-track paywall: gate a track behind an active fan subscription or a
+  // one-time PurchaseTier. See apps/api/src/lib/purchase-tiers.ts.
+  fastify.patch(
+    '/api/me/archive/:id/access',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const parsed = ArchiveItemAccessPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id: routeParams.id, channel: { userId: user.id } },
+        select: { id: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      if (parsed.data.accessMode === 'PURCHASE') {
+        if (!parsed.data.purchaseTierId) {
+          return reply.status(400).send({ error: 'purchaseTierId is required for PURCHASE access' })
+        }
+        const tier = await fastify.prisma.purchaseTier.findFirst({
+          where: { id: parsed.data.purchaseTierId, artistUserId: user.id },
+          select: { id: true },
+        })
+        if (!tier) return reply.status(404).send({ error: 'Tier not found' })
+      }
+
+      const updated = await fastify.prisma.archiveItem.update({
+        where: { id: item.id },
+        data: {
+          accessMode: parsed.data.accessMode,
+          purchaseTierId: parsed.data.accessMode === 'PURCHASE' ? parsed.data.purchaseTierId : null,
+        },
+        select: { accessMode: true, purchaseTierId: true },
       })
       return reply.send(updated)
     },

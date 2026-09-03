@@ -32,6 +32,7 @@ import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
 import { ArchiveHearthisExportPanel } from './archive-hearthis-export-panel'
 import ArchiveVisualPanel from './archive-visual-panel'
+import ArchiveAccessPanel from './archive-access-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
 import { shouldShowTracklist, shouldShowVenueLocation } from './archive-editor-visibility'
 
@@ -172,13 +173,14 @@ function RowToolsActions({
   )
 }
 
-type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'sharing' | 'advanced'
+type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'access' | 'sharing' | 'advanced'
 
 const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
   { id: 'basics', label: 'Basics', icon: '📝' },
   { id: 'tracklist', label: 'Tracklist', icon: '🎼' },
   { id: 'audio', label: 'Audio', icon: '🎚️' },
   { id: 'visuals', label: 'Cover & visuals', icon: '🖼️' },
+  { id: 'access', label: 'Access', icon: '🔒' },
   { id: 'sharing', label: 'Sharing', icon: '🔗' },
   { id: 'advanced', label: 'Advanced', icon: '⚙️' },
 ]
@@ -569,6 +571,16 @@ export default function ArchiveEditor({
                   }}
                 />
               </>
+            )}
+            {tab === 'access' && (
+              <ArchiveAccessPanel
+                itemId={item.id}
+                initial={{
+                  accessMode: ((item.accessMode as string | undefined) ??
+                    'FREE') as import('@tahti/shared').ArchiveItemAccessPatch['accessMode'],
+                  purchaseTierId: (item.purchaseTierId as string | null | undefined) ?? null,
+                }}
+              />
             )}
             {tab === 'sharing' && (
               <>

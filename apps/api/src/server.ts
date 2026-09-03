@@ -92,6 +92,7 @@ import fanTierRoutes from './routes/fansubs/tiers.js'
 import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
 import fanConnectRoutes from './routes/fansubs/connect.js'
 import fanSubPayoutRoutes from './routes/fansubs/payouts.js'
+import purchaseTierRoutes from './routes/fansubs/purchase-tiers.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import emailBounceWebhookRoutes from './routes/webhooks/email-bounce.js'
 import membershipRoutes from './routes/me/membership.js'
@@ -620,6 +621,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M19: fan-to-artist subscriptions
   await fastify.register(fanTierRoutes)
   await fastify.register(fanSubscriptionRoutes)
+  await fastify.register(purchaseTierRoutes)
   await fastify.register(fanConnectRoutes)
   await fastify.register(fanSubPayoutRoutes)
   await fastify.register(stripeWebhookRoutes)

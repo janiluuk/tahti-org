@@ -902,6 +902,16 @@ export const PublicProfileViewSchema = z.object({
       amountCents: z.number().int(),
     }),
   ),
+  purchaseTiers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      priceCents: z.number().int(),
+      priceOptional: z.boolean(),
+    }),
+  ),
+  storePaymentsReady: z.boolean(),
   collections: z.array(
     z.object({
       slug: z.string(),

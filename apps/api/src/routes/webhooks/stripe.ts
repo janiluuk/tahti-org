@@ -15,6 +15,7 @@ import {
 } from '../../lib/fansub.js'
 import { activateMembership, recordMembershipRenewal } from '../../lib/membership.js'
 import { recordDistributionPayment } from '../../lib/distribution-billing.js'
+import { recordPurchasePayment } from '../../lib/purchase-tiers.js'
 import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
 import {
@@ -70,6 +71,16 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
                 userId: meta.userId,
                 amountCents: amount ?? config.distribution.artistFeeCents,
                 stripeSessionId: String(obj.id),
+              })
+              break
+            }
+
+            if (meta.type === 'purchase-tier' && meta.purchaseId) {
+              const amount = obj.amount_total != null ? Number(obj.amount_total) : 0
+              await recordPurchasePayment(fastify.prisma, {
+                purchaseId: meta.purchaseId,
+                amountCents: amount,
+                stripeCheckoutSessionId: String(obj.id),
               })
               break
             }

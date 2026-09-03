@@ -43,6 +43,7 @@ Open `/dashboard` after login.
 | **Multistream**           | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)).                         |
 | **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices.                                                                                                                             |
 | **Fan subscriptions**     | Stripe Connect + fan tiers + perk codes.                                                                                                                                                          |
+| **One-time tiers**        | Price a track once (optionally "pay what you want"), assign it in the track editor's Access tab, and see who bought what.                                                                        |
 | **Releases**              | Draft/publish releases + **DSP URLs** for smart links.                                                                                                                                            |
 | **Discography**           | Upload and manage tracks, sets, mixes, and catalog metadata.                                                                                                                                      |
 | **Recordings**            | Review recorded live shows separately from the rest of the discography.                                                                                                                           |
@@ -135,6 +136,24 @@ Fans pay monthly via Stripe. You receive payouts minus Stripe fees and a **2% op
 ### 4. When a fan cancels
 
 They keep perks until the **billing period ends**, then about **7 days grace**. You do not need to do anything — status updates automatically.
+
+---
+
+## Step-by-step: one-time tiers (sell a track without a subscription)
+
+Separate from fan subscriptions above — a fan buys access once instead of subscribing monthly. Uses
+the same Stripe Connect account, so complete onboarding there first.
+
+1. Dashboard → **One-time tiers** → **Add tier**: name, price, and optionally check **price is
+   optional** to let fans name their own amount (including free — it still counts as an order).
+2. Open the track in **Discography**, go to its **Access** tab, turn on **Restrict who can play this
+   track**, and choose **One-time purchase** → pick the tier.
+3. A fan who buys that tier can play the track; anyone with an active fan subscription to you can
+   always play it too. Buying one tier never unlocks a different tier's tracks.
+4. See who bought what under **One-time tiers** → **Orders**, and click **Message** to thank a buyer
+   directly — same money split as fan subscriptions (Stripe fees + 2% operational fee).
+5. Turn on **Show a Store section on my public artist page** to list your active tiers at
+   `/u/your-username` for fans to browse and buy.
 
 ---
 

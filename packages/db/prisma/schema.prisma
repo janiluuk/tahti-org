@@ -57,6 +57,14 @@ enum ArtistKind {
   @@schema("channel")
 }
 
+enum TrackAccessMode {
+  FREE
+  SUBSCRIBERS_ONLY
+  PURCHASE
+
+  @@schema("channel")
+}
+
 enum ChannelGalleryMode {
   NONE
   STATIC_SLIDESHOW
@@ -312,6 +320,9 @@ enum LedgerCategory {
   FAN_SUB_GROSS_RECEIVED
   FAN_SUB_NET_TO_ARTIST
   FAN_SUB_OPERATIONAL_FEE
+  PURCHASE_TIER_GROSS_RECEIVED
+  PURCHASE_TIER_NET_TO_ARTIST
+  PURCHASE_TIER_OPERATIONAL_FEE
 
   @@schema("ledger")
 }
@@ -813,6 +824,8 @@ model User {
   fanTiers                       FanTier[]
   fanSubsAsArtist                FanSubscription[]               @relation("ArtistFanSubs")
   fanSubsAsSubscriber            FanSubscription[]               @relation("SubscriberFanSubs")
+  purchaseTiers                  PurchaseTier[]
+  purchasesAsBuyer               Purchase[]
   releases                       Release[]
   revelatorRoyaltyReports        RevelatorRoyaltyReport[]
   mixUploads                     MixUpload[]
@@ -1273,6 +1286,7 @@ model Channel {
   lastFeaturedAt                  DateTime? // M16: Tahti Radio fair rotation
   commentsEnabled                 Boolean               @default(true) // initialized from User.defaultChannelCommentsEnabled
   pressKitGalleryPublic           Boolean               @default(false) // show press-kit images in a public gallery on the artist page
+  storeEnabled                    Boolean               @default(false) // show the one-time-purchase tiers Store section on the artist page
   // When set, THIS channel's Liquidsoap process reads its live input from the
   // named channel's mount instead of its own — e.g. Tahti Radio relaying a
   // booked artist's live source during their RadioSlotBooking window. Null for
@@ -1782,6 +1796,11 @@ model ArchiveItem {
   // ever add that for tracks, colorSchemeJson is the artist's explicit override.
   paletteJson          String?
   colorSchemeJson      String?
+  // Per-track paywall (fansubs schema's PurchaseTier is a one-time-purchase
+  // gate; SUBSCRIBERS_ONLY needs no tier — any active fan-subscriber qualifies).
+  accessMode           TrackAccessMode       @default(FREE)
+  purchaseTierId       String?
+  purchaseTier         PurchaseTier?         @relation(fields: [purchaseTierId], references: [id], onDelete: SetNull)
   // Artist's public "Stage" showcase (PLAT-Stage): pinned tracks/releases float to
   // the top of the profile's Stage tab, most-recently-pinned first. trackOrder is
   // the manual-sort position for the separate flat "Tracks" tab (all archive items,
@@ -1827,6 +1846,7 @@ model ArchiveItem {
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
+  @@index([purchaseTierId])
   @@schema("channel")
 }
 
@@ -2648,6 +2668,57 @@ model FanSubPayout {
   @@index([artistUserId, forPeriodStart])
   @@index([artistUserId, state, paidAt])
   @@index([state, createdAt])
+  @@schema("fansubs")
+}
+
+// ── One-time-purchase tiers (per-track paywall, distinct from the recurring
+// FanTier above) — an artist prices a tier once, assigns it to specific
+// ArchiveItems, and a fan buys access without subscribing. An active
+// FanSubscription always bypasses this gate (see isActiveFanSubscriber);
+// buying one tier does not unlock any other tier's tracks. Same Connect
+// destination-charge + 2% operational fee model as fan-subs.
+
+model PurchaseTier {
+  id            String        @id @default(cuid())
+  artistUserId  String
+  artist        User          @relation(fields: [artistUserId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  priceCents    Int // suggested/fixed price
+  priceOptional Boolean       @default(false) // true = buyer may enter any amount >= 0 ("pay what you want", incl. free)
+  active        Boolean       @default(true)
+  position      Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  purchases     Purchase[]
+  archiveItems  ArchiveItem[]
+
+  @@index([artistUserId, active])
+  @@schema("fansubs")
+}
+
+model Purchase {
+  id                      String        @id @default(cuid())
+  tierId                  String
+  tier                    PurchaseTier  @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  buyerUserId             String
+  buyer                   User          @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  artistUserId            String // denormalized for the artist's orders list
+  amountCents             Int // what was actually paid (may be 0 for a priceOptional free claim)
+  stripeCheckoutSessionId String?       @unique
+  state                   PurchaseState @default(PENDING)
+  createdAt               DateTime      @default(now())
+
+  @@index([artistUserId, createdAt])
+  @@index([buyerUserId, tierId])
+  @@schema("fansubs")
+}
+
+enum PurchaseState {
+  PENDING
+  PAID
+  REFUNDED
+
   @@schema("fansubs")
 }
 

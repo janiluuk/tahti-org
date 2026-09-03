@@ -3,6 +3,7 @@
 
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import {
@@ -28,6 +29,7 @@ import { FollowersSection } from '@/components/followers-section'
 import { resolveChannelUrl } from '@/lib/app-url'
 import type { PublicPressKitImage, DiscoWidgetRenderItem } from '@tahti/shared'
 import { DiscoWidgetFrame } from '@/components/disco-widgets/disco-widget-frame'
+import StoreSection from './store-section'
 import { ProfileTabs } from './_profile-tabs'
 import { ProfileCoverVisual } from './_profile-cover-visual'
 import { ProfileFeed } from './_profile-feed'
@@ -66,8 +68,14 @@ function formatJoinDateTitle(joinDate: string | null | undefined): string | unde
 
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  // Forward the viewer's session so the API can resolve per-track playback
+  // gates (subscriber / purchase-tier access) — this response can now differ
+  // by viewer, so it must not go through Next's shared fetch cache. The API's
+  // own 20s Redis cache still covers the viewer-agnostic parts.
+  const sessionCookie = cookies().get('tahti_session')
   const res = await fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/profile`, {
-    next: { revalidate: 60 },
+    headers: sessionCookie ? { Cookie: `tahti_session=${sessionCookie.value}` } : undefined,
+    cache: 'no-store',
   })
   if (!res.ok) return null
   return (await res.json()) as ProfileResponse
@@ -204,6 +212,14 @@ interface ProfileResponse {
     url: string
     rssUrl?: string
   }>
+  purchaseTiers?: Array<{
+    id: string
+    name: string
+    description: string | null
+    priceCents: number
+    priceOptional: boolean
+  }>
+  storePaymentsReady?: boolean
   backgroundMusicUrl?: string | null
 }
 
@@ -592,6 +608,16 @@ export default async function ArtistProfilePage({ params }: { params: { username
           <section className="prof-section">
             <div className="prof-sec-label">Press kit</div>
             <PressKitGallery images={pressKitImages} />
+          </section>
+        )}
+        {data.purchaseTiers && data.purchaseTiers.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Store</div>
+            <StoreSection
+              username={data.artist.username}
+              tiers={data.purchaseTiers}
+              paymentsReady={data.storePaymentsReady ?? true}
+            />
           </section>
         )}
         {discoWidgets.length > 0 && (

@@ -39,7 +39,10 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
   },
   {
     label: 'Audience',
-    items: [{ href: '/dashboard/settings/fan-subs', label: 'Fan subs' }],
+    items: [
+      { href: '/dashboard/settings/fan-subs', label: 'Fan subs' },
+      { href: '/dashboard/settings/purchase-tiers', label: 'One-time tiers' },
+    ],
   },
   {
     label: 'Money',

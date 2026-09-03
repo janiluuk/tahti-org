@@ -4,7 +4,12 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import type { ChannelVisualPatch, ReleaseVisualPatch, ArchiveItemVisualPatch } from '@tahti/shared'
+import type {
+  ChannelVisualPatch,
+  ReleaseVisualPatch,
+  ArchiveItemVisualPatch,
+  ArchiveItemAccessPatch,
+} from '@tahti/shared'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -62,4 +67,37 @@ export async function updateArchiveItemVisual(
     return { error: body.error ?? 'Failed to save visual settings' }
   }
   return { error: null }
+}
+
+export async function updateArchiveItemAccess(
+  itemId: string,
+  patch: ArchiveItemAccessPatch,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/access`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(patch),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: body.error ?? 'Failed to save access settings' }
+  }
+  return { error: null }
+}
+
+export async function fetchMyPurchaseTiers(): Promise<
+  Array<{ id: string; name: string; priceCents: number; active: boolean }>
+> {
+  const res = await fetch(`${apiUrl}/api/me/purchase-tiers`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  return (await res.json().catch(() => [])) as Array<{
+    id: string
+    name: string
+    priceCents: number
+    active: boolean
+  }>
 }

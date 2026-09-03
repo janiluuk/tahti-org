@@ -86,6 +86,11 @@ export const SlugTrackIdParamsSchema = z.object({
   trackId: IdParamSchema.shape.id,
 })
 
+export const UsernameTierIdParamsSchema = z.object({
+  username: UsernameParamSchema.shape.username,
+  tierId: IdParamSchema.shape.id,
+})
+
 export function parseRouteParams<T extends z.ZodTypeAny>(
   schema: T,
   params: unknown,

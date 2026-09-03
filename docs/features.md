@@ -92,6 +92,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Messages:** Wide conversation view, artist search, follower/following contact list, unread state, and mention-aware composing.
 - **Newsletter:** Compose and send audience updates with subscription and suppression handling.
 - **Fan subscriptions:** Stripe Connect onboarding, artist-defined tiers and perks, subscriber access, and payout reporting.
+- **One-time purchase tiers:** Separate from fan subscriptions — an artist prices a tier once (optionally "pay what you want," including free) and assigns it to specific tracks from the track editor's Access tab. A track can also be gated to subscribers-only with no tier involved. An active fan-subscriber always gets everything for free; buying one tier only unlocks that tier's own tracks, not another tier's. Sales appear in an Orders list where the artist can message a buyer directly. An optional Store section lists active tiers on the artist's public page.
 
 ### Analytics and account
 
