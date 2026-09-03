@@ -100,7 +100,12 @@ export async function activateMembership(
       }
     }
 
-    return { alreadyActive: false as const, membership, memberNumber: memberNumber!, previousTier: user.tier }
+    return {
+      alreadyActive: false as const,
+      membership,
+      memberNumber: memberNumber!,
+      previousTier: user.tier,
+    }
   })
 
   if (!result.alreadyActive) {

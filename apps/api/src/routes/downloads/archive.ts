@@ -149,7 +149,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         ? (item.rawKey ?? item.flacKey ?? archivePlaybackKey(item))
         : wantFlac
           ? item.flacKey!
-          : archivePlaybackKey(item) ?? item.rawKey
+          : (archivePlaybackKey(item) ?? item.rawKey)
       if (!objectKey) {
         return reply.status(409).send({ error: 'No downloadable file for this item' })
       }
