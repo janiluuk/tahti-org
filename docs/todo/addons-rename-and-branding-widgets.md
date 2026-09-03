@@ -81,7 +81,7 @@ original request assumed:
 - **A logo already exists.** Settings → Artist info → Identity tab has a
   "drop a transparent PNG/WebP logo" uploader (`channel-identity-panel.tsx`,
   `prepareLogoUpload`) — alpha-preserving PNG/WebP already required, so the
-  "can be alpha RGBA" ask was already true. But it's an *overlay stamp*:
+  "can be alpha RGBA" ask was already true. But it's an _overlay stamp_:
   `User.logoUrl` + `logoPlacement` (`AVATAR` | `COVER` | `BOTH`, see
   `packages/shared/src/dto/avatar-theme.ts`) composites the logo onto the
   avatar and/or cover image. It is not a placeable Channel Designer element
@@ -114,7 +114,7 @@ original request assumed:
   no user-facing benefit. "Generalized" here means the block system itself
   is reusable for future block types, not that everything becomes a block.
 
-### B.1 — Channel Designer block system (not started — this is the big one)
+### B.1 — Channel Designer block system (this is the big one; phase 1 of 5 done, see Status)
 
 **Data model** — new table, additive, no touch to existing Designer
 sections' storage:
@@ -160,7 +160,7 @@ rather than risking drift between an editor preview and the real render.
 
 **Logo asset**: new `ChannelBlockAsset` upload (or a `blockLogoUrl` +
 size-variant columns on a per-block basis, since configJson can't hold
-binary) — mirror the *existing* avatar/cover derived-size pipeline (find
+binary) — mirror the _existing_ avatar/cover derived-size pipeline (find
 and reuse whatever generates their size variants today; don't invent a
 second image-processing path). Alpha-preserving PNG/WebP, same validation
 as the existing logo uploader.
@@ -213,8 +213,25 @@ rest of this session's work.
   (`packages/ui/src/lib/ExpandableText.tsx`) wired into `c/[slug]` and
   `u/[username]`. Typecheck/lint/format green.
 - Workstream B.1 (Channel Designer block system: logo + addon blocks,
-  full/half/third width, row-packing) — scoped in detail above, not started.
-  This is the large remaining piece; treat it as its own effort (new
-  migration, shared packing function, API CRUD, editor UI, public
-  rendering, logo upload pipeline) rather than a quick add-on to this
-  branch.
+  full/half/third width, row-packing) — phase 1 of 5 done (see B.1 phasing
+  above), on branch `addons-branding-blocks` (worktree
+  `../tahti-org-worktree-addons-branding-blocks`): migration
+  `20260904020000_channel_blocks` (`ChannelBlock` table +
+  `ChannelBlockType`/`ChannelBlockWidth` enums, both `core` schema, FK to
+  `channel.Channel`, matches the `AddonInstall`/`ChannelVisualPreset`
+  cross-schema-FK precedent already in this schema) and the shared
+  `packBlocks` row-packing function (`packages/shared/src/channel-blocks.ts`
+  - DTO/zod schemas in `dto/channel-blocks.ts`), with 8 unit tests covering
+    FULL-alone, HALF/HALF, THIRD/THIRD/THIRD, the "leftover space unfilled"
+    case, a width-change mid-list, and input-order preservation. Verified:
+    `prisma validate`/`generate` succeed, `packages/shared` typecheck/lint/
+    test green (8/8), `packages/db` typecheck green. `prisma migrate deploy`
+    could not be exercised against a real Postgres this session — the local
+    instance has no schemas bootstrapped (`stack-up.sh --seed` never run
+    here) and fails replaying an unrelated 2026-06-05 migration before it
+    even reaches this one; same class of local-DB limitation as A.2's
+    session note. CI is the real gate for the migration SQL itself.
+    Remaining: phase 2 (API CRUD, `apps/api/src/routes/me/channel/blocks.ts`),
+    phase 3 (editor UI, reuse `packages/ui/src/brand/SortableList.tsx`),
+    phase 4 (public rendering on `c/[slug]`), phase 5 (logo upload +
+    size-variant pipeline, reuse the existing avatar/cover pipeline).

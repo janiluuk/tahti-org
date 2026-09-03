@@ -890,8 +890,8 @@ model User {
   featureRequestComments         FeatureRequestComment[]         @relation("FeatureRequestCommentAuthor")
   featureRequestReportsGenerated FeatureRequestQuarterlyReport[]
   newsPostsAuthored              NewsPost[]
-  addonsAuthored           Addon[]                   @relation("AddonAuthor")
-  addonInstalls            AddonInstall[]            @relation("AddonListenerInstall")
+  addonsAuthored                 Addon[]                         @relation("AddonAuthor")
+  addonInstalls                  AddonInstall[]                  @relation("AddonListenerInstall")
   internetRadioStations          InternetRadioStation[]
   themes                         Theme[]
   integrationCredentials         IntegrationCredential[]
@@ -1349,8 +1349,9 @@ model Channel {
   liveShowEpisodes       LiveShowEpisode[]
   members                ChannelMember[]
   slugRedirects          ChannelSlugRedirect[]
-  addonInstalls    AddonInstall[]
+  addonInstalls          AddonInstall[]
   visualPresets          ChannelVisualPreset[]
+  blocks                 ChannelBlock[]
 
   @@index([state])
   @@schema("channel")
@@ -3472,21 +3473,21 @@ enum AddonStatus {
 }
 
 model Addon {
-  id                String            @id @default(cuid())
-  slug              String            @unique
+  id                String      @id @default(cuid())
+  slug              String      @unique
   scope             AddonScope
   name              String
   description       String
   authorName        String
   authorUserId      String?
-  authorUser        User?             @relation("AddonAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  authorUser        User?       @relation("AddonAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
   categories        String[]
   iconUrl           String?
   currentVersion    String
   bundleKey         String
   bundleHash        String
   bundleSizeBytes   Int
-  permissionsJson   Json              @default("{}")
+  permissionsJson   Json        @default("{}")
   status            AddonStatus @default(DRAFT)
   moderationNote    String?
   // Board-set starting configJson for every new install of this widget,
@@ -3499,9 +3500,9 @@ model Addon {
   // scope's surfaces even with no explicit AddonInstall row. A user/artist
   // can still install to override position/config, or add a disabled
   // AddonInstall row to suppress the default for themselves.
-  enabledByDefault  Boolean           @default(false)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  enabledByDefault  Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   versions AddonVersion[]
   installs AddonInstall[]
@@ -3513,14 +3514,14 @@ model Addon {
 // One row per published bundle revision — kept even after currentVersion moves
 // on, so an install with pinnedVersion set can keep resolving its own hash.
 model AddonVersion {
-  id         String      @id @default(cuid())
+  id         String   @id @default(cuid())
   widgetId   String
-  widget     Addon @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widget     Addon    @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   version    String
   bundleKey  String
   bundleHash String
   changelog  String?
-  createdAt  DateTime    @default(now())
+  createdAt  DateTime @default(now())
 
   @@unique([widgetId, version])
   @@schema("core")
@@ -3531,20 +3532,20 @@ model AddonVersion {
 // in the route handlers, not a DB constraint — mirrors this schema's existing
 // style of application-level invariants over CHECK constraints).
 model AddonInstall {
-  id             String      @id @default(cuid())
+  id             String   @id @default(cuid())
   widgetId       String
-  widget         Addon @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widget         Addon    @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   listenerUserId String?
-  listenerUser   User?       @relation("AddonListenerInstall", fields: [listenerUserId], references: [id], onDelete: Cascade)
+  listenerUser   User?    @relation("AddonListenerInstall", fields: [listenerUserId], references: [id], onDelete: Cascade)
   channelId      String?
-  channel        Channel?    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel        Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
   adminSurface   String?
   pinnedVersion  String?
-  position       Int         @default(0)
-  enabled        Boolean     @default(true)
-  configJson     Json        @default("{}")
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  position       Int      @default(0)
+  enabled        Boolean  @default(true)
+  configJson     Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([widgetId, listenerUserId])
   @@unique([widgetId, channelId])
@@ -3552,6 +3553,45 @@ model AddonInstall {
   @@index([listenerUserId, position])
   @@index([channelId, position])
   @@index([adminSurface, position])
+  @@schema("core")
+}
+
+// Channel Designer "Brand blocks" section: an ordered, packed list of
+// placeable blocks (logo, addon) on an artist's public channel page. Row
+// packing (which blocks share a row) is a pure function of the ordered
+// (width) sequence computed at render time — see packBlocks in
+// @tahti/shared — not stored here, so reordering never needs a second
+// write to fix up row/column numbers.
+enum ChannelBlockType {
+  LOGO
+  ADDON
+
+  @@schema("core")
+}
+
+enum ChannelBlockWidth {
+  FULL
+  HALF
+  THIRD
+
+  @@schema("core")
+}
+
+model ChannelBlock {
+  id         String            @id @default(cuid())
+  channelId  String
+  channel    Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  type       ChannelBlockType
+  width      ChannelBlockWidth @default(FULL)
+  /// Flat order among a channel's blocks; row-packing derives rows from this
+  /// plus width at render time (see file header comment above).
+  position   Int               @default(0)
+  /// Type-specific payload: LOGO -> { assetUrl }, ADDON -> { addonInstallId }.
+  configJson Json              @default("{}")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([channelId, position])
   @@schema("core")
 }
 
