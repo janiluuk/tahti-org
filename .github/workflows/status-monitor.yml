@@ -23,7 +23,7 @@ jobs:
       APP_URL: ${{ vars.STATUS_APP_URL || 'https://app.tahti.live' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check API and web surfaces
         run: bash scripts/status-monitor.sh
