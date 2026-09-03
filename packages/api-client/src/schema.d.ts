@@ -13679,12 +13679,6 @@ export interface paths {
               }
               /** Format: uri */
               backgroundMusicUrl?: string | null
-              likedPlaylist?: {
-                name: string
-                itemCount: number
-                coverUrl: string | null
-                url: string
-              } | null
             }
           }
         }
@@ -14171,7 +14165,6 @@ export interface paths {
               showFollowers: boolean
               showFollowing: boolean
               showDailyListeners: boolean
-              showLikes: boolean
               chatEnabled: boolean
               /** Format: date-time */
               createdAt: string
@@ -14229,7 +14222,6 @@ export interface paths {
               showFollowers: boolean
               showFollowing: boolean
               showDailyListeners: boolean
-              showLikes: boolean
               chatEnabled: boolean
               /** Format: date-time */
               createdAt: string
@@ -19687,28 +19679,6 @@ export interface paths {
                     title: string
                     releaseType: string
                     artworkUrl: string | null
-                    url: string
-                  }
-                | {
-                    /** @enum {string} */
-                    kind: 'like'
-                    id: string
-                    /** Format: date-time */
-                    date: string
-                    artist: {
-                      username: string
-                      displayName: string
-                      avatarUrl: string | null
-                    }
-                    title: string
-                    bannerUrl: string | null
-                    audioUrl: string | null
-                    channelSlug: string
-                    trackArtist: {
-                      username: string
-                      displayName: string
-                      avatarUrl: string | null
-                    }
                     url: string
                   }
               )[]
@@ -29170,12 +29140,6 @@ export interface components {
       }
       /** Format: uri */
       backgroundMusicUrl?: string | null
-      likedPlaylist?: {
-        name: string
-        itemCount: number
-        coverUrl: string | null
-        url: string
-      } | null
     }
     SmartLink: {
       release: {
@@ -29367,7 +29331,6 @@ export interface components {
       showFollowers: boolean
       showFollowing: boolean
       showDailyListeners: boolean
-      showLikes: boolean
       chatEnabled: boolean
       /** Format: date-time */
       createdAt: string
