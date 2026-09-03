@@ -26,6 +26,7 @@ function formatFeedDate(iso: string): string {
 function feedBadge(item: FeedItem): string {
   if (item.kind === 'post') return 'posted'
   if (item.kind === 'track') return 'shared a track'
+  if (item.kind === 'like') return 'liked a track'
   const type = item.releaseType.replace(/_/g, ' ').toLowerCase()
   return `released a ${type}`
 }
@@ -160,6 +161,29 @@ export function ArtistFeedSection({
                       initialLikeCount={item.likeCount}
                     />
                   </div>
+                ) : item.kind === 'like' ? (
+                  <Link
+                    href={item.url}
+                    className="feed-item__content feed-item__content--track feed-item__content--visual"
+                  >
+                    {item.bannerUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.bannerUrl}
+                        alt=""
+                        className="feed-item__art feed-item__art--large"
+                      />
+                    ) : (
+                      <span
+                        className="feed-item__art feed-item__art--large feed-item__art--ph"
+                        aria-hidden
+                      />
+                    )}
+                    <span className="feed-item__overlay">
+                      <span className="feed-item__title">{item.title}</span>
+                      <span className="feed-item__text">by {item.trackArtist.displayName}</span>
+                    </span>
+                  </Link>
                 ) : (
                   <Link
                     href={item.url}

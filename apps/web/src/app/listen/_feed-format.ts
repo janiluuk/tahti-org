@@ -11,6 +11,8 @@ export function feedHeadline(item: FeedItem): string {
       return `${item.artist.displayName} released ${item.title}`
     case 'track':
       return `${item.artist.displayName} shared ${item.title}`
+    case 'like':
+      return `${item.artist.displayName} liked ${item.title}`
   }
 }
 
@@ -22,6 +24,8 @@ export function feedTeaser(item: FeedItem): string {
       return `New ${item.releaseType.replace(/_/g, ' ').toLowerCase()} release`
     case 'track':
       return 'New track'
+    case 'like':
+      return `by ${item.trackArtist.displayName}`
   }
 }
 
@@ -32,6 +36,8 @@ export function feedCover(item: FeedItem): string | null {
     case 'release':
       return item.artworkUrl
     case 'track':
+      return item.bannerUrl
+    case 'like':
       return item.bannerUrl
   }
 }
