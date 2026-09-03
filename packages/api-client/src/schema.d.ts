@@ -13679,6 +13679,12 @@ export interface paths {
               }
               /** Format: uri */
               backgroundMusicUrl?: string | null
+              likedPlaylist?: {
+                name: string
+                itemCount: number
+                coverUrl: string | null
+                url: string
+              } | null
             }
           }
         }
@@ -14165,6 +14171,7 @@ export interface paths {
               showFollowers: boolean
               showFollowing: boolean
               showDailyListeners: boolean
+              showLikes: boolean
               chatEnabled: boolean
               /** Format: date-time */
               createdAt: string
@@ -14222,6 +14229,7 @@ export interface paths {
               showFollowers: boolean
               showFollowing: boolean
               showDailyListeners: boolean
+              showLikes: boolean
               chatEnabled: boolean
               /** Format: date-time */
               createdAt: string
@@ -16684,7 +16692,9 @@ export interface paths {
                   connectionTest: boolean
                   fileList: boolean
                   import: boolean
+                  /** @default false */
                   search: boolean
+                  /** @default false */
                   playback: boolean
                 }
                 oauthStartPath: string | null
@@ -19679,6 +19689,28 @@ export interface paths {
                     artworkUrl: string | null
                     url: string
                   }
+                | {
+                    /** @enum {string} */
+                    kind: 'like'
+                    id: string
+                    /** Format: date-time */
+                    date: string
+                    artist: {
+                      username: string
+                      displayName: string
+                      avatarUrl: string | null
+                    }
+                    title: string
+                    bannerUrl: string | null
+                    audioUrl: string | null
+                    channelSlug: string
+                    trackArtist: {
+                      username: string
+                      displayName: string
+                      avatarUrl: string | null
+                    }
+                    url: string
+                  }
               )[]
               followingCount: number
             }
@@ -22587,6 +22619,7 @@ export interface paths {
                 currentVersion: string
                 bundleSizeBytes: number
                 moderationNote: string | null
+                defaultConfigJson?: unknown
                 /** Format: date-time */
                 createdAt: string
                 /** Format: date-time */
@@ -22628,6 +22661,7 @@ export interface paths {
               currentVersion: string
               bundleSizeBytes: number
               moderationNote: string | null
+              defaultConfigJson?: unknown
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -22726,6 +22760,7 @@ export interface paths {
               currentVersion: string
               bundleSizeBytes: number
               moderationNote: string | null
+              defaultConfigJson?: unknown
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -22837,6 +22872,63 @@ export interface paths {
             [name: string]: unknown
           }
           content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/default-config': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              slug: string
+              /** @enum {string} */
+              scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+              name: string
+              description: string
+              authorName: string
+              categories: string[]
+              iconUrl: string | null
+              currentVersion: string
+              bundleSizeBytes: number
+              moderationNote: string | null
+              defaultConfigJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
         }
       }
     }
@@ -29078,6 +29170,12 @@ export interface components {
       }
       /** Format: uri */
       backgroundMusicUrl?: string | null
+      likedPlaylist?: {
+        name: string
+        itemCount: number
+        coverUrl: string | null
+        url: string
+      } | null
     }
     SmartLink: {
       release: {
@@ -29269,6 +29367,7 @@ export interface components {
       showFollowers: boolean
       showFollowing: boolean
       showDailyListeners: boolean
+      showLikes: boolean
       chatEnabled: boolean
       /** Format: date-time */
       createdAt: string
