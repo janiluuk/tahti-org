@@ -22956,6 +22956,7 @@ export interface paths {
                 bundleSizeBytes: number
                 moderationNote: string | null
                 defaultConfigJson?: unknown
+                enabledByDefault: boolean
                 /** Format: date-time */
                 createdAt: string
                 /** Format: date-time */
@@ -22998,6 +22999,7 @@ export interface paths {
               bundleSizeBytes: number
               moderationNote: string | null
               defaultConfigJson?: unknown
+              enabledByDefault: boolean
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -23097,6 +23099,7 @@ export interface paths {
               bundleSizeBytes: number
               moderationNote: string | null
               defaultConfigJson?: unknown
+              enabledByDefault: boolean
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -23259,6 +23262,65 @@ export interface paths {
               bundleSizeBytes: number
               moderationNote: string | null
               defaultConfigJson?: unknown
+              enabledByDefault: boolean
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/addons/{id}/enabled-by-default': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              slug: string
+              /** @enum {string} */
+              scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+              name: string
+              description: string
+              authorName: string
+              categories: string[]
+              iconUrl: string | null
+              currentVersion: string
+              bundleSizeBytes: number
+              moderationNote: string | null
+              defaultConfigJson?: unknown
+              enabledByDefault: boolean
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */

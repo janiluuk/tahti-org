@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Button, Field, FileDropzone, Input, Panel, Select } from '@tahti/ui'
+import { Badge, Button, Field, FileDropzone, Input, Panel, Select, StudioSwitch } from '@tahti/ui'
 import type {
   AddonAdminItem,
   AddonInstallView,
@@ -24,6 +24,7 @@ import {
   rejectAddon,
   removeHomepageAddonInstall,
   saveAddonDefaultConfig,
+  setAddonEnabledByDefaultAction,
 } from './actions'
 
 function toStoreItem(w: AddonAdminItem): AddonStoreItem {
@@ -244,6 +245,18 @@ function CatalogRow({
     onChange(result.widget)
   }
 
+  async function handleToggleEnabledByDefault(next: boolean) {
+    setPending(true)
+    setError(null)
+    const result = await setAddonEnabledByDefaultAction(widget.id, next)
+    setPending(false)
+    if (result.error || !result.widget) {
+      setError(result.error ?? 'Failed to update default')
+      return
+    }
+    onChange(result.widget)
+  }
+
   return (
     <div className="ui-panel studio-mt-sm">
       <div className="admin-row" style={{ justifyContent: 'space-between' }}>
@@ -285,7 +298,7 @@ function CatalogRow({
         </div>
       )}
       {widget.status === 'APPROVED' && (
-        <div className="studio-mt-sm">
+        <div className="admin-row studio-mt-sm" style={{ gap: '0.75rem', alignItems: 'center' }}>
           <Button
             variant="danger"
             size="sm"
@@ -294,6 +307,20 @@ function CatalogRow({
           >
             Disable
           </Button>
+          <label
+            className="admin-row"
+            style={{ gap: '0.4rem', alignItems: 'center', cursor: 'pointer' }}
+          >
+            <StudioSwitch
+              checked={widget.enabledByDefault}
+              onChange={(next) => void handleToggleEnabledByDefault(next)}
+              disabled={pending}
+              label={`Enable ${widget.name} by default`}
+            />
+            <span className="admin-text-muted">
+              On by default{widget.enabledByDefault ? ' — renders for everyone in scope' : ''}
+            </span>
+          </label>
         </div>
       )}
       {error && <p className="admin-form-error">{error}</p>}

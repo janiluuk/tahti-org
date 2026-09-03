@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { getObjectBuffer } from '../../lib/minio.js'
+import { resolveAddonRenderSet } from '../../lib/addons.js'
 
 function sandboxUrl(bundleHash: string): string {
   return `/widget-sandbox/${bundleHash}`
@@ -60,14 +61,19 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const installs = await fastify.prisma.addonInstall.findMany({
-        where: { channelId: channel.id, enabled: true, widget: { status: 'APPROVED' } },
-        orderBy: { position: 'asc' },
-        include: { widget: true },
-      })
+      const { explicitInstalls, defaultOnlyWidgets } = await resolveAddonRenderSet(
+        fastify.prisma,
+        'ARTIST',
+        { channelId: channel.id },
+      )
+      const context = {
+        channelSlug: channel.slug,
+        displayName: channel.user.displayName,
+        isLive: channel.state === 'LIVE',
+      }
 
-      const widgets = await Promise.all(
-        installs.map(async (install) => {
+      const fromInstalls = await Promise.all(
+        explicitInstalls.map(async (install) => {
           const { version, bundleHash } = await resolveVersionHash(
             fastify,
             install.widget,
@@ -81,15 +87,26 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
             version,
             position: install.position,
             config: install.configJson,
-            context: {
-              channelSlug: channel.slug,
-              displayName: channel.user.displayName,
-              isLive: channel.state === 'LIVE',
-            },
+            context,
           }
         }),
       )
-      return reply.send({ widgets })
+      const fromDefaults = await Promise.all(
+        defaultOnlyWidgets.map(async (widget, index) => {
+          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          return {
+            installId: `default:${widget.id}`,
+            widgetSlug: widget.slug,
+            name: widget.name,
+            sandboxUrl: sandboxUrl(bundleHash),
+            version,
+            position: explicitInstalls.length + index,
+            config: widget.defaultConfigJson ?? {},
+            context,
+          }
+        }),
+      )
+      return reply.send({ widgets: [...fromInstalls, ...fromDefaults] })
     },
   )
 
@@ -103,14 +120,15 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const installs = await fastify.prisma.addonInstall.findMany({
-        where: { adminSurface: 'homepage', enabled: true, widget: { status: 'APPROVED' } },
-        orderBy: { position: 'asc' },
-        include: { widget: true },
-      })
+      const { explicitInstalls, defaultOnlyWidgets } = await resolveAddonRenderSet(
+        fastify.prisma,
+        'ADMIN',
+        { adminSurface: 'homepage' },
+      )
+      const context = { surface: 'homepage' }
 
-      const widgets = await Promise.all(
-        installs.map(async (install) => {
+      const fromInstalls = await Promise.all(
+        explicitInstalls.map(async (install) => {
           const { version, bundleHash } = await resolveVersionHash(
             fastify,
             install.widget,
@@ -124,11 +142,26 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
             version,
             position: install.position,
             config: install.configJson,
-            context: { surface: 'homepage' },
+            context,
           }
         }),
       )
-      return reply.send({ widgets })
+      const fromDefaults = await Promise.all(
+        defaultOnlyWidgets.map(async (widget, index) => {
+          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          return {
+            installId: `default:${widget.id}`,
+            widgetSlug: widget.slug,
+            name: widget.name,
+            sandboxUrl: sandboxUrl(bundleHash),
+            version,
+            position: explicitInstalls.length + index,
+            config: widget.defaultConfigJson ?? {},
+            context,
+          }
+        }),
+      )
+      return reply.send({ widgets: [...fromInstalls, ...fromDefaults] })
     },
   )
 
@@ -145,18 +178,14 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const installs = await fastify.prisma.addonInstall.findMany({
-        where: {
-          listenerUserId: request.sessionUser!.id,
-          enabled: true,
-          widget: { status: 'APPROVED' },
-        },
-        orderBy: { position: 'asc' },
-        include: { widget: true },
-      })
+      const { explicitInstalls, defaultOnlyWidgets } = await resolveAddonRenderSet(
+        fastify.prisma,
+        'LISTENER',
+        { listenerUserId: request.sessionUser!.id },
+      )
 
-      const widgets = await Promise.all(
-        installs.map(async (install) => {
+      const fromInstalls = await Promise.all(
+        explicitInstalls.map(async (install) => {
           const { version, bundleHash } = await resolveVersionHash(
             fastify,
             install.widget,
@@ -174,7 +203,22 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
           }
         }),
       )
-      return reply.send({ widgets })
+      const fromDefaults = await Promise.all(
+        defaultOnlyWidgets.map(async (widget, index) => {
+          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          return {
+            installId: `default:${widget.id}`,
+            widgetSlug: widget.slug,
+            name: widget.name,
+            sandboxUrl: sandboxUrl(bundleHash),
+            version,
+            position: explicitInstalls.length + index,
+            config: widget.defaultConfigJson ?? {},
+            context: {},
+          }
+        }),
+      )
+      return reply.send({ widgets: [...fromInstalls, ...fromDefaults] })
     },
   )
 

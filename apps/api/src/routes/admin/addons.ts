@@ -25,6 +25,7 @@ import {
   RegisterAddonSchema,
   RejectAddonSchema,
   SetAddonDefaultConfigSchema,
+  SetAddonEnabledByDefaultSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -48,6 +49,7 @@ const ADMIN_ITEM_SELECT = {
   bundleSizeBytes: true,
   moderationNote: true,
   defaultConfigJson: true,
+  enabledByDefault: true,
   createdAt: true,
   updatedAt: true,
 } as const
@@ -366,6 +368,36 @@ const adminAddonsRoutes: FastifyPluginAsync = async (fastify) => {
               ? Prisma.DbNull
               : (parsed.data.defaultConfigJson as Prisma.InputJsonValue),
         },
+        select: ADMIN_ITEM_SELECT,
+      })
+      return reply.send(updated)
+    },
+  )
+
+  // POST /api/admin/addons/:id/enabled-by-default — board-only: platform-
+  // wide "on by default" (see resolveAddonRenderSet). Independent of a
+  // widget's own install rows; toggling it doesn't touch any of those.
+  fastify.post(
+    '/api/admin/addons/:id/enabled-by-default',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AddonAdminItemSchema, 'AddonAdminItem'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = SetAddonEnabledByDefaultSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const widget = await fastify.prisma.addon.findUnique({ where: { id: routeParams.id } })
+      if (!widget) return reply.status(404).send({ error: 'Widget not found' })
+
+      const updated = await fastify.prisma.addon.update({
+        where: { id: routeParams.id },
+        data: { enabledByDefault: parsed.data.enabledByDefault },
         select: ADMIN_ITEM_SELECT,
       })
       return reply.send(updated)

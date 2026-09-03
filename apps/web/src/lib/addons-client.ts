@@ -95,3 +95,15 @@ export async function setAddonDefaultConfig(
     body: JSON.stringify({ defaultConfigJson }),
   })
 }
+
+/** Board-only — platform-wide "on by default" for every owner with no
+ * install row of their own (see resolveAddonRenderSet, apps/api). */
+export async function setAddonEnabledByDefault(
+  widgetId: string,
+  enabledByDefault: boolean,
+): Promise<{ error: string | null; widget?: AddonAdminItem }> {
+  return request<AddonAdminItem>(`/api/admin/addons/${widgetId}/enabled-by-default`, {
+    method: 'POST',
+    body: JSON.stringify({ enabledByDefault }),
+  })
+}

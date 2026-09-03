@@ -95,11 +95,23 @@ widget-placement grid.
 
 ## Status
 
-- A.1 mechanical rename: done (content + file/dir renames via a scripted
-  identifier substitution, `packages/widget-sdk` → `packages/addon-sdk`
-  included). DB migration for the rename + `enabledByDefault` column still
-  pending, along with `pnpm install` to regenerate the lockfile for the
-  SDK package rename, and full typecheck/lint/test verification.
-- A.2 (`enabledByDefault` UI + surface fallback logic): not started.
+- A.1 mechanical rename: done and merged to main. DB migration
+  (`20260904010000_rename_disco_widgets_to_addons`) renames the tables/
+  enums and adds `Addon.enabledByDefault`. Verified: typecheck/lint/format
+  green across all 17 packages, API build + OpenAPI/SDK regen succeed.
+- A.2 `enabledByDefault`: done. `resolveAddonRenderSet` (apps/api/src/lib/
+  addons.ts) is the shared merge — explicit enabled installs plus any
+  APPROVED+enabledByDefault addon with no install row at all for that
+  owner (an install row, even disabled, is how an owner overrides/
+  suppresses a default) — used by all three render feeds in
+  routes/addons/public.ts (channel/ARTIST, homepage/ADMIN, discover/
+  LISTENER). Default-only renders use a synthetic `default:<addonId>`
+  installId (confirmed unused beyond a React key). Admin catalog row
+  (`_admin-addons-panel.tsx`) has a StudioSwitch toggle next to Disable.
+  New API test coverage: `apps/api/src/routes/addons/public.test.ts`
+  covers a default rendering with no install, and a disabled install row
+  suppressing it. Typecheck/lint/format green; local Postgres unavailable
+  this session (port 5432 already held) so these new test cases are
+  unverified locally — CI is the real gate.
 - Workstream B (branding: logo, bio/story, Channel Designer sizing): not
   started.

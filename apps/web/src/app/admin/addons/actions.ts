@@ -15,6 +15,7 @@ import {
   fetchAddonInstalls,
   patchAddonInstall,
   setAddonDefaultConfig,
+  setAddonEnabledByDefault,
   type AddonConfig,
 } from '@/lib/addons-client'
 
@@ -164,4 +165,13 @@ export async function saveAddonDefaultConfig(
   defaultConfigJson: AddonConfig,
 ): Promise<{ error: string | null; widget?: AddonAdminItem }> {
   return setAddonDefaultConfig(widgetId, defaultConfigJson)
+}
+
+/** Board-only: platform-wide "on by default" for every owner with no install
+ * row of their own — see resolveAddonRenderSet (apps/api). */
+export async function setAddonEnabledByDefaultAction(
+  widgetId: string,
+  enabledByDefault: boolean,
+): Promise<{ error: string | null; widget?: AddonAdminItem }> {
+  return setAddonEnabledByDefault(widgetId, enabledByDefault)
 }

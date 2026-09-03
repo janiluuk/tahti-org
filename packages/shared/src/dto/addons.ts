@@ -188,6 +188,14 @@ export const SetAddonDefaultConfigSchema = z.object({
 })
 export type SetAddonDefaultConfigInput = z.infer<typeof SetAddonDefaultConfigSchema>
 
+// Board-only: platform-wide "on by default" — an approved addon with this set
+// renders on its scope's surfaces for every owner with no install row of
+// their own, no per-owner opt-in needed. See resolveAddonRenderSet.
+export const SetAddonEnabledByDefaultSchema = z.object({
+  enabledByDefault: z.boolean(),
+})
+export type SetAddonEnabledByDefaultInput = z.infer<typeof SetAddonEnabledByDefaultSchema>
+
 export const AddonAdminItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -202,6 +210,7 @@ export const AddonAdminItemSchema = z.object({
   bundleSizeBytes: z.number().int(),
   moderationNote: z.string().nullable(),
   defaultConfigJson: z.unknown().nullable(),
+  enabledByDefault: z.boolean(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

@@ -3,8 +3,8 @@
 
 import { createHash } from 'node:crypto'
 import { transform } from 'esbuild'
-import type { Prisma } from '@tahti/db'
-import type { PatchAddonInstallInput } from '@tahti/shared'
+import type { Prisma, PrismaClient } from '@tahti/db'
+import type { AddonScopeInput, PatchAddonInstallInput } from '@tahti/shared'
 
 export function sha256Hex(bytes: Buffer | string): string {
   return createHash('sha256').update(bytes).digest('hex')
@@ -24,4 +24,32 @@ export function toInstallUpdateData(patch: PatchAddonInstallInput): Prisma.Addon
       ? { configJson: patch.configJson as Prisma.InputJsonValue }
       : {}),
   }
+}
+
+/** One owner-scoped surface's addons to render: explicit installs (position-
+ * ordered, may override a default's config) plus any platform-wide default-
+ * enabled addon this owner has no install row for at all — installing one
+ * (even disabled) is how an owner overrides or suppresses a default. Used by
+ * every render feed in routes/addons/public.ts so "on by default" behaves
+ * the same on the channel page, homepage, and Discover. */
+export async function resolveAddonRenderSet(
+  prisma: PrismaClient,
+  scope: AddonScopeInput,
+  ownerWhere: Prisma.AddonInstallWhereInput,
+) {
+  const [explicitInstalls, ownedInstalls, defaultWidgets] = await Promise.all([
+    prisma.addonInstall.findMany({
+      where: { ...ownerWhere, enabled: true, widget: { status: 'APPROVED' } },
+      orderBy: { position: 'asc' },
+      include: { widget: true },
+    }),
+    prisma.addonInstall.findMany({ where: ownerWhere, select: { widgetId: true } }),
+    prisma.addon.findMany({
+      where: { scope, status: 'APPROVED', enabledByDefault: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ])
+  const ownedWidgetIds = new Set(ownedInstalls.map((i) => i.widgetId))
+  const defaultOnlyWidgets = defaultWidgets.filter((w) => !ownedWidgetIds.has(w.id))
+  return { explicitInstalls, defaultOnlyWidgets }
 }
