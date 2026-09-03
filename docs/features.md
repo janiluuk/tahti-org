@@ -76,7 +76,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Slideshow transitions:** Only shown once a gallery mode is enabled in Header & backdrop. Eight transition styles (four plain CSS crossfades, four richer WebGL ones — particle dissolve, glitch wipe, cube flip, liquid distortion), plus interval, transition duration, and autoplay.
 - **Links:** The link buttons shown in the channel banner (label + URL each, platform icon auto-detected from the URL).
 - **Player overlay text:** An optional stylized headline/tagline over the player, with five CSS text-effect styles and an alignment choice.
-- **Press kit** now lives on Settings → Artist info's Branding tab, not in the designer, since it's identity material rather than a per-look setting. **Disco-widgets** was dropped from the designer's section list (the feature itself is unchanged, just not surfaced there).
+- **Press kit** now lives on Settings → Artist info's Branding tab, not in the designer, since it's identity material rather than a per-look setting. **Addons** was dropped from the designer's section list (the feature itself is unchanged, just not surfaced there).
 - **Artist info:** Compact Identity, Story, and People tabs for name, avatar, logo, genres, location, biography, project type, and members.
 - **Uploads:** Avatar, logo, artwork, and visual media use the standard drag-and-drop interaction.
 - **Connections:** Separate tabs for streaming platforms, profile links, social accounts, and MusicBrainz.

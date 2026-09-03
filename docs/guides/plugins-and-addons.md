@@ -64,14 +64,14 @@ setup.
 
 ### Discovery and channel widgets
 
-Disco-widgets are small, sandboxed add-ons that can appear on Discover, an
+Addons are small, sandboxed add-ons that can appear on Discover, an
 artist channel, or another approved surface. They receive only the public
 context selected for that surface and communicate through the widget host.
 They cannot read the parent page, cookies, or private account data.
 
 Anyone can propose a widget. A maintainer reviews the code, and an
 administrator publishes and approves it for the relevant store. See [Contribute
-a Disco-widget](/help/disco-widgets) for the submission process.
+an Addon](/help/addons) for the submission process.
 
 ### Audio tools
 
@@ -104,7 +104,7 @@ an empty page or a dead category.
 Choose the smallest extension point that matches your idea:
 
 1. Use an **audio-editor plugin** for a deterministic processing step.
-2. Use a **Disco-widget** for a public, sandboxed visual or information
+2. Use a **Addon** for a public, sandboxed visual or information
    surface.
 3. Use a **provider/integration** when the feature needs a defined account or
    catalogue connection.

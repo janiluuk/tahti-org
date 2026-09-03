@@ -31,7 +31,7 @@ there.
 Also: Stats merged into three tabs (top lists / plays & listeners, unified
 range control) with `/dashboard/stats/detail` now redirecting rather than
 existing as a separate page; Fan subs redesigned as colorful tier cards
-under a new "Audience" settings section; Disco-widgets merged into
+under a new "Audience" settings section; Addons merged into
 Discovery settings; the listener Feed moved from the artist dashboard to
 the public Discover page; Discover's duplicate track-title/artist-name
 rendering fixed; a play-button affordance added to Live/Replay station

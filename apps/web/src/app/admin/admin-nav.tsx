@@ -201,8 +201,8 @@ export const ADMIN_NAV = [
     ),
   },
   {
-    href: '/admin/disco-widgets',
-    label: 'Disco widgets',
+    href: '/admin/addons',
+    label: 'Addons',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
         <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
@@ -487,7 +487,7 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/news',
       '/admin/top-lists',
       '/admin/announcements',
-      '/admin/disco-widgets',
+      '/admin/addons',
     ],
   },
   {

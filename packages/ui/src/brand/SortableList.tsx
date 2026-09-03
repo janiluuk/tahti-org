@@ -86,7 +86,7 @@ export function SortableList<T>({
  * the item you're hovering over out of the way" reflow an intentional,
  * tuned interaction (not an implementation detail that could silently
  * change or disappear on a library bump) for every SortableList consumer
- * (Disco-widgets installs, links, the broadcast rotation queue, etc). Other
+ * (Addons installs, links, the broadcast rotation queue, etc). Other
  * items translate up or down along the list axis toward wherever the
  * dragged item is heading — @dnd-kit computes the direction itself from
  * the live index delta, this only controls how that move is animated. */

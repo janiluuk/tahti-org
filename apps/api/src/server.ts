@@ -190,10 +190,10 @@ import meProgrammeRoutes from './routes/me/programme.js'
 import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
 import adminAnnouncementsRoutes from './routes/admin/announcements.js'
-import meDiscoWidgetsRoutes from './routes/me/disco-widgets.js'
-import adminDiscoWidgetsRoutes from './routes/admin/disco-widgets.js'
-import discoWidgetStoreRoutes from './routes/disco-widgets/store.js'
-import discoWidgetPublicRoutes from './routes/disco-widgets/public.js'
+import meAddonsRoutes from './routes/me/addons.js'
+import adminAddonsRoutes from './routes/admin/addons.js'
+import addonStoreRoutes from './routes/addons/store.js'
+import addonPublicRoutes from './routes/addons/public.js'
 import internetRadioPresetsRoute from './routes/internet-radio/presets.js'
 import meInternetRadioRoutes from './routes/me/internet-radio.js'
 import adminInternetRadioRoutes from './routes/admin/internet-radio.js'
@@ -744,10 +744,10 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meRadioSubmissionRoutes)
   await fastify.register(meAnnouncementsRoutes)
   await fastify.register(adminAnnouncementsRoutes)
-  await fastify.register(meDiscoWidgetsRoutes)
-  await fastify.register(adminDiscoWidgetsRoutes)
-  await fastify.register(discoWidgetStoreRoutes)
-  await fastify.register(discoWidgetPublicRoutes)
+  await fastify.register(meAddonsRoutes)
+  await fastify.register(adminAddonsRoutes)
+  await fastify.register(addonStoreRoutes)
+  await fastify.register(addonPublicRoutes)
   await fastify.register(internetRadioPresetsRoute)
   await fastify.register(meInternetRadioRoutes)
   await fastify.register(adminInternetRadioRoutes)

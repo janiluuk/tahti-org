@@ -18,7 +18,7 @@ export async function GET(
     return new Response('Not found', { status: 404 })
   }
 
-  const upstream = await fetch(`${apiUrl}/api/v1/disco-widgets/bundle/${params.bundleHash}`, {
+  const upstream = await fetch(`${apiUrl}/api/v1/addons/bundle/${params.bundleHash}`, {
     cache: 'no-store',
   })
   if (!upstream.ok) {

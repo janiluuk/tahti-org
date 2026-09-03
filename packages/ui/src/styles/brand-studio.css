@@ -13199,18 +13199,18 @@
   font-size: var(--text-xs);
 }
 
-[data-tahti-ui='studio'] .disco-widget-installed-list {
+[data-tahti-ui='studio'] .addon-installed-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-[data-tahti-ui='studio'] .disco-widget-installed-row.is-dragging {
+[data-tahti-ui='studio'] .addon-installed-row.is-dragging {
   border-color: var(--accent);
   opacity: 0.75;
 }
 
-[data-tahti-ui='studio'] .disco-widget-installed-row__handle {
+[data-tahti-ui='studio'] .addon-installed-row__handle {
   border: 0;
   background: transparent;
   color: var(--text-muted);
@@ -13219,12 +13219,12 @@
   flex-shrink: 0;
 }
 
-[data-tahti-ui='studio'] .disco-widget-configure {
+[data-tahti-ui='studio'] .addon-configure {
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
 
-[data-tahti-ui='studio'] .disco-widget-configure__textarea {
+[data-tahti-ui='studio'] .addon-configure__textarea {
   font-family: var(--font-mono, monospace);
   font-size: var(--text-sm);
   resize: vertical;

@@ -47,7 +47,7 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 | Radio history, schedule, and slots | `GET /api/v1/radio/history`, `GET /api/v1/radio/recently-played`, `GET /api/v1/radio/rotation`, `GET /api/v1/radio/slots` |
 | Internet-radio presets             | `GET /api/v1/internet-radio/presets/enabled` (public); `GET /api/internet-radio/presets` (artist, requires auth — do not confuse the two, paths are easy to mix up) |
 | Live chat                          | `POST /api/chat/message`, `GET /api/chat/:slug/{access,history,token,viewer-token,announcements}`, `POST /api/chat/:slug/react` |
-| Disco widgets                      | `GET /api/v1/channels/:slug/disco-widgets`, `GET /api/v1/disco-widgets/{homepage,discover,bundle/:bundleHash}`, `GET /api/disco-widgets/store` |
+| Addons                      | `GET /api/v1/channels/:slug/addons`, `GET /api/v1/addons/{homepage,discover,bundle/:bundleHash}`, `GET /api/addons/store` |
 | Theme gallery                      | `GET /api/v1/themes/gallery`                                                                                             |
 | Embeds                             | `GET /api/v1/embed/c/:slug` (channel), `GET /api/v1/embed/r/:id` (release), `GET /api/v1/embed/col/:slug` (collection) — each has its own play-tracking sub-routes |
 
@@ -114,7 +114,7 @@ vary by resource state.
 files live under `apps/api/src/routes/me/` and `apps/api/src/routes/channels/`
 covering visual/branding, backdrop, egress, funnel/live stats, members,
 provisioning, schedule (+ show series, live-show episodes), slug, custom
-domain, disco-widget installs, go-live/end-broadcast, green room (+
+domain, addon installs, go-live/end-broadcast, green room (+
 defaults), moderators, meta-stream, programme, publish settings, recording
 settings, gallery/slideshow, the channel text layer, stream overlay, and
 preflight. The two most relevant to client channel-design work:

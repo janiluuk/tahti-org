@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ChannelCard, DiscoWidgetRenderItem } from '@tahti/shared'
+import type { ChannelCard, AddonRenderItem } from '@tahti/shared'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { isSignupOpen } from '@/lib/signup'
 import { resolveChannelUrl } from '@/lib/app-url'
-import { DiscoWidgetFrame } from '@/components/disco-widgets/disco-widget-frame'
+import { AddonFrame } from '@/components/addons/addon-frame'
 import { DevLinks } from './_dev-links'
 
 interface PlatformStats {
@@ -29,27 +29,27 @@ async function fetchData(): Promise<{
   live: ChannelCard[]
   stats: PlatformStats | null
   news: NewsPost[]
-  discoWidgets: DiscoWidgetRenderItem[]
+  addons: AddonRenderItem[]
 }> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
-    const [channelsRes, statsRes, newsRes, discoWidgetsRes] = await Promise.all([
+    const [channelsRes, statsRes, newsRes, addonsRes] = await Promise.all([
       fetch(`${apiUrl}/api/v1/channels`, { next: { revalidate: 30, tags: ['channels-live'] } }),
       fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
       fetch(`${apiUrl}/api/v1/news`, { next: { revalidate: 60, tags: ['news-feed'] } }),
-      fetch(`${apiUrl}/api/v1/disco-widgets/homepage`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/v1/addons/homepage`, { next: { revalidate: 60 } }),
     ])
     const channels = channelsRes.ok
       ? ((await channelsRes.json()) as { live: ChannelCard[]; recent: ChannelCard[] })
       : { live: [], recent: [] }
     const stats = statsRes.ok ? ((await statsRes.json()) as PlatformStats) : null
     const news = newsRes.ok ? ((await newsRes.json()) as NewsPost[]) : []
-    const discoWidgets = discoWidgetsRes.ok
-      ? ((await discoWidgetsRes.json()) as { widgets: DiscoWidgetRenderItem[] }).widgets
+    const addons = addonsRes.ok
+      ? ((await addonsRes.json()) as { widgets: AddonRenderItem[] }).widgets
       : []
-    return { live: channels.live, stats, news, discoWidgets }
+    return { live: channels.live, stats, news, addons }
   } catch {
-    return { live: [], stats: null, news: [], discoWidgets: [] }
+    return { live: [], stats: null, news: [], addons: [] }
   }
 }
 
@@ -111,10 +111,7 @@ function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: { home?: string } }) {
-  const [{ live, stats, news, discoWidgets }, user] = await Promise.all([
-    fetchData(),
-    getSessionUser(),
-  ])
+  const [{ live, stats, news, addons }, user] = await Promise.all([fetchData(), getSessionUser()])
 
   // Logged-in artists land in the studio (Artist panel) by default. Explicit
   // Home nav uses ?home=1 so they can still reach the marketing page.
@@ -213,10 +210,10 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
         </section>
       )}
 
-      {discoWidgets.length > 0 && (
+      {addons.length > 0 && (
         <section className="home-news-section" data-scroll-section>
-          {discoWidgets.map((w) => (
-            <DiscoWidgetFrame
+          {addons.map((w) => (
+            <AddonFrame
               key={w.installId}
               sandboxUrl={w.sandboxUrl}
               name={w.name}

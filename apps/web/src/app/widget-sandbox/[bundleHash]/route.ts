@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-// The ONLY place a Disco-widget's code ever executes. Deliberately a plain
+// The ONLY place an Addon's code ever executes. Deliberately a plain
 // Route Handler, not a page.tsx — a React/Next page would pull in the
 // framework's own hydration bootstrap scripts, which the sandbox route's
 // `script-src 'self'` CSP (next.config.mjs) would then also have to permit,
@@ -9,7 +9,7 @@
 // A hand-written HTML string has none of that: the only script this document
 // ever references is the one <script> tag below.
 //
-// DiscoWidgetFrame (apps/web) embeds this in a sandboxed <iframe
+// AddonFrame (apps/web) embeds this in a sandboxed <iframe
 // sandbox="allow-scripts"> with no allow-same-origin — that's what actually
 // contains the widget's code (opaque origin: no cookies, no parent DOM, no
 // storage). The bundle's own integrity is separately pinned by Subresource
@@ -21,7 +21,7 @@
 // anyone but the widget author) empty sandboxed page.
 
 import { bundleHashToIntegrity, isValidBundleHashHex } from '@tahti/shared'
-import { DISCO_WIDGET_ROOT_ELEMENT_ID } from '@tahti/widget-sdk'
+import { ADDON_ROOT_ELEMENT_ID } from '@tahti/addon-sdk'
 
 function escapeHtmlAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
@@ -42,7 +42,7 @@ export async function GET(
 <html>
 <head><meta charset="utf-8"></head>
 <body>
-<div id="${DISCO_WIDGET_ROOT_ELEMENT_ID}"></div>
+<div id="${ADDON_ROOT_ELEMENT_ID}"></div>
 <script type="module" src="${bundleSrc}" integrity="${integrity}"></script>
 </body>
 </html>`

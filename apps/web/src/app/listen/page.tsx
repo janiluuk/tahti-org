@@ -7,7 +7,7 @@ import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
 import { NewToYouSection } from './_new-to-you-section'
 import { YourFeedSection } from './_your-feed-section'
-import { DiscoWidgetsSection } from './_disco-widgets-section'
+import { AddonsSection } from './_addons-section'
 import { MobileDisclosure } from './_mobile-disclosure'
 import { getSessionUser } from '@/lib/session'
 
@@ -150,7 +150,7 @@ export default async function ListenPage() {
       <MobileDisclosure title="For you">
         <YourFeedSection viewerUsername={user?.username ?? null} />
         <NewToYouSection />
-        <DiscoWidgetsSection />
+        <AddonsSection />
       </MobileDisclosure>
 
       <DiscoverTabs

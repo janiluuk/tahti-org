@@ -890,8 +890,8 @@ model User {
   featureRequestComments         FeatureRequestComment[]         @relation("FeatureRequestCommentAuthor")
   featureRequestReportsGenerated FeatureRequestQuarterlyReport[]
   newsPostsAuthored              NewsPost[]
-  discoWidgetsAuthored           DiscoWidget[]                   @relation("DiscoWidgetAuthor")
-  discoWidgetInstalls            DiscoWidgetInstall[]            @relation("DiscoWidgetListenerInstall")
+  addonsAuthored           Addon[]                   @relation("AddonAuthor")
+  addonInstalls            AddonInstall[]            @relation("AddonListenerInstall")
   internetRadioStations          InternetRadioStation[]
   themes                         Theme[]
   integrationCredentials         IntegrationCredential[]
@@ -1349,7 +1349,7 @@ model Channel {
   liveShowEpisodes       LiveShowEpisode[]
   members                ChannelMember[]
   slugRedirects          ChannelSlugRedirect[]
-  discoWidgetInstalls    DiscoWidgetInstall[]
+  addonInstalls    AddonInstall[]
   visualPresets          ChannelVisualPreset[]
 
   @@index([state])
@@ -3444,7 +3444,7 @@ model DiscordBotSettings {
   @@schema("admin")
 }
 
-// ── Disco-widgets ────────────────────────────────────────────────────────────
+// ── Addons ────────────────────────────────────────────────────────────
 // Dynamically-loaded, sandboxed third-party widgets — see docs/design for the
 // full writeup. A widget's code never runs in the main app's origin; it's
 // fetched by /widget-sandbox/[bundleHash] and executed inside a cookieless,
@@ -3453,7 +3453,7 @@ model DiscordBotSettings {
 // script-src, so an approved bundle can never be swapped without a version
 // bump (which mints a new hash).
 
-enum DiscoWidgetScope {
+enum AddonScope {
   LISTENER
   ARTIST
   ADMIN
@@ -3461,7 +3461,7 @@ enum DiscoWidgetScope {
   @@schema("core")
 }
 
-enum DiscoWidgetStatus {
+enum AddonStatus {
   DRAFT
   PENDING
   APPROVED
@@ -3471,15 +3471,15 @@ enum DiscoWidgetStatus {
   @@schema("core")
 }
 
-model DiscoWidget {
+model Addon {
   id                String            @id @default(cuid())
   slug              String            @unique
-  scope             DiscoWidgetScope
+  scope             AddonScope
   name              String
   description       String
   authorName        String
   authorUserId      String?
-  authorUser        User?             @relation("DiscoWidgetAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  authorUser        User?             @relation("AddonAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
   categories        String[]
   iconUrl           String?
   currentVersion    String
@@ -3487,19 +3487,24 @@ model DiscoWidget {
   bundleHash        String
   bundleSizeBytes   Int
   permissionsJson   Json              @default("{}")
-  status            DiscoWidgetStatus @default(DRAFT)
+  status            AddonStatus @default(DRAFT)
   moderationNote    String?
   // Board-set starting configJson for every new install of this widget,
   // regardless of scope (listener/artist/admin) — null means "no default
   // set yet", new installs then fall back to the bare Json default ({}) on
-  // DiscoWidgetInstall.configJson. Set via an admin-only action that copies
+  // AddonInstall.configJson. Set via an admin-only action that copies
   // one existing install's current configJson onto this field.
   defaultConfigJson Json?
+  // Platform-wide default: an approved addon with this on renders on its
+  // scope's surfaces even with no explicit AddonInstall row. A user/artist
+  // can still install to override position/config, or add a disabled
+  // AddonInstall row to suppress the default for themselves.
+  enabledByDefault  Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  versions DiscoWidgetVersion[]
-  installs DiscoWidgetInstall[]
+  versions AddonVersion[]
+  installs AddonInstall[]
 
   @@index([scope, status])
   @@schema("core")
@@ -3507,10 +3512,10 @@ model DiscoWidget {
 
 // One row per published bundle revision — kept even after currentVersion moves
 // on, so an install with pinnedVersion set can keep resolving its own hash.
-model DiscoWidgetVersion {
+model AddonVersion {
   id         String      @id @default(cuid())
   widgetId   String
-  widget     DiscoWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widget     Addon @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   version    String
   bundleKey  String
   bundleHash String
@@ -3525,12 +3530,12 @@ model DiscoWidgetVersion {
 // listenerUserId / channelId / adminSurface is set for a given row (enforced
 // in the route handlers, not a DB constraint — mirrors this schema's existing
 // style of application-level invariants over CHECK constraints).
-model DiscoWidgetInstall {
+model AddonInstall {
   id             String      @id @default(cuid())
   widgetId       String
-  widget         DiscoWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widget         Addon @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   listenerUserId String?
-  listenerUser   User?       @relation("DiscoWidgetListenerInstall", fields: [listenerUserId], references: [id], onDelete: Cascade)
+  listenerUser   User?       @relation("AddonListenerInstall", fields: [listenerUserId], references: [id], onDelete: Cascade)
   channelId      String?
   channel        Channel?    @relation(fields: [channelId], references: [id], onDelete: Cascade)
   adminSurface   String?

@@ -22629,7 +22629,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/disco-widgets/installs': {
+  '/api/me/addons/installs': {
     parameters: {
       query?: never
       header?: never
@@ -22719,7 +22719,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/disco-widgets/installs/{id}': {
+  '/api/me/addons/installs/{id}': {
     parameters: {
       query?: never
       header?: never
@@ -22773,7 +22773,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/channel/disco-widgets/installs': {
+  '/api/me/channel/addons/installs': {
     parameters: {
       query?: never
       header?: never
@@ -22863,7 +22863,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/me/channel/disco-widgets/installs/{id}': {
+  '/api/me/channel/addons/installs/{id}': {
     parameters: {
       query?: never
       header?: never
@@ -22917,7 +22917,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/admin/disco-widgets': {
+  '/api/admin/addons': {
     parameters: {
       query?: never
       header?: never
@@ -23013,7 +23013,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/prepare-upload': {
+  '/api/admin/addons/{id}/prepare-upload': {
     parameters: {
       query?: never
       header?: never
@@ -23055,7 +23055,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/publish-version': {
+  '/api/admin/addons/{id}/publish-version': {
     parameters: {
       query?: never
       header?: never
@@ -23112,7 +23112,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/approve': {
+  '/api/admin/addons/{id}/approve': {
     parameters: {
       query?: never
       header?: never
@@ -23147,7 +23147,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/reject': {
+  '/api/admin/addons/{id}/reject': {
     parameters: {
       query?: never
       header?: never
@@ -23182,7 +23182,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/disable': {
+  '/api/admin/addons/{id}/disable': {
     parameters: {
       query?: never
       header?: never
@@ -23217,7 +23217,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/{id}/default-config': {
+  '/api/admin/addons/{id}/default-config': {
     parameters: {
       query?: never
       header?: never
@@ -23274,7 +23274,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/installs': {
+  '/api/admin/addons/installs': {
     parameters: {
       query?: never
       header?: never
@@ -23364,7 +23364,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/admin/disco-widgets/installs/{id}': {
+  '/api/admin/addons/installs/{id}': {
     parameters: {
       query?: never
       header?: never
@@ -23418,7 +23418,7 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/disco-widgets/store': {
+  '/api/addons/store': {
     parameters: {
       query?: never
       header?: never
@@ -23464,7 +23464,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/channels/{slug}/disco-widgets': {
+  '/api/v1/channels/{slug}/addons': {
     parameters: {
       query?: never
       header?: never
@@ -23512,7 +23512,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/disco-widgets/homepage': {
+  '/api/v1/addons/homepage': {
     parameters: {
       query?: never
       header?: never
@@ -23558,7 +23558,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/disco-widgets/discover': {
+  '/api/v1/addons/discover': {
     parameters: {
       query?: never
       header?: never
@@ -23604,7 +23604,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/disco-widgets/bundle/{bundleHash}': {
+  '/api/v1/addons/bundle/{bundleHash}': {
     parameters: {
       query?: never
       header?: never

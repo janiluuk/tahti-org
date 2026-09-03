@@ -90,7 +90,7 @@ the same grouped accordion/sheet structure at every breakpoint.
 `apps/web/src/app/dashboard/upload-form.tsx`,
 `apps/web/src/app/dashboard/stash/stash-client.tsx`,
 `apps/web/src/app/admin/announcements/_admin-announcements-panel.tsx`, and
-`apps/web/src/app/admin/disco-widgets/_admin-disco-widgets-panel.tsx`.
+`apps/web/src/app/admin/addons/_admin-addons-panel.tsx`.
 
 Some surfaces have bespoke drop zones, some expose browser-native file inputs,
 and image/avatar/logo controls use different preview, validation, and busy
@@ -127,12 +127,12 @@ actions. Reserve confirmation dialogs for destructive actions.
 **Surface:** Artist/admin labels  
 **Evidence:** artist labels vary between `Library`/`Discography`,
 `Perform`/`Broadcast`, and `Manage`/`Design`; admin uses `Selects`,
-`Disco-widgets`, `Reports`, and `Features` while the page titles use
-`Tahti Selects`, `Disco-widgets`, `Content reports`, and `Feature requests`.
+`Addons`, `Reports`, and `Features` while the page titles use
+`Tahti Selects`, `Addons`, `Content reports`, and `Feature requests`.
 
 The labels are individually understandable but do not consistently describe the
 same concept at navigation and page level. Hyphenation and capitalization also
-vary (`Disco-widgets` versus the more readable `Disco widgets`).
+vary (`Addons` versus the more readable `Addons`).
 
 **Recommended fix:** establish a label glossary and use the page title as the
 navigation label unless a shorter label is deliberately documented.
@@ -207,7 +207,7 @@ destructive or disconnect actions where confirmation is appropriate.
 
 ### UX-07 — completed
 
-Admin navigation now uses `Tahti Selects` and `Disco widgets`, matching the
+Admin navigation now uses `Tahti Selects` and `Addons`, matching the
 corresponding page titles and removing the inconsistent hyphenation.
 
 ### Channel designer follow-up — completed

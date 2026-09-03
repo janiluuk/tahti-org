@@ -42,9 +42,9 @@ const GUIDES: { href: string; icon: string; title: string; description: string }
     description: 'Live-hour limits, audio quality, and what changes when you support Tahti ry.',
   },
   {
-    href: '/help/disco-widgets',
+    href: '/help/addons',
     icon: '🧩',
-    title: 'Contribute a Disco-widget',
+    title: 'Contribute an Addon',
     description: 'Build a widget for the store and submit it as a pull request for review.',
   },
   {

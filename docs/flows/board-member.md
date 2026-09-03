@@ -38,7 +38,7 @@ flowchart TD
     Missed["Missed shows"]
     Top["Top lists"]
     Ann["Announcements"]
-    Widgets["Disco widgets"]
+    Widgets["Addons"]
     Themes["Themes"]
     Internet["Internet radio"]
     Storage["Storage"]
@@ -106,7 +106,7 @@ flowchart TD
 | **Missed shows** | `/admin/missed-shows` | Shows that need operational follow-up |
 | **Top lists** | `/admin/top-lists` | Charts / rankings admin |
 | **Announcements** | `/admin/announcements` | Org announcement clips + editor |
-| **Disco widgets** | `/admin/disco-widgets` | Manage admin, artist, and listener widget installs |
+| **Addons** | `/admin/addons` | Manage admin, artist, and listener widget installs |
 | **Themes** | `/admin/themes` | Review and manage interface themes |
 | **Internet radio** | `/admin/internet-radio` | Internet-radio operations and configuration |
 | **Storage** | `/admin/storage` | Storage usage; per-user `/admin/storage/:userId` |
@@ -174,7 +174,7 @@ flowchart TD
 
 ### Capture gaps (routes exist; no dedicated PNG in manifest yet)
 
-`/admin/users/:id`, `/admin/support/:id`, `/admin/storage`, `/admin/files`, `/admin/content-reports`, `/admin/feature-requests`, `/admin/news`, `/admin/announcements`, `/admin/radio-submissions`, `/admin/missed-shows`, `/admin/top-lists`, `/admin/disco-widgets`, `/admin/themes`, `/admin/internet-radio`, `/admin/grants/:year`.
+`/admin/users/:id`, `/admin/support/:id`, `/admin/storage`, `/admin/files`, `/admin/content-reports`, `/admin/feature-requests`, `/admin/news`, `/admin/announcements`, `/admin/radio-submissions`, `/admin/missed-shows`, `/admin/top-lists`, `/admin/addons`, `/admin/themes`, `/admin/internet-radio`, `/admin/grants/:year`.
 
 ---
 
