@@ -112,6 +112,16 @@ describe('M1 — membership payment', () => {
     expect(res.json().error).toMatch(/Stripe/i)
   })
 
+  it('invoices returns an empty list without Stripe (dev mode)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/invoices',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ invoices: [] })
+  })
+
   it('webhook checkout.session.completed is idempotent', async () => {
     const passwordHash = await hashPassword('testpassword')
     const pending = await prisma.user.create({

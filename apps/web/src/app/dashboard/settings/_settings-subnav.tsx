@@ -22,6 +22,7 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
       { href: '/dashboard/settings/themes', label: 'Themes' },
       { href: '/dashboard/settings/domain', label: 'Username & domain' },
       { href: '/dashboard/settings/api', label: 'API tokens' },
+      { href: '/dashboard/settings/notifications', label: 'Notifications & visibility' },
     ],
   },
   {
@@ -46,7 +47,11 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
   },
   {
     label: 'Money',
-    items: [{ href: '/dashboard/settings/notifications', label: 'Notifications & visibility' }],
+    items: [
+      { href: '/dashboard/settings/payment', label: 'Payment' },
+      { href: '/dashboard/settings/billing', label: 'Billing' },
+      { href: '/dashboard/settings/invoices', label: 'Invoices' },
+    ],
   },
 ]
 

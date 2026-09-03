@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   BillingPortalUrlResponseSchema,
+  InvoicesResponseSchema,
   MembershipCheckoutBodySchema,
   MembershipCheckoutResponseSchema,
   MembershipStatusResponseSchema,
@@ -16,6 +17,7 @@ import {
   createMembershipCheckoutSession,
   createStripeCustomer,
   createBillingPortalSession,
+  listInvoices,
 } from '../../lib/stripe.js'
 import { activateMembership, membershipRenewalDueAt } from '../../lib/membership.js'
 
@@ -55,6 +57,7 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
         hasStripeSubscription: !!user.stripeMembershipSubscriptionId,
         subscriptionMigrationRequired:
           user.isMember && !user.stripeMembershipSubscriptionId && stripeEnabled,
+        stripeEnabled,
       })
     },
   )
@@ -189,6 +192,33 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (err) {
         request.log.error({ err }, 'billing portal failed')
         return reply.status(502).send({ error: 'Could not open billing portal' })
+      }
+    },
+  )
+
+  // GET /api/me/invoices — membership invoice history (Invoices settings tab)
+  fastify.get(
+    '/api/me/invoices',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['auth'],
+        response: openApiResponse(InvoicesResponseSchema, 'Invoices'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+
+      if (!stripeEnabled || !user.stripeCustomerId) {
+        return reply.send({ invoices: [] })
+      }
+
+      try {
+        const invoices = await listInvoices(user.stripeCustomerId)
+        return reply.send({ invoices })
+      } catch (err) {
+        request.log.error({ err }, 'invoice listing failed')
+        return reply.status(502).send({ error: 'Could not load invoices' })
       }
     },
   )

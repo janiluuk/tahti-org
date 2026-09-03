@@ -304,6 +304,45 @@ export async function fetchSubscriptionMetadata(
   )
 }
 
+export interface StripeInvoice {
+  id: string
+  number: string | null
+  status: string | null
+  amountPaidCents: number
+  currency: string
+  created: string
+  hostedInvoiceUrl: string | null
+  invoicePdf: string | null
+}
+
+/** Membership invoice history (Invoices settings tab). */
+export async function listInvoices(customerId: string, limit = 24): Promise<StripeInvoice[]> {
+  const data = (await stripeGet(
+    `/invoices?customer=${encodeURIComponent(customerId)}&limit=${limit}`,
+  )) as {
+    data?: Array<{
+      id: string
+      number: string | null
+      status: string | null
+      amount_paid: number
+      currency: string
+      created: number
+      hosted_invoice_url: string | null
+      invoice_pdf: string | null
+    }>
+  }
+  return (data.data ?? []).map((inv) => ({
+    id: inv.id,
+    number: inv.number,
+    status: inv.status,
+    amountPaidCents: inv.amount_paid,
+    currency: inv.currency,
+    created: new Date(inv.created * 1000).toISOString(),
+    hostedInvoiceUrl: inv.hosted_invoice_url,
+    invoicePdf: inv.invoice_pdf,
+  }))
+}
+
 async function stripeDelete(path: string): Promise<void> {
   const key = config.stripe.secretKey
   if (!key) throw new Error('Stripe is not configured')

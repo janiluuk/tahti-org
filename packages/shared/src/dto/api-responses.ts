@@ -403,6 +403,7 @@ export const MembershipStatusResponseSchema = z.object({
   renewalDueAt: z.coerce.date().nullable().optional(),
   hasStripeSubscription: z.boolean().optional(),
   subscriptionMigrationRequired: z.boolean().optional(),
+  stripeEnabled: z.boolean().optional(),
 })
 
 export const StripeCheckoutUrlResponseSchema = z.object({
@@ -428,6 +429,21 @@ export const MembershipCheckoutResponseSchema = z.union([
 
 export const BillingPortalUrlResponseSchema = z.object({
   portalUrl: z.string().nullable(),
+})
+
+export const InvoiceSchema = z.object({
+  id: z.string(),
+  number: z.string().nullable(),
+  status: z.string().nullable(),
+  amountPaidCents: z.number().int(),
+  currency: z.string(),
+  created: z.string().datetime(),
+  hostedInvoiceUrl: z.string().nullable(),
+  invoicePdf: z.string().nullable(),
+})
+
+export const InvoicesResponseSchema = z.object({
+  invoices: z.array(InvoiceSchema),
 })
 
 export const FanSubCheckoutUrlResponseSchema = z.object({
