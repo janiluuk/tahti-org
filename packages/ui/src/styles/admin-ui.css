@@ -1775,6 +1775,14 @@
   border: 1px solid var(--border);
   background: var(--card);
   position: relative;
+  /* Matches the hover feedback every other thumbnail widget on this page
+     (.selects-gallery__tile) already gives — a card with cover art reads as
+     interactive, so it should react on hover the same way theirs does. */
+  transition: border-color 0.15s;
+}
+
+.feed-banner:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
 }
 
 @media (max-width: 560px) {
@@ -1789,6 +1797,11 @@
   background-size: cover;
   background-position: center;
   min-height: 140px;
+  transition: transform 0.2s ease;
+}
+
+.feed-banner:hover .feed-banner__cover {
+  transform: scale(1.03);
 }
 
 .feed-banner__text {
