@@ -299,6 +299,20 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Forbidden' })
       }
 
+      // SEC-014: channelId is caller-supplied — without this check, an
+      // artist could label their venue broadcast with any other artist's
+      // channel id, misattributing "hosted by channel X" to someone who
+      // never opted in.
+      if (body.channelId !== undefined && body.channelId !== null) {
+        const targetChannel = await fastify.prisma.channel.findFirst({
+          where: { id: body.channelId, userId: user.id },
+          select: { id: true },
+        })
+        if (!targetChannel) {
+          return reply.status(403).send({ error: 'You do not own that channel' })
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: Record<string, any> = {}
       if (body.startAt !== undefined) data.startAt = new Date(body.startAt)

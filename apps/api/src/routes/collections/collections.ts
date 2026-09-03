@@ -850,7 +850,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug },
+        where: { slug: routeParams.slug, isPublic: true },
         select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })

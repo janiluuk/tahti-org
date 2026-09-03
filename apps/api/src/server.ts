@@ -331,7 +331,14 @@ export interface BuildOptions {
 export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
     logger: apiLoggerConfig(opts.logger),
-    trustProxy: true,
+    // SEC-014: exactly one reverse proxy fronts the API in every real
+    // deployment (NPM for api.tahti.live in prod; nothing in dev/test, where
+    // there's no X-Forwarded-For to begin with). `true` trusted the entire
+    // X-Forwarded-For chain and took its left-most (client-supplied, hence
+    // spoofable) entry — a caller could prepend any address, e.g. a private
+    // one, and have it believed. `1` trusts exactly the nearest hop and
+    // returns the address *that hop* observed, which a client can't override.
+    trustProxy: 1,
   })
 
   // Browser CORS — must be registered before routes so it also covers
