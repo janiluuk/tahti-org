@@ -21,9 +21,9 @@ export default function AddonsHelpPage() {
       <Heading level={2}>1. Build it</Heading>
       <Text>
         Use the <code>@tahti/addon-sdk</code> package in the tahti-org repository —{' '}
-        <code>packages/widget-sdk/README.md</code> walks through the whole contract (what a widget
+        <code>packages/addon-sdk/README.md</code> walks through the whole contract (what a widget
         exports, how it talks to the host page, and the size/security limits it runs under) and{' '}
-        <code>packages/widget-sdk/example/live-status/</code> is a complete working example to start
+        <code>packages/addon-sdk/example/live-status/</code> is a complete working example to start
         from.
       </Text>
 

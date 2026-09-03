@@ -11,7 +11,7 @@ import { cookies } from 'next/headers'
 import type { AddonAdminItem, AddonInstallView, AddonStoreItem } from '@tahti/shared'
 
 /** configJson is a free-form JSON object — the SDK's per-widget settings blob,
- * no fixed schema on this side (see packages/widget-sdk). */
+ * no fixed schema on this side (see packages/addon-sdk). */
 export type AddonConfig = Record<string, unknown>
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'

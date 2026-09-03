@@ -4,7 +4,7 @@
 // Admin-only catalog management: register a widget, upload+publish a bundle
 // version, moderate it (approve/reject/disable), and manage ADMIN-scope
 // installs onto shared surfaces (e.g. the homepage). Publishing is admin-only
-// in v1 — see packages/widget-sdk/README.md for the full author-facing flow.
+// in v1 — see packages/addon-sdk/README.md for the full author-facing flow.
 
 import type { FastifyPluginAsync } from 'fastify'
 import { Prisma } from '@tahti/db'

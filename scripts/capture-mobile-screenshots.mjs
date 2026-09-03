@@ -214,7 +214,7 @@ function buildPages(seed) {
     },
     { role: 'admin', id: 'missed-shows', path: '/admin/missed-shows', label: 'Missed shows' },
     { role: 'admin', id: 'top-lists', path: '/admin/top-lists', label: 'Top lists' },
-    { role: 'admin', id: 'disco-widgets', path: '/admin/disco-widgets', label: 'Disco widgets' },
+    { role: 'admin', id: 'addons', path: '/admin/addons', label: 'Addons' },
     { role: 'admin', id: 'themes', path: '/admin/themes', label: 'Interface themes' },
     {
       role: 'admin',
