@@ -82,6 +82,16 @@ export function SortableList<T>({
   )
 }
 
+/** Explicit rather than relying on @dnd-kit's own default — makes the "push
+ * the item you're hovering over out of the way" reflow an intentional,
+ * tuned interaction (not an implementation detail that could silently
+ * change or disappear on a library bump) for every SortableList consumer
+ * (Disco-widgets installs, links, the broadcast rotation queue, etc). Other
+ * items translate up or down along the list axis toward wherever the
+ * dragged item is heading — @dnd-kit computes the direction itself from
+ * the live index delta, this only controls how that move is animated. */
+const REORDER_TRANSITION = { duration: 220, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' }
+
 function SortableListItem({
   id,
   index,
@@ -93,6 +103,11 @@ function SortableListItem({
   group?: string
   children: (sortable: SortableItemHandle) => ReactNode
 }): ReactNode {
-  const { ref, handleRef, isDragging } = useSortable({ id, index, group })
+  const { ref, handleRef, isDragging } = useSortable({
+    id,
+    index,
+    group,
+    transition: REORDER_TRANSITION,
+  })
   return children({ ref, handleRef, isDragging })
 }
