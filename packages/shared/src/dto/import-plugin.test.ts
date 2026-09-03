@@ -71,10 +71,7 @@ describe('import plugin contract', () => {
       ],
     })
 
-    expect(parsed.providers.map((provider) => provider.kind)).toEqual([
-      'search',
-      'tool',
-    ])
+    expect(parsed.providers.map((provider) => provider.kind)).toEqual(['search', 'tool'])
   })
 
   it('rejects an unknown contract version', () => {

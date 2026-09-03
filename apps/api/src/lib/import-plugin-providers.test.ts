@@ -12,10 +12,18 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
     })
 
     const byKind = {
-      oauth: body.providers.filter((provider) => provider.kind === 'oauth').map((provider) => provider.id),
-      search: body.providers.filter((provider) => provider.kind === 'search').map((provider) => provider.id),
-      tool: body.providers.filter((provider) => provider.kind === 'tool').map((provider) => provider.id),
-      upload: body.providers.filter((provider) => provider.kind === 'upload').map((provider) => provider.id),
+      oauth: body.providers
+        .filter((provider) => provider.kind === 'oauth')
+        .map((provider) => provider.id),
+      search: body.providers
+        .filter((provider) => provider.kind === 'search')
+        .map((provider) => provider.id),
+      tool: body.providers
+        .filter((provider) => provider.kind === 'tool')
+        .map((provider) => provider.id),
+      upload: body.providers
+        .filter((provider) => provider.kind === 'upload')
+        .map((provider) => provider.id),
     }
 
     expect(byKind.oauth).toEqual(

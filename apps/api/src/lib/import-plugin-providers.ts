@@ -56,8 +56,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'soundcloud',
     name: 'SoundCloud',
-    description:
-      'OAuth connect, list downloadable tracks, queue server-side import to archive.',
+    description: 'OAuth connect, list downloadable tracks, queue server-side import to archive.',
     kind: 'oauth',
     capabilities: {
       configure: true,
@@ -95,8 +94,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'spotify',
     name: 'Spotify search',
-    description:
-      'Search Spotify tracks (app token) to add into mixed-source collections.',
+    description: 'Search Spotify tracks (app token) to add into mixed-source collections.',
     kind: 'search',
     capabilities: {
       configure: true,
@@ -153,8 +151,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'stash',
     name: 'Stash',
-    description:
-      'Private file locker — upload stems/masters without publishing to the channel.',
+    description: 'Private file locker — upload stems/masters without publishing to the channel.',
     kind: 'upload',
     capabilities: {
       configure: false,
@@ -173,8 +170,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'url',
     name: 'URL / DSP paste',
-    description:
-      'Paste Spotify/Bandcamp/etc. URLs to seed smart-link targets on a release.',
+    description: 'Paste Spotify/Bandcamp/etc. URLs to seed smart-link targets on a release.',
     kind: 'tool',
     capabilities: {
       configure: false,
@@ -191,8 +187,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'radio',
     name: 'Internet radio',
-    description:
-      'Paste an M3U/M3U8 playlist or direct stream URL to play a station.',
+    description: 'Paste an M3U/M3U8 playlist or direct stream URL to play a station.',
     kind: 'tool',
     capabilities: {
       configure: false,
