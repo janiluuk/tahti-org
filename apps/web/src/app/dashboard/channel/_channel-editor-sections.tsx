@@ -20,6 +20,7 @@ import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import ChannelLinksPanel from '../channel-links-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
 import type { ChannelLink } from '../channel-links-panel'
+import { ChannelBlockManager } from '@/components/channel-blocks/channel-block-manager'
 import { DesignerSectionList } from './_designer-section-list'
 import {
   DESIGNER_SECTIONS,
@@ -358,6 +359,8 @@ export function ChannelEditorSections({
                 onDraftChange={(textLayer) => setDraft((current) => ({ ...current, textLayer }))}
               />
             )}
+
+            {activeSection === 'blocks' && <ChannelBlockManager />}
           </div>
 
           <div className="studio-designer-panel__footer">

@@ -114,7 +114,7 @@ original request assumed:
   no user-facing benefit. "Generalized" here means the block system itself
   is reusable for future block types, not that everything becomes a block.
 
-### B.1 — Channel Designer block system (this is the big one; phases 1–2 of 5 done, see Status)
+### B.1 — Channel Designer block system (this is the big one; phases 1–3 of 5 done, see Status)
 
 **Data model** — new table, additive, no touch to existing Designer
 sections' storage:
@@ -252,7 +252,32 @@ rest of this session's work.
     which does provision via migration history, remains the real gate for
     the migration SQL file itself; the schema/logic it produces is verified
     correct via `db push` + integration tests above.
-  - Remaining: phase 3 (editor UI, new Designer section reusing
-    `packages/ui/src/brand/SortableList.tsx`), phase 4 (public rendering on
-    `c/[slug]`), phase 5 (logo upload + size-variant pipeline, reuse the
-    existing avatar/cover pipeline).
+  - **Phase 3 (editor UI) — done.** New "Brand blocks" Designer section
+    (`id: 'blocks'` in `_designer-sections.ts`, `saveKind: 'blocks'` —
+    intentionally a no-op in `saveSection`, since every mutation here
+    persists immediately through the phase-2 API, same "acts immediately"
+    pattern as `ChannelAddonsPanel`/`AddonManagerPanel` right next to it, not
+    a batch-save flow like the other sections). Self-contained
+    `ChannelBlockManager` (`apps/web/src/components/channel-blocks/`) fetches
+    its own blocks + the channel's addon installs on mount rather than
+    threading through `ChannelEditorData`'s already-large prop chain (this
+    section's data isn't needed by the live preview or any other section);
+    `ChannelBlockList` reuses `SortableList` for drag-reorder, same shape as
+    `AddonInstalledList`, with Full/Half/Third width buttons per row. "Add a
+    block" offers a logo-URL input (a stand-in for phase 5's real upload
+    pipeline) and a dropdown of not-yet-placed addon installs. Server actions
+    in `channel-blocks-actions.ts` + `lib/channel-blocks-client.ts` mirror
+    `channel-addons-actions.ts`/`lib/addons-client.ts`'s exact
+    request/error-shape pattern. Pure logic (`channelBlockSummary`,
+    `unblockedAddonInstalls`) extracted to `lib/channel-block-summary.ts`
+    with 7 unit tests — `apps/web` has no React-component-test convention
+    at all (vitest here is `node`-environment, `.ts`-only, zero existing
+    `.test.tsx` files), so this tests the real logic without inventing a new
+    testing pattern (RTL + jsdom) for one section. Verified: `apps/web`
+    typecheck/lint green, `channel-block-summary.test.ts` 7/7 passing, and a
+    full `next build` of the whole app succeeds with zero errors.
+  - Remaining: phase 4 (public rendering on `c/[slug]`, reusing `packBlocks`
+    for the actual row layout), phase 5 (logo upload + size-variant
+    pipeline, reuse the existing avatar/cover pipeline — the editor's
+    logo-URL text input from phase 3 stays as a fallback/manual-override
+    path once that lands, not something to delete).

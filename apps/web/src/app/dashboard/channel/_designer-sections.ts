@@ -5,9 +5,10 @@
  * consumed by both the sidebar nav data (dashboard-nav.ts) and the designer
  * shell itself, so the two never drift out of sync. */
 
-export type DesignerSectionId = 'visual' | 'header' | 'slideshow' | 'links' | 'player'
+export type DesignerSectionId = 'visual' | 'header' | 'slideshow' | 'links' | 'player' | 'blocks'
 
-export type DesignerSectionSaveKind = 'gallery' | 'profile' | 'textLayer' | 'visual' | 'header'
+export type DesignerSectionSaveKind =
+  'gallery' | 'profile' | 'textLayer' | 'visual' | 'header' | 'blocks'
 
 export type DesignerSectionDefinition = {
   id: DesignerSectionId
@@ -61,6 +62,15 @@ export const DESIGNER_SECTIONS: DesignerSectionDefinition[] = [
     title: 'Player overlay text',
     description: 'Add a stylized headline or tagline to your channel page.',
     saveKind: 'textLayer',
+  },
+  {
+    id: 'blocks',
+    hash: 'channel-blocks',
+    navLabel: 'Brand blocks',
+    title: 'Brand blocks',
+    description:
+      'Place your logo and add-ons on your public channel page. Changes save immediately.',
+    saveKind: 'blocks',
   },
 ]
 
