@@ -87,3 +87,43 @@ describe('ChannelVisualPatchSchema videoBackgroundUrl', () => {
     expect(result.success).toBe(false)
   })
 })
+
+describe('ChannelVisualPatchSchema look extras', () => {
+  const scheme = {
+    bg: '#111111',
+    accent: '#222222',
+    text: '#333333',
+    muted: '#444444',
+    highlight: '#555555',
+  }
+
+  it('accepts player/background gradient fields and background visual preset ids', () => {
+    const result = ChannelVisualPatchSchema.safeParse({
+      usePlayerGradient: true,
+      playerColorSchemeJson: JSON.stringify(scheme),
+      useBackgroundGradient: false,
+      backgroundColorSchemeJson: null,
+      backgroundVisualPreset: 'FAT_LINES',
+      nowPlayingOverlayStyle: 'classic',
+      nowPlayingOverlaySettingsJson: null,
+      playerOverlayMode: 'COSMIC_NEON',
+      playerOverlayText: 'Hello',
+      playerOverlayAlign: 'CENTER',
+      channelLinks: [{ label: 'Site', url: 'https://example.com' }],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects invalid playerColorSchemeJson and unknown background presets', () => {
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        playerColorSchemeJson: JSON.stringify({ bg: 'red' }),
+      }).success,
+    ).toBe(false)
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        backgroundVisualPreset: 'AURORA',
+      }).success,
+    ).toBe(false)
+  })
+})

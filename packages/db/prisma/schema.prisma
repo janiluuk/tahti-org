@@ -1308,6 +1308,25 @@ model Channel {
   slideshowIntervalSeconds        Int                   @default(8)
   slideshowTransitionMs           Int                   @default(600)
   slideshowAutoplay               Boolean               @default(true)
+  // Channel Designer look extras (previously client localStorage only).
+  // Player stage can override the header color scheme when usePlayerGradient.
+  usePlayerGradient               Boolean               @default(false)
+  playerColorSchemeJson           String? // JSON {bg,accent,text,muted,highlight} for the player stage
+  // Channel-page background surface (Backdrop tab) — distinct from header
+  // visualPreset. Preset ids are a restricted subset (INTERACTIVE_POINTS,
+  // FAT_LINES, …) not present on the VisualPreset enum, so this is a string.
+  useBackgroundGradient           Boolean               @default(false)
+  backgroundColorSchemeJson       String?
+  backgroundVisualPreset          String?
+  // Now-playing title/artist overlay layout + optional settings blob.
+  nowPlayingOverlayStyle          String?
+  nowPlayingOverlaySettingsJson   String?
+  // Player-stage text overlay (distinct from channel-page textLayer*).
+  playerOverlayMode               ChannelTextLayerMode  @default(NONE)
+  playerOverlayText               String                @default("")
+  playerOverlayAlign              ChannelTextLayerAlign @default(CENTER)
+  // Outbound social/link buttons on the channel page (JSON array of {label,url}).
+  channelLinksJson                String?
   nextBroadcastAt                 DateTime? // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote               String? // e.g. "Weekly show — Thursdays 22:00 EET"
   lastFeaturedAt                  DateTime? // M16: Tahti Radio fair rotation

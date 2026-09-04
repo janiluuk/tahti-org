@@ -74,8 +74,15 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Visual style:** Brand accent (six preset gradients or a custom 5-color scheme), the background visualizer (eleven Three.js presets, e.g. Water ripple, Aurora, Particle field — each with speed/intensity/scale and an audio-reactive toggle), and **Saved Looks**: save the current Visual style settings as a named preset from a picker at the top of the section, re-apply any saved Look, or delete one. Saving under a name that's already used asks for confirmation before overwriting it.
 - **Header & backdrop:** Header banner style (gradient, solid color, or a video loop on paid tiers), the backdrop media (image, gallery slideshow, or direct video file) that style uses, and which quick-facts (join date, live listener count) show next to the artist name in the header. Name/avatar/country/pronouns/tags are edited on Settings → Artist info instead — this section only links there, so there's one save path for identity fields.
 - **Slideshow transitions:** Only shown once a gallery mode is enabled in Header & backdrop. Eight transition styles (four plain CSS crossfades, four richer WebGL ones — particle dissolve, glitch wipe, cube flip, liquid distortion), plus interval, transition duration, and autoplay.
-- **Links:** The link buttons shown in the channel banner (label + URL each, platform icon auto-detected from the URL).
-- **Player overlay text:** An optional stylized headline/tagline over the player, with five CSS text-effect styles and an alignment choice.
+- **Links:** The link buttons shown in the channel banner (label + URL each,
+  platform icon auto-detected from the URL) — persisted as `channelLinksJson`
+  via `PATCH /api/me/channel/visual`.
+- **Player overlay text:** An optional stylized headline/tagline over the
+  player stage (`playerOverlay*`), distinct from the channel-page text layer
+  (`textLayer*` / designer `textOverlay*`).
+- **Look extras:** Player/background independent gradients, background
+  visualizer preset, and now-playing overlay style also persist on Channel
+  (see worklog `2026-09-04-channel-look-extras.md`).
 - **Press kit** now lives on Settings → Artist info's Branding tab, not in the designer, since it's identity material rather than a per-look setting. **Addons** was dropped from the designer's section list (the feature itself is unchanged, just not surfaced there).
 - **Artist info:** Compact Identity, Story, and People tabs for name, avatar, logo, genres, location, biography, project type, and members.
 - **Uploads:** Avatar, logo, artwork, and visual media use the standard drag-and-drop interaction.

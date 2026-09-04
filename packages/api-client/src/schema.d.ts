@@ -856,10 +856,22 @@ export interface paths {
                 highlight: string
               }
               visualPreset: string
+              visualSettingsJson?: string | null
               slideshowPreset: string
               slideshowIntervalSeconds: number
               slideshowTransitionMs: number
               slideshowAutoplay: boolean
+              usePlayerGradient?: boolean
+              playerColorSchemeJson?: string | null
+              useBackgroundGradient?: boolean
+              backgroundColorSchemeJson?: string | null
+              backgroundVisualPreset?: string | null
+              nowPlayingOverlayStyle?: string | null
+              nowPlayingOverlaySettingsJson?: string | null
+              playerOverlayMode?: string
+              playerOverlayText?: string
+              playerOverlayAlign?: string
+              channelLinksJson?: string | null
               user: {
                 username: string
                 displayName: string
@@ -14493,8 +14505,31 @@ export interface paths {
                 /** @enum {string} */
                 artistKind?: 'SINGLE' | 'COLLECTIVE'
                 visualPreset?: string
+                visualSettingsJson?: string | null
                 galleryMode?: string
                 slideshowImages?: string[]
+                headerStyle?: string
+                brandAccentPreset?: string | null
+                colorSchemeJson?: string | null
+                videoBackgroundUrl?: string | null
+                textLayerMode?: string
+                textLayerText?: string
+                textLayerAlign?: string
+                slideshowPreset?: string
+                slideshowIntervalSeconds?: number
+                slideshowTransitionMs?: number
+                slideshowAutoplay?: boolean
+                usePlayerGradient?: boolean
+                playerColorSchemeJson?: string | null
+                useBackgroundGradient?: boolean
+                backgroundColorSchemeJson?: string | null
+                backgroundVisualPreset?: string | null
+                nowPlayingOverlayStyle?: string | null
+                nowPlayingOverlaySettingsJson?: string | null
+                playerOverlayMode?: string
+                playerOverlayText?: string
+                playerOverlayAlign?: string
+                channelLinksJson?: string | null
               } | null
               releases: {
                 [key: string]: unknown
@@ -30245,10 +30280,22 @@ export interface components {
         highlight: string
       }
       visualPreset: string
+      visualSettingsJson?: string | null
       slideshowPreset: string
       slideshowIntervalSeconds: number
       slideshowTransitionMs: number
       slideshowAutoplay: boolean
+      usePlayerGradient?: boolean
+      playerColorSchemeJson?: string | null
+      useBackgroundGradient?: boolean
+      backgroundColorSchemeJson?: string | null
+      backgroundVisualPreset?: string | null
+      nowPlayingOverlayStyle?: string | null
+      nowPlayingOverlaySettingsJson?: string | null
+      playerOverlayMode?: string
+      playerOverlayText?: string
+      playerOverlayAlign?: string
+      channelLinksJson?: string | null
       user: {
         username: string
         displayName: string
@@ -30310,8 +30357,31 @@ export interface components {
         /** @enum {string} */
         artistKind?: 'SINGLE' | 'COLLECTIVE'
         visualPreset?: string
+        visualSettingsJson?: string | null
         galleryMode?: string
         slideshowImages?: string[]
+        headerStyle?: string
+        brandAccentPreset?: string | null
+        colorSchemeJson?: string | null
+        videoBackgroundUrl?: string | null
+        textLayerMode?: string
+        textLayerText?: string
+        textLayerAlign?: string
+        slideshowPreset?: string
+        slideshowIntervalSeconds?: number
+        slideshowTransitionMs?: number
+        slideshowAutoplay?: boolean
+        usePlayerGradient?: boolean
+        playerColorSchemeJson?: string | null
+        useBackgroundGradient?: boolean
+        backgroundColorSchemeJson?: string | null
+        backgroundVisualPreset?: string | null
+        nowPlayingOverlayStyle?: string | null
+        nowPlayingOverlaySettingsJson?: string | null
+        playerOverlayMode?: string
+        playerOverlayText?: string
+        playerOverlayAlign?: string
+        channelLinksJson?: string | null
       } | null
       releases: {
         [key: string]: unknown
