@@ -155,7 +155,7 @@ export function useJamGuestPlayback(
       load(
         {
           id: track.id,
-          kind: 'archive',
+          kind: 'sound',
           url: track.streamUrl,
           title: track.title,
           subtitle: track.artistName,

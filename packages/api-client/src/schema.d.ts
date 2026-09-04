@@ -21888,7 +21888,6 @@ export interface paths {
     }
     trace?: never
   }
-
   '/api/me/sound/{id}/access': {
     parameters: {
       query?: never
@@ -21924,8 +21923,6 @@ export interface paths {
     }
     trace?: never
   }
-  '/api/me/archive/{id}/export/hearthis': {
-
   '/api/me/sound/{id}/export/hearthis': {
     parameters: {
       query?: never

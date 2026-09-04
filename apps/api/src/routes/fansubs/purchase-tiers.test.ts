@@ -97,7 +97,7 @@ describe('Purchase tiers (per-track paywall)', () => {
   })
 
   it('gates a track behind SUBSCRIBERS_ONLY: subscriber gets in, stranger does not', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channel: { connect: { userId: artistId } },
         title: 'Subscriber-only track',
@@ -126,7 +126,7 @@ describe('Purchase tiers (per-track paywall)', () => {
     const subscriberTrack = asSubscriber.json().tracks.find((t: { id: string }) => t.id === item.id)
     expect(subscriberTrack.playUrl).not.toBeNull()
 
-    await prisma.archiveItem.delete({ where: { id: item.id } })
+    await prisma.sound.delete({ where: { id: item.id } })
   })
 
   it("gates a track behind a specific purchase tier: only that tier's buyer gets in", async () => {
@@ -137,7 +137,7 @@ describe('Purchase tiers (per-track paywall)', () => {
       data: { artistUserId: artistId, name: 'Tier B', priceCents: 300 },
     })
 
-    const trackA = await prisma.archiveItem.create({
+    const trackA = await prisma.sound.create({
       data: {
         channel: { connect: { userId: artistId } },
         title: 'Tier A track',
@@ -148,7 +148,7 @@ describe('Purchase tiers (per-track paywall)', () => {
         mp3Key: `${PREFIX}tier-a.mp3`,
       },
     })
-    const trackB = await prisma.archiveItem.create({
+    const trackB = await prisma.sound.create({
       data: {
         channel: { connect: { userId: artistId } },
         title: 'Tier B track',
@@ -192,11 +192,11 @@ describe('Purchase tiers (per-track paywall)', () => {
     expect(orders.json()).toHaveLength(1)
     expect(orders.json()[0]).toMatchObject({ tier: { id: tierA.id } })
 
-    await prisma.archiveItem.deleteMany({ where: { id: { in: [trackA.id, trackB.id] } } })
+    await prisma.sound.deleteMany({ where: { id: { in: [trackA.id, trackB.id] } } })
   })
 
   it('rejects assigning PURCHASE access to a track without a valid tier', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channel: { connect: { userId: artistId } },
         title: 'Untiered track',
@@ -207,12 +207,12 @@ describe('Purchase tiers (per-track paywall)', () => {
     })
     const res = await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${item.id}/access`,
+      url: `/api/me/sound/${item.id}/access`,
       headers: { cookie: artistCookie },
       payload: { accessMode: 'PURCHASE' },
     })
     expect(res.statusCode).toBe(400)
-    await prisma.archiveItem.delete({ where: { id: item.id } })
+    await prisma.sound.delete({ where: { id: item.id } })
   })
 
   it('Store section only appears in the public profile once storeEnabled is on', async () => {
