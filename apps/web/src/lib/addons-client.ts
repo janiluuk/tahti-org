@@ -8,13 +8,14 @@
 // these in its own thin named actions instead.
 
 import { cookies } from 'next/headers'
+import { resolveServerApiUrl } from '@/lib/api-url'
 import type { AddonAdminItem, AddonInstallView, AddonStoreItem } from '@tahti/shared'
 
 /** configJson is a free-form JSON object — the SDK's per-widget settings blob,
  * no fixed schema on this side (see packages/addon-sdk). */
 export type AddonConfig = Record<string, unknown>
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+const apiUrl = resolveServerApiUrl()
 
 function sessionHeader(): string {
   const sessionCookie = cookies().get('tahti_session')
