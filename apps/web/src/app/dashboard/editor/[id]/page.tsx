@@ -41,7 +41,7 @@ export default async function EditorProjectPage({ params }: { params: { id: stri
       <MultitrackEditor
         projectId={project.id}
         title={project.title}
-        archiveItemId={project.archiveItemId}
+        soundId={project.soundId}
         timeline={project.timeline}
         sources={project.sources}
       />

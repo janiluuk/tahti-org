@@ -66,7 +66,7 @@ const adminLogsRoutes: FastifyPluginAsync = async (fastify) => {
       const { service, search, since, until, limit } = parsed.data
 
       const endMs = until ? new Date(until).getTime() : Date.now()
-      // Default to the last hour — a live log viewer, not a historical archive
+      // Default to the last hour — a live log viewer, not a historical sound
       // (Loki's own retention/limits_config governs how far back `since` can go).
       const startMs = since ? new Date(since).getTime() : endMs - 60 * 60 * 1000
 

@@ -25,6 +25,6 @@ describe('WORKER_CRON_JOBS', () => {
     const names = new Set(WORKER_CRON_JOBS.map((j) => j.name))
     expect(names).toContain('hls-minio-sync')
     expect(names).toContain('channel-watchdog')
-    expect(names).toContain('archive-fallback-cache-sync')
+    expect(names).toContain('sound-fallback-cache-sync')
   })
 })

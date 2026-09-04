@@ -80,11 +80,11 @@ import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
 import featureRequestsRoutes from './routes/governance/feature-requests.js'
-import downloadRoutes from './routes/downloads/archive.js'
+import downloadRoutes from './routes/downloads/sound.js'
 import artistFollowRoutes from './routes/engagement/artist-follows.js'
-import archiveRepostRoutes from './routes/engagement/archive-repost.js'
-import archiveLikeRoutes from './routes/engagement/archive-likes.js'
-import archiveItemRepostRoutes from './routes/engagement/archive-item-repost.js'
+import soundRepostRoutes from './routes/engagement/sound-repost.js'
+import soundLikeRoutes from './routes/engagement/sound-likes.js'
+import soundRepostAckRoutes from './routes/engagement/sound-repost-ack.js'
 import listenEventsRoutes from './routes/engagement/listen-events.js'
 import listenHeartbeatRoutes from './routes/engagement/listen-heartbeat.js'
 import meGrantsRoutes from './routes/me/grants.js'
@@ -107,7 +107,7 @@ import adminRadioSubmissionRoutes from './routes/admin/radio-submissions.js'
 import adminTahtiSelectsRoutes from './routes/admin/tahti-selects.js'
 import adminNewsRoutes from './routes/admin/news.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
-import adminArchiveRoutes from './routes/admin/archive.js'
+import adminSoundRoutes from './routes/admin/sound.js'
 import adminFilesRoutes from './routes/admin/files.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
@@ -188,9 +188,9 @@ import meMediaRoutes from './routes/me/media.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import mePressKitImages from './routes/me/press-kit-images.js'
 import meRadioSlotBookings from './routes/me/radio-slot-bookings.js'
-import meArchiveRoutes from './routes/me/archive.js'
+import meSoundRoutes from './routes/me/sound.js'
 import meChannelVisualPresetsRoutes from './routes/me/channel-visual-presets.js'
-import meArchiveBannerRoutes from './routes/me/archive-banner.js'
+import meSoundBannerRoutes from './routes/me/sound-banner.js'
 import meProgrammeRoutes from './routes/me/programme.js'
 import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
@@ -209,14 +209,14 @@ import meIntegrationsRoutes from './routes/me/integrations.js'
 import adminNotificationsRoutes from './routes/admin/notifications.js'
 import meStorageRoutes from './routes/me/storage.js'
 import adminStorageRoutes from './routes/admin/storage.js'
-import meArchiveStemsRoutes from './routes/me/archive-stems.js'
+import meSoundStemsRoutes from './routes/me/sound-stems.js'
 import meSocialRoutes from './routes/me/social.js'
 import socialTwitterRoutes from './routes/me/social-twitter.js'
 import socialInstagramRoutes from './routes/me/social-instagram.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meChannelProvisionRoutes from './routes/me/channel-provision.js'
-import meArchiveVersionRoutes from './routes/me/archive-versions.js'
-import meArchiveEditorRoutes from './routes/me/archive-editor.js'
+import meSoundVersionRoutes from './routes/me/sound-versions.js'
+import meSoundEditorRoutes from './routes/me/sound-editor.js'
 import meEditorProjectRoutes from './routes/me/editor-projects.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meChannelEgressRoutes from './routes/me/channel-egress.js'
@@ -258,9 +258,9 @@ import {
   ChannelFunnelResponseSchema,
   ChannelLiveStatsResponseSchema,
   ChannelScheduleViewSchema,
-  ArchiveItemListSchema,
+  SoundListSchema,
   AuthMeResponseSchema,
-  ChannelArchiveItemsResponseSchema,
+  ChannelSoundsResponseSchema,
   CollectionPublicViewSchema,
   CompleteUploadResponseSchema,
   DownloadGateItemDetailResponseSchema,
@@ -416,8 +416,8 @@ export async function buildApp(opts: BuildOptions = {}) {
           MotionList: MotionListSchema,
           MotionDetail: MotionDetailSchema,
           CollectionPublic: CollectionPublicViewSchema,
-          ArchiveItemList: ArchiveItemListSchema,
-          ChannelArchiveItems: ChannelArchiveItemsResponseSchema,
+          SoundList: SoundListSchema,
+          ChannelSounds: ChannelSoundsResponseSchema,
           AuthMe: AuthMeResponseSchema,
           PrepareUpload: PrepareUploadResponseSchema,
           CompleteUpload: CompleteUploadResponseSchema,
@@ -480,7 +480,7 @@ export async function buildApp(opts: BuildOptions = {}) {
       },
       tags: [
         { name: 'auth', description: 'Authentication and session management' },
-        { name: 'channel', description: 'Channel + archive management' },
+        { name: 'channel', description: 'Channel + sound management' },
         { name: 'chat', description: 'Live chat (Centrifugo)' },
         { name: 'releases', description: 'Release catalogue and smart links' },
         { name: 'downloads', description: 'Public downloads with anti-fraud' },
@@ -627,11 +627,11 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M18: downloads as first-class action (engagement units)
   await fastify.register(downloadRoutes)
   await fastify.register(artistFollowRoutes)
-  await fastify.register(archiveRepostRoutes)
-  await fastify.register(archiveLikeRoutes)
+  await fastify.register(soundRepostRoutes)
+  await fastify.register(soundLikeRoutes)
   await fastify.register(listenEventsRoutes)
   await fastify.register(listenHeartbeatRoutes)
-  await fastify.register(archiveItemRepostRoutes)
+  await fastify.register(soundRepostAckRoutes)
 
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)
@@ -657,7 +657,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminTahtiSelectsRoutes)
   await fastify.register(adminNewsRoutes)
   await fastify.register(adminChannelsRoutes)
-  await fastify.register(adminArchiveRoutes)
+  await fastify.register(adminSoundRoutes)
   await fastify.register(adminFilesRoutes)
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
@@ -716,7 +716,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M14: embed widget + oEmbed
   await fastify.register(embedRoutes)
 
-  // M7: Mixcloud upload for archive items
+  // M7: Mixcloud upload for sound items
   await fastify.register(mixcloudRoutes)
   await fastify.register(bandcampRoutes)
   await fastify.register(soundcloudRoutes)
@@ -759,10 +759,10 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M18: public release-track downloads with anti-fraud
   await fastify.register(releaseDownloadRoutes)
 
-  // M22/M24/M25: archive item metadata edit + channel slideshow
-  await fastify.register(meArchiveRoutes)
+  // M22/M24/M25: sound item metadata edit + channel slideshow
+  await fastify.register(meSoundRoutes)
   await fastify.register(meChannelVisualPresetsRoutes)
-  await fastify.register(meArchiveBannerRoutes)
+  await fastify.register(meSoundBannerRoutes)
   await fastify.register(meProgrammeRoutes)
   await fastify.register(meRadioSubmissionRoutes)
   await fastify.register(meAnnouncementsRoutes)
@@ -781,14 +781,14 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminNotificationsRoutes)
   await fastify.register(meStorageRoutes)
   await fastify.register(adminStorageRoutes)
-  await fastify.register(meArchiveStemsRoutes)
+  await fastify.register(meSoundStemsRoutes)
   await fastify.register(meSocialRoutes)
   await fastify.register(socialTwitterRoutes)
   await fastify.register(socialInstagramRoutes)
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meChannelProvisionRoutes)
-  await fastify.register(meArchiveVersionRoutes)
-  await fastify.register(meArchiveEditorRoutes)
+  await fastify.register(meSoundVersionRoutes)
+  await fastify.register(meSoundEditorRoutes)
   await fastify.register(meEditorProjectRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meChannelEgressRoutes)

@@ -4,7 +4,7 @@
 'use client'
 
 import type { VisualPreset } from '@tahti/shared'
-import { ArchiveWaveform } from '@/components/archive-waveform'
+import { SoundWaveform } from '@/components/sound-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 
 /** Prefer the track's preset; when unset/MINIMAL, fall back to the bright
@@ -62,7 +62,7 @@ export function ActiveTrackStage({
       />
       <div className="active-track-stage__foreground">
         {showWave ? (
-          <ArchiveWaveform
+          <SoundWaveform
             peaks={peaks}
             progress={progress}
             onSeek={onSeek}

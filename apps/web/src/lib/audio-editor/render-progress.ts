@@ -12,12 +12,12 @@ export interface RenderProgressEvent {
 }
 
 /** PERF-08: SSE progress for server-side archive edit render. */
-export function watchArchiveVersionProgress(
-  archiveId: string,
+export function watchSoundVersionProgress(
+  soundId: string,
   versionId: string,
   onEvent: (event: RenderProgressEvent) => void,
 ): () => void {
-  const es = new EventSource(`/dashboard/archive/${archiveId}/editor/progress/${versionId}`)
+  const es = new EventSource(`/dashboard/sounds/${soundId}/editor/progress/${versionId}`)
 
   es.onmessage = (msg) => {
     try {
@@ -35,13 +35,13 @@ export function watchArchiveVersionProgress(
 }
 
 export function waitForRenderViaProgress(
-  archiveId: string,
+  soundId: string,
   versionId: string,
   onProgress?: (event: RenderProgressEvent) => void,
   maxMs = 180_000,
 ): Promise<RenderProgressEvent> {
   return new Promise((resolve, reject) => {
-    const stop = watchArchiveVersionProgress(archiveId, versionId, (event) => {
+    const stop = watchSoundVersionProgress(soundId, versionId, (event) => {
       onProgress?.(event)
       if (event.status === 'READY') {
         stop()

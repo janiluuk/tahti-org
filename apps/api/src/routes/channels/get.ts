@@ -132,7 +132,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       where: { channelId: channel.id },
       orderBy: { position: 'asc' },
       select: {
-        archiveItem: {
+        sound: {
           select: {
             title: true,
             artistName: true,
@@ -144,9 +144,9 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       },
     })
     if (curated.length > 1) {
-      const idx = curated.findIndex((c) => c.archiveItem.title === nowPlaying.title)
+      const idx = curated.findIndex((c) => c.sound.title === nowPlaying.title)
       if (idx !== -1) {
-        const next = curated[(idx + 1) % curated.length]!.archiveItem
+        const next = curated[(idx + 1) % curated.length]!.sound
         nowPlayingNext = {
           title: next.title,
           artistName: next.artistName ?? next.channel.user.displayName,

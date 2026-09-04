@@ -188,7 +188,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   const key = playbackKeyFromMetadata(initialUri)
   if (!key) return true
 
-  const item = await prisma.archiveItem.findFirst({
+  const item = await prisma.sound.findFirst({
     where: { OR: [{ mp3Key: key }, { flacKey: key }] },
     select: {
       id: true,
@@ -234,7 +234,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
     await prisma.radioPlayLog.create({
       data: {
         channelId,
-        archiveItemId: item.id,
+        soundId: item.id,
         title: item.title,
         artistName,
         artistUsername,
@@ -269,7 +269,7 @@ async function watchdogCheckChannel(channelId: string, containerName: string, te
 }
 
 /** STREAM-012: periodically resolves each running channel's current rotation
- * track (via Liquidsoap telnet metadata) to a real ArchiveItem, so the public
+ * track (via Liquidsoap telnet metadata) to a real Sound, so the public
  * radio page can show accurate title/artist/artwork instead of generic branding
  * while nobody's actually live. A failure on any one channel never blocks the
  * others — each sync call is independently caught.

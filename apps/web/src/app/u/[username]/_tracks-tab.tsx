@@ -10,7 +10,7 @@ import { LoveButton } from '@/components/love-button'
 import { ReportButton } from '@/components/report-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
-import { ArchiveWaveform } from '@/components/archive-waveform'
+import { SoundWaveform } from '@/components/sound-waveform'
 
 export interface TrackTabItem {
   id: string
@@ -203,7 +203,7 @@ export function TracksTab({
       load(
         {
           id: item.id,
-          kind: 'archive',
+          kind: 'sound',
           url: item.playUrl,
           title: item.title,
           subtitle: item.artistName ?? undefined,
@@ -229,7 +229,7 @@ export function TracksTab({
         <div className="prof-sec-label-row__actions">
           <div className="prof-sec-count">{tracks.length} total</div>
           {canEdit && (
-            <Link href="/dashboard/archive" className="prof-tracks-studio-link">
+            <Link href="/dashboard/sounds" className="prof-tracks-studio-link">
               Manage in Studio
             </Link>
           )}
@@ -238,7 +238,7 @@ export function TracksTab({
       <div data-tahti-ui="studio">
         {hasEmbeds && (
           <div
-            className="archive-list__filters prof-collection-source-filters"
+            className="sound-list__filters prof-collection-source-filters"
             role="group"
             aria-label="Filter by source"
           >
@@ -247,7 +247,7 @@ export function TracksTab({
                 key={key}
                 type="button"
                 onClick={() => setSourceFilter(key)}
-                className={`archive-list__filter${sourceFilter === key ? ' archive-list__filter--active' : ''}`}
+                className={`sound-list__filter${sourceFilter === key ? ' sound-list__filter--active' : ''}`}
               >
                 {SOURCE_FILTER_LABELS[key]} ({sourceCounts[key]})
               </button>
@@ -269,7 +269,7 @@ export function TracksTab({
               .filter((item) => item.playUrl)
               .map((item) => ({
                 id: item.id,
-                kind: 'archive' as const,
+                kind: 'sound' as const,
                 url: item.playUrl ?? '',
                 title: item.title,
                 subtitle: item.artistName ?? undefined,
@@ -317,7 +317,7 @@ export function TracksTab({
                         </button>
                         {canEdit && (
                           <Link
-                            href={`/dashboard/archive/${t.id}/editor`}
+                            href={`/dashboard/sounds/${t.id}/editor`}
                             className="prof-row-edit-btn"
                             aria-label={`Edit ${t.title}`}
                             title="Edit"
@@ -335,7 +335,7 @@ export function TracksTab({
                         t.peaks &&
                         t.peaks.length > 0 &&
                         (playerTrack?.id === t.id ? (
-                          <ArchiveWaveform
+                          <SoundWaveform
                             peaks={t.peaks}
                             progress={duration > 0 ? currentTime / duration : 0}
                             onSeek={seek}
@@ -344,11 +344,11 @@ export function TracksTab({
                         ) : (
                           <button
                             type="button"
-                            className="ch-archive-playback__wf-btn"
+                            className="ch-sound-playback__wf-btn"
                             onClick={() => toggleRow(t, queue)}
                             aria-label={`Play ${t.title}`}
                           >
-                            <ArchiveWaveform peaks={t.peaks} size="large" />
+                            <SoundWaveform peaks={t.peaks} size="large" />
                           </button>
                         ))}
                       {isExpanded && (
@@ -360,11 +360,7 @@ export function TracksTab({
                                 <LoveButton channelSlug={channelSlug} itemId={t.id} />
                               </div>
                             )}
-                            <ReportButton
-                              targetType="ARCHIVE_ITEM"
-                              targetId={t.id}
-                              variant="icon"
-                            />
+                            <ReportButton targetType="SOUND_ITEM" targetId={t.id} variant="icon" />
                             {t.releaseSlug ? (
                               <Link
                                 href={`/r/${t.releaseSlug}`}

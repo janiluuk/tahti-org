@@ -20,7 +20,7 @@ type ImportJob = {
   fileName: string | null
   status: string
   error: string | null
-  archiveItemId: string | null
+  soundId: string | null
 }
 
 type PickerCallbackData = {
@@ -227,9 +227,9 @@ export function GoogleDrivePickerPanel({ connected }: { connected: boolean }) {
               </div>
               <div className="import-drive__job-actions">
                 <StatusPill tone={statusTone(job.status)}>{statusLabel(job.status)}</StatusPill>
-                {job.status === 'DONE' && job.archiveItemId ? (
+                {job.status === 'DONE' && job.soundId ? (
                   <Link
-                    href={`/dashboard/archive/${job.archiveItemId}/editor`}
+                    href={`/dashboard/sounds/${job.soundId}/editor`}
                     className="ui-btn ui-btn--ghost ui-btn--sm"
                   >
                     Open in editor →

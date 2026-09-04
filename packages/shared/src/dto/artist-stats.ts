@@ -37,7 +37,7 @@ export const StatsSummaryResponseSchema = z.object({
 })
 
 export const StatsTopTrackSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   title: z.string(),
   plays: z.number().int().nonnegative(),
 })

@@ -42,7 +42,7 @@ export async function createLiveShowSeries(payload: {
   artworkUrl: string | null
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   episodeNumberEnabled: boolean
   nextEpisodeNumber: number
 }): Promise<{ data?: LiveShowSeriesView; error?: string }> {

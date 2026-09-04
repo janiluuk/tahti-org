@@ -127,7 +127,7 @@ export async function fetchMyCollections(): Promise<{
 
 export async function addCollectionItem(
   slug: string,
-  params: { archiveItemId?: string; releaseId?: string },
+  params: { soundId?: string; releaseId?: string },
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/items`, {
     method: 'POST',
@@ -293,7 +293,7 @@ export async function addSpotifyTrackToCollection(
   spotifyUri: string,
 ): Promise<{
   error: string | null
-  archiveItemId?: string
+  soundId?: string
   collectionItemId?: string
   track?: SpotifyTrackResult
 }> {
@@ -308,7 +308,7 @@ export async function addSpotifyTrackToCollection(
     return { error: (data as { error?: string }).error ?? 'Failed to add Spotify track' }
   }
   const data = (await res.json()) as {
-    archiveItemId: string
+    soundId: string
     collectionItemId: string
     track: SpotifyTrackResult
   }
@@ -371,7 +371,7 @@ export async function addMixcloudTrackToCollection(
   cloudcastUrl: string,
 ): Promise<{
   error: string | null
-  archiveItemId?: string
+  soundId?: string
   collectionItemId?: string
   track?: MixcloudTrackResult
 }> {
@@ -386,7 +386,7 @@ export async function addMixcloudTrackToCollection(
     return { error: (data as { error?: string }).error ?? 'Failed to add Mixcloud track' }
   }
   const data = (await res.json()) as {
-    archiveItemId: string
+    soundId: string
     collectionItemId: string
     track: MixcloudTrackResult
   }
@@ -449,7 +449,7 @@ export async function addHearthisTrackToCollection(
   trackUrl: string,
 ): Promise<{
   error: string | null
-  archiveItemId?: string
+  soundId?: string
   collectionItemId?: string
   track?: HearthisTrackResult
 }> {
@@ -464,7 +464,7 @@ export async function addHearthisTrackToCollection(
     return { error: (data as { error?: string }).error ?? 'Failed to add hearthis.at track' }
   }
   const data = (await res.json()) as {
-    archiveItemId: string
+    soundId: string
     collectionItemId: string
     track: HearthisTrackResult
   }

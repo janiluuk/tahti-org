@@ -1,0 +1,196 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import {
+  SOUND_METADATA_DEFAULTS,
+  SoundMetadataFieldsSchema,
+  SoundMetadataPatchSchema,
+  type SoundMetadataFields,
+} from '@tahti/shared'
+
+export const soundMetadataSelect = {
+  id: true,
+  title: true,
+  artistName: true,
+  credits: true,
+  description: true,
+  tracklist: true,
+  bannerUrl: true,
+  backgroundUrl: true,
+  slideshowUrls: true,
+  peaks: true,
+  galleryMode: true,
+  galleryAudioReactive: true,
+  commentary: true,
+  taggedNote: true,
+  genre: true,
+  genreCustom: true,
+  recordingLocation: true,
+  venueId: true,
+  venue: {
+    select: { id: true, slug: true, name: true, city: true, countryCode: true },
+  },
+  subGenres: true,
+  tags: true,
+  contentType: true,
+  mediaKind: true,
+  imageKey: true,
+  videoKey: true,
+  mixVersion: true,
+  bpm: true,
+  musicalKey: true,
+  bpmDetected: true,
+  keyDetected: true,
+  useDetectedBpmKey: true,
+  isAiGenerated: true,
+  releasedAt: true,
+  license: true,
+  repostToDownload: true,
+  followToDownload: true,
+  isPublic: true,
+  isFallback: true,
+  selectsOptIn: true,
+  commentsEnabled: true,
+  topListsEligible: true,
+  fallbackOrder: true,
+  lastFallbackPlayedAt: true,
+  visualPreset: true,
+  colorSchemeJson: true,
+  paletteJson: true,
+  accessMode: true,
+  purchaseTierId: true,
+  status: true,
+  streamingCopyStatus: true,
+  durationSec: true,
+  sourceFormat: true,
+  sourceBitrateKbps: true,
+  sourceSampleRateHz: true,
+  sourceBitDepth: true,
+  sourceChannels: true,
+  embedUri: true,
+  hearthisExportStatus: true,
+  hearthisExportId: true,
+  pinnedAt: true,
+  trackOrder: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
+export function effectiveBpm(item: {
+  bpm: number | null
+  bpmDetected: number | null
+  useDetectedBpmKey: boolean
+}): number | null {
+  if (item.useDetectedBpmKey && item.bpmDetected != null) return item.bpmDetected
+  return item.bpm
+}
+
+export function effectiveKey(item: {
+  musicalKey: string | null
+  keyDetected: string | null
+  useDetectedBpmKey: boolean
+}): string | null {
+  if (item.useDetectedBpmKey && item.keyDetected) return item.keyDetected
+  return item.musicalKey
+}
+
+export function serializeSound<T extends Record<string, unknown>>(item: T) {
+  const row = item as T & {
+    bpm: number | null
+    bpmDetected: number | null
+    musicalKey: string | null
+    keyDetected: string | null
+    useDetectedBpmKey: boolean
+  }
+  return {
+    ...item,
+    effectiveBpm: effectiveBpm(row),
+    effectiveKey: effectiveKey(row),
+  }
+}
+
+function parseOptionalUrl(value: string | null | undefined): string | null | undefined {
+  if (value === undefined) return undefined
+  if (value === null || value === '') return null
+  return value
+}
+
+function fieldsToPrismaData(fields: SoundMetadataFields): Record<string, unknown> {
+  const data: Record<string, unknown> = {}
+  if (fields.description !== undefined) data.description = fields.description || null
+  if (fields.artistName !== undefined) data.artistName = fields.artistName?.trim() || null
+  if (fields.credits !== undefined) {
+    data.credits =
+      fields.credits && fields.credits.length > 0
+        ? fields.credits.map((c) => ({
+            role: c.role,
+            name: c.name.trim(),
+            ...(c.artistUsername ? { artistUsername: c.artistUsername } : {}),
+          }))
+        : null
+  }
+  if (fields.tracklist !== undefined) data.tracklist = fields.tracklist
+  if (fields.bannerUrl !== undefined) data.bannerUrl = parseOptionalUrl(fields.bannerUrl)
+  if (fields.backgroundUrl !== undefined)
+    data.backgroundUrl = parseOptionalUrl(fields.backgroundUrl)
+  if (fields.slideshowUrls !== undefined) data.slideshowUrls = fields.slideshowUrls
+  if (fields.galleryMode !== undefined) data.galleryMode = fields.galleryMode
+  if (fields.galleryAudioReactive !== undefined)
+    data.galleryAudioReactive = fields.galleryAudioReactive
+  if (fields.commentary !== undefined) data.commentary = fields.commentary || null
+  if (fields.taggedNote !== undefined) data.taggedNote = fields.taggedNote || null
+  if (fields.genre !== undefined) data.genre = fields.genre || null
+  if (fields.genreCustom !== undefined) data.genreCustom = fields.genreCustom || null
+  if (fields.recordingLocation !== undefined)
+    data.recordingLocation = fields.recordingLocation || null
+  if (fields.venueId !== undefined) data.venueId = fields.venueId || null
+  if (fields.subGenres !== undefined) data.subGenres = fields.subGenres
+  if (fields.tags !== undefined) data.tags = fields.tags
+  if (fields.contentType !== undefined) data.contentType = fields.contentType
+  if (fields.mediaKind !== undefined) data.mediaKind = fields.mediaKind
+  if (fields.mixVersion !== undefined) data.mixVersion = fields.mixVersion || null
+  if (fields.bpm !== undefined) data.bpm = fields.bpm
+  if (fields.musicalKey !== undefined) data.musicalKey = fields.musicalKey || null
+  if (fields.useDetectedBpmKey !== undefined) data.useDetectedBpmKey = fields.useDetectedBpmKey
+  if (fields.isAiGenerated !== undefined) data.isAiGenerated = fields.isAiGenerated
+  if (fields.releasedAt !== undefined) data.releasedAt = new Date(fields.releasedAt)
+  if (fields.license !== undefined) data.license = fields.license
+  if (fields.repostToDownload !== undefined) data.repostToDownload = fields.repostToDownload
+  if (fields.followToDownload !== undefined) data.followToDownload = fields.followToDownload
+  if (fields.isPublic !== undefined) data.isPublic = fields.isPublic
+  if (fields.isFallback !== undefined) data.isFallback = fields.isFallback
+  if (fields.selectsOptIn !== undefined) data.selectsOptIn = fields.selectsOptIn
+  if (fields.commentsEnabled !== undefined) data.commentsEnabled = fields.commentsEnabled
+  if (fields.topListsEligible !== undefined) data.topListsEligible = fields.topListsEligible
+  if (fields.pinned !== undefined) data.pinnedAt = fields.pinned ? new Date() : null
+  return data
+}
+
+export function metadataForNewUpload(input?: unknown): Record<string, unknown> {
+  const parsed = SoundMetadataFieldsSchema.partial().safeParse(input ?? {})
+  const fields = parsed.success ? parsed.data : {}
+  return {
+    ...SOUND_METADATA_DEFAULTS,
+    releasedAt: fields.releasedAt ? new Date(fields.releasedAt) : new Date(),
+    ...fieldsToPrismaData(fields),
+  }
+}
+
+export function metadataPatchFromBody(body: unknown):
+  | {
+      ok: true
+      title?: string
+      data: Record<string, unknown>
+    }
+  | { ok: false; error: string } {
+  const parsed = SoundMetadataPatchSchema.safeParse(body)
+  if (!parsed.success) {
+    return { ok: false, error: 'Invalid metadata' }
+  }
+  const { title, ...rest } = parsed.data
+  const data = fieldsToPrismaData(rest)
+  if (Object.keys(data).length === 0 && title === undefined) {
+    return { ok: false, error: 'No fields to update' }
+  }
+  return { ok: true, title, data }
+}

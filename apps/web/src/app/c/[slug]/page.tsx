@@ -22,8 +22,8 @@ import { ChannelPageVisualizer } from './_channel-page-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
-import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
-import { ArchiveListSection } from './_archive-list-section'
+import { SoundVideoBackdrop, resolveSoundBackground } from './sound-item-backdrop'
+import { SoundListSection } from './_sound-list-section'
 import type { PlayerTrack } from '@/contexts/player-context'
 import type {
   ChannelGalleryMode,
@@ -33,6 +33,7 @@ import type {
   TracklistEntry,
 } from '@tahti/shared'
 import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
+
 import {
   AvatarTile,
   Heading,
@@ -42,7 +43,7 @@ import {
   SafePlainText,
   ExpandableText,
 } from '@tahti/ui'
-import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+import { channelSoundRssUrl } from '@/lib/rss-feeds'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
 import { logout } from '@/app/auth/actions'
@@ -119,7 +120,7 @@ function resolveHeaderBannerStyle(channel: ChannelResponse): CSSProperties | und
   return { background: preset?.gradient ?? BRAND_ACCENT_PRESETS[0]?.gradient }
 }
 
-export interface ArchiveItem {
+export interface SoundItem {
   id: string
   title: string
   artistName?: string | null
@@ -221,7 +222,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         .catch(() => false)
     : false
 
-  const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
+  const items: SoundItem[] = itemsRes.ok ? ((await itemsRes.json()) as SoundItem[]) : []
   const ranks: Record<string, number> =
     items.length > 0
       ? await fetch(`${apiUrl}/api/top-lists/ranks?ids=${items.map((i) => i.id).join(',')}`, {
@@ -233,11 +234,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       : {}
   // Shared play queue for every playable archive item, in list order — lets
   // playback auto-advance to the next track on 'ended' instead of just stopping.
-  const archiveQueue: PlayerTrack[] = items
+  const soundQueue: PlayerTrack[] = items
     .filter((i) => i.audioUrl)
     .map((i) => ({
       id: i.id,
-      kind: 'archive',
+      kind: 'sound',
       url: i.audioUrl!,
       title: i.title,
       subtitle: i.artistName?.trim() || `@${channel.user.username}`,
@@ -295,7 +296,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   // "LIVE NOW" is misleading here; show the currently-rotating track instead.
   const isRotationChannel = slug === TAHTI_RADIO_SLUG || slug === TAHTI_SELECTS_SLUG
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
-  const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
+  const channelBackdrop = resolveSoundBackground(channel.videoBackgroundUrl ?? null)
   const headerBannerStyle = resolveHeaderBannerStyle(channel)
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
   const profileGenres = socialLinks.genres
@@ -373,7 +374,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
             <div className="ch-page-foreground">
               {channelBackdrop.videoEmbedUrl && (
-                <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
+                <SoundVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
               )}
               {channelBackdrop.cssImageUrl && !channelBackdrop.videoEmbedUrl && (
                 <div
@@ -568,16 +569,16 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 archive={
                   <>
                     {releases.length > 0 && (
-                      <section className="ch-archive-section ch-live-releases">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section ch-live-releases">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">Latest releases</h2>
                         </div>
                         <ReleasesGrid releases={releases.slice(0, 4)} />
                       </section>
                     )}
                     {embeds.length > 0 && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">Listen on SoundCloud</h2>
                         </div>
                         <div className="ch-embeds-list">
@@ -597,8 +598,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     )}
 
                     {kickUsername && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">Live on Kick</h2>
                         </div>
                         <div className="ch-embeds-list">
@@ -613,11 +614,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       </section>
                     )}
 
-                    <section className="ch-archive-section">
-                      <div className="ch-archive-section-head">
+                    <section className="ch-sound-section">
+                      <div className="ch-sound-section-head">
                         <h2 className="ch-section-label">Sounds</h2>
                         <a
-                          href={channelArchiveRssUrl(apiUrl, slug)}
+                          href={channelSoundRssUrl(apiUrl, slug)}
                           className="ch-rss-link"
                           rel="alternate"
                         >
@@ -651,22 +652,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         </div>
                       ) : (
                         <div data-tahti-ui="studio">
-                          <ArchiveListSection
+                          <SoundListSection
                             items={items}
                             ranks={ranks}
                             slug={slug}
                             artistUsername={channel.user.username}
                             colorSchemeJson={channel.colorSchemeJson}
                             isLoggedIn={!!user}
-                            archiveQueue={archiveQueue}
+                            soundQueue={soundQueue}
                           />
                         </div>
                       )}
                     </section>
 
                     {allTracks.length > 0 && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">All tracks</h2>
                         </div>
                         <TracksTab tracks={allTracks} isOwner={isOwnerOrAdmin} channelSlug={slug} />
@@ -716,8 +717,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     )}
 
                     {events.length > 0 && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">Events</h2>
                         </div>
                         <ul className="ch-events-list">
@@ -785,8 +786,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     )}
 
                     {posts.length > 1 && (
-                      <section className="ch-archive-section">
-                        <div className="ch-archive-section-head">
+                      <section className="ch-sound-section">
+                        <div className="ch-sound-section-head">
                           <h2 className="ch-section-label">Updates</h2>
                         </div>
                         <ul className="ch-posts-list">

@@ -35,7 +35,8 @@ type PlaylistOption = {
 type CollectionItem = {
   id: string
   position: number
-  archiveItem: { id: string; title: string } | null
+
+  sound: { id: string; title: string } | null
   release: { title: string } | null
 }
 
@@ -46,7 +47,7 @@ type CollectionDetail = {
 }
 
 function itemTitle(item: CollectionItem): string {
-  return item.archiveItem?.title ?? item.release?.title ?? 'Untitled track'
+  return item.sound?.title ?? item.release?.title ?? 'Untitled track'
 }
 
 function TransportIcon({ direction }: { direction: 'previous' | 'next' }) {
@@ -352,7 +353,7 @@ export function ChannelControlsPanel({
       const detail = (await response.json()) as CollectionDetail
       const newIds = new Set(rotationItems.map((item) => item.id))
       const additions = detail.items
-        .map((item) => item.archiveItem)
+        .map((item) => item.sound)
         .filter((item): item is { id: string; title: string } => item != null)
         .filter((item) => !newIds.has(item.id))
 
@@ -381,8 +382,8 @@ export function ChannelControlsPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fallbackMode: 'ordered',
-          items: mergedIds.map((archiveItemId, index) => ({
-            archiveItemId,
+          items: mergedIds.map((soundId, index) => ({
+            soundId,
             isFallback: true,
             fallbackOrder: index,
           })),
@@ -425,7 +426,7 @@ export function ChannelControlsPanel({
         body: JSON.stringify({
           fallbackMode: 'ordered',
           items: optimistic.items.map((item) => ({
-            archiveItemId: item.id,
+            soundId: item.id,
             isFallback: item.isFallback,
             ...(item.isFallback && item.fallbackOrder != null
               ? { fallbackOrder: item.fallbackOrder }

@@ -8,7 +8,7 @@ import {
   RejectRadioSubmissionSchema,
   RadioSubmissionListSchema,
   TAHTI_RADIO_SLUG,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -52,7 +52,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
               submitter: { select: { id: true, username: true, displayName: true } },
             },
           },
-          archiveItem: {
+          sound: {
             select: {
               id: true,
               title: true,
@@ -75,7 +75,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           batchId: item.batchId,
           batchNote: item.batch.note,
           submitter: item.batch.submitter,
-          archiveItem: item.archiveItem,
+          sound: item.sound,
         })),
       })
     },
@@ -92,7 +92,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       const item = await fastify.prisma.radioTrackSubmissionItem.findUnique({
         where: { id: routeParams.id },
         select: {
-          archiveItem: {
+          sound: {
             select: { id: true, title: true, artistName: true, mp3Key: true, flacKey: true },
           },
           batch: {
@@ -104,17 +104,17 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!item) return reply.status(404).send({ error: 'Submission not found' })
 
-      const key = archivePlaybackKey(item.archiveItem)
+      const key = soundPlaybackKey(item.sound)
       if (!key) return reply.status(404).send({ error: 'No playable audio' })
       const audioUrl = await presignedGetUrl(key, 3600)
       return reply.send({
         audioUrl,
-        title: item.archiveItem.title,
+        title: item.sound.title,
         artistName:
-          item.archiveItem.artistName ??
+          item.sound.artistName ??
           item.batch.submitter.displayName ??
           item.batch.submitter.username,
-        archiveItemId: item.archiveItem.id,
+        soundId: item.sound.id,
       })
     },
   )
@@ -129,7 +129,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const submission = await fastify.prisma.radioTrackSubmissionItem.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, status: true, archiveItemId: true },
+        select: { id: true, status: true, soundId: true },
       })
       if (!submission) return reply.status(404).send({ error: 'Submission not found' })
       if (submission.status !== 'PENDING') {
@@ -142,19 +142,19 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!radio) return reply.status(404).send({ error: 'Tahti Radio channel not found' })
 
-      const archiveItem = await fastify.prisma.archiveItem.findUnique({
-        where: { id: submission.archiveItemId },
+      const sound = await fastify.prisma.sound.findUnique({
+        where: { id: submission.soundId },
         select: { id: true, isPublic: true, status: true },
       })
-      if (!archiveItem || archiveItem.status !== 'READY') {
+      if (!sound || sound.status !== 'READY') {
         return reply.status(400).send({ error: 'Track is not ready to add' })
       }
 
       const existing = await fastify.prisma.curatedRotationItem.findUnique({
         where: {
-          channelId_archiveItemId: {
+          channelId_soundId: {
             channelId: radio.id,
-            archiveItemId: submission.archiveItemId,
+            soundId: submission.soundId,
           },
         },
       })
@@ -167,16 +167,16 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.prisma.curatedRotationItem.create({
           data: {
             channelId: radio.id,
-            archiveItemId: submission.archiveItemId,
+            soundId: submission.soundId,
             position: (last?.position ?? -1) + 1,
             addedById: request.sessionUser!.id,
           },
         })
       }
 
-      if (!archiveItem.isPublic) {
-        await fastify.prisma.archiveItem.update({
-          where: { id: archiveItem.id },
+      if (!sound.isPublic) {
+        await fastify.prisma.sound.update({
+          where: { id: sound.id },
           data: { isPublic: true },
         })
       }
@@ -215,8 +215,8 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           id: true,
           status: true,
-          archiveItemId: true,
-          archiveItem: { select: { title: true } },
+          soundId: true,
+          sound: { select: { title: true } },
           batch: { select: { submitterId: true } },
         },
       })
@@ -233,7 +233,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.prisma.curatedRotationItem.deleteMany({
           where: {
             channelId: radio.id,
-            archiveItemId: submission.archiveItemId,
+            soundId: submission.soundId,
           },
         })
       }
@@ -253,7 +253,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
         await notifyArtistOfRadioSubmissionRejected(
           fastify.prisma,
           submission.batch.submitterId,
-          submission.archiveItem.title,
+          submission.sound.title,
           rejectionNote,
         )
       }

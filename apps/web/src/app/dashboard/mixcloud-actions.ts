@@ -43,9 +43,9 @@ export async function disconnectMixcloud(): Promise<{ error: string | null }> {
 }
 
 export async function queueMixcloudUpload(
-  archiveItemId: string,
+  soundId: string,
 ): Promise<{ error: string | null; status?: string; mixcloudUrl?: string }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${archiveItemId}/mixcloud`, {
+  const res = await fetch(`${apiUrl}/api/me/sound/${soundId}/mixcloud`, {
     method: 'POST',
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
@@ -57,12 +57,12 @@ export async function queueMixcloudUpload(
   return { error: null, status: (data as { status?: string }).status }
 }
 
-export async function fetchMixcloudUploadStatus(archiveItemId: string): Promise<{
+export async function fetchMixcloudUploadStatus(soundId: string): Promise<{
   error: string | null
   status?: string
   mixcloudUrl?: string | null
 }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${archiveItemId}/mixcloud`, {
+  const res = await fetch(`${apiUrl}/api/me/sound/${soundId}/mixcloud`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
   })

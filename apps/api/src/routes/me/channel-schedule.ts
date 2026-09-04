@@ -36,7 +36,7 @@ type LiveShowSeriesDbRow = {
   artworkUrl: string | null
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   episodeNumberEnabled: boolean
   nextEpisodeNumber: number
   intervalHours: number
@@ -61,7 +61,7 @@ type LiveShowEpisodeDbRow = {
   artworkUrl: string | null
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SCHEDULED' | 'LIVE'
   source: 'UPLOAD' | 'BROADCAST'
-  archiveItemId: string | null
+  soundId: string | null
   radioSlotBookingId: string | null
   createdAt: Date
   updatedAt: Date
@@ -81,7 +81,7 @@ type ScheduledLiveShowDbRow = {
   artworkUrl: string | null
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
   canceledAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -381,7 +381,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
             artworkUrl: parsed.data.artworkUrl ?? series.artworkUrl,
             showType: series.showType,
             visibility: series.visibility,
-            autoArchive: series.autoArchive,
+            autoPublish: series.autoPublish,
           },
         })
         if (series.episodeNumberEnabled) {
@@ -432,17 +432,17 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     }
   }
 
-  /** Validates archiveItemId/radioSlotBookingId belong to the caller's own channel. */
+  /** Validates soundId/radioSlotBookingId belong to the caller's own channel. */
   async function validateEpisodeRefs(
     channelId: string,
-    refs: { archiveItemId?: string | null; radioSlotBookingId?: string | null },
+    refs: { soundId?: string | null; radioSlotBookingId?: string | null },
   ): Promise<string | null> {
-    if (refs.archiveItemId) {
-      const owned = await fastify.prisma.archiveItem.findFirst({
-        where: { id: refs.archiveItemId, channelId },
+    if (refs.soundId) {
+      const owned = await fastify.prisma.sound.findFirst({
+        where: { id: refs.soundId, channelId },
         select: { id: true },
       })
-      if (!owned) return 'Archive item not found'
+      if (!owned) return 'Sound item not found'
     }
     if (refs.radioSlotBookingId) {
       const owned = await fastify.prisma.radioSlotBooking.findFirst({
@@ -516,7 +516,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
             artworkUrl: series.artworkUrl,
             status: parsed.data.source === 'BROADCAST' ? 'PENDING_APPROVAL' : 'DRAFT',
             source: parsed.data.source,
-            archiveItemId: parsed.data.archiveItemId ?? null,
+            soundId: parsed.data.soundId ?? null,
             radioSlotBookingId: parsed.data.radioSlotBookingId ?? null,
           },
         })
@@ -581,7 +581,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
 
       const data: Record<string, unknown> = { ...parsed.data }
       if ('description' in data) data.description = parsed.data.description || null
-      if ('archiveItemId' in data) data.archiveItemId = parsed.data.archiveItemId ?? null
+      if ('soundId' in data) data.soundId = parsed.data.soundId ?? null
       if ('radioSlotBookingId' in data) {
         data.radioSlotBookingId = parsed.data.radioSlotBookingId ?? null
       }

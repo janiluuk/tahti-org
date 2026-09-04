@@ -6,7 +6,7 @@ import {
   RssFeedResponseSchema,
   PublicProfileViewSchema,
   UsernameParamSchema,
-  archivePlaybackKey,
+  soundPlaybackKey,
   openApiResponse,
   parseAvatarTheme,
   parseLogoPlacement,
@@ -191,7 +191,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
               position: true,
               title: true,
               durationSec: true,
-              archiveItemId: true,
+              soundId: true,
               streamKey: true,
             },
           },
@@ -232,10 +232,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
 
   const channelSlug = user.channel?.slug ?? null
 
-  // All READY, public archive items for the "Tracks" tab — a flat list of every
+  // All READY, public sound items for the "Tracks" tab — a flat list of every
   // audio file the artist has, independent of whether it's part of a release.
-  const allArchiveItems = user.channel
-    ? await fastify.prisma.archiveItem.findMany({
+  const allSounds = user.channel
+    ? await fastify.prisma.sound.findMany({
         where: { channelId: user.channel.id, status: 'READY', isPublic: true },
         select: {
           id: true,
@@ -259,31 +259,31 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       })
     : []
 
-  const archiveIds = new Set<string>([
+  const soundIds = new Set<string>([
     ...user.releases.flatMap((r) =>
-      r.tracks.map((t) => t.archiveItemId).filter((id): id is string => Boolean(id)),
+      r.tracks.map((t) => t.soundId).filter((id): id is string => Boolean(id)),
     ),
-    ...allArchiveItems.map((i) => i.id),
+    ...allSounds.map((i) => i.id),
   ])
 
   // So the Tracks tab can link a standalone-looking track straight to the
   // formal Release it's actually part of, when it's part of one.
-  const releaseSlugByArchiveId = new Map<string, string>()
+  const releaseSlugBySoundId = new Map<string, string>()
   for (const release of user.releases) {
     for (const t of release.tracks) {
-      if (t.archiveItemId) releaseSlugByArchiveId.set(t.archiveItemId, release.smartLinkSlug)
+      if (t.soundId) releaseSlugBySoundId.set(t.soundId, release.smartLinkSlug)
     }
   }
 
-  const playUrlByArchiveId = new Map<string, string | null>()
-  const accessByArchiveId = new Map<
+  const playUrlBySoundId = new Map<string, string | null>()
+  const accessBySoundId = new Map<
     string,
     { accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'; purchaseTierId: string | null }
   >()
-  if (archiveIds.size > 0) {
-    const items = await fastify.prisma.archiveItem.findMany({
+  if (soundIds.size > 0) {
+    const items = await fastify.prisma.sound.findMany({
       where: {
-        id: { in: [...archiveIds] },
+        id: { in: [...soundIds] },
         status: 'READY',
         channel: { userId: user.id },
       },
@@ -291,9 +291,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     })
     await Promise.all(
       items.map(async (item) => {
-        const key = archivePlaybackKey(item)
-        playUrlByArchiveId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
-        accessByArchiveId.set(item.id, {
+        const key = soundPlaybackKey(item)
+        playUrlBySoundId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
+        accessBySoundId.set(item.id, {
           accessMode: item.accessMode,
           purchaseTierId: item.purchaseTierId,
         })
@@ -301,14 +301,15 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     )
   }
 
-  const tracks = allArchiveItems.map((item) => ({
+  const tracks = allSounds.map((item) => ({
     id: item.id,
     title: item.title,
     artistName: item.artistName,
     credits: item.credits,
     durationSec: item.durationSec,
     bannerUrl: item.bannerUrl,
-    playUrl: playUrlByArchiveId.get(item.id) ?? null,
+
+    playUrl: playUrlBySoundId.get(item.id) ?? null,
     accessMode: item.accessMode,
     purchaseTierId: item.purchaseTierId,
     pinned: item.pinnedAt != null,
@@ -316,9 +317,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     trackOrder: item.trackOrder,
     createdAt: item.createdAt.toISOString(),
     channelItemUrl: channelSlug
-      ? resolveChannelUrl(channelSlug, { hash: `archive-item-${item.id}` })
+      ? resolveChannelUrl(channelSlug, { hash: `sound-item-${item.id}` })
       : null,
-    releaseSlug: releaseSlugByArchiveId.get(item.id) ?? null,
+    releaseSlug: releaseSlugBySoundId.get(item.id) ?? null,
     // *_EMBED-sourced items have no audio file (rawKey/mp3Key/flacKey are all
     // null) — the Tracks tab needs these to render the same working embed
     // player collections already use, instead of a dead "no play button" row.
@@ -336,23 +337,23 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       tracks: await Promise.all(
         release.tracks.map(async (track) => {
           let playUrl: string | null = null
-          if (track.archiveItemId) {
-            playUrl = playUrlByArchiveId.get(track.archiveItemId) ?? null
+          if (track.soundId) {
+            playUrl = playUrlBySoundId.get(track.soundId) ?? null
           } else if (track.streamKey) {
             playUrl = await presignedGetUrl(track.streamKey, 3600)
           }
-          const access = track.archiveItemId ? accessByArchiveId.get(track.archiveItemId) : null
+          const access = track.soundId ? accessBySoundId.get(track.soundId) : null
           return {
             position: track.position,
             title: track.title,
             durationSec: track.durationSec,
-            archiveItemId: track.archiveItemId,
+            soundId: track.soundId,
             playUrl,
             accessMode: access?.accessMode ?? 'FREE',
             purchaseTierId: access?.purchaseTierId ?? null,
             channelItemUrl:
-              track.archiveItemId && channelSlug
-                ? resolveChannelUrl(channelSlug, { hash: `archive-item-${track.archiveItemId}` })
+              track.soundId && channelSlug
+                ? resolveChannelUrl(channelSlug, { hash: `sound-item-${track.soundId}` })
                 : null,
           }
         }),
@@ -427,7 +428,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       channel: user.channel ? resolveChannelUrl(user.channel.slug) : null,
       subscribe: `/u/${user.username}/subscribe`,
       feeds: {
-        archive: user.channel ? `${config.apiUrl}/api/v1/u/${user.username}/rss.xml` : null,
+        sound: user.channel ? `${config.apiUrl}/api/v1/u/${user.username}/rss.xml` : null,
       },
       presskit: `${config.apiUrl}/api/v1/u/${user.username}/press-kit.zip`,
     },

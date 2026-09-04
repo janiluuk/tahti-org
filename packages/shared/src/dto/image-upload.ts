@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-/** Generic presigned image upload — reused for archive banner and collection cover art. */
+/** Generic presigned image upload — reused for sound banner and collection cover art. */
 export const ImageUploadPrepareSchema = z.object({
   filename: z.string().min(1).max(255),
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),

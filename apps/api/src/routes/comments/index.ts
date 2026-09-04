@@ -22,7 +22,7 @@ function zodError(
 
 async function listComments(
   prisma: PrismaClient,
-  where: { archiveItemId: string } | { channelId: string },
+  where: { soundId: string } | { channelId: string },
 ) {
   const rows = await prisma.comment.findMany({
     where,
@@ -54,13 +54,13 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const item = await fastify.prisma.archiveItem.findUnique({
+      const item = await fastify.prisma.sound.findUnique({
         where: { id: routeParams.id },
         select: { commentsEnabled: true, isPublic: true },
       })
       if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
 
-      const comments = await listComments(fastify.prisma, { archiveItemId: routeParams.id })
+      const comments = await listComments(fastify.prisma, { soundId: routeParams.id })
       return reply.send({ comments, commentsEnabled: item.commentsEnabled })
     },
   )
@@ -72,7 +72,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = CommentBodySchema.safeParse(request.body)
     if (!parsed.success) return zodError(reply, parsed.error)
 
-    const item = await fastify.prisma.archiveItem.findUnique({
+    const item = await fastify.prisma.sound.findUnique({
       where: { id: routeParams.id },
       select: { commentsEnabled: true, isPublic: true },
     })
@@ -85,7 +85,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       data: {
         body: parsed.data.body,
         authorId: request.sessionUser!.id,
-        archiveItemId: routeParams.id,
+        soundId: routeParams.id,
       },
       select: {
         id: true,
@@ -177,13 +177,13 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id: routeParams.id },
       select: {
         authorId: true,
-        archiveItem: { select: { channel: { select: { userId: true } } } },
+        sound: { select: { channel: { select: { userId: true } } } },
         channel: { select: { userId: true } },
       },
     })
     if (!comment) return reply.status(404).send({ error: 'Comment not found' })
 
-    const ownerId = comment.archiveItem?.channel.userId ?? comment.channel?.userId
+    const ownerId = comment.sound?.channel.userId ?? comment.channel?.userId
     const user = request.sessionUser!
     if (comment.authorId !== user.id && ownerId !== user.id) {
       return reply.status(403).send({ error: 'Not allowed to delete this comment' })

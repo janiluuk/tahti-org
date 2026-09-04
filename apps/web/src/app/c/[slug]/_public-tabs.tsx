@@ -15,7 +15,7 @@ const ALL_TABS: Array<{ id: Tab; label: string }> = [
   { id: 'feed', label: 'Feed' },
 ]
 
-/** Public tab bar for a channel page — Live is the player/now; Archive holds past
+/** Public tab bar for a channel page — Live is the player/now; Sounds holds past
  * broadcasts, latest releases, and external listen embeds. Distinct from ChannelTabs
  * (owner Overview/Manage). Bio lives in the header now (always visible, not a tab). */
 export function PublicChannelTabs({

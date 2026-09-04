@@ -113,7 +113,7 @@ describe('api response schemas', () => {
       links: {
         channel: '/c/dj1',
         subscribe: '/u/dj1/subscribe',
-        feeds: { archive: 'https://api.example/u/dj1/rss.xml' },
+        feeds: { sound: 'https://api.example/u/dj1/rss.xml' },
         presskit: 'https://api.example/u/dj1/press-kit.zip',
       },
     })

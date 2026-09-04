@@ -7,7 +7,7 @@ import { buildGateDailySeries, GATE_DAILY_SERIES_DAYS } from './download-gate-da
 export type DownloadGateStatsPayload = {
   artistFollowerCount: number
   items: Array<{
-    archiveItemId: string
+    soundId: string
     title: string
     repostToDownload: boolean
     followToDownload: boolean
@@ -36,7 +36,7 @@ export async function buildDownloadGateStats(
   })
   if (!channel) return empty
 
-  const gatedItems = await prisma.archiveItem.findMany({
+  const gatedItems = await prisma.sound.findMany({
     where: {
       channelId: channel.id,
       OR: [{ repostToDownload: true }, { followToDownload: true }],
@@ -57,17 +57,17 @@ export async function buildDownloadGateStats(
 
   const [repostByItem, blockedByItem, countedByItem, followerCount] = await Promise.all([
     itemIds.length > 0
-      ? prisma.archiveRepostAck.groupBy({
-          by: ['archiveItemId'],
-          where: { archiveItemId: { in: itemIds } },
+      ? prisma.soundRepostAck.groupBy({
+          by: ['soundId'],
+          where: { soundId: { in: itemIds } },
           _count: { _all: true },
         })
       : [],
     itemIds.length > 0
       ? prisma.download.groupBy({
-          by: ['archiveItemId'],
+          by: ['soundId'],
           where: {
-            archiveItemId: { in: itemIds },
+            soundId: { in: itemIds },
             countedAt: null,
             reason: { in: ['gate_repost', 'gate_follow'] },
           },
@@ -76,9 +76,9 @@ export async function buildDownloadGateStats(
       : [],
     itemIds.length > 0
       ? prisma.download.groupBy({
-          by: ['archiveItemId'],
+          by: ['soundId'],
           where: {
-            archiveItemId: { in: itemIds },
+            soundId: { in: itemIds },
             countedAt: { not: null },
             createdAt: { gte: since },
           },
@@ -88,12 +88,12 @@ export async function buildDownloadGateStats(
     prisma.artistFollow.count({ where: { artistUserId: userId } }),
   ])
 
-  const repostMap = new Map(repostByItem.map((r) => [r.archiveItemId, r._count._all]))
-  const blockedMap = new Map(blockedByItem.map((b) => [b.archiveItemId, b._count._all]))
-  const countedMap = new Map(countedByItem.map((c) => [c.archiveItemId, c._count._all]))
+  const repostMap = new Map(repostByItem.map((r) => [r.soundId, r._count._all]))
+  const blockedMap = new Map(blockedByItem.map((b) => [b.soundId, b._count._all]))
+  const countedMap = new Map(countedByItem.map((c) => [c.soundId, c._count._all]))
 
   const items = gatedItems.map((item) => ({
-    archiveItemId: item.id,
+    soundId: item.id,
     title: item.title,
     repostToDownload: item.repostToDownload,
     followToDownload: item.followToDownload,

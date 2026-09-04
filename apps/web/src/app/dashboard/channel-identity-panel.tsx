@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import {
-  ARCHIVE_GENRES,
+  SOUND_GENRES,
   AVATAR_THEME_PRESETS,
   avatarThemeCss,
   randomAvatarTheme,
@@ -753,7 +753,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
       <div className="studio-field--block">
         <span className="studio-label">Genre tags (up to {MAX_GENRES})</span>
         <div className="signup-genre-grid">
-          {ARCHIVE_GENRES.map((genre) => (
+          {SOUND_GENRES.map((genre) => (
             <label key={genre} className="signup-genre-chip">
               <input
                 type="checkbox"

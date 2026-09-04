@@ -17,7 +17,7 @@ import {
 
 interface SmartLinkTrack {
   id: string
-  archiveItemId?: string | null
+  soundId?: string | null
   title: string
   isrc: string | null
   position: number
@@ -77,12 +77,12 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
     track.audioUrl
       ? [
           {
-            id: track.archiveItemId ?? `release-track-${track.id}`,
+            id: track.soundId ?? `release-track-${track.id}`,
             title: track.title,
             audioUrl: track.audioUrl,
             subtitle: data.artist.displayName,
             artworkUrl: data.release.artworkUrl,
-            href: track.archiveItemId ? `/tracks/${track.archiveItemId}` : undefined,
+            href: track.soundId ? `/tracks/${track.soundId}` : undefined,
           },
         ]
       : [],

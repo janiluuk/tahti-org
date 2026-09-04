@@ -31,7 +31,7 @@ describe('GET /api/v1/channels — live / replaying / recent tiers', () => {
       data: { state: 'LIVE', goneLiveAt: new Date() },
     })
 
-    // Not live, but airing its own 24/7 archive rotation right now — REPLAY tier.
+    // Not live, but airing its own 24/7 sound rotation right now — REPLAY tier.
     const replayingArtist = await createTestArtist(prisma, {
       email: `${PREFIX}replaying@example.com`,
       username: `${PREFIX}replaying`,

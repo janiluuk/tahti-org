@@ -41,9 +41,9 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
       const body = parsed.data
 
       let channelId: string | null = null
-      if (body.archiveItemId) {
-        const item = await fastify.prisma.archiveItem.findUnique({
-          where: { id: body.archiveItemId },
+      if (body.soundId) {
+        const item = await fastify.prisma.sound.findUnique({
+          where: { id: body.soundId },
           select: { channelId: true },
         })
         channelId = item?.channelId ?? null
@@ -71,7 +71,7 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
         where: {
           byFingerprint,
           channelId,
-          archiveItemId: body.archiveItemId ?? null,
+          soundId: body.soundId ?? null,
           endedAt: null,
         },
         orderBy: { lastSeenAt: 'desc' },
@@ -87,7 +87,7 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.prisma.listenSession.create({
           data: {
             channelId,
-            archiveItemId: body.archiveItemId ?? null,
+            soundId: body.soundId ?? null,
             byUserId: request.sessionUser?.id ?? null,
             byFingerprint,
             byIpHash: sha256(`${clientIp}:${salt}`),

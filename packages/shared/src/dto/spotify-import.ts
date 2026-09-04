@@ -31,7 +31,7 @@ export const SpotifyAddTrackRequestSchema = z.object({
 })
 
 export const SpotifyAddTrackResponseSchema = z.object({
-  archiveItemId: z.string(),
+  soundId: z.string(),
   collectionItemId: z.string(),
   track: SpotifyTrackResultSchema,
 })

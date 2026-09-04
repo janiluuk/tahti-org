@@ -40,7 +40,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      // Usage is computed live from ArchiveItem/StashFile, the same source
+      // Usage is computed live from Sound/StashFile, the same source
       // /api/me/storage uses — UserStorageQuota.usedBytes is a legacy cached
       // counter from the abandoned hard-cap model (see storage-quota.ts) that
       // nothing ever writes to, so reading it here always showed 0 regardless
@@ -110,7 +110,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // Per-user file browser — every file that counts against the user's quota
-  // (archive items + stash files, see computeUserStorageUsedBytes), oldest
+  // (sound items + stash files, see computeUserStorageUsedBytes), oldest
   // first, with a running total so the board can see how usage built up over
   // time. Preview URLs always point at the (local MinIO) streaming copy,
   // regardless of R2 status, since that's always present once ready.

@@ -11,7 +11,7 @@ export async function resolveDownloadGateStatus(
   prisma: PrismaClient,
   params: {
     artistUserId: string
-    archiveItemId: string
+    soundId: string
     repostToDownload: boolean
     followToDownload: boolean
     byUserId: string | null
@@ -36,10 +36,10 @@ export async function resolveDownloadGateStatus(
   let followSatisfied = !followRequired
 
   if (repostRequired) {
-    const ack = await prisma.archiveRepostAck.findUnique({
+    const ack = await prisma.soundRepostAck.findUnique({
       where: {
-        archiveItemId_byFingerprint: {
-          archiveItemId: params.archiveItemId,
+        soundId_byFingerprint: {
+          soundId: params.soundId,
           byFingerprint: params.byFingerprint,
         },
       },

@@ -63,7 +63,7 @@ describe('/api/me/top-lists-opt-out', () => {
     expect(patch.statusCode).toBe(200)
     expect(patch.json()).toEqual({ topListsOptOut: true })
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: { channelId, title: 'New Upload', status: 'READY', isPublic: true },
     })
     // topListsEligible defaults to true at the Prisma level (this test creates
@@ -81,19 +81,19 @@ describe('/api/me/top-lists-opt-out', () => {
   })
 
   it('lets the track owner flip topListsEligible per-track via the metadata patch', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: { channelId, title: 'Override Track', status: 'READY', isPublic: true },
     })
 
     const patch = await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${item.id}`,
+      url: `/api/me/sound/${item.id}`,
       headers: { cookie, 'content-type': 'application/json' },
       payload: { topListsEligible: false },
     })
     expect(patch.statusCode).toBe(200)
 
-    const updated = await prisma.archiveItem.findUniqueOrThrow({ where: { id: item.id } })
+    const updated = await prisma.sound.findUniqueOrThrow({ where: { id: item.id } })
     expect(updated.topListsEligible).toBe(false)
   })
 
@@ -122,7 +122,7 @@ describe('/api/me/top-lists-opt-out', () => {
     })
     expect(complete.statusCode).toBe(201)
 
-    const created = await prisma.archiveItem.findUniqueOrThrow({
+    const created = await prisma.sound.findUniqueOrThrow({
       where: { id: complete.json().itemId },
       select: { topListsEligible: true },
     })

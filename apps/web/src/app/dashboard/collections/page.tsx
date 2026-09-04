@@ -21,7 +21,7 @@ interface CollectionSummary {
 }
 
 interface CollectionApiItem {
-  archiveItem?: { bannerUrl: string | null } | null
+  sound?: { bannerUrl: string | null } | null
 }
 
 interface CollectionApiRow {
@@ -58,7 +58,7 @@ async function fetchCollections(): Promise<CollectionSummary[]> {
       publicProfileOrder: c.publicProfileOrder,
       itemCount: c.items?.length ?? c._count?.items ?? 0,
       itemCovers: (c.items ?? [])
-        .map((i) => i.archiveItem?.bannerUrl)
+        .map((i) => i.sound?.bannerUrl)
         .filter((url): url is string => Boolean(url))
         .slice(0, 4),
     }))

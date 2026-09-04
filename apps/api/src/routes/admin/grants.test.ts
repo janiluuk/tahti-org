@@ -52,7 +52,7 @@ async function seedDownloads(channelId: string, countedCount: number) {
     await prisma.download.create({
       data: {
         channelId,
-        archiveItemId: `item-${channelId}-${i}`,
+        soundId: `item-${channelId}-${i}`,
         format: 'mp3_320',
         byFingerprint: `fp-${channelId}-${i}`,
         byIpHash: `ip-${i}`,

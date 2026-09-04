@@ -32,7 +32,7 @@ export async function processTahtiSelectsDrawJob(
   })
   if (!channel) return { picked: 0, artists: 0 }
 
-  const eligible = await prisma.archiveItem.findMany({
+  const eligible = await prisma.sound.findMany({
     where: {
       selectsOptIn: true,
       status: 'READY',
@@ -60,12 +60,12 @@ export async function processTahtiSelectsDrawJob(
     prisma.curatedRotationItem.deleteMany({
       where: { channelId: channel.id, addedById: channel.userId },
     }),
-    ...selected.map((archiveItemId, i) =>
+    ...selected.map((soundId, i) =>
       prisma.curatedRotationItem.upsert({
-        where: { channelId_archiveItemId: { channelId: channel.id, archiveItemId } },
+        where: { channelId_soundId: { channelId: channel.id, soundId } },
         create: {
           channelId: channel.id,
-          archiveItemId,
+          soundId,
           position: POSITION_BASE + i,
           addedById: channel.userId,
         },

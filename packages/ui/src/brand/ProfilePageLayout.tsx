@@ -167,7 +167,7 @@ type ProfileHeroProps = {
   /** Press kit ZIP download — compact icon button up in the CTA row rather than
    * buried in the Stage tab, so it's reachable without digging. */
   presskitUrl?: string | null
-  /** Archive RSS feed — same top-row treatment as presskitUrl. */
+  /** Sound RSS feed — same top-row treatment as presskitUrl. */
   rssUrl?: string | null
   /** Additional icon action rendered in the top overflow menu. */
   moreActionSlot?: ReactNode

@@ -32,7 +32,7 @@ export type RecurringSeriesInput = {
   artworkUrl: string | null
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoArchive: boolean
+  autoPublish: boolean
 }
 
 function episodeTitle(seriesName: string, episodeNumber: number | null): string {
@@ -130,7 +130,7 @@ export async function generateForSeries(
         artworkUrl: series.artworkUrl,
         showType: series.showType,
         visibility: series.visibility,
-        autoArchive: series.autoArchive,
+        autoPublish: series.autoPublish,
       },
     })
     if (series.episodeNumberEnabled) nextNumber++

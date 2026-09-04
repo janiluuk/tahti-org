@@ -11,7 +11,7 @@ describe('artist dashboard library navigation', () => {
 
   it('orders My Library uploads before Discography, and Broadcasting before Recordings', () => {
     const uploadIndex = DASHBOARD_NAV.findIndex((item) => item.href === '/dashboard/upload')
-    const discographyIndex = DASHBOARD_NAV.findIndex((item) => item.href === '/dashboard/archive')
+    const discographyIndex = DASHBOARD_NAV.findIndex((item) => item.href === '/dashboard/sounds')
     const broadcastIndex = DASHBOARD_NAV.findIndex((item) => item.href === '/dashboard/broadcast')
     const recordingsIndex = DASHBOARD_NAV.findIndex((item) => item.href === '/dashboard/recordings')
 
@@ -33,7 +33,7 @@ describe('artist dashboard library navigation', () => {
   })
 
   it('surfaces Distribution under the Library tab, alongside releases', () => {
-    const libraryMenu = DASHBOARD_SUBMENUS['/dashboard/archive'] ?? []
+    const libraryMenu = DASHBOARD_SUBMENUS['/dashboard/sounds'] ?? []
     const releasesIndex = libraryMenu.findIndex((item) => item.href === '/dashboard/releases')
     const distributionIndex = libraryMenu.findIndex(
       (item) => item.href === '/dashboard/distribution',

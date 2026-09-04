@@ -20,7 +20,7 @@ export const PatchBroadcastPreflightSchema = z.object({
   tagline: z.string().trim().max(200).nullable().optional(),
   showType: BroadcastShowTypeSchema.optional(),
   visibility: BroadcastVisibilitySchema.optional(),
-  autoArchive: z.boolean().optional(),
+  autoPublish: z.boolean().optional(),
   seriesId: z.string().optional(),
 })
 
@@ -53,7 +53,7 @@ export const PlannedLiveShowSchema = z.object({
 export const BroadcastPreflightViewSchema = z.object({
   title: z.string().nullable(),
   visibility: BroadcastVisibilitySchema,
-  autoArchive: z.boolean(),
+  autoPublish: z.boolean(),
   showType: BroadcastShowTypeSchema,
   episodeNumber: z.number().int().min(1).nullable(),
   tagline: z.string().nullable(),

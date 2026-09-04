@@ -44,7 +44,7 @@ describe('GET /api/me/download-gate-stats', () => {
   })
 
   it('returns totals with countedDownloads and daily series', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Gated mix',
@@ -60,7 +60,7 @@ describe('GET /api/me/download-gate-stats', () => {
     await prisma.download.create({
       data: {
         channelId,
-        archiveItemId: item.id,
+        soundId: item.id,
         format: 'mp3_320',
         byFingerprint: 'gate-fp-1',
         byIpHash: 'gate-ip-1',
@@ -87,7 +87,7 @@ describe('GET /api/me/download-gate-stats', () => {
   })
 
   it('per-item endpoint includes countedDownloadCount for last 14 days', async () => {
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Per-item gate',
@@ -103,7 +103,7 @@ describe('GET /api/me/download-gate-stats', () => {
     await prisma.download.create({
       data: {
         channelId,
-        archiveItemId: item.id,
+        soundId: item.id,
         format: 'mp3_320',
         byFingerprint: 'per-item-fp',
         byIpHash: 'per-item-ip',
@@ -115,7 +115,7 @@ describe('GET /api/me/download-gate-stats', () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/api/me/archive/${item.id}/download-gate-stats`,
+      url: `/api/me/sound/${item.id}/download-gate-stats`,
       headers: { cookie },
     })
     expect(res.statusCode).toBe(200)

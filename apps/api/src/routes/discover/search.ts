@@ -24,7 +24,7 @@ export async function performSearch(
   const [tracks, artists, collections] = await Promise.all([
     type === 'artists' || type === 'collections'
       ? []
-      : prisma.archiveItem.findMany({
+      : prisma.sound.findMany({
           where: {
             title: { contains: q, mode: 'insensitive' },
             isPublic: true,

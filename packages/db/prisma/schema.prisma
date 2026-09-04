@@ -106,7 +106,7 @@ enum ChannelTextLayerAlign {
   @@schema("channel")
 }
 
-// M31: audio-reactive / ambient Three.js visualizer preset for channel + archive items
+// M31: audio-reactive / ambient Three.js visualizer preset for channel + sound items
 enum VisualPreset {
   MINIMAL
   WAVEFORM_BARS
@@ -138,7 +138,7 @@ enum SlideshowPreset {
   @@schema("channel")
 }
 
-enum ArchiveItemStatus {
+enum SoundStatus {
   PENDING
   PROCESSING
   READY
@@ -182,7 +182,7 @@ enum AnnouncementRenderStatus {
   @@schema("channel")
 }
 
-enum ArchiveContentType {
+enum SoundContentType {
   LIVE
   TRACK
   DJ_SET
@@ -196,8 +196,8 @@ enum ArchiveContentType {
   @@schema("channel")
 }
 
-// How this ArchiveItem's media was acquired — drives qualityBadge + player choice.
-enum ArchiveItemSource {
+// How this Sound's media was acquired — drives qualityBadge + player choice.
+enum SoundSource {
   UPLOAD
   BROADCAST
   BANDCAMP
@@ -214,7 +214,7 @@ enum ArchiveItemSource {
 }
 
 // Derived-but-stored quality signal — see packages/shared/src/quality.ts for the source matrix.
-enum ArchiveQualityBadge {
+enum SoundQualityBadge {
   LOSSLESS
   TRANSCODED
   EMBED_ONLY
@@ -222,7 +222,7 @@ enum ArchiveQualityBadge {
   @@schema("channel")
 }
 
-enum ArchiveEmbedProvider {
+enum SoundEmbedProvider {
   SPOTIFY
   MIXCLOUD
   YOUTUBE
@@ -233,7 +233,21 @@ enum ArchiveEmbedProvider {
   @@schema("channel")
 }
 
-enum ArchiveLicense {
+// What kind of file this Sound row actually holds. AUDIO (the default) keeps the
+// existing rawKey/mp3Key/flacKey + transcode pipeline; IMAGE/VIDEO reuse the same
+// catalog row (title, genre, tags, collections, likes/reposts/comments) for a
+// standalone visual clip instead of duplicating that machinery in a new model —
+// see imageKey/videoKey below. Orthogonal to SoundContentType, which still
+// describes what the clip *is* (e.g. a video CLIP vs an audio one).
+enum SoundMediaKind {
+  AUDIO
+  IMAGE
+  VIDEO
+
+  @@schema("channel")
+}
+
+enum SoundLicense {
   ALL_RIGHTS_RESERVED
   CC_BY
   CC_BY_NC
@@ -365,23 +379,23 @@ enum AuditAction {
   STREAM_FORCE_OFFLINE
   STREAM_RESTART
   ACCOUNT_DELETE
-  ARCHIVE_EDIT_RENDER
-  ARCHIVE_EDIT_BOUNCE
-  ARCHIVE_EDIT_PUBLISH
+  SOUND_EDIT_RENDER
+  SOUND_EDIT_BOUNCE
+  SOUND_EDIT_PUBLISH
   FEATURE_REQUEST_CREATE
   FEATURE_REQUEST_VOTE
   FEATURE_REQUEST_UNVOTE
   FEATURE_REQUEST_COMMENT_CREATE
   FEATURE_REQUEST_STATUS_UPDATE
   FEATURE_REQUEST_QUARTERLY_REPORT
-  ARCHIVE_METADATA_ADMIN_EDIT
+  SOUND_METADATA_ADMIN_EDIT
   API_TOKEN_CREATE
   API_TOKEN_REVOKE
   USER_LOGIN
   USER_REGISTER
   CONTENT_UPLOAD
   RELEASE_PUBLISH
-  ARCHIVE_ITEM_LIKE
+  SOUND_ITEM_LIKE
   ARTIST_FOLLOW
   FAN_SUBSCRIPTION_CREATE
   RADIO_SLOT_BOOKING_CREATE
@@ -583,7 +597,7 @@ enum NotificationType {
   /// ScheduledLiveShow whose start time passed with no Broadcast against it.
   MISSED_LIVE_SHOW_FLAGGED
   /// A lossless upload's compressed streaming copy finished encoding — see
-  /// ArchiveItem.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
+  /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
 
   @@schema("core")
@@ -708,8 +722,8 @@ model CloudImportJob {
   source           CloudImportSource
   externalFileId   String
   fileName         String?
-  archiveItemId    String?           @unique
-  archiveItem      ArchiveItem?      @relation(fields: [archiveItemId], references: [id])
+  soundId    String?           @unique
+  sound      Sound?      @relation(fields: [soundId], references: [id])
   status           CloudImportStatus @default(QUEUED)
   error            String?
   bytesTransferred BigInt?
@@ -785,10 +799,11 @@ model User {
   mentionsEnabled                Boolean    @default(true)
   publicMentionsEnabled          Boolean    @default(false)
   // Defaults applied to new tracks/channel when created — each item can still be
-  // overridden individually afterward (ArchiveItem.commentsEnabled / Channel.commentsEnabled).
+
+  // overridden individually afterward (Sound.commentsEnabled / Channel.commentsEnabled).
   defaultTrackCommentsEnabled    Boolean    @default(true)
   defaultChannelCommentsEnabled  Boolean    @default(true)
-  // Default for new tracks' ArchiveItem.topListsEligible — inverted polarity
+  // Default for new tracks' Sound.topListsEligible — inverted polarity
   // (opt OUT), so an artist who's opted out can still flip a specific track
   // back in via the per-track override.
   topListsOptOut                 Boolean    @default(false)
@@ -818,6 +833,7 @@ model User {
   totpEnabledAt                  DateTime? // null = 2FA off (default)
   createdAt                      DateTime   @default(now())
   updatedAt                      DateTime   @updatedAt
+
 
   sessions                       Session[]
   apiTokens                      ApiToken[]
@@ -851,10 +867,10 @@ model User {
   collections                    Collection[]
   artistFollowers                ArtistFollow[]                  @relation("ArtistFollowers")
   artistFollowing                ArtistFollow[]                  @relation("ArtistFollowing")
-  archiveItemLikes               ArchiveItemLike[]
+  soundLikes                     SoundLike[]
   collectionSubscriptions        CollectionSubscription[]
   collectionItemsAdded           CollectionItem[]                @relation("CollectionItemAddedBy")
-  archiveItemReposts             ArchiveItemRepost[]
+  soundReposts                   SoundRepost[]
   trackReactions                 TrackReaction[]
   jamSessionsHosted              JamSession[]
   jamParticipations              JamParticipant[]
@@ -984,7 +1000,7 @@ model EditorProject {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title         String
-  archiveItemId String?
+  soundId String?
   timeline      Json     @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1235,18 +1251,19 @@ model Channel {
   // When true (default), a new track auto-joins the 24/7 rotation on upload as
   // long as MAX_FALLBACK_ITEMS isn't already reached — artist has to opt out
   // per-channel if they'd rather curate rotation manually.
+
   fallbackAutoEnroll              Boolean               @default(true)
-  // M35: whether a finished broadcast is auto-recorded to the archive. Defaults
+  // M35: whether a finished broadcast is auto-recorded to the sound library. Defaults
   // to true (today's unconditional behavior) — artists opt out per-channel.
   autoRecordEnabled               Boolean               @default(true)
-  // Persistent per-channel default for a new broadcast's `autoArchive` (whether
-  // the recorded archive item is public once it's created) — the artist can
+  // Persistent per-channel default for a new broadcast's `autoPublish` (whether
+  // the recorded sound is public once it's created) — the artist can
   // still override per-session in preflight; this just sets the starting value
   // so "always publish" doesn't need re-toggling every show.
   autoPublishBroadcast            Boolean               @default(true)
   // Manage panel playlist switch: when set, the fallback rotation plays this
   // Collection's tracks (in position order) instead of the regular
-  // isFallback-flagged ArchiveItem set. Null = default rotation. SetNull so
+  // isFallback-flagged Sound set. Null = default rotation. SetNull so
   // deleting the collection just reverts to the default rather than erroring.
   activeFallbackCollectionId      String?
   activeFallbackCollection        Collection?           @relation("ChannelActiveFallbackCollection", fields: [activeFallbackCollectionId], references: [id], onDelete: SetNull)
@@ -1304,13 +1321,14 @@ model Channel {
   liveInputOverrideSlug           String?
   // Rotation now-playing (STREAM-012): the orchestrator polls each running
   // channel's Liquidsoap telnet metadata every ~20s and resolves the current
-  // track's ArchiveItem here — only meaningful while no live artist is on air,
+  // track's Sound here — only meaningful while no live artist is on air,
   // since a live show's identity/artwork comes from the booking instead.
+
   nowPlayingTitle                 String?
   nowPlayingArtistName            String?
   nowPlayingArtistUsername        String?
   nowPlayingArtworkUrl            String?
-  /// Source ArchiveItem.durationSec, snapshotted alongside the rest of these
+  /// Source Sound.durationSec, snapshotted alongside the rest of these
   /// fields — lets a caller show remaining time without a second lookup.
   /// nowPlayingUpdatedAt doubles as "started at" (only rewritten when the
   /// resolved track actually changes, see now-playing-sync.ts).
@@ -1333,7 +1351,8 @@ model Channel {
   createdAt                       DateTime              @default(now())
   updatedAt                       DateTime              @updatedAt
 
-  archiveItems           ArchiveItem[]
+
+  sounds                 Sound[]
   broadcasts             Broadcast[]
   liveShowSeries         LiveShowSeries[]
   scheduledLiveShows     ScheduledLiveShow[]
@@ -1468,13 +1487,13 @@ model RadioFeatureLog {
 // rotation-track change on a channel (not one row per now-playing-sync poll;
 // the orchestrator only inserts when the resolved track actually differs from
 // the last logged one). Denormalized title/artist/artwork so history still
-// displays correctly even if the source ArchiveItem is later deleted.
+// displays correctly even if the source Sound is later deleted.
 model RadioPlayLog {
   id             String       @id @default(cuid())
   channelId      String
   channel        Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  archiveItemId  String?
-  archiveItem    ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  soundId  String?
+  sound    Sound? @relation(fields: [soundId], references: [id], onDelete: SetNull)
   title          String
   artistName     String
   artistUsername String?
@@ -1486,19 +1505,20 @@ model RadioPlayLog {
 }
 
 model Broadcast {
+
   id                  String                     @id @default(cuid())
   channelId           String
   channel             Channel                    @relation(fields: [channelId], references: [id], onDelete: Cascade)
   source              BroadcastSource
   startedAt           DateTime                   @default(now())
-  /// Set when this session was promoted PREVIEW -> LIVE. Null means it never went public — skip archive finalization.
+  /// Set when this session was promoted PREVIEW -> LIVE. Null means it never went public — skip sound finalization.
   wentLiveAt          DateTime?
   endedAt             DateTime?
   recordingKey        String?
-  archiveItemId       String?                    @unique
+  soundId           String?                    @unique
   /// Show name set in Broadcasting Setup step 3 (pre-flight). Falls back to a generated title if unset.
   title               String?
-  /// Description copied from a scheduled show series and later used by the archive item.
+  /// Description copied from a scheduled show series and later used by the sound.
   description         String?
   /// Live set vs talk show (solo or with guests).
   showType            BroadcastShowType          @default(LIVE_SET)
@@ -1508,12 +1528,13 @@ model Broadcast {
   tagline             String?
   artworkUrl          String?
   /// Booked slot this session is linked to (set when going live in the T−30m window).
+
   radioSlotBookingId  String?
   radioSlotBooking    RadioSlotBooking?          @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
   scheduledLiveShowId String?                    @unique
   scheduledLiveShow   ScheduledLiveShow?         @relation(fields: [scheduledLiveShowId], references: [id], onDelete: SetNull)
   visibility          BroadcastVisibility        @default(PUBLIC)
-  autoArchive         Boolean                    @default(true)
+  autoPublish         Boolean                    @default(true)
   /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
   greenRoomEnabled    Boolean                    @default(false)
   greenRoomInvites    BroadcastGreenRoomInvite[]
@@ -1526,6 +1547,7 @@ model Broadcast {
 
 /// Reusable defaults for an artist's recurring live programme.
 model LiveShowSeries {
+
   id                    String              @id @default(cuid())
   channelId             String
   channel               Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
@@ -1535,7 +1557,7 @@ model LiveShowSeries {
   artworkUrl            String?
   showType              BroadcastShowType   @default(LIVE_SET)
   visibility            BroadcastVisibility @default(PUBLIC)
-  autoArchive           Boolean             @default(true)
+  autoPublish           Boolean             @default(true)
   episodeNumberEnabled  Boolean             @default(true)
   nextEpisodeNumber     Int                 @default(1)
   /// Preferred length for this show's radio-slot bookings (RadioSlotBooking), hours.
@@ -1591,11 +1613,12 @@ model LiveShowEpisode {
   title              String
   description        String?
   artworkUrl         String?
+
   status             LiveShowEpisodeStatus @default(DRAFT)
-  /// Only UPLOAD / BROADCAST are valid here — narrower than ArchiveItemSource's full range.
-  source             ArchiveItemSource     @default(UPLOAD)
-  archiveItemId      String?
-  archiveItem        ArchiveItem?          @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  /// Only UPLOAD / BROADCAST are valid here — narrower than SoundSource's full range.
+  source             SoundSource           @default(UPLOAD)
+  soundId           String?
+  sound             Sound?                @relation(fields: [soundId], references: [id], onDelete: SetNull)
   radioSlotBookingId String?
   radioSlotBooking   RadioSlotBooking?     @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
   createdAt          DateTime              @default(now())
@@ -1624,7 +1647,7 @@ model ScheduledLiveShow {
   artworkUrl    String?
   showType      BroadcastShowType
   visibility    BroadcastVisibility
-  autoArchive   Boolean
+  autoPublish   Boolean
   canceledAt    DateTime?
   broadcast     Broadcast?
   missedFlag    MissedLiveShowFlag?
@@ -1646,7 +1669,7 @@ enum AccountRestrictionType {
   /// Blocks scheduling new live shows — manual scheduleLiveShowEpisode and
   /// recurrence generation both check for this.
   LIVE_SHOW_BOOKING
-  /// Blocks uploading new tracks/archive/release audio.
+  /// Blocks uploading new tracks/sounds/release audio.
   UPLOAD
   /// Blocks signing in — checked at /api/auth/login.
   LOGIN
@@ -1748,7 +1771,8 @@ model RtmpTarget {
   @@schema("channel")
 }
 
-model ArchiveItem {
+
+model Sound {
   id                   String                @id @default(cuid())
   channelId            String
   channel              Channel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
@@ -1760,6 +1784,7 @@ model ArchiveItem {
   artistName           String?
   // Structured role credits for this track when they differ from the channel
   // Members/Credits roster — same shape as Release.credits.
+
   credits              Json? // [{ role, name, artistUsername? }]
   description          String?
   tracklist            Json? // M22: [{startSec, title, artist?, artistUsername?}]
@@ -1778,7 +1803,10 @@ model ArchiveItem {
   venueId              String?
   venue                Venue?                @relation(fields: [venueId], references: [id], onDelete: SetNull)
   subGenres            String[]              @default([])
-  contentType          ArchiveContentType    @default(TRACK)
+  // Free-form artist-defined labels (mood, series, anything genre/subGenres don't
+  // cover) — unlike genre there is no preset list; filterable via array-contains.
+  tags                 String[]              @default([])
+  contentType          SoundContentType      @default(TRACK)
   mixVersion           String? // e.g. "Original Mix", "Rok Tek Remix"
   bpm                  Int?
   musicalKey           String?
@@ -1787,10 +1815,16 @@ model ArchiveItem {
   useDetectedBpmKey    Boolean               @default(true)
   isAiGenerated        Boolean               @default(false)
   releasedAt           DateTime              @default(now())
-  license              ArchiveLicense        @default(ALL_RIGHTS_RESERVED)
+  license              SoundLicense          @default(ALL_RIGHTS_RESERVED)
   repostToDownload     Boolean               @default(false)
   followToDownload     Boolean               @default(false)
-  rawKey               String? // null for *_EMBED sources — no audio file exists
+  // What kind of file this row actually holds — see SoundMediaKind. AUDIO (the
+  // default) uses rawKey/mp3Key/flacKey + the transcode pipeline below as before;
+  // IMAGE/VIDEO instead populate imageKey/videoKey and skip transcoding.
+  mediaKind            SoundMediaKind        @default(AUDIO)
+  imageKey             String? // mediaKind = IMAGE
+  videoKey             String? // mediaKind = VIDEO
+  rawKey               String? // null for *_EMBED sources, and for mediaKind IMAGE/VIDEO
   mp3Key               String?
   flacKey              String?
   durationSec          Int?
@@ -1813,16 +1847,17 @@ model ArchiveItem {
   purchaseTier         PurchaseTier?         @relation(fields: [purchaseTierId], references: [id], onDelete: SetNull)
   // Artist's public "Stage" showcase (PLAT-Stage): pinned tracks/releases float to
   // the top of the profile's Stage tab, most-recently-pinned first. trackOrder is
-  // the manual-sort position for the separate flat "Tracks" tab (all archive items,
+  // the manual-sort position for the separate flat "Tracks" tab (all sounds,
   // unrelated to pinning) — same publicProfileOrder-reorder pattern as Collection.
+
   pinnedAt             DateTime?
   trackOrder           Int                   @default(0)
   fileSizeBytes        BigInt? // null for *_EMBED sources
-  source               ArchiveItemSource     @default(UPLOAD)
-  qualityBadge         ArchiveQualityBadge   @default(LOSSLESS)
+  source               SoundSource           @default(UPLOAD)
+  qualityBadge         SoundQualityBadge     @default(LOSSLESS)
   embedUri             String? // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
-  embedProvider        ArchiveEmbedProvider?
-  status               ArchiveItemStatus     @default(PENDING)
+  embedProvider        SoundEmbedProvider?
+  status               SoundStatus           @default(PENDING)
   // Set to PENDING (not NOT_NEEDED) by the transcode job itself once it
   // knows the source was lossless — see apps/worker/src/jobs/transcode.ts.
   streamingCopyStatus  StreamingCopyStatus   @default(NOT_NEEDED)
@@ -1839,19 +1874,20 @@ model ArchiveItem {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
+
   mixUpload            MixUpload?
   cloudImportJob       CloudImportJob?
   collectionItems      CollectionItem[]
-  versions             ArchiveItemVersion[]
+  versions             SoundVersion[]
   curatedRotationItems CuratedRotationItem[]
   radioSubmissions     RadioTrackSubmissionItem[]
   comments             Comment[]
-  likes                ArchiveItemLike[]
-  reposts              ArchiveItemRepost[]
+  likes                SoundLike[]
+  reposts              SoundRepost[]
   reactions            TrackReaction[]
   listenEvents         ListenEvent[]
   radioPlayLogs        RadioPlayLog[]
-  stemJobs             ArchiveItemStemJob[]
+  stemJobs             SoundStemJob[]
   liveShowEpisodes     LiveShowEpisode[]
 
   @@index([channelId, createdAt(sort: Desc)])
@@ -1878,14 +1914,15 @@ enum StemJobStatus {
 
 // Vocal/instrument separation (UVR5-family models via the stem-separator
 // service) for a library track's "Download stems" option. Rendered
-// on-demand from the archive item's own rawKey/flacKey (never re-derived
+// on-demand from the sound's own rawKey/flacKey (never re-derived
 // from a lossy mp3Key when a better source exists) and auto-expired ~7
 // days after READY — see sweep-expired-stems cron — rather than kept
 // forever, since there's no per-user quota headroom carved out for this.
-model ArchiveItemStemJob {
+
+model SoundStemJob {
   id              String        @id @default(cuid())
-  archiveItemId   String
-  archiveItem     ArchiveItem   @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  soundId         String
+  sound           Sound         @relation(fields: [soundId], references: [id], onDelete: Cascade)
   requestedById   String
   stemSet         StemSet
   status          StemJobStatus @default(PENDING)
@@ -1899,7 +1936,7 @@ model ArchiveItemStemJob {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  @@unique([archiveItemId, stemSet])
+  @@unique([soundId, stemSet])
   @@index([expiresAt])
   @@schema("channel")
 }
@@ -1910,9 +1947,9 @@ model ArchiveItemStemJob {
 // and this clip's own isEnabled + scheduleMode. channelId set = one artist's
 // own library, played subject to Channel.announcementsEnabled — always
 // RANDOM-ish spacing, no configurable schedule (scheduleMode/everyNth are
-// ignored for these). No mp3Key/flacKey pair like ArchiveItem — a single
+// ignored for these). No mp3Key/flacKey pair like Sound — a single
 // audioKey is enough, since Liquidsoap only ever needs one resolvable file
-// per playlist row (see packages/shared/src/archive-playback.ts).
+// per playlist row (see packages/shared/src/sound-playback.ts).
 model AnnouncementClip {
   id                   String                   @id @default(cuid())
   channelId            String?
@@ -1952,11 +1989,12 @@ model AnnouncementSettings {
   @@schema("channel")
 }
 
-// M28: audio file versions for a single archive track (stable public item id).
-model ArchiveItemVersion {
-  id                 String            @id @default(cuid())
-  archiveItemId      String
-  archiveItem        ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+
+// M28: audio file versions for a single sound track (stable public item id).
+model SoundVersion {
+  id                 String      @id @default(cuid())
+  soundId            String
+  sound              Sound       @relation(fields: [soundId], references: [id], onDelete: Cascade)
   versionNumber      Int
   versionLabel       String
   rawKey             String
@@ -1969,39 +2007,39 @@ model ArchiveItemVersion {
   sourceBitDepth     Int? // detected source bit depth
   sourceChannels     Int? // detected source channel count
   peaks              Json? // M27: per-set waveform visualisation — [0..255] amplitude buckets
-  fileSizeBytes      BigInt            @default(0)
-  status             ArchiveItemStatus @default(PENDING)
-  isActive           Boolean           @default(false)
-  createdAt          DateTime          @default(now())
+  fileSizeBytes      BigInt      @default(0)
+  status             SoundStatus @default(PENDING)
+  isActive           Boolean     @default(false)
+  createdAt          DateTime    @default(now())
 
-  @@unique([archiveItemId, versionNumber])
-  @@index([archiveItemId, createdAt(sort: Desc)])
+  @@unique([soundId, versionNumber])
+  @@index([soundId, createdAt(sort: Desc)])
   @@schema("channel")
 }
 
 // Curated, admin-programmed rotation for a channel (e.g. "Tahti Selects") — a thin
-// reference list pointing at ArchiveItems wherever they live (own channel or another
-// artist's already-public archive), so the same audio file is never duplicated.
-// Distinct from the per-artist ArchiveItem.isFallback/fallbackOrder offline rotation:
-// that's one artist's own archive; this is a curated cross-channel playlist for a
+// reference list pointing at Sounds wherever they live (own channel or another
+// artist's already-public sounds), so the same audio file is never duplicated.
+// Distinct from the per-artist Sound.isFallback/fallbackOrder offline rotation:
+// that's one artist's own sound library; this is a curated cross-channel playlist for a
 // single admin-managed channel. See docs/planning-decisions.md (Tahti Selects).
 model CuratedRotationItem {
   id            String      @id @default(cuid())
   channelId     String
   channel       Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  archiveItemId String
-  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  soundId String
+  sound   Sound @relation(fields: [soundId], references: [id], onDelete: Cascade)
   position      Int
   addedById     String
   addedBy       User        @relation(fields: [addedById], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
 
-  @@unique([channelId, archiveItemId])
+  @@unique([channelId, soundId])
   @@index([channelId, position])
   @@schema("channel")
 }
 
-/// Artist submits up to 5 READY archive tracks at once for Tahti Radio audit.
+/// Artist submits up to 5 READY sound tracks at once for Tahti Radio audit.
 model RadioTrackSubmissionBatch {
   id          String                     @id @default(cuid())
   submitterId String
@@ -2021,8 +2059,9 @@ model RadioTrackSubmissionItem {
   id              String                    @id @default(cuid())
   batchId         String
   batch           RadioTrackSubmissionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  archiveItemId   String
-  archiveItem     ArchiveItem               @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+
+  soundId         String
+  sound           Sound                     @relation(fields: [soundId], references: [id], onDelete: Cascade)
   positionInBatch Int
   status          RadioSubmissionStatus     @default(PENDING)
   rejectionNote   String?
@@ -2031,9 +2070,9 @@ model RadioTrackSubmissionItem {
   reviewedAt      DateTime?
   createdAt       DateTime                  @default(now())
 
-  @@unique([batchId, archiveItemId])
+  @@unique([batchId, soundId])
   @@index([status, createdAt(sort: Desc)])
-  @@index([archiveItemId, status])
+  @@index([soundId, status])
   @@schema("channel")
 }
 
@@ -2359,7 +2398,7 @@ model FeatureRequestComment {
 model Download {
   id             BigInt    @id @default(autoincrement())
   channelId      String
-  archiveItemId  String?
+  soundId  String?
   releaseTrackId String?
   format         String
   byUserId       String?
@@ -2374,8 +2413,8 @@ model Download {
 
   @@index([channelId, countedAt])
   @@index([channelId, createdAt(sort: Desc)])
-  @@index([byFingerprint, archiveItemId])
-  @@index([archiveItemId, createdAt])
+  @@index([byFingerprint, soundId])
+  @@index([soundId, createdAt])
   @@index([byIpHash, createdAt])
   @@index([countedAt])
   @@schema("engagement")
@@ -2410,7 +2449,7 @@ enum ListenSource {
 model ListenSession {
   id            BigInt       @id @default(autoincrement())
   channelId     String
-  archiveItemId String?
+  soundId String?
   byUserId      String?
   byFingerprint String
   byIpHash      String
@@ -2421,11 +2460,11 @@ model ListenSession {
   endedAt       DateTime?
 
   @@index([channelId, startedAt])
-  @@index([archiveItemId, startedAt])
+  @@index([soundId, startedAt])
   @@index([byUserId, startedAt])
   @@index([source, startedAt])
   @@index([countryCode, startedAt])
-  @@index([byFingerprint, channelId, archiveItemId, endedAt])
+  @@index([byFingerprint, channelId, soundId, endedAt])
   @@index([endedAt])
   @@schema("engagement")
 }
@@ -2447,64 +2486,65 @@ model ArtistFollow {
 
 // M40: a listener "loving" a track — powers the heart/like button on track rows
 // and the NEW_LIKE notification to the artist.
-model ArchiveItemLike {
+model SoundLike {
   userId        String
-  archiveItemId String
+  soundId String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  sound   Sound @relation(fields: [soundId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
 
-  @@id([userId, archiveItemId])
-  @@index([archiveItemId])
+
+  @@id([userId, soundId])
+  @@index([soundId])
   @@index([userId, createdAt])
   @@schema("engagement")
 }
 
-// A listener reposting/sharing a track — distinct from ArchiveRepostAck (an
+// A listener reposting/sharing a track — distinct from SoundRepostAck (an
 // acknowledgment gating a download, unrelated to sharing). Powers the repost
 // button on track rows, the Manage panel's Reposts stat, and the NEW_REPOST
 // notification to the artist.
-model ArchiveItemRepost {
+model SoundRepost {
   userId        String
-  archiveItemId String
+  soundId String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  sound   Sound @relation(fields: [soundId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
 
-  @@id([userId, archiveItemId])
-  @@index([archiveItemId])
+  @@id([userId, soundId])
+  @@index([soundId])
   @@schema("engagement")
 }
 
 // A listener reacting to a specific moment in a track — pinned to the waveform
 // position it was left at (positionSec), shown to every listener as a subtly
-// animated marker. Distinct from ArchiveItemLike: a user may leave many of
+// animated marker. Distinct from SoundLike: a user may leave many of
 // these on the same track (different types, different timestamps), and a
 // LOVE reaction additionally posts a "{user} loved {track}" chat message
 // (see routes/reactions/track.ts).
 model TrackReaction {
   id            String            @id @default(cuid())
-  archiveItemId String
-  archiveItem   ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  soundId String
+  sound   Sound       @relation(fields: [soundId], references: [id], onDelete: Cascade)
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          TrackReactionType
   positionSec   Float
   createdAt     DateTime          @default(now())
 
-  @@index([archiveItemId, positionSec])
+  @@index([soundId, positionSec])
   @@schema("engagement")
 }
 
 /// Flying-emoji reactions fired during a LIVE broadcast (routes/chat/react.ts,
 /// ReactionsOverlay) — anonymous-friendly and channel/show-wide, unlike
-/// TrackReaction above (signed-in, anchored to a specific archived track's
+/// TrackReaction above (signed-in, anchored to a specific archived sound's
 /// playback position). elapsedSec is seconds since the broadcast's
 /// wentLiveAt/startedAt, computed once at write time, so replaying them
-/// during archive playback later is a direct lookup, not a recomputation.
-/// Broadcast.archiveItemId links a finished broadcast to its recording, so
+/// during sound playback later is a direct lookup, not a recomputation.
+/// Broadcast.soundId links a finished broadcast to its recording, so
 /// a reaction can be looked up either live (by broadcastId) or on replay
-/// (by resolving the archive item back to its broadcast).
+/// (by resolving the sound back to its broadcast).
 model BroadcastReaction {
   id          String    @id @default(cuid())
   broadcastId String
@@ -2521,18 +2561,18 @@ model BroadcastReaction {
 // listener, calendar day) — dedupeKey is the userId when logged in, else a
 // server-side hash of IP+UA, so the unique constraint below stops a single
 // listener from inflating a track's count by replaying/refreshing.
-// archiveItem-only for now: releases aren't tracked here since they aren't
+// sound-only for now: releases aren't tracked here since they aren't
 // played through a mechanism that reports playback progress yet.
 model ListenEvent {
   id            String      @id @default(cuid())
-  archiveItemId String
-  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  soundId String
+  sound   Sound @relation(fields: [soundId], references: [id], onDelete: Cascade)
   dedupeKey     String
   dayBucket     String
   playedAt      DateTime    @default(now())
 
-  @@unique([archiveItemId, dedupeKey, dayBucket])
-  @@index([archiveItemId, playedAt])
+  @@unique([soundId, dedupeKey, dayBucket])
+  @@index([soundId, playedAt])
   @@index([playedAt])
   @@schema("engagement")
 }
@@ -2579,7 +2619,7 @@ model Message {
   @@schema("engagement")
 }
 
-// Comments on a track (ArchiveItem) or a channel — exactly one of archiveItemId /
+// Comments on a track (Sound) or a channel — exactly one of soundId /
 // channelId is set per row (enforced in the API, not the DB). Posting is blocked
 // when the target's commentsEnabled is false; existing comments are left in place
 // (toggling off just stops new ones, it isn't a moderation wipe).
@@ -2588,27 +2628,27 @@ model Comment {
   body          String
   authorId      String
   author        User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  archiveItemId String?
-  archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  soundId String?
+  sound   Sound? @relation(fields: [soundId], references: [id], onDelete: Cascade)
   channelId     String?
   channel       Channel?     @relation(fields: [channelId], references: [id], onDelete: Cascade)
   createdAt     DateTime     @default(now())
 
-  @@index([archiveItemId, createdAt])
+  @@index([soundId, createdAt])
   @@index([channelId, createdAt])
   @@schema("engagement")
 }
 
 // M22: listener acknowledged sharing (repost-gated downloads).
-model ArchiveRepostAck {
+model SoundRepostAck {
   id            String   @id @default(cuid())
-  archiveItemId String
+  soundId String
   byUserId      String?
   byFingerprint String
   createdAt     DateTime @default(now())
 
-  @@unique([archiveItemId, byFingerprint])
-  @@index([archiveItemId])
+  @@unique([soundId, byFingerprint])
+  @@index([soundId])
   @@schema("engagement")
 }
 
@@ -2684,7 +2724,7 @@ model FanSubPayout {
 
 // ── One-time-purchase tiers (per-track paywall, distinct from the recurring
 // FanTier above) — an artist prices a tier once, assigns it to specific
-// ArchiveItems, and a fan buys access without subscribing. An active
+// Sounds, and a fan buys access without subscribing. An active
 // FanSubscription always bypasses this gate (see isActiveFanSubscriber);
 // buying one tier does not unlock any other tier's tracks. Same Connect
 // destination-charge + 2% operational fee model as fan-subs.
@@ -2702,7 +2742,7 @@ model PurchaseTier {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   purchases     Purchase[]
-  archiveItems  ArchiveItem[]
+  sounds        Sound[]
 
   @@index([artistUserId, active])
   @@schema("fansubs")
@@ -2777,7 +2817,8 @@ model Release {
   galleryMode                 ChannelGalleryMode @default(NONE) // preset WebGL transition for slideshowImages
   galleryAudioReactive        Boolean            @default(false) // gallery preset reacts to this release's playback
   // Artist's public "Stage" showcase: pinned releases float to the top of the
-  // profile's Stage tab, most-recently-pinned first — same mechanism as ArchiveItem.pinnedAt.
+
+  // profile's Stage tab, most-recently-pinned first — same mechanism as Sound.pinnedAt.
   pinnedAt                    DateTime?
   createdAt                   DateTime           @default(now())
   updatedAt                   DateTime           @updatedAt
@@ -2833,10 +2874,18 @@ model ReleaseTrack {
   title                  String
   isrc                   String?
   musicbrainzRecordingId String?
+
   durationSec            Int?
-  archiveItemId          String?
+  soundId                String?
   genre                  String?
   genreCustom            String? // when not in preset genre list
+  // Metadata parity with Sound (a track only gets these if catalogued as a
+  // ReleaseTrack instead of/in addition to a Sound row — see soundId above).
+  subGenres              String[]            @default([])
+  tags                   String[]            @default([])
+  bpm                    Int?
+  musicalKey             String?
+  mixVersion             String? // e.g. "Original Mix", "Rok Tek Remix"
   credits                Json? // per-song credits [{ role, name, artistUsername? }], distinct from Release.credits
   // M12 — audio file pipeline
   sourceKey              String? // original uploaded file in MinIO
@@ -2848,7 +2897,7 @@ model ReleaseTrack {
   peaks                  Json? // [0..255] amplitude buckets, cached at transcode time so
   // embed players (which have no separate route to fetch this)
   // get a real waveform in the same response as the play URL —
-  // same shape/purpose as ArchiveItem.peaks.
+  // same shape/purpose as Sound.peaks.
   fingerprint            String? // Chromaprint fingerprint (base64), generated on upload
   // AcoustID lookup result against `fingerprint`, generated automatically on upload —
   // { acoustidId, score, recordingId?, title?, artist? } (see AcoustidFullMatch in
@@ -2897,13 +2946,13 @@ model ReleaseTrackVersion {
   @@schema("release")
 }
 
-// M7 — Mixcloud upload for archive items (mixes)
+// M7 — Mixcloud upload for sound items (mixes)
 model MixUpload {
   id            String          @id @default(cuid())
   userId        String
   user          User            @relation(fields: [userId], references: [id])
-  archiveItemId String          @unique
-  archiveItem   ArchiveItem     @relation(fields: [archiveItemId], references: [id])
+  soundId String          @unique
+  sound   Sound     @relation(fields: [soundId], references: [id])
   mixcloudUrl   String?
   mixcloudKey   String?
   status        MixUploadStatus @default(PENDING)
@@ -2989,7 +3038,7 @@ model Venue {
   createdAt     DateTime  @default(now())
 
   broadcasts   VenueBroadcast[]
-  archiveItems ArchiveItem[]
+  sounds Sound[]
 
   @@index([createdBy])
   @@schema("venue")
@@ -3071,6 +3120,7 @@ model MentionMute {
 // ── Collections + catalog UX (M23) ───────────────────────────────────────────
 
 model Collection {
+
   id            String         @id @default(cuid())
   userId        String
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -3080,10 +3130,10 @@ model Collection {
   type          CollectionType @default(CUSTOM)
   isPublic      Boolean        @default(true)
   isFeatured    Boolean        @default(false) // M23: highlight on profile + smart links
-  // When true (and isPublic), any logged-in user can add an archive item to this
+  // When true (and isPublic), any logged-in user can add a sound to this
   // playlist — a collaborative-playlist toggle. Only meaningful for style=PLAYLIST;
-  // adding archive items only, never releases (a release isn't "an artist's own
-  // track" to contribute the way a single archive item is).
+  // adding sound items only, never releases (a release isn't "an artist's own
+  // track" to contribute the way a single sound item is).
   collaborative Boolean        @default(false)
   coverUrl      String?
   // MinIO object key when the cover was uploaded through our own flow (cover.ts) —
@@ -3132,9 +3182,10 @@ model Collection {
 model CollectionItem {
   id            String       @id @default(cuid())
   collectionId  String
+
   collection    Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  archiveItemId String?
-  archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  soundId       String?
+  sound         Sound?       @relation(fields: [soundId], references: [id], onDelete: SetNull)
   releaseId     String?
   release       Release?     @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   position      Int
@@ -3173,7 +3224,7 @@ model JamSession {
   // A snapshot ({id, title, artistName, coverUrl}), not a relation: the host
   // already has the full track in hand when it pushes state, so a guest
   // never needs a second round trip just to render "now playing" — and this
-  // stays valid even for a track type that isn't an ArchiveItem later (an
+  // stays valid even for a track type that isn't an Sound later (an
   // embed, a radio source) without a schema change.
   currentTrackJson  Json?
   positionSec       Float       @default(0)
@@ -3269,7 +3320,7 @@ enum SupportStatus {
 }
 
 enum ContentReportTargetType {
-  ARCHIVE_ITEM
+  SOUND_ITEM
   RELEASE
   CHANNEL
   COLLECTION

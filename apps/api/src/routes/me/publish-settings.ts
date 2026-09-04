@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AutoPublishBroadcastPatchSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
-// Persistent per-channel default for a new broadcast's autoArchive value — see
+// Persistent per-channel default for a new broadcast's autoPublish value — see
 // recording-settings.ts for the paired "store past broadcasts" toggle.
 const mePublishSettings: FastifyPluginAsync = async (fastify) => {
   fastify.get(

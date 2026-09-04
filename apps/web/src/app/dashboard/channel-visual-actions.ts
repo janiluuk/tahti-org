@@ -4,10 +4,11 @@
 'use server'
 
 import { cookies } from 'next/headers'
+
 import type {
   ChannelVisualPatch,
   ReleaseVisualPatch,
-  ArchiveItemVisualPatch,
+  SoundVisualPatch,
   ArchiveItemAccessPatch,
 } from '@tahti/shared'
 
@@ -52,11 +53,11 @@ export async function updateReleaseVisual(
   return { error: null }
 }
 
-export async function updateArchiveItemVisual(
+export async function updateSoundItemVisual(
   itemId: string,
-  patch: ArchiveItemVisualPatch,
+  patch: SoundVisualPatch,
 ): Promise<{ error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/visual`, {
+  const res = await fetch(`${apiUrl}/api/me/sound/${itemId}/visual`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify(patch),
@@ -73,7 +74,7 @@ export async function updateArchiveItemAccess(
   itemId: string,
   patch: ArchiveItemAccessPatch,
 ): Promise<{ error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/access`, {
+  const res = await fetch(`${apiUrl}/api/me/sound/${itemId}/access`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify(patch),

@@ -5,11 +5,11 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ARCHIVE_GENRES } from '@tahti/shared'
+import { SOUND_GENRES } from '@tahti/shared'
 import { Button, ButtonIcon } from '@tahti/ui'
 import { createRelease, finalizeReleaseTrack, prepareReleaseTrackUpload } from './release-actions'
 
-const GENRE_OPTIONS: readonly string[] = ARCHIVE_GENRES
+const GENRE_OPTIONS: readonly string[] = SOUND_GENRES
 
 /** Splits a resolved genre value back into the {genre, genreCustom} pair the API expects. */
 function genrePayload(value: string): { genre?: string; genreCustom?: string } {

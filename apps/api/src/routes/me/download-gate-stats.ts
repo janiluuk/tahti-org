@@ -32,12 +32,12 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get(
-    '/api/me/archive/:id/download-gate-stats',
+    '/api/me/sound/:id/download-gate-stats',
     {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'M22: per-archive-item download gate funnel (14-day counted downloads)',
+        description: 'M22: per-sound-item download gate funnel (14-day counted downloads)',
         response: openApiResponse(DownloadGateItemDetailResponseSchema, 'DownloadGateItemDetail'),
       },
     },
@@ -47,7 +47,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
 
-      const item = await fastify.prisma.archiveItem.findFirst({
+      const item = await fastify.prisma.sound.findFirst({
         where: { id, channel: { userId: user.id } },
         select: {
           id: true,
@@ -55,7 +55,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
           followToDownload: true,
         },
       })
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
       const since = new Date(
         Date.UTC(
@@ -68,17 +68,17 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
       const [artistFollowerCount, repostAckCount, blockedDownloads, countedDownloads] =
         await Promise.all([
           fastify.prisma.artistFollow.count({ where: { artistUserId: user.id } }),
-          fastify.prisma.archiveRepostAck.count({ where: { archiveItemId: item.id } }),
+          fastify.prisma.soundRepostAck.count({ where: { soundId: item.id } }),
           fastify.prisma.download.count({
             where: {
-              archiveItemId: item.id,
+              soundId: item.id,
               countedAt: null,
               reason: { in: ['gate_repost', 'gate_follow'] },
             },
           }),
           fastify.prisma.download.count({
             where: {
-              archiveItemId: item.id,
+              soundId: item.id,
               countedAt: { not: null },
               createdAt: { gte: since },
             },

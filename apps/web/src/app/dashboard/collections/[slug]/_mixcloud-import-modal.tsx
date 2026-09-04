@@ -18,7 +18,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BA
 type Tab = 'mine' | 'search' | 'url'
 
 type AddedResult = {
-  archiveItemId: string
+  soundId: string
   collectionItemId: string
   track: MixcloudTrackResult
 }
@@ -116,13 +116,13 @@ export function MixcloudImportModal({ collectionId, collectionTitle, onClose, on
       setAddingUrl(track.url)
       const res = await addMixcloudTrackToCollection(collectionId, track.url)
       setAddingUrl(null)
-      if (res.error || !res.archiveItemId || !res.collectionItemId || !res.track) {
+      if (res.error || !res.soundId || !res.collectionItemId || !res.track) {
         setError(res.error ?? 'Failed to add track')
         return
       }
       setAddedUrls((prev) => new Set(prev).add(track.url))
       onAdded({
-        archiveItemId: res.archiveItemId,
+        soundId: res.soundId,
         collectionItemId: res.collectionItemId,
         track: res.track,
       })

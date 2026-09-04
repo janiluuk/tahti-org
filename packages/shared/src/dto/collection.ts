@@ -47,22 +47,22 @@ export type PatchCollectionInput = z.infer<typeof PatchCollectionSchema>
 
 export const AddCollectionItemSchema = z
   .object({
-    archiveItemId: z.string().min(1).optional(),
+    soundId: z.string().min(1).optional(),
     releaseId: z.string().min(1).optional(),
     position: z.number().int().min(1).optional(),
   })
-  .refine((b) => Boolean(b.archiveItemId) !== Boolean(b.releaseId), {
-    message: 'Provide archiveItemId or releaseId, not both',
+  .refine((b) => Boolean(b.soundId) !== Boolean(b.releaseId), {
+    message: 'Provide soundId or releaseId, not both',
   })
 
 export type AddCollectionItemInput = z.infer<typeof AddCollectionItemSchema>
 
-/** Body for a non-owner adding a track to a collaborative playlist — archive
+/** Body for a non-owner adding a track to a collaborative playlist — sound
  * items only (any public, READY track in the catalog), always appended at
  * the end. Distinct from AddCollectionItemSchema (the owner's own route,
  * which also accepts releases and an explicit insert position). */
 export const AddCollaborativeTrackSchema = z.object({
-  archiveItemId: z.string().min(1),
+  soundId: z.string().min(1),
   /** Optional short note from the contributor about why they added this track. */
   note: z.string().trim().max(200).optional(),
 })

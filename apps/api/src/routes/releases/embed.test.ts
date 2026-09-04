@@ -9,7 +9,7 @@ import {
   cleanupUsersByEmailPrefix,
   createTestArtist,
   createPublishedReleaseWithTrack,
-  createReadyArchiveItem,
+  createReadySound,
 } from '../../test/helpers.js'
 
 vi.mock('../../lib/minio.js', () => ({
@@ -157,25 +157,25 @@ describe('M14 — embed and oEmbed', () => {
 
   describe('collection/playlist embed', () => {
     let collectionSlug: string
-    let collectionArchiveItemId: string
-    let hearthisArchiveItemId: string
+    let collectionSoundId: string
+    let hearthisSoundId: string
 
     beforeAll(async () => {
       const artist = await prisma.user.findUniqueOrThrow({
         where: { username },
         include: { channel: true },
       })
-      const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Embed test track')
-      collectionArchiveItemId = item.id
+      const item = await createReadySound(prisma, artist.channel!.id, 'Embed test track')
+      collectionSoundId = item.id
 
       collectionSlug = `${PREFIX}collection`
       const collection = await prisma.collection.create({
         data: { userId: artist.id, slug: collectionSlug, name: 'Embed test playlist' },
       })
       await prisma.collectionItem.create({
-        data: { collectionId: collection.id, archiveItemId: item.id, position: 0 },
+        data: { collectionId: collection.id, soundId: item.id, position: 0 },
       })
-      const hearthisItem = await prisma.archiveItem.create({
+      const hearthisItem = await prisma.sound.create({
         data: {
           channelId: artist.channel!.id,
           title: 'HearThis embed track',
@@ -185,9 +185,9 @@ describe('M14 — embed and oEmbed', () => {
           embedUri: '123456',
         },
       })
-      hearthisArchiveItemId = hearthisItem.id
+      hearthisSoundId = hearthisItem.id
       await prisma.collectionItem.create({
-        data: { collectionId: collection.id, archiveItemId: hearthisItem.id, position: 1 },
+        data: { collectionId: collection.id, soundId: hearthisItem.id, position: 1 },
       })
     })
 
@@ -211,7 +211,7 @@ describe('M14 — embed and oEmbed', () => {
       expect(body.tracks.map((t) => t.title)).toContain('Embed test track')
       expect(body.tracks).toContainEqual(
         expect.objectContaining({
-          id: hearthisArchiveItemId,
+          id: hearthisSoundId,
           hasStream: false,
           embedProvider: 'HEARTHIS',
           embedUri: '123456',
@@ -222,7 +222,7 @@ describe('M14 — embed and oEmbed', () => {
     it('GET play endpoint returns a signed stream URL for a track in the collection', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: `/api/v1/embed/col/${collectionSlug}/tracks/${collectionArchiveItemId}/play`,
+        url: `/api/v1/embed/col/${collectionSlug}/tracks/${collectionSoundId}/play`,
       })
       expect(res.statusCode).toBe(200)
       expect(res.json()).toMatchObject({ url: 'https://minio.test/signed-stream' })

@@ -2,16 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { ArchiveDownloadQuerySchema, ReleaseDownloadQuerySchema } from './downloads.js'
+import { SoundDownloadQuerySchema, ReleaseDownloadQuerySchema } from './downloads.js'
 
 describe('download query schemas', () => {
   it('accepts known formats', () => {
-    expect(ArchiveDownloadQuerySchema.safeParse({ format: 'flac' }).success).toBe(true)
-    expect(ArchiveDownloadQuerySchema.safeParse({ format: 'source' }).success).toBe(true)
+    expect(SoundDownloadQuerySchema.safeParse({ format: 'flac' }).success).toBe(true)
+    expect(SoundDownloadQuerySchema.safeParse({ format: 'source' }).success).toBe(true)
   })
 
   it('rejects unknown format', () => {
-    expect(ArchiveDownloadQuerySchema.safeParse({ format: 'wav' }).success).toBe(false)
+    expect(SoundDownloadQuerySchema.safeParse({ format: 'wav' }).success).toBe(false)
   })
 
   it('accepts source format on release downloads', () => {

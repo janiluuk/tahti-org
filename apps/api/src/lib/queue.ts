@@ -24,11 +24,11 @@ export const mediaQueue = new Queue('media', { connection, defaultJobOptions })
 export const mediaQueueEvents = new QueueEvents('media', { connection })
 
 export async function enqueueTranscode(itemId: string): Promise<void> {
-  await mediaQueue.add('transcode-archive', { itemId })
+  await mediaQueue.add('transcode-sound', { itemId })
 }
 
 /** Compressed streaming copy for a lossless upload — see StreamingCopyStatus
- * on ArchiveItem. Runs after the item is already READY off its FLAC. */
+ * on Sound. Runs after the item is already READY off its FLAC. */
 export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> {
   await mediaQueue.add(
     'encode-streaming-copy',
@@ -42,12 +42,12 @@ export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> 
 }
 
 export async function enqueueVersionTranscode(versionId: string): Promise<void> {
-  await mediaQueue.add('transcode-archive-version', { versionId })
+  await mediaQueue.add('transcode-sound-version', { versionId })
 }
 
-export interface RenderArchiveEditJob {
+export interface RenderSoundEditJob {
   versionId: string
-  archiveItemId: string
+  soundId: string
   channelSlug: string
   sourceKey: string
   editList: EditList
@@ -57,9 +57,9 @@ export interface RenderArchiveEditJob {
   sampleOnly?: boolean
 }
 
-export async function enqueueRenderArchiveEdit(payload: RenderArchiveEditJob): Promise<void> {
-  await mediaQueue.add('render-archive-edit', payload, {
-    jobId: `render-archive-edit-${payload.versionId}`,
+export async function enqueueRenderSoundEdit(payload: RenderSoundEditJob): Promise<void> {
+  await mediaQueue.add('render-sound-edit', payload, {
+    jobId: `render-sound-edit-${payload.versionId}`,
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   })
@@ -119,7 +119,7 @@ export async function runFingerprintReleaseTrack(
   )) as FingerprintReleaseTrackResult
 }
 
-/** ARTIST-001: scan Liquidsoap WAV on shared volume, upload to MinIO, then archive. */
+/** ARTIST-001: scan Liquidsoap WAV on shared volume, upload to MinIO, then sound. */
 export async function enqueueFinalizeBroadcastRecording(broadcastId: string): Promise<void> {
   await mediaQueue.add(
     'finalize-broadcast-recording',
@@ -170,11 +170,11 @@ export async function enqueueCloudImportHearthis(cloudImportJobId: string): Prom
 }
 
 export async function enqueueHearthisEmbedLocalization(payload: {
-  archiveItemId: string
+  soundId: string
   trackUrl: string
 }): Promise<void> {
   await mediaQueue.add('hearthis-embed-localize', payload, {
-    jobId: `hearthis-embed-localize-${payload.archiveItemId}`,
+    jobId: `hearthis-embed-localize-${payload.soundId}`,
     attempts: 3,
     backoff: { type: 'exponential', delay: 15_000 },
   })
@@ -202,7 +202,7 @@ export async function enqueueRenderAnnouncementTrim(
 
 export interface SeparateStemsJob {
   stemJobId: string
-  archiveItemId: string
+  soundId: string
   sourceKey: string
   stemSet: 'TWO_STEM' | 'FOUR_STEM'
 }
@@ -215,12 +215,12 @@ export async function enqueueSeparateStems(payload: SeparateStemsJob): Promise<v
   })
 }
 
-export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
+export async function enqueueWarmSoundFallbackCache(channelId: string): Promise<void> {
   await mediaQueue.add(
-    'warm-archive-fallback-cache',
+    'warm-sound-fallback-cache',
     { channelId },
     {
-      jobId: `warm-archive-fallback-cache-${channelId}`,
+      jobId: `warm-sound-fallback-cache-${channelId}`,
       removeOnComplete: true,
       removeOnFail: 100,
     },
@@ -239,12 +239,12 @@ export async function enqueueOpenThemePullRequest(payload: OpenThemePullRequestJ
   })
 }
 
-export async function enqueueHearthisExport(archiveItemId: string): Promise<void> {
+export async function enqueueHearthisExport(soundId: string): Promise<void> {
   await mediaQueue.add(
     'hearthis-export',
-    { archiveItemId },
+    { soundId },
     {
-      jobId: `hearthis-export-${archiveItemId}`,
+      jobId: `hearthis-export-${soundId}`,
       attempts: 3,
       backoff: { type: 'exponential', delay: 15_000 },
     },

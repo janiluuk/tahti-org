@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { buildMixcloudAuthorizeUrl, exchangeMixcloudCode } from '@tahti/mixcloud'
 import {
-  ArchiveItemIdParamSchema,
+  SoundIdParamSchema,
   MixcloudConnectStatusSchema,
   MixcloudOAuthCallbackQuerySchema,
   MixcloudUploadQueuedSchema,
@@ -21,7 +21,7 @@ import { encryptStreamKey } from '../../lib/stream-key-enc.js'
 
 const OAUTH_STATE_MAX_AGE_SEC = 600
 
-// M7 — Mixcloud OAuth + archive mix upload
+// M7 — Mixcloud OAuth + sound mix upload
 const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/mixcloud',
@@ -136,12 +136,12 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.post(
-    '/api/me/archive/:itemId/mixcloud',
+    '/api/me/sound/:itemId/mixcloud',
     {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: queue archive mix upload to Mixcloud',
+        description: 'M7: queue sound mix upload to Mixcloud',
         response: openApiResponses([
           { status: 202, schema: MixcloudUploadQueuedSchema, name: 'MixcloudUploadQueued' },
         ]),
@@ -149,7 +149,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)
+      const routeParams = parseRouteParams(SoundIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { itemId } = routeParams
 
@@ -165,14 +165,14 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const item = await fastify.prisma.archiveItem.findFirst({
+      const item = await fastify.prisma.sound.findFirst({
         where: { id: itemId, channel: { userId: user.id } },
         select: { id: true, status: true, mp3Key: true, rawKey: true, mixUpload: true },
       })
 
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
       if (item.status !== 'READY') {
-        return reply.status(409).send({ error: 'Archive item is not ready for upload' })
+        return reply.status(409).send({ error: 'Sound item is not ready for upload' })
       }
       if (item.mixUpload) {
         return reply.status(409).send({
@@ -183,7 +183,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const upload = await fastify.prisma.mixUpload.create({
-        data: { userId: user.id, archiveItemId: itemId, status: 'PENDING' },
+        data: { userId: user.id, soundId: itemId, status: 'PENDING' },
       })
 
       await mediaQueue.add('mixcloud-upload', { mixUploadId: upload.id })
@@ -193,7 +193,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get(
-    '/api/me/archive/:itemId/mixcloud',
+    '/api/me/sound/:itemId/mixcloud',
     {
       preHandler: requireAuth,
       schema: {
@@ -203,16 +203,16 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)
+      const routeParams = parseRouteParams(SoundIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { itemId } = routeParams
 
-      const item = await fastify.prisma.archiveItem.findFirst({
+      const item = await fastify.prisma.sound.findFirst({
         where: { id: itemId, channel: { userId: user.id } },
         select: { mixUpload: true },
       })
 
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
       if (!item.mixUpload) return reply.status(404).send({ error: 'No Mixcloud upload found' })
 
       return reply.send({

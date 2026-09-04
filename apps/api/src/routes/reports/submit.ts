@@ -26,7 +26,7 @@ const reportsRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['reports'],
         description:
-          'Report a channel, release, archive item, or collection for review (auth optional)',
+          'Report a channel, release, sound item, or collection for review (auth optional)',
         response: openApiResponse(SubmitContentReportResponseSchema, 'SubmitContentReportResponse'),
       },
     },

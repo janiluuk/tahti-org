@@ -6,12 +6,12 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileDropzone, SidebarNavIconSvg, Button } from '@tahti/ui'
-import { prepareUpload, completeUpload, getArchiveItemStatus } from './actions'
+import { prepareUpload, completeUpload, getSoundItemStatus } from './actions'
 import {
-  ArchiveMetadataFields,
+  SoundMetadataFields,
   defaultMetadataFormState,
   metadataFormToPayload,
-} from './archive-metadata-fields'
+} from './sound-metadata-fields'
 
 type UploadState =
   'idle' | 'preparing' | 'uploading' | 'completing' | 'transcoding' | 'done' | 'error'
@@ -85,7 +85,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
         setState('transcoding')
         setProgress(0)
         for (let attempt = 0; attempt < 90; attempt++) {
-          const { status } = await getArchiveItemStatus(itemId)
+          const { status } = await getSoundItemStatus(itemId)
           if (status === 'READY') break
           if (status === 'FAILED') {
             throw new Error('Transcoding failed — try uploading again')
@@ -144,7 +144,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
         {showMeta ? '▼ Hide metadata' : '▶ Show metadata (genre, BPM, license…)'}
       </button>
 
-      {showMeta && <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
+      {showMeta && <SoundMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
 
       <Button type="submit" disabled={isLoading} variant="primary" className="studio-mt-md">
         <SidebarNavIconSvg name="upload" />

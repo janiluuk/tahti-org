@@ -25,8 +25,8 @@ describe('queue-metrics', () => {
     getJobs.mockImplementation((types: string[]) => {
       if (types[0] === 'waiting') {
         return Promise.resolve([
-          { name: 'transcode-archive' },
-          { name: 'transcode-archive' },
+          { name: 'transcode-sound' },
+          { name: 'transcode-sound' },
           { name: 'newsletter-dispatch' },
         ])
       }

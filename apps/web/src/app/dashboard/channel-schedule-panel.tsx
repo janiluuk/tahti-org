@@ -59,7 +59,7 @@ export default function ChannelSchedulePanel({
   const [venue, setVenue] = useState('')
   const [location, setLocation] = useState('')
   const [visibility, setVisibility] = useState<'PUBLIC' | 'FAN_ONLY'>('PUBLIC')
-  const [autoArchive, setAutoArchive] = useState(true)
+  const [autoPublish, setAutoPublish] = useState(true)
   const [episodeNumberEnabled, setEpisodeNumberEnabled] = useState(true)
   const [nextEpisodeNumber, setNextEpisodeNumber] = useState(1)
   const [isPending, startTransition] = useTransition()
@@ -99,7 +99,7 @@ export default function ChannelSchedulePanel({
         artworkUrl: artworkUrl.trim() || null,
         showType,
         visibility,
-        autoArchive,
+        autoPublish,
         episodeNumberEnabled,
         nextEpisodeNumber,
       })
@@ -309,7 +309,7 @@ export default function ChannelSchedulePanel({
             />
           </label>
           <label className="studio-schedule-row__field studio-show-series-grid__wide">
-            <span className="studio-label-sm">Archive description</span>
+            <span className="studio-label-sm">Sound description</span>
             <textarea
               className="studio-input"
               value={description}
@@ -357,8 +357,8 @@ export default function ChannelSchedulePanel({
           <label className="studio-checkbox-label">
             <input
               type="checkbox"
-              checked={autoArchive}
-              onChange={(event) => setAutoArchive(event.target.checked)}
+              checked={autoPublish}
+              onChange={(event) => setAutoPublish(event.target.checked)}
               disabled={isPending}
             />
             Publish recording automatically

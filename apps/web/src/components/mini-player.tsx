@@ -9,7 +9,7 @@ import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
-import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
+import { SoundWaveform, type WaveformMarker } from '@/components/sound-waveform'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 import { fetchMyCollections, type MyCollectionSummary } from '@/app/dashboard/collection-actions'
 import { HearthisEmbedSurface } from '@/contexts/player-embed-plugins/hearthis-embed-plugin'
@@ -314,8 +314,8 @@ function FullPlayerSheet({
   closing: boolean
 }) {
   const progress = duration > 0 ? currentTime / duration : 0
-  const seekable = track.kind === 'archive' && duration > 0
-  const [details, setDetails] = useTrackPlaybackDetails(track.kind === 'archive' ? track.id : null)
+  const seekable = track.kind === 'sound' && duration > 0
+  const [details, setDetails] = useTrackPlaybackDetails(track.kind === 'sound' ? track.id : null)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [postingReaction, setPostingReaction] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -371,7 +371,7 @@ function FullPlayerSheet({
   }
 
   async function postReaction(type: TrackReactionType) {
-    if (track.kind !== 'archive' || postingReaction) return
+    if (track.kind !== 'sound' || postingReaction) return
     setPostingReaction(true)
     try {
       const res = await fetch(`${API_URL}/api/reactions/track/${track.id}`, {
@@ -561,7 +561,7 @@ function FullPlayerSheet({
         ) : seekable ? (
           <>
             {details?.peaks && details.peaks.length > 0 ? (
-              <ArchiveWaveform
+              <SoundWaveform
                 peaks={details.peaks}
                 progress={progress}
                 onSeek={seek}
@@ -592,7 +592,7 @@ function FullPlayerSheet({
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
-            {track.kind === 'archive' && (
+            {track.kind === 'sound' && (
               <div className="full-player__reactions" role="group" aria-label="React to this track">
                 {REACTION_TYPES.map((r) => (
                   <button
@@ -849,9 +849,9 @@ export function MiniPlayer() {
         role="region"
         aria-label="Now playing"
       >
-        {addToOpen && track.kind === 'archive' && (
+        {addToOpen && track.kind === 'sound' && (
           <AddToCollectionPanel
-            archiveItemId={track.id}
+            soundId={track.id}
             trackTitle={track.title}
             onClose={() => setAddToOpen(false)}
           />
@@ -1046,7 +1046,7 @@ export function MiniPlayer() {
             )}
           </div>
         )}
-        {track.kind === 'archive' && duration > 0 && (
+        {track.kind === 'sound' && duration > 0 && (
           <button
             type="button"
             className="mini-player__progress"
@@ -1177,7 +1177,7 @@ export function MiniPlayer() {
               aria-label="Volume"
             />
           </div>
-          {track.kind === 'archive' && (
+          {track.kind === 'sound' && (
             <button
               type="button"
               className={`mini-player__add-to${addToOpen ? ' mini-player__add-to--active' : ''}`}

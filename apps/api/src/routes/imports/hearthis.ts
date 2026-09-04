@@ -119,7 +119,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/imports/hearthis/add — creates a hearthis_embed ArchiveItem, appends to the collection.
+  // POST /api/v1/imports/hearthis/add — creates a hearthis_embed Sound, appends to the collection.
   fastify.post(
     '/api/v1/imports/hearthis/add',
     {
@@ -168,7 +168,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const result = toTrackResult(track)
 
-      const archiveItem = await fastify.prisma.archiveItem.create({
+      const sound = await fastify.prisma.sound.create({
         data: {
           channelId: channel.id,
           title: result.title,
@@ -189,7 +189,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {
           collectionId: collection.id,
-          archiveItemId: archiveItem.id,
+          soundId: sound.id,
           position: collection._count.items + 1,
         },
         select: { id: true },
@@ -199,11 +199,11 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       // download this file. Localize those tracks in the background so Tahti
       // can use its native player and preserve lossless originals when offered.
       if (track.downloadable === '1' && track.download_url) {
-        await enqueueHearthisEmbedLocalization({ archiveItemId: archiveItem.id, trackUrl })
+        await enqueueHearthisEmbedLocalization({ soundId: sound.id, trackUrl })
       }
 
       return reply.status(201).send({
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         collectionItemId: collectionItem.id,
         track: result,
       })

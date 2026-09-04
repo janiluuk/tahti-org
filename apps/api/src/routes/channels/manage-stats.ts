@@ -62,13 +62,13 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
           fetch(`${config.apiUrl}/api/channels/${slug}/presence`)
             .then((r) => (r.ok ? r.json() : { numClients: 0 }))
             .catch(() => ({ numClients: 0 })),
-          fastify.prisma.archiveItemLike.count({
-            where: { archiveItem: { channelId: channel.id } },
+          fastify.prisma.soundLike.count({
+            where: { sound: { channelId: channel.id } },
           }),
-          fastify.prisma.archiveItemRepost.count({
-            where: { archiveItem: { channelId: channel.id } },
+          fastify.prisma.soundRepost.count({
+            where: { sound: { channelId: channel.id } },
           }),
-          fastify.prisma.archiveItem.count({ where: { channelId: channel.id, isFallback: true } }),
+          fastify.prisma.sound.count({ where: { channelId: channel.id, isFallback: true } }),
         ])
 
         const liveDurationSec =

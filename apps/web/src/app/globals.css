@@ -193,7 +193,7 @@ body {
   padding: 0.65rem 0.75rem 0.45rem;
 }
 
-.active-track-stage__foreground .ch-archive-waveform {
+.active-track-stage__foreground .ch-sound-waveform {
   margin: 0;
 }
 
@@ -237,7 +237,7 @@ body {
     min-height: 152px;
   }
 
-  .active-track-stage--large .ch-archive-waveform {
+  .active-track-stage--large .ch-sound-waveform {
     height: 104px;
   }
 }

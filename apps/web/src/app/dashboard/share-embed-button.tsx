@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveAppUrl, resolveChannelUrl } from '@/lib/app-url'
-import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+import { channelSoundRssUrl } from '@/lib/rss-feeds'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -98,7 +98,7 @@ function ShareEmbedModal({
   const [transparentBg, setTransparentBg] = useState(false)
 
   const publicUrl = resolveChannelUrl(channelSlug)
-  const rssUrl = channelArchiveRssUrl(API_BASE, channelSlug)
+  const rssUrl = channelSoundRssUrl(API_BASE, channelSlug)
   const { width, height } = EMBED_SIZES[size]
   const embedParams = new URLSearchParams()
   if (!showTracklist) embedParams.set('tracklist', '0')

@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -47,8 +47,8 @@ describe("admin channel programme — board edits any artist's rotation", () => 
     })
     boardCookie = await sessionCookieFor(prisma, board.id)
 
-    const a = await createReadyArchiveItem(prisma, channelId, 'Board Set A')
-    const b = await createReadyArchiveItem(prisma, channelId, 'Board Set B')
+    const a = await createReadySound(prisma, channelId, 'Board Set A')
+    const b = await createReadySound(prisma, channelId, 'Board Set B')
     itemA = a.id
     itemB = b.id
   })
@@ -95,32 +95,32 @@ describe("admin channel programme — board edits any artist's rotation", () => 
       payload: {
         fallbackMode: 'ordered',
         items: [
-          { archiveItemId: itemA, isFallback: true, fallbackOrder: 0 },
-          { archiveItemId: itemB, isFallback: true, fallbackOrder: 1 },
+          { soundId: itemA, isFallback: true, fallbackOrder: 0 },
+          { soundId: itemB, isFallback: true, fallbackOrder: 1 },
         ],
       },
     })
     expect(patch.statusCode).toBe(200)
     expect(patch.json().fallbackMode).toBe('ordered')
 
-    const updated = await prisma.archiveItem.findUnique({ where: { id: itemA } })
+    const updated = await prisma.sound.findUnique({ where: { id: itemA } })
     expect(updated?.isFallback).toBe(true)
     expect(updated?.fallbackOrder).toBe(0)
   })
 
-  it('rejects an archive item that belongs to a different channel', async () => {
+  it('rejects an sound item that belongs to a different channel', async () => {
     const other = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,
       username: 'admin-programme-other',
       tier: 'FREE',
     })
-    const foreignItem = await createReadyArchiveItem(prisma, other.channel!.id, 'Foreign Set')
+    const foreignItem = await createReadySound(prisma, other.channel!.id, 'Foreign Set')
 
     const res = await app.inject({
       method: 'PATCH',
       url: `/api/admin/channels/${channelSlug}/programme`,
       headers: { cookie: boardCookie },
-      payload: { items: [{ archiveItemId: foreignItem.id, isFallback: true }] },
+      payload: { items: [{ soundId: foreignItem.id, isFallback: true }] },
     })
     expect(res.statusCode).toBe(400)
 

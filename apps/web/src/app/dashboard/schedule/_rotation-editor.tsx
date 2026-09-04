@@ -44,7 +44,7 @@ function PreviewPlayButton({
   async function handleClick() {
     if (!isCurrent) {
       load(
-        { id: `programme-preview-${id}`, kind: 'archive', url: audioUrl!, title },
+        { id: `programme-preview-${id}`, kind: 'sound', url: audioUrl!, title },
         { autoplay: true },
       )
       return
@@ -84,7 +84,7 @@ export function RotationEditor({
     fallbackEnabled?: boolean
     fallbackAutoEnroll?: boolean
     announcementsEnabled?: boolean
-    items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
+    items?: Array<{ soundId: string; isFallback: boolean; fallbackOrder?: number }>
   }) => Promise<ProgrammeActionResult>
   addLibraryTrack?: (releaseTrackId: string) => Promise<ProgrammeActionResult>
 }) {
@@ -96,13 +96,13 @@ export function RotationEditor({
   const [library, setLibrary] = useState<ProgrammeLibraryTrackRow[]>(initial.library)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [pickerTab, setPickerTab] = useState<'archive' | 'library'>('archive')
+  const [pickerTab, setPickerTab] = useState<'sound' | 'library'>('sound')
   const [promotingId, setPromotingId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const inRotation = useMemo(() => items.filter((r) => r.isFallback), [items])
   const atCap = inRotation.length >= MAX_FALLBACK_ITEMS
-  const availableArchive = useMemo(
+  const availableSound = useMemo(
     () => items.filter((r) => r.status === 'READY' && !r.isFallback),
     [items],
   )
@@ -116,7 +116,7 @@ export function RotationEditor({
     setLibrary(view.library)
   }
 
-  function addArchiveItem(id: string) {
+  function addSoundItem(id: string) {
     setItems((prev) => prev.map((r) => (r.id === id ? { ...r, isFallback: true } : r)))
   }
 
@@ -143,7 +143,7 @@ export function RotationEditor({
         fallbackAutoEnroll,
         announcementsEnabled,
         items: items.map((r) => ({
-          archiveItemId: r.id,
+          soundId: r.id,
           isFallback: r.isFallback,
           fallbackOrder: rotation.includes(r) ? rotation.indexOf(r) : undefined,
         })),
@@ -339,11 +339,11 @@ export function RotationEditor({
             <div className="studio-row studio-gap-xs studio-mb-md">
               <Button
                 type="button"
-                variant={pickerTab === 'archive' ? 'primary' : 'ghost'}
+                variant={pickerTab === 'sound' ? 'primary' : 'ghost'}
                 size="sm"
-                onClick={() => setPickerTab('archive')}
+                onClick={() => setPickerTab('sound')}
               >
-                Archive
+                Sounds
               </Button>
               <Button
                 type="button"
@@ -355,9 +355,9 @@ export function RotationEditor({
               </Button>
             </div>
 
-            {pickerTab === 'archive' ? (
+            {pickerTab === 'sound' ? (
               <LibraryBrowser
-                items={availableArchive}
+                items={availableSound}
                 getTitle={(row) => row.title}
                 showStatusFilters={false}
                 searchPlaceholder="Search archive…"
@@ -383,7 +383,7 @@ export function RotationEditor({
                           size="sm"
                           disabled={isPending || atCap}
                           title={atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined}
-                          onClick={() => addArchiveItem(row.id)}
+                          onClick={() => addSoundItem(row.id)}
                         >
                           + Add
                         </Button>
@@ -404,8 +404,8 @@ export function RotationEditor({
                 {(visible) => (
                   <ul className="studio-list">
                     {visible.map((track) => {
-                      const linkedItem = track.archiveItemId
-                        ? items.find((i) => i.id === track.archiveItemId)
+                      const linkedItem = track.soundId
+                        ? items.find((i) => i.id === track.soundId)
                         : undefined
                       const active = linkedItem?.isFallback ?? false
                       return (

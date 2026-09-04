@@ -56,7 +56,7 @@ export interface RadioShowEpisode {
   /** Set only for a past episode the artist broadcast and published a
    * recording of afterward — null for an upcoming episode, a past slot that
    * never aired, or one that hasn't been published yet. */
-  recording: { archiveItemId: string; title: string; channelItemUrl: string } | null
+  recording: { soundId: string; title: string; channelItemUrl: string } | null
 }
 
 export interface RadioShowDetail {

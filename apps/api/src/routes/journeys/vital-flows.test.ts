@@ -12,7 +12,7 @@ import { FREE_WEEKLY_LIVE_CAP_SEC, utcWeekStart } from '@tahti/shared/broadcast-
 import {
   cleanupUsersByEmailPrefix,
   createEmailVerificationToken,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -20,9 +20,9 @@ import {
 // The Icecast on_connect/on_disconnect callbacks enqueue worker jobs (recording
 // finalize + fallback cache warm) that need Redis/MinIO; stub them so the live
 // broadcast journey below can drive the real ingest routes end to end.
-const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
+const { enqueueFinalizeBroadcastRecording, enqueueWarmSoundFallbackCache } = vi.hoisted(() => ({
   enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
-  enqueueWarmArchiveFallbackCache: vi.fn().mockResolvedValue(undefined),
+  enqueueWarmSoundFallbackCache: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../lib/queue.js', async (importOriginal) => {
@@ -30,7 +30,7 @@ vi.mock('../../lib/queue.js', async (importOriginal) => {
   return {
     ...actual,
     enqueueFinalizeBroadcastRecording,
-    enqueueWarmArchiveFallbackCache,
+    enqueueWarmSoundFallbackCache,
   }
 })
 
@@ -173,16 +173,16 @@ describe('Vital flows (E2E journeys)', () => {
     })
     expect(sub.statusCode).toBe(201)
 
-    const item = await createReadyArchiveItem(prisma, artist.channel!.id)
+    const item = await createReadySound(prisma, artist.channel!.id)
     const dl = await app.inject({
       method: 'GET',
-      url: `/api/v1/c/journey-artist-fan/archive/${item.id}/download?fp=journey-fan-fp`,
+      url: `/api/v1/c/journey-artist-fan/sounds/${item.id}/download?fp=journey-fan-fp`,
       headers: { cookie: fanCookie, 'x-forwarded-for': '203.0.113.77' },
     })
     expect(dl.statusCode).toBe(200)
 
     const row = await prisma.download.findFirst({
-      where: { archiveItemId: item.id, byUserId: fan.id },
+      where: { soundId: item.id, byUserId: fan.id },
     })
     expect(row?.weight).toBe(5)
   })
@@ -205,10 +205,10 @@ describe('Vital flows (E2E journeys)', () => {
     const fanCookie = await sessionCookieFor(prisma, fan.id)
     const ip = { 'x-forwarded-for': '203.0.113.91' }
 
-    // 1. Artist uploads 5 tracks to their archive
+    // 1. Artist uploads 5 tracks to their sound
     const tracks = []
     for (let i = 1; i <= 5; i++) {
-      tracks.push(await createReadyArchiveItem(prisma, artist.channel!.id, `Catalog track ${i}`))
+      tracks.push(await createReadySound(prisma, artist.channel!.id, `Catalog track ${i}`))
     }
     expect(tracks).toHaveLength(5)
 
@@ -218,7 +218,7 @@ describe('Vital flows (E2E journeys)', () => {
     const [fanOnlyTrack, freeTrack] = tracks
     const gatePatch = await app.inject({
       method: 'PATCH',
-      url: `/api/me/archive/${fanOnlyTrack.id}`,
+      url: `/api/me/sound/${fanOnlyTrack.id}`,
       headers: { cookie: artistCookie },
       payload: { followToDownload: true },
     })
@@ -228,19 +228,19 @@ describe('Vital flows (E2E journeys)', () => {
     // 3. Fan downloads one of the four remaining free tracks — no purchase needed
     const freeDl = await app.inject({
       method: 'GET',
-      url: `/api/v1/c/journey-artist-catalog/archive/${freeTrack.id}/download?fp=journey-fan-catalog-free`,
+      url: `/api/v1/c/journey-artist-catalog/sounds/${freeTrack.id}/download?fp=journey-fan-catalog-free`,
       headers: { cookie: fanCookie, ...ip },
     })
     expect(freeDl.statusCode).toBe(200)
     const freeRow = await prisma.download.findFirst({
-      where: { archiveItemId: freeTrack.id, byUserId: fan.id },
+      where: { soundId: freeTrack.id, byUserId: fan.id },
     })
     expect(freeRow?.weight).toBe(1)
 
     // The fan-only track stays locked — the fan neither follows nor subscribes yet
     const lockedDl = await app.inject({
       method: 'GET',
-      url: `/api/v1/c/journey-artist-catalog/archive/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
+      url: `/api/v1/c/journey-artist-catalog/sounds/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
       headers: { cookie: fanCookie, ...ip },
     })
     expect(lockedDl.statusCode).toBe(403)
@@ -268,20 +268,20 @@ describe('Vital flows (E2E journeys)', () => {
     // 5. The purchase satisfies the follow-to-download gate and pays the 5× weight
     const unlockedDl = await app.inject({
       method: 'GET',
-      url: `/api/v1/c/journey-artist-catalog/archive/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
+      url: `/api/v1/c/journey-artist-catalog/sounds/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
       headers: { cookie: fanCookie, ...ip },
     })
     expect(unlockedDl.statusCode).toBe(200)
     const gatedRow = await prisma.download.findFirst({
-      where: { archiveItemId: fanOnlyTrack.id, byUserId: fan.id, format: { not: 'gate' } },
+      where: { soundId: fanOnlyTrack.id, byUserId: fan.id, format: { not: 'gate' } },
       orderBy: { createdAt: 'desc' },
     })
     expect(gatedRow?.weight).toBe(5)
   })
 
-  it('live broadcast journey: 30s stream → 3 fans tune in → recording is archived and watchable in the channel history', async () => {
+  it('live broadcast journey: 30s stream → 3 fans tune in → recording is soundd and watchable in the channel history', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
-    enqueueWarmArchiveFallbackCache.mockClear()
+    enqueueWarmSoundFallbackCache.mockClear()
 
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}artist-live@example.com`,
@@ -368,8 +368,8 @@ describe('Vital flows (E2E journeys)', () => {
     )
 
     // 4. Stand in for the worker pipeline's end state: the recording lands as a
-    // READY archive item and gets linked back onto the broadcast session
-    const recording = await prisma.archiveItem.create({
+    // READY sound item and gets linked back onto the broadcast session
+    const recording = await prisma.sound.create({
       data: {
         channelId: channel.id,
         title: 'Live set — 30s broadcast',
@@ -383,10 +383,10 @@ describe('Vital flows (E2E journeys)', () => {
     })
     await prisma.broadcast.update({
       where: { id: broadcast.id },
-      data: { recordingKey: recording.rawKey, archiveItemId: recording.id },
+      data: { recordingKey: recording.rawKey, soundId: recording.id },
     })
 
-    // 5. The archived set now shows up in the channel's public history/back-catalog
+    // 5. The soundd set now shows up in the channel's public history/back-catalog
     const items = await app.inject({
       method: 'GET',
       url: '/api/channels/journey-artist-live/items',
@@ -398,7 +398,7 @@ describe('Vital flows (E2E journeys)', () => {
     expect(entry.audioUrl).toMatch(/^https?:\/\//)
 
     expect(
-      (await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })).archiveItemId,
+      (await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })).soundId,
     ).toBe(recording.id)
   })
 

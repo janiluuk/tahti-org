@@ -58,7 +58,7 @@ export const CloudImportJobStatusSchema = z.object({
   fileName: z.string().nullable(),
   status: z.string(),
   error: z.string().nullable(),
-  archiveItemId: z.string().nullable(),
+  soundId: z.string().nullable(),
   bytesTransferred: z.coerce.number().nullable(),
   queuedAt: z.coerce.date(),
   completedAt: z.coerce.date().nullable(),

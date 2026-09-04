@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ButtonIcon, Button, SortableList } from '@tahti/ui'
-import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
+import type { SoundSource, SoundQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import { LibraryBrowser } from '@/components/library/library-browser'
@@ -31,21 +31,21 @@ import { listMyIntegrations } from '../../integrations-actions'
 import { MixcloudEmbedRow } from '../../../u/[username]/c/[slug]/_mixcloud-embed-row'
 import { SpotifyEmbedRow } from '../../../u/[username]/c/[slug]/_spotify-embed-row'
 
-const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
+const SOURCE_BADGE_LABEL: Partial<Record<SoundSource, string>> = {
   SPOTIFY_EMBED: 'SPOTIFY EMBED',
   MIXCLOUD_EMBED: 'MIXCLOUD EMBED',
   HEARTHIS_EMBED: 'HEARTHIS EMBED',
   URL_EMBED: 'EMBED',
 }
 
-const SOURCE_BADGE_CLASS: Partial<Record<ArchiveItemSource, string>> = {
+const SOURCE_BADGE_CLASS: Partial<Record<SoundSource, string>> = {
   SPOTIFY_EMBED: 'collection-tracklist__badge--spotify',
   MIXCLOUD_EMBED: 'collection-tracklist__badge--mixcloud',
   HEARTHIS_EMBED: 'collection-tracklist__badge--hearthis',
   URL_EMBED: 'collection-tracklist__badge--embed',
 }
 
-const QUALITY_BADGE_CLASS: Record<ArchiveQualityBadge, string> = {
+const QUALITY_BADGE_CLASS: Record<SoundQualityBadge, string> = {
   LOSSLESS: '',
   TRANSCODED: 'collection-tracklist__badge--transcoded',
   EMBED_ONLY: 'collection-tracklist__badge--embed',
@@ -55,14 +55,14 @@ interface CollectionItem {
   id: string
   position: number
   audioUrl?: string | null
-  archiveItem: {
+  sound: {
     id: string
     title: string
     durationSec: number | null
     bannerUrl: string | null
     createdAt: string
-    source: ArchiveItemSource
-    qualityBadge: ArchiveQualityBadge
+    source: SoundSource
+    qualityBadge: SoundQualityBadge
     embedProvider?: string | null
     embedUri?: string | null
   } | null
@@ -110,15 +110,15 @@ function formatDuration(sec: number): string {
 }
 
 function itemTitle(item: CollectionItem): string {
-  return item.archiveItem?.title ?? item.release?.title ?? '—'
+  return item.sound?.title ?? item.release?.title ?? '—'
 }
 
 function itemThumb(item: CollectionItem): string | null {
-  const bannerUrl = item.archiveItem?.bannerUrl ?? null
-  if (bannerUrl && item.archiveItem?.source === 'SPOTIFY_EMBED') {
+  const bannerUrl = item.sound?.bannerUrl ?? null
+  if (bannerUrl && item.sound?.source === 'SPOTIFY_EMBED') {
     return spotifyCoverProxySrc(bannerUrl)
   }
-  if (bannerUrl && item.archiveItem?.source === 'MIXCLOUD_EMBED') {
+  if (bannerUrl && item.sound?.source === 'MIXCLOUD_EMBED') {
     return mixcloudCoverProxySrc(bannerUrl)
   }
   return bannerUrl ?? item.release?.artworkUrl ?? null
@@ -126,11 +126,11 @@ function itemThumb(item: CollectionItem): string | null {
 
 export function CollectionEditor({
   collection: initial,
-  myArchiveItems = [],
+  mySoundItems = [],
   myReleases = [],
 }: {
   collection: CollectionDetail
-  myArchiveItems?: Array<{ id: string; title: string; status: string }>
+  mySoundItems?: Array<{ id: string; title: string; status: string }>
   myReleases?: Array<{ id: string; title: string; state: string }>
 }) {
   const router = useRouter()
@@ -196,7 +196,7 @@ export function CollectionEditor({
   const [mode, setMode] = useState<'view' | 'edit'>('view')
 
   const totalDurationSec = useMemo(
-    () => items.reduce((sum, item) => sum + (item.archiveItem?.durationSec ?? 0), 0),
+    () => items.reduce((sum, item) => sum + (item.sound?.durationSec ?? 0), 0),
     [items],
   )
 
@@ -265,8 +265,8 @@ export function CollectionEditor({
     }
     if (initial.trackSortMode === 'TIME') {
       return [...items].sort((a, b) => {
-        const at = a.archiveItem?.createdAt ?? a.release?.releaseDate ?? ''
-        const bt = b.archiveItem?.createdAt ?? b.release?.releaseDate ?? ''
+        const at = a.sound?.createdAt ?? a.release?.releaseDate ?? ''
+        const bt = b.sound?.createdAt ?? b.release?.releaseDate ?? ''
         return at.localeCompare(bt)
       })
     }
@@ -276,8 +276,7 @@ export function CollectionEditor({
   const playbackQueue = useMemo(
     () =>
       displayItems.flatMap((item) =>
-        item.audioUrl ||
-        (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri)
+        item.audioUrl || (item.sound?.source === 'HEARTHIS_EMBED' && item.sound.embedUri)
           ? [toPlayerTrack(item)]
           : [],
       ),
@@ -297,10 +296,7 @@ export function CollectionEditor({
 
   const toggleItemPlayback = useCallback(
     async (item: CollectionItem) => {
-      if (
-        !item.audioUrl &&
-        !(item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri)
-      )
+      if (!item.audioUrl && !(item.sound?.source === 'HEARTHIS_EMBED' && item.sound.embedUri))
         return
       const playerTrack = toPlayerTrack(item)
       if (track?.id === playerTrack.id) {
@@ -314,8 +310,7 @@ export function CollectionEditor({
 
   const queueItem = useCallback(
     (item: CollectionItem) => {
-      const isHearthis =
-        item.archiveItem?.source === 'HEARTHIS_EMBED' && Boolean(item.archiveItem.embedUri)
+      const isHearthis = item.sound?.source === 'HEARTHIS_EMBED' && Boolean(item.sound.embedUri)
       if (!item.audioUrl && !isHearthis) return
       const added = addToQueue(toPlayerTrack(item))
       const title = itemTitle(item)
@@ -335,7 +330,7 @@ export function CollectionEditor({
       const [kind, id] = selectedPick.split(':')
       const { error } = await addCollectionItem(
         initial.slug,
-        kind === 'archive' ? { archiveItemId: id } : { releaseId: id },
+        kind === 'sound' ? { soundId: id } : { releaseId: id },
       )
       setLibraryAdding(false)
       if (error) {
@@ -349,35 +344,35 @@ export function CollectionEditor({
     [initial.slug, libraryPick, router],
   )
 
-  const usedArchiveIds = new Set(items.map((i) => i.archiveItem?.id).filter(Boolean))
+  const usedSoundIds = new Set(items.map((i) => i.sound?.id).filter(Boolean))
   const usedReleaseIds = new Set(items.map((i) => i.release?.id).filter(Boolean))
-  const availableArchiveItems = myArchiveItems.filter(
-    (a) => a.status === 'READY' && !usedArchiveIds.has(a.id),
+  const availableSoundItems = mySoundItems.filter(
+    (a) => a.status === 'READY' && !usedSoundIds.has(a.id),
   )
   const availableReleases = myReleases.filter((r) => !usedReleaseIds.has(r.id))
   const availableLibraryItems = useMemo(
     () => [
-      ...availableArchiveItems.map((item) => ({ ...item, kind: 'archive' as const })),
+      ...availableSoundItems.map((item) => ({ ...item, kind: 'sound' as const })),
       ...availableReleases.map((item) => ({ ...item, kind: 'release' as const })),
     ],
-    [availableArchiveItems, availableReleases],
+    [availableSoundItems, availableReleases],
   )
 
   const renderTrackRowBody = useCallback(
     (item: CollectionItem, idx: number) => {
       const thumb = itemThumb(item)
       const title = itemTitle(item)
-      const dur = item.archiveItem?.durationSec
-      const source = item.archiveItem?.source
-      const quality = item.archiveItem?.qualityBadge
+      const dur = item.sound?.durationSec
+      const source = item.sound?.source
+      const quality = item.sound?.qualityBadge
       const badgeLabel =
         (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
         (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
       const badgeClass =
         (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
         (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
-      const embedUri = item.archiveItem?.embedUri
-      const embedProvider = item.archiveItem?.embedProvider
+      const embedUri = item.sound?.embedUri
+      const embedProvider = item.sound?.embedProvider
       const isEmbedExpanded = expandedEmbedItemId === item.id
       return (
         <>
@@ -880,7 +875,7 @@ export function CollectionEditor({
                           >
                             <span>{item.title}</span>
                             <span className="studio-text-muted-sm">
-                              {item.kind === 'archive' ? 'Archive item' : `Release · ${item.state}`}
+                              {item.kind === 'sound' ? 'Sound item' : `Release · ${item.state}`}
                             </span>
                           </button>
                           <Button
@@ -910,14 +905,14 @@ export function CollectionEditor({
               collectionId={initial.id}
               collectionTitle={name || initial.name}
               onClose={() => setSpotifyModalOpen(false)}
-              onAdded={({ archiveItemId, collectionItemId, track }) => {
+              onAdded={({ soundId, collectionItemId, track }) => {
                 setItems((prev) => [
                   ...prev,
                   {
                     id: collectionItemId,
                     position: prev.length + 1,
-                    archiveItem: {
-                      id: archiveItemId,
+                    sound: {
+                      id: soundId,
                       title: track.title,
                       durationSec: track.durationSec,
                       bannerUrl: track.coverUrl,
@@ -937,14 +932,14 @@ export function CollectionEditor({
               collectionId={initial.id}
               collectionTitle={name || initial.name}
               onClose={() => setMixcloudModalOpen(false)}
-              onAdded={({ archiveItemId, collectionItemId, track }) => {
+              onAdded={({ soundId, collectionItemId, track }) => {
                 setItems((prev) => [
                   ...prev,
                   {
                     id: collectionItemId,
                     position: prev.length + 1,
-                    archiveItem: {
-                      id: archiveItemId,
+                    sound: {
+                      id: soundId,
                       title: track.title,
                       durationSec: track.durationSec,
                       bannerUrl: track.coverUrl,
@@ -964,14 +959,14 @@ export function CollectionEditor({
               collectionId={initial.id}
               collectionTitle={name || initial.name}
               onClose={() => setHearthisModalOpen(false)}
-              onAdded={({ archiveItemId, collectionItemId, track }) => {
+              onAdded={({ soundId, collectionItemId, track }) => {
                 setItems((prev) => [
                   ...prev,
                   {
                     id: collectionItemId,
                     position: prev.length + 1,
-                    archiveItem: {
-                      id: archiveItemId,
+                    sound: {
+                      id: soundId,
                       title: track.title,
                       durationSec: track.durationSec,
                       bannerUrl: track.coverUrl,
@@ -1003,7 +998,7 @@ export function CollectionEditor({
                 Add archive recordings or releases from your catalog tab.
               </p>
               <Link
-                href="/dashboard/archive"
+                href="/dashboard/sounds"
                 className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
               >
                 <ButtonIcon name="link" />
@@ -1058,16 +1053,16 @@ export function CollectionEditor({
 }
 
 function toPlayerTrack(item: CollectionItem): PlayerTrack {
-  const isHearthis = item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri
+  const isHearthis = item.sound?.source === 'HEARTHIS_EMBED' && item.sound.embedUri
   return {
-    id: item.archiveItem?.id ?? `collection-release-${item.release?.id ?? item.id}`,
-    kind: 'archive',
+    id: item.sound?.id ?? `collection-release-${item.release?.id ?? item.id}`,
+    kind: 'sound',
     url: item.audioUrl ?? '',
     title: itemTitle(item),
     artworkUrl: itemThumb(item),
-    durationSec: item.archiveItem?.durationSec,
+    durationSec: item.sound?.durationSec,
     ...(isHearthis
-      ? { embed: { provider: 'HEARTHIS' as const, embedUri: item.archiveItem!.embedUri! } }
+      ? { embed: { provider: 'HEARTHIS' as const, embedUri: item.sound!.embedUri! } }
       : {}),
   }
 }

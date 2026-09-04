@@ -18,7 +18,7 @@ describe('PLAT-030 — artist stats API', () => {
   let cookie: string
   let userId: string
   let channelId: string
-  let archiveItemId: string
+  let soundId: string
   let releaseId: string
 
   beforeAll(async () => {
@@ -42,7 +42,7 @@ describe('PLAT-030 — artist stats API', () => {
     })
     channelId = channel.id
 
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Stats Test Track',
@@ -54,7 +54,7 @@ describe('PLAT-030 — artist stats API', () => {
         isPublic: true,
       },
     })
-    archiveItemId = item.id
+    soundId = item.id
 
     const release = await prisma.release.create({
       data: {
@@ -71,7 +71,7 @@ describe('PLAT-030 — artist stats API', () => {
     await prisma.download.create({
       data: {
         channelId,
-        archiveItemId,
+        soundId,
         format: 'mp3',
         byFingerprint: 'stats-fp-1',
         byIpHash: 'stats-ip-1',
@@ -139,15 +139,15 @@ describe('PLAT-030 — artist stats API', () => {
     expect(body.daily).toHaveLength(30)
   })
 
-  it('GET /api/me/stats/top-tracks ranks archive items', async () => {
+  it('GET /api/me/stats/top-tracks ranks sound items', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/stats/top-tracks',
       headers: { cookie },
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { items: Array<{ archiveItemId: string; plays: number }> }
-    expect(body.items.some((i) => i.archiveItemId === archiveItemId && i.plays >= 1)).toBe(true)
+    const body = res.json() as { items: Array<{ soundId: string; plays: number }> }
+    expect(body.items.some((i) => i.soundId === soundId && i.plays >= 1)).toBe(true)
   })
 
   it('GET /api/me/stats/top-countries groups referer clicks', async () => {

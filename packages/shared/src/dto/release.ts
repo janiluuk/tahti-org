@@ -48,7 +48,7 @@ export const SmartLinkTargetsSchema = z
 export const ReleaseTrackInputSchema = z.object({
   title: z.string().trim().min(1, 'track title is required').max(200),
   durationSec: z.number().int().positive().optional(),
-  archiveItemId: z.string().min(1).optional(),
+  soundId: z.string().min(1).optional(),
   isrc: z
     .string()
     .trim()
@@ -58,6 +58,12 @@ export const ReleaseTrackInputSchema = z.object({
   explicit: z.boolean().optional(),
   genre: z.string().trim().max(80).optional(),
   genreCustom: z.string().trim().max(80).optional(),
+  // Metadata parity with Sound — see ReleaseTrack.subGenres/tags/bpm/musicalKey/mixVersion.
+  subGenres: z.array(z.string().max(40).trim()).max(12).optional(),
+  tags: z.array(z.string().max(40).trim()).max(20).optional(),
+  bpm: z.number().int().min(40).max(300).nullable().optional(),
+  musicalKey: z.string().max(12).nullable().optional(),
+  mixVersion: z.string().max(120).nullable().optional(),
 })
 
 export const ReleaseTrackUploadSchema = z.object({

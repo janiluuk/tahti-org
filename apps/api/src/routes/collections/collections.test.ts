@@ -6,7 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
-  createReadyArchiveItem,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -18,7 +18,7 @@ describe('M23 — collections and RSS', () => {
   let cookie: string
   let username: string
   let channelId: string
-  let archiveItemId: string
+  let soundId: string
   let collectionSlug: string
 
   beforeAll(async () => {
@@ -37,8 +37,8 @@ describe('M23 — collections and RSS', () => {
     channelId = artist.channel!.id
     cookie = await sessionCookieFor(prisma, artist.id)
 
-    const item = await createReadyArchiveItem(prisma, channelId, 'Sunset Mix')
-    archiveItemId = item.id
+    const item = await createReadySound(prisma, channelId, 'Sunset Mix')
+    soundId = item.id
     collectionSlug = `${username}-trance-sets`
   })
 
@@ -66,7 +66,7 @@ describe('M23 — collections and RSS', () => {
     expect(res.statusCode).toBe(400)
   })
 
-  it('creates a collection, adds archive item, and serves public JSON + RSS', async () => {
+  it('creates a collection, adds sound item, and serves public JSON + RSS', async () => {
     const create = await app.inject({
       method: 'POST',
       url: '/api/me/collections',
@@ -85,7 +85,7 @@ describe('M23 — collections and RSS', () => {
       method: 'POST',
       url: `/api/me/collections/${collectionSlug}/items`,
       headers: { cookie },
-      payload: { archiveItemId, position: 1 },
+      payload: { soundId, position: 1 },
     })
     expect(add.statusCode).toBe(201)
 
@@ -96,7 +96,7 @@ describe('M23 — collections and RSS', () => {
     expect(pub.statusCode).toBe(200)
     expect(pub.json().name).toBe('Trance Sets')
     expect(pub.json().items).toHaveLength(1)
-    expect(pub.json().items[0].archiveItem.title).toBe('Sunset Mix')
+    expect(pub.json().items[0].sound.title).toBe('Sunset Mix')
 
     const rss = await app.inject({
       method: 'GET',
@@ -170,7 +170,7 @@ describe('M23 — collections and RSS', () => {
     expect(pub.statusCode).toBe(404)
   })
 
-  it('serves channel archive RSS for public ready items', async () => {
+  it('serves channel sound RSS for public ready items', async () => {
     const rss = await app.inject({
       method: 'GET',
       url: `/api/v1/c/${username}/rss.xml`,
@@ -179,7 +179,7 @@ describe('M23 — collections and RSS', () => {
     expect(rss.body).toContain('Sunset Mix')
   })
 
-  it('serves artist archive RSS at /api/v1/u/:username/rss.xml', async () => {
+  it('serves artist sound RSS at /api/v1/u/:username/rss.xml', async () => {
     const rss = await app.inject({
       method: 'GET',
       url: `/api/v1/u/${username}/rss.xml`,
@@ -224,12 +224,12 @@ describe('M23 — collections and RSS', () => {
   })
 
   it('reorders collection items via PUT /reorder', async () => {
-    const item2 = await createReadyArchiveItem(prisma, channelId, 'Dawn Mix')
+    const item2 = await createReadySound(prisma, channelId, 'Dawn Mix')
     const create2 = await app.inject({
       method: 'POST',
       url: `/api/me/collections/${collectionSlug}/items`,
       headers: { cookie },
-      payload: { archiveItemId: item2.id },
+      payload: { soundId: item2.id },
     })
     expect(create2.statusCode).toBe(201)
 
@@ -362,7 +362,7 @@ describe('collaborative playlists', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let ownerCookie: string
   let contributorCookie: string
-  let contributorArchiveItemId: string
+  let contributorSoundId: string
   let collaborativeSlug: string
   let nonCollaborativeSlug: string
 
@@ -384,12 +384,12 @@ describe('collaborative playlists', () => {
       tier: 'ARTIST',
     })
     contributorCookie = await sessionCookieFor(prisma, contributor.id)
-    const contributorItem = await createReadyArchiveItem(
+    const contributorItem = await createReadySound(
       prisma,
       contributor.channel!.id,
       'Contributor track',
     )
-    contributorArchiveItemId = contributorItem.id
+    contributorSoundId = contributorItem.id
 
     collaborativeSlug = `${PREFIX}collab-playlist`
     await prisma.collection.create({
@@ -428,7 +428,7 @@ describe('collaborative playlists', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as { tracks: Array<{ id: string; title: string }> }
-    expect(body.tracks.map((t) => t.id)).toContain(contributorArchiveItemId)
+    expect(body.tracks.map((t) => t.id)).toContain(contributorSoundId)
   })
 
   it('lets another logged-in user add a track to a collaborative playlist', async () => {
@@ -436,12 +436,12 @@ describe('collaborative playlists', () => {
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
       headers: { cookie: contributorCookie },
-      payload: { archiveItemId: contributorArchiveItemId },
+      payload: { soundId: contributorSoundId },
     })
     expect(res.statusCode).toBe(201)
 
     const item = await prisma.collectionItem.findFirst({
-      where: { collection: { slug: collaborativeSlug }, archiveItemId: contributorArchiveItemId },
+      where: { collection: { slug: collaborativeSlug }, soundId: contributorSoundId },
     })
     expect(item).toBeTruthy()
   })
@@ -451,7 +451,7 @@ describe('collaborative playlists', () => {
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
       headers: { cookie: contributorCookie },
-      payload: { archiveItemId: contributorArchiveItemId },
+      payload: { soundId: contributorSoundId },
     })
     expect(res.statusCode).toBe(409)
   })
@@ -460,7 +460,7 @@ describe('collaborative playlists', () => {
     const res = await app.inject({
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
-      payload: { archiveItemId: contributorArchiveItemId },
+      payload: { soundId: contributorSoundId },
     })
     expect(res.statusCode).toBe(401)
   })
@@ -470,7 +470,7 @@ describe('collaborative playlists', () => {
       method: 'POST',
       url: `/api/v1/collections/${nonCollaborativeSlug}/items`,
       headers: { cookie: contributorCookie },
-      payload: { archiveItemId: contributorArchiveItemId },
+      payload: { soundId: contributorSoundId },
     })
     expect(res.statusCode).toBe(404)
   })
@@ -480,7 +480,7 @@ describe('collaborative playlists', () => {
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
       headers: { cookie: ownerCookie },
-      payload: { archiveItemId: 'not-a-real-track' },
+      payload: { soundId: 'not-a-real-track' },
     })
     expect(res.statusCode).toBe(400)
   })
@@ -490,18 +490,18 @@ describe('collaborative playlists', () => {
       where: { username: `${PREFIX}collab-owner` },
       include: { channel: true },
     })
-    const item = await createReadyArchiveItem(prisma, owner.channel!.id, 'Noted track')
+    const item = await createReadySound(prisma, owner.channel!.id, 'Noted track')
 
     const res = await app.inject({
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
       headers: { cookie: contributorCookie },
-      payload: { archiveItemId: item.id, note: 'This one slaps' },
+      payload: { soundId: item.id, note: 'This one slaps' },
     })
     expect(res.statusCode).toBe(201)
 
     const stored = await prisma.collectionItem.findFirst({
-      where: { collection: { slug: collaborativeSlug }, archiveItemId: item.id },
+      where: { collection: { slug: collaborativeSlug }, soundId: item.id },
     })
     expect(stored?.addNote).toBe('This one slaps')
     const contributor = await prisma.user.findFirstOrThrow({
@@ -525,11 +525,7 @@ describe('collaborative playlists', () => {
       where: { username: `${PREFIX}collab-owner` },
       include: { channel: true },
     })
-    const secondItem = await createReadyArchiveItem(
-      prisma,
-      owner.channel!.id,
-      'Second contributor track',
-    )
+    const secondItem = await createReadySound(prisma, owner.channel!.id, 'Second contributor track')
     const second = await createTestArtist(prisma, {
       email: `${PREFIX}collab-second@example.com`,
       username: `${PREFIX}collab-second`,
@@ -541,7 +537,7 @@ describe('collaborative playlists', () => {
       method: 'POST',
       url: `/api/v1/collections/${collaborativeSlug}/items`,
       headers: { cookie: secondCookie },
-      payload: { archiveItemId: secondItem.id },
+      payload: { soundId: secondItem.id },
     })
     expect(res.statusCode).toBe(201)
 
@@ -710,15 +706,11 @@ describe('owner route accepts any public track (player "Add to...")', () => {
       username: `${PREFIX}addto-other`,
       tier: 'ARTIST',
     })
-    const publicItem = await createReadyArchiveItem(prisma, otherArtist.channel!.id, 'Public track')
+    const publicItem = await createReadySound(prisma, otherArtist.channel!.id, 'Public track')
     otherArtistPublicItemId = publicItem.id
 
-    const privateItem = await createReadyArchiveItem(
-      prisma,
-      otherArtist.channel!.id,
-      'Private track',
-    )
-    await prisma.archiveItem.update({ where: { id: privateItem.id }, data: { isPublic: false } })
+    const privateItem = await createReadySound(prisma, otherArtist.channel!.id, 'Private track')
+    await prisma.sound.update({ where: { id: privateItem.id }, data: { isPublic: false } })
     otherArtistPrivateItemId = privateItem.id
 
     listenerSlug = `${PREFIX}addto-my-playlist`
@@ -737,7 +729,7 @@ describe('owner route accepts any public track (player "Add to...")', () => {
       method: 'POST',
       url: `/api/me/collections/${listenerSlug}/items`,
       headers: { cookie: listenerCookie },
-      payload: { archiveItemId: otherArtistPublicItemId },
+      payload: { soundId: otherArtistPublicItemId },
     })
     expect(res.statusCode).toBe(201)
   })
@@ -747,7 +739,7 @@ describe('owner route accepts any public track (player "Add to...")', () => {
       method: 'POST',
       url: `/api/me/collections/${listenerSlug}/items`,
       headers: { cookie: listenerCookie },
-      payload: { archiveItemId: otherArtistPublicItemId },
+      payload: { soundId: otherArtistPublicItemId },
     })
     expect(res.statusCode).toBe(409)
   })
@@ -757,7 +749,7 @@ describe('owner route accepts any public track (player "Add to...")', () => {
       method: 'POST',
       url: `/api/me/collections/${listenerSlug}/items`,
       headers: { cookie: listenerCookie },
-      payload: { archiveItemId: otherArtistPrivateItemId },
+      payload: { soundId: otherArtistPrivateItemId },
     })
     expect(res.statusCode).toBe(400)
   })

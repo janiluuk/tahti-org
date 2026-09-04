@@ -17,7 +17,7 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Presigned URL for archive source upload',
+        description: 'Presigned URL for sound source upload',
         response: openApiResponse(PrepareUploadResponseSchema, 'PrepareUpload'),
       },
     },
