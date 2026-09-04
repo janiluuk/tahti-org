@@ -185,7 +185,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | ~~P1~~ | ~~Playwright page captures~~ — local `scripts/e2e-screenshots.sh` + `docs/e2e-screenshots/` (not CI)                                        | Visual regression for docs/stakeholders       |
 | ~~P1~~ | ~~Playwright smoke in CI against `docker compose stack` (optional nightly, not every PR)~~ — `tests/e2e/web-smoke.mjs` in `stack-smoke.yml` | Catch RSC regressions without local-only flow |
-| P1     | README: local test DB + `pnpm ci:check` one-liner                                                                                           | Onboarding                                    |
+| ~~P1~~ | ~~README: local test DB + `pnpm ci:check` one-liner~~ — clean-checkout bootstrap command added                                              | Onboarding                                    |
 | ~~P2~~ | ~~Broad API test coverage~~ — ~230 tests (2026-06-03)                                                                                       | —                                             |
 | ~~P2~~ | ~~Contract tests for public `/api/v1/*` JSON shapes~~ — `apps/api/src/routes/contracts/public-v1.test.ts`                                   |
 | P2     | Ephemeral DB per Vitest worker (Testcontainers)                                                                                             | Parallel CI                                   |
