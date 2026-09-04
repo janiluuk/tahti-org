@@ -8,13 +8,6 @@
   },
   {
     "role": "public",
-    "id": "join",
-    "file": "public/join.png",
-    "url": "/join",
-    "label": "Join (register)"
-  },
-  {
-    "role": "public",
     "id": "login",
     "file": "public/login.png",
     "url": "/login",
@@ -31,7 +24,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=XlWw6AOG9otfJLzlWOwZQaiYo4eXOpJQ",
+    "url": "/verify?token=54EwoDEr-6HUi7Ss-bfSvr_7xDicRDzn",
     "label": "Verify email (with token)"
   },
   {
@@ -61,13 +54,6 @@
     "file": "public/venues.png",
     "url": "/venues",
     "label": "Venues calendar"
-  },
-  {
-    "role": "public",
-    "id": "apply",
-    "file": "public/apply.png",
-    "url": "/apply",
-    "label": "Beta apply"
   },
   {
     "role": "public",
@@ -204,13 +190,6 @@
   },
   {
     "role": "public",
-    "id": "venues-register",
-    "file": "public/venues-register.png",
-    "url": "/venues/register",
-    "label": "Venue registration"
-  },
-  {
-    "role": "public",
     "id": "how-it-works",
     "file": "public/how-it-works.png",
     "url": "/how-it-works",
@@ -227,7 +206,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmt7wx5ya00068qsyou0iz434",
+    "url": "/embed/r/cmthzjrax00062lai1cev4eqp",
     "label": "Embed release player"
   },
   {
@@ -458,7 +437,7 @@
     "role": "artist",
     "id": "release-detail",
     "file": "artist/release-detail.png",
-    "url": "/dashboard/releases/cmt7wx5ya00068qsyou0iz434",
+    "url": "/dashboard/releases/cmthzjrax00062lai1cev4eqp",
     "label": "Release detail"
   },
   {
@@ -472,21 +451,21 @@
     "role": "artist",
     "id": "archive-item",
     "file": "artist/archive-item.png",
-    "url": "/dashboard/archive/cmt7wx60s000s8qsyuke99phf",
+    "url": "/dashboard/archive/cmthzjrbo000s2laioyghi0a3",
     "label": "Archive item preview"
   },
   {
     "role": "artist",
     "id": "archive-item-editor",
     "file": "artist/archive-item-editor.png",
-    "url": "/dashboard/archive/cmt7wx60s000s8qsyuke99phf/editor",
+    "url": "/dashboard/archive/cmthzjrbo000s2laioyghi0a3/editor",
     "label": "Archive item — audio editor"
   },
   {
     "role": "artist",
     "id": "editor-project",
     "file": "artist/editor-project.png",
-    "url": "/dashboard/editor/cmt7wx65d000u8qsymsooy4ya",
+    "url": "/dashboard/editor/cmthzjrdv000u2lair27jn9xi",
     "label": "Editor project"
   },
   {
@@ -523,6 +502,90 @@
     "file": "admin/support.png",
     "url": "/admin/support",
     "label": "Support tickets"
+  },
+  {
+    "role": "admin",
+    "id": "news",
+    "file": "admin/news.png",
+    "url": "/admin/news",
+    "label": "Site news"
+  },
+  {
+    "role": "admin",
+    "id": "announcements",
+    "file": "admin/announcements.png",
+    "url": "/admin/announcements",
+    "label": "Announcement clips"
+  },
+  {
+    "role": "admin",
+    "id": "radio-submissions",
+    "file": "admin/radio-submissions.png",
+    "url": "/admin/radio-submissions",
+    "label": "Radio submissions"
+  },
+  {
+    "role": "admin",
+    "id": "missed-shows",
+    "file": "admin/missed-shows.png",
+    "url": "/admin/missed-shows",
+    "label": "Missed shows"
+  },
+  {
+    "role": "admin",
+    "id": "top-lists",
+    "file": "admin/top-lists.png",
+    "url": "/admin/top-lists",
+    "label": "Top lists"
+  },
+  {
+    "role": "admin",
+    "id": "disco-widgets",
+    "file": "admin/disco-widgets.png",
+    "url": "/admin/disco-widgets",
+    "label": "Disco widgets"
+  },
+  {
+    "role": "admin",
+    "id": "themes",
+    "file": "admin/themes.png",
+    "url": "/admin/themes",
+    "label": "Interface themes"
+  },
+  {
+    "role": "admin",
+    "id": "internet-radio",
+    "file": "admin/internet-radio.png",
+    "url": "/admin/internet-radio",
+    "label": "Internet radio"
+  },
+  {
+    "role": "admin",
+    "id": "storage",
+    "file": "admin/storage.png",
+    "url": "/admin/storage",
+    "label": "Storage overview"
+  },
+  {
+    "role": "admin",
+    "id": "files",
+    "file": "admin/files.png",
+    "url": "/admin/files",
+    "label": "File browser"
+  },
+  {
+    "role": "admin",
+    "id": "content-reports",
+    "file": "admin/content-reports.png",
+    "url": "/admin/content-reports",
+    "label": "Content reports"
+  },
+  {
+    "role": "admin",
+    "id": "feature-requests",
+    "file": "admin/feature-requests.png",
+    "url": "/admin/feature-requests",
+    "label": "Feature requests"
   },
   {
     "role": "admin",
