@@ -1671,7 +1671,12 @@ export const AdminChatTimeseriesPointSchema = z.object({
 })
 
 export const AdminChatTimeseriesSchema = z.object({
-  days: z.number().int().positive(),
+  // .min(1) rather than .positive() — zod-to-json-schema's openApi3 target
+  // emits .positive() as a boolean-style `exclusiveMinimum: true`, which
+  // Fastify's ajv rejects when compiling this as a response schema (ajv
+  // wants exclusiveMinimum as a number). .min(1) has the same constraint
+  // (integer >= 1) but serializes as a plain `minimum`.
+  days: z.number().int().min(1),
   series: z.array(AdminChatTimeseriesPointSchema),
 })
 
