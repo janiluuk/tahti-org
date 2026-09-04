@@ -107,6 +107,48 @@ describe('GET /api/tracks/:id', () => {
     expect(body.commentary).toBe('Recorded live at Klubi.')
     expect(body.commentCount).toBe(0)
     expect(body.downloadCount).toBe(0)
+    expect(body.accessMode).toBe('FREE')
+    expect(body.gate).toBeNull()
+  })
+
+  it('nulls audioUrl and exposes purchase gate for anonymous viewers', async () => {
+    const artist = await prisma.channel.findUniqueOrThrow({
+      where: { id: channelId },
+      select: { userId: true },
+    })
+    const tier = await prisma.purchaseTier.create({
+      data: {
+        artistUserId: artist.userId,
+        name: 'Digital download',
+        priceCents: 500,
+        active: true,
+        position: 0,
+      },
+    })
+    const item = await prisma.archiveItem.create({
+      data: {
+        channelId,
+        title: 'Paywalled Track',
+        rawKey: 'raw/track-get-testuser/paid.mp3',
+        mp3Key: 'mp3/track-get-testuser/paid.mp3',
+        fileSizeBytes: 0,
+        durationSec: 200,
+        status: 'READY',
+        isPublic: true,
+        accessMode: 'PURCHASE',
+        purchaseTierId: tier.id,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.audioUrl).toBeNull()
+    expect(body.accessMode).toBe('PURCHASE')
+    expect(body.purchaseTierId).toBe(tier.id)
+    expect(body.purchaseTierName).toBe('Digital download')
+    expect(body.purchaseTierPriceCents).toBe(500)
+    expect(body.gate).toEqual({ reason: 'PURCHASE', tierId: tier.id })
   })
 
   it('does not serve a private track', async () => {

@@ -883,6 +883,19 @@ export const PublicTrackDetailSchema = z
     peaks: z.array(z.number()).nullable(),
     commentCount: z.number().int(),
     downloadCount: z.number().int(),
+    /** FREE | SUBSCRIBERS_ONLY | PURCHASE — one-time purchase tiers are distinct from fan-subs. */
+    accessMode: z.enum(['FREE', 'SUBSCRIBERS_ONLY', 'PURCHASE']).optional(),
+    purchaseTierId: z.string().nullable().optional(),
+    purchaseTierName: z.string().nullable().optional(),
+    purchaseTierPriceCents: z.number().int().nullable().optional(),
+    /** Present when the viewer cannot stream; audioUrl is null in that case. */
+    gate: z
+      .object({
+        reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
+        tierId: z.string().optional(),
+      })
+      .nullable()
+      .optional(),
   })
   .passthrough()
 
