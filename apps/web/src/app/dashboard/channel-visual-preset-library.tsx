@@ -133,9 +133,6 @@ export function ChannelVisualPresetLibrary({ current, onApply }: Props) {
   return (
     <div className="studio-field--block channel-visual-preset-library">
       <span className="studio-label">Saved Looks</span>
-      <p className="studio-help">
-        Save the settings on this page as a named Look, then re-apply or delete it later.
-      </p>
 
       <div className="studio-row studio-row--wrap">
         <select

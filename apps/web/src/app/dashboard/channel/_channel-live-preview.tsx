@@ -66,12 +66,18 @@ function resolveHeaderBannerStyle(
   visual: ChannelPreviewDraft['visual'],
 ): CSSProperties | undefined {
   if (visual.headerStyle === 'VIDEO_LOOP') return undefined // rendered via the backdrop below
+  const scheme = parseColorScheme(visual.colorSchemeJson) ?? DEFAULT_COLOR_SCHEME
   const preset = BRAND_ACCENT_PRESETS.find((p) => p.id === visual.brandAccentPreset)
   if (visual.headerStyle === 'SOLID') {
-    const scheme = parseColorScheme(visual.colorSchemeJson)
-    return { background: preset?.accent ?? scheme?.accent ?? DEFAULT_COLOR_SCHEME.accent }
+    return { background: scheme.bg }
   }
-  return { background: (preset ?? BRAND_ACCENT_PRESETS[0])?.gradient }
+  // GRADIENT: prefer live scheme colors; brand preset only when it still matches.
+  if (preset && scheme.accent === preset.accent && scheme.highlight === preset.highlight) {
+    return { background: preset.gradient }
+  }
+  return {
+    background: `linear-gradient(135deg, ${scheme.highlight}, ${scheme.accent}, ${scheme.bg})`,
+  }
 }
 
 /** Mirrors the top-of-page visual stack from the public channel page, fed by live draft state.
@@ -116,13 +122,19 @@ export function ChannelLivePreview({
     }
   }
 
-  const headerRegion = regionProps('header', 'header & backdrop')
+  const headerRegion = regionProps('header', 'header / backdrop')
   const linksRegion = regionProps('links', 'links')
-  const playerRegion = regionProps('player', 'player overlay text')
-  const slideshowRegion = regionProps('slideshow', 'slideshow transitions')
+  const playerRegion = regionProps('player', 'player')
+  const slideshowRegion = regionProps('slideshow', 'slideshow')
+  const pageScheme = parseColorScheme(draft.visual.colorSchemeJson)
 
   return (
-    <div data-tahti-ui="brand" data-channel-root className="brand-channel studio-channel-preview">
+    <div
+      data-tahti-ui="brand"
+      data-channel-root
+      className="brand-channel studio-channel-preview"
+      style={pageScheme ? { backgroundColor: pageScheme.bg } : undefined}
+    >
       <div className="ch-page-content studio-channel-preview__inner">
         <ChannelColorScheme colorSchemeJson={draft.visual.colorSchemeJson} />
 

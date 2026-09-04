@@ -20,7 +20,9 @@ import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import ChannelLinksPanel from '../channel-links-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
 import type { ChannelLink } from '../channel-links-panel'
-import { DesignerSectionList } from './_designer-section-list'
+import { DesignerSectionSelect } from './_designer-section-select'
+import { DesignerHelpLayer } from './_designer-help-layer'
+import { DesignerCatalogLinkPanel } from './_designer-catalog-link-panel'
 import {
   DESIGNER_SECTIONS,
   designerSectionById,
@@ -150,6 +152,7 @@ export function ChannelEditorSections({
   }
 
   async function saveSection(section: DesignerSectionDefinition): Promise<boolean> {
+    if (section.saveKind === 'none') return true
     if (section.saveKind === 'visual' || section.saveKind === 'header') {
       const visualRes = await updateChannelVisual({
         visualPreset: draft.visual.visualPreset,
@@ -240,6 +243,7 @@ export function ChannelEditorSections({
   }
 
   const activeDef = designerSectionById(activeSection)
+  const showSave = activeDef.saveKind !== 'none'
 
   return (
     <div className="studio-channel-editor">
@@ -259,22 +263,24 @@ export function ChannelEditorSections({
         />
       </div>
 
-      <div className="studio-channel-editor__layout">
-        <DesignerSectionList
-          sections={DESIGNER_SECTIONS}
-          activeId={activeSection}
-          onSelect={selectSection}
-        />
-
+      <div className="studio-channel-editor__layout studio-channel-editor__layout--dropdown">
         <div className="studio-designer-active-panel">
+          <div className="studio-designer-active-panel__toolbar">
+            <DesignerSectionSelect
+              sections={DESIGNER_SECTIONS}
+              activeId={activeSection}
+              onSelect={selectSection}
+            />
+            <DesignerHelpLayer title="Help for this section">
+              <p className="studio-m-0">{activeDef.help}</p>
+            </DesignerHelpLayer>
+          </div>
+
           <div className="studio-designer-active-panel__body">
-            {activeDef.description ? (
-              <p className="studio-help studio-mb-sm">{activeDef.description}</p>
-            ) : null}
             {error && <p className="studio-notice studio-notice--error">{error}</p>}
             {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-            {activeSection === 'visual' && (
+            {activeSection === 'background' && (
               <>
                 <ChannelVisualPresetLibrary
                   current={draft.visual}
@@ -304,8 +310,12 @@ export function ChannelEditorSections({
             {activeSection === 'header' && (
               <ChannelHeaderPanel
                 tier={tier}
-                initialHeaderStyle={channelVisual.headerStyle}
-                initialGallery={channelGallery}
+                initialHeaderStyle={draft.visual.headerStyle}
+                initialGallery={{
+                  galleryMode: draft.gallery.galleryMode,
+                  slideshowImages: draft.gallery.slideshowImages,
+                  videoBackgroundUrl: draft.gallery.videoBackgroundUrl,
+                }}
                 initialVisibility={visibility}
                 onHeaderStyleChange={(headerStyle) =>
                   setDraft((d) => ({ ...d, visual: { ...d.visual, headerStyle } }))
@@ -322,9 +332,8 @@ export function ChannelEditorSections({
 
             {activeSection === 'slideshow' &&
               (draft.gallery.galleryMode === 'NONE' ? (
-                <p className="studio-help">
-                  Enable a gallery mode in Header &amp; backdrop first to configure slideshow
-                  transitions.
+                <p className="studio-text-muted-sm">
+                  Choose a gallery style under Header / backdrop, then return here for transitions.
                 </p>
               ) : (
                 <ChannelSlideshowPanel
@@ -358,6 +367,10 @@ export function ChannelEditorSections({
                 onDraftChange={(textLayer) => setDraft((current) => ({ ...current, textLayer }))}
               />
             )}
+
+            {(activeSection === 'tracks' ||
+              activeSection === 'collections' ||
+              activeSection === 'releases') && <DesignerCatalogLinkPanel section={activeSection} />}
           </div>
 
           <div className="studio-designer-panel__footer">
@@ -367,10 +380,12 @@ export function ChannelEditorSections({
                 <ButtonIcon name="check" />
                 Done
               </Button>
-              <Button variant="primary" onClick={handleSave} disabled={isPending}>
-                <ButtonIcon name="save" />
-                {isPending ? 'Saving…' : 'Save'}
-              </Button>
+              {showSave ? (
+                <Button variant="primary" onClick={handleSave} disabled={isPending}>
+                  <ButtonIcon name="save" />
+                  {isPending ? 'Saving…' : 'Save'}
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>

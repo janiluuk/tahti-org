@@ -66,7 +66,7 @@ export type ChannelVisualDraft = {
 export default function ChannelVisualPresetPanel({
   channelSlug,
   tier,
-  hasVideoBackground,
+  hasVideoBackground: _hasVideoBackground,
   initial,
   bare = false,
   hideHeaderStyle = false,
@@ -83,7 +83,6 @@ export default function ChannelVisualPresetPanel({
   )
   const parsed = parseOrNull(initial.colorSchemeJson)
   const [scheme, setScheme] = useState<ColorScheme>(parsed ?? DEFAULT_COLOR_SCHEME)
-  const [useCustomScheme, setUseCustomScheme] = useState(!!parsed)
   const [brandAccentPreset, setBrandAccentPreset] = useState(initial.brandAccentPreset)
   const [headerStyle, setHeaderStyle] = useState<ChannelHeaderStyle>(initial.headerStyle)
   const [settingsMap, setSettingsMap] = useState<VisualSettingsMap>(() =>
@@ -92,13 +91,12 @@ export default function ChannelVisualPresetPanel({
 
   const canUseVideoLoop = tier !== 'FREE'
 
-  // Slideshow-transition fields live on Media & Presskit (ChannelSlideshowPanel) now —
-  // see /dashboard/settings/media#gallery.
-  // pass them through unchanged so this panel's save doesn't clobber them.
+  // Always persist a full color scheme so page backgrounds are never stuck on
+  // the platform purple default when the artist only touched brand swatches.
   useEffect(() => {
     onDraftChange?.({
       visualPreset: preset,
-      colorSchemeJson: useCustomScheme ? JSON.stringify(scheme) : null,
+      colorSchemeJson: JSON.stringify(scheme),
       visualSettingsJson: Object.keys(settingsMap).length > 0 ? JSON.stringify(settingsMap) : null,
       headerStyle,
       brandAccentPreset,
@@ -108,7 +106,7 @@ export default function ChannelVisualPresetPanel({
       slideshowAutoplay: initial.slideshowAutoplay,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, scheme, useCustomScheme, headerStyle, brandAccentPreset, settingsMap])
+  }, [preset, scheme, headerStyle, brandAccentPreset, settingsMap])
 
   function updateColor(key: keyof ColorScheme, value: string) {
     setScheme((s) => ({ ...s, [key]: value }))
@@ -118,7 +116,6 @@ export default function ChannelVisualPresetPanel({
     const accentPreset = BRAND_ACCENT_PRESETS.find((p) => p.id === presetId)
     if (!accentPreset) return
     setBrandAccentPreset(presetId)
-    setUseCustomScheme(true)
     setScheme((s) => ({ ...s, accent: accentPreset.accent, highlight: accentPreset.highlight }))
   }
 
@@ -160,6 +157,37 @@ export default function ChannelVisualPresetPanel({
         </div>
       </div>
 
+      <div className="studio-field--block">
+        <span className="studio-label">Page &amp; artist box colors</span>
+        <div className="channel-color-scheme-grid">
+          {(
+            [
+              ['bg', 'Background'],
+              ['accent', 'Accent'],
+              ['highlight', 'Highlight'],
+              ['text', 'Text'],
+              ['muted', 'Muted'],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key} className="channel-color-scheme-field">
+              <input
+                type="color"
+                value={scheme[key]}
+                aria-label={label}
+                onChange={(e) => {
+                  setBrandAccentPreset(null)
+                  updateColor(key, e.target.value)
+                }}
+              />
+              <span>
+                <span className="studio-label">{label}</span>
+                <code className="studio-text-muted-sm">{scheme[key]}</code>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       {!hideHeaderStyle ? (
         <div className="studio-field--block">
           <span className="studio-label">Header style</span>
@@ -181,20 +209,12 @@ export default function ChannelVisualPresetPanel({
               )
             })}
           </div>
-          {headerStyle === 'VIDEO_LOOP' && !hasVideoBackground ? (
-            <p className="studio-text-muted-sm studio-mt-sm">
-              Add the video URL in Header &amp; backdrop.
-            </p>
-          ) : null}
         </div>
       ) : null}
 
       <div className="studio-field--block">
         <div className="channel-visualizer-toggle-row">
-          <div>
-            <span className="studio-label">Background visualizer</span>
-            <p className="studio-help">Add an animated, audio-reactive backdrop to your channel.</p>
-          </div>
+          <span className="studio-label">Background visualizer</span>
           <StudioSwitch
             checked={preset !== 'MINIMAL'}
             onChange={(enabled) => setVisualizerEnabled(enabled)}
@@ -206,20 +226,11 @@ export default function ChannelVisualPresetPanel({
             <VisualPresetPicker
               value={preset}
               onChange={selectVisualizer}
-              colorScheme={useCustomScheme ? scheme : undefined}
+              colorScheme={scheme}
               settingsMap={settingsMap}
               onSettingsChange={setSettingsMap}
               showPreview
-              colorSchemeEditor={{
-                enabled: useCustomScheme,
-                onEnabledChange: setUseCustomScheme,
-                scheme,
-                onSchemeChange: updateColor,
-              }}
             />
-            <p className="studio-help studio-mt-xs">
-              Click the visualizer to browse all presets, or use the gear icon for quick settings.
-            </p>
           </div>
         ) : null}
       </div>
