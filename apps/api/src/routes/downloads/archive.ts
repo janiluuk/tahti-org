@@ -16,6 +16,7 @@ import {
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
+import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
@@ -88,6 +89,8 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
           fileSizeBytes: true,
           repostToDownload: true,
           followToDownload: true,
+          accessMode: true,
+          purchaseTierId: true,
         },
       })
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
@@ -97,6 +100,26 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
       const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
       const byUserId = request.sessionUser?.id ?? null
+
+      const playbackGate = await resolvePlaybackGateStatus(
+        fastify.prisma,
+        {
+          artistUserId: channel.userId,
+          accessMode: item.accessMode ?? 'FREE',
+          purchaseTierId: item.purchaseTierId ?? null,
+        },
+        byUserId,
+      )
+      if (!playbackGate.allowed) {
+        return reply.status(403).send({
+          error:
+            playbackGate.reason === 'PURCHASE'
+              ? 'Buy this track (or subscribe) to download'
+              : 'Subscribe to this artist to download',
+          gate: playbackGate.reason,
+          ...(playbackGate.tierId ? { tierId: playbackGate.tierId } : {}),
+        })
+      }
 
       const gates = await resolveDownloadGateStatus(fastify.prisma, {
         artistUserId: channel.userId,

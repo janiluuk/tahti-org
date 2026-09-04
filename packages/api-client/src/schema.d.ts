@@ -2318,7 +2318,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Public single-track detail page — full metadata plus real waveform peaks */
+    /** @description Public single-track detail — metadata, waveform peaks, and purchase/subscriber gate */
     get: {
       parameters: {
         query?: never
@@ -2368,6 +2368,16 @@ export interface paths {
               peaks: number[] | null
               commentCount: number
               downloadCount: number
+              /** @enum {string} */
+              accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+              purchaseTierId?: string | null
+              purchaseTierName?: string | null
+              purchaseTierPriceCents?: number | null
+              gate?: {
+                /** @enum {string} */
+                reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                tierId?: string
+              } | null
             } & {
               [key: string]: unknown
             }
