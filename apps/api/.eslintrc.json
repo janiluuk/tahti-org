@@ -10,7 +10,10 @@
       "rules": { "no-restricted-syntax": "off" }
     },
     {
-      "files": ["src/routes/journeys/**/*.ts"],
+      "files": [
+        "src/routes/journeys/**/*.ts",
+        "src/routes/me/channel-look-extras.test.ts"
+      ],
       "rules": { "no-restricted-syntax": "off" }
     }
   ]
