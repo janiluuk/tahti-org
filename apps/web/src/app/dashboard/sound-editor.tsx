@@ -21,7 +21,6 @@ import {
   SoundAdvancedFields,
   metadataFormToPayload,
   metadataFromApi,
-
   type SoundMetadataFormState,
 } from './sound-metadata-fields'
 import { SoundVersionPanel } from './sound-version-panel'

@@ -51,7 +51,6 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Not authorized to manage this channel' })
       }
 
-
       // Polled every 15s while the Manage tab is open — a short cache
       // collapses that poller (and a board member viewing the same channel
       // concurrently) into one round trip of counts/signal-status checks.

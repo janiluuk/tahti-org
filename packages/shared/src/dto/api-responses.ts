@@ -636,7 +636,6 @@ export const SoundLikeResponseSchema = z.object({
   likeCount: z.number().int(),
 })
 
-
 export const LikedTrackSchema = z.object({
   id: z.string(),
   title: z.string(),

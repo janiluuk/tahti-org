@@ -149,7 +149,9 @@ export default async function CollectionPage({
         <ProfilePageLayout
           activeNav="discover"
           hero={
-            <>              {data.coverUrl && (
+            <>
+              {' '}
+              {data.coverUrl && (
                 <div
                   className="prof-collection-ambient-bg"
                   style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}

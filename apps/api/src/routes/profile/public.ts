@@ -241,7 +241,6 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     }
   }
 
-
   const playUrlBySoundId = new Map<string, string | null>()
   const accessBySoundId = new Map<
     string,
@@ -258,7 +257,6 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     })
     await Promise.all(
       items.map(async (item) => {
-
         const key = soundPlaybackKey(item)
         playUrlBySoundId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
         accessBySoundId.set(item.id, {

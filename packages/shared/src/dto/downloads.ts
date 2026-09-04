@@ -3,7 +3,6 @@
 
 import { z } from 'zod'
 
-
 /** Public sound / release download query (`?fp=&format=`). */
 export const DownloadFormatSchema = z.enum(['mp3_320', 'opus256', 'flac', 'source'])
 

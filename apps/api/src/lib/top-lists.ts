@@ -100,7 +100,6 @@ export async function buildTopList(
     sort?: 'desc' | 'asc'
   } = {},
 ): Promise<TopListEntry[]> {
-
   // Rankings don't need per-request freshness — a short cache collapses
   // every visitor hitting the same period/filter combination (the vast
   // majority of traffic, since the UI only offers a handful of presets)

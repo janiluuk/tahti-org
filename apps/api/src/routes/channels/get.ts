@@ -39,7 +39,8 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         computeChannelView(fastify, slug),
       )
       if (!result) return reply.status(404).send({ error: 'Channel not found' })
-      return reply.send(result)    },
+      return reply.send(result)
+    },
   )
 }
 

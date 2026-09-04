@@ -6,7 +6,6 @@ import { SoundDownloadQuerySchema, ReleaseDownloadQuerySchema } from './download
 
 describe('download query schemas', () => {
   it('accepts known formats', () => {
-
     expect(SoundDownloadQuerySchema.safeParse({ format: 'flac' }).success).toBe(true)
     expect(SoundDownloadQuerySchema.safeParse({ format: 'source' }).success).toBe(true)
   })
