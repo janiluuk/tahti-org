@@ -85,9 +85,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const query = request.query as { limit?: string; cursor?: string }
+      const parsedLimit = Number(query.limit)
+      const limit = Number.isInteger(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50
       const motions = await fastify.prisma.motion.findMany({
+        ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         orderBy: { createdAt: 'desc' },
-        take: 100,
+        take: limit + 1,
         include: {
           proposer: { select: { displayName: true, username: true } },
           _count: { select: { votes: true, comments: true } },
@@ -100,30 +104,34 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      return reply.send(
-        motions.map((m) => {
-          const myVote = m.votes.find((v) => v.userId === user.id)
-          let tally: { YES: number; NO: number; ABSTAIN: number } | undefined
-          if (m.state === 'CLOSED') {
-            tally = { YES: 0, NO: 0, ABSTAIN: 0 }
-            for (const v of m.votes) tally[v.choice] += 1
-          }
-          return {
-            id: m.id,
-            title: m.title,
-            state: m.state,
-            advisory: m.advisory,
-            openAt: m.openAt,
-            closeAt: m.closeAt,
-            proposer: m.proposer.displayName,
-            totalVotes: m._count.votes,
-            youVoted: Boolean(myVote),
-            yourChoice: myVote?.choice ?? null,
-            commentCount: m._count.comments,
-            tally,
-          }
-        }),
-      )
+      const rows = motions.map((m) => {
+        const myVote = m.votes.find((v) => v.userId === user.id)
+        let tally: { YES: number; NO: number; ABSTAIN: number } | undefined
+        if (m.state === 'CLOSED') {
+          tally = { YES: 0, NO: 0, ABSTAIN: 0 }
+          for (const v of m.votes) tally[v.choice] += 1
+        }
+        return {
+          id: m.id,
+          title: m.title,
+          state: m.state,
+          advisory: m.advisory,
+          openAt: m.openAt,
+          closeAt: m.closeAt,
+          proposer: m.proposer.displayName,
+          totalVotes: m._count.votes,
+          youVoted: Boolean(myVote),
+          yourChoice: myVote?.choice ?? null,
+          commentCount: m._count.comments,
+          tally,
+        }
+      })
+      if (rows.length > limit) {
+        const page = rows.slice(0, limit)
+        reply.header('x-next-cursor', page.at(-1)!.id)
+        return reply.send(page)
+      }
+      return reply.send(rows)
     },
   )
 

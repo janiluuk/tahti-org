@@ -215,6 +215,15 @@ See `docs/e2e-screenshots/README.md` for ports, fixtures, and route → file map
 
 **All UI lives in `packages/ui` (`@tahti/ui`).** Do not implement Button, Panel, layout shells, or brand chrome under `apps/web`. The web app imports from `@tahti/ui` (or `@/components/ui`, which re-exports the package).
 
+When creating a new view, always reuse an applicable existing Storybook/
+`@tahti/ui` component. If no suitable component exists, add the component to
+the shared UI kit together with Storybook coverage before using it in the web
+app; do not create one-off view primitives in `apps/web`.
+
+Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
+Prettier command for the files changed) and then confirm with
+`pnpm format:check`.
+
 | Surface          | Routes                 | Key imports                                                     |
 | ---------------- | ---------------------- | --------------------------------------------------------------- |
 | Brand (dark)     | `/c`, `/u`, `/r`       | `ChannelPageLayout`, `ProfilePageLayout`, `SmartLinkPageLayout` |

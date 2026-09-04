@@ -62,12 +62,15 @@ describe('governance meetings and documents', () => {
         location: 'Helsinki / video call',
         eligibleMemberCount: 2,
         quorumRequired: 2,
+        chairName: 'Chair',
+        secretaryName: 'Secretary',
         agenda: [{ title: 'Approve annual accounts' }, { title: 'Elect the board' }],
       },
     })
     expect(create.statusCode).toBe(201)
     expect(create.json().state).toBe('DRAFT')
     expect(create.json().quorumMet).toBe(false)
+    expect(create.json()).toMatchObject({ chairName: 'Chair', secretaryName: 'Secretary' })
 
     const memberList = await app.inject({
       method: 'GET',

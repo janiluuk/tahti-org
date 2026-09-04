@@ -83,6 +83,8 @@ export const CreateGovernanceMeetingSchema = z.object({
   noticeAt: z.coerce.date().optional(),
   eligibleMemberCount: z.number().int().nonnegative().optional(),
   quorumRequired: z.number().int().positive().optional(),
+  chairName: z.string().trim().max(200).optional(),
+  secretaryName: z.string().trim().max(200).optional(),
   agenda: z
     .array(
       z.object({
@@ -114,6 +116,10 @@ export const PatchGovernanceMeetingSchema = z.object({
     .optional(),
   minutesKey: z.string().trim().max(500).nullable().optional(),
   minutesApprovedAt: z.coerce.date().nullable().optional(),
+  chairName: z.string().trim().max(200).nullable().optional(),
+  secretaryName: z.string().trim().max(200).nullable().optional(),
+  minutesSignedAt: z.coerce.date().nullable().optional(),
+  minutesSignedByName: z.string().trim().max(200).nullable().optional(),
 })
 
 export const CreateGovernanceDocumentSchema = z.object({
@@ -140,6 +146,10 @@ export const GovernanceMeetingItemSchema = z.object({
   agenda: z.unknown().nullable(),
   minutesKey: z.string().nullable(),
   minutesApprovedAt: z.coerce.date().nullable(),
+  chairName: z.string().nullable(),
+  secretaryName: z.string().nullable(),
+  minutesSignedAt: z.coerce.date().nullable(),
+  minutesSignedByName: z.string().nullable(),
   eligibleMemberCount: z.number().int().nullable(),
   quorumRequired: z.number().int().nullable(),
   attendanceCount: z.number().int(),

@@ -61,6 +61,10 @@ function meetingResponse(meeting: {
   agenda: unknown
   minutesKey: string | null
   minutesApprovedAt: Date | null
+  chairName: string | null
+  secretaryName: string | null
+  minutesSignedAt: Date | null
+  minutesSignedByName: string | null
   eligibleMemberCount: number | null
   quorumRequired: number | null
   createdAt: Date
@@ -77,6 +81,28 @@ function meetingResponse(meeting: {
   }
 }
 
+function pagination(request: { query?: unknown }) {
+  const query = (request.query ?? {}) as { limit?: string; cursor?: string }
+  const parsedLimit = Number(query.limit)
+  return {
+    cursor: query.cursor?.trim() || undefined,
+    limit: Number.isInteger(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50,
+  }
+}
+
+function nextCursor(
+  reply: { header: (name: string, value: string) => unknown },
+  rows: Array<{ id: string }>,
+  limit: number,
+) {
+  if (rows.length > limit) {
+    const page = rows.slice(0, limit)
+    reply.header('x-next-cursor', page.at(-1)!.id)
+    return page
+  }
+  return rows
+}
+
 const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/v1/governance/meetings',
@@ -87,14 +113,16 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceMeetingListSchema, 'GovernanceMeetingList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const meetings = await fastify.prisma.governanceMeeting.findMany({
         where: { state: { not: 'DRAFT' } },
         orderBy: { scheduledAt: 'desc' },
-        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings.map(meetingResponse))
+      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
     },
   )
 
@@ -107,13 +135,16 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceDocumentListSchema, 'GovernanceDocumentList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const documents = await fastify.prisma.governanceDocument.findMany({
         where: { publishedAt: { not: null } },
         orderBy: [{ type: 'asc' }, { effectiveAt: 'desc' }, { version: 'desc' }],
-        take: 200,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
       })
-      return reply.send(await Promise.all(documents.map(documentResponse)))
+      const rows = await Promise.all(documents.map(documentResponse))
+      return reply.send(nextCursor(reply, rows, limit))
     },
   )
 
@@ -126,13 +157,15 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceMeetingListSchema, 'AdminGovernanceMeetingList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const meetings = await fastify.prisma.governanceMeeting.findMany({
         orderBy: { scheduledAt: 'desc' },
-        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings.map(meetingResponse))
+      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
     },
   )
 

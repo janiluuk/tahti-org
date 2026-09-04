@@ -21,6 +21,17 @@ linked docs; do not invent product rules that contradict them.
 | Do not touch `website/` unless asked | [`.cursor/rules/website-off-limits.mdc`](.cursor/rules/website-off-limits.mdc)   |
 | Project map + remaining work         | [`.cursor/rules/project-context.mdc`](.cursor/rules/project-context.mdc)         |
 
+### UI component reuse
+
+When creating a new view, always use an applicable existing Storybook/
+`@tahti/ui` component. Add a new component to the shared UI kit and its
+Storybook coverage when no suitable component exists; do not introduce a
+one-off view primitive in `apps/web`.
+
+Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
+Prettier command for the files changed) and then confirm with
+`pnpm format:check`.
+
 ## What this monorepo is
 
 Nonprofit AGPL broadcasting platform (Tahti ry). Artists get always-on channels

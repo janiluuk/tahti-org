@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { CreateMotionSchema, PatchMotionSchema, VoteMotionSchema } from './governance.js'
+import {
+  CreateGovernanceMeetingSchema,
+  CreateMotionSchema,
+  PatchGovernanceMeetingSchema,
+  PatchMotionSchema,
+  VoteMotionSchema,
+} from './governance.js'
 
 describe('governance DTOs', () => {
   it('accepts valid create motion body', () => {
@@ -33,5 +39,22 @@ describe('governance DTOs', () => {
 
   it('accepts patch state', () => {
     expect(PatchMotionSchema.safeParse({ state: 'OPEN' }).success).toBe(true)
+  })
+
+  it('accepts meeting officer and minutes sign-off metadata', () => {
+    expect(
+      CreateGovernanceMeetingSchema.safeParse({
+        title: 'Board meeting',
+        type: 'BOARD',
+        chairName: 'Chair',
+        secretaryName: 'Secretary',
+      }).success,
+    ).toBe(true)
+    expect(
+      PatchGovernanceMeetingSchema.safeParse({
+        minutesSignedAt: '2026-09-05T12:00:00.000Z',
+        minutesSignedByName: 'Chair',
+      }).success,
+    ).toBe(true)
   })
 })

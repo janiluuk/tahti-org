@@ -16,6 +16,7 @@ bylaws and legal review authorize a binding electronic voting procedure.
 - [x] Admin AGM page has a governance-records panel for meeting/document metadata.
 - [x] Focused governance journey tests cover voting, discussion, feature requests, reports, and record visibility.
 - [x] Admin can persist AGM/board meetings with type, schedule, notice, location/remote link, agenda, eligibility count, and quorum, and record per-member attendance.
+- [x] Meeting records persist chair, secretary, and minutes sign-off metadata; formal approval/signature workflow remains board-controlled.
 
 ## Member journey
 
@@ -49,7 +50,7 @@ bylaws and legal review authorize a binding electronic voting procedure.
 - [ ] Separate advisory polls from binding ballots.
 - [ ] Protect secret ballots from operational audit-log disclosure.
 - [ ] Provide immutable result certificates and correction history.
-- [ ] Add pagination and remove governance list N+1 comment loading.
+- [~] Governance lists now support bounded cursor continuation through `x-next-cursor`; the member directory and any remaining archive consumers still need the same UI pagination affordance.
 - [ ] Add backups, retention, legal hold, and restore verification for official records.
 
 ## Plugin registry boundary
