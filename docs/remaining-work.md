@@ -90,7 +90,7 @@ current implementation remains in place until the replacement contract is
 proven. Do not move files, change storage keys, or alter plugin bootstrap order
 as part of this preparation.
 
-- [ ] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
+- [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers. → [`docs/todo/plugin-registry-extraction.md`](todo/plugin-registry-extraction.md)
 - [ ] Define a minimal registry interface and compatibility adapter around the current implementation.
 - [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior.
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
