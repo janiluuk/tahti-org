@@ -58,13 +58,13 @@ export function ChannelHeaderPanel({
         initial={initialGallery}
         bare
         hideSave
-        showVideoBackground={initialHeaderStyle === 'VIDEO_LOOP'}
+        showVideoBackground
         onDraftChange={onGalleryChange}
+        onHeaderStyleChange={onHeaderStyleChange}
       />
 
       <div className="studio-field--block">
         <span className="studio-label">Quick facts</span>
-        <p className="studio-help">What shows alongside your name in the channel header.</p>
         <VisibilitySettingsPanel
           initial={{
             ...initialVisibility,
@@ -83,9 +83,6 @@ export function ChannelHeaderPanel({
             })
           }
         />
-        <p className="studio-text-muted-sm studio-mt-sm">
-          Listener count shows automatically while you&rsquo;re live — nothing to configure.
-        </p>
       </div>
 
       <div className="studio-field--block">

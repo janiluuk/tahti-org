@@ -16,11 +16,14 @@ export type DashboardSectionKey =
   | 'account'
   // Channel Designer's own focused-section nav (see _designer-sections.ts) — these are only
   // ever consulted on /dashboard/channel/edit, never against the /dashboard tab map above.
-  | 'designerVisual'
+  | 'designerBackground'
   | 'designerHeader'
   | 'designerSlideshow'
   | 'designerLinks'
   | 'designerPlayer'
+  | 'designerTracks'
+  | 'designerCollections'
+  | 'designerReleases'
 
 export type DashboardNavDefinition = {
   href: string
@@ -73,24 +76,31 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
   '/dashboard/channel/edit': [
     {
       href: '/dashboard/channel/edit',
-      label: 'Visual style',
+      label: 'Background',
       icon: 'appearance',
-      hash: 'channel-visual',
-      sectionKey: 'designerVisual',
+      hash: 'channel-background',
+      sectionKey: 'designerBackground',
     },
     {
       href: '/dashboard/channel/edit',
-      label: 'Header & backdrop',
+      label: 'Header / backdrop',
       icon: 'appearance',
       hash: 'channel-header',
       sectionKey: 'designerHeader',
     },
     {
       href: '/dashboard/channel/edit',
-      label: 'Slideshow transitions',
+      label: 'Slideshow',
       icon: 'appearance',
       hash: 'channel-slideshow',
       sectionKey: 'designerSlideshow',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Player',
+      icon: 'appearance',
+      hash: 'channel-text-overlay',
+      sectionKey: 'designerPlayer',
     },
     {
       href: '/dashboard/channel/edit',
@@ -101,10 +111,24 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
     },
     {
       href: '/dashboard/channel/edit',
-      label: 'Player overlay text',
-      icon: 'appearance',
-      hash: 'channel-text-overlay',
-      sectionKey: 'designerPlayer',
+      label: 'Featured tracks',
+      icon: 'collections',
+      hash: 'channel-tracks',
+      sectionKey: 'designerTracks',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Collections',
+      icon: 'collections',
+      hash: 'channel-collections',
+      sectionKey: 'designerCollections',
+    },
+    {
+      href: '/dashboard/channel/edit',
+      label: 'Releases',
+      icon: 'sound',
+      hash: 'channel-releases',
+      sectionKey: 'designerReleases',
     },
     {
       href: '/dashboard/channel/playlist',
@@ -131,11 +155,14 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   account: 'overview',
   // Designer section keys are never resolved against the /dashboard tab map (only consulted
   // on /dashboard/channel/edit, see StudioSidebar's onDesigner branch) — value is unused filler.
-  designerVisual: 'overview',
+  designerBackground: 'overview',
   designerHeader: 'overview',
   designerSlideshow: 'overview',
   designerLinks: 'overview',
   designerPlayer: 'overview',
+  designerTracks: 'overview',
+  designerCollections: 'overview',
+  designerReleases: 'overview',
 }
 
 /** Map URL hash keys (without #) to a unique dashboard section for nav highlighting. */
@@ -164,13 +191,17 @@ export const DASHBOARD_HASH_TO_SECTION: Record<string, DashboardSectionKey> = {
   membership: 'account',
   settings: 'account',
   // Channel Designer section hashes (/dashboard/channel/edit#<hash>) — see _designer-sections.ts.
-  'channel-visual': 'designerVisual',
+  'channel-background': 'designerBackground',
+  'channel-visual': 'designerBackground',
   'channel-header': 'designerHeader',
   // Legacy alias: Header & backdrop absorbed the old standalone "Background media" section.
   'channel-media': 'designerHeader',
   'channel-slideshow': 'designerSlideshow',
   'channel-links': 'designerLinks',
   'channel-text-overlay': 'designerPlayer',
+  'channel-tracks': 'designerTracks',
+  'channel-collections': 'designerCollections',
+  'channel-releases': 'designerReleases',
 }
 
 /** @deprecated Use DASHBOARD_HASH_TO_SECTION — kept for StudioTabs hashAliases compat. */
