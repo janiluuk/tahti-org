@@ -35,6 +35,7 @@ export function CoverImageUpload({
   const [dragOver, setDragOver] = useState(false)
   const [urlMode, setUrlMode] = useState(false)
   const [urlValue, setUrlValue] = useState('')
+  const [editOpen, setEditOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function onFile(file: File) {
@@ -68,6 +69,7 @@ export function CoverImageUpload({
         return
       }
       onUploaded(done.url ?? null)
+      setEditOpen(false)
     } catch {
       setError('Upload failed')
     } finally {
@@ -88,6 +90,7 @@ export function CoverImageUpload({
       onUploaded(done.url ?? null)
       setUrlValue('')
       setUrlMode(false)
+      setEditOpen(false)
     } catch {
       setError('Could not fetch that URL')
     } finally {
@@ -95,99 +98,174 @@ export function CoverImageUpload({
     }
   }
 
-  return (
-    <div className="cover-upload">
-      <div
-        className={`cover-upload__zone${dragOver ? ' cover-upload__zone--dragover' : ''}`}
-        onDragOver={(e) => {
-          e.preventDefault()
-          if (!uploading) setDragOver(true)
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault()
-          setDragOver(false)
-          if (uploading) return
-          const f = e.dataTransfer.files?.[0]
-          if (f) void onFile(f)
-        }}
-        onClick={() => !uploading && !urlMode && inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        aria-label={label}
-        onKeyDown={(e) => {
-          if (!uploading && !urlMode && (e.key === 'Enter' || e.key === ' '))
-            inputRef.current?.click()
-        }}
-      >
-        {currentUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={currentUrl} alt="" className="cover-upload__preview" />
-        ) : (
-          <div className="cover-upload__placeholder" aria-hidden />
-        )}
-        <div className="cover-upload__copy">
-          <span className="cover-upload__label">{label}</span>
-          <span className="cover-upload__hint">
-            {uploading ? 'Uploading…' : 'Drop an image, or click to browse'}
-          </span>
-        </div>
-        {fromUrl && (
-          <button
-            type="button"
-            className="cover-upload__url-toggle"
-            title="Use an image URL instead"
-            aria-label="Use an image URL instead"
-            disabled={uploading}
-            onClick={(e) => {
-              e.stopPropagation()
-              setUrlMode((v) => !v)
-              setError(null)
-            }}
-          >
-            🔗
-          </button>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPTED_TYPES.join(',')}
-          disabled={uploading}
-          className="cover-upload__file-input"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) void onFile(f)
-            e.target.value = ''
+  function dropzone() {
+    return (
+      <>
+        <div
+          className={`cover-upload__zone${dragOver ? ' cover-upload__zone--dragover' : ''}`}
+          onDragOver={(e) => {
+            e.preventDefault()
+            if (!uploading) setDragOver(true)
           }}
-        />
-      </div>
-
-      {urlMode && fromUrl && (
-        <div className="cover-upload__url-row" onClick={(e) => e.stopPropagation()}>
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDragOver(false)
+            if (uploading) return
+            const f = e.dataTransfer.files?.[0]
+            if (f) void onFile(f)
+          }}
+          onClick={() => !uploading && !urlMode && inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label={label}
+          onKeyDown={(e) => {
+            if (!uploading && !urlMode && (e.key === 'Enter' || e.key === ' '))
+              inputRef.current?.click()
+          }}
+        >
+          {currentUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={currentUrl} alt="" className="cover-upload__preview" />
+          ) : (
+            <div className="cover-upload__placeholder" aria-hidden />
+          )}
+          <div className="cover-upload__copy">
+            <span className="cover-upload__label">{label}</span>
+            <span className="cover-upload__hint">
+              {uploading ? 'Uploading…' : 'Drop an image, or click to browse'}
+            </span>
+          </div>
+          {fromUrl && (
+            <button
+              type="button"
+              className="cover-upload__url-toggle"
+              title="Use an image URL instead"
+              aria-label="Use an image URL instead"
+              disabled={uploading}
+              onClick={(e) => {
+                e.stopPropagation()
+                setUrlMode((v) => !v)
+                setError(null)
+              }}
+            >
+              🔗
+            </button>
+          )}
           <input
-            type="url"
-            value={urlValue}
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED_TYPES.join(',')}
             disabled={uploading}
-            placeholder="https://…"
-            className="studio-input studio-flex-1"
-            onChange={(e) => setUrlValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void onSubmitUrl()
+            className="cover-upload__file-input"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) void onFile(f)
+              e.target.value = ''
             }}
           />
-          <button
-            type="button"
-            className="ui-btn ui-btn--sm ui-btn--primary"
-            disabled={uploading || !urlValue.trim()}
-            onClick={() => void onSubmitUrl()}
-          >
-            Fetch
-          </button>
         </div>
-      )}
 
-      {error && (
-        <p className="studio-notice studio-notice--error studio-mt-sm studio-m-0">{error}</p>
+        {urlMode && fromUrl && (
+          <div className="cover-upload__url-row" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="url"
+              value={urlValue}
+              disabled={uploading}
+              placeholder="https://…"
+              className="studio-input studio-flex-1"
+              onChange={(e) => setUrlValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void onSubmitUrl()
+              }}
+            />
+            <button
+              type="button"
+              className="ui-btn ui-btn--sm ui-btn--primary"
+              disabled={uploading || !urlValue.trim()}
+              onClick={() => void onSubmitUrl()}
+            >
+              Fetch
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <p className="studio-notice studio-notice--error studio-mt-sm studio-m-0">{error}</p>
+        )}
+      </>
+    )
+  }
+
+  // No cover set yet — the dropzone itself is the only affordance, nothing to
+  // remove or preview-edit. Once a cover exists, replacing it happens inside
+  // the edit modal instead, so hovering the thumbnail can offer remove/edit.
+  if (!currentUrl) {
+    return <div className="cover-upload">{dropzone()}</div>
+  }
+
+  return (
+    <div className="cover-upload">
+      <div className="cover-upload__current">
+        <div className="cover-upload__thumb-wrap">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={currentUrl} alt="" className="cover-upload__preview" />
+          <div className="cover-upload__thumb-actions">
+            <button
+              type="button"
+              className="cover-upload__thumb-btn cover-upload__thumb-btn--remove"
+              title="Remove"
+              aria-label={`Remove ${label.toLowerCase()}`}
+              onClick={() => onUploaded(null)}
+            >
+              ✕
+            </button>
+            <button
+              type="button"
+              className="cover-upload__thumb-btn cover-upload__thumb-btn--edit"
+              title="Change"
+              aria-label={`Change ${label.toLowerCase()}`}
+              onClick={() => {
+                setError(null)
+                setEditOpen(true)
+              }}
+            >
+              ✎
+            </button>
+          </div>
+        </div>
+        <div className="cover-upload__copy">
+          <span className="cover-upload__label">{label}</span>
+          <span className="cover-upload__hint">Hover the image to change or remove it</span>
+        </div>
+      </div>
+
+      {editOpen && (
+        <div
+          className="cover-upload__edit-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Change ${label.toLowerCase()}`}
+          onClick={() => !uploading && setEditOpen(false)}
+        >
+          <div className="cover-upload__edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cover-upload__edit-header">
+              <h3 className="cover-upload__edit-title">{label}</h3>
+              <button
+                type="button"
+                className="cover-upload__edit-close"
+                aria-label="Close"
+                onClick={() => setEditOpen(false)}
+                disabled={uploading}
+              >
+                ✕
+              </button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={currentUrl} alt="" className="cover-upload__edit-preview" />
+            {dropzone()}
+          </div>
+        </div>
       )}
     </div>
   )
