@@ -3,6 +3,7 @@
 
 import { cache } from 'react'
 import { cookies } from 'next/headers'
+import { resolveServerApiUrl } from '@/lib/api-url'
 
 export interface DashboardUser {
   id: string
@@ -31,7 +32,7 @@ export const getDashboardUser = cache(async (): Promise<DashboardUser | null> =>
   const sessionCookie = cookies().get('tahti_session')
   if (!sessionCookie) return null
 
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const apiUrl = resolveServerApiUrl()
   try {
     const res = await fetch(`${apiUrl}/api/auth/me`, {
       headers: { Cookie: `tahti_session=${sessionCookie.value}` },

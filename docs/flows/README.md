@@ -33,7 +33,7 @@ flowchart TB
   end
 
   subgraph auth["3 · Account"]
-    J["/join · /signup"]
+    J["/signup"]
     LI["/login"]
     V["/verify"]
     J --> V

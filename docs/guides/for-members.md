@@ -8,7 +8,7 @@ This guide is **not** about paying an artist monthly (fan subscription) — see 
 
 ## 1. Join and pay membership
 
-1. **Sign up:** `/join` → check email → open `/verify?token=…`
+1. **Sign up:** `/signup` → check email → open `/verify?token=…`
 2. **Log in:** `/login`
 3. **Dashboard:** `/dashboard` → **Tahti ry membership** → pay or activate (Stripe when enabled)
 

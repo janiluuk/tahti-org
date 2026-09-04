@@ -17,7 +17,7 @@ export * from './admin'
 // Public dark shells (channel, profile, smart link, studio)
 export * from './brand'
 
-// Marketing site primitives (Nav, MktButton, Stat, …)
+// Marketing site primitives (Nav, MktButton, …)
 export {
   Button as MarketingButton,
   Card,

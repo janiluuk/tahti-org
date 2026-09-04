@@ -18,7 +18,7 @@ See [for-members.md](../guides/for-members.md) for step-by-step guidance.
 journey
     title Cooperative member on Tahti
     section Join
-      Register at /join                    : 4 : Member
+      Register at /signup                    : 4 : Member
       Verify email                         : 3 : Member
       Pay €40/year membership on dashboard : 4 : Member
     section Participate
@@ -41,7 +41,7 @@ sequenceDiagram
     participant APP as app.tahti.live
     participant API as API
 
-    M->>APP: /join — email, password, username
+    M->>APP: /signup — email, password, username
     APP->>API: POST /api/auth/register
     M->>APP: Clicks verify link
     APP->>API: GET /api/auth/verify?token=…

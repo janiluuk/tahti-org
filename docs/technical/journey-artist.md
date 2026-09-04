@@ -57,7 +57,7 @@ sequenceDiagram
     A->>TF: Clicks "Join the beta" → waiting list form
     Note over A: 3 days pass — Director sends invite
 
-    A->>APP: Opens invite link (app.tahti.live/join?invite=xxx)
+    A->>APP: Opens invite link (app.tahti.live/signup?invite=xxx)
     APP-->>A: Registration form
     A->>APP: Fills in: name, email, password
     APP->>API: POST /api/auth/register
@@ -348,7 +348,7 @@ graph LR
 
 | Journey | Step | Web | API | E2e |
 |---------|------|-----|-----|-----|
-| 1 — Register & verify | Sign up | `/join` | `POST /api/auth/register` | `vital-flows.sh` |
+| 1 — Register & verify | Sign up | `/signup` | `POST /api/auth/register` | `vital-flows.sh` |
 | 1 | Email verify | `/verify` | `GET /api/auth/verify` | seed token (manual) |
 | 1 | Activate membership | `/dashboard` | `POST /api/me/membership/checkout` | `artist.sh` (`/api/me/membership`) |
 | 2 — First broadcast | Stream settings | `/dashboard` | `GET /api/me/stream-settings` | `artist.sh`, `dashboard-player.sh` |
