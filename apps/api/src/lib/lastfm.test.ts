@@ -29,9 +29,7 @@ describe('lastfm', () => {
   })
 
   it('builds the auth URL with optional callback', () => {
-    expect(lastFmAuthUrl('key', 'tok')).toBe(
-      'https://www.last.fm/api/auth?api_key=key&token=tok',
-    )
+    expect(lastFmAuthUrl('key', 'tok')).toBe('https://www.last.fm/api/auth?api_key=key&token=tok')
     expect(lastFmAuthUrl('key', 'tok', 'https://api.example/cb')).toContain(
       'cb=https%3A%2F%2Fapi.example%2Fcb',
     )

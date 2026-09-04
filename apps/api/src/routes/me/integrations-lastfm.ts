@@ -5,11 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { upsertUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
-import {
-  getLastFmAuthToken,
-  getLastFmSession,
-  lastFmAuthUrl,
-} from '../../lib/lastfm.js'
+import { getLastFmAuthToken, getLastFmSession, lastFmAuthUrl } from '../../lib/lastfm.js'
 
 const OAUTH_TOKEN_MAX_AGE_SEC = 600
 const RETURN_COOKIE = 'tahti_lastfm_return'

@@ -23,10 +23,7 @@ function md5Hex(value: string): string {
 }
 
 /** Last.fm api_sig = md5(concat of sorted key+value pairs + secret). */
-export function signLastFmParams(
-  params: Record<string, string>,
-  apiSecret: string,
-): string {
+export function signLastFmParams(params: Record<string, string>, apiSecret: string): string {
   const sortedKeys = Object.keys(params).sort()
   let raw = ''
   for (const key of sortedKeys) {
@@ -77,10 +74,7 @@ async function lastFmCall(
   }
 
   if (!res.ok || body.error) {
-    const message =
-      typeof body.message === 'string'
-        ? body.message
-        : `Last.fm HTTP ${res.status}`
+    const message = typeof body.message === 'string' ? body.message : `Last.fm HTTP ${res.status}`
     return { ok: false, error: message }
   }
 
@@ -99,11 +93,7 @@ export async function getLastFmAuthToken(
   return { ok: true, token: token.trim() }
 }
 
-export function lastFmAuthUrl(
-  apiKey: string,
-  token: string,
-  callbackUrl?: string,
-): string {
+export function lastFmAuthUrl(apiKey: string, token: string, callbackUrl?: string): string {
   const url = new URL(LASTFM_AUTH)
   url.searchParams.set('api_key', apiKey)
   url.searchParams.set('token', token)
@@ -114,18 +104,14 @@ export function lastFmAuthUrl(
 export async function getLastFmSession(
   credentials: LastFmCredentials,
   token: string,
-): Promise<
-  { ok: true; sessionKey: string; username: string } | { ok: false; error: string }
-> {
+): Promise<{ ok: true; sessionKey: string; username: string } | { ok: false; error: string }> {
   const trimmed = token.trim()
   if (!trimmed) return { ok: false, error: 'Missing Last.fm auth token' }
 
   const result = await lastFmCall(credentials, 'auth.getSession', { token: trimmed })
   if (!result.ok) return result
 
-  const session = result.body.session as
-    | { key?: string; name?: string }
-    | undefined
+  const session = result.body.session as { key?: string; name?: string } | undefined
   if (!session?.key || !session?.name) {
     return { ok: false, error: 'Last.fm session was not granted' }
   }

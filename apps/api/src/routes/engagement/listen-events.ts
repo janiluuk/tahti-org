@@ -101,7 +101,9 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
       if (sessionUser) {
         void (async () => {
           const trackName = item.title.trim()
-          const artistName = (item.artistName?.trim() || item.channel.user.displayName.trim()).trim()
+          const artistName = (
+            item.artistName?.trim() || item.channel.user.displayName.trim()
+          ).trim()
           if (!trackName || !artistName) return
 
           const listenedAt = Math.floor(Date.now() / 1000)
@@ -157,9 +159,7 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
               }
             }
           }
-        })().catch((err: unknown) =>
-          request.log.warn({ err, soundId: item.id }, 'Scrobble failed'),
-        )
+        })().catch((err: unknown) => request.log.warn({ err, soundId: item.id }, 'Scrobble failed'))
       }
 
       return reply.send({ recorded: true })

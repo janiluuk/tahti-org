@@ -140,7 +140,9 @@ describe('/api/listen-events', () => {
       userToken: 'lb-test-token',
     })
 
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }))
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
     const res = await app.inject({

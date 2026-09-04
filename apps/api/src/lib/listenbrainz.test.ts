@@ -50,7 +50,9 @@ describe('listenbrainz', () => {
 
   describe('submitListenBrainzListen', () => {
     it('posts a single listen with tahti as submission_client', async () => {
-      vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }))
+      vi.mocked(fetch).mockResolvedValue(
+        new Response(JSON.stringify({ status: 'ok' }), { status: 200 }),
+      )
 
       const result = await submitListenBrainzListen('secret-token', {
         listenedAt: 1_700_000_000,
