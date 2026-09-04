@@ -9,8 +9,6 @@ export function resolveServerApiUrl(): string {
 /** Browser-reachable API origin (client components). */
 export function resolveClientApiUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_API_URL ??
-    process.env.NEXT_PUBLIC_API_BASE ??
-    'http://localhost:3001'
+    process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
   )
 }
