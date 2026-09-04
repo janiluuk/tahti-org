@@ -20,6 +20,7 @@
     "prod:check-distribution": "bash scripts/check-distribution-prod.sh",
     "prod:readiness": "bash scripts/check-prod-readiness.sh",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "bash tests/e2e/vital-flows.sh",
     "test:e2e:journeys": "bash tests/e2e/user-journeys.sh",

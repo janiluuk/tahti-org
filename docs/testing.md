@@ -14,14 +14,15 @@ For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`,
 
 ## Commands
 
-| Command                      | What it runs                                                    |
-| ---------------------------- | --------------------------------------------------------------- |
-| `pnpm ci:check`              | Lint, format, typecheck, Tor exit list freshness                |
-| `pnpm test`                  | Vitest (single worker; needs Postgres)                          |
-| `pnpm smoke`                 | Local CI gate + stack health (`scripts/unified-smoke.sh`)       |
-| `pnpm smoke:prod`            | Above + production HTTP checks on `app.tahti.live`              |
-| `pnpm smoke:all`             | Prod + e2e bash journeys (stack must be up; `--seed` fixtures)  |
-| `pnpm test:e2e:journeys:all` | Vital-flows + user-journeys + Vitest `persona-journeys.test.ts` |
+| Command                      | What it runs                                                           |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `pnpm ci:check`              | Lint, format, typecheck, Tor exit list freshness                       |
+| `pnpm test`                  | Vitest (single worker; needs Postgres)                                 |
+| `pnpm test:coverage`         | Vitest with the V8 coverage report (same Postgres/Redis prerequisites) |
+| `pnpm smoke`                 | Local CI gate + stack health (`scripts/unified-smoke.sh`)              |
+| `pnpm smoke:prod`            | Above + production HTTP checks on `app.tahti.live`                     |
+| `pnpm smoke:all`             | Prod + e2e bash journeys (stack must be up; `--seed` fixtures)         |
+| `pnpm test:e2e:journeys:all` | Vital-flows + user-journeys + Vitest `persona-journeys.test.ts`        |
 
 Other scripts: `pnpm tor-exit:check`, `./scripts/status-monitor.sh`, persona-specific `pnpm test:e2e:journeys:*`.
 
@@ -64,6 +65,11 @@ Run coverage locally (API package):
 ```bash
 pnpm --filter @tahti/api exec vitest run --coverage
 ```
+
+The root `pnpm test:coverage` command runs the same report across the workspace.
+Coverage thresholds remain a follow-up until Testcontainers isolates database
+state per worker; enabling a hard threshold before that would make the result
+depend on suite ordering.
 
 Target (not yet a CI gate): lines/functions/branches/statements **≥ 45%** on
 included `src/**`. Pure helpers in `packages/shared` and `packages/ledger`

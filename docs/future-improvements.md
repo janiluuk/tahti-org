@@ -192,13 +192,13 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ### CI / DX
 
-| P      | Item                                                      | Benefit                             |
-| ------ | --------------------------------------------------------- | ----------------------------------- |
-| ~~P1~~ | ~~Merge vital-flows into CI~~ — done                      | —                                   |
-| P1     | `user-journeys-e2e` required in branch protection         | Guides-backed paths always verified |
-| P2     | `pnpm test --coverage` threshold (e.g. 60% on `apps/api`) | Untested money paths visible        |
-| P2     | Docker stack smoke job in CI (build + health, weekly)     | Catches Dockerfile drift            | **Done** — `.github/workflows/stack-smoke.yml` + `scripts/stack-smoke.sh` |
-| P3     | Preview deployments per PR                                | Stakeholder review                  |
+| P        | Item                                                                                                        | Benefit                             |
+| -------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| ~~P1~~   | ~~Merge vital-flows into CI~~ — done                                                                        | —                                   |
+| P1       | `user-journeys-e2e` required in branch protection                                                           | Guides-backed paths always verified |
+| `[~]` P2 | Coverage report command (`pnpm test:coverage`) added; hard threshold deferred until per-worker DB isolation | Untested money paths visible        |
+| P2       | Docker stack smoke job in CI (build + health, weekly)                                                       | Catches Dockerfile drift            | **Done** — `.github/workflows/stack-smoke.yml` + `scripts/stack-smoke.sh` |
+| P3       | Preview deployments per PR                                                                                  | Stakeholder review                  |
 
 ### Code quality
 
