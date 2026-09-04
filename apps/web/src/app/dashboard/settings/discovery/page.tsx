@@ -6,6 +6,7 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 import { fetchAddonInstalls, fetchAddonStore } from '@/lib/addons-client'
 import { DiscoverySettingsPanel } from '../../discovery-settings-panel'
 import { AddonsPanel } from '../../addons-panel'
+import { NewsFeedPanel } from '../../news-feed-panel'
 
 export default async function DiscoverySettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -17,15 +18,26 @@ export default async function DiscoverySettingsPage() {
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   let topListsOptOut = false
+  let newsFeedUrl: string | null = null
 
   try {
-    const res = await fetch(`${apiUrl}/api/me/top-lists-opt-out`, {
-      headers: { Cookie: `tahti_session=${sessionValue}` },
-      cache: 'no-store',
-    })
-    if (res.ok) {
-      const data = (await res.json()) as { topListsOptOut: boolean }
+    const [optOutRes, profileRes] = await Promise.all([
+      fetch(`${apiUrl}/api/me/top-lists-opt-out`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/me/profile`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+    ])
+    if (optOutRes.ok) {
+      const data = (await optOutRes.json()) as { topListsOptOut: boolean }
       topListsOptOut = data.topListsOptOut
+    }
+    if (profileRes.ok) {
+      const data = (await profileRes.json()) as { newsFeedUrl: string | null }
+      newsFeedUrl = data.newsFeedUrl
     }
   } catch {
     // render with defaults
@@ -43,6 +55,8 @@ export default async function DiscoverySettingsPage() {
       </div>
 
       <DiscoverySettingsPanel initialTopListsOptOut={topListsOptOut} />
+
+      <NewsFeedPanel initialUrl={newsFeedUrl} />
 
       <div className="studio-page-header studio-mt-lg">
         <h2 className="studio-page-title">Addons</h2>

@@ -37,6 +37,7 @@ const profileSelect = {
   logoUrl: true,
   logoPlacement: true,
   tipJarUrl: true,
+  newsFeedUrl: true,
   countryCode: true,
   pronouns: true,
   defaultLocation: true,
@@ -65,6 +66,7 @@ function serializeProfile(
     logoUrl: string | null
     logoPlacement: string | null
     tipJarUrl: string | null
+    newsFeedUrl: string | null
     countryCode: string | null
     pronouns: string | null
     defaultLocation: string | null
@@ -93,6 +95,7 @@ function serializeProfile(
     logoUrl: profile.logoUrl,
     logoPlacement: parseLogoPlacement(profile.logoPlacement),
     tipJarUrl: profile.tipJarUrl,
+    newsFeedUrl: profile.newsFeedUrl,
     countryCode: profile.countryCode,
     pronouns: profile.pronouns,
     defaultLocation: profile.defaultLocation,
@@ -167,6 +170,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.logoUrl !== undefined) data.logoUrl = body.logoUrl?.trim() || null
       if (body.logoPlacement !== undefined) data.logoPlacement = body.logoPlacement
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
+      if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
       if (body.defaultLocation !== undefined)
