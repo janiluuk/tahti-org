@@ -79,7 +79,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const item = await fastify.prisma.archiveItem.findFirst({
-        where: { id: itemId, channelId: channel.id, status: 'READY' },
+        where: { id: itemId, channelId: channel.id, status: 'READY', isPublic: true },
         select: {
           id: true,
           title: true,

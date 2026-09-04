@@ -84,18 +84,14 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=error`)
     }
 
-    const sessionId = request.cookies[config.sessionCookieName]
-    if (!sessionId) {
+    // SEC-014: use request.sessionUser (populated by the global auth
+    // preHandler via lib/session.ts's validateSession) instead of
+    // re-deriving it from the raw cookie — the manual version below skipped
+    // validateSession's session.user.deletedAt check.
+    if (!request.sessionUser) {
       return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=login`)
     }
-
-    const session = await fastify.prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { user: { select: { id: true } } },
-    })
-    if (!session || session.expiresAt < new Date()) {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=login`)
-    }
+    const sessionUserId = request.sessionUser.id
 
     try {
       const tokenData = await exchangeGoogleDriveCode(
@@ -108,7 +104,7 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
       )
 
       await fastify.prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: sessionUserId },
         data: {
           googleDriveAccessTokenEnc: encryptStreamKey(tokenData.access_token),
           ...(tokenData.refresh_token
