@@ -75,9 +75,21 @@ jobs:
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
 
     steps:
+      # Checked out under an explicit path (rather than $GITHUB_WORKSPACE
+      # root) so the tahti-radio-discord-bot checkout below can sit next to
+      # it as a true sibling directory — scripts/deploy_prod.sh looks for
+      # ../tahti-radio-discord-bot relative to its own repo root, the same
+      # layout a developer gets from cloning both repos side by side.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          path: tahti
+
+      # Public repo, no extra token needed.
+      - uses: actions/checkout@v7
+        with:
+          repository: janiluuk/tahti-radio-discord-bot
+          path: tahti-radio-discord-bot
 
       - name: Export deploy targets
         run: |
@@ -150,13 +162,14 @@ jobs:
       # `docker compose up -d --remove-orphans` — no `down` step, so existing
       # named volumes (postgres, minio, redis) are preserved across deploys.
       - name: Deploy stack
+        working-directory: tahti
         run: |
           set -euo pipefail
           args=()
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.no_cache }}" = "true" ]; then
             args+=(--no-cache)
           fi
-          DEPLOY_HOST=deploy-prod ./scripts/deploy_prod.sh "${args[@]}"
+          DEPLOY_HOST=deploy-prod RADIO_DISCORD_BOT_SRC="${GITHUB_WORKSPACE}/tahti-radio-discord-bot" ./scripts/deploy_prod.sh "${args[@]}"
 
       - name: Health check
         run: |
