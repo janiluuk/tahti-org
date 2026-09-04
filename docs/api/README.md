@@ -104,6 +104,7 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 | Artist channel/broadcast                    | `/api/me/channel/*` (see below), `/api/me/stream-settings/*`                                                                                         |
 | Releases, collections, and uploads          | `/api/me/releases`, `/api/me/collections`, `/api/uploads/*`                                                                                          |
 | Comments, fan subscriptions, and newsletter | `/api/me/comments/*`, `/api/me/fan-tiers`, `/api/me/newsletter/*`                                                                                    |
+| RSS/Atom feed proxy (Listen News widget)    | `GET /api/me/rss-feed?url=` — SSRF-guarded (http/https only, no redirects, no private-IP targets)                                                    |
 | Catalog imports                             | `/api/v1/imports/{hearthis,mixcloud,spotify}/*` (`requireAuth`; note this family lives outside the `/api/me/*` prefix the rest of this section uses) |
 
 These families contain authenticated mutations. Consult the generated
