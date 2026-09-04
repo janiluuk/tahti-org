@@ -125,7 +125,7 @@ describe('GET /api/tracks/:id', () => {
         position: 0,
       },
     })
-    const item = await prisma.archiveItem.create({
+    const item = await prisma.sound.create({
       data: {
         channelId,
         title: 'Paywalled Track',
