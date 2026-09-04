@@ -26,7 +26,7 @@ listed for completeness but are not coding tasks.
 | ---------------------------------------------------------------------------------------------------------------------- | :-----: | ----------- | -------------------------------- |
 | **STREAM-011 B** — live/24-7 multi-bitrate HLS (lossless or high-bitrate ABR); spike Liquidsoap fMP4 + master playlist |  `[ ]`  | Dev         | `project-roadmap.md` §STREAM-011 |
 | **STREAM-011 A** — on-demand prefer FLAC                                                                               | ✅ done | —           | `archivePlaybackKey` + tests     |
-| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection                                                   |  `[~]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
+| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection                                                   |  `[x]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
 | **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                         |  `[~]`  | Dev         | roadmap PLAT-053                 |
 | **M11** — live Upptime fork deploy                                                                                     |  `[~]`  | Ops         | roadmap M11                      |
 | **M29** — pgBackRest PITR (interim `backup.sh` exists)                                                                 |  `[~]`  | Dev / Ops   | roadmap M29                      |
@@ -34,7 +34,7 @@ listed for completeness but are not coding tasks.
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                        |  `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                |  `[~]`  | Dev         | future-improvements              |
 | Playwright smoke in CI against Docker stack (nightly)                                                                  |  `[x]`  | Dev         | future-improvements §Testing     |
-| `user-journeys-e2e` required in branch protection                                                                      |  `[ ]`  | Dev         | future-improvements              |
+| `user-journeys-e2e` required in branch protection                                                                      |  `[x]`  | Dev         | Via required **All checks**      |
 
 ---
 

@@ -1,20 +1,27 @@
 # Branch protection (PLAT-002)
 
+Verified 2026-09-05: active repository ruleset **Main CI gate (PLAT-002)**
+(`22306827`) applies to `refs/heads/main`. It requires **All checks**, an
+up-to-date branch, one PR approval, and resolved review threads. It blocks
+deletion and force pushes and has no bypass actors. The effective rules were
+confirmed through `GET /repos/janiluuk/tahti-org/rules/branches/main`.
+The aggregate includes `user-journeys-e2e`, so that suite is covered by the gate.
+
 GitHub branch protection cannot be committed to the repo; configure it in the repository settings for `main`.
 
 ## Required status checks
 
 Require the **`All checks`** job from the [CI workflow](./workflows/ci.yml) before merge. That job fails if any of these jobs fail:
 
-| Job name | Purpose |
-|----------|---------|
-| Validate website Docker build | Marketing site image builds |
-| Lint & format | ESLint + Prettier |
-| Typecheck | `tsc` across the monorepo |
-| Unit + integration tests | Vitest + Postgres |
-| API vital flows (curl e2e) | Core API smoke paths |
-| User journey e2e (listener, artist, member) | Guides-backed journeys |
-| AGPL header check | License headers on source files |
+| Job name                                    | Purpose                         |
+| ------------------------------------------- | ------------------------------- |
+| Validate website Docker build               | Marketing site image builds     |
+| Lint & format                               | ESLint + Prettier               |
+| Typecheck                                   | `tsc` across the monorepo       |
+| Unit + integration tests                    | Vitest + Postgres               |
+| API vital flows (curl e2e)                  | Core API smoke paths            |
+| User journey e2e (listener, artist, member) | Guides-backed journeys          |
+| AGPL header check                           | License headers on source files |
 
 Optional but recommended: also require **Generate OpenAPI spec** if you want OpenAPI artifacts on every merge.
 
