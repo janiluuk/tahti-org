@@ -64,15 +64,17 @@ export function Step3Preflight() {
   const [pinning, setPinning] = useState(false)
   const [pinned, setPinned] = useState(false)
   const [series, setSeries] = useState<ShowSeriesOption[]>([])
+  const [chatEnabled, setChatEnabled] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const [preflightRes, targetsRes, seriesRes] = await Promise.all([
+        const [preflightRes, targetsRes, seriesRes, profileRes] = await Promise.all([
           fetch(`${API_BASE}/api/me/channel/preflight`, { credentials: 'include' }),
           fetch(`${API_BASE}/api/me/rtmp-targets`, { credentials: 'include' }),
           fetch(`${API_BASE}/api/me/channel/show-series`, { credentials: 'include' }),
+          fetch(`${API_BASE}/api/me/profile`, { credentials: 'include' }),
         ])
         if (!cancelled && preflightRes.ok) {
           const data = (await preflightRes.json()) as Preflight
@@ -86,6 +88,10 @@ export function Step3Preflight() {
         if (!cancelled && seriesRes.ok) {
           const data = (await seriesRes.json()) as { series: ShowSeriesOption[] }
           setSeries(data.series)
+        }
+        if (!cancelled && profileRes.ok) {
+          const data = (await profileRes.json()) as { chatEnabled: boolean }
+          setChatEnabled(data.chatEnabled)
         }
       } catch {
         // render with defaults
@@ -121,6 +127,16 @@ export function Step3Preflight() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ enabled }),
+    })
+  }
+
+  async function toggleChatEnabled(enabled: boolean) {
+    setChatEnabled(enabled)
+    await fetch(`${API_BASE}/api/me/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ chatEnabled: enabled }),
     })
   }
 
@@ -311,6 +327,17 @@ export function Step3Preflight() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="studio-field studio-mt-md">
+          <label className="studio-label-row studio-text-sm">
+            <input
+              type="checkbox"
+              checked={chatEnabled}
+              onChange={(e) => void toggleChatEnabled(e.target.checked)}
+            />
+            Enable live chat on my channel
+          </label>
         </div>
 
         <div className="studio-field studio-mt-md">
