@@ -14113,6 +14113,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/u/{username}/news': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Public: an artist's parsed news feed items */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          username: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              items: {
+                title: string
+                link: string
+                pubDate: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/u/{username}/mentions': {
     parameters: {
       query?: never
@@ -14577,6 +14621,7 @@ export interface paths {
               /** @enum {string|null} */
               logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
               tipJarUrl: string | null
+              newsFeedUrl: string | null
               countryCode: string | null
               pronouns: string | null
               defaultLocation: string | null
@@ -14636,6 +14681,7 @@ export interface paths {
               /** @enum {string|null} */
               logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
               tipJarUrl: string | null
+              newsFeedUrl: string | null
               countryCode: string | null
               pronouns: string | null
               defaultLocation: string | null
@@ -29915,6 +29961,7 @@ export interface components {
       /** @enum {string|null} */
       logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
       tipJarUrl: string | null
+      newsFeedUrl: string | null
       countryCode: string | null
       pronouns: string | null
       defaultLocation: string | null

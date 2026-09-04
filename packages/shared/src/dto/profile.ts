@@ -21,6 +21,8 @@ export const ProfilePatchSchema = z
     logoUrl: z.string().trim().max(2000).nullable().optional(),
     logoPlacement: LogoPlacementSchema.nullable().optional(),
     tipJarUrl: z.string().trim().max(2000).optional(),
+    /** Artist-configured RSS/Atom feed URL for the public "Latest news" section. */
+    newsFeedUrl: z.string().trim().max(2000).optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
     pronouns: z.string().trim().max(40).nullable().optional(),
     defaultLocation: z.string().trim().max(120).nullable().optional(),
@@ -44,6 +46,18 @@ export type ProfilePatchInput = z.infer<typeof ProfilePatchSchema>
 export const MetaStreamOptSchema = z.object({
   optOut: z.boolean({ required_error: 'optOut (boolean) is required' }),
 })
+
+export const RssFeedItemSchema = z.object({
+  title: z.string(),
+  link: z.string(),
+  pubDate: z.string().nullable(),
+})
+
+export const RssFeedResponseSchema = z.object({
+  items: z.array(RssFeedItemSchema),
+})
+
+export type RssFeedItem = z.infer<typeof RssFeedItemSchema>
 
 export const MentionsEnabledSchema = z
   .object({

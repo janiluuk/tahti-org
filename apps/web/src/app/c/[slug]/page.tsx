@@ -29,6 +29,7 @@ import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
+  RssFeedItem,
   TracklistEntry,
 } from '@tahti/shared'
 import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
@@ -176,21 +177,36 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, tiersRes, user] =
-    await Promise.all([
-      fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
-      fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
-      fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
-      fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
-      fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
-      fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/profile`, {
-        cache: 'no-store',
-      }),
-      fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/tiers`, {
-        next: { revalidate: 60 },
-      }),
-      getSessionUser(),
-    ])
+  const [
+    itemsRes,
+    announcementsRes,
+    eventsRes,
+    postsRes,
+    embedsRes,
+    profileRes,
+    tiersRes,
+    newsRes,
+    user,
+  ] = await Promise.all([
+    fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/profile`, {
+      cache: 'no-store',
+    }),
+    fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/tiers`, {
+      next: { revalidate: 60 },
+    }),
+    fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/news`, {
+      next: { revalidate: 60 },
+    }),
+    getSessionUser(),
+  ])
+  const newsItems: RssFeedItem[] = newsRes.ok
+    ? ((await newsRes.json().catch(() => ({ items: [] }))) as { items: RssFeedItem[] }).items
+    : []
   const profileData = profileRes.ok
     ? ((await profileRes.json()) as { releases: ReleaseGridItem[]; tracks: TrackTabItem[] })
     : null
@@ -727,6 +743,39 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                   >
                                     Tickets / event link ↗
                                   </a>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {newsItems.length > 0 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Latest news</h2>
+                        </div>
+                        <ul className="ch-events-list">
+                          {newsItems.map((item) => (
+                            <li key={item.link} className="ch-events-list__item">
+                              <div className="ch-events-list__body">
+                                <a
+                                  href={item.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ch-events-list__link"
+                                >
+                                  {item.title}
+                                </a>
+                                {item.pubDate && (
+                                  <div className="ch-events-list__date">
+                                    {new Date(item.pubDate).toLocaleDateString(undefined, {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })}
+                                  </div>
                                 )}
                               </div>
                             </li>

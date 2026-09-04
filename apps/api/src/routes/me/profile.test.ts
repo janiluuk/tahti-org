@@ -57,6 +57,7 @@ describe('M12 — artist profile API', () => {
         bio: 'Thanks @profile-mentioned for the collab',
         fullBio: 'A much longer history of how this project got started.',
         tipJarUrl: 'https://ko-fi.com/test',
+        newsFeedUrl: 'https://example.com/feed.xml',
         countryCode: 'fi',
         pronouns: 'they/them',
         publicAttribution: false,
@@ -68,6 +69,7 @@ describe('M12 — artist profile API', () => {
     expect(res.json().publicAttribution).toBe(false)
     expect(res.json().countryCode).toBe('FI')
     expect(res.json().pronouns).toBe('they/them')
+    expect(res.json().newsFeedUrl).toBe('https://example.com/feed.xml')
 
     await new Promise((r) => setTimeout(r, 500))
     const mention = await prisma.mention.findFirst({
@@ -102,6 +104,17 @@ describe('M12 — artist profile API', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().fullBio).toBeNull()
+  })
+
+  it('PATCH /api/me/profile clears newsFeedUrl when set to an empty string', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { newsFeedUrl: '' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().newsFeedUrl).toBeNull()
   })
 
   it('PATCH /api/me/profile regenerates a stale generated placeholder avatar on rename', async () => {

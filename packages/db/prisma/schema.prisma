@@ -749,6 +749,9 @@ model User {
   logoPlacement                  String?
   socialLinks                    Json?
   tipJarUrl                      String?
+  // Artist-configured RSS/Atom feed URL — server-fetched (SSRF-guarded) and
+  // rendered as a "Latest news" section on the public channel page.
+  newsFeedUrl                    String?
   countryCode                    String?
   pronouns                       String?
   gender                         String? // free text, e.g. "Woman"/"Man"/"Non-binary" — null means declined to say

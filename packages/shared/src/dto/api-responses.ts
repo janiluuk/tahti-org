@@ -1187,6 +1187,7 @@ export const ProfileFieldsSchema = z.object({
   logoUrl: z.string().nullable(),
   logoPlacement: LogoPlacementSchema.nullable(),
   tipJarUrl: z.string().nullable(),
+  newsFeedUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
   pronouns: z.string().nullable(),
   defaultLocation: z.string().nullable(),
