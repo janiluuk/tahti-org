@@ -27,6 +27,7 @@ function CredentialForm({
   pending,
   signupUrl,
   signupLabel,
+  submitLabel = 'Save',
   onSubmit,
   onCancel,
 }: {
@@ -34,6 +35,7 @@ function CredentialForm({
   pending: boolean
   signupUrl?: string
   signupLabel?: string
+  submitLabel?: string
   onSubmit: (values: Record<string, string>) => void
   onCancel: () => void
 }) {
@@ -75,11 +77,78 @@ function CredentialForm({
           disabled={pending || !allFilled}
           onClick={() => onSubmit(values)}
         >
-          {pending ? 'Saving…' : 'Save'}
+          {pending ? 'Saving…' : submitLabel}
         </Button>
         <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={onCancel}>
           Cancel
         </Button>
+      </div>
+    </div>
+  )
+}
+
+function LastFmConnectModal({
+  fields,
+  signupUrl,
+  signupLabel,
+  pending,
+  error,
+  onSubmit,
+  onClose,
+}: {
+  fields: IntegrationField[]
+  signupUrl?: string
+  signupLabel?: string
+  pending: boolean
+  error: string | null
+  onSubmit: (values: Record<string, string>) => void
+  onClose: () => void
+}) {
+  return (
+    <div
+      className="spotify-import-modal__overlay"
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !pending) onClose()
+      }}
+    >
+      <div
+        className="spotify-import-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lastfm-connect-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="spotify-import-modal__header">
+          <div>
+            <h2 id="lastfm-connect-title" className="spotify-import-modal__title">
+              Connect Last.fm
+            </h2>
+            <p className="spotify-import-modal__subline">
+              Paste the API key and shared secret from your Last.fm API account, then approve Tahti
+              on Last.fm.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="spotify-import-modal__close"
+            aria-label="Close"
+            disabled={pending}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+        {error && <p className="studio-notice studio-notice--error">{error}</p>}
+        <CredentialForm
+          fields={fields}
+          pending={pending}
+          signupUrl={signupUrl}
+          signupLabel={signupLabel}
+          submitLabel="Continue to Last.fm"
+          onSubmit={onSubmit}
+          onCancel={onClose}
+        />
       </div>
     </div>
   )
@@ -90,6 +159,8 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
   const [error, setError] = useState<string | null>(null)
   const [configuringSlug, setConfiguringSlug] = useState<string | null>(null)
   const [pendingSlug, setPendingSlug] = useState<string | null>(null)
+  const [lastFmOpen, setLastFmOpen] = useState(false)
+  const [lastFmError, setLastFmError] = useState<string | null>(null)
 
   function patch(slug: string, changes: Partial<IntegrationView>) {
     setIntegrations((prev) => prev.map((i) => (i.slug === slug ? { ...i, ...changes } : i)))
@@ -120,6 +191,39 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
     patch(slug, { installed: false })
   }
 
+  async function handleLastFmPrepare(fields: Record<string, string>) {
+    setLastFmError(null)
+    setPendingSlug('lastfm')
+    try {
+      const returnTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/dashboard/settings?tab=integrations`
+          : undefined
+      const res = await fetch(`${apiUrl}/api/me/integrations/lastfm/prepare`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: fields.apiKey,
+          apiSecret: fields.apiSecret,
+          returnTo,
+        }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string; authUrl?: string }
+      if (!res.ok || !body.authUrl) {
+        setLastFmError(body.error ?? 'Could not start Last.fm authorization')
+        setPendingSlug(null)
+        return
+      }
+      window.location.href = body.authUrl
+    } catch {
+      setLastFmError('Could not reach the API')
+      setPendingSlug(null)
+    }
+  }
+
+  const lastFmProvider = INTEGRATION_PROVIDERS.find((p) => p.slug === 'lastfm')
+
   return (
     <Panel
       title="Integrations"
@@ -143,6 +247,7 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
                 const fields = provider?.fields ?? []
                 const isPending = pendingSlug === row.slug
                 const isConfiguring = configuringSlug === row.slug
+                const isLastFm = row.slug === 'lastfm'
 
                 return (
                   <div key={row.slug} className="ui-panel">
@@ -185,6 +290,19 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
                             }}
                           >
                             {isPending ? 'Disconnecting…' : 'Disconnect'}
+                          </Button>
+                        ) : isLastFm ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => {
+                              setLastFmError(null)
+                              setLastFmOpen(true)
+                            }}
+                          >
+                            Connect
                           </Button>
                         ) : (
                           <a
@@ -251,6 +369,22 @@ export function IntegrationsPanel({ initial }: IntegrationsPanelProps) {
           </div>
         )
       })}
+
+      {lastFmOpen && lastFmProvider && (
+        <LastFmConnectModal
+          fields={lastFmProvider.fields ?? []}
+          signupUrl={lastFmProvider.signupUrl}
+          signupLabel={lastFmProvider.signupLabel}
+          pending={pendingSlug === 'lastfm'}
+          error={lastFmError}
+          onSubmit={(values) => void handleLastFmPrepare(values)}
+          onClose={() => {
+            if (pendingSlug === 'lastfm') return
+            setLastFmOpen(false)
+            setLastFmError(null)
+          }}
+        />
+      )}
     </Panel>
   )
 }
