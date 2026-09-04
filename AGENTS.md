@@ -44,8 +44,9 @@ server-side persistence; the Tahti Player plugin owns its client configuration f
 
 The versioned import-provider catalog is `GET /api/me/import-plugins`
 (`docs/technical/import-plugin-contracts.md`). Keep OAuth, search, and
-tool/upload kinds separate. Do not add DSP export submit/status/webhook
-routes until that product contract exists.
+tool/upload kinds separate. Export/DSP delivery uses a separate catalog:
+`GET /api/me/export-plugins` (`docs/technical/export-plugin-contracts.md`)
+with submit/status/webhook paths (Revelator live; other DSPs may be stubs).
 
 For import plugins, all provider configuration must happen from the plugin’s
 Configure action in a modal. The modal must support entering keys/settings,

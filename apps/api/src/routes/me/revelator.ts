@@ -15,15 +15,13 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { releaseCatalogSelect } from '../../lib/release-catalog.js'
-import { mediaQueue } from '../../lib/queue.js'
 import { config } from '../../config.js'
 import {
   getDistributionBillingStatus,
   recordDistributionPayment,
 } from '../../lib/distribution-billing.js'
 import { createCheckoutSession, stripeEnabled } from '../../lib/stripe.js'
-
-const SUBMITTABLE_STATUSES = new Set(['failed', null])
+import { getRevelatorReleaseStatus, submitRevelatorRelease } from '../../lib/revelator-delivery.js'
 
 async function loadOwnedRelease(
   fastify: { prisma: import('@tahti/db').PrismaClient },
@@ -40,10 +38,6 @@ async function loadOwnedRelease(
       user: { select: { email: true } },
     },
   })
-}
-
-async function queueRevelatorDeliver(releaseId: string) {
-  await mediaQueue.add('revelator-deliver', { releaseId })
 }
 
 // M7 — Revelator DSP submission (wizard entry point)
@@ -64,20 +58,13 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
 
-      const release = await fastify.prisma.release.findFirst({
-        where: { id, userId: user.id },
-        select: {
-          revelatorId: true,
-          revelatorStatus: true,
-          title: true,
-        },
-      })
-      if (!release) return reply.status(404).send({ error: 'Release not found' })
+      const result = await getRevelatorReleaseStatus(fastify.prisma, user.id, id)
+      if (!result.ok) return reply.status(404).send({ error: 'Release not found' })
 
       return reply.send({
-        revelatorId: release.revelatorId,
-        revelatorStatus: release.revelatorStatus,
-        title: release.title,
+        revelatorId: result.revelatorId,
+        revelatorStatus: result.revelatorStatus,
+        title: result.title,
       })
     },
   )
@@ -219,43 +206,20 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
 
-      const release = await loadOwnedRelease(fastify, user.id, id)
-      if (!release) return reply.status(404).send({ error: 'Release not found' })
-
-      if (release.tracks.length < 1) {
-        return reply.status(400).send({ error: 'Add at least one track before DSP submit' })
-      }
-
-      const hasIdentifier =
-        Boolean(release.upc?.trim()) || release.tracks.every((t) => Boolean(t.isrc?.trim()))
-      if (!hasIdentifier) {
-        return reply.status(400).send({
-          error: 'Add a UPC or ISRC on every track before DSP submit',
+      const result = await submitRevelatorRelease(fastify.prisma, user.id, id)
+      if (!result.ok) {
+        return reply.status(result.status).send({
+          error: result.error,
+          ...(result.revelatorStatus !== undefined
+            ? { revelatorStatus: result.revelatorStatus, revelatorId: result.revelatorId }
+            : {}),
         })
       }
 
-      if (release.revelatorStatus && !SUBMITTABLE_STATUSES.has(release.revelatorStatus)) {
-        return reply.status(409).send({
-          error: 'Release already submitted to Revelator',
-          revelatorStatus: release.revelatorStatus,
-          revelatorId: release.revelatorId,
-        })
-      }
-
-      if (!release.distributionPaidAt) {
-        return reply.status(402).send({
-          error: 'Pay the distribution fee before submitting to Revelator',
-        })
-      }
-
-      await fastify.prisma.release.update({
-        where: { id },
-        data: { revelatorStatus: 'pending' },
+      return reply.status(202).send({
+        releaseId: result.releaseId,
+        revelatorStatus: result.revelatorStatus,
       })
-
-      await queueRevelatorDeliver(id)
-
-      return reply.status(202).send({ releaseId: id, revelatorStatus: 'pending' as const })
     },
   )
 

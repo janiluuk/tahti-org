@@ -96,6 +96,7 @@ import fanSubPayoutRoutes from './routes/fansubs/payouts.js'
 import purchaseTierRoutes from './routes/fansubs/purchase-tiers.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import emailBounceWebhookRoutes from './routes/webhooks/email-bounce.js'
+import exportWebhookRoutes from './routes/webhooks/export.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
@@ -154,6 +155,7 @@ import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
 import googleDriveRoutes from './routes/me/google-drive.js'
 import meImportPluginRoutes from './routes/me/import-plugins.js'
+import meExportPluginRoutes from './routes/me/export-plugins.js'
 import musicbrainzRoutes from './routes/me/musicbrainz.js'
 import spotifyImportRoutes from './routes/imports/spotify.js'
 import spotifyProfileRoute from './routes/me/spotify-profile.js'
@@ -636,6 +638,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(fanSubPayoutRoutes)
   await fastify.register(stripeWebhookRoutes)
   await fastify.register(emailBounceWebhookRoutes)
+  await fastify.register(exportWebhookRoutes)
 
   // M1: annual membership payment
   await fastify.register(membershipRoutes)
@@ -712,6 +715,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(soundcloudRoutes)
   await fastify.register(googleDriveRoutes)
   await fastify.register(meImportPluginRoutes)
+  await fastify.register(meExportPluginRoutes)
   await fastify.register(musicbrainzRoutes)
   await fastify.register(spotifyImportRoutes)
   await fastify.register(spotifyProfileRoute)
