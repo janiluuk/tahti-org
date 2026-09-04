@@ -105,7 +105,7 @@ function ledgerEntrySignedCents(entry: LedgerEntry): number {
   return INFLOW_CATEGORIES.has(entry.category) ? amount : -amount
 }
 
-export default async function TransparencyPage() {
+export default async function TransparencyPage({ studio = false }: { studio?: boolean }) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const statusUrl = statusPageUrl()
   const currentYear = new Date().getFullYear()
@@ -177,7 +177,14 @@ export default async function TransparencyPage() {
 
   return (
     <>
-      <PublicPageHeader title="Transparency" back={{ href: '/', label: '← Home' }}>
+      <PublicPageHeader
+        title="Transparency"
+        back={
+          studio
+            ? { href: '/dashboard/governance', label: '← Governance' }
+            : { href: '/', label: '← Home' }
+        }
+      >
         Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
         published here. <Link href="/transparency/methodology">Methodology ↗</Link>
         {' · Updated monthly · bylaws §8 · audited annually'}

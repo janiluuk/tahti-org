@@ -207,7 +207,7 @@ export default async function DashboardMotionsPage() {
               </ul>
             )}
             <Text size="sm">
-              <Link href="/transparency">Full resolution history →</Link>
+              <Link href="/dashboard/governance/transparency">Full resolution history →</Link>
             </Text>
           </div>
 

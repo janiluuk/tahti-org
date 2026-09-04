@@ -25,7 +25,7 @@ const SECTIONS = [
     desc: 'Record and publish formal board decisions and vote outcomes.',
   },
   {
-    href: '/transparency',
+    href: '/dashboard/governance/transparency',
     title: 'Published governance history',
     desc: 'Review the public archive of board decisions and closed advisory motions.',
   },
@@ -64,7 +64,7 @@ const GOVERNANCE_TABS = [
   { href: '/admin/governance/report', label: 'Annual reports' },
   { href: '/admin/governance/audit', label: 'Governance audit' },
   { href: '/governance/venues', label: 'Venue verification' },
-  { href: '/transparency', label: 'Transparency' },
+  { href: '/dashboard/governance/transparency', label: 'Transparency' },
 ] as const
 
 export default function AdminGovernancePage() {

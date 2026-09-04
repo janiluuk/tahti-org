@@ -16,7 +16,9 @@ export default async function GovernanceLayout({ children }: { children: ReactNo
       <nav className="brand-governance-nav" aria-label="Governance navigation">
         <Link href="/dashboard/governance">Governance overview</Link>
         <Link href="/dashboard/governance/motions">Member motions</Link>
-        <Link href="/transparency#member-motion-history">Published results</Link>
+        <Link href="/dashboard/governance/transparency#member-motion-history">
+          Published results
+        </Link>
       </nav>
       {children}
     </PublicBrandShell>

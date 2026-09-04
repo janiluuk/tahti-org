@@ -22,7 +22,9 @@ export default function DashboardGovernanceLayout({ children }: { children: Reac
           <Link href="/dashboard/governance">Overview</Link>
           <Link href="/dashboard/governance/motions">Member motions</Link>
           <Link href="/dashboard/governance/topics">Product feedback</Link>
-          <Link href="/transparency#member-motion-history">Published results</Link>
+          <Link href="/dashboard/governance/transparency#member-motion-history">
+            Published results
+          </Link>
         </nav>
         {children}
       </div>

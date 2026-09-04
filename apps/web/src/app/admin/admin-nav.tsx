@@ -349,7 +349,7 @@ export const ADMIN_NAV = [
     icon: <GovernanceNavIcon mark="V" />,
   },
   {
-    href: '/transparency',
+    href: '/dashboard/governance/transparency',
     label: 'Transparency',
     icon: <GovernanceNavIcon mark="T" />,
   },
@@ -460,7 +460,7 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/governance/resolutions',
       '/admin/governance/audit',
       '/governance/venues',
-      '/transparency',
+      '/dashboard/governance/transparency',
       '/admin/grants',
       '/admin/agm',
       '/admin/status',

@@ -214,7 +214,7 @@ export default async function DashboardGovernancePage() {
             </p>
           </div>
           <Link
-            href="/transparency#member-motion-history"
+            href="/dashboard/governance/transparency#member-motion-history"
             className="ui-btn ui-btn--secondary ui-btn--sm"
           >
             Public history →
