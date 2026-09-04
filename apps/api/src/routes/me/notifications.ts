@@ -27,8 +27,7 @@ const NOTIFICATION_SELECT = {
 const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/notifications — most recent notifications + unread count.
   // ?stickyOnly=true returns unread sticky notifications only (unbounded by
-  // NOTIFICATION_LIMIT — see StickyNotificationBanner), for the dashboard's
-  // must-dismiss banner, kept separate from the ordinary bell's list.
+  // NOTIFICATION_LIMIT) for the must-acknowledge toaster.
   fastify.get(
     '/api/me/notifications',
     {
@@ -64,23 +63,24 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/me/notifications/read-all — mark every unread notification as read
+  // POST /api/me/notifications/read-all — mark every unread *non-sticky*
+  // notification as read. Sticky rows stay unread until PATCH :id/read
+  // (Acknowledge on the toaster / inbox).
   fastify.post(
     '/api/me/notifications/read-all',
     { preHandler: requireAuth, schema: { tags: ['channel'] } },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.notification.updateMany({
-        where: { userId: user.id, readAt: null },
+        where: { userId: user.id, readAt: null, sticky: false },
         data: { readAt: new Date() },
       })
       return reply.status(204).send()
     },
   )
 
-  // PATCH /api/me/notifications/:id/read — dismiss exactly one notification.
-  // Needed for sticky notifications: opening the bell marks everything read,
-  // which would silently clear a sticky banner nobody actually dismissed.
+  // PATCH /api/me/notifications/:id/read — acknowledge exactly one notification.
+  // Sticky notices are not cleared by read-all / opening the bell.
   fastify.patch(
     '/api/me/notifications/:id/read',
     { preHandler: requireAuth },

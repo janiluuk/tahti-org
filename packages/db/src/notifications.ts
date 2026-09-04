@@ -246,9 +246,8 @@ export async function notifyArtistOfRadioSubmissionRejected(
   })
 }
 
-/** Theme review lifecycle — all three are sticky (must be explicitly dismissed
- * in the dashboard's StickyNotificationBanner, not just cleared by opening
- * the ordinary notification bell). */
+/** Theme review lifecycle — all three are sticky (must be explicitly
+ * acknowledged; opening the bell / read-all does not clear them). */
 export async function notifyUserThemeUnderReview(
   prisma: PrismaClient,
   userId: string,

@@ -99,4 +99,47 @@ describe('GET/POST /api/me/notifications', () => {
     const body = after.json() as { unreadCount: number }
     expect(body.unreadCount).toBe(0)
   })
+
+  it('leaves sticky notifications unread after read-all', async () => {
+    await prisma.notification.create({
+      data: {
+        userId,
+        type: 'THEME_UNDER_REVIEW',
+        title: 'Theme is in review',
+        body: 'An admin will decide soon.',
+        url: '/dashboard/settings/themes',
+        sticky: true,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/notifications/read-all',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(204)
+
+    const after = await app.inject({
+      method: 'GET',
+      url: '/api/me/notifications',
+      headers: { cookie },
+    })
+    const body = after.json() as {
+      notifications: Array<{ sticky: boolean; readAt: string | null; title: string }>
+      unreadCount: number
+    }
+    const sticky = body.notifications.find((item) => item.sticky)
+    expect(sticky?.readAt).toBeNull()
+    expect(sticky?.title).toBe('Theme is in review')
+    expect(body.unreadCount).toBe(1)
+
+    const stickyOnly = await app.inject({
+      method: 'GET',
+      url: '/api/me/notifications?stickyOnly=true',
+      headers: { cookie },
+    })
+    const stickyBody = stickyOnly.json() as { notifications: Array<{ sticky: boolean }> }
+    expect(stickyBody.notifications).toHaveLength(1)
+    expect(stickyBody.notifications[0]!.sticky).toBe(true)
+  })
 })
