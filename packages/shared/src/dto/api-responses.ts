@@ -1661,6 +1661,20 @@ export const AdminMemberStatsSchema = z.object({
   lapsedThisMonth: z.number().int().nonnegative(),
 })
 
+export const AdminChatStatsSchema = z.object({
+  last24h: z.number().int().nonnegative(),
+})
+
+export const AdminChatTimeseriesPointSchema = z.object({
+  date: z.string(),
+  count: z.number().int().nonnegative(),
+})
+
+export const AdminChatTimeseriesSchema = z.object({
+  days: z.number().int().positive(),
+  series: z.array(AdminChatTimeseriesPointSchema),
+})
+
 export const AdminQueueStatsSchema = z.object({
   name: z.string(),
   waiting: z.number().int().nonnegative(),

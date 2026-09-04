@@ -61,6 +61,7 @@ export default async function AdminDashboardPage() {
     betaRes,
     venuesRes,
     healthRes,
+    chatStatsRes,
   ] = await Promise.all([
     boardFetch('/api/v1/transparency/ytd'),
     boardFetch('/api/admin/stats/members'),
@@ -74,7 +75,12 @@ export default async function AdminDashboardPage() {
     boardFetch('/api/admin/beta/applications?status=PENDING&limit=100'),
     boardFetch('/api/admin/venues'),
     boardFetch('/api/admin/stats/system-health'),
+    boardFetch('/api/admin/stats/chat'),
   ])
+
+  const chatLast24h = chatStatsRes.ok
+    ? ((await chatStatsRes.json()) as { last24h: number }).last24h
+    : 0
 
   const failedPayoutCount = fansubsRes.ok
     ? ((await fansubsRes.json()) as { failedPayouts: { count: number } }).failedPayouts.count
@@ -223,6 +229,13 @@ export default async function AdminDashboardPage() {
         <KpiCard color="green" value={streams.count} label="Live now" />
         <KpiCard color="amber" value={betaApplications.length} label="Beta queue" />
         <KpiCard color="coral" value={openSupportCount} label="Open tickets" />
+        <Link
+          href="/admin/chat-stats"
+          className="admin-kpi-link"
+          aria-label="Chat messages, last 24h — view stats over time"
+        >
+          <KpiCard color="purple" value={chatLast24h} label="Chat msgs (24h)" />
+        </Link>
       </KpiCardRow>
 
       <div className="admin-dashboard-grid">
