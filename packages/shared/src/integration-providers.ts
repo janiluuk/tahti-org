@@ -125,6 +125,17 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
     signupUrl: 'https://listenbrainz.org/settings/',
     signupLabel: 'Get your ListenBrainz user token →',
   },
+  {
+    slug: 'lastfm',
+    name: 'Last.fm',
+    description:
+      'Scrobble plays of Tahti tracks to your Last.fm profile. Approve Tahti once; charts and recommendations stay out of scope.',
+    scope: 'SCROBBLE',
+    authKind: 'OAUTH',
+    oauthConnectPath: '/api/me/integrations/lastfm/oauth/start',
+    // Session lives in IntegrationCredential (not a User column). List uses
+    // installed credential rows when oauthStatusField is omitted.
+  },
 ]
 
 export function findIntegrationProvider(slug: string): IntegrationProvider | undefined {

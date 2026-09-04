@@ -15,9 +15,12 @@ ExportProvider / ImportPlugin Configure flows or ListenBrainz scrobble.
 
 Registry metadata (slug, fields, OAuth connect path, scope) lives in
 `packages/shared/src/integration-providers.ts`. Scopes include `IMPORT`,
-`EXPORT`, `FINGERPRINT`, and `SCROBBLE` (ListenBrainz). OAuth providers
+`EXPORT`, `FINGERPRINT`, and `SCROBBLE` (ListenBrainz, Last.fm). OAuth providers
 (SoundCloud, Google Drive, …) keep their existing connect/disconnect
-routes; the install endpoint rejects them.
+routes; the install endpoint rejects them. Last.fm is OAuth-style but stores
+the session in `IntegrationCredential` (no User column); list `connected`
+uses the credential row when `oauthStatusField` is omitted, and
+`DELETE /api/me/integrations/lastfm` uninstalls it.
 
 ## Storage (`@tahti/db`)
 
