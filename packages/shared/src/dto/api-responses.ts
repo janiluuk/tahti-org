@@ -883,6 +883,19 @@ export const PublicTrackDetailSchema = z
     peaks: z.array(z.number()).nullable(),
     commentCount: z.number().int(),
     downloadCount: z.number().int(),
+    /** FREE | SUBSCRIBERS_ONLY | PURCHASE — one-time purchase tiers are distinct from fan-subs. */
+    accessMode: z.enum(['FREE', 'SUBSCRIBERS_ONLY', 'PURCHASE']).optional(),
+    purchaseTierId: z.string().nullable().optional(),
+    purchaseTierName: z.string().nullable().optional(),
+    purchaseTierPriceCents: z.number().int().nullable().optional(),
+    /** Present when the viewer cannot stream; audioUrl is null in that case. */
+    gate: z
+      .object({
+        reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
+        tierId: z.string().optional(),
+      })
+      .nullable()
+      .optional(),
   })
   .passthrough()
 
@@ -1187,6 +1200,7 @@ export const ProfileFieldsSchema = z.object({
   logoUrl: z.string().nullable(),
   logoPlacement: LogoPlacementSchema.nullable(),
   tipJarUrl: z.string().nullable(),
+  newsFeedUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
   pronouns: z.string().nullable(),
   defaultLocation: z.string().nullable(),
@@ -1659,6 +1673,25 @@ export const AdminMemberStatsSchema = z.object({
   total: z.number().int().nonnegative(),
   newThisMonth: z.number().int().nonnegative(),
   lapsedThisMonth: z.number().int().nonnegative(),
+})
+
+export const AdminChatStatsSchema = z.object({
+  last24h: z.number().int().nonnegative(),
+})
+
+export const AdminChatTimeseriesPointSchema = z.object({
+  date: z.string(),
+  count: z.number().int().nonnegative(),
+})
+
+export const AdminChatTimeseriesSchema = z.object({
+  // .min(1) rather than .positive() — zod-to-json-schema's openApi3 target
+  // emits .positive() as a boolean-style `exclusiveMinimum: true`, which
+  // Fastify's ajv rejects when compiling this as a response schema (ajv
+  // wants exclusiveMinimum as a number). .min(1) has the same constraint
+  // (integer >= 1) but serializes as a plain `minimum`.
+  days: z.number().int().min(1),
+  series: z.array(AdminChatTimeseriesPointSchema),
 })
 
 export const AdminQueueStatsSchema = z.object({

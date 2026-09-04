@@ -70,8 +70,8 @@ echo "── Web app ───────────────────�
 check "Web app root returns 200" \
   "curl -sf -o /dev/null -w '%{http_code}' '$APP_URL/' | grep -q 200"
 
-check "Join page returns 200" \
-  "curl -sf -o /dev/null -w '%{http_code}' '$APP_URL/join' | grep -q 200"
+check "Join legacy alias redirects to signup" \
+  "code=\$(curl -s -o /dev/null -w '%{http_code}' '$APP_URL/join'); test \"\$code\" = '307' -o \"\$code\" = '308'"
 
 check "Web page includes AGPL footer link" \
   "curl -sf '$APP_URL/' | grep -qi 'AGPL'"

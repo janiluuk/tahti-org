@@ -72,7 +72,7 @@ Full route colour map: [site-map.md](site-map.md).
 
 | Screen | Reference screenshot |
 | --- | --- |
-| Join | [`public/join.png`](../e2e-screenshots/public/join.png) |
+| Join | [`public/join.png`](../e2e-screenshots/public/join.png) (captured at `/signup`) |
 | Login | [`public/login.png`](../e2e-screenshots/public/login.png) |
 | Free dashboard | [`free/dashboard.png`](../e2e-screenshots/free/dashboard.png) |
 | Member dashboard | [`member/dashboard.png`](../e2e-screenshots/member/dashboard.png) |

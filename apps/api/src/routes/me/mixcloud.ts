@@ -89,18 +89,16 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
     }
 
-    const sessionId = request.cookies[config.sessionCookieName]
-    if (!sessionId) {
+    // SEC-014: use the same request.sessionUser every other route relies on
+    // (populated by the global auth preHandler via lib/session.ts's
+    // validateSession) rather than re-deriving it from the raw cookie here —
+    // the manual version below used to skip validateSession's
+    // session.user.deletedAt check, so a soft-deleted account's still-live
+    // session cookie could complete this OAuth link when it shouldn't.
+    if (!request.sessionUser) {
       return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=login`)
     }
-
-    const session = await fastify.prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { user: { select: { id: true } } },
-    })
-    if (!session || session.expiresAt < new Date()) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=login`)
-    }
+    const sessionUserId = request.sessionUser.id
 
     try {
       const { accessToken } = await exchangeMixcloudCode({
@@ -108,7 +106,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         redirectUri: config.mixcloud.redirectUri,
       })
       await fastify.prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: sessionUserId },
         data: { mixcloudAccessTokenEnc: encryptStreamKey(accessToken) },
       })
       reply.clearCookie(config.mixcloud.oauthStateCookie, { path: '/' })

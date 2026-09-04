@@ -96,6 +96,7 @@ import fanSubPayoutRoutes from './routes/fansubs/payouts.js'
 import purchaseTierRoutes from './routes/fansubs/purchase-tiers.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import emailBounceWebhookRoutes from './routes/webhooks/email-bounce.js'
+import exportWebhookRoutes from './routes/webhooks/export.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
@@ -154,6 +155,7 @@ import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
 import googleDriveRoutes from './routes/me/google-drive.js'
 import meImportPluginRoutes from './routes/me/import-plugins.js'
+import meExportPluginRoutes from './routes/me/export-plugins.js'
 import musicbrainzRoutes from './routes/me/musicbrainz.js'
 import spotifyImportRoutes from './routes/imports/spotify.js'
 import spotifyProfileRoute from './routes/me/spotify-profile.js'
@@ -331,7 +333,14 @@ export interface BuildOptions {
 export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
     logger: apiLoggerConfig(opts.logger),
-    trustProxy: true,
+    // SEC-014: exactly one reverse proxy fronts the API in every real
+    // deployment (NPM for api.tahti.live in prod; nothing in dev/test, where
+    // there's no X-Forwarded-For to begin with). `true` trusted the entire
+    // X-Forwarded-For chain and took its left-most (client-supplied, hence
+    // spoofable) entry — a caller could prepend any address, e.g. a private
+    // one, and have it believed. `1` trusts exactly the nearest hop and
+    // returns the address *that hop* observed, which a client can't override.
+    trustProxy: 1,
   })
 
   // Browser CORS — must be registered before routes so it also covers
@@ -636,6 +645,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(fanSubPayoutRoutes)
   await fastify.register(stripeWebhookRoutes)
   await fastify.register(emailBounceWebhookRoutes)
+  await fastify.register(exportWebhookRoutes)
 
   // M1: annual membership payment
   await fastify.register(membershipRoutes)
@@ -712,6 +722,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(soundcloudRoutes)
   await fastify.register(googleDriveRoutes)
   await fastify.register(meImportPluginRoutes)
+  await fastify.register(meExportPluginRoutes)
   await fastify.register(musicbrainzRoutes)
   await fastify.register(spotifyImportRoutes)
   await fastify.register(spotifyProfileRoute)

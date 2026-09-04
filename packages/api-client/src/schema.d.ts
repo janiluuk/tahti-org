@@ -2318,7 +2318,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Public single-track detail page — full metadata plus real waveform peaks */
+    /** @description Public single-track detail — metadata, waveform peaks, and purchase/subscriber gate */
     get: {
       parameters: {
         query?: never
@@ -2368,6 +2368,16 @@ export interface paths {
               peaks: number[] | null
               commentCount: number
               downloadCount: number
+              /** @enum {string} */
+              accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+              purchaseTierId?: string | null
+              purchaseTierName?: string | null
+              purchaseTierPriceCents?: number | null
+              gate?: {
+                /** @enum {string} */
+                reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                tierId?: string
+              } | null
             } & {
               [key: string]: unknown
             }
@@ -8174,6 +8184,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/webhooks/export/{provider}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Currently accepts and logs. */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+              provider: string
+              /** @enum {boolean} */
+              accepted: true
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/membership': {
     parameters: {
       query?: never
@@ -8638,6 +8692,86 @@ export interface paths {
               minio: 'up' | 'down'
               postgresBackupAgeHours: number | null
               failedFanSubPayouts: number
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/stats/chat': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Chat message volume for the admin dashboard KPI tile */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              last24h: number
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/stats/chat-timeseries': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Daily chat message counts for the admin dashboard chat chart */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              days: number
+              series: {
+                date: string
+                count: number
+              }[]
             }
           }
         }
@@ -14429,6 +14563,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/u/{username}/news': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Public: an artist's parsed news feed items */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          username: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              items: {
+                title: string
+                link: string
+                pubDate: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/u/{username}/mentions': {
     parameters: {
       query?: never
@@ -14893,6 +15071,7 @@ export interface paths {
               /** @enum {string|null} */
               logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
               tipJarUrl: string | null
+              newsFeedUrl: string | null
               countryCode: string | null
               pronouns: string | null
               defaultLocation: string | null
@@ -14952,6 +15131,7 @@ export interface paths {
               /** @enum {string|null} */
               logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
               tipJarUrl: string | null
+              newsFeedUrl: string | null
               countryCode: string | null
               pronouns: string | null
               defaultLocation: string | null
@@ -17443,6 +17623,144 @@ export interface paths {
     }
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Versioned export-provider capabilities for external clients */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              providers: {
+                /** @enum {number} */
+                contractVersion: 1
+                id: string
+                name: string
+                description: string
+                capabilities: {
+                  submit: boolean
+                  status: boolean
+                  webhook: boolean
+                }
+                submitPath: string | null
+                statusPath: string | null
+                webhookPath: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins/{provider}/releases/{id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description ExportProvider status alias (delegates to provider-specific status) */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              revelatorId: string | null
+              revelatorStatus: string | null
+              title: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins/{provider}/releases/{id}/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description ExportProvider submit alias (delegates to provider-specific submit) */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        202: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              releaseId: string
+              /** @enum {string} */
+              revelatorStatus: 'pending'
+            }
+          }
+        }
+      }
+    }
     delete?: never
     options?: never
     head?: never
@@ -30231,6 +30549,7 @@ export interface components {
       /** @enum {string|null} */
       logoPlacement: 'AVATAR' | 'COVER' | 'BOTH' | null
       tipJarUrl: string | null
+      newsFeedUrl: string | null
       countryCode: string | null
       pronouns: string | null
       defaultLocation: string | null

@@ -8,11 +8,11 @@ Source of truth for the versioned `GET /api/me/import-plugins` registry in
 
 Import sources do not share one `start/status/import` shape:
 
-| Kind | Lifecycle | Typical routes |
-| --- | --- | --- |
-| `oauth` | Connect → status → optional list → import → disconnect | `/api/me/{provider}/oauth/start`, `/api/me/{provider}` |
-| `search` | Search → select → add/import (no OAuth account) | `/api/v1/imports/{provider}/search`, `/add` |
-| `tool` / `upload` | Paste URL, local file, or stash locker | Studio upload / stash / releases deep links |
+| Kind              | Lifecycle                                              | Typical routes                                         |
+| ----------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| `oauth`           | Connect → status → optional list → import → disconnect | `/api/me/{provider}/oauth/start`, `/api/me/{provider}` |
+| `search`          | Search → select → add/import (no OAuth account)        | `/api/v1/imports/{provider}/search`, `/add`            |
+| `tool` / `upload` | Paste URL, local file, or stash locker                 | Studio upload / stash / releases deep links            |
 
 Tahti Player / Nuclear must keep separate adapter interfaces for these kinds.
 Do not force search or paste-a-link tools through an OAuth connect modal.
@@ -27,13 +27,12 @@ Do not force search or paste-a-link tools through an OAuth connect modal.
   save, then enable. Do not add a parallel configuration surface in
   `apps/web`.
 
-## Export / DSP delivery (blocked)
+## Export / DSP delivery
 
-A behavioral `ExportProvider` (submit / status / webhook per DSP) is **not**
-part of this contract. Current Nuclear `src/plugins/export` is metadata and
-deep links into Studio distribution / Revelator only. Do not invent
-provider-specific export submit/status/webhook routes here until product and
-ops define them.
+Behavioral `ExportProvider` contracts live in
+[`export-plugin-contracts.md`](export-plugin-contracts.md)
+(`GET /api/me/export-plugins`). Import adapters must not absorb submit /
+status / webhook shapes.
 
 ## Parity checklist for new providers
 

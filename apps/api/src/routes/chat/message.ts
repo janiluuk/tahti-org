@@ -11,6 +11,7 @@ import {
 import { notifyUsersOfChatMention } from '@tahti/db'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 import { extractHandles, recordMentions } from '../../lib/mentions.js'
+import { auditLog } from '../../lib/audit.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -96,11 +97,12 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       // from elsewhere and skip this proxy, so they aren't captured here).
       if (text) {
         const data = (body.data ?? {}) as Record<string, unknown>
-        await fastify.prisma.chatMessage.create({
+        const handle = (typeof data.handle === 'string' && data.handle.trim()) || 'anon'
+        const message = await fastify.prisma.chatMessage.create({
           data: {
             channelId: channel.id,
             fanOnly: isFanChannel,
-            handle: (typeof data.handle === 'string' && data.handle.trim()) || 'anon',
+            handle,
             text,
             userId: mentionerUserId,
             supporter: data.supporter === true,
@@ -110,6 +112,14 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
                 : null,
             countryCode: typeof data.countryCode === 'string' ? data.countryCode : null,
           },
+        })
+        // No message body here by design — the audit log is broadly readable
+        // by board members and isn't the place for user-typed chat content.
+        void auditLog(fastify.prisma, {
+          action: 'CHAT_MESSAGE_SEND',
+          actorId: mentionerUserId ?? 'anonymous',
+          targetId: channel.id,
+          meta: { messageId: message.id, fanOnly: isFanChannel, handle },
         })
       }
 

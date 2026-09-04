@@ -44,8 +44,9 @@ server-side persistence; the Tahti Player plugin owns its client configuration f
 
 The versioned import-provider catalog is `GET /api/me/import-plugins`
 (`docs/technical/import-plugin-contracts.md`). Keep OAuth, search, and
-tool/upload kinds separate. Do not add DSP export submit/status/webhook
-routes until that product contract exists.
+tool/upload kinds separate. Export/DSP delivery uses a separate catalog:
+`GET /api/me/export-plugins` (`docs/technical/export-plugin-contracts.md`)
+with submit/status/webhook paths (Revelator live; other DSPs may be stubs).
 
 For import plugins, all provider configuration must happen from the plugin’s
 Configure action in a modal. The modal must support entering keys/settings,
@@ -161,6 +162,9 @@ Demo/e2e seed accounts (see `tests/e2e/journeys/fixtures.sh`): board account is
 `screenshot-board@e2e.tahti.live` — only present after seeding
 (`./scripts/stack-up.sh --seed` or the individual `apps/api/scripts/seed-*.ts`
 scripts), password `screenshot-demo-pass`.
+
+**Naming:** `beta.tahti.live` is the Nuclear listen/studio SPA (production API).
+`[BETA]` / `*@beta.tahti.live` in seed scripts are **dev fixtures only**.
 
 ## Quality gates (before claiming done)
 

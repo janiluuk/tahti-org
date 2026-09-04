@@ -5,9 +5,12 @@ import { describe, expect, it } from 'vitest'
 import { clientIpFromHeaders } from './client-ip.js'
 
 describe('clientIpFromHeaders', () => {
-  it('returns leftmost X-Forwarded-For address', () => {
+  it('returns the right-most (nearest-hop) X-Forwarded-For address', () => {
+    // SEC-014: the left-most entry is whatever the client put there
+    // themselves; only the right-most entry is appended by our own proxy
+    // and can't be forged.
     expect(clientIpFromHeaders({ 'x-forwarded-for': '203.0.113.1, 10.0.0.1' }, '127.0.0.1')).toBe(
-      '203.0.113.1',
+      '10.0.0.1',
     )
   })
 

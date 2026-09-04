@@ -4,7 +4,9 @@
 import { cookies } from 'next/headers'
 import type { ThemeView } from '@tahti/shared'
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+import { resolveServerApiUrl } from '@/lib/api-url'
+
+const apiUrl = resolveServerApiUrl()
 
 function sessionHeader(): string {
   const sessionCookie = cookies().get('tahti_session')

@@ -4,6 +4,8 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   AdminAuditRecentListSchema,
+  AdminChatStatsSchema,
+  AdminChatTimeseriesSchema,
   AdminCronRunListSchema,
   AdminMemberStatsSchema,
   AdminQueueStatsListSchema,
@@ -125,6 +127,73 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
         postgresBackupAgeHours: backup.postgresBackupAgeHours,
         failedFanSubPayouts: failedPayouts,
       })
+    },
+  )
+
+  // Chat messages in the last 24h — the admin dashboard KPI tile.
+  fastify.get(
+    '/api/admin/stats/chat',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Chat message volume for the admin dashboard KPI tile',
+        response: openApiResponse(AdminChatStatsSchema, 'AdminChatStats'),
+      },
+    },
+    async (_request, reply) => {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const last24h = await fastify.prisma.chatMessage.count({
+        where: { createdAt: { gte: since } },
+      })
+      return reply.send({ last24h })
+    },
+  )
+
+  // Daily chat message counts — the chart behind the KPI tile.
+  fastify.get(
+    '/api/admin/stats/chat-timeseries',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Daily chat message counts for the admin dashboard chat chart',
+        response: openApiResponse(AdminChatTimeseriesSchema, 'AdminChatTimeseries'),
+      },
+    },
+    async (request, reply) => {
+      const rawDays = (request.query as { days?: string | number } | undefined)?.days
+      const parsedDays =
+        typeof rawDays === 'string'
+          ? Number.parseInt(rawDays, 10)
+          : typeof rawDays === 'number'
+            ? rawDays
+            : 30
+      const days = Number.isFinite(parsedDays) ? Math.min(Math.max(parsedDays, 1), 90) : 30
+
+      const since = new Date()
+      since.setUTCHours(0, 0, 0, 0)
+      since.setUTCDate(since.getUTCDate() - (days - 1))
+
+      const messages = await fastify.prisma.chatMessage.findMany({
+        where: { createdAt: { gte: since } },
+        select: { createdAt: true },
+      })
+
+      const countByDate = new Map<string, number>()
+      for (const { createdAt } of messages) {
+        const key = createdAt.toISOString().slice(0, 10)
+        countByDate.set(key, (countByDate.get(key) ?? 0) + 1)
+      }
+
+      const series = Array.from({ length: days }, (_, i) => {
+        const d = new Date(since)
+        d.setUTCDate(d.getUTCDate() + i)
+        const key = d.toISOString().slice(0, 10)
+        return { date: key, count: countByDate.get(key) ?? 0 }
+      })
+
+      return reply.send({ days, series })
     },
   )
 

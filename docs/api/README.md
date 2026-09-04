@@ -53,15 +53,17 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 
 ### Artists, profiles, catalog, and collections
 
-| Purpose                       | Endpoints                                                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Public artist profile         | `GET /api/v1/u/:username/profile`                                                                                                  |
-| Artist mentions and fan tiers | `GET /api/v1/u/:username/mentions`, `GET /api/v1/u/:username/tiers`                                                                |
-| Fan subscription checkout     | `POST /api/v1/u/:username/subscribe`, `GET /api/v1/fansubs/portal`                                                                 |
-| Collections and feeds         | `GET /api/v1/collections/:slug`, `GET /api/v1/collections/:slug/rss.xml`, `GET /api/v1/u/:username/rss.xml`                        |
-| Collection subscribe          | `POST /api/v1/collections/:slug/subscribe`                                                                                         |
-| Smart links                   | `GET /api/v1/r/:slug`, click tracking via `POST /api/smartlink/click`                                                              |
-| Public releases/tracks        | `GET /api/v1/releases/:id`, `GET /api/v1/tracks/:id`, downloads via `GET /api/v1/releases/:smartLinkSlug/tracks/:trackId/download` |
+| Purpose                       | Endpoints                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public artist profile         | `GET /api/v1/u/:username/profile`                                                                                                                                                                                                                                                                                                 |
+| Artist news feed (RSS/Atom)   | `GET /api/v1/u/:username/news` — server-fetched/cached items from the artist's `newsFeedUrl` (soft-empty on errors)                                                                                                                                                                                                               |
+| Artist mentions and fan tiers | `GET /api/v1/u/:username/mentions`, `GET /api/v1/u/:username/tiers`                                                                                                                                                                                                                                                               |
+| Fan subscription checkout     | `POST /api/v1/u/:username/subscribe`, `GET /api/v1/fansubs/portal`                                                                                                                                                                                                                                                                |
+| One-time purchase tiers       | `GET/POST /api/me/purchase-tiers`, `PATCH /api/me/purchase-tiers/:id`, `GET /api/me/purchase-tiers/orders`, `GET /api/me/store-settings`, `PATCH /api/me/store-settings`, public `GET /api/v1/u/:username/purchase-tiers`, checkout `POST /api/v1/u/:username/purchase-tiers/:tierId/checkout`                                    |
+| Collections and feeds         | `GET /api/v1/collections/:slug`, `GET /api/v1/collections/:slug/rss.xml`, `GET /api/v1/u/:username/rss.xml`                                                                                                                                                                                                                       |
+| Collection subscribe          | `POST /api/v1/collections/:slug/subscribe`                                                                                                                                                                                                                                                                                        |
+| Smart links                   | `GET /api/v1/r/:slug`, click tracking via `POST /api/smartlink/click`                                                                                                                                                                                                                                                             |
+| Public releases/tracks        | `GET /api/v1/releases/:id`, `GET /api/tracks/:id` (includes `accessMode` / purchase-tier fields; nulls `audioUrl` + sets `gate` when the viewer is not entitled), downloads via `GET /api/v1/c/:slug/archive/:itemId/download` (same purchase/subscriber gate) and `GET /api/v1/releases/:smartLinkSlug/tracks/:trackId/download` |
 
 ### Venues, collab, and other public features
 
@@ -104,6 +106,7 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 | Artist channel/broadcast                    | `/api/me/channel/*` (see below), `/api/me/stream-settings/*`                                                                                         |
 | Releases, collections, and uploads          | `/api/me/releases`, `/api/me/collections`, `/api/uploads/*`                                                                                          |
 | Comments, fan subscriptions, and newsletter | `/api/me/comments/*`, `/api/me/fan-tiers`, `/api/me/newsletter/*`                                                                                    |
+| One-time purchase tiers (studio)            | `/api/me/purchase-tiers`, `/api/me/purchase-tiers/orders`, `/api/me/store-settings`; assign via `PATCH /api/me/archive/:id/access`                   |
 | RSS/Atom feed proxy (Listen News widget)    | `GET /api/me/rss-feed?url=` — SSRF-guarded (http/https only, no redirects, no private-IP targets)                                                    |
 | Catalog imports                             | `/api/v1/imports/{hearthis,mixcloud,spotify}/*` (`requireAuth`; note this family lives outside the `/api/me/*` prefix the rest of this section uses) |
 

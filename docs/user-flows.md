@@ -25,7 +25,7 @@ For **how to distribute Swarm nodes by bottleneck** (API, chat, transcode, inges
 ```mermaid
 flowchart TB
   home["/ — Home"]
-  join["/join"]
+  signup["/signup"]
   login["/login"]
   verify["/verify"]
   trans["/transparency"]
@@ -40,9 +40,9 @@ flowchart TB
   govVenues["/governance/venues"]
   agm["/admin/agm (board)"]
 
-  home --> join
+  home --> signup
   home --> login
-  join --> verify
+  signup --> verify
   login --> dash
   login --> gov
   dash --> dashGov
@@ -127,7 +127,7 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 
 | Step              | Web route         | API                                                                | E2e                              |
 | ----------------- | ----------------- | ------------------------------------------------------------------ | -------------------------------- |
-| Register          | `/join`           | `POST /api/auth/register`                                          | `vital-flows.sh` (register only) |
+| Register          | `/signup` (`/join` redirects) | `POST /api/auth/register`                                          | `vital-flows.sh` (register only) |
 | Verify email      | `/verify?token=…` | `GET /api/auth/verify`                                             | Manual / seed token              |
 | Login             | `/login`          | `POST /api/auth/login`                                             | `member.sh`                      |
 | Governance hub    | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/members`, `GET /api/v1/governance/motions` | `member.sh`, Vitest              |
@@ -204,7 +204,7 @@ Full set by role: [e2e-screenshots/README.md](e2e-screenshots/README.md) · `man
 
 | Step       | Route             | Screenshot                                                  |
 | ---------- | ----------------- | ----------------------------------------------------------- |
-| Register   | `/join`           | [join.png](e2e-screenshots/public/join.png)                 |
+| Register   | `/signup`         | [join.png](e2e-screenshots/public/join.png)                 |
 | Verify     | `/verify?token=…` | [verify-token.png](e2e-screenshots/public/verify-token.png) |
 | Dashboard  | `/dashboard`      | [dashboard.png](e2e-screenshots/member/dashboard.png)       |
 | Governance | `/governance`     | [governance.png](e2e-screenshots/member/governance.png)     |

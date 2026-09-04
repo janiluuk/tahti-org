@@ -3,7 +3,7 @@
 
 import { redirect } from 'next/navigation'
 
-/** Legacy /join URL — beta applications live on /apply. */
+/** Legacy alias — self-serve signup lives at `/signup`. */
 export default function JoinPage() {
-  redirect('/apply')
+  redirect('/signup')
 }

@@ -3,6 +3,7 @@
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import {
+  RssFeedResponseSchema,
   PublicProfileViewSchema,
   UsernameParamSchema,
   soundPlaybackKey,
@@ -20,6 +21,7 @@ import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { stripeEnabled } from '../../lib/stripe.js'
+import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
 
 interface GatedTrack {
   playUrl: string | null
@@ -93,6 +95,38 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const viewerId = request.sessionUser?.id ?? null
       await applyPlaybackGates(fastify, publicProfile, _internalArtistId, viewerId)
       return reply.send(publicProfile)
+    },
+  )
+
+  // GET /api/v1/u/:username/news — the artist's configured RSS/Atom feed,
+  // parsed into a flat item list for the public channel page's "Latest
+  // news" section. Never exposes the configured URL itself or fetch
+  // failures — an unset or unreachable feed just renders no section.
+  fastify.get(
+    '/api/v1/u/:username/news',
+    {
+      schema: {
+        tags: ['releases'],
+        description: "Public: an artist's parsed news feed items",
+        response: openApiResponse(RssFeedResponseSchema, 'ArtistRssFeed'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
+
+      const items = await getCachedJson(`profile:news:${username}`, 300, async () => {
+        const user = await fastify.prisma.user.findUnique({
+          where: { username },
+          select: { newsFeedUrl: true },
+        })
+        if (!user?.newsFeedUrl) return []
+        const result = await fetchGuardedFeed(user.newsFeedUrl)
+        if (!result.ok) return []
+        return parseFeedItems(result.xml)
+      })
+      return reply.send({ items })
     },
   )
 }

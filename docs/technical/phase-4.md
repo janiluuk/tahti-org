@@ -95,7 +95,7 @@ sequenceDiagram
     participant PG as Postgres
     participant MH as Postmark (email)
 
-    A->>Web: Open app.tahti.live/join
+    A->>Web: Open app.tahti.live/signup
     Web->>A: Registration form (name, email, password, invite code)
     A->>Web: Submit form
     Web->>API: POST /api/auth/register

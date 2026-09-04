@@ -164,16 +164,16 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ## Refactors
 
-| P   | Item                                                                     | Benefit                                  |
-| --- | ------------------------------------------------------------------------ | ---------------------------------------- |
-| P1  | Wire `@tahti/ui` into `apps/web`                                         | One design system; delete duplicated CSS | **Done** (PLAT-020) |
-| P1  | Zod on all route bodies                                                  | Consistent validation + types            | PLAT-021 (partial)  |
-| P2  | Single e2e seed module (`apps/api/scripts/seed-e2e-screenshots.ts` only) | Less Docker/host confusion               |
-| P2  | Worker cron manifest (one registry file)                                 | Easier ops audit of scheduled jobs       |
-| P2  | Shared Vitest `TestContext` fixture                                      | Less boilerplate across 56 test files    |
-| P2  | `exportCsv()` helper for admin routes                                    | DRY                                      |
-| P2  | `@tahti/ui` ESLint in Turbo                                              | Same bar as other packages               |
-| P3  | Drop `eslint.ignoreDuringBuilds` in web Docker build                     | Lint enforced at build time              |
+| P      | Item                                                                                                             | Benefit                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| P1     | Wire `@tahti/ui` into `apps/web`                                                                                 | One design system; delete duplicated CSS | **Done** (PLAT-020) |
+| P1     | Zod on all route bodies                                                                                          | Consistent validation + types            | PLAT-021 (partial)  |
+| ~~P2~~ | ~~Single e2e seed module (`apps/api/scripts/seed-e2e-screenshots.ts` only)~~ — root re-export removed 2026-08-28 | Less Docker/host confusion               |
+| P2     | Worker cron manifest (one registry file)                                                                         | Easier ops audit of scheduled jobs       |
+| P2     | Shared Vitest `TestContext` fixture                                                                              | Less boilerplate across 56 test files    |
+| P2     | `exportCsv()` helper for admin routes                                                                            | DRY                                      |
+| P2     | `@tahti/ui` ESLint in Turbo                                                                                      | Same bar as other packages               |
+| P3     | Drop `eslint.ignoreDuringBuilds` in web Docker build                                                             | Lint enforced at build time              |
 
 ---
 

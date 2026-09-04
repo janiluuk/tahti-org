@@ -4,8 +4,9 @@
 'use server'
 
 import { normalizeBetaApplyLinks } from '@tahti/shared'
+import { resolveServerApiUrl } from '@/lib/api-url'
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+const apiUrl = resolveServerApiUrl()
 
 export async function submitBetaApplication(formData: FormData): Promise<{ error: string | null }> {
   const rawLinks = formData

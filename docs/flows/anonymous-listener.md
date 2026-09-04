@@ -24,7 +24,7 @@ flowchart TD
   H --> V["/venues Calendar"]
   H --> T["/transparency"]
   H --> Help["/help…"]
-  H --> Auth["/join or /login"]
+  H --> Auth["/signup or /login"]
 
   L --> C["/c/:slug Channel"]
   R --> C
@@ -72,7 +72,7 @@ Anonymous users see **marketing / brand** chrome (site header), not the artist s
 | Transparency | `/transparency`, `/transparency/methodology` | Public ledger & grant methodology |
 | Help / legal | `/help…`, `/about`, `/terms`, `/privacy`, `/agpl` | Docs & policies |
 | Status | `/status` | Platform health |
-| Apply / auth entry | `/apply`, `/join`, `/signup`, `/login`, `/verify` | Onto Part 2 |
+| Auth entry | `/signup`, `/login`, `/verify` | Onto Part 2 (`/join` and `/apply` redirect to `/signup`) |
 
 ### Channel page layout (primary listen surface)
 
@@ -97,7 +97,7 @@ Anonymous users see **marketing / brand** chrome (site header), not the artist s
 | Venues | `/venues` | [`public/venues.png`](../e2e-screenshots/public/venues.png) |
 | How it works | `/how-it-works` | [`public/how-it-works.png`](../e2e-screenshots/public/how-it-works.png) |
 | About | `/about` | [`public/about.png`](../e2e-screenshots/public/about.png) |
-| Apply (beta) | `/apply` | [`public/apply.png`](../e2e-screenshots/public/apply.png) |
+| Beta apply (signup closed) | `/signup` | [`public/apply.png`](../e2e-screenshots/public/apply.png) |
 | Status | `/status` | [`public/status.png`](../e2e-screenshots/public/status.png) |
 
 ![Home](../e2e-screenshots/public/home.png)

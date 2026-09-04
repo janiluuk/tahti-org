@@ -10,8 +10,8 @@ import { IMPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
  * deliberately contains no credentials or per-user state.
  *
  * Keep kinds separate: OAuth, search, and tool/upload adapters are not one
- * universal start/status/import interface. Export/DSP delivery is out of
- * scope until submit/status/webhook routes exist.
+ * universal start/status/import interface. Export/DSP delivery is
+ * `GET /api/me/export-plugins` — see `export-plugin-providers.ts`.
  */
 export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
   {

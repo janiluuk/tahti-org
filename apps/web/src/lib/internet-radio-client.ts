@@ -3,8 +3,9 @@
 
 import { cookies } from 'next/headers'
 import type { InternetRadioPreset, InternetRadioStation } from '@tahti/shared'
+import { resolveServerApiUrl } from '@/lib/api-url'
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+const apiUrl = resolveServerApiUrl()
 
 function sessionHeader(): string {
   const sessionCookie = cookies().get('tahti_session')

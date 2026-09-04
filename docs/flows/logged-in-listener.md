@@ -22,8 +22,8 @@ Keep listening with identity (supporter badge, fan chat when entitled), manage f
 
 ```mermaid
 flowchart TD
-  A([Anonymous]) --> Join["/join or /signup"]
-  Join --> Verify["/verify email"]
+  A([Anonymous]) --> Signup["/signup"]
+  Signup --> Verify["/verify email"]
   Verify --> Login["/login"]
   A --> Login
 
@@ -53,8 +53,7 @@ flowchart TD
 
 | Tab / page | Route | Functionality |
 | --- | --- | --- |
-| Join | `/join` | Register for an account |
-| Signup alias | `/signup` | Same funnel (legacy/alias) |
+| Signup | `/signup` | Register for an account (`/join` redirects here) |
 | Verify | `/verify`, `/verify?token=…` | Email verification |
 | Login | `/login` | Session; `?next=` resume |
 
@@ -80,13 +79,12 @@ Free listeners do **not** get the full artist sidebar (Music, Broadcast, …) un
 
 | Screen | Route | Screenshot |
 | --- | --- | --- |
-| Join | `/join` | [`public/join.png`](../e2e-screenshots/public/join.png) |
-| Signup | `/signup` | [`public/signup.png`](../e2e-screenshots/public/signup.png) |
+| Signup | `/signup` | [`public/join.png`](../e2e-screenshots/public/join.png) |
 | Login | `/login` | [`public/login.png`](../e2e-screenshots/public/login.png) |
 | Verify landing | `/verify` | [`public/verify.png`](../e2e-screenshots/public/verify.png) |
 | Verify with token | `/verify?token=…` | [`public/verify-token.png`](../e2e-screenshots/public/verify-token.png) |
 
-![Join](../e2e-screenshots/public/join.png)
+![Signup](../e2e-screenshots/public/join.png)
 
 ![Login](../e2e-screenshots/public/login.png)
 

@@ -416,6 +416,13 @@ async function seedArchiveSet(
 }
 
 async function main() {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_BETA_SEED !== '1') {
+    console.error(
+      'Refusing to seed [BETA] placeholder artists in production. Set ALLOW_BETA_SEED=1 to override.',
+    )
+    process.exit(1)
+  }
+
   const specs = buildSpecs()
 
   const sourceTracks = (await prisma.archiveItem.findMany({

@@ -8,6 +8,7 @@ interface AuditParams {
     | 'CHAT_BAN'
     | 'CHAT_UNBAN'
     | 'CHAT_MESSAGE_DELETE'
+    | 'CHAT_MESSAGE_SEND'
     | 'STREAM_KEY_ROTATE'
     | 'RTMP_TARGET_ADD'
     | 'RTMP_TARGET_DELETE'
