@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { upsertUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -48,51 +48,117 @@ function withLastFmQuery(base: string, status: string): string {
   return url.toString()
 }
 
+function cookieOpts() {
+  return {
+    httpOnly: true,
+    secure: config.isProd,
+    sameSite: 'lax' as const,
+    maxAge: OAUTH_TOKEN_MAX_AGE_SEC,
+    path: '/',
+  }
+}
+
+function clearPendingLastFmCookies(reply: FastifyReply) {
+  reply.clearCookie(config.lastfm.oauthTokenCookie, { path: '/' })
+  reply.clearCookie(config.lastfm.pendingApiKeyCookie, { path: '/' })
+  reply.clearCookie(config.lastfm.pendingApiSecretCookie, { path: '/' })
+  reply.clearCookie(RETURN_COOKIE, { path: '/' })
+}
+
+function resolveLastFmCredentials(request: FastifyRequest): {
+  apiKey: string
+  apiSecret: string
+  fromUser: boolean
+} | null {
+  const pendingKey = request.cookies[config.lastfm.pendingApiKeyCookie]?.trim() ?? ''
+  const pendingSecret = request.cookies[config.lastfm.pendingApiSecretCookie]?.trim() ?? ''
+  if (pendingKey && pendingSecret) {
+    return { apiKey: pendingKey, apiSecret: pendingSecret, fromUser: true }
+  }
+  if (config.lastfm.apiKey && config.lastfm.apiSecret) {
+    return {
+      apiKey: config.lastfm.apiKey,
+      apiSecret: config.lastfm.apiSecret,
+      fromUser: false,
+    }
+  }
+  return null
+}
+
+function setReturnCookie(reply: FastifyReply, returnTo: string | undefined) {
+  if (returnTo && isAllowedReturnUrl(returnTo)) {
+    reply.setCookie(RETURN_COOKIE, returnTo, cookieOpts())
+  } else {
+    reply.clearCookie(RETURN_COOKIE, { path: '/' })
+  }
+}
+
+async function beginLastFmAuth(
+  reply: FastifyReply,
+  credentials: { apiKey: string; apiSecret: string },
+): Promise<{ ok: true; authUrl: string } | { ok: false; error: string; status: number }> {
+  const tokenResult = await getLastFmAuthToken(credentials)
+  if (!tokenResult.ok) {
+    return { ok: false, error: tokenResult.error, status: 502 }
+  }
+
+  reply.setCookie(config.lastfm.oauthTokenCookie, tokenResult.token, cookieOpts())
+  reply.setCookie(config.lastfm.pendingApiKeyCookie, credentials.apiKey, cookieOpts())
+  reply.setCookie(config.lastfm.pendingApiSecretCookie, credentials.apiSecret, cookieOpts())
+
+  return {
+    ok: true,
+    authUrl: lastFmAuthUrl(credentials.apiKey, tokenResult.token, config.lastfm.redirectUri),
+  }
+}
+
 const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
+  /** Collect the user's Last.fm API key/secret, then return the Last.fm auth URL. */
+  fastify.post(
+    '/api/me/integrations/lastfm/prepare',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const body = (request.body ?? {}) as {
+        apiKey?: string
+        apiSecret?: string
+        returnTo?: string
+      }
+      const apiKey = body.apiKey?.trim() ?? ''
+      const apiSecret = body.apiSecret?.trim() ?? ''
+      if (!apiKey || !apiSecret) {
+        return reply.status(400).send({ error: 'API key and shared secret are required' })
+      }
+
+      setReturnCookie(reply, body.returnTo?.trim())
+
+      const started = await beginLastFmAuth(reply, { apiKey, apiSecret })
+      if (!started.ok) {
+        return reply.status(started.status).send({ error: started.error })
+      }
+      return reply.send({ authUrl: started.authUrl })
+    },
+  )
+
   fastify.get(
     '/api/me/integrations/lastfm/oauth/start',
     { preHandler: requireAuth },
     async (request, reply) => {
-      if (!config.lastfm.apiKey || !config.lastfm.apiSecret) {
-        return reply.status(503).send({ error: 'Last.fm scrobbling is not configured' })
-      }
-
       const query = request.query as Record<string, string>
-      const returnTo = query.returnTo?.trim()
-      if (returnTo && isAllowedReturnUrl(returnTo)) {
-        reply.setCookie(RETURN_COOKIE, returnTo, {
-          httpOnly: true,
-          secure: config.isProd,
-          sameSite: 'lax',
-          maxAge: OAUTH_TOKEN_MAX_AGE_SEC,
-          path: '/',
+      setReturnCookie(reply, query.returnTo?.trim())
+
+      const credentials = resolveLastFmCredentials(request)
+      if (!credentials) {
+        return reply.status(503).send({
+          error:
+            'Enter your Last.fm API key in Studio Integrations, or set LASTFM_API_KEY on the server',
         })
-      } else {
-        reply.clearCookie(RETURN_COOKIE, { path: '/' })
       }
 
-      const tokenResult = await getLastFmAuthToken({
-        apiKey: config.lastfm.apiKey,
-        apiSecret: config.lastfm.apiSecret,
-      })
-      if (!tokenResult.ok) {
-        return reply.status(502).send({ error: tokenResult.error })
+      const started = await beginLastFmAuth(reply, credentials)
+      if (!started.ok) {
+        return reply.status(started.status).send({ error: started.error })
       }
-
-      reply.setCookie(config.lastfm.oauthTokenCookie, tokenResult.token, {
-        httpOnly: true,
-        secure: config.isProd,
-        sameSite: 'lax',
-        maxAge: OAUTH_TOKEN_MAX_AGE_SEC,
-        path: '/',
-      })
-
-      const authUrl = lastFmAuthUrl(
-        config.lastfm.apiKey,
-        tokenResult.token,
-        config.lastfm.redirectUri,
-      )
-      return reply.redirect(302, authUrl)
+      return reply.redirect(302, started.authUrl)
     },
   )
 
@@ -105,9 +171,9 @@ const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
     const tokenFromQuery = query.token?.trim()
     const tokenFromCookie = request.cookies[config.lastfm.oauthTokenCookie]
     const token = tokenFromQuery || tokenFromCookie
+    const credentials = resolveLastFmCredentials(request)
 
-    reply.clearCookie(config.lastfm.oauthTokenCookie, { path: '/' })
-    reply.clearCookie(RETURN_COOKIE, { path: '/' })
+    clearPendingLastFmCookies(reply)
 
     if (!token) {
       return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
@@ -115,23 +181,26 @@ const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.sessionUser) {
       return reply.redirect(302, withLastFmQuery(returnBase, 'login'))
     }
-    if (!config.lastfm.apiKey || !config.lastfm.apiSecret) {
+    if (!credentials) {
       return reply.redirect(302, withLastFmQuery(returnBase, 'unconfigured'))
     }
 
-    const session = await getLastFmSession(
-      { apiKey: config.lastfm.apiKey, apiSecret: config.lastfm.apiSecret },
-      token,
-    )
+    const session = await getLastFmSession(credentials, token)
     if (!session.ok) {
       request.log.warn({ error: session.error }, 'Last.fm getSession failed')
       return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
     }
 
-    await upsertUserIntegrationCredential(fastify.prisma, request.sessionUser.id, 'lastfm', {
+    const fields: Record<string, string> = {
       sessionKey: session.sessionKey,
       username: session.username,
-    })
+    }
+    if (credentials.fromUser) {
+      fields.apiKey = credentials.apiKey
+      fields.apiSecret = credentials.apiSecret
+    }
+
+    await upsertUserIntegrationCredential(fastify.prisma, request.sessionUser.id, 'lastfm', fields)
 
     return reply.redirect(302, withLastFmQuery(returnBase, 'ok'))
   })

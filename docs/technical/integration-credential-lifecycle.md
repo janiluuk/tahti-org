@@ -18,9 +18,12 @@ Registry metadata (slug, fields, OAuth connect path, scope) lives in
 `EXPORT`, `FINGERPRINT`, and `SCROBBLE` (ListenBrainz, Last.fm). OAuth providers
 (SoundCloud, Google Drive, …) keep their existing connect/disconnect
 routes; the install endpoint rejects them. Last.fm is OAuth-style but stores
-the session in `IntegrationCredential` (no User column); list `connected`
-uses the credential row when `oauthStatusField` is omitted, and
-`DELETE /api/me/integrations/lastfm` uninstalls it.
+the session (and the user's API key/secret when they used the Connect modal)
+in `IntegrationCredential` (no User column); list `connected` uses the
+credential row when `oauthStatusField` is omitted, and
+`DELETE /api/me/integrations/lastfm` uninstalls it. Studio collects the
+user's Last.fm API key via `POST /api/me/integrations/lastfm/prepare`
+before redirecting to Last.fm auth.
 
 ## Storage (`@tahti/db`)
 
