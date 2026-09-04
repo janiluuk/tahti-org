@@ -138,25 +138,22 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
             }
           }
 
-          if (config.lastfm.apiKey && config.lastfm.apiSecret) {
-            const lastfmCredential = await getUserIntegrationCredential(
-              fastify.prisma,
-              sessionUser.id,
-              'lastfm',
-            )
-            const sessionKey = lastfmCredential?.sessionKey?.trim()
-            if (sessionKey) {
-              const result = await submitLastFmScrobble(
-                { apiKey: config.lastfm.apiKey, apiSecret: config.lastfm.apiSecret },
-                sessionKey,
-                { artistName, trackName, listenedAt },
-              )
-              if (!result.ok) {
-                request.log.warn(
-                  { error: result.error, soundId: item.id },
-                  'Last.fm scrobble failed',
-                )
-              }
+          const lastfmCredential = await getUserIntegrationCredential(
+            fastify.prisma,
+            sessionUser.id,
+            'lastfm',
+          )
+          const sessionKey = lastfmCredential?.sessionKey?.trim()
+          const apiKey = lastfmCredential?.apiKey?.trim() || config.lastfm.apiKey
+          const apiSecret = lastfmCredential?.apiSecret?.trim() || config.lastfm.apiSecret
+          if (sessionKey && apiKey && apiSecret) {
+            const result = await submitLastFmScrobble({ apiKey, apiSecret }, sessionKey, {
+              artistName,
+              trackName,
+              listenedAt,
+            })
+            if (!result.ok) {
+              request.log.warn({ error: result.error, soundId: item.id }, 'Last.fm scrobble failed')
             }
           }
         })().catch((err: unknown) => request.log.warn({ err, soundId: item.id }, 'Scrobble failed'))

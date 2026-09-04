@@ -129,10 +129,17 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
     slug: 'lastfm',
     name: 'Last.fm',
     description:
-      'Scrobble plays of Tahti tracks to your Last.fm profile. Approve Tahti once; charts and recommendations stay out of scope.',
+      'Scrobble plays of Tahti tracks to your Last.fm profile using your own API application. Charts and recommendations stay out of scope.',
     scope: 'SCROBBLE',
     authKind: 'OAUTH',
     oauthConnectPath: '/api/me/integrations/lastfm/oauth/start',
+    // Connect UI collects these, then OAuth stores sessionKey alongside them.
+    fields: [
+      { key: 'apiKey', label: 'Last.fm API key', secret: true },
+      { key: 'apiSecret', label: 'Shared secret', secret: true },
+    ],
+    signupUrl: 'https://www.last.fm/api/account/create',
+    signupLabel: 'Create a Last.fm API account →',
     // Session lives in IntegrationCredential (not a User column). List uses
     // installed credential rows when oauthStatusField is omitted.
   },

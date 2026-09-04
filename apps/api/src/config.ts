@@ -288,7 +288,7 @@ export const config = {
   },
   /** STREAM-008: optional AcoustID key for live + sound tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
-  /** Last.fm scrobble — platform API account (optional until configured). */
+  /** Last.fm scrobble — optional platform fallback; users usually bring their own API key. */
   lastfm: {
     apiKey: process.env.LASTFM_API_KEY?.trim() ?? '',
     apiSecret: readSecret('LASTFM_API_SECRET', 'LASTFM_API_SECRET_FILE', ''),
@@ -296,6 +296,8 @@ export const config = {
       process.env.LASTFM_OAUTH_REDIRECT_URI ??
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/integrations/lastfm/oauth/callback`,
     oauthTokenCookie: 'tahti_lastfm_oauth_token',
+    pendingApiKeyCookie: 'tahti_lastfm_pending_api_key',
+    pendingApiSecretCookie: 'tahti_lastfm_pending_api_secret',
   },
   acrcloud: {
     /** Post-production: set ACRCLOUD_ENABLED=true plus keys/secrets to enable identify at ingest. */
