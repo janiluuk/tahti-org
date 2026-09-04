@@ -132,3 +132,44 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track?.releaseSlug).toBe(release.smartLinkSlug)
   })
 })
+
+describe('GET /api/v1/u/:username/news', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await createTestArtist(prisma, {
+      email: `${PREFIX}news@example.com`,
+      username: 'public-news-artist',
+    })
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it('returns an empty list when the artist has no feed configured', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/u/public-news-artist/news' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ items: [] })
+  })
+
+  it('fails soft to an empty list when the configured feed is disallowed (SSRF guard)', async () => {
+    await prisma.user.update({
+      where: { username: 'public-news-artist' },
+      data: { newsFeedUrl: 'http://127.0.0.1/feed.xml' },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/v1/u/public-news-artist/news' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ items: [] })
+  })
+
+  it('returns an empty list (not a 404) for an unknown username', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/u/nonexistent-user-xyz/news' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ items: [] })
+  })
+})
