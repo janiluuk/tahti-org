@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
+import { CHANNEL_TEXT_LAYER_ALIGNMENTS, CHANNEL_TEXT_LAYER_MODES } from './channel-text-layer.js'
 import { isAllowedBackdropUrl, isDirectVideoFileUrl } from '../safe-background-url.js'
 
 // M31: Three.js ambient visualizer presets
@@ -246,6 +247,51 @@ export const VISUAL_PRESET_STRIP: VisualPreset[] = [
   'PARTICLE_FIELD',
 ]
 
+/** Channel-background visualizer widgets (Backdrop tab) — distinct from the
+ * full header/player `VisualPreset` list. Stored as a free string on Channel
+ * because these ids are not members of the Prisma `VisualPreset` enum. */
+export const BACKGROUND_VISUAL_PRESETS = [
+  'INTERACTIVE_POINTS',
+  'FAT_LINES',
+  'VIDEO_KINECT',
+  'BACKDROP_AREA',
+] as const
+
+export type BackgroundVisualPreset = (typeof BACKGROUND_VISUAL_PRESETS)[number]
+
+export const ChannelLinkSchema = z.object({
+  label: z.string().trim().min(1).max(60),
+  url: z.string().url().max(2048),
+})
+
+export type ChannelLink = z.infer<typeof ChannelLinkSchema>
+
+/** Validates a stored color-scheme JSON string (null/empty clears). */
+function colorSchemeJsonField() {
+  return z
+    .string()
+    .max(2048)
+    .nullable()
+    .optional()
+    .superRefine((value, ctx) => {
+      if (value == null || value === '') return
+      try {
+        const parsed = ColorSchemeSchema.safeParse(JSON.parse(value))
+        if (!parsed.success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Must be JSON matching ColorSchemeSchema',
+          })
+        }
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Must be valid JSON',
+        })
+      }
+    })
+}
+
 export const ChannelVisualPatchSchema = z
   .object({
     visualPreset: z.enum(VISUAL_PRESETS).optional(),
@@ -267,6 +313,21 @@ export const ChannelVisualPatchSchema = z
     /** Shown instead of the generic Tahti top bar when this channel is
      * viewed via its verified custom domain. Null/empty = artist name + avatar. */
     topBarText: z.string().max(120).nullable().optional(),
+    /** When true, `playerColorSchemeJson` colors the player/visualizer
+     * independently of the header color scheme. */
+    usePlayerGradient: z.boolean().optional(),
+    playerColorSchemeJson: colorSchemeJsonField(),
+    useBackgroundGradient: z.boolean().optional(),
+    backgroundColorSchemeJson: colorSchemeJsonField(),
+    backgroundVisualPreset: z.enum(BACKGROUND_VISUAL_PRESETS).nullable().optional(),
+    nowPlayingOverlayStyle: z.string().trim().max(64).nullable().optional(),
+    nowPlayingOverlaySettingsJson: z.string().max(8192).nullable().optional(),
+    /** Player-stage text overlay — distinct from channel-page `textLayer*`. */
+    playerOverlayMode: z.enum(CHANNEL_TEXT_LAYER_MODES).optional(),
+    playerOverlayText: z.string().trim().max(120).optional(),
+    playerOverlayAlign: z.enum(CHANNEL_TEXT_LAYER_ALIGNMENTS).optional(),
+    /** Outbound link buttons; null clears. Stored as `channelLinksJson`. */
+    channelLinks: z.array(ChannelLinkSchema).max(20).nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const url = data.videoBackgroundUrl
@@ -285,6 +346,32 @@ export const ChannelVisualPatchSchema = z
   })
 
 export type ChannelVisualPatch = z.infer<typeof ChannelVisualPatchSchema>
+
+/** Prisma select / response shape for GET|PATCH /api/me/channel/visual. */
+export const CHANNEL_VISUAL_SELECT = {
+  colorSchemeJson: true,
+  visualPreset: true,
+  visualSettingsJson: true,
+  headerStyle: true,
+  videoBackgroundUrl: true,
+  brandAccentPreset: true,
+  slideshowPreset: true,
+  slideshowIntervalSeconds: true,
+  slideshowTransitionMs: true,
+  slideshowAutoplay: true,
+  topBarText: true,
+  usePlayerGradient: true,
+  playerColorSchemeJson: true,
+  useBackgroundGradient: true,
+  backgroundColorSchemeJson: true,
+  backgroundVisualPreset: true,
+  nowPlayingOverlayStyle: true,
+  nowPlayingOverlaySettingsJson: true,
+  playerOverlayMode: true,
+  playerOverlayText: true,
+  playerOverlayAlign: true,
+  channelLinksJson: true,
+} as const
 
 export const ReleaseVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
@@ -306,10 +393,9 @@ export type SoundVisualPatch = z.infer<typeof SoundVisualPatchSchema>
 /** A named, owner-saved snapshot of the channel's whole Look (see the
  * `ChannelVisualPreset` Prisma model). `settings` is stored/replayed
  * wholesale rather than validated field-by-field — it's the same object
- * shape the client already builds for `PATCH /api/me/channel/visual` (plus a
- * few designer-only fields not yet persisted on Channel itself), and grows
- * as the designer grows, so pinning every key here would just fall out of
- * sync. The channel-visual PATCH route remains the single point that
+ * shape the client already builds for `PATCH /api/me/channel/visual`, and
+ * grows as the designer grows, so pinning every key here would just fall
+ * out of sync. The channel-visual PATCH route remains the single point that
  * validates individual fields when a preset is actually applied and saved. */
 export const ChannelVisualPresetSaveSchema = z.object({
   name: z.string().trim().min(1).max(60),

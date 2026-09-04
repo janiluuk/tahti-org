@@ -128,27 +128,29 @@ preflight. The two most relevant to client channel-design work:
   (`{bg,accent,text,muted,highlight}` hex), `visualSettings`, `headerStyle`
   (`GRADIENT`/`SOLID`/`VIDEO_LOOP`, `VIDEO_LOOP` requires a paid tier),
   `videoBackgroundUrl`, `brandAccentPreset` (also returned on the _public_
-  `GET /api/channels/:slug`), `slideshowPreset`/`slideshowIntervalSeconds`/
-  `slideshowTransitionMs`/`slideshowAutoplay`, `topBarText`.
-- `GET`/`PATCH /api/me/channel/text-layer` — a stylized headline on the
+  `GET /api/channels/:slug` and profile channel payload), `slideshowPreset`/
+  `slideshowIntervalSeconds`/`slideshowTransitionMs`/`slideshowAutoplay`,
+  `topBarText`, plus Channel Designer look extras: `usePlayerGradient`/
+  `playerColorSchemeJson`, `useBackgroundGradient`/`backgroundColorSchemeJson`/
+  `backgroundVisualPreset` (string ids: `INTERACTIVE_POINTS`/`FAT_LINES`/
+  `VIDEO_KINECT`/`BACKDROP_AREA`), `nowPlayingOverlayStyle`/
+  `nowPlayingOverlaySettingsJson`, `playerOverlayMode`/`playerOverlayText`/
+  `playerOverlayAlign` (same enums as the text layer), and `channelLinks`
+  (stored as `channelLinksJson`).
+- `GET`/`PATCH /api/me/channel/text-layer` — stylized headline on the
   public channel page (`textLayerMode`/`textLayerText`/`textLayerAlign`,
   `packages/shared/src/dto/channel-text-layer.ts`), also returned on the
-  public `GET /api/channels/:slug`. Collections have the same concept via
-  `PATCH /api/me/collections/:slug/text-layer`
+  public `GET /api/channels/:slug`. Designer `textOverlay*` maps to these
+  columns (no separate `textOverlay*` DB fields). Collections have the same
+  concept via `PATCH /api/me/collections/:slug/text-layer`
   (`packages/shared/src/dto/collection-theme.ts`).
 
-**Not real backend concepts today** (checked while auditing a client that had
-started building against them): there is no `channelLinks` field or
-`/api/me/channel/links` route — arbitrary label+url links are not a Channel
-model concept. There is no "player" headline/overlay distinct from the
-channel text layer above; the only overlay-shaped field near "player" is
+**Player overlay vs channel text layer:** `playerOverlay*` is the in-app
+player-stage headline (Player design → Overlay). It is distinct from
+`textLayer*` (channel-page Text overlay block) and from
 `GET`/`PATCH /api/me/channel/stream-overlay`
 (`streamOverlayTitle`/`Subtitle`/`CoverUrl`/`BackdropUrl`/`VisualPreset`),
-which is baked into the RTMP mirror video track pushed to multistream
-targets (YouTube/Twitch) — not an in-app player UI overlay. A client wanting
-either concept should either use `channel/text-layer` (it already does what
-"player overlay" would) or file it under Priority backlog rather than
-inventing a client-only field with no server column.
+which is baked into the RTMP mirror video track for multistream targets.
 
 ### Operations and administration
 
