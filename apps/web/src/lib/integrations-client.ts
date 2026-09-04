@@ -10,7 +10,7 @@ export interface IntegrationView {
   slug: string
   name: string
   description: string
-  scope: 'IMPORT' | 'EXPORT' | 'FINGERPRINT'
+  scope: 'IMPORT' | 'EXPORT' | 'FINGERPRINT' | 'SCROBBLE'
   authKind: 'API_KEY' | 'OAUTH'
   installed: boolean
   connected: boolean

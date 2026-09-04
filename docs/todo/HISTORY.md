@@ -22,3 +22,23 @@ move past metadata/deep-link export targets.
 ### Status
 
 Shipped — see worklog `docs/worklogs/2026-09-04-export-plugin-contracts.md`.
+
+## 2026-09-04 — listenbrainz-scrobble.md
+
+Branch: `feat/listenbrainz-scrobble`.
+
+### Goal
+
+Submit-listens scrobbling via existing integrations credential store (not charts).
+
+### Plan
+
+1. Registry: `SCROBBLE` scope + `listenbrainz` provider; DTO + dashboard section.
+2. `apps/api/src/lib/listenbrainz.ts` — validate-token + submit-listens.
+3. Installer validates token before storing `{ userToken }`.
+4. Fire-and-forget scrobble after successful listen-event create for session users.
+5. Docs + unit/route tests; commit on branch.
+
+### Status
+
+Shipped — see worklog `docs/worklogs/2026-09-04-listenbrainz-scrobble.md`.

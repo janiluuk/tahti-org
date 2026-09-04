@@ -10,7 +10,7 @@ export const IntegrationViewSchema = z.object({
   slug: z.string(),
   name: z.string(),
   description: z.string(),
-  scope: z.enum(['IMPORT', 'EXPORT', 'FINGERPRINT']),
+  scope: z.enum(['IMPORT', 'EXPORT', 'FINGERPRINT', 'SCROBBLE']),
   authKind: z.enum(['API_KEY', 'OAUTH']),
   installed: z.boolean(),
   connected: z.boolean(),

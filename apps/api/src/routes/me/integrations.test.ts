@@ -225,4 +225,59 @@ describe('me/integrations', () => {
       expect(res.json()).toMatchObject({ error: expect.stringMatching(/email|password/i) })
     })
   })
+
+  describe('listenbrainz (token validated before store)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('stores userToken when validate-token succeeds', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: true, user_name: 'lb-user' }),
+        }),
+      )
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/integrations/listenbrainz/install',
+        headers: { cookie },
+        payload: { fields: { userToken: 'lb-secret-token' } },
+      })
+      expect(res.statusCode).toBe(204)
+
+      const row = await prisma.integrationCredential.findUnique({
+        where: { userId_providerSlug: { userId, providerSlug: 'listenbrainz' } },
+      })
+      expect(row).not.toBeNull()
+      expect(row?.fieldsEnc).not.toContain('lb-secret-token')
+
+      await prisma.integrationCredential.deleteMany({
+        where: { userId, providerSlug: 'listenbrainz' },
+      })
+    })
+
+    it('rejects install when validate-token fails', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ valid: false, message: 'Token invalid.' }),
+        }),
+      )
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/integrations/listenbrainz/install',
+        headers: { cookie },
+        payload: { fields: { userToken: 'bad-token' } },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json()).toMatchObject({ error: expect.stringMatching(/invalid/i) })
+    })
+  })
 })

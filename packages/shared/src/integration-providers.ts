@@ -6,7 +6,7 @@
 // and the frontend renders the marketplace from it. Adding a provider later
 // is one array entry here, not a migration.
 
-export type IntegrationScope = 'IMPORT' | 'EXPORT' | 'FINGERPRINT'
+export type IntegrationScope = 'IMPORT' | 'EXPORT' | 'FINGERPRINT' | 'SCROBBLE'
 export type IntegrationAuthKind = 'API_KEY' | 'OAUTH'
 
 export interface IntegrationField {
@@ -113,6 +113,17 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
       { key: 'accessKey', label: 'Access key', secret: true },
       { key: 'accessSecret', label: 'Access secret', secret: true },
     ],
+  },
+  {
+    slug: 'listenbrainz',
+    name: 'ListenBrainz',
+    description:
+      'Scrobble plays of Tahti tracks to your ListenBrainz account using a user token from listenbrainz.org/settings/.',
+    scope: 'SCROBBLE',
+    authKind: 'API_KEY',
+    fields: [{ key: 'userToken', label: 'ListenBrainz user token', secret: true }],
+    signupUrl: 'https://listenbrainz.org/settings/',
+    signupLabel: 'Get your ListenBrainz user token →',
   },
 ]
 
