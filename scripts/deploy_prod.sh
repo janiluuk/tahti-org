@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Deploy the full Tahti stack to production (vimage, 192.168.2.100).
+# Deploy the full Tahti stack to production (vimage, 192.168.2.100), including
+# the Tahti Radio Discord bot (sibling repo tahti-radio-discord-bot).
 #
 # Usage:
 #   ./scripts/deploy_prod.sh               # sync, build, up
@@ -8,8 +9,9 @@
 #   ./scripts/deploy_prod.sh --down        # stop the stack on prod
 #
 # Override targets:
-#   DEPLOY_HOST   — SSH host alias (default: vimage → root@192.168.2.100)
-#   DEPLOY_PATH   — remote project path (default: /srv/tahti)
+#   DEPLOY_HOST              — SSH host alias (default: vimage → root@192.168.2.100)
+#   DEPLOY_PATH              — remote project path (default: /srv/tahti)
+#   RADIO_DISCORD_BOT_SRC    — Discord bot checkout (default: ../tahti-radio-discord-bot)
 #
 set -euo pipefail
 
@@ -23,7 +25,7 @@ for arg in "$@"; do
   case "$arg" in
     --no-cache) NO_CACHE=1 ;;
     --down)     DOWN=1 ;;
-    -h|--help)  sed -n '2,14p' "$0"; exit 0 ;;
+      -h|--help)  sed -n '2,16p' "$0"; exit 0 ;;
     *) echo "Unknown option: $arg" >&2; exit 1 ;;
   esac
 done
@@ -61,6 +63,23 @@ rsync -az --delete \
   --exclude infra/icecast-b.xml \
   ./ "${HOST}:${REMOTE_PATH}/"
 
+BOT_SRC=""
+if BOT_SRC="$(bash "$ROOT/scripts/radio-discord-bot-src.sh")"; then
+  BOT_REMOTE="$(dirname "${REMOTE_PATH}")/tahti-radio-discord-bot"
+  echo "==> Syncing Discord bot → ${HOST}:${BOT_REMOTE}"
+  ssh_remote "mkdir -p '${BOT_REMOTE}'"
+  rsync -az --delete \
+    --exclude .git \
+    --exclude target \
+    --exclude .env \
+    --exclude .env.local \
+    "${BOT_SRC}/" "${HOST}:${BOT_REMOTE}/"
+else
+  echo "ERROR: tahti-radio-discord-bot source not found." >&2
+  echo "Clone it next to this repo, or set RADIO_DISCORD_BOT_SRC." >&2
+  exit 1
+fi
+
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "==> Building images on ${HOST}"
 BUILD_ARGS=()
@@ -76,7 +95,7 @@ else
 fi
 
 ssh_remote "cd '${REMOTE_PATH}' && \
-  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push"
+  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push radio-discord-bot"
 
 # ── Up ────────────────────────────────────────────────────────────────────────
 echo "==> Starting stack on ${HOST}"

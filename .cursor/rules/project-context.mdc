@@ -26,3 +26,4 @@ alwaysApply: true
 - Production app: `apps/web` (this repo).
 - Tahti Player beta: separate repo (`../tahti-player` or `../tahti-nuclear`); cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.
 - Plugin/theme **Store** catalog: `../tahti-registry` ([janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry)). After adding a plugin, it must appear there; after changing one, bump `version` in both the plugin and the catalog. See root `AGENTS.md`.
+- Tahti Radio Discord bot: sibling `../tahti-radio-discord-bot`, Compose service `radio-discord-bot` in `infra/docker-compose.stack.yml`. Deployed with `./scripts/deploy_prod.sh` (required sibling) / `./scripts/stack-up.sh` (skipped if missing). One replica. Not Fly.io, not an HTTP route on the API. See root `AGENTS.md`.

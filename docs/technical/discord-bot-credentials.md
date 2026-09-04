@@ -53,6 +53,10 @@ Returns `{ "clientId", "token" }` for the Discord bot process only.
 Bot env: `TAHTI_API_BASE` + `INTERNAL_SECRET` (see
 [tahti-radio-discord-bot](https://github.com/janiluuk/tahti-radio-discord-bot)).
 
+The bot process is the `radio-discord-bot` service in
+`infra/docker-compose.stack.yml`. `./scripts/deploy_prod.sh` rsyncs the sibling
+repo and builds it with the rest of the stack. One replica only.
+
 ## Player UI
 
 `packages/tahti-web` (Tahti Player): `DiscordBotAddonCard` under Settings →

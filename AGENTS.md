@@ -33,6 +33,7 @@ units. Listeners stay anonymous by default.
 | UI kit                     | `packages/ui` (`@tahti/ui`) — never duplicate in `apps/web`                                              |
 | Marketing site             | `website/` — **off limits** unless user explicitly asks                                                  |
 | Tahti Player beta client   | Separate repo; cutover in [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) (`beta.tahti.live`) |
+| Tahti Radio Discord bot    | Sibling `../tahti-radio-discord-bot` — Compose service `radio-discord-bot`, not the Fastify API          |
 
 ## Tahti Player import-plugin boundary
 
@@ -67,7 +68,8 @@ monorepo and not the player’s on-disk install list. The catalog is
 `https://raw.githubusercontent.com/janiluuk/tahti-registry/master`.
 
 Sibling checkouts (same parent as this repo): `../tahti-registry` (catalog),
-`../tahti-player` or `../tahti-nuclear` (player + beta web). `GET
+`../tahti-player` or `../tahti-nuclear` (player + beta web),
+`../tahti-radio-discord-bot` (Tahti Radio Discord bot). `GET
 /api/me/import-plugins` is the **API** import-provider list; it does not
 replace the Store catalog.
 
@@ -91,11 +93,40 @@ rollback path, and player-app contract are accepted. Do not change registry
 keys, bootstrap ordering, plugin discovery semantics, or storage location while
 doing this preparation.
 
+## Tahti Radio Discord bot
+
+The 24/7 Discord voice bot lives in the sibling repo
+[`../tahti-radio-discord-bot`](https://github.com/janiluuk/tahti-radio-discord-bot).
+It is a long-running Gateway process (Serenity + ffmpeg + yt-dlp), **not** an
+HTTP service. Do not fold it into Fastify. Do not give it a Discord Interactions
+Endpoint URL. Do not deploy it to Fly.io.
+
+Stack wiring:
+
+- Compose service `radio-discord-bot` in `infra/docker-compose.stack.yml` (one
+  replica — a second copy joins Discord twice and plays in duplicate).
+- Build context defaults to sibling `../../tahti-radio-discord-bot` (relative to
+  `infra/`). Override with `RADIO_DISCORD_BOT_CONTEXT` or `RADIO_DISCORD_BOT_SRC`.
+- `./scripts/deploy_prod.sh` **requires** that checkout: it rsyncs it to
+  `$DEPLOY_PATH/../tahti-radio-discord-bot` (default `/srv/tahti-radio-discord-bot`)
+  and builds the service with api / web / worker / orchestrator.
+- `./scripts/stack-up.sh` starts the bot when the sibling (or
+  `RADIO_DISCORD_BOT_SRC`) exists; otherwise it skips the service.
+- Helper: `./scripts/radio-discord-bot-src.sh`.
+
+Credentials: the bot calls `GET /api/v1/internal/discord-bot/credentials` with
+`INTERNAL_SECRET` (`TAHTI_API_BASE=http://api:3001` on the compose network).
+Board admins set Client ID and token in Tahti Player → Settings → Add-ons →
+Radio (`PUT /api/admin/discord-bot`; never returns the raw token). Optional
+`DISCORD_CLIENT_ID` / `DISCORD_TOKEN` on the API or bot are env fallbacks.
+Contract: `docs/technical/discord-bot-credentials.md`.
+
 ## Running the app locally (env gotchas)
 
 **Use `./scripts/stack-up.sh --seed` first** — it builds and runs the full
 Docker stack (postgres, pgbouncer, redis, minio, mailhog, chat, icecast,
-rtmp-ingest, api, worker, orchestrator, web) with demo fixtures loaded. App at
+rtmp-ingest, api, worker, orchestrator, web, and `radio-discord-bot` when
+`../tahti-radio-discord-bot` is present) with demo fixtures loaded. App at
 `http://localhost:${WEB_PORT:-17777}`, API at `http://localhost:${API_PORT:-15011}`.
 This is also what the screenshot-capture and e2e-journey scripts assume.
 `./scripts/stack-up.sh --down` tears it down; ports are all `15000+` so they
@@ -150,6 +181,7 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 | Status matrix                 | `docs/project-roadmap.md`                        |
 | Deferred / efficiency backlog | `docs/future-improvements.md`                    |
 | Streaming scale rules         | `docs/technical/streaming-architecture.md`       |
+| Discord bot credentials       | `docs/technical/discord-bot-credentials.md`      |
 | Grants + fan-subs             | `docs/engagement-and-fansubs.md`                 |
 | Infra / no CDN                | `docs/infra-strategy.md`                         |
 | Design                        | `docs/design/README.md`, `docs/e2e-screenshots/` |

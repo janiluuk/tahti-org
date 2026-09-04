@@ -1,4 +1,6 @@
-# Full local Tahti stack — infra + API + web + worker + orchestrator.
+# Full local Tahti stack — infra + API + web + worker + orchestrator +
+# radio-discord-bot (source from sibling tahti-radio-discord-bot, synced by
+# deploy_prod.sh).
 # Not Swarm; use: ./scripts/stack-up.sh
 #
 # App UI:     http://localhost:17777  (override WEB_PORT)
@@ -352,6 +354,25 @@ services:
       timeout: 10s
       retries: 8
       start_period: 30s
+
+  # Single replica. A second copy would join Discord twice and play in duplicate.
+  # Default context is the sibling checkout ../../tahti-radio-discord-bot
+  # (infra/ → workspace). deploy_prod.sh rsyncs that repo to
+  # $DEPLOY_PATH/../tahti-radio-discord-bot on the host.
+  radio-discord-bot:
+    logging: *loki-logging
+    build:
+      context: ${RADIO_DISCORD_BOT_CONTEXT:-../../tahti-radio-discord-bot}
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      TAHTI_API_BASE: http://api:3001
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-local-stack-internal-secret}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+    depends_on:
+      api:
+        condition: service_healthy
 
   web:
     logging: *loki-logging
