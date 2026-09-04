@@ -42,6 +42,19 @@ function utcDayKeys(days: number): { since: Date; keys: string[] } {
   return { since: start, keys }
 }
 
+function utcDayKeysBetween(from: string, to: string): string[] {
+  const keys: string[] = []
+  const start = new Date(`${from}T00:00:00.000Z`)
+  const end = new Date(`${to}T00:00:00.000Z`)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+    return keys
+  }
+  for (let cursor = new Date(start); cursor <= end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+    keys.push(cursor.toISOString().slice(0, 10))
+  }
+  return keys
+}
+
 function bucketByUtcDay(rows: { createdAt: Date }[], keys: string[]): Record<string, number> {
   const counts = Object.fromEntries(keys.map((k) => [k, 0]))
   for (const row of rows) {
@@ -52,6 +65,7 @@ function bucketByUtcDay(rows: { createdAt: Date }[], keys: string[]): Record<str
 }
 
 function rangeDays(range: StatsRangeQuery): number | null {
+  if (range === '1') return 1
   if (range === '7') return 7
   if (range === '30') return 30
   return null
@@ -75,8 +89,11 @@ export async function buildArtistPlaysStats(
   prisma: PrismaClient,
   userId: string,
   range: StatsRangeQuery,
+  window?: { from?: string; to?: string },
 ) {
-  const days = rangeDays(range)
+  const customFrom = window?.from
+  const customTo = window?.to
+  const days = customFrom && customTo ? null : rangeDays(range)
   const channel = await prisma.channel.findUnique({
     where: { userId },
     select: { id: true },
@@ -90,22 +107,36 @@ export async function buildArtistPlaysStats(
   ).map((r) => r.id)
 
   const since =
-    days != null
-      ? utcDayKeys(days).since
-      : new Date(Date.UTC(new Date().getUTCFullYear() - 2, 0, 1))
+    customFrom != null
+      ? new Date(`${customFrom}T00:00:00.000Z`)
+      : days != null
+        ? utcDayKeys(days).since
+        : new Date(Date.UTC(new Date().getUTCFullYear() - 2, 0, 1))
 
-  const keys = days != null ? utcDayKeys(days).keys : null
+  const until =
+    customTo != null ? new Date(`${customTo}T23:59:59.999Z`) : undefined
+
+  const keys =
+    customFrom && customTo
+      ? utcDayKeysBetween(customFrom, customTo)
+      : days != null
+        ? utcDayKeys(days).keys
+        : null
+
+  const createdAtFilter = until
+    ? { gte: since, lte: until }
+    : { gte: since }
 
   const [downloadRows, clickRows, downloadCountryRows] = await Promise.all([
     channel
       ? prisma.download.findMany({
-          where: { channelId: channel.id, countedAt: { not: null }, createdAt: { gte: since } },
+          where: { channelId: channel.id, countedAt: { not: null }, createdAt: createdAtFilter },
           select: { createdAt: true },
         })
       : [],
     releaseIds.length > 0
       ? prisma.smartLinkClick.findMany({
-          where: { releaseId: { in: releaseIds }, createdAt: { gte: since } },
+          where: { releaseId: { in: releaseIds }, createdAt: createdAtFilter },
           select: { createdAt: true },
         })
       : [],
@@ -115,7 +146,7 @@ export async function buildArtistPlaysStats(
           where: {
             channelId: channel.id,
             countedAt: { not: null },
-            createdAt: { gte: since },
+            createdAt: createdAtFilter,
             countryCode: { not: null },
           },
           _count: { countryCode: true },
@@ -167,8 +198,8 @@ export async function buildArtistPlaysStats(
     .sort((a, b) => b.count - a.count)
 
   return {
-    range,
-    ...(days != null ? { windowDays: days } : {}),
+    range: customFrom && customTo ? 'all' : range,
+    ...(keys != null ? { windowDays: keys.length } : days != null ? { windowDays: days } : {}),
     totalPlays: totalDownloads + totalSmartLinkClicks,
     totalDownloads,
     totalSmartLinkClicks,

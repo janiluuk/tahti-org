@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-export const StatsRangeQuerySchema = z.enum(['7', '30', 'all']).default('30')
+export const StatsRangeQuerySchema = z.enum(['1', '7', '30', 'all']).default('30')
 
 export const StatsPlaysDailyPointSchema = z.object({
   date: z.string(),
@@ -13,7 +13,7 @@ export const StatsPlaysDailyPointSchema = z.object({
 })
 
 export const StatsPlaysResponseSchema = z.object({
-  range: z.enum(['7', '30', 'all']),
+  range: z.enum(['1', '7', '30', 'all']),
   windowDays: z.number().int().nonnegative().optional(),
   totalPlays: z.number().int().nonnegative(),
   totalDownloads: z.number().int().nonnegative(),

@@ -52,11 +52,15 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const raw = (request.query as { range?: string }).range
-      const parsed = StatsRangeQuerySchema.safeParse(raw ?? '30')
+      const query = request.query as { range?: string; from?: string; to?: string }
+      const parsed = StatsRangeQuerySchema.safeParse(query.range ?? '30')
       const range = parsed.success ? parsed.data : '30'
       const user = request.sessionUser!
-      return reply.send(await buildArtistPlaysStats(fastify.prisma, user.id, range))
+      const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? '') ? query.from : undefined
+      const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? '') ? query.to : undefined
+      return reply.send(
+        await buildArtistPlaysStats(fastify.prisma, user.id, range, { from, to }),
+      )
     },
   )
 
