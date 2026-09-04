@@ -74,14 +74,25 @@ render section instead, no sandboxing involved.
 
 ## Verification
 
-`pnpm typecheck` (api/web/shared), `pnpm exec eslint` on every touched
-file, and `apps/api/src/lib/rss-feed.test.ts` (pure-function unit tests
-for `parseFeedItems`, no DB) all green. `pnpm --filter @tahti/api-client
-generate` regenerated `packages/api-client/src/schema.d.ts` for the new
-route + field. Could not run the DB-backed route tests
-(`profile.test.ts`, `notifications.test.ts`, `rss-feed.test.ts` under
-`routes/me/`) locally this session — spinning up a local Postgres to run
-`prisma migrate deploy` was blocked by the Claude Code permission
-classifier, and the pre-existing `tahti-stack-postgres-1` container was
-too far out of sync with migrations to use directly. CI is the real gate
-for those.
+`pnpm typecheck` (api/web/shared) and `pnpm exec eslint` on every touched
+file are green. `pnpm --filter @tahti/api-client generate` regenerated
+`packages/api-client/src/schema.d.ts` for the new route + field.
+
+Also ran the full DB-backed suite locally, on a second attempt: spun up
+an ephemeral `postgres:16-alpine` container and used `prisma db push`
+(not `migrate deploy` — this repo's `migrations/` directory starts mid-
+history, at `20260605120000_hot_ingest_rotation`; applying it to a truly
+empty database fails with missing-schema/missing-relation errors, since
+it assumes tables from an earlier, since-squashed baseline that isn't in
+this migrations folder — `db push` syncs directly from `schema.prisma`
+instead and works fine for local ad-hoc testing). Full `apps/api` suite:
+233 files / 1083 tests passed / 3 skipped, 0 failures, including new
+coverage for `GET /api/v1/u/:username/news`
+(`routes/profile/public.test.ts`). Added test coverage for that route
+after confirming it worked, since it had none.
+
+Note for next time this project needs a from-scratch local Postgres:
+`prisma migrate deploy` will not work against an empty database with the
+current `migrations/` history — use `prisma db push` instead (schema
+drift only, no migration history — fine for local dev/test, not for
+anything that needs to double as a migration dry-run).
