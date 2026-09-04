@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
-import { BETA_CLIENT_URL } from '@/lib/beta-client'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { AddonFrame } from '@/components/addons/addon-frame'
 import { DevLinks } from './_dev-links'
@@ -137,16 +136,6 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
             <ButtonIcon name="play" />
             Try new beta!
           </Link>
-          {!user && (
-            <a
-              href={BETA_CLIENT_URL}
-              className="ui-btn ui-btn--secondary ui-btn--lg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Try beta client
-            </a>
-          )}
           {!user && (
             <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
               Sign in
