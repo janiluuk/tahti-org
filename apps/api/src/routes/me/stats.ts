@@ -61,9 +61,7 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? '') ? query.from : undefined
       const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? '') ? query.to : undefined
-      return reply.send(
-        await buildArtistPlaysStats(fastify.prisma, user.id, range, { from, to }),
-      )
+      return reply.send(await buildArtistPlaysStats(fastify.prisma, user.id, range, { from, to }))
     },
   )
 
