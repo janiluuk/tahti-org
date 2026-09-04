@@ -195,6 +195,7 @@ import adminAddonsRoutes from './routes/admin/addons.js'
 import addonStoreRoutes from './routes/addons/store.js'
 import addonPublicRoutes from './routes/addons/public.js'
 import meChannelBlocksRoutes from './routes/me/channel-blocks.js'
+import channelBlocksPublicRoutes from './routes/channels/blocks.js'
 import internetRadioPresetsRoute from './routes/internet-radio/presets.js'
 import meInternetRadioRoutes from './routes/me/internet-radio.js'
 import adminInternetRadioRoutes from './routes/admin/internet-radio.js'
@@ -747,6 +748,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminAnnouncementsRoutes)
   await fastify.register(meAddonsRoutes)
   await fastify.register(meChannelBlocksRoutes)
+  await fastify.register(channelBlocksPublicRoutes)
   await fastify.register(adminAddonsRoutes)
   await fastify.register(addonStoreRoutes)
   await fastify.register(addonPublicRoutes)

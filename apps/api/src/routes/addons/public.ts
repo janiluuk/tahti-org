@@ -7,8 +7,7 @@
 // see the surface at all (public for a channel page / homepage, requireAuth
 // for a listener's own Discover page).
 
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
-import type { Addon } from '@tahti/db'
+import type { FastifyPluginAsync } from 'fastify'
 import {
   AddonBundleHashParamSchema,
   AddonRenderListSchema,
@@ -18,28 +17,11 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { getObjectBuffer } from '../../lib/minio.js'
-import { resolveAddonRenderSet } from '../../lib/addons.js'
-
-function sandboxUrl(bundleHash: string): string {
-  return `/widget-sandbox/${bundleHash}`
-}
-
-async function resolveVersionHash(
-  fastify: FastifyInstance,
-  widget: Pick<Addon, 'id' | 'currentVersion' | 'bundleHash'>,
-  pinnedVersion: string | null,
-): Promise<{ version: string; bundleHash: string }> {
-  if (!pinnedVersion || pinnedVersion === widget.currentVersion) {
-    return { version: widget.currentVersion, bundleHash: widget.bundleHash }
-  }
-  const pinned = await fastify.prisma.addonVersion.findUnique({
-    where: { widgetId_version: { widgetId: widget.id, version: pinnedVersion } },
-  })
-  // Pinned version was deleted from history somehow — fall back to current
-  // rather than serving a broken/missing bundle.
-  if (!pinned) return { version: widget.currentVersion, bundleHash: widget.bundleHash }
-  return { version: pinned.version, bundleHash: pinned.bundleHash }
-}
+import {
+  addonSandboxUrl as sandboxUrl,
+  resolveAddonRenderSet,
+  resolveAddonVersionHash,
+} from '../../lib/addons.js'
 
 const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/channels/:slug/addons — public, no auth
@@ -74,8 +56,8 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
       const fromInstalls = await Promise.all(
         explicitInstalls.map(async (install) => {
-          const { version, bundleHash } = await resolveVersionHash(
-            fastify,
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
             install.widget,
             install.pinnedVersion,
           )
@@ -93,7 +75,11 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       )
       const fromDefaults = await Promise.all(
         defaultOnlyWidgets.map(async (widget, index) => {
-          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
+            widget,
+            null,
+          )
           return {
             installId: `default:${widget.id}`,
             widgetSlug: widget.slug,
@@ -129,8 +115,8 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
       const fromInstalls = await Promise.all(
         explicitInstalls.map(async (install) => {
-          const { version, bundleHash } = await resolveVersionHash(
-            fastify,
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
             install.widget,
             install.pinnedVersion,
           )
@@ -148,7 +134,11 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       )
       const fromDefaults = await Promise.all(
         defaultOnlyWidgets.map(async (widget, index) => {
-          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
+            widget,
+            null,
+          )
           return {
             installId: `default:${widget.id}`,
             widgetSlug: widget.slug,
@@ -186,8 +176,8 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
       const fromInstalls = await Promise.all(
         explicitInstalls.map(async (install) => {
-          const { version, bundleHash } = await resolveVersionHash(
-            fastify,
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
             install.widget,
             install.pinnedVersion,
           )
@@ -205,7 +195,11 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       )
       const fromDefaults = await Promise.all(
         defaultOnlyWidgets.map(async (widget, index) => {
-          const { version, bundleHash } = await resolveVersionHash(fastify, widget, null)
+          const { version, bundleHash } = await resolveAddonVersionHash(
+            fastify.prisma,
+            widget,
+            null,
+          )
           return {
             installId: `default:${widget.id}`,
             widgetSlug: widget.slug,

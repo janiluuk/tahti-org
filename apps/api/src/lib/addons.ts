@@ -3,8 +3,32 @@
 
 import { createHash } from 'node:crypto'
 import { transform } from 'esbuild'
-import type { Prisma, PrismaClient } from '@tahti/db'
+import type { Addon, Prisma, PrismaClient } from '@tahti/db'
 import type { AddonScopeInput, PatchAddonInstallInput } from '@tahti/shared'
+
+/** Path apps/web's /widget-sandbox/[bundleHash] route proxies, then loads
+ * via <script src integrity="sha256-...">. Shared by every render feed in
+ * routes/addons/public.ts and routes/channels/blocks.ts. */
+export function addonSandboxUrl(bundleHash: string): string {
+  return `/widget-sandbox/${bundleHash}`
+}
+
+export async function resolveAddonVersionHash(
+  prisma: PrismaClient,
+  widget: Pick<Addon, 'id' | 'currentVersion' | 'bundleHash'>,
+  pinnedVersion: string | null,
+): Promise<{ version: string; bundleHash: string }> {
+  if (!pinnedVersion || pinnedVersion === widget.currentVersion) {
+    return { version: widget.currentVersion, bundleHash: widget.bundleHash }
+  }
+  const pinned = await prisma.addonVersion.findUnique({
+    where: { widgetId_version: { widgetId: widget.id, version: pinnedVersion } },
+  })
+  // Pinned version was deleted from history somehow — fall back to current
+  // rather than serving a broken/missing bundle.
+  if (!pinned) return { version: widget.currentVersion, bundleHash: widget.bundleHash }
+  return { version: pinned.version, bundleHash: pinned.bundleHash }
+}
 
 export function sha256Hex(bytes: Buffer | string): string {
   return createHash('sha256').update(bytes).digest('hex')

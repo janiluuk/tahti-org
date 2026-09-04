@@ -114,7 +114,7 @@ original request assumed:
   no user-facing benefit. "Generalized" here means the block system itself
   is reusable for future block types, not that everything becomes a block.
 
-### B.1 — Channel Designer block system (this is the big one; phases 1–3 of 5 done, see Status)
+### B.1 — Channel Designer block system (this is the big one; phases 1–4 of 5 done, see Status)
 
 **Data model** — new table, additive, no touch to existing Designer
 sections' storage:
@@ -276,8 +276,52 @@ rest of this session's work.
     testing pattern (RTL + jsdom) for one section. Verified: `apps/web`
     typecheck/lint green, `channel-block-summary.test.ts` 7/7 passing, and a
     full `next build` of the whole app succeeds with zero errors.
-  - Remaining: phase 4 (public rendering on `c/[slug]`, reusing `packBlocks`
-    for the actual row layout), phase 5 (logo upload + size-variant
-    pipeline, reuse the existing avatar/cover pipeline — the editor's
-    logo-URL text input from phase 3 stays as a fallback/manual-override
-    path once that lands, not something to delete).
+  - **Phase 4 (public rendering) — done, on `/u/[username]` not `/c/[slug]`.**
+    Scope correction found while implementing: this doc originally assumed
+    `c/[slug]/page.tsx` (the live-stream/channel page) was the render
+    target, but both existing precedents this feature builds on — the
+    "Widgets" section (installed ADDON rendering) and the logo overlay from
+    B.0 (`User.logoUrl`/`logoPlacement`) — already live on
+    `/u/[username]/page.tsx` (the artist profile page), not `/c/[slug]`.
+    Followed the real precedent instead of the original assumption, same
+    "found while building, not what was originally assumed" pattern as
+    B.0's own findings.
+    - New public, unauthenticated `GET /api/v1/channels/:slug/blocks`
+      (`apps/api/src/routes/channels/blocks.ts`) resolves each block to a
+      render-ready shape (`ChannelBlockRenderItemSchema`, a discriminated
+      union on `type` in `dto/channel-blocks.ts`): LOGO returns its
+      `assetUrl` directly, ADDON re-resolves the referenced `AddonInstall`
+      through the exact same version/sandbox-URL logic the existing addon
+      feeds use. That logic (`sandboxUrl`/`resolveVersionHash`) was
+      previously private to `routes/addons/public.ts`; extracted to
+      `lib/addons.ts` as `addonSandboxUrl`/`resolveAddonVersionHash` so
+      this new route (and any future one) can reuse it instead of
+      duplicating it — `routes/addons/public.ts` itself now imports these
+      too, no behavior change there (its own 6 tests still pass unmodified).
+      A block referencing a since-removed-or-disabled install is silently
+      dropped from the public feed (not sent broken) — the artist's own
+      management view still shows it so they can notice and fix it.
+    - `apps/web`: `ChannelBlocksSection` (new component) fetches alongside
+      the existing addons/events/etc. calls in `fetchChannelExtras`, runs
+      the same `packBlocks` the editor preview uses, and renders each
+      packed row as a flex row with Full/Half/Third-based flex-basis
+      percentages — LOGO as a plain `<img>`, ADDON via the existing
+      `AddonFrame` sandboxed-iframe component. Placed directly above the
+      existing "Widgets" section; exact visual prominence (e.g. whether a
+      LOGO block should sit higher, nearer the header) is a product/design
+      call left for a follow-up, not blocking this phase.
+    - 4 new integration tests (`routes/channels/blocks.test.ts`): 404 for
+      an unknown channel, empty list, resolving a LOGO + an ADDON block
+      while dropping a LOGO with no asset and an ADDON pointing at a
+      nonexistent install (same request, position-ordered), and dropping a
+      block whose install was disabled after being placed.
+    - Verified: `packages/shared`/`apps/api`/`packages/api-client` typecheck
+      green; the full addons+channels test surface — `addons/public.test.ts`
+      (6, unmodified, confirming the extraction didn't change behavior),
+      `me/channel-blocks.test.ts` (8), `channels/blocks.test.ts` (4), plus
+      7 pre-existing `channels/*` suites — 59/59 passing together; `apps/web`
+      typecheck/lint green and a full `next build` succeeds with zero errors.
+  - Remaining: phase 5 (logo upload + size-variant pipeline, reuse the
+    existing avatar/cover pipeline — the editor's logo-URL text input from
+    phase 3 stays as a fallback/manual-override path once that lands, not
+    something to delete).

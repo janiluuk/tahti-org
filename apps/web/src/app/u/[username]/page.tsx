@@ -27,8 +27,9 @@ import { ReleasesGrid } from '@/components/releases-grid'
 import { PressKitGallery } from '@/components/press-kit-gallery'
 import { FollowersSection } from '@/components/followers-section'
 import { resolveChannelUrl } from '@/lib/app-url'
-import type { PublicPressKitImage, AddonRenderItem } from '@tahti/shared'
+import type { PublicPressKitImage, AddonRenderItem, ChannelBlockRenderItem } from '@tahti/shared'
 import { AddonFrame } from '@/components/addons/addon-frame'
+import { ChannelBlocksSection } from '@/components/channel-blocks/channel-blocks-section'
 import StoreSection from './store-section'
 import { ProfileTabs } from './_profile-tabs'
 import { ProfileCoverVisual } from './_profile-cover-visual'
@@ -349,19 +350,29 @@ async function fetchPressKitImages(username: string): Promise<PublicPressKitImag
 
 async function fetchChannelExtras(slug: string | undefined) {
   if (!slug) {
-    return { events: [], posts: [], embeds: [], members: [], upcomingShows: [], addons: [] }
+    return {
+      events: [],
+      posts: [],
+      embeds: [],
+      members: [],
+      upcomingShows: [],
+      addons: [],
+      blocks: [],
+    }
   }
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [eventsRes, postsRes, embedsRes, membersRes, showRes, addonsRes] = await Promise.all([
-    fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
-    fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
-    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
-    fetch(`${apiUrl}/api/channels/${slug}/members`, { next: { revalidate: 60 } }),
-    // Upcoming Tahti Radio guest slots this artist has booked — same "show"
-    // concept as the radio page's calendar (RadioSlotBooking), not a venue event.
-    fetch(`${apiUrl}/api/v1/radio/show/${slug}`, { next: { revalidate: 60 } }),
-    fetch(`${apiUrl}/api/v1/channels/${slug}/addons`, { next: { revalidate: 60 } }),
-  ])
+  const [eventsRes, postsRes, embedsRes, membersRes, showRes, addonsRes, blocksRes] =
+    await Promise.all([
+      fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/channels/${slug}/members`, { next: { revalidate: 60 } }),
+      // Upcoming Tahti Radio guest slots this artist has booked — same "show"
+      // concept as the radio page's calendar (RadioSlotBooking), not a venue event.
+      fetch(`${apiUrl}/api/v1/radio/show/${slug}`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/v1/channels/${slug}/addons`, { next: { revalidate: 60 } }),
+      fetch(`${apiUrl}/api/v1/channels/${slug}/blocks`, { next: { revalidate: 60 } }),
+    ])
   const events: ArtistEventItem[] = eventsRes.ok ? await eventsRes.json() : []
   const posts: ArtistPostItem[] = postsRes.ok ? await postsRes.json() : []
   const embeds: ArtistEmbedItem[] = embedsRes.ok ? await embedsRes.json() : []
@@ -372,7 +383,10 @@ async function fetchChannelExtras(slug: string | undefined) {
   const addons: AddonRenderItem[] = addonsRes.ok
     ? ((await addonsRes.json()) as { widgets: AddonRenderItem[] }).widgets
     : []
-  return { events, posts, embeds, members, upcomingShows, addons }
+  const blocks: ChannelBlockRenderItem[] = blocksRes.ok
+    ? ((await blocksRes.json()) as { blocks: ChannelBlockRenderItem[] }).blocks
+    : []
+  return { events, posts, embeds, members, upcomingShows, addons, blocks }
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
@@ -401,7 +415,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const isAdmin = Boolean(user?.isBoard)
   const canEdit = isOwner || isAdmin
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
-  const [{ events, posts, embeds, members, upcomingShows, addons }, pressKitImages] =
+  const [{ events, posts, embeds, members, upcomingShows, addons, blocks }, pressKitImages] =
     await Promise.all([fetchChannelExtras(channel?.slug), fetchPressKitImages(artist.username)])
   const profileUrl = resolveChannelUrl(artist.username)
   const theme = resolveAvatarTheme(JSON.stringify(artist.avatarTheme ?? null), artist.username)
@@ -622,6 +636,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             />
           </section>
         )}
+        <ChannelBlocksSection blocks={blocks} />
         {addons.length > 0 && (
           <section className="prof-section">
             <div className="prof-sec-label">Widgets</div>

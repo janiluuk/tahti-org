@@ -23065,6 +23065,73 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/v1/channels/{slug}/blocks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              blocks: (
+                | {
+                    id: string
+                    /** @enum {string} */
+                    type: 'LOGO'
+                    /** @enum {string} */
+                    width: 'FULL' | 'HALF' | 'THIRD'
+                    position: number
+                    assetUrl: string
+                  }
+                | {
+                    id: string
+                    /** @enum {string} */
+                    type: 'ADDON'
+                    /** @enum {string} */
+                    width: 'FULL' | 'HALF' | 'THIRD'
+                    position: number
+                    addon: {
+                      installId: string
+                      widgetSlug: string
+                      name: string
+                      sandboxUrl: string
+                      version: string
+                      position: number
+                      config?: unknown
+                      context?: unknown
+                    }
+                  }
+              )[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/addons': {
     parameters: {
       query?: never

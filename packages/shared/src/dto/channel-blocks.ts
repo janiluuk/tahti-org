@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { AddonRenderItemSchema } from './addons.js'
 
 export const CHANNEL_BLOCK_TYPES = ['LOGO', 'ADDON'] as const
 export type ChannelBlockTypeInput = (typeof CHANNEL_BLOCK_TYPES)[number]
@@ -47,4 +48,31 @@ export type ChannelBlockView = z.infer<typeof ChannelBlockViewSchema>
 
 export const ChannelBlockListSchema = z.object({
   blocks: z.array(ChannelBlockViewSchema),
+})
+
+// Public render feed (GET /api/v1/channels/:slug/blocks) — resolved,
+// render-ready shape, distinct from ChannelBlockView (the artist-management
+// shape from me/channel-blocks.ts). An ADDON block whose install was
+// removed/disabled since it was placed is dropped by the API rather than
+// sent broken, so this never needs a "missing" variant.
+export const ChannelBlockRenderItemSchema = z.discriminatedUnion('type', [
+  z.object({
+    id: z.string(),
+    type: z.literal('LOGO'),
+    width: z.enum(CHANNEL_BLOCK_WIDTHS),
+    position: z.number().int(),
+    assetUrl: z.string(),
+  }),
+  z.object({
+    id: z.string(),
+    type: z.literal('ADDON'),
+    width: z.enum(CHANNEL_BLOCK_WIDTHS),
+    position: z.number().int(),
+    addon: AddonRenderItemSchema,
+  }),
+])
+export type ChannelBlockRenderItem = z.infer<typeof ChannelBlockRenderItemSchema>
+
+export const ChannelBlockRenderListSchema = z.object({
+  blocks: z.array(ChannelBlockRenderItemSchema),
 })
