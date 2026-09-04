@@ -7868,6 +7868,50 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/webhooks/export/{provider}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Currently accepts and logs. */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+              provider: string
+              /** @enum {boolean} */
+              accepted: true
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/membership': {
     parameters: {
       query?: never
@@ -17263,6 +17307,144 @@ export interface paths {
     }
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Versioned export-provider capabilities for external clients */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              providers: {
+                /** @enum {number} */
+                contractVersion: 1
+                id: string
+                name: string
+                description: string
+                capabilities: {
+                  submit: boolean
+                  status: boolean
+                  webhook: boolean
+                }
+                submitPath: string | null
+                statusPath: string | null
+                webhookPath: string | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins/{provider}/releases/{id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description ExportProvider status alias (delegates to provider-specific status) */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              revelatorId: string | null
+              revelatorStatus: string | null
+              title: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/export-plugins/{provider}/releases/{id}/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description ExportProvider submit alias (delegates to provider-specific submit) */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          provider: string
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        202: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              releaseId: string
+              /** @enum {string} */
+              revelatorStatus: 'pending'
+            }
+          }
+        }
+      }
+    }
     delete?: never
     options?: never
     head?: never

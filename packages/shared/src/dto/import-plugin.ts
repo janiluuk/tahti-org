@@ -13,7 +13,7 @@ import { z } from 'zod'
  * - tool / upload: paste-a-link or local upload surfaces
  *
  * Export/delivery (Revelator DSP submit/status/webhook) is a separate contract
- * and must not be modeled here until those routes exist.
+ * — see `dto/export-plugin.ts` and `GET /api/me/export-plugins`.
  */
 export const IMPORT_PLUGIN_CONTRACT_VERSION = 1 as const
 

@@ -44,8 +44,8 @@ current plugin.
 `GET /api/me/import-plugins` is the versioned metadata registry for OAuth,
 search, and tool/upload import sources. See
 [`import-plugin-contracts.md`](import-plugin-contracts.md). DSP export
-submit/status/webhook is not part of this registry.
-
+submit/status/webhook lives on `GET /api/me/export-plugins` —
+[`export-plugin-contracts.md`](export-plugin-contracts.md).
 
 The existing API reference remains the contract source of truth for all other
 Tahti Player calls. Run the client-side freshness check from the Tahti Player
