@@ -6,22 +6,10 @@
  * shell itself, so the two never drift out of sync. */
 
 export type DesignerSectionId =
-  | 'background'
-  | 'header'
-  | 'slideshow'
-  | 'player'
-  | 'links'
-  | 'tracks'
-  | 'collections'
-  | 'releases'
+  'background' | 'header' | 'slideshow' | 'player' | 'links' | 'tracks' | 'collections' | 'releases'
 
 export type DesignerSectionSaveKind =
-  | 'gallery'
-  | 'profile'
-  | 'textLayer'
-  | 'visual'
-  | 'header'
-  | 'none'
+  'gallery' | 'profile' | 'textLayer' | 'visual' | 'header' | 'none'
 
 export type DesignerSectionDefinition = {
   id: DesignerSectionId
