@@ -139,6 +139,30 @@ describe('PLAT-030 — artist stats API', () => {
     expect(body.daily).toHaveLength(30)
   })
 
+  it('GET /api/me/stats/plays/hourly returns 24 UTC buckets', async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/stats/plays/hourly?date=${today}`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { date: string; hours: number[]; totalPlays: number }
+    expect(body.date).toBe(today)
+    expect(body.hours).toHaveLength(24)
+    expect(body.hours.reduce((sum, value) => sum + value, 0)).toBe(body.totalPlays)
+    expect(body.totalPlays).toBeGreaterThanOrEqual(1)
+  })
+
+  it('GET /api/me/stats/plays/hourly rejects bad dates', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/stats/plays/hourly?date=not-a-day',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('GET /api/me/stats/top-tracks ranks sound items', async () => {
     const res = await app.inject({
       method: 'GET',

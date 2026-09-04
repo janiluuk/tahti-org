@@ -208,6 +208,58 @@ export async function buildArtistPlaysStats(
   }
 }
 
+/** UTC-hour buckets for one calendar day — same play definition as the daily series
+ * (counted downloads + smart-link clicks). */
+export async function buildArtistPlaysHourlyStats(
+  prisma: PrismaClient,
+  userId: string,
+  date: string,
+) {
+  const since = new Date(`${date}T00:00:00.000Z`)
+  const until = new Date(`${date}T23:59:59.999Z`)
+  if (Number.isNaN(since.getTime()) || Number.isNaN(until.getTime())) {
+    return { date, hours: Array.from({ length: 24 }, () => 0), totalPlays: 0 }
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  const releaseIds = (
+    await prisma.release.findMany({
+      where: { userId },
+      select: { id: true },
+    })
+  ).map((r) => r.id)
+
+  const createdAtFilter = { gte: since, lte: until }
+  const [downloadRows, clickRows] = await Promise.all([
+    channel
+      ? prisma.download.findMany({
+          where: { channelId: channel.id, countedAt: { not: null }, createdAt: createdAtFilter },
+          select: { createdAt: true },
+        })
+      : [],
+    releaseIds.length > 0
+      ? prisma.smartLinkClick.findMany({
+          where: { releaseId: { in: releaseIds }, createdAt: createdAtFilter },
+          select: { createdAt: true },
+        })
+      : [],
+  ])
+
+  const hours = Array.from({ length: 24 }, () => 0)
+  for (const row of [...downloadRows, ...clickRows]) {
+    hours[row.createdAt.getUTCHours()] += 1
+  }
+
+  return {
+    date,
+    hours,
+    totalPlays: downloadRows.length + clickRows.length,
+  }
+}
+
 /** Dashboard overview KPI counters — "plays"/"downloads", today + all-time. "Plays"
  * mirrors buildArtistPlaysStats' definition (downloads + smart-link clicks); unlike
  * that function's range-bounded totals (capped to a 2-year window for the daily

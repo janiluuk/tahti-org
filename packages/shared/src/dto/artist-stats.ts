@@ -28,6 +28,16 @@ export const StatsPlaysResponseSchema = z.object({
   ),
 })
 
+export const StatsPlaysHourlyQuerySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+})
+
+export const StatsPlaysHourlyResponseSchema = z.object({
+  date: z.string(),
+  hours: z.array(z.number().int().nonnegative()).length(24),
+  totalPlays: z.number().int().nonnegative(),
+})
+
 export const StatsSummaryResponseSchema = z.object({
   playsToday: z.number().int().nonnegative(),
   playsTotal: z.number().int().nonnegative(),

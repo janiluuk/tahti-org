@@ -3,6 +3,8 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  StatsPlaysHourlyQuerySchema,
+  StatsPlaysHourlyResponseSchema,
   StatsPlaysResponseSchema,
   StatsRangeQuerySchema,
   StatsSummaryResponseSchema,
@@ -16,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
+  buildArtistPlaysHourlyStats,
   buildArtistPlaysStats,
   buildDashboardPlayDownloadCounters,
   buildTopCountriesStats,
@@ -60,6 +63,28 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? '') ? query.to : undefined
       return reply.send(
         await buildArtistPlaysStats(fastify.prisma, user.id, range, { from, to }),
+      )
+    },
+  )
+
+  fastify.get(
+    '/api/me/stats/plays/hourly',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'UTC hourly play buckets for one calendar day (downloads + smart-link clicks)',
+        response: openApiResponse(StatsPlaysHourlyResponseSchema, 'StatsPlaysHourly'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = StatsPlaysHourlyQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: 'Invalid date (expected YYYY-MM-DD)' })
+      }
+      const user = request.sessionUser!
+      return reply.send(
+        await buildArtistPlaysHourlyStats(fastify.prisma, user.id, parsed.data.date),
       )
     },
   )
