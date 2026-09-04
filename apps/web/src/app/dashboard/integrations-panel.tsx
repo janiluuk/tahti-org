@@ -15,6 +15,7 @@ const SCOPE_SECTIONS: Array<{ scope: IntegrationScope; title: string }> = [
   { scope: 'IMPORT', title: 'Import sources' },
   { scope: 'EXPORT', title: 'Export' },
   { scope: 'FINGERPRINT', title: 'Fingerprinting' },
+  { scope: 'SCROBBLE', title: 'Scrobbling' },
 ]
 
 export interface IntegrationsPanelProps {

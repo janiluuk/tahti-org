@@ -3,8 +3,12 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { Prisma } from '@tahti/db'
+import { Prisma, getUserIntegrationCredential } from '@tahti/db'
 import { RecordListenResponseSchema, RecordListenSchema, openApiResponse } from '@tahti/shared'
+import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { submitListenBrainzListen } from '../../lib/listenbrainz.js'
+import { submitLastFmScrobble } from '../../lib/lastfm.js'
+import { config } from '../../config.js'
 
 // In-memory rate limit: max 60 listen-events per listener per hour — bounds
 // abuse (rapidly "voting" for many tracks) without constraining a genuine
@@ -50,8 +54,9 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
 
-      const dedupeKey = request.sessionUser
-        ? `user:${request.sessionUser.id}`
+      const sessionUser = request.sessionUser
+      const dedupeKey = sessionUser
+        ? `user:${sessionUser.id}`
         : `anon:${createHash('sha256')
             .update(`${request.ip ?? '0.0.0.0'}:${(request.headers['user-agent'] as string) ?? ''}`)
             .digest('hex')
@@ -63,7 +68,20 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.sound.findUnique({
         where: { id: parsed.data.soundId },
-        select: { id: true, isPublic: true, status: true, topListsEligible: true },
+        select: {
+          id: true,
+          title: true,
+          artistName: true,
+          isPublic: true,
+          status: true,
+          topListsEligible: true,
+          channel: {
+            select: {
+              slug: true,
+              user: { select: { displayName: true } },
+            },
+          },
+        },
       })
       if (!item || !item.isPublic || item.status !== 'READY' || !item.topListsEligible) {
         return reply.send({ recorded: false })
@@ -73,13 +91,78 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.prisma.listenEvent.create({
           data: { soundId: item.id, dedupeKey, dayBucket: todayUtcBucket() },
         })
-        return reply.send({ recorded: true })
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
           return reply.send({ recorded: false })
         }
         throw err
       }
+
+      if (sessionUser) {
+        void (async () => {
+          const trackName = item.title.trim()
+          const artistName = (
+            item.artistName?.trim() || item.channel.user.displayName.trim()
+          ).trim()
+          if (!trackName || !artistName) return
+
+          const listenedAt = Math.floor(Date.now() / 1000)
+          const originUrl = resolveChannelUrl(item.channel.slug, {
+            hash: `sound-item-${item.id}`,
+          })
+
+          const releaseTrack = await fastify.prisma.releaseTrack.findFirst({
+            where: { soundId: item.id, musicbrainzRecordingId: { not: null } },
+            select: { musicbrainzRecordingId: true },
+          })
+
+          const lbCredential = await getUserIntegrationCredential(
+            fastify.prisma,
+            sessionUser.id,
+            'listenbrainz',
+          )
+          const userToken = lbCredential?.userToken?.trim()
+          if (userToken) {
+            const result = await submitListenBrainzListen(userToken, {
+              listenedAt,
+              artistName,
+              trackName,
+              recordingMbid: releaseTrack?.musicbrainzRecordingId ?? undefined,
+              originUrl,
+            })
+            if (!result.ok) {
+              request.log.warn(
+                { error: result.error, soundId: item.id },
+                'ListenBrainz scrobble failed',
+              )
+            }
+          }
+
+          if (config.lastfm.apiKey && config.lastfm.apiSecret) {
+            const lastfmCredential = await getUserIntegrationCredential(
+              fastify.prisma,
+              sessionUser.id,
+              'lastfm',
+            )
+            const sessionKey = lastfmCredential?.sessionKey?.trim()
+            if (sessionKey) {
+              const result = await submitLastFmScrobble(
+                { apiKey: config.lastfm.apiKey, apiSecret: config.lastfm.apiSecret },
+                sessionKey,
+                { artistName, trackName, listenedAt },
+              )
+              if (!result.ok) {
+                request.log.warn(
+                  { error: result.error, soundId: item.id },
+                  'Last.fm scrobble failed',
+                )
+              }
+            }
+          }
+        })().catch((err: unknown) => request.log.warn({ err, soundId: item.id }, 'Scrobble failed'))
+      }
+
+      return reply.send({ recorded: true })
     },
   )
 }

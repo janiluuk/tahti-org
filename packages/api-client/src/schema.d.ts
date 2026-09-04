@@ -25313,7 +25313,7 @@ export interface paths {
                 name: string
                 description: string
                 /** @enum {string} */
-                scope: 'IMPORT' | 'EXPORT' | 'FINGERPRINT'
+                scope: 'IMPORT' | 'EXPORT' | 'FINGERPRINT' | 'SCROBBLE'
                 /** @enum {string} */
                 authKind: 'API_KEY' | 'OAUTH'
                 installed: boolean
@@ -25397,6 +25397,72 @@ export interface paths {
         }
       }
     }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/integrations/lastfm/oauth/start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/integrations/lastfm/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -28154,7 +28220,7 @@ export interface paths {
           content: {
             'application/json': {
               /** @enum {string} */
-              range: '7' | '30' | 'all'
+              range: '1' | '7' | '30' | 'all'
               windowDays?: number
               totalPlays: number
               totalDownloads: number
@@ -28170,6 +28236,46 @@ export interface paths {
                 displayName: string
                 count: number
               }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/stats/plays/hourly': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description UTC hourly play buckets for one calendar day (downloads + smart-link clicks) */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              date: string
+              hours: number[]
+              totalPlays: number
             }
           }
         }

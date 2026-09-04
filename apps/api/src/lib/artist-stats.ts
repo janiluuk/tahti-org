@@ -113,8 +113,7 @@ export async function buildArtistPlaysStats(
         ? utcDayKeys(days).since
         : new Date(Date.UTC(new Date().getUTCFullYear() - 2, 0, 1))
 
-  const until =
-    customTo != null ? new Date(`${customTo}T23:59:59.999Z`) : undefined
+  const until = customTo != null ? new Date(`${customTo}T23:59:59.999Z`) : undefined
 
   const keys =
     customFrom && customTo
@@ -123,9 +122,7 @@ export async function buildArtistPlaysStats(
         ? utcDayKeys(days).keys
         : null
 
-  const createdAtFilter = until
-    ? { gte: since, lte: until }
-    : { gte: since }
+  const createdAtFilter = until ? { gte: since, lte: until } : { gte: since }
 
   const [downloadRows, clickRows, downloadCountryRows] = await Promise.all([
     channel

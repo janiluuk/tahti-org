@@ -11,6 +11,7 @@
 // rather than leaking into the generic install route.
 
 import { loginToHearthis, HearthisLoginError } from '@tahti/hearthis'
+import { validateListenBrainzToken } from './listenbrainz.js'
 
 export type IntegrationInstaller = (
   fields: Record<string, string>,
@@ -45,6 +46,18 @@ const INTEGRATION_INSTALLERS: Record<string, IntegrationInstaller> = {
     }
 
     return { fields: { key: result.auth.key, secret: result.auth.secret } }
+  },
+
+  // Validates the ListenBrainz user token before storing it. Only the token
+  // is persisted — never a password. Reject install when validate-token fails.
+  listenbrainz: async (fields) => {
+    const userToken = fields.userToken?.trim()
+    if (!userToken) return { error: 'Missing field: userToken' }
+
+    const result = await validateListenBrainzToken(userToken)
+    if (!result.ok) return { error: result.error }
+
+    return { fields: { userToken } }
   },
 }
 

@@ -67,7 +67,9 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
         installed: provider.authKind === 'API_KEY' && installedSlugs.has(provider.slug),
         connected:
           provider.authKind === 'OAUTH' &&
-          Boolean(provider.oauthStatusField && oauthColumns[provider.oauthStatusField]),
+          (provider.oauthStatusField
+            ? Boolean(oauthColumns[provider.oauthStatusField])
+            : installedSlugs.has(provider.slug)),
       }))
 
       return reply.send({ integrations })
@@ -130,7 +132,9 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const provider = findIntegrationProvider(routeParams.slug)
       if (!provider) return reply.status(404).send({ error: 'Unknown integration' })
-      if (provider.authKind === 'OAUTH') {
+      // OAuth providers that store a User column still disconnect on their own
+      // route. Credential-store OAuth (e.g. Last.fm) uninstalls here.
+      if (provider.authKind === 'OAUTH' && provider.oauthStatusField) {
         return reply
           .status(400)
           .send({ error: 'This integration connects via OAuth — use its disconnect flow instead' })
