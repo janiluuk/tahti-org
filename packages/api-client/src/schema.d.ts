@@ -5373,7 +5373,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Published board resolutions for a calendar year */
+    /** @description Published board resolutions, optionally filtered to a calendar year */
     get: {
       parameters: {
         query?: never
@@ -5445,6 +5445,51 @@ export interface paths {
               voteFor: number
               voteAgainst: number
               voteAbstain: number
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/transparency/quarterly-reports': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Published quarterly reviews of member-submitted feature requests */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              year: number
+              quarter: number
+              storageKey: string
+              /** Format: date-time */
+              generatedAt: string
+              generatedByDisplayName: string
+              downloadUrl: string | null
             }[]
           }
         }
@@ -28154,7 +28199,7 @@ export interface paths {
           content: {
             'application/json': {
               /** @enum {string} */
-              range: '7' | '30' | 'all'
+              range: '1' | '7' | '30' | 'all'
               windowDays?: number
               totalPlays: number
               totalDownloads: number
