@@ -79,6 +79,18 @@ export function rtmpMirrorOutputId(targetId: string): string {
   return `rtmp_${targetId}`
 }
 
+/** Converts a validated "#RRGGBB" hex string (see ChannelStreamOverlayPatchSchema)
+ * into Liquidsoap's `0xRRGGBB` color-literal format. Falls back to `fallback`
+ * (already in `0xRRGGBB` form) for anything that isn't exactly that shape —
+ * defensive here too, not just at the DTO layer, since a bad literal breaks
+ * Liquidsoap script parsing for the whole channel. */
+function toLiquidsoapColor(hex: string | undefined, fallback: string): string {
+  if (hex && /^#[0-9a-fA-F]{6}$/.test(hex)) {
+    return `0x${hex.slice(1)}`
+  }
+  return fallback
+}
+
 /**
  * Renders one multistream RTMP output: the live/archive audio muxed with a video
  * track built from the channel's cover-cache image + title text. Verified against
@@ -90,16 +102,20 @@ export function rtmpMirrorOutputId(targetId: string): string {
 export function buildRtmpMirrorOutput(
   target: RtmpMirrorTarget,
   coverPath: string,
-  titleText: string,
+  titleText?: string,
   subtitleText?: string,
+  textColor?: string,
 ): string {
   const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
-  const escapedTitle = escapeLiquidsoapString(titleText)
   const base = `video.add_image(file="${coverPath}", width=1280, height=720, blank())`
+  const subtitleColor = toLiquidsoapColor(textColor, '0xcbd5e1')
+  const titleColor = toLiquidsoapColor(textColor, '0xffffff')
   const withSubtitle = subtitleText
-    ? `video.add_text(color=0xcbd5e1, size=18, x=20, y=662, "${escapeLiquidsoapString(subtitleText)}", ${base})`
+    ? `video.add_text(color=${subtitleColor}, size=18, x=20, y=662, "${escapeLiquidsoapString(subtitleText)}", ${base})`
     : base
-  const videoSource = `video.add_text(color=0xffffff, size=28, x=20, y=628, "${escapedTitle}", ${withSubtitle})`
+  const videoSource = titleText
+    ? `video.add_text(color=${titleColor}, size=28, x=20, y=628, "${escapeLiquidsoapString(titleText)}", ${withSubtitle})`
+    : withSubtitle
   const outputId = rtmpMirrorOutputId(target.id)
   return `output.url(\n  id="${outputId}",\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
 }
@@ -248,6 +264,8 @@ export async function spawnLiquidsoapContainer(
       },
       streamOverlayTitle: true,
       streamOverlaySubtitle: true,
+      streamOverlayShowTitle: true,
+      streamOverlayTextColor: true,
       streamOverlayCoverUrl: true,
       user: { select: { displayName: true, avatarUrl: true } },
     },
@@ -305,14 +323,23 @@ export async function spawnLiquidsoapContainer(
     // decoded-once image, see cover-cache.ts) with the channel's display name
     // overlaid. See buildRtmpMirrorOutput for the Liquidsoap API details.
     const coverPath = coverImagePath(channelId)
-    const overlayTitle = channel.streamOverlayTitle || channel.user.displayName
+    // Off by default — an artist opts in before any text renders at all,
+    // rather than always getting the display-name fallback whether they
+    // set this up or not (see Channel.streamOverlayShowTitle).
+    const overlayTitle = channel.streamOverlayShowTitle
+      ? channel.streamOverlayTitle || channel.user.displayName
+      : undefined
+    const overlaySubtitle = channel.streamOverlayShowTitle
+      ? (channel.streamOverlaySubtitle ?? undefined)
+      : undefined
     const rtmpBlock = targets
       .map((t) =>
         buildRtmpMirrorOutput(
           t,
           coverPath,
           overlayTitle,
-          channel.streamOverlaySubtitle ?? undefined,
+          overlaySubtitle,
+          channel.streamOverlayTextColor ?? undefined,
         ),
       )
       .join('\n\n')
