@@ -12,6 +12,10 @@ import {
 } from '../../test/helpers.js'
 
 const PREFIX = 'sound-meta-test-'
+// Arbitrary artist-chosen overlay color data, not a design token — the
+// repo's no-raw-hex lint rule targets component styling, not this.
+// eslint-disable-next-line no-restricted-syntax
+const TEST_OVERLAY_COLOR = '#22d3ee'
 
 describe('M22/M24/M25 — sound metadata and slideshow', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -150,6 +154,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(getInitial.statusCode).toBe(200)
     expect(getInitial.json().streamOverlayTitle).toBeNull()
     expect(getInitial.json().streamOverlayShowTitle).toBe(false)
+    expect(getInitial.json().streamOverlayTextColor).toBeNull()
 
     const patch = await app.inject({
       method: 'PATCH',
@@ -159,6 +164,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
         streamOverlayTitle: 'Late Night Sessions',
         streamOverlaySubtitle: 'Every Friday, 8pm CET',
         streamOverlayShowTitle: true,
+        streamOverlayTextColor: TEST_OVERLAY_COLOR,
         streamOverlayCoverUrl: 'https://cdn.example/overlay-cover.jpg',
       },
     })
@@ -166,6 +172,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(patch.json().streamOverlayTitle).toBe('Late Night Sessions')
     expect(patch.json().streamOverlaySubtitle).toBe('Every Friday, 8pm CET')
     expect(patch.json().streamOverlayShowTitle).toBe(true)
+    expect(patch.json().streamOverlayTextColor).toBe(TEST_OVERLAY_COLOR)
     expect(patch.json().streamOverlayCoverUrl).toBe('https://cdn.example/overlay-cover.jpg')
 
     const clear = await app.inject({
@@ -176,6 +183,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
         streamOverlayTitle: '',
         streamOverlaySubtitle: '',
         streamOverlayShowTitle: false,
+        streamOverlayTextColor: '',
         streamOverlayCoverUrl: '',
       },
     })
@@ -183,7 +191,18 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(clear.json().streamOverlayTitle).toBeNull()
     expect(clear.json().streamOverlaySubtitle).toBeNull()
     expect(clear.json().streamOverlayShowTitle).toBe(false)
+    expect(clear.json().streamOverlayTextColor).toBeNull()
     expect(clear.json().streamOverlayCoverUrl).toBeNull()
+  })
+
+  it('rejects a non-hex streamOverlayTextColor', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/stream-overlay',
+      headers: { cookie },
+      payload: { streamOverlayTextColor: 'cyan' },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('rejects a non-URL streamOverlayCoverUrl', async () => {

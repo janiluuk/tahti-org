@@ -16,6 +16,10 @@ describe('escapeLiquidsoapString', () => {
 
 describe('buildRtmpMirrorOutput', () => {
   const coverPath = '/cover-cache/chan-1/cover.jpg'
+  // Arbitrary artist-chosen overlay color data, not a design token — the
+  // repo's no-raw-hex lint rule targets component styling, not this.
+  // eslint-disable-next-line no-restricted-syntax
+  const testColor = '#22d3ee'
 
   it('mixes archive-eligible mirrors onto the full radio source', () => {
     const out = buildRtmpMirrorOutput(
@@ -110,5 +114,42 @@ describe('buildRtmpMirrorOutput', () => {
     expect(out.match(/video\.add_text\(/g)).toHaveLength(2)
     expect(out).toContain('"Every Friday, 8pm CET"')
     expect(out).toContain('size=18')
+  })
+
+  it('uses the artist-chosen color for both title and subtitle when set', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target8', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+      'Every Friday, 8pm CET',
+      testColor,
+    )
+    expect(out).toContain('video.add_text(color=0x22d3ee, size=28')
+    expect(out).toContain('video.add_text(color=0x22d3ee, size=18')
+    expect(out).not.toContain('0xffffff')
+    expect(out).not.toContain('0xcbd5e1')
+  })
+
+  it('falls back to the historical hardcoded colors when no custom color is set', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target9', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+      'Every Friday, 8pm CET',
+    )
+    expect(out).toContain('video.add_text(color=0xffffff, size=28')
+    expect(out).toContain('video.add_text(color=0xcbd5e1, size=18')
+  })
+
+  it('falls back to the historical colors for a malformed color string, never emitting an invalid literal', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target10', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+      undefined,
+      'not-a-color',
+    )
+    expect(out).toContain('video.add_text(color=0xffffff, size=28')
+    expect(out).not.toContain('not-a-color')
   })
 })

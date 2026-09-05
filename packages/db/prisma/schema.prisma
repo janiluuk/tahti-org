@@ -1364,6 +1364,9 @@ model Channel {
   // text is rendered at all (not even the fallback); title/subtitle fields
   // stay stored either way so re-enabling doesn't lose prior input.
   streamOverlayShowTitle    Boolean      @default(false)
+  // Null keeps the historical hardcoded colors (white title, light-slate
+  // subtitle) — set once an artist actually picks a color from the editor.
+  streamOverlayTextColor    String?
   streamOverlayCoverUrl     String?
   streamOverlayBackdropUrl  String?
   streamOverlayVisualPreset VisualPreset @default(MINIMAL)
