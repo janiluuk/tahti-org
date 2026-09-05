@@ -20,11 +20,14 @@ Optional but recommended: also require **Generate OpenAPI spec** if you want Ope
 
 ## Settings checklist
 
-1. **Settings → Branches → Add rule** for `main`
-2. **Require a pull request before merging** (1 approval for production)
-3. **Require status checks to pass** → select **All checks**
-4. **Require branches to be up to date** before merging
-5. **Do not allow bypassing the above settings** (except org admins if needed)
+Configured as ruleset **Main CI gate (PLAT-002)** on `main` (not classic branch protection).
+
+1. **Require a pull request before merging** — still required; pushes to `main` are blocked.
+2. **Required approving reviews: 0** — GitHub does not allow authors to approve their own PRs. This repo is a solo-maintainer project, so reviews are optional; the author can merge after CI.
+3. **Require status checks to pass** → select **All checks**, and require the branch to be up to date.
+4. **Do not allow bypassing** the CI/PR gate (no ruleset bypass actors).
+
+Do not set required reviews to 1 unless a second person with write access is actually reviewing.
 
 ## Release gate
 

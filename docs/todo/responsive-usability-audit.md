@@ -1,4 +1,8 @@
-# Responsive usability audit and mobile simplification worklog (2026-09-01)
+# Responsive usability audit (mobile simplification)
+
+Open implementation worklist from 2026-09-01. Audit only — **no responsive UI
+changes have been made yet.** Shipped session notes (prod preflight, method) are
+in `docs/todo/HISTORY.md`.
 
 ## Scope and method
 

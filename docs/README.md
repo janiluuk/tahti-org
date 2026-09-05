@@ -28,6 +28,6 @@ docs at `https://api.tahti.live/api`.
 
 Dated HTML/PNG mockup packs, `_archive/` design drafts, and point-in-time UX audits
 were deleted so agents stop treating them as current truth. Visual truth is
-**live UI + e2e screenshots + `@tahti/ui`**. Session worklogs are deleted once their
-findings land in `project-roadmap.md`/code — a worklog under `docs/worklogs/` is
-kept only while it still has open follow-up items.
+**live UI + e2e screenshots + `@tahti/ui`**. Finished todos and session worklogs
+append to [`todo/HISTORY.md`](./todo/HISTORY.md) then the source file is deleted —
+`docs/todo/` and `docs/worklogs/` hold **open work only**.

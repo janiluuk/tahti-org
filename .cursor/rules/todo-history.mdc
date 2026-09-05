@@ -1,0 +1,26 @@
+---
+description: Active todos in docs/todo/; shipped work appends to HISTORY.md and is deleted from todo/worklogs.
+alwaysApply: true
+---
+
+# Todo and history hygiene
+
+`docs/todo/` is **open work only**. Finished work belongs in `docs/todo/HISTORY.md`.
+
+## While working
+
+- One file per in-progress task: `docs/todo/<short-name>.md` (plan, status, leftovers).
+- Session notes in `docs/worklogs/` only while that session still has open follow-ups.
+
+## When work ships (merged or landed on main)
+
+1. Append a **compact** dated section to `docs/todo/HISTORY.md` (filename, what shipped, PR if any). Do not dump full transcripts.
+2. Delete the todo file and any matching worklog.
+3. Move leftover open items into `docs/remaining-work.md` or a new slim todo file.
+4. Strip `[x]` / "✅ done" rows from `docs/remaining-work.md`, worklogs, and plan docs. That checklist is open/`[~]` only.
+
+## Before starting new work
+
+Skim `docs/todo/` (not HISTORY). Fold anything already shipped into HISTORY first.
+
+Do not invent a second backlog. Roadmap status stays in `docs/project-roadmap.md`.

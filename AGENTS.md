@@ -20,6 +20,7 @@ linked docs; do not invent product rules that contradict them.
 | UI only via `@tahti/ui`              | [`.cursor/rules/ui-library.mdc`](.cursor/rules/ui-library.mdc)                   |
 | Do not touch `website/` unless asked | [`.cursor/rules/website-off-limits.mdc`](.cursor/rules/website-off-limits.mdc)   |
 | Project map + remaining work         | [`.cursor/rules/project-context.mdc`](.cursor/rules/project-context.mdc)         |
+| Done todos → HISTORY.md              | [`.cursor/rules/todo-history.mdc`](.cursor/rules/todo-history.mdc)               |
 
 ## What this monorepo is
 
@@ -182,6 +183,7 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 | Mission / money / AGPL        | `docs/about.md`, `docs/CONSTITUTION.md`          |
 | Milestone specs               | `docs/AGENT.md`                                  |
 | Incomplete work (all owners)  | `docs/remaining-work.md`                         |
+| Active todos (open only)      | `docs/todo/` — shipped work → `docs/todo/HISTORY.md` |
 | Status matrix                 | `docs/project-roadmap.md`                        |
 | Deferred / efficiency backlog | `docs/future-improvements.md`                    |
 | Streaming scale rules         | `docs/technical/streaming-architecture.md`       |

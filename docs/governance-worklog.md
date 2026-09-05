@@ -1,46 +1,28 @@
-# Governance implementation worklog
+# Governance implementation checklist
 
-This is the implementation checklist for making Tahti’s governance useful to a
-real association. Product behavior must remain advisory until the adopted
-bylaws and legal review authorize a binding electronic voting procedure.
-
-## Delivered
-
-- [x] Members can submit advisory motion drafts for board review.
-- [x] Members can discuss motions before closure.
-- [x] Closed advisory motion results are exposed through public transparency history.
-- [x] Governance navigation links member motions, product feedback, and published results.
-- [x] Persisted meeting/document schema and admin/member API foundation added.
-- [x] Persisted meeting eligibility counts, quorum thresholds, and attendance snapshots.
-- [x] Members can see published meetings/documents in the governance dashboard.
-- [x] Admin AGM page has a governance-records panel for meeting/document metadata.
-- [x] Focused governance journey tests cover voting, discussion, feature requests, reports, and record visibility.
-- [x] Admin can persist AGM/board meetings with type, schedule, notice, location/remote link, agenda, eligibility count, and quorum, and record per-member attendance.
+Open items only. Shipped advisory motions, discussion, transparency history,
+meeting/attendance records, and related tests — see `docs/todo/HISTORY.md`
+(2026-09-05 governance). Product behavior stays advisory until adopted bylaws
+and legal review authorize binding electronic voting.
 
 ## Member journey
 
 - [ ] View association identity, current bylaws, policies, board, auditor, and contacts.
-- [x] Submit a motion draft.
-- [x] Read and post discussion comments.
-- [x] Vote once on an open advisory motion.
 - [ ] Change/retract a vote according to approved voting rules.
-- [x] Submit, vote on, and discuss product feature requests.
 - [ ] Receive motion, meeting, and result notifications.
 - [ ] View complete historical decisions and meeting records.
 - [ ] Request correction of member-register data or governance records.
 
 ## Board and association operations
 
-- [x] Review advisory motions and close voting.
 - [ ] Review, second, schedule, and circulate member motions.
-- [x] Record agenda items, attendance, and quorum. (Chair/secretary role fields still missing.)
+- [ ] Record chair/secretary role fields on meetings (attendance/quorum already persist).
 - [ ] Publish notices and retain delivery evidence.
 - [ ] Capture official meeting votes and decisions.
 - [ ] Upload, approve, redact, sign, and publish minutes.
 - [ ] Maintain versioned bylaws and association documents.
 - [ ] Link decisions to meetings, agenda items, motions, and minutes.
 - [ ] Maintain board roles, terms, elections, conflicts, and recusals.
-- [x] Generate yearly transparency reports.
 - [ ] Approve, publish, correct, and archive yearly reports with filing status.
 
 ## Technical integrity

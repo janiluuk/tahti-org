@@ -1,7 +1,8 @@
 # Project: Tahti ry — nonprofit broadcasting platform
 
 Cursor agents: also read root **`AGENTS.md`** (session map) and
-**`docs/remaining-work.md`** (collective incomplete checklist). Status matrices
+**`docs/remaining-work.md`** (collective incomplete checklist). Active todos live
+in **`docs/todo/`**; shipped work appends to **`docs/todo/HISTORY.md`**. Status matrices
 live in **`docs/project-roadmap.md`**; product surface in **`docs/features.md`**;
 test commands in **`docs/testing.md`**. [Tahti Player](https://github.com/janiluuk/tahti-player)
 beta cutover:
