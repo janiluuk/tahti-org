@@ -149,6 +149,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     })
     expect(getInitial.statusCode).toBe(200)
     expect(getInitial.json().streamOverlayTitle).toBeNull()
+    expect(getInitial.json().streamOverlayShowTitle).toBe(false)
 
     const patch = await app.inject({
       method: 'PATCH',
@@ -157,23 +158,31 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
       payload: {
         streamOverlayTitle: 'Late Night Sessions',
         streamOverlaySubtitle: 'Every Friday, 8pm CET',
+        streamOverlayShowTitle: true,
         streamOverlayCoverUrl: 'https://cdn.example/overlay-cover.jpg',
       },
     })
     expect(patch.statusCode).toBe(200)
     expect(patch.json().streamOverlayTitle).toBe('Late Night Sessions')
     expect(patch.json().streamOverlaySubtitle).toBe('Every Friday, 8pm CET')
+    expect(patch.json().streamOverlayShowTitle).toBe(true)
     expect(patch.json().streamOverlayCoverUrl).toBe('https://cdn.example/overlay-cover.jpg')
 
     const clear = await app.inject({
       method: 'PATCH',
       url: '/api/me/channel/stream-overlay',
       headers: { cookie },
-      payload: { streamOverlayTitle: '', streamOverlaySubtitle: '', streamOverlayCoverUrl: '' },
+      payload: {
+        streamOverlayTitle: '',
+        streamOverlaySubtitle: '',
+        streamOverlayShowTitle: false,
+        streamOverlayCoverUrl: '',
+      },
     })
     expect(clear.statusCode).toBe(200)
     expect(clear.json().streamOverlayTitle).toBeNull()
     expect(clear.json().streamOverlaySubtitle).toBeNull()
+    expect(clear.json().streamOverlayShowTitle).toBe(false)
     expect(clear.json().streamOverlayCoverUrl).toBeNull()
   })
 

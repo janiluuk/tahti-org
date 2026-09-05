@@ -612,6 +612,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
+          streamOverlayShowTitle: true,
           streamOverlayCoverUrl: true,
           streamOverlayBackdropUrl: true,
           streamOverlayVisualPreset: true,
@@ -634,6 +635,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
       const {
         streamOverlayTitle,
         streamOverlaySubtitle,
+        streamOverlayShowTitle,
         streamOverlayCoverUrl,
         streamOverlayBackdropUrl,
         streamOverlayVisualPreset,
@@ -654,6 +656,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
           ...(streamOverlaySubtitle !== undefined
             ? { streamOverlaySubtitle: streamOverlaySubtitle || null }
             : {}),
+          ...(streamOverlayShowTitle !== undefined ? { streamOverlayShowTitle } : {}),
           ...(streamOverlayCoverUrl !== undefined
             ? { streamOverlayCoverUrl: streamOverlayCoverUrl || null }
             : {}),
@@ -665,6 +668,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
+          streamOverlayShowTitle: true,
           streamOverlayCoverUrl: true,
           streamOverlayBackdropUrl: true,
           streamOverlayVisualPreset: true,

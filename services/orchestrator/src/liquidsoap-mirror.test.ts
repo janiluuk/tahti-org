@@ -91,6 +91,15 @@ describe('buildRtmpMirrorOutput', () => {
     expect(out.match(/video\.add_text\(/g)).toHaveLength(1)
   })
 
+  it('omits all add_text calls when no title is given (streamOverlayShowTitle off)', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target7', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+    )
+    expect(out.match(/video\.add_text\(/g)).toBeNull()
+    expect(out).toContain(`video.add_image(file="${coverPath}", width=1280, height=720, blank())`)
+  })
+
   it('bakes an artist-editable subtitle as a second, smaller text layer', () => {
     const out = buildRtmpMirrorOutput(
       { id: 'target6', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },

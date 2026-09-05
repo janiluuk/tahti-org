@@ -57,6 +57,8 @@ export type RtmpTargetTestResult = z.infer<typeof RtmpTargetTestResultSchema>
 export const ChannelStreamOverlayPatchSchema = z.object({
   streamOverlayTitle: z.string().trim().max(80).optional(),
   streamOverlaySubtitle: z.string().trim().max(120).optional(),
+  // Off by default — see the schema.prisma comment on Channel.streamOverlayShowTitle.
+  streamOverlayShowTitle: z.boolean().optional(),
   streamOverlayCoverUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayBackdropUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayVisualPreset: z.enum(VISUAL_PRESETS).optional(),
