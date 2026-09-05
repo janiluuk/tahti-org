@@ -1,7 +1,9 @@
-# Plugin registry extraction — inventory (non-breaking prep)
+# Plugin registry extraction — inventory + interface (non-breaking prep)
 
-**Status:** inventory only. Do **not** move files, change storage keys, alter
-discovery semantics, or change bootstrap order yet.
+**Status:** inventory complete; minimal `PluginRegistryStore` / `PluginRegistryHost`
+interface and adapter plan defined (section 5). Do **not** move files, change
+storage keys, alter discovery semantics, or change bootstrap order until adapter
+contract tests and rollback plan are accepted.
 
 **Repos:**
 
@@ -18,7 +20,7 @@ discovery semantics, or change bootstrap order yet.
 ## Checklist (mirrors `docs/remaining-work.md`)
 
 - [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
-- [ ] Define a minimal registry interface and compatibility adapter around the current implementation.
+- [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [§5](#5-minimal-compatibility-interface-and-adapter-plan)
 - [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior.
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
@@ -268,15 +270,25 @@ not make hydrate block first paint unless a later accepted plan says so.
 
 ---
 
-## 5. Suggested minimal compatibility interface (sketch only)
+## 5. Minimal compatibility interface and adapter plan
 
-Wrap existing functions; do not change storage. Adapter implements this and
-delegates to today’s modules.
+**Target repo (implementation):** `../tahti-nuclear` →
+`packages/player/src/services/plugins/`.
+
+Wrap existing functions; do **not** change LazyStore keys, file name
+(`plugins.json`), key prefix (`plugins.`), or managed path layout. The adapter
+is a thin boundary so callers stop importing `pluginRegistry.ts` directly.
+
+### 5.1 Contract module (new file, types only)
+
+Add `packages/player/src/services/plugins/pluginRegistryContract.ts` — shared
+types + interfaces, no Tauri imports:
 
 ```ts
-type PluginInstallationMethod = 'dev' | 'store';
+/** Mirrors exports from pluginRegistry.ts today — keep in sync until extraction. */
+export type PluginInstallationMethod = 'dev' | 'store';
 
-type PluginRegistryEntry = {
+export type PluginRegistryEntry = {
   id: string;
   version: string;
   path: string;
@@ -288,41 +300,150 @@ type PluginRegistryEntry = {
   warnings?: string[];
 };
 
-/** Persistence + query — maps 1:1 to pluginRegistry.ts today */
-type PluginRegistryStore = {
+/** Storage constants — frozen for adapter compatibility. */
+export const PLUGIN_REGISTRY_FILE = 'plugins.json' as const;
+export const PLUGIN_REGISTRY_KEY_PREFIX = 'plugins.' as const;
+
+/**
+ * Persistence + query — maps 1:1 to pluginRegistry.ts free functions.
+ * Only implementation of this interface may touch LazyStore / plugins.json.
+ */
+export interface PluginRegistryStore {
   list(): Promise<PluginRegistryEntry[]>;
   get(id: string): Promise<PluginRegistryEntry | undefined>;
   upsert(entry: PluginRegistryEntry): Promise<void>;
   setEnabled(id: string, enabled: boolean): Promise<void>;
   setWarnings(id: string, warnings: string[]): Promise<void>;
   remove(id: string): Promise<void>;
+}
+
+/** Marketplace row subset needed for store install (from pluginMarketplaceApi). */
+export type MarketplacePluginRelease = {
+  id: string;
+  version: string;
+  downloadUrl: string;
+  repo?: string;
 };
 
 /**
- * Host-facing lifecycle used by UI / bootstrap / auto-update.
- * Today implemented by usePluginStore + hydratePluginsFromRegistry +
- * checkAndUpdatePlugins + useInstallPlugin — not by pluginRegistry alone.
+ * Host-facing lifecycle — UI, bootstrap, auto-update.
+ * Today spread across pluginStore, pluginBootstrap, pluginAutoUpdate,
+ * useInstallPlugin; not owned by pluginRegistry.ts alone.
  */
-type PluginRegistryHost = {
+export interface PluginRegistryHost {
   hydrateFromRegistry(): Promise<void>;
-  installFromPath(path: string): Promise<void>; // loadPluginFromPath
-  installFromMarketplace(plugin: { id: string; repo: string /* … */ }): Promise<void>;
+  installFromPath(path: string): Promise<void>;
+  installFromMarketplace(plugin: MarketplacePluginRelease): Promise<void>;
   enable(id: string): Promise<void>;
   disable(id: string): Promise<void>;
   reloadDev(id: string): Promise<void>;
   remove(id: string): Promise<void>;
   checkAndUpdateStorePlugins(): Promise<void>;
-};
+}
 ```
 
-**Compatibility adapter plan (next checklist item):**
+Re-export types from `pluginRegistry.ts` during transition (deprecated
+re-exports) so existing imports keep compiling until callers migrate.
 
-- Export `PluginRegistryStore` as the only module that touches LazyStore /
-  `plugins.json` keys.
-- Keep `usePluginStore` as the host implementation of `PluginRegistryHost`
-  (or a thin façade) until extraction.
-- Do **not** change key prefix `plugins.`, file name `plugins.json`, or
-  managed path layout in the adapter step.
+### 5.2 LazyStore adapter (new file, delegates to current impl)
+
+Add `packages/player/src/services/plugins/pluginRegistryAdapter.ts`:
+
+```ts
+import type { PluginRegistryStore } from './pluginRegistryContract';
+import {
+  getRegistryEntry,
+  listRegistryEntries,
+  removeRegistryEntry,
+  setRegistryEntryEnabled,
+  setRegistryEntryWarnings,
+  upsertRegistryEntry,
+} from './pluginRegistry';
+
+/** Default runtime adapter — wraps today's pluginRegistry.ts without changing storage. */
+export const createLazyStorePluginRegistry = (): PluginRegistryStore => ({
+  list: () => listRegistryEntries(),
+  get: (id) => getRegistryEntry(id),
+  upsert: (entry) => upsertRegistryEntry(entry),
+  setEnabled: (id, enabled) => setRegistryEntryEnabled(id, enabled),
+  setWarnings: (id, warnings) => setRegistryEntryWarnings(id, warnings),
+  remove: (id) => removeRegistryEntry(id),
+});
+
+/** Process-wide singleton for player core (same LazyStore instance as today). */
+export const pluginRegistryStore: PluginRegistryStore =
+  createLazyStorePluginRegistry();
+```
+
+`pluginRegistry.ts` stays the LazyStore owner; the adapter is the **only**
+supported import path for new code. After extraction, swap
+`createLazyStorePluginRegistry` for a remote or package-backed impl without
+touching callers.
+
+### 5.3 Function mapping (today → contract)
+
+| `pluginRegistry.ts` export | `PluginRegistryStore` method | Notes |
+| -------------------------- | ---------------------------- | ----- |
+| `listRegistryEntries()` | `list()` | No sort in store layer; bootstrap sorts by `installedAt` |
+| `getRegistryEntry(id)` | `get(id)` | Returns `undefined` when missing |
+| `upsertRegistryEntry(entry)` | `upsert(entry)` | Always calls `store.save()` |
+| `setRegistryEntryEnabled(id, enabled)` | `setEnabled(id, enabled)` | No-op + warn log if entry missing |
+| `setRegistryEntryWarnings(id, warnings)` | `setWarnings(id, warnings)` | Empty array → omit `warnings` field |
+| `removeRegistryEntry(id)` | `remove(id)` | Deletes `plugins.{id}` key |
+
+| Current module / symbol | `PluginRegistryHost` method | Notes |
+| ----------------------- | --------------------------- | ----- |
+| `hydratePluginsFromRegistry()` in `pluginBootstrap.ts` | `hydrateFromRegistry()` | Preserves bootstrap order (§4) |
+| `usePluginStore.loadPluginFromPath` | `installFromPath()` | Dev folder + managed copy |
+| `useInstallPlugin` mutation | `installFromMarketplace()` | Catalog download → upsert → load → enable |
+| `usePluginStore.enablePlugin` | `enable()` | Calls `onEnable`, then `setEnabled` |
+| `usePluginStore.disablePlugin` | `disable()` | Calls `onDisable`, then `setEnabled` |
+| `usePluginStore.reloadPlugin` | `reloadDev()` | Dev entries only (`originalPath`) |
+| `usePluginStore.removePlugin` | `remove()` | Unload + managed dir + registry key |
+| `checkAndUpdatePlugins()` in `pluginAutoUpdate.ts` | `checkAndUpdateStorePlugins()` | Uses `list()` + marketplace catalog |
+
+### 5.4 Caller migration (tahti-nuclear, incremental)
+
+Migrate imports **one PR at a time**; behavior must stay identical.
+
+| File | Today | After adapter step |
+| ---- | ----- | ------------------ |
+| `pluginBootstrap.ts` | `listRegistryEntries`, `getRegistryEntry`, `setRegistryEntryWarnings` | `pluginRegistryStore.list/get/setWarnings` |
+| `pluginStore.tsx` | `get/upsert/setEnabled/removeRegistryEntry` | `pluginRegistryStore.*` |
+| `pluginAutoUpdate.ts` | `listRegistryEntries` | `pluginRegistryStore.list` |
+| `useInstallPlugin.ts` | `upsertRegistryEntry` | `pluginRegistryStore.upsert` |
+| `test/utils/seedPlugins.ts` | `upsertRegistryEntry` | `pluginRegistryStore.upsert` |
+| Tests importing `getRegistryEntry` directly | direct import | `pluginRegistryStore.get` |
+
+**Do not migrate yet:** `PluginLoader`, `pluginDir`, `pluginDownloader`,
+`pluginMarketplaceApi` — they do not touch `plugins.json` keys.
+
+Optional follow-up (not blocking interface sign-off): thin
+`pluginRegistryHost.ts` façade that re-exports bootstrap + store methods as
+`PluginRegistryHost` for tests and future package extraction.
+
+### 5.5 Rollback plan
+
+1. **Adapter-only PR** — no storage changes; rollback = revert import paths to
+   `pluginRegistry.ts` (adapter file can remain unused).
+2. **Singleton** — keep `pluginRegistryStore` as the only exported instance;
+   no dependency injection until contract tests pass (avoids half-migrated
+   graphs).
+3. **Feature flag (optional)** — env `TAHTI_PLUGIN_REGISTRY_ADAPTER=0` could
+   re-export legacy functions from adapter module; only add if a staged rollout
+   is needed (default on).
+4. **Extraction gate** — do not move LazyStore to another repo/package until
+   §6 contract tests run against `pluginRegistryStore` and pass on CI; rollback
+   then means pointing `createLazyStorePluginRegistry` back at in-repo
+   `pluginRegistry.ts`.
+
+### 5.6 Invariants (must not change in adapter PRs)
+
+- File: AppData `plugins.json` via `@tauri-apps/plugin-store` `LazyStore`.
+- Keys: `plugins.{id}` only (`PREFIX = 'plugins.'`).
+- Managed installs: `{appDataDir}/plugins/{id}/{version}/`.
+- Bootstrap order: §4 unchanged.
+- Marketplace catalog remains separate (`tahti-registry` remote JSON).
 
 ---
 
