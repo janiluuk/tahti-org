@@ -4,7 +4,7 @@ Single index of items still marked **open** (`[ ]`) or **partial** (`[~]`) acros
 the docs package. Status detail and owners live in the linked sources; update
 those sources when closing work, then refresh this file.
 
-**Last compiled:** 2026-08-25 (from `project-roadmap.md`, `future-improvements.md`).
+**Last compiled:** 2026-09-05 (from `project-roadmap.md`, `future-improvements.md`, archived session leftovers).
 
 ---
 
@@ -14,6 +14,9 @@ those sources when closing work, then refresh this file.
 | ----- | ---------------------------------------------- |
 | `[ ]` | Not started / blocked on org or ops            |
 | `[~]` | Partially done — remaining notes in source row |
+
+When an item ships, append it to `docs/todo/HISTORY.md` and **remove the row
+here**. Do not leave `[x]` / "✅ done" in this file.
 
 Engineering agents: prefer **Dev / P0–P2** sections. Board/Director items are
 listed for completeness but are not coding tasks.
@@ -25,7 +28,6 @@ listed for completeness but are not coding tasks.
 | ID / item                                                                                                              | Status  | Owner       | Source                           |
 | ---------------------------------------------------------------------------------------------------------------------- | :-----: | ----------- | -------------------------------- |
 | **STREAM-011 B** — live/24-7 multi-bitrate HLS (lossless or high-bitrate ABR); spike Liquidsoap fMP4 + master playlist |  `[ ]`  | Dev         | `project-roadmap.md` §STREAM-011 |
-| **STREAM-011 A** — on-demand prefer FLAC                                                                               | ✅ done | —           | `archivePlaybackKey` + tests     |
 | **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection                                                   |  `[~]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
 | **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                         |  `[~]`  | Dev         | roadmap PLAT-053                 |
 | **M11** — live Upptime fork deploy                                                                                     |  `[~]`  | Ops         | roadmap M11                      |
@@ -33,7 +35,6 @@ listed for completeness but are not coding tasks.
 | MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test        |  `[ ]`  | Dev         | roadmap Phase 3 test matrix      |
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                        |  `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                |  `[~]`  | Dev         | future-improvements              |
-| Playwright smoke in CI against Docker stack (nightly)                                                                  |  `[x]`  | Dev         | future-improvements §Testing     |
 | `user-journeys-e2e` required in branch protection                                                                      |  `[ ]`  | Dev         | future-improvements              |
 
 ---
@@ -58,10 +59,6 @@ adopted bylaws and legal review.
 
 | ID / item                                                                                              | Status | Owner       | Depends                 |
 | ------------------------------------------------------------------------------------------------------ | :----: | ----------- | ----------------------- |
-| Members can submit formal motion drafts for board review                                               | `[x]`  | Dev         | member auth             |
-| Closed advisory-motion results are available through public history API                                | `[x]`  | Dev         | transparency API        |
-| Persist meeting metadata, eligibility counts, quorum thresholds, and attendance snapshots              | `[x]`  | Dev         | meeting records         |
-| Persist AGM and board meetings with agenda, notice, attendance, and quorum                             | `[x]`  | Dev         | meeting records         |
 | Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[ ]`  | Dev / Board | meeting model           |
 | Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[ ]`  | Dev / Legal | bylaws                  |
 | Signed minutes upload, approval, redaction, publication, and immutable history                         | `[ ]`  | Dev / Board | document model          |
@@ -75,7 +72,6 @@ adopted bylaws and legal review.
 Additional governance gaps from the audit:
 
 - [ ] Persist official member eligibility periods and privacy-scoped register views.
-- [x] Add AGM/board attendance and quorum data.
 - [ ] Add AGM/board chair, secretary, and signed approval data.
 - [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
@@ -103,7 +99,6 @@ as part of this preparation.
 | ID           | Item                                               | Status | P   |
 | ------------ | -------------------------------------------------- | :----: | --- |
 | **PLAT-081** | Cloud import abstraction (Dropbox/OneDrive/WebDAV) | `[ ]`  | P3  |
-| **PLAT-082** | Google Drive import audit-log entry per job        | `[x]`  | P2  |
 | **PLAT-053** | Radio Mixcloud Live (see above)                    | `[~]`  | P2  |
 
 Most PLAT-001–080 / SEC / UX / PERF items are **done** — see roadmap tables.
@@ -153,6 +148,33 @@ Open / partial highlights:
 Recruit anchors, office hours, press, AGM, first grant distribution — all `[ ]`
 (Director/Board). Handover tracks (infra/support/treasurer), legal asset
 transfer, governance rhythms, post-handover cadences — see roadmap Phases 8–10.
+
+---
+
+## Session leftovers (still open)
+
+Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
+
+| Item | Notes |
+| ---- | ----- |
+| Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
+| Channel Designer block system | Logo + addon blocks: `docs/todo/channel-designer-blocks.md` |
+| Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |
+| Client `NEXT_PUBLIC_API_*` env unification | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL` |
+| Deduplicate chat panel logic | `chat-panel.tsx` / `fan-chat-panel.tsx` |
+| Collapse overlapping e2e seed scripts | Four `apps/api/scripts/seed-e2e-*` scripts |
+| hearthis.at real-audio import | Self-owned tracks/sets only; embed-only was a ToS/rights choice |
+| Member badge on public artist profiles | Not started |
+| Fallback cover for releases without artwork | Gradient placeholder exists; no approved fallback asset |
+| Recurrence duration unused | `recurrenceDurationMin` stored, not used for overlap/end time |
+| Orphan public routes | `/status` unlinked; `/transparency/grants/[year]` and `/venues/[slug]` 404 |
+| Jam SSE multi-instance | In-process fan-out only; needs Redis pub/sub before >1 API replica |
+| Discord bot → Tahti Radio | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio` |
+| Revelator export webhook sync | Webhook accepts + logs; body → release status not wired |
+| Per-DSP export submit | hearthis-export and storefront stubs; product API TBD |
+| `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live |
+
+Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 
 ---
 
