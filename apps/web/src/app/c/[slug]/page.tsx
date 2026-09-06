@@ -29,6 +29,7 @@ import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
+  PublicChannelBlock,
   RssFeedItem,
   TracklistEntry,
 } from '@tahti/shared'
@@ -56,6 +57,7 @@ import { FollowButton } from '@/components/follow-button'
 import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
 import { PublicChannelTabs } from './_public-tabs'
+import { ChannelBlocksView } from '@/components/channel-blocks-view'
 import { ManagePanel, type ManageStats } from './_manage-panel'
 import { TracksTab, type TrackTabItem } from '@/app/u/[username]/_tracks-tab'
 import { cookies } from 'next/headers'
@@ -187,6 +189,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     profileRes,
     tiersRes,
     newsRes,
+    blocksRes,
     user,
   ] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
@@ -203,6 +206,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/news`, {
       next: { revalidate: 60 },
     }),
+    fetch(`${apiUrl}/api/v1/channels/${slug}/blocks`, { cache: 'no-store' }),
     getSessionUser(),
   ])
   const newsItems: RssFeedItem[] = newsRes.ok
@@ -266,6 +270,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   }> = postsRes.ok ? await postsRes.json() : []
   const embeds: Array<{ id: string; url: string; title: string | null }> = embedsRes.ok
     ? await embedsRes.json()
+    : []
+  const channelBlocks: PublicChannelBlock[] = blocksRes.ok
+    ? ((await blocksRes.json()) as { blocks: PublicChannelBlock[] }).blocks
     : []
 
   const isOwnerOrAdmin = !!user && (user.username === channel.user.username || user.isBoard)
@@ -491,6 +498,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   )}
                 </header>
               </div>
+
+              <ChannelBlocksView blocks={channelBlocks} />
 
               {/* Ambient decoration (text layer + slideshow/gallery) — the
                   artist's own configured backdrop, not tied to whether

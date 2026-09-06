@@ -13982,6 +13982,68 @@
   font-size: var(--text-xs);
 }
 
+[data-tahti-ui='studio'] .channel-blocks-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .channel-blocks-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .channel-blocks-panel__row .ui-field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .channel-blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .channel-blocks-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .channel-blocks-row.is-dragging {
+  opacity: 0.6;
+}
+
+[data-tahti-ui='studio'] .channel-blocks-row__handle {
+  flex-shrink: 0;
+  cursor: grab;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+[data-tahti-ui='studio'] .channel-blocks-row__body {
+  flex: 1 1 8rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .channel-blocks-row__thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 @media (max-width: 640px) {
   [data-tahti-ui='studio'] .artist-info-summary {
     grid-template-columns: auto minmax(0, 1fr);
