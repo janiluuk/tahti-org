@@ -97,6 +97,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
           socialLinks: true,
           tier: true,
           showJoinDate: true,
+          isMember: true,
           chatEnabled: true,
           showPageHero: true,
           createdAt: true,

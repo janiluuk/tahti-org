@@ -39,18 +39,40 @@ describe('GET /api/v1/u/:username/profile', () => {
     await app.close()
   })
 
-  it('returns countryCode and pronouns on the public artist object', async () => {
+  it('returns countryCode, pronouns, and isMember on the public artist object', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/v1/u/public-profile-artist/profile',
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as {
-      artist: { countryCode?: string | null; pronouns?: string | null; fullBio?: string | null }
+      artist: {
+        countryCode?: string | null
+        pronouns?: string | null
+        fullBio?: string | null
+        isMember?: boolean
+      }
     }
     expect(body.artist.countryCode).toBe('FI')
     expect(body.artist.pronouns).toBe('she/her')
     expect(body.artist.fullBio).toBe('A much longer history of how this project got started.')
+    expect(body.artist.isMember).toBe(false)
+  })
+
+  it('sets isMember true when the artist is a Tahti ry member', async () => {
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}member@example.com`,
+      username: 'public-profile-member',
+      isMember: true,
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-member/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { artist: { isMember?: boolean; username: string } }
+    expect(body.artist.username).toBe(member.username)
+    expect(body.artist.isMember).toBe(true)
   })
 
   it('includes collection style so the profile page can group DJ mixes/playlists/collections', async () => {
