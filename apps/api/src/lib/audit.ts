@@ -1,64 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import type { AuditAction, PrismaClient } from '@tahti/db'
+import {
+  isSecretBallotAuditAction,
+  redactSecretBallotAuditMeta,
+  topicForAuditAction,
+} from '@tahti/shared'
 
 interface AuditParams {
-  action:
-    | 'CHAT_BAN'
-    | 'CHAT_UNBAN'
-    | 'CHAT_MESSAGE_DELETE'
-    | 'CHAT_MESSAGE_SEND'
-    | 'STREAM_KEY_ROTATE'
-    | 'RTMP_TARGET_ADD'
-    | 'RTMP_TARGET_DELETE'
-    | 'LEDGER_ENTRY_CREATE'
-    | 'MEMBER_SUSPEND'
-    | 'MEMBER_REINSTATE'
-    | 'MOTION_CREATE'
-    | 'MOTION_OPEN'
-    | 'MOTION_CLOSE'
-    | 'MOTION_COMMENT_CREATE'
-    | 'VOTE_CAST'
-    | 'GRANT_RUN'
-    | 'STRIPE_WEBHOOK_ERROR'
-    | 'DOWNLOAD_FRAUD_ALERT'
-    | 'MEMBERSHIP_RENEWAL_REMINDER'
-    | 'MEMBERSHIP_LAPSED'
-    | 'USER_SUSPEND'
-    | 'USER_UNSUSPEND'
-    | 'BOARD_ROLE_CHANGE'
-    | 'USER_TIER_CHANGE'
-    | 'ENGAGEMENT_ADJUSTMENT'
-    | 'STREAM_FORCE_OFFLINE'
-    | 'STREAM_RESTART'
-    | 'ACCOUNT_DELETE'
-    | 'SOUND_EDIT_RENDER'
-    | 'SOUND_EDIT_BOUNCE'
-    | 'SOUND_EDIT_PUBLISH'
-    | 'FEATURE_REQUEST_CREATE'
-    | 'FEATURE_REQUEST_VOTE'
-    | 'FEATURE_REQUEST_UNVOTE'
-    | 'FEATURE_REQUEST_COMMENT_CREATE'
-    | 'FEATURE_REQUEST_STATUS_UPDATE'
-    | 'FEATURE_REQUEST_QUARTERLY_REPORT'
-    | 'SOUND_METADATA_ADMIN_EDIT'
-    | 'API_TOKEN_CREATE'
-    | 'API_TOKEN_REVOKE'
-    | 'USER_LOGIN'
-    | 'USER_REGISTER'
-    | 'CONTENT_UPLOAD'
-    | 'RELEASE_PUBLISH'
-    | 'SOUND_ITEM_LIKE'
-    | 'ARTIST_FOLLOW'
-    | 'FAN_SUBSCRIPTION_CREATE'
-    | 'RADIO_SLOT_BOOKING_CREATE'
-    | 'RADIO_SLOT_BOOKING_UPDATE'
-    | 'RADIO_SLOT_BOOKING_CANCEL'
-    | 'CHANNEL_GO_LIVE'
+  action: AuditAction
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>
+}
+
+export function presentAuditLogRow(
+  row: {
+    id: { toString(): string }
+    action: string
+    actorId: string
+    targetId: string | null
+    meta: unknown
+    createdAt: Date
+  },
+  actor?: { displayName: string | null; username: string | null } | null,
+) {
+  const secret = isSecretBallotAuditAction(row.action)
+  const rawMeta =
+    row.meta && typeof row.meta === 'object' && !Array.isArray(row.meta)
+      ? (row.meta as Record<string, unknown>)
+      : {}
+  return {
+    id: row.id.toString(),
+    action: row.action,
+    actorId: secret ? 'hidden' : row.actorId,
+    targetId: row.targetId,
+    meta: redactSecretBallotAuditMeta(row.action, rawMeta),
+    createdAt: row.createdAt,
+    actorDisplayName: secret ? null : (actor?.displayName ?? null),
+    actorUsername: secret ? null : (actor?.username ?? null),
+    topic: topicForAuditAction(row.action),
+  }
 }
 
 export async function auditLog(prisma: PrismaClient, params: AuditParams): Promise<void> {

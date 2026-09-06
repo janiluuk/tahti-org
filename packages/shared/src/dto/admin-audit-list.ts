@@ -2,6 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import {
+  GovernanceAuditScopeSchema,
+  GovernanceAuditTopicIdSchema,
+} from './governance-audit-topics.js'
 
 export const AdminAuditListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -11,6 +15,8 @@ export const AdminAuditListQuerySchema = z.object({
   targetId: z.string().trim().max(64).optional(),
   since: z.string().datetime().optional(),
   until: z.string().datetime().optional(),
+  topic: GovernanceAuditTopicIdSchema.optional(),
+  scope: GovernanceAuditScopeSchema,
 })
 
 export const AdminAuditListItemSchema = z.object({
@@ -22,6 +28,7 @@ export const AdminAuditListItemSchema = z.object({
   createdAt: z.coerce.date(),
   actorDisplayName: z.string().nullable(),
   actorUsername: z.string().nullable(),
+  topic: z.string().nullable(),
 })
 
 export const AdminAuditListResponseSchema = z.object({

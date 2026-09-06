@@ -120,7 +120,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Tahti Selects:** Generate a ten-track rotation from top-played eligible tracks, add or replace the current list, reorder/remove entries, and auto-fill an empty rotation before stream start.
 - **Radio operations:** Radio stream status, submissions, scheduling, and operational controls.
 - **Financial transparency:** Ledger, fan-subscription operations, grants, payouts, public transparency summaries, and immutable correction entries.
-- **Association governance:** Member register, AGM/board meetings with chair/secretary and minutes-signature fields, motions, resolutions, voting, audit trail, and public governance documents.
+- **Association governance:** Member register, AGM/board meetings with chair/secretary and minutes-signature fields, motions, resolutions, voting, a board governance audit log (finance, subscriptions, membership, decisions, meetings, radio bookings) on the shared LogViewer, and public governance documents.
 
 ## Platform and integrations
 
