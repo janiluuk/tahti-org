@@ -4,10 +4,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from '@tahti/shared'
+import type { ChannelCard } from '@tahti/shared'
 import { ListenChannels } from './_listen-channels'
-import { ArtistDirectory } from './_artist-directory'
-import { SelectsGallery } from './_selects-gallery'
+import { LazyArtistDirectory, LazySelectsGallery } from './_lazy-discover-panels'
 import { TopListsTab } from './_top-lists-tab'
 
 type Tab = 'live' | 'selects' | 'artists' | 'top-lists'
@@ -16,16 +15,10 @@ export function DiscoverTabs({
   live,
   replaying,
   listenerCounts,
-  directory,
-  gallery,
-  galleryRanks,
 }: {
   live: ChannelCard[]
   replaying: ChannelCard[]
   listenerCounts: Record<string, number>
-  directory: ChannelDirectoryEntry[]
-  gallery: TahtiSelectsGalleryItem[]
-  galleryRanks: Record<string, number>
 }) {
   const [tab, setTab] = useState<Tab>('live')
   // Only active (live/replaying) channels appear here — a channel that isn't
@@ -107,7 +100,7 @@ export function DiscoverTabs({
           panelRefs.current.selects = el
         }}
       >
-        {tab === 'selects' && <SelectsGallery items={gallery} ranks={galleryRanks} />}
+        {tab === 'selects' && <LazySelectsGallery />}
       </div>
 
       <div
@@ -115,7 +108,7 @@ export function DiscoverTabs({
           panelRefs.current.artists = el
         }}
       >
-        {tab === 'artists' && <ArtistDirectory items={directory} />}
+        {tab === 'artists' && <LazyArtistDirectory />}
       </div>
 
       <div

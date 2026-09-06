@@ -156,7 +156,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item | Notes |
 | ---- | ----- |
-| Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
+| Mobile UX audit (MOB-01–MOB-10) | In progress: `docs/todo/responsive-usability-audit.md` (MOB-01/03/07/08 started, PR #446) |
 | Release smart-link / RSS stream URLs | `GET /api/v1/r/:slug` ReleaseTracks without a linked Sound, and collection/channel RSS enclosures, still presign without `Sound.accessMode` |
 | Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |
 | Client `NEXT_PUBLIC_API_*` env unification | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL` |

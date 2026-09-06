@@ -191,5 +191,5 @@ Shipped on main: Channel Designer logo/addon blocks ([#445](https://github.com/j
 
 ### 2026-09-06 — restore-download-purchase-gate.md
 
-Download gate was already restored. Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, and embed play. Channel-item cache no longer stores URLs. Leftover: release smart-link / RSS enclosures for files without a linked `Sound.accessMode`.
+Download gate restored (`ca7ee137`). Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, and embed play. Channel-item cache no longer stores URLs. Leftover: release smart-link / RSS enclosures for files without a linked `Sound.accessMode`.
 

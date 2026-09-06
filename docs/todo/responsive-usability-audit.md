@@ -1,8 +1,23 @@
 # Responsive usability audit (mobile simplification)
 
-Open implementation worklist from 2026-09-01. Audit only — **no responsive UI
-changes have been made yet.** Shipped session notes (prod preflight, method) are
-in `docs/todo/HISTORY.md`.
+Open implementation worklist from 2026-09-01. **Partial implementation started
+2026-09-06** on `cursor/responsive-mobile-audit-5cae` (MOB-01 remaining, MOB-03,
+MOB-07, MOB-08). Remaining items below stay open.
+
+## Implementation status (2026-09-06)
+
+- **[x] MOB-07** — `--mini-player-h` / `--fixed-stack-bottom` tokens; body padding
+  and mini-player safe-area; studio `.db-main` / more-sheet / pro-editor use the
+  stack; `viewport-fit: cover`.
+- **[~] MOB-01** — Live is the default tab; For you is session-gated and collapsed
+  on ≤640px (children mount on open); directory and Selects gallery lazy-load
+  when those tabs open. Directory API is still `take: 500` (no server filter).
+- **[~] MOB-03** — Radio defaults to What’s next; track history + recently-on-air
+  sit in History; channel row peeks 3 cards with See all.
+- **[~] MOB-08** — Channel/radio chat is a mobile bottom sheet with a Chat peek
+  bar (Escape / backdrop dismiss). Identity → player → tabs order unchanged;
+  links/archive metadata not yet collapsed into About.
+- **[ ] MOB-02, MOB-04, MOB-05, MOB-06, MOB-09, MOB-10**
 
 ## Scope and method
 
@@ -12,8 +27,8 @@ artist/channel, player, artist studio, settings, and admin surfaces for
 content density, horizontal overflow, fixed-element collisions, touch targets,
 and places where desktop complexity should be progressively disclosed.
 
-This is an audit and implementation worklist; no responsive UI changes were
-made in this pass.
+This was originally an audit-only pass; implementation of MOB-01/03/07/08 started
+2026-09-06 (see status above).
 
 ## Production preflight
 
