@@ -8,10 +8,35 @@ import {
   AdminAuditListResponseSchema,
   AuditExportQuerySchema,
   CsvExportBodySchema,
+  actionsForGovernanceAuditTopic,
   openApiResponse,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
+import { presentAuditLogRow } from '../../lib/audit.js'
+
+function auditActionWhere(
+  scope: 'governance' | 'all',
+  topic: string | undefined,
+  action: string | undefined,
+): { error: string } | { where: Prisma.AuditLogWhereInput } {
+  if (action) {
+    if (scope !== 'all') {
+      const allowed = actionsForGovernanceAuditTopic(topic)
+      if (!allowed) return { error: 'Unknown audit topic' }
+      if (!allowed.includes(action)) {
+        return { error: 'Action is not a governance audit action' }
+      }
+    }
+    return { where: { action: action as AuditAction } }
+  }
+  if (scope === 'all' && !topic) {
+    return { where: {} }
+  }
+  const actions = actionsForGovernanceAuditTopic(topic)
+  if (!actions) return { error: 'Unknown audit topic' }
+  return { where: { action: { in: [...actions] as AuditAction[] } } }
+}
 
 // M11: board/treasurer audit log export for compliance review.
 const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
@@ -21,7 +46,7 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'M21-G: paginated audit log for admin viewer',
+        description: 'Paginated governance audit log for the board viewer',
         response: openApiResponse(AdminAuditListResponseSchema, 'AdminAuditListResponse'),
       },
     },
@@ -32,10 +57,13 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
           error: parsed.error.issues[0]?.message ?? 'Invalid query',
         })
       }
-      const { page, limit, action, actorId, targetId, since, until } = parsed.data
+      const { page, limit, action, actorId, targetId, since, until, topic, scope } = parsed.data
+      const actionFilter = auditActionWhere(scope, topic, action)
+      if ('error' in actionFilter) {
+        return reply.status(400).send({ error: actionFilter.error })
+      }
 
-      const where: Prisma.AuditLogWhereInput = {}
-      if (action) where.action = action as AuditAction
+      const where: Prisma.AuditLogWhereInput = { ...actionFilter.where }
       if (actorId) where.actorId = actorId
       if (targetId) where.targetId = targetId
       if (since || until) {
@@ -68,19 +96,7 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
         page,
         limit,
         total,
-        items: rows.map((r) => {
-          const actor = actorMap.get(r.actorId)
-          return {
-            id: r.id.toString(),
-            action: r.action,
-            actorId: r.actorId,
-            targetId: r.targetId,
-            meta: (r.meta ?? {}) as Record<string, unknown>,
-            createdAt: r.createdAt,
-            actorDisplayName: actor?.displayName ?? null,
-            actorUsername: actor?.username ?? null,
-          }
-        }),
+        items: rows.map((r) => presentAuditLogRow(r, actorMap.get(r.actorId))),
       })
     },
   )
@@ -101,28 +117,39 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
           error: parsed.error.issues[0]?.message ?? 'Invalid query',
         })
       }
-      const { since, until } = parsed.data
+      const { since, until, topic, scope } = parsed.data
       const from = since ? new Date(since) : new Date(Date.now() - 90 * 86400_000)
       const to = until ? new Date(until) : new Date()
+      const actionFilter = auditActionWhere(scope, topic, undefined)
+      if ('error' in actionFilter) {
+        return reply.status(400).send({ error: actionFilter.error })
+      }
 
       const rows = await fastify.prisma.auditLog.findMany({
-        where: { createdAt: { gte: from, lte: to } },
+        where: {
+          ...actionFilter.where,
+          createdAt: { gte: from, lte: to },
+        },
         orderBy: { createdAt: 'asc' },
         take: 50_000,
       })
 
       return sendCsv(
         reply,
-        'tahti-audit-log.csv',
-        ['id', 'createdAt', 'action', 'actorId', 'targetId', 'meta'],
-        rows.map((r) => [
-          r.id.toString(),
-          r.createdAt.toISOString(),
-          r.action,
-          r.actorId,
-          r.targetId,
-          JSON.stringify(r.meta ?? {}),
-        ]),
+        'tahti-governance-audit.csv',
+        ['id', 'createdAt', 'topic', 'action', 'actorId', 'targetId', 'meta'],
+        rows.map((r) => {
+          const presented = presentAuditLogRow(r)
+          return [
+            presented.id,
+            presented.createdAt.toISOString(),
+            presented.topic ?? '',
+            presented.action,
+            presented.actorId,
+            presented.targetId,
+            JSON.stringify(presented.meta),
+          ]
+        }),
       )
     },
   )

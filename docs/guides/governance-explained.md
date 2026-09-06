@@ -138,8 +138,12 @@ list in [`governance-worklog.md`](../governance-worklog.md).
 | Motions, votes, discussion | `apps/api/src/routes/governance/index.ts` | `Motion`, `Vote`, `MotionComment` (`packages/db/prisma/schema.prisma`) | `apps/web/src/app/governance/motion-card.tsx` |
 | Feature-request topics | `apps/api/src/routes/governance/feature-requests.ts` | `FeatureRequest*` | `apps/web/src/app/governance/feature-requests/` |
 | Meetings, attendance, documents | `apps/api/src/routes/admin/governance-records.ts` | `GovernanceMeeting`, `GovernanceAttendance`, `GovernanceDocument` | `apps/web/src/app/admin/agm/governance-records-panel.tsx` |
-| Board resolutions, audit, annual report | `apps/api/src/routes/admin/governance*.ts` | `BoardResolution`, `AuditLog` | `apps/web/src/app/admin/governance/*` |
+| Board resolutions, audit, annual report | `apps/api/src/routes/admin/governance*.ts`, `GET /api/admin/audit` | `BoardResolution`, `AuditLog` | `/admin/governance/audit` (`LogViewer` from `@tahti/ui`) |
 
 Bulk discussion-thread lookup (`GET /api/v1/governance/motions/comments?ids=…`)
 exists specifically so the list pages above don't fetch one motion's
-comments at a time — see the comment on that route for why.
+comments at a time. Motion lists also accept `?state=` and `?cursor=` (`x-next-cursor`).
+
+The board governance audit log is topic-filtered (finance, subscriptions,
+membership, decisions, officers, meetings, radio bookings). Vote records are
+written without ballot choice; the board viewer redacts voter identity.

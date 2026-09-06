@@ -3,19 +3,24 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
+import { LogViewer, type LogViewerEntry } from '@tahti/ui'
+import {
+  GOVERNANCE_AUDIT_PLANNED_TOPICS,
+  GOVERNANCE_AUDIT_TOPICS,
+  describeGovernanceAuditItem,
+  isGovernanceAuditTopicId,
+} from '@tahti/shared'
 
-const ACTION_LABELS: Record<string, string> = {
-  CHAT_BAN: 'Chat: user banned',
-  CHAT_UNBAN: 'Chat: ban lifted',
-  CHAT_MESSAGE_DELETE: 'Chat: message deleted',
-  STREAM_KEY_ROTATE: 'Stream key rotated',
-  STREAM_FORCE_OFFLINE: 'Stream forced offline',
-  LEDGER_ENTRY_CREATE: 'Ledger: entry created',
-  GRANT_RUN: 'Grant round run',
-  USER_SUSPEND: 'Account suspended',
-  USER_UNSUSPEND: 'Suspension lifted',
-  BOARD_ROLE_CHANGE: 'Board role changed',
-  ENGAGEMENT_ADJUSTMENT: 'Engagement units adjusted',
+type AuditItem = {
+  id: string
+  action: string
+  actorId: string
+  targetId: string | null
+  meta: Record<string, unknown>
+  createdAt: string
+  actorDisplayName: string | null
+  actorUsername: string | null
+  topic: string | null
 }
 
 function boardFetch(path: string) {
@@ -27,19 +32,30 @@ function boardFetch(path: string) {
   })
 }
 
-function actionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action
+function toLogEntry(row: AuditItem): LogViewerEntry {
+  const line = describeGovernanceAuditItem(row)
+  return {
+    id: row.id,
+    timestamp: row.createdAt,
+    source: line.source,
+    title: line.title,
+    detail: line.detail,
+  }
 }
 
-export default async function AdminAuditPage({
+export default async function AdminGovernanceAuditPage({
   searchParams,
 }: {
-  searchParams: { page?: string; action?: string }
+  searchParams: { page?: string; action?: string; topic?: string }
 }) {
   const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1)
   const actionFilter = searchParams.action?.trim()
-  const query = new URLSearchParams({ page: String(page), limit: '50' })
+  const topicFilter = searchParams.topic?.trim()
+  const topic = topicFilter && isGovernanceAuditTopicId(topicFilter) ? topicFilter : undefined
+
+  const query = new URLSearchParams({ page: String(page), limit: '50', scope: 'governance' })
   if (actionFilter) query.set('action', actionFilter)
+  if (topic) query.set('topic', topic)
 
   const res = await boardFetch(`/api/admin/audit?${query.toString()}`)
   const data = res.ok
@@ -47,107 +63,111 @@ export default async function AdminAuditPage({
         page: number
         total: number
         limit: number
-        items: Array<{
-          id: string
-          action: string
-          actorId: string
-          targetId: string | null
-          meta: Record<string, unknown>
-          createdAt: string
-          actorDisplayName: string | null
-          actorUsername: string | null
-        }>
+        items: AuditItem[]
       })
     : { page: 1, total: 0, limit: 50, items: [] }
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.limit))
+  const entries = data.items.map(toLogEntry)
+  const exportQuery = new URLSearchParams({ scope: 'governance' })
+  if (topic) exportQuery.set('topic', topic)
+
+  const pageHref = (nextPage: number) => {
+    const params = new URLSearchParams({ page: String(nextPage) })
+    if (actionFilter) params.set('action', actionFilter)
+    if (topic) params.set('topic', topic)
+    return `/admin/governance/audit?${params.toString()}`
+  }
+
+  const topicHref = (id?: string) => {
+    const params = new URLSearchParams()
+    if (id) params.set('topic', id)
+    if (actionFilter) params.set('action', actionFilter)
+    return `/admin/governance/audit${params.size ? `?${params.toString()}` : ''}`
+  }
 
   return (
     <>
-      <h1 className="admin-section-title">Audit log</h1>
-      <p className="admin-stat-sub" style={{ marginBottom: '1.5rem' }}>
+      <h1 className="admin-section-title">Governance audit log</h1>
+      <p className="admin-stat-sub">
         <Link href="/admin/governance">← Governance</Link>
         {' · '}
-        <a href="/api/admin/audit/export.csv">Export CSV</a>
+        Association, money, and membership events. Chat, stream keys, and login noise stay on{' '}
+        <Link href="/admin/logs">system logs</Link>.{' · '}
+        <a href={`/api/admin/audit/export.csv?${exportQuery.toString()}`}>Export CSV</a>
       </p>
 
-      <form method="get" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <input
-          type="search"
-          name="action"
-          defaultValue={actionFilter ?? ''}
-          placeholder="Filter by action (e.g. USER_SUSPEND)"
-          className="admin-search-input"
-        />
+      <nav className="admin-filter-pills" aria-label="Audit topics">
+        <Link href={topicHref()} className={!topic ? 'active' : undefined}>
+          All governance
+        </Link>
+        {GOVERNANCE_AUDIT_TOPICS.map((item) => (
+          <Link
+            key={item.id}
+            href={topicHref(item.id)}
+            className={topic === item.id ? 'active' : undefined}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      {topic ? (
+        <p className="admin-help">
+          {GOVERNANCE_AUDIT_TOPICS.find((item) => item.id === topic)?.description}
+        </p>
+      ) : (
+        <p className="admin-help">
+          Topics: finance and grants, fan subscriptions, membership register, motions and
+          resolutions, board roles, meetings and documents, and radio bookings.
+        </p>
+      )}
+
+      <form method="get" className="admin-log-controls">
+        {topic ? <input type="hidden" name="topic" value={topic} /> : null}
+        <label>
+          Action
+          <input
+            type="search"
+            name="action"
+            defaultValue={actionFilter ?? ''}
+            placeholder="e.g. GRANT_RUN"
+            className="admin-search-input"
+          />
+        </label>
         <button type="submit" className="admin-btn admin-btn--sm">
           Filter
         </button>
       </form>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Action</th>
-              <th>Actor</th>
-              <th>Target</th>
-              <th>Meta</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.items.map((row) => (
-              <tr key={row.id}>
-                <td>
-                  {new Date(row.createdAt).toLocaleString(undefined, {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
-                </td>
-                <td>{actionLabel(row.action)}</td>
-                <td>
-                  {row.actorUsername ? (
-                    <Link href={`/admin/users?search=${encodeURIComponent(row.actorUsername)}`}>
-                      {row.actorDisplayName ?? row.actorUsername}
-                    </Link>
-                  ) : (
-                    row.actorId.slice(0, 8)
-                  )}
-                </td>
-                <td>{row.targetId ?? '—'}</td>
-                <td>
-                  <code style={{ fontSize: '0.75rem' }}>
-                    {JSON.stringify(row.meta).slice(0, 80)}
-                    {JSON.stringify(row.meta).length > 80 ? '…' : ''}
-                  </code>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="admin-log-meta">
+        {data.total} rows · page {data.page} of {totalPages}
+        {topic ? ` · ${topic}` : ' · all governance topics'}
       </div>
 
-      {data.total === 0 ? <p className="admin-stat-sub">No audit entries match.</p> : null}
+      <LogViewer
+        entries={entries}
+        emptyMessage="No governance audit entries match these filters."
+      />
 
-      <nav style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-        {page > 1 ? (
-          <Link
-            href={`/admin/governance/audit?page=${page - 1}${actionFilter ? `&action=${encodeURIComponent(actionFilter)}` : ''}`}
-          >
-            ← Previous
-          </Link>
-        ) : null}
+      <nav className="admin-audit-pager" aria-label="Audit pages">
+        {page > 1 ? <Link href={pageHref(page - 1)}>← Previous</Link> : null}
         <span className="admin-stat-sub">
-          Page {data.page} of {totalPages} ({data.total} rows)
+          Page {data.page} of {totalPages}
         </span>
-        {page < totalPages ? (
-          <Link
-            href={`/admin/governance/audit?page=${page + 1}${actionFilter ? `&action=${encodeURIComponent(actionFilter)}` : ''}`}
-          >
-            Next →
-          </Link>
-        ) : null}
+        {page < totalPages ? <Link href={pageHref(page + 1)}>Next →</Link> : null}
       </nav>
+
+      <section className="admin-planned-topics">
+        <h2 className="admin-subsection-title">Planned audit topics</h2>
+        <ul>
+          {GOVERNANCE_AUDIT_PLANNED_TOPICS.map((item) => (
+            <li key={item.id}>
+              <strong>{item.label}.</strong> {item.description}
+            </li>
+          ))}
+        </ul>
+      </section>
     </>
   )
 }

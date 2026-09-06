@@ -2,6 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import {
+  GovernanceAuditScopeSchema,
+  GovernanceAuditTopicIdSchema,
+} from './governance-audit-topics.js'
 
 /** Public sound / release download query (`?fp=&format=`). */
 export const DownloadFormatSchema = z.enum(['mp3_320', 'opus256', 'flac', 'source'])
@@ -27,6 +31,8 @@ export const RepostAckBodySchema = z.object({
 export const AuditExportQuerySchema = z.object({
   since: z.string().datetime().optional(),
   until: z.string().datetime().optional(),
+  topic: GovernanceAuditTopicIdSchema.optional(),
+  scope: GovernanceAuditScopeSchema,
 })
 
 export const TransparencyYearQuerySchema = z.object({

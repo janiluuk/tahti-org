@@ -82,4 +82,58 @@ describe('GET /api/admin/audit/export.csv', () => {
     expect(body.total).toBeGreaterThan(0)
     expect(body.items.some((i) => i.action === 'GRANT_RUN')).toBe(true)
   })
+
+  it('filters governance topics and hides ops actions by default', async () => {
+    await auditLog(prisma, {
+      action: 'CHAT_BAN',
+      actorId: boardId,
+      targetId: 'chat-user',
+      meta: { reason: 'test' },
+    })
+    const governance = await app.inject({
+      method: 'GET',
+      url: '/api/admin/audit?topic=finance&limit=50',
+      headers: { cookie: boardCookie },
+    })
+    expect(governance.statusCode).toBe(200)
+    const finance = governance.json() as { items: Array<{ action: string; topic: string | null }> }
+    expect(finance.items.length).toBeGreaterThan(0)
+    expect(
+      finance.items.every((item) => item.action === 'GRANT_RUN' || item.topic === 'finance'),
+    ).toBe(true)
+    expect(finance.items.some((item) => item.action === 'CHAT_BAN')).toBe(false)
+
+    const all = await app.inject({
+      method: 'GET',
+      url: '/api/admin/audit?scope=all&action=CHAT_BAN&limit=10',
+      headers: { cookie: boardCookie },
+    })
+    expect(all.statusCode).toBe(200)
+    expect(
+      (all.json() as { items: Array<{ action: string }> }).items.some(
+        (i) => i.action === 'CHAT_BAN',
+      ),
+    ).toBe(true)
+  })
+
+  it('redacts vote choice and actor from the board audit log', async () => {
+    await auditLog(prisma, {
+      action: 'VOTE_CAST',
+      actorId: boardId,
+      targetId: 'motion-secret',
+      meta: { choice: 'YES' },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/audit?action=VOTE_CAST&limit=20',
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const vote = (
+      res.json() as { items: Array<{ actorId: string; meta: Record<string, unknown> }> }
+    ).items.find((item) => item.meta && 'ballot' in item.meta)
+    expect(vote).toBeTruthy()
+    expect(vote?.actorId).toBe('hidden')
+    expect(vote?.meta).toEqual({ ballot: 'secret' })
+  })
 })
