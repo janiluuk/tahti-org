@@ -96,11 +96,8 @@ function MultistreamStatus({ slug }: { slug: string }) {
   )
 }
 
-/** Status + listener count + live chat + end-stream, with no modal chrome of
- * its own — the shared body for both the top-nav stream manager modal
- * (_stream-manager-modal.tsx) and the dashboard home hero's inline live view
- * (_channel-hero.tsx), so "what's happening on my stream right now" looks
- * and behaves the same wherever you open it from. */
+/** Status + listener count + live chat + end-stream. Shared body for the
+ * dashboard home hero's inline live view (`_channel-hero.tsx`). */
 export function StreamManagerPanel({
   slug,
   displayName,

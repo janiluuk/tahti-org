@@ -15,9 +15,6 @@ type GoLiveStatusProps = {
   /** Artist-set "next broadcast" hint (channel-schedule-panel.tsx) — shown as
    * a countdown when set and still in the future. */
   nextBroadcastAt?: string | null
-  /** Opens the stream manager (modal or page) — the small popover this icon
-   * opens is a status summary only; this button is the way out of it. */
-  onOpenManager?: () => void
 }
 
 function IconGoLive() {
@@ -70,15 +67,9 @@ function formatCountdown(totalSec: number): string {
 
 /** Top-nav go-live icon: green while actually on air, red otherwise. Click
  * opens a small status popover (elapsed time, or a countdown to the next
- * scheduled slot) with a button through to the stream manager — distinct
- * from clicking straight through, so checking status never leaves the page
- * you're on. */
-export function GoLiveStatus({
-  isReallyLive,
-  goneLiveAt,
-  nextBroadcastAt,
-  onOpenManager,
-}: GoLiveStatusProps) {
+ * scheduled slot). Stream management lives on Studio overview (`/dashboard`);
+ * this popover only links there (or to the Go live wizard when offline). */
+export function GoLiveStatus({ isReallyLive, goneLiveAt, nextBroadcastAt }: GoLiveStatusProps) {
   const [open, setOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const ref = useRef<HTMLDivElement>(null)
@@ -104,19 +95,6 @@ export function GoLiveStatus({
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [open])
-
-  if (!onOpenManager) {
-    return (
-      <Link
-        href="/dashboard/broadcast"
-        className="studio-top-nav__icon-btn studio-top-nav__golive-btn"
-        aria-label="Go live"
-        title="Go live"
-      >
-        <IconGoLive />
-      </Link>
-    )
-  }
 
   const nextBroadcastMs = nextBroadcastAt ? new Date(nextBroadcastAt).getTime() : null
   const isScheduled = !isReallyLive && nextBroadcastMs !== null && nextBroadcastMs > now
@@ -162,18 +140,26 @@ export function GoLiveStatus({
             <span className="studio-top-nav__golive-label">{statusLabel}</span>
             {statusDetail && <span className="studio-top-nav__golive-detail">{statusDetail}</span>}
           </div>
-          <button
-            type="button"
-            className="studio-top-nav__golive-manage"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false)
-              onOpenManager()
-            }}
-          >
-            <IconManager />
-            Open stream manager
-          </button>
+          {isReallyLive ? (
+            <Link
+              href="/dashboard"
+              className="studio-top-nav__golive-manage"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              <IconManager />
+              Open stream manager
+            </Link>
+          ) : (
+            <Link
+              href="/dashboard/broadcast"
+              className="studio-top-nav__golive-manage"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              Go live
+            </Link>
+          )}
         </div>
       )}
     </div>

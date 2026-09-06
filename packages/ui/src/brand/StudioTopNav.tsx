@@ -39,10 +39,6 @@ type StudioTopNavProps = {
   }>
   markNotificationsRead?: () => Promise<void>
   fetchConversations?: () => Promise<MessagesBellConversation[]>
-  /** When set, clicking the go-live icon opens a small status popover with a
-   * button through to the stream manager, instead of navigating straight to
-   * /dashboard/broadcast. */
-  onGoLiveClick?: () => void
   /** Server action for the "Log out" form. The old hardcoded
    * action="/api/auth/logout" posted to a path that only exists on the API
    * host, not this app — every logout attempt 404'd. */
@@ -126,7 +122,6 @@ export function StudioTopNav({
   fetchNotifications,
   markNotificationsRead,
   fetchConversations,
-  onGoLiveClick,
   logoutAction,
 }: StudioTopNavProps) {
   const pathname = usePathname()
@@ -199,7 +194,6 @@ export function StudioTopNav({
             isReallyLive={Boolean(isReallyLive)}
             goneLiveAt={goneLiveAt}
             nextBroadcastAt={nextBroadcastAt}
-            onOpenManager={onGoLiveClick}
           />
         )}
         {displayName && hasChannel && (

@@ -5,20 +5,14 @@
 
 import { useState } from 'react'
 import { Alert } from '@tahti/ui'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { goLive } from './actions'
-import { useStreamManager } from './_stream-manager-context'
 
-/** The dashboard header's go-live pill, shown on every dashboard page. Once
- * the artist is already connected and in PREVIEW (sound-checking), this goes
- * straight to LIVE in one click instead of sending them to the broadcast
- * studio page to find the same button there — they're already streaming,
- * there's nothing left to set up. OFFLINE stays a link to the broadcast
- * studio, where there's actually something to do (set up ingest). LIVE opens
- * the stream manager (status, listeners, chat, end stream) in place instead
- * of sending them to the setup wizard, which has nothing relevant left to
- * show once you're already on air. */
+/** The dashboard header's go-live pill, shown on the artist studio page.
+ * PREVIEW goes straight to LIVE. OFFLINE links to the broadcast studio.
+ * LIVE links to Studio overview (this page when already there), where the
+ * stream manager lives — not a modal off the Go live control. */
 export function HeaderGoLiveAction({
   state,
   className,
@@ -33,14 +27,22 @@ export function HeaderGoLiveAction({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const openStreamManager = useStreamManager()
+  const pathname = usePathname()
 
-  if (state === 'LIVE' && openStreamManager) {
+  if (state === 'LIVE') {
+    if (pathname === '/dashboard') {
+      return (
+        <span className={className}>
+          <span className={dotClassName} aria-hidden style={{ width: 6, height: 6 }} />
+          {label}
+        </span>
+      )
+    }
     return (
-      <button type="button" className={className} onClick={openStreamManager}>
+      <NextLink href="/dashboard" className={className}>
         <span className={dotClassName} aria-hidden style={{ width: 6, height: 6 }} />
         {label}
-      </button>
+      </NextLink>
     )
   }
 

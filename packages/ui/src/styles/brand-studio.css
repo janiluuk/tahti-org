@@ -395,6 +395,7 @@
   font-size: var(--text-xs);
   font-family: var(--font-body);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -5854,12 +5855,36 @@
   border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--border));
 }
 
-[data-tahti-ui='studio'] .db-hero__go-live-btn {
-  height: 60px;
-  padding: 0 var(--space-6);
+[data-tahti-ui='studio'] .db-hero__go-live-btn,
+[data-tahti-ui='studio'] a.db-hero__go-live-btn,
+[data-tahti-ui='studio'] .db-hero__go-live-btn.brand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: auto;
+  padding: 18px 40px;
+  margin-top: 0;
   font-size: var(--text-h3);
   font-weight: var(--weight-medium);
-  margin-top: var(--space-4);
+  background: var(--green);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .db-hero__go-live-btn:hover,
+[data-tahti-ui='studio'] a.db-hero__go-live-btn:hover,
+[data-tahti-ui='studio'] .db-hero__go-live-btn.brand-btn:hover {
+  filter: brightness(1.08);
+}
+
+[data-tahti-ui='studio'] .db-hero__go-live-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
 }
 
 [data-tahti-ui='studio'] .db-hero__eyebrow {
@@ -13304,6 +13329,17 @@
 
 [data-tahti-ui='studio'] .db-channel-controls__collapsed-title {
   flex-shrink: 0;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='studio'] .db-channel-controls__collapsed-playlist {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
   font-size: var(--text-sm);
 }
 

@@ -5,7 +5,6 @@
 
 import { useEffect, useState } from 'react'
 import NextLink from 'next/link'
-import { BrandButton } from '@tahti/ui'
 import { GoLiveBtn } from './go-live-btn'
 import { StreamManagerPanel } from './_stream-manager-panel'
 
@@ -33,7 +32,7 @@ function elapsedSecondsSince(goneLiveAt: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(goneLiveAt).getTime()) / 1000))
 }
 
-/** Channel home hero — giant Go live CTA when offline, live status + ticking clock when on air. */
+/** Channel home hero — Go live button when offline, live status + stream manager when on air. */
 export function ChannelHero({
   slug,
   state,
@@ -73,7 +72,7 @@ export function ChannelHero({
           <span className="db-hero__live-label">PREVIEW — only you can hear this</span>
         </div>
         <div className="db-hero__actions">
-          <GoLiveBtn />
+          <GoLiveBtn className="db-hero__go-live-btn" />
           <NextLink href="/dashboard/broadcast" className="db-hero__secondary-link">
             Open broadcast studio →
           </NextLink>
@@ -84,17 +83,15 @@ export function ChannelHero({
 
   return (
     <div className="db-hero db-hero--offline" data-hero>
-      <div className="db-hero__eyebrow">Your channel is offline</div>
-      <div className="db-hero__headline">Ready to broadcast?</div>
-      <p className="db-hero__hint">Configure your broadcasting tool and start streaming.</p>
+      <NextLink href="/dashboard/broadcast" className="db-hero__go-live-btn">
+        Go live
+      </NextLink>
+      <p className="db-hero__hint">Configure your broadcasting tool, then start streaming.</p>
       {lastBroadcast ? (
         <p className="db-hero__last-broadcast">
           Last broadcast: {lastBroadcast.title}, {lastBroadcast.ago}
         </p>
       ) : null}
-      <BrandButton as="a" href="/dashboard/broadcast" className="db-hero__go-live-btn">
-        Go live →
-      </BrandButton>
     </div>
   )
 }

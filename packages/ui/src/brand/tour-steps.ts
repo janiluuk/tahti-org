@@ -23,7 +23,7 @@ const STUDIO_TOP_BAR: TourStep[] = [
   {
     selector: '.studio-top-nav__golive-btn',
     title: 'Go live',
-    body: "Red when you're offline, green while you're actually on air. Click it for a quick status check — how long you've been live, or a countdown if you've got a slot scheduled — plus a one-click way through to the stream manager.",
+    body: "Red when you're offline, green while you're actually on air. Click it for a quick status check — how long you've been live, or a countdown if you've got a slot scheduled. Stream management lives on Studio overview.",
   },
   {
     selector: '.studio-top-nav__icon-btn[aria-label="Upload"]',
@@ -61,7 +61,7 @@ const DASHBOARD_HOME: TourStep[] = [
   {
     selector: '[data-hero]',
     title: 'Channel status',
-    body: 'Shows whether you’re live, previewing, or offline, plus a one-click way to start broadcasting.',
+    body: 'Shows whether you’re live, previewing, or offline. When you’re off air, the Go live button starts the broadcast setup.',
   },
   {
     selector: '[aria-label="Channel summary"]',
