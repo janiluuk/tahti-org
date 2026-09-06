@@ -2,15 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { buildApp } from '../../server.js'
+import { buildApp } from '../server.js'
 import { prisma } from '@tahti/db'
-import {
-  cleanupUsersByEmailPrefix,
-  createTestArtist,
-  sessionCookieFor,
-} from '../../test/helpers.js'
+import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../test/helpers.js'
 
-vi.mock('../../lib/minio.js', () => ({
+vi.mock('../lib/minio.js', () => ({
   presignedPutUrl: vi.fn().mockResolvedValue('https://minio.test/presigned'),
   presignedGetUrl: vi.fn().mockResolvedValue('https://minio.test/get'),
   s3: {},

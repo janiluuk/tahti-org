@@ -371,29 +371,33 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           sourceKey: true,
           title: true,
           peaks: true,
-          sound: {
-            select: {
-              accessMode: true,
-              purchaseTierId: true,
-              channel: { select: { userId: true } },
-            },
-          },
+          soundId: true,
         },
       })
       if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
 
-      if (track.sound) {
-        const gateStatus = await resolvePlaybackGateStatus(
-          fastify.prisma,
-          {
-            artistUserId: track.sound.channel.userId,
-            accessMode: track.sound.accessMode ?? 'FREE',
-            purchaseTierId: track.sound.purchaseTierId ?? null,
+      if (track.soundId) {
+        const linked = await fastify.prisma.sound.findUnique({
+          where: { id: track.soundId },
+          select: {
+            accessMode: true,
+            purchaseTierId: true,
+            channel: { select: { userId: true } },
           },
-          request.sessionUser?.id ?? null,
-        )
-        if (!gateStatus.allowed) {
-          return reply.status(403).send(playbackForbiddenBody(gateStatus))
+        })
+        if (linked) {
+          const gateStatus = await resolvePlaybackGateStatus(
+            fastify.prisma,
+            {
+              artistUserId: linked.channel.userId,
+              accessMode: linked.accessMode ?? 'FREE',
+              purchaseTierId: linked.purchaseTierId ?? null,
+            },
+            request.sessionUser?.id ?? null,
+          )
+          if (!gateStatus.allowed) {
+            return reply.status(403).send(playbackForbiddenBody(gateStatus))
+          }
         }
       }
 
