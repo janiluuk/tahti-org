@@ -38,6 +38,7 @@ import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@t
 import {
   AvatarTile,
   Heading,
+  MemberBadge,
   Row,
   Text,
   ChannelPageShell,
@@ -67,7 +68,7 @@ function formatJoinDateLabel(joinDate: string | null | undefined): string | null
   if (!joinDate) return null
   const date = new Date(joinDate)
   if (Number.isNaN(date.getTime())) return null
-  return `Member since ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
+  return `Joined ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
 }
 
 interface ChannelResponse {
@@ -100,6 +101,7 @@ interface ChannelResponse {
     pronouns?: string | null
     socialLinks?: Record<string, string> | null
     tier: string
+    isMember?: boolean
     joinDate?: string | null
     chatEnabled?: boolean
   }
@@ -408,6 +410,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         {channel.user.pronouns && (
                           <span className="prof-pronouns">{channel.user.pronouns}</span>
                         )}
+                        {channel.user.isMember ? <MemberBadge /> : null}
                       </Heading>
                       <Text size="sm" tone="muted" className="ch-artist-meta-row">
                         @{channel.user.username}
