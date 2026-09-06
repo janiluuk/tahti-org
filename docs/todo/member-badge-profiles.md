@@ -1,6 +1,6 @@
 # Member badge on public artist profiles
 
-**Status:** in progress on `cursor/member-badge-profiles-61fc`.
+**Status:** implemented on `cursor/member-badge-profiles-61fc` (PR pending).
 
 ## Goal
 
