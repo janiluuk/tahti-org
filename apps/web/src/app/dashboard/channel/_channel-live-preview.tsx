@@ -13,6 +13,7 @@ import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
+import { ChannelBlocksView } from '@/components/channel-blocks-view'
 import { SoundVideoBackdrop, resolveSoundBackground } from '@/app/c/[slug]/sound-item-backdrop'
 import type { DesignerSectionId } from './_designer-sections'
 import {
@@ -25,6 +26,7 @@ import {
   type ChannelHeaderStyle,
   type ChannelTextLayerAlignment,
   type ChannelTextLayerMode,
+  type PublicChannelBlock,
   type SlideshowPreset,
   type VisualPreset,
 } from '@tahti/shared'
@@ -85,11 +87,13 @@ function resolveHeaderBannerStyle(
  *  visualizer — not gallery/text-layer edits that live on other settings pages. */
 export function ChannelLivePreview({
   draft,
+  blocks = [],
   mode = 'full',
   activeSection,
   onSectionSelect,
 }: {
   draft: ChannelPreviewDraft
+  blocks?: PublicChannelBlock[]
   mode?: 'full' | 'visual'
   /** The designer section currently open — its matching preview region gets a persistent highlight. */
   activeSection?: DesignerSectionId
@@ -126,6 +130,7 @@ export function ChannelLivePreview({
   const linksRegion = regionProps('links', 'links')
   const playerRegion = regionProps('player', 'player')
   const slideshowRegion = regionProps('slideshow', 'slideshow')
+  const blocksRegion = regionProps('blocks', 'blocks')
   const pageScheme = parseColorScheme(draft.visual.colorSchemeJson)
 
   return (
@@ -219,6 +224,12 @@ export function ChannelLivePreview({
               )}
             </header>
           </div>
+
+          {showMedia && blocks.length > 0 && (
+            <div {...blocksRegion} className={blocksRegion.className}>
+              <ChannelBlocksView blocks={blocks} preview />
+            </div>
+          )}
 
           {showMedia && (
             <div {...playerRegion} className={playerRegion.className}>
