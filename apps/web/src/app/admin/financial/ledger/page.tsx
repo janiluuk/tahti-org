@@ -60,7 +60,7 @@ export default async function AdminLedgerPage({
         {entries.length === 0 ? (
           <p className="admin-stat-sub">No entries for this period.</p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>

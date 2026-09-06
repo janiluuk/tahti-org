@@ -40,30 +40,32 @@ export default async function AdminLegacyMembersPage() {
       {members.length === 0 ? (
         <p className="admin-text-muted">No legacy members in the queue (or Stripe is disabled).</p>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Username</th>
-              <th>Member since</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.id}>
-                <td>{m.memberNumber ?? '—'}</td>
-                <td>
-                  <Link href={`/admin/users/${m.id}`}>{m.displayName}</Link>
-                </td>
-                <td>{m.email}</td>
-                <td>@{m.username}</td>
-                <td>{m.memberSince ? new Date(m.memberSince).toLocaleDateString() : '—'}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Member since</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {members.map((m) => (
+                <tr key={m.id}>
+                  <td>{m.memberNumber ?? '—'}</td>
+                  <td>
+                    <Link href={`/admin/users/${m.id}`}>{m.displayName}</Link>
+                  </td>
+                  <td>{m.email}</td>
+                  <td>@{m.username}</td>
+                  <td>{m.memberSince ? new Date(m.memberSince).toLocaleDateString() : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   )

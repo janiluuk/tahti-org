@@ -104,7 +104,7 @@ export default async function AdminFanSubsPage() {
         {payouts.payouts.length === 0 ? (
           <p className="admin-stat-sub">No pending or failed payouts.</p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -142,7 +142,7 @@ export default async function AdminFanSubsPage() {
         {artists.length === 0 ? (
           <p className="admin-stat-sub">No active fan subscriptions.</p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>

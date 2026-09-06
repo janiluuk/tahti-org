@@ -412,7 +412,7 @@ export function GovernanceRecordsPanel({
           {meetings.length === 0 ? (
             <p className="admin-stat-sub">No meetings recorded.</p>
           ) : (
-            <div className="admin-table-wrap">
+            <div className="admin-table-wrap admin-table-wrap--tabular">
               <table className="admin-table admin-governance-records__meetings-table">
                 <thead>
                   <tr>

@@ -10,6 +10,7 @@ import '@tahti/ui/src/components.css'
 import '@/components/admin-shell.css'
 import { AdminNav } from './admin-nav'
 import { AdminMobileNav } from './admin-mobile-nav'
+import { AdminTableEnhance } from './_admin-table-enhance'
 
 async function requireBoardSession() {
   const sessionCookie = cookies().get('tahti_session')
@@ -45,7 +46,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         />
       }
     >
-      {children}
+      <AdminTableEnhance>{children}</AdminTableEnhance>
     </AdminShell>
   )
 }

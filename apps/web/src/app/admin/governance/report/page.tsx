@@ -40,7 +40,7 @@ export default async function AdminAnnualReportPage() {
         {reports.length === 0 ? (
           <p className="admin-stat-sub">No reports stored yet.</p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>

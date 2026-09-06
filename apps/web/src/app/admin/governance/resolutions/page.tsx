@@ -44,7 +44,7 @@ export default async function AdminResolutionsPage() {
         {rows.length === 0 ? (
           <p className="admin-stat-sub">No resolutions yet.</p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>
