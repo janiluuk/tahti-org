@@ -66,6 +66,8 @@ describe('GET /api/channels/:slug', () => {
     expect(body.user.username).toBe('channel-get-testuser')
     expect(body.user.isMember).toBe(true)
     expect(body.hlsUrl).toBeNull()
+    // OFFLINE channels never attempt an Icecast signal check.
+    expect(body.signalConnected).toBe(false)
     // Default channel header style — see ChannelDesigner's VIDEO_LOOP header
     // and its videoBackgroundUrl wiring (reused from Gallery & backdrop).
     expect(body.headerStyle).toBe('GRADIENT')
@@ -132,6 +134,11 @@ describe('GET /api/channels/:slug', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().hlsUrl).toContain('stream-mp3-192')
+    // state: 'LIVE' alone doesn't mean a human is broadcasting -- the 24/7
+    // fallback rotation sets it too (channel-fallback-reconciler.ts).
+    // signalConnected reflects the real Icecast mount status; no mount is
+    // actually running in this test, so it resolves false without throwing.
+    expect(res.json().signalConnected).toBe(false)
 
     await prisma.channel.update({
       where: { slug: 'channel-get-testuser' },

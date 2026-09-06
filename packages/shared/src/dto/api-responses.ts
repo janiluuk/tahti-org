@@ -545,6 +545,11 @@ export const PublicChannelUserSchema = z.object({
 export const PublicChannelViewSchema = z.object({
   slug: z.string(),
   state: z.string(),
+  /** True only when there's a real ingest signal on the live mount right
+   * now — `state === 'LIVE'` alone doesn't distinguish an actual human
+   * broadcast from the always-on 24/7 fallback rotation, which also sets
+   * state to LIVE. False whenever state isn't LIVE. */
+  signalConnected: z.boolean(),
   hlsUrl: z.string().nullable(),
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
