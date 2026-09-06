@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import { Alert } from '@tahti/ui'
 import { usePlayer } from '@/contexts/player-context'
 import { goLive } from '../actions'
-import { ChannelControlsPanel } from '../channel-controls-panel'
 import { SignalMeters } from './_signal-meters'
 
 interface SignalStatus {
@@ -93,15 +92,7 @@ function AudioCheckPanel({ signal, hlsUrl }: { signal: SignalStatus | null; hlsU
   )
 }
 
-export function Step4GoLive({
-  signal,
-  hlsUrl,
-  slug,
-}: {
-  signal: SignalStatus | null
-  hlsUrl: string
-  slug: string
-}) {
+export function Step4GoLive({ signal, hlsUrl }: { signal: SignalStatus | null; hlsUrl: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -143,11 +134,6 @@ export function Step4GoLive({
         <p className="broadcast-studio__go-live-hint">
           ⌨ hold space-bar to use a 3-2-1 countdown instead
         </p>
-        <ChannelControlsPanel
-          slug={slug}
-          title="Active rotation"
-          description="Preview and manage what plays until you go live."
-        />
       </div>
     </>
   )

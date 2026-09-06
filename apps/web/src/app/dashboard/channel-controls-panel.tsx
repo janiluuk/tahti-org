@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { Button, Panel, SortableList } from '@tahti/ui'
+import { channelPlaylistLabel } from './channel-controls-label'
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -222,6 +223,7 @@ export function ChannelControlsPanel({
       : null
 
   const activePlaylist = playlists.find((playlist) => playlist.active) ?? null
+  const playlistLabel = channelPlaylistLabel(playlists)
   const rotationItems = useMemo(
     () => programme?.items.filter((item) => item.isFallback) ?? [],
     [programme],
@@ -487,6 +489,9 @@ export function ChannelControlsPanel({
     return (
       <div className="db-channel-controls db-channel-controls--collapsed">
         <strong className="db-channel-controls__collapsed-title">{title}</strong>
+        <span className="db-channel-controls__collapsed-playlist" title={playlistLabel}>
+          {playlistLabel}
+        </span>
         <span className="db-channel-controls__now-compact" title={statusText}>
           {statusText}
         </span>
