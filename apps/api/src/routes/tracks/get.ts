@@ -9,9 +9,8 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { presignedGetUrl } from '../../lib/minio.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
-import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 // GET /api/tracks/:id — public, no auth required. Full detail for a
 // standalone track page reached anywhere a track id travels without its
@@ -99,22 +98,16 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         ...rest
       } = item
       const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
-
       const viewerUserId = request.sessionUser?.id ?? null
-      const gateStatus = await resolvePlaybackGateStatus(
-        fastify.prisma,
-        {
-          artistUserId: channel.userId,
-          accessMode: accessMode ?? 'FREE',
-          purchaseTierId: purchaseTierId ?? null,
-        },
-        viewerUserId,
-      )
 
-      const [rawAudioUrl, downloadCount] = await Promise.all([
-        gateStatus.allowed && playbackKey
-          ? presignedGetUrl(playbackKey, 3600)
-          : Promise.resolve(null),
+      const [playback, downloadCount] = await Promise.all([
+        resolveGatedPlaybackUrl(fastify.prisma, {
+          playbackKey,
+          artistUserId: channel.userId,
+          accessMode,
+          purchaseTierId,
+          viewerUserId,
+        }),
         fastify.prisma.download.count({
           where: { soundId: item.id, countedAt: { not: null } },
         }),
@@ -131,19 +124,14 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           bio: channel.user.bio,
         },
         releasedAt: item.releasedAt.toISOString(),
-        audioUrl: rawAudioUrl,
+        audioUrl: playback.url,
         commentCount: _count.comments,
         downloadCount,
         accessMode: accessMode ?? 'FREE',
         purchaseTierId: purchaseTierId ?? null,
         purchaseTierName: purchaseTier?.name ?? null,
         purchaseTierPriceCents: purchaseTier?.priceCents ?? null,
-        gate: gateStatus.allowed
-          ? null
-          : {
-              reason: gateStatus.reason,
-              ...(gateStatus.tierId ? { tierId: gateStatus.tierId } : {}),
-            },
+        gate: playback.gate,
       })
     },
   )

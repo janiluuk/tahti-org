@@ -75,6 +75,13 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     title: z.string(),
     bannerUrl: z.string().nullable(),
     audioUrl: z.string().nullable(),
+    gate: z
+      .object({
+        reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
+        tierId: z.string().optional(),
+      })
+      .nullable()
+      .optional(),
     channelSlug: z.string(),
     liked: z.boolean(),
     likeCount: z.number().int(),

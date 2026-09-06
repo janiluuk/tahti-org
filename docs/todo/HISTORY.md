@@ -70,7 +70,6 @@ Implemented on `feat/channel-designer-uploads-help` (2026-09-04).
 3. Header / backdrop: drop multiple JPGs into gallery dropzone; drop MP4 → header style becomes video loop.
 4. Help (?) expands section instructions; forms have no long annotation paragraphs.
 
-
 ## 2026-09-05 — channel-look-extras.md
 
 # Channel look-extras persistence
@@ -185,7 +184,10 @@ Last.fm scrobble beside ListenBrainz. Artist plays `range=1` / custom / hourly b
 
 Advisory motions, discussion, public history, meeting/document schema, attendance/quorum, governance journey tests, yearly transparency reports. Open items remain in `docs/governance-worklog.md`.
 
+### 2026-09-06 — channel-designer-blocks.md / stream-manager-artist-page.md / governance-meeting-officers.md
+
+Shipped on main: Channel Designer logo/addon blocks ([#445](https://github.com/janiluuk/tahti-org/pull/445)); stream manager on Studio overview ([#449](https://github.com/janiluuk/tahti-org/pull/449)); meeting officers ([#447](https://github.com/janiluuk/tahti-org/pull/447)).
+
 ### 2026-09-06 — restore-download-purchase-gate.md
 
-Restored `resolvePlaybackGateStatus` on sound downloads (`ca7ee137`). Leftover streaming `audioUrl` bypasses moved to `docs/remaining-work.md`.
-
+Download gate restored (`ca7ee137`). Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, embed play, and smart-link tracks linked to a gated Sound. Channel-item cache no longer stores URLs. RSS omits `<enclosure>` for non-FREE sounds. Album `ReleaseTrack` files with no linked Sound have no purchase-tier field and stay streamable on the smart link.
