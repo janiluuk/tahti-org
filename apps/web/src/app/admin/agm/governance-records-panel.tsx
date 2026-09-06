@@ -22,6 +22,10 @@ interface Meeting {
   agenda: AgendaItem[] | null
   eligibleMemberCount: number | null
   quorumRequired: number | null
+  chairName: string | null
+  secretaryName: string | null
+  minutesSignedByName: string | null
+  minutesSignedAt: string | null
   attendanceCount: number
   presentCount: number
   quorumMet: boolean | null
@@ -79,6 +83,14 @@ function localDateTimeToIso(value: string): string | undefined {
   return value ? new Date(value).toISOString() : undefined
 }
 
+function isoToLocalDateTime(value: string | null): string {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 export function GovernanceRecordsPanel({
   initialMeetings,
   initialDocuments,
@@ -118,6 +130,8 @@ export function GovernanceRecordsPanel({
         noticeAt: localDateTimeToIso(fieldString(fd, 'noticeAt')),
         eligibleMemberCount: eligibleMemberCount ? Number(eligibleMemberCount) : undefined,
         quorumRequired: quorumRequired ? Number(quorumRequired) : undefined,
+        chairName: fieldString(fd, 'chairName') || undefined,
+        secretaryName: fieldString(fd, 'secretaryName') || undefined,
         agenda: agenda.length > 0 ? agenda : undefined,
       }),
     })
@@ -136,6 +150,28 @@ export function GovernanceRecordsPanel({
       body: JSON.stringify({ state }),
     })
     if (!response.ok) return setError('Could not update meeting state')
+    const updated = (await response.json()) as Meeting
+    setMeetings((items) => items.map((m) => (m.id === id ? updated : m)))
+  }
+
+  async function updateMeetingOfficers(id: string, event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null)
+    const fd = new FormData(event.currentTarget)
+    const response = await fetch(`${API_BASE}/api/admin/governance/meetings/${id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        chairName: fieldString(fd, 'chairName'),
+        secretaryName: fieldString(fd, 'secretaryName'),
+        minutesSignedByName: fieldString(fd, 'minutesSignedByName'),
+        minutesSignedAt: fieldString(fd, 'minutesSignedAt')
+          ? localDateTimeToIso(fieldString(fd, 'minutesSignedAt'))
+          : null,
+      }),
+    })
+    if (!response.ok) return setError('Could not update meeting officers')
     const updated = (await response.json()) as Meeting
     setMeetings((items) => items.map((m) => (m.id === id ? updated : m)))
   }
@@ -230,8 +266,8 @@ export function GovernanceRecordsPanel({
       <div className="admin-governance-records__header">
         <h2>Governance records</h2>
         <p className="admin-stat-sub">
-          Persist official AGM/board meetings — agenda, notice, attendance, and quorum — and the
-          document index that backs them.
+          Persist official AGM/board meetings — officers, agenda, notice, attendance, quorum, and
+          the document index that backs them.
         </p>
       </div>
       {error && <p className="admin-err">{error}</p>}
@@ -282,6 +318,14 @@ export function GovernanceRecordsPanel({
             <label>
               Quorum required
               <input name="quorumRequired" type="number" min={1} />
+            </label>
+            <label>
+              Chair
+              <input name="chairName" maxLength={200} placeholder="Meeting chair" />
+            </label>
+            <label>
+              Secretary
+              <input name="secretaryName" maxLength={200} placeholder="Meeting secretary" />
             </label>
           </div>
           <label style={{ marginTop: '0.65rem', display: 'block' }}>
@@ -446,6 +490,46 @@ export function GovernanceRecordsPanel({
                                   </ol>
                                 </div>
                               )}
+                              <form
+                                onSubmit={(e) => updateMeetingOfficers(meeting.id, e)}
+                                className="admin-governance-records__grid"
+                              >
+                                <label>
+                                  Chair
+                                  <input
+                                    name="chairName"
+                                    maxLength={200}
+                                    defaultValue={meeting.chairName ?? ''}
+                                  />
+                                </label>
+                                <label>
+                                  Secretary
+                                  <input
+                                    name="secretaryName"
+                                    maxLength={200}
+                                    defaultValue={meeting.secretaryName ?? ''}
+                                  />
+                                </label>
+                                <label>
+                                  Minutes signed by
+                                  <input
+                                    name="minutesSignedByName"
+                                    maxLength={200}
+                                    defaultValue={meeting.minutesSignedByName ?? ''}
+                                  />
+                                </label>
+                                <label>
+                                  Minutes signed at
+                                  <input
+                                    name="minutesSignedAt"
+                                    type="datetime-local"
+                                    defaultValue={isoToLocalDateTime(meeting.minutesSignedAt)}
+                                  />
+                                </label>
+                                <button type="submit" className="admin-btn">
+                                  Save officers
+                                </button>
+                              </form>
                               <div>
                                 <p className="admin-stat-sub" style={{ marginBottom: '0.35rem' }}>
                                   Attendance ({attendance[meeting.id]?.length ?? 0})

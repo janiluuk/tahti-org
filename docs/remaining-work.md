@@ -72,7 +72,6 @@ adopted bylaws and legal review.
 Additional governance gaps from the audit:
 
 - [ ] Persist official member eligibility periods and privacy-scoped register views.
-- [ ] Add AGM/board chair, secretary, and signed approval data.
 - [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
 - [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
