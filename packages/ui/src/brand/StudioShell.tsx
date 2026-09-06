@@ -31,7 +31,6 @@ type StudioShellProps = {
   }>
   markNotificationsRead?: () => Promise<void>
   fetchConversations?: () => Promise<MessagesBellConversation[]>
-  onGoLiveClick?: () => void
   logoutAction?: (formData: FormData) => void | Promise<void>
 }
 
@@ -50,7 +49,6 @@ export function StudioShell({
   fetchNotifications,
   markNotificationsRead,
   fetchConversations,
-  onGoLiveClick,
   logoutAction,
 }: StudioShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -70,7 +68,6 @@ export function StudioShell({
         fetchNotifications={fetchNotifications}
         markNotificationsRead={markNotificationsRead}
         fetchConversations={fetchConversations}
-        onGoLiveClick={onGoLiveClick}
         logoutAction={logoutAction}
       />
       <StudioLayoutContext.Provider value={{ sidebarCollapsed, setSidebarCollapsed }}>

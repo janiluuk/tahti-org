@@ -6,7 +6,15 @@
  * shell itself, so the two never drift out of sync. */
 
 export type DesignerSectionId =
-  'background' | 'header' | 'slideshow' | 'player' | 'links' | 'tracks' | 'collections' | 'releases'
+  | 'background'
+  | 'header'
+  | 'slideshow'
+  | 'player'
+  | 'links'
+  | 'blocks'
+  | 'tracks'
+  | 'collections'
+  | 'releases'
 
 export type DesignerSectionSaveKind =
   'gallery' | 'profile' | 'textLayer' | 'visual' | 'header' | 'none'
@@ -64,6 +72,14 @@ export const DESIGNER_SECTIONS: DesignerSectionDefinition[] = [
     title: 'Links',
     help: 'Outbound links shown on your public channel banner.',
     saveKind: 'profile',
+  },
+  {
+    id: 'blocks',
+    hash: 'channel-blocks',
+    navLabel: 'Blocks',
+    title: 'Blocks',
+    help: 'Logo images and installed addons on the public channel page. Choose full, half, or third width — rows pack left to right (two halves or three thirds share a row; leftover space stays empty). Existing look sections above stay as dedicated settings.',
+    saveKind: 'none',
   },
   {
     id: 'tracks',

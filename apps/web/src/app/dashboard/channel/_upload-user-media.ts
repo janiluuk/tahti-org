@@ -4,12 +4,14 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 export type UploadedUserMedia = {
+  id?: string
   url: string
   contentType: string
   filename: string
 }
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const LOGO_TYPES = new Set(['image/png', 'image/webp'])
 const BACKDROP_TYPES = new Set([
   'video/mp4',
   'video/webm',
@@ -61,8 +63,25 @@ export async function uploadUserImage(file: File): Promise<UploadedUserMedia> {
     }),
   })
   if (!complete.ok) throw new Error('Could not finish image upload')
-  const result = (await complete.json()) as { url: string }
-  return { url: result.url, contentType, filename: file.name }
+  const result = (await complete.json()) as { url: string; id?: string }
+  return { id: result.id, url: result.url, contentType, filename: file.name }
+}
+
+/** Channel Designer LOGO block — alpha PNG/WebP only via `/api/me/media/*`. */
+export async function uploadChannelLogo(file: File): Promise<UploadedUserMedia & { id: string }> {
+  const contentType = LOGO_TYPES.has(file.type)
+    ? file.type
+    : /\.webp$/i.test(file.name)
+      ? 'image/webp'
+      : 'image/png'
+  if (!LOGO_TYPES.has(contentType)) {
+    throw new Error('Logos must be PNG or WebP (transparency supported)')
+  }
+  const uploaded = await uploadUserImage(new File([file], file.name, { type: contentType }))
+  if (!uploaded.id) {
+    throw new Error('Could not finish logo upload')
+  }
+  return { ...uploaded, id: uploaded.id }
 }
 
 /** Header backdrop slot — images or short video loops via `/api/me/channel/video-background/*`. */

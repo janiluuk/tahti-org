@@ -24,6 +24,7 @@ export type DashboardSectionKey =
   | 'designerTracks'
   | 'designerCollections'
   | 'designerReleases'
+  | 'designerBlocks'
 
 export type DashboardNavDefinition = {
   href: string
@@ -111,6 +112,13 @@ export const DASHBOARD_SUBMENUS: Record<string, DashboardNavDefinition[]> = {
     },
     {
       href: '/dashboard/channel/edit',
+      label: 'Blocks',
+      icon: 'appearance',
+      hash: 'channel-blocks',
+      sectionKey: 'designerBlocks',
+    },
+    {
+      href: '/dashboard/channel/edit',
       label: 'Featured tracks',
       icon: 'collections',
       hash: 'channel-tracks',
@@ -160,6 +168,7 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   designerSlideshow: 'overview',
   designerLinks: 'overview',
   designerPlayer: 'overview',
+  designerBlocks: 'overview',
   designerTracks: 'overview',
   designerCollections: 'overview',
   designerReleases: 'overview',
@@ -199,6 +208,7 @@ export const DASHBOARD_HASH_TO_SECTION: Record<string, DashboardSectionKey> = {
   'channel-slideshow': 'designerSlideshow',
   'channel-links': 'designerLinks',
   'channel-text-overlay': 'designerPlayer',
+  'channel-blocks': 'designerBlocks',
   'channel-tracks': 'designerTracks',
   'channel-collections': 'designerCollections',
   'channel-releases': 'designerReleases',
