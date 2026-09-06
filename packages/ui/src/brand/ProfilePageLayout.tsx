@@ -5,6 +5,7 @@ import Link from 'next/link'
 import React, { type ReactNode } from 'react'
 import { AvatarTile } from './AvatarTile'
 import { ChannelHeader, type SiteNavId } from './ChannelPageLayout'
+import { MemberBadge } from './MemberBadge'
 import { PublicFooter } from './PublicFooter'
 import { SafePlainText } from '../lib/safe-plain-text'
 import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
@@ -142,14 +143,16 @@ type ProfileHeroProps = {
   countryLabel?: string | null
   pronouns?: string | null
   isLive?: boolean
+  /** Association member of Tahti ry — shows a modest badge next to the name. */
+  isMember?: boolean
   channelHref?: string | null
   subscribeHref: string
   /** When false, hide the Support CTA (no tiers / payments). Defaults to true. */
   showSupport?: boolean
   tipJarUrl?: string | null
-  /** Pre-formatted, e.g. "Member since 8 months" — resolved by the caller so this component stays locale-agnostic. */
+  /** Pre-formatted, e.g. "Joined 8 months ago" — resolved by the caller so this component stays locale-agnostic. */
   joinDateLabel?: string | null
-  /** Precise form shown on hover, e.g. "Member since November 2025". */
+  /** Precise form shown on hover, e.g. "Joined November 2025". */
   joinDateTitle?: string
   /** The newsletter subscribe control (apps/web's NewsletterSubscribeForm) — a slot
    * rather than a prop this component builds itself, since it needs client-side
@@ -191,6 +194,7 @@ export function ProfileHero({
   countryLabel,
   pronouns,
   isLive,
+  isMember = false,
   channelHref,
   subscribeHref,
   showSupport = true,
@@ -213,6 +217,7 @@ export function ProfileHero({
           <div className="prof-name">
             {displayName}
             {pronouns && <span className="prof-pronouns">{pronouns}</span>}
+            {isMember ? <MemberBadge /> : null}
           </div>
           <div className="prof-meta-line">
             <span>@{username}</span>

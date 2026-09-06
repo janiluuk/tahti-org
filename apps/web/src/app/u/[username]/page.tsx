@@ -45,25 +45,26 @@ export const revalidate = 60
  * on hover via joinDateTitle instead. */
 function relativeSince(date: Date, now: Date): string {
   const days = Math.floor((now.getTime() - date.getTime()) / 86_400_000)
-  if (days < 31) return `${days} day${days === 1 ? '' : 's'}`
+  if (days < 1) return 'today'
+  if (days < 31) return `${days} day${days === 1 ? '' : 's'} ago`
   const months = Math.floor(days / 30.44)
-  if (months < 12) return `${months} month${months === 1 ? '' : 's'}`
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`
   const years = Math.floor(days / 365.25)
-  return `${years} year${years === 1 ? '' : 's'}`
+  return `${years} year${years === 1 ? '' : 's'} ago`
 }
 
 function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
   if (!joinDate) return null
   const date = new Date(joinDate)
   if (Number.isNaN(date.getTime())) return null
-  return `Member since ${relativeSince(date, new Date())}`
+  return `Joined ${relativeSince(date, new Date())}`
 }
 
 function formatJoinDateTitle(joinDate: string | null | undefined): string | undefined {
   if (!joinDate) return undefined
   const date = new Date(joinDate)
   if (Number.isNaN(date.getTime())) return undefined
-  return `Member since ${date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`
+  return `Joined ${date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`
 }
 
 async function fetchProfile(username: string) {
@@ -144,6 +145,7 @@ interface ProfileResponse {
     countryCode?: string | null
     pronouns?: string | null
     tier: string
+    isMember?: boolean
     socialLinks: Record<string, string> | null
     joinDate?: string | null
     followerCount?: number | null
@@ -513,6 +515,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             countryLabel={countryName(artist.countryCode)}
             pronouns={artist.pronouns}
             isLive={isLive}
+            isMember={Boolean(artist.isMember)}
             channelHref={links.channel}
             subscribeHref={links.subscribe}
             showSupport={showSupport}

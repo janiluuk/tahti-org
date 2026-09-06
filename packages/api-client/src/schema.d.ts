@@ -883,6 +883,7 @@ export interface paths {
                 socialLinks?: unknown
                 /** Format: date-time */
                 joinDate?: string | null
+                isMember?: boolean
                 chatEnabled?: boolean
                 showPageHero?: boolean
               }
@@ -1003,6 +1004,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -1034,6 +1036,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -1065,6 +1068,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -14517,6 +14521,7 @@ export interface paths {
                 pronouns?: string | null
                 /** Format: date-time */
                 joinDate?: string | null
+                isMember?: boolean
                 followerCount?: number | null
                 followingCount?: number | null
               }
@@ -30691,6 +30696,7 @@ export interface components {
         socialLinks?: unknown
         /** Format: date-time */
         joinDate?: string | null
+        isMember?: boolean
         chatEnabled?: boolean
         showPageHero?: boolean
       }
@@ -30732,6 +30738,7 @@ export interface components {
         pronouns?: string | null
         /** Format: date-time */
         joinDate?: string | null
+        isMember?: boolean
         followerCount?: number | null
         followingCount?: number | null
       }

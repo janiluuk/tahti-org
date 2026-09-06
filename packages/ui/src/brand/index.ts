@@ -64,6 +64,7 @@ export { CoverArt, type CoverArtProps, type CoverArtSize } from './CoverArt'
 export { AvatarTile, type AvatarTileProps } from './AvatarTile'
 export { PageHero, type PageHeroProps, type PageHeroStat } from './PageHero'
 export { RankBadge } from './RankBadge'
+export { MemberBadge } from './MemberBadge'
 export { PinnedAnnouncement, type PinnedAnnouncementProps } from './PinnedAnnouncement'
 export {
   WaveformPlayer,
