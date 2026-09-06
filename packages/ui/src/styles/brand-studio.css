@@ -3662,7 +3662,8 @@
   }
 
   [data-tahti-ui='studio'] .db-main {
-    padding: 16px 16px 80px;
+    /* Body already clears --fixed-stack-bottom; keep a little content inset. */
+    padding: 16px 16px 16px;
   }
 
   [data-tahti-ui='studio'] .db-mobile-nav {
@@ -3727,8 +3728,8 @@
     border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
     padding: 10px 16px max(16px, env(safe-area-inset-bottom));
-    /* sits above the 56px-ish bottom nav bar so both stay visible */
-    margin-bottom: 64px;
+    /* sits above the studio nav (+ mini-player when it is playing) */
+    margin-bottom: var(--fixed-stack-bottom);
   }
 
   [data-tahti-ui='studio'] .db-mobile-more-sheet__handle {
@@ -7990,8 +7991,8 @@
 
 @media (max-width: 768px) {
   .pro-editor-fullpage {
-    margin: -16px -16px -80px;
-    padding-bottom: 80px;
+    margin: -16px -16px -16px;
+    padding-bottom: var(--fixed-stack-bottom);
   }
 }
 
