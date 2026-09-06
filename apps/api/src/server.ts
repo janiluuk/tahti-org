@@ -196,6 +196,7 @@ import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
 import adminAnnouncementsRoutes from './routes/admin/announcements.js'
 import meAddonsRoutes from './routes/me/addons.js'
+import meChannelBlockRoutes from './routes/me/channel-blocks.js'
 import adminAddonsRoutes from './routes/admin/addons.js'
 import addonStoreRoutes from './routes/addons/store.js'
 import addonPublicRoutes from './routes/addons/public.js'
@@ -769,6 +770,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meAnnouncementsRoutes)
   await fastify.register(adminAnnouncementsRoutes)
   await fastify.register(meAddonsRoutes)
+  await fastify.register(meChannelBlockRoutes)
   await fastify.register(adminAddonsRoutes)
   await fastify.register(addonStoreRoutes)
   await fastify.register(addonPublicRoutes)
