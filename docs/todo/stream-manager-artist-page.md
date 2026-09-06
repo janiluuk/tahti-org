@@ -13,8 +13,9 @@ Implemented on `cursor/stream-manager-artist-todo-5cae`.
 - Live stream manager stays on Studio overview (`/dashboard` `ChannelHero`) when
   the channel is on air. Rotation/playlist transport stays there too
   (`ChannelControlsPanel`).
-- Offline hero is a Go live button (opens `/dashboard/broadcast`), not the mock
-  “Ready to broadcast?” banner. Preview still uses the real Go live action.
+- Offline hero is a Go live button (opens `/dashboard/broadcast`), not the
+  “your channel is offline” status banner. Preview still uses the real Go live
+  action.
 - Collapsed rotation block shows the active playlist name (`Night Drive`, or
   `Default rotation`).
 - Go live step no longer embeds the playlist manager. The top-nav status

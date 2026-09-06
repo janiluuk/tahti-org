@@ -5851,8 +5851,8 @@
 }
 
 [data-tahti-ui='studio'] .db-hero--offline {
-  background: color-mix(in srgb, var(--cyan) 10%, var(--card));
-  border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--border));
+  background: color-mix(in srgb, var(--green) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--green) 30%, var(--border));
 }
 
 [data-tahti-ui='studio'] .db-hero__go-live-btn,

@@ -32,7 +32,8 @@ function elapsedSecondsSince(goneLiveAt: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(goneLiveAt).getTime()) / 1000))
 }
 
-/** Channel home hero — Go live button when offline, live status + stream manager when on air. */
+/** Channel home hero — Go live button when the channel is not on air, live
+ * status + stream manager when it is. */
 export function ChannelHero({
   slug,
   state,
@@ -86,7 +87,6 @@ export function ChannelHero({
       <NextLink href="/dashboard/broadcast" className="db-hero__go-live-btn">
         Go live
       </NextLink>
-      <p className="db-hero__hint">Configure your broadcasting tool, then start streaming.</p>
       {lastBroadcast ? (
         <p className="db-hero__last-broadcast">
           Last broadcast: {lastBroadcast.title}, {lastBroadcast.ago}

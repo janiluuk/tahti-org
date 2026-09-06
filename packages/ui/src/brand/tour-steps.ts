@@ -61,7 +61,7 @@ const DASHBOARD_HOME: TourStep[] = [
   {
     selector: '[data-hero]',
     title: 'Channel status',
-    body: 'Shows whether you’re live, previewing, or offline. When you’re off air, the Go live button starts the broadcast setup.',
+    body: 'When you’re on air this is the stream manager. When you’re not, Go live starts the broadcast setup.',
   },
   {
     selector: '[aria-label="Channel summary"]',
