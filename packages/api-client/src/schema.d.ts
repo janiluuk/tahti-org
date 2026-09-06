@@ -835,6 +835,7 @@ export interface paths {
             'application/json': {
               slug: string
               state: string
+              signalConnected: boolean
               hlsUrl: string | null
               /** Format: date-time */
               nextBroadcastAt: string | null
@@ -30668,6 +30669,7 @@ export interface components {
     PublicChannel: {
       slug: string
       state: string
+      signalConnected: boolean
       hlsUrl: string | null
       /** Format: date-time */
       nextBroadcastAt: string | null
