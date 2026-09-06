@@ -13,6 +13,7 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -126,6 +127,24 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         })),
       )
 
+      const linkedSoundIds = release.tracks
+        .map((t) => t.soundId)
+        .filter((id): id is string => Boolean(id))
+      const linkedSounds =
+        linkedSoundIds.length > 0
+          ? await fastify.prisma.sound.findMany({
+              where: { id: { in: linkedSoundIds } },
+              select: {
+                id: true,
+                accessMode: true,
+                purchaseTierId: true,
+                channel: { select: { userId: true } },
+              },
+            })
+          : []
+      const linkedById = new Map(linkedSounds.map((s) => [s.id, s]))
+      const viewerUserId = request.sessionUser?.id ?? null
+
       return reply.send({
         release: {
           id: release.id,
@@ -140,12 +159,25 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           pLine: release.pLine,
           cLine: release.cLine,
           tracks: await Promise.all(
-            release.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
+            release.tracks.map(async ({ streamKey, sourceKey, soundId, ...track }) => {
               const key = streamKey ?? sourceKey
-              return {
-                ...track,
-                audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+              const linked = soundId ? linkedById.get(soundId) : undefined
+              if (!linked) {
+                return {
+                  ...track,
+                  soundId,
+                  audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+                }
               }
+              const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
+                playbackKey: key,
+                artistUserId: linked.channel.userId,
+                accessMode: linked.accessMode,
+                purchaseTierId: linked.purchaseTierId,
+                viewerUserId,
+                ttlSec: 60 * 60,
+              })
+              return { ...track, soundId, audioUrl: url, gate }
             }),
           ),
           musicbrainzUrl,

@@ -23,6 +23,7 @@ describe('public list/play purchase gate', () => {
   let purchaseTierId: string
   let purchaseItemId: string
   let collectionSlug: string
+  let smartLinkSlug: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -78,6 +79,28 @@ describe('public list/play purchase gate', () => {
     })
     await prisma.collectionItem.create({
       data: { collectionId: collection.id, soundId: item.id, position: 0 },
+    })
+
+    smartLinkSlug = `${PREFIX}rel`
+    await prisma.release.create({
+      data: {
+        userId: artistId,
+        title: 'Gated EP',
+        type: 'SINGLE',
+        releaseDate: new Date('2030-01-01'),
+        smartLinkSlug,
+        state: 'PUBLISHED',
+        publishedAt: new Date(),
+        tracks: {
+          create: {
+            position: 1,
+            title: 'Paywalled list track',
+            status: 'READY',
+            soundId: item.id,
+            streamKey: `${PREFIX}stream.opus`,
+          },
+        },
+      },
     })
   })
 
@@ -180,5 +203,50 @@ describe('public list/play purchase gate', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().url).toBe('https://minio.test/get')
+  })
+
+  it('omits RSS enclosures for gated channel and collection sounds', async () => {
+    const channelRss = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/${slug}/rss.xml`,
+    })
+    expect(channelRss.statusCode).toBe(200)
+    expect(channelRss.body).toContain('Paywalled list track')
+    expect(channelRss.body).not.toContain(`${PREFIX}paid.mp3`)
+    expect(channelRss.body).not.toContain('<enclosure')
+
+    const colRss = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${collectionSlug}/rss.xml`,
+    })
+    expect(colRss.statusCode).toBe(200)
+    expect(colRss.body).toContain('Paywalled list track')
+    expect(colRss.body).not.toContain(`${PREFIX}paid.mp3`)
+    expect(colRss.body).not.toContain('<enclosure')
+  })
+
+  it('GET /api/v1/r/:slug nulls audioUrl for a linked gated Sound', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/r/${smartLinkSlug}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const track = res.json().release.tracks[0] as {
+      audioUrl: string | null
+      gate: { reason: string; tierId?: string } | null
+    }
+    expect(track.audioUrl).toBeNull()
+    expect(track.gate).toEqual({ reason: 'PURCHASE', tierId: purchaseTierId })
+  })
+
+  it('GET /api/v1/r/:slug still presigns for the artist', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/r/${smartLinkSlug}`,
+      headers: { cookie: artistCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().release.tracks[0].audioUrl).toBe('https://minio.test/get')
+    expect(res.json().release.tracks[0].gate).toBeNull()
   })
 })

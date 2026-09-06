@@ -70,7 +70,6 @@ Implemented on `feat/channel-designer-uploads-help` (2026-09-04).
 3. Header / backdrop: drop multiple JPGs into gallery dropzone; drop MP4 → header style becomes video loop.
 4. Help (?) expands section instructions; forms have no long annotation paragraphs.
 
-
 ## 2026-09-05 — channel-look-extras.md
 
 # Channel look-extras persistence
@@ -191,5 +190,4 @@ Shipped on main: Channel Designer logo/addon blocks ([#445](https://github.com/j
 
 ### 2026-09-06 — restore-download-purchase-gate.md
 
-Download gate restored (`ca7ee137`). Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, and embed play. Channel-item cache no longer stores URLs. Leftover: release smart-link / RSS enclosures for files without a linked `Sound.accessMode`.
-
+Download gate restored (`ca7ee137`). Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, embed play, and smart-link tracks linked to a gated Sound. Channel-item cache no longer stores URLs. RSS omits `<enclosure>` for non-FREE sounds. Album `ReleaseTrack` files with no linked Sound have no purchase-tier field and stay streamable on the smart link.

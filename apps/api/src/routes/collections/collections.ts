@@ -1033,6 +1033,7 @@ type ChannelSoundRssSource = {
     durationSec: number | null
     mp3Key: string | null
     flacKey: string | null
+    accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
     createdAt: Date
   }>
 }
@@ -1057,11 +1058,22 @@ async function loadChannelSoundRssSource(
           durationSec: true,
           mp3Key: true,
           flacKey: true,
+          accessMode: true,
           createdAt: true,
         },
       },
     },
   })
+}
+
+function rssEnclosureUrl(item: {
+  mp3Key: string | null
+  flacKey: string | null
+  accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+}): string | null {
+  // RSS has no viewer session — never publish a stable object URL for gated tracks.
+  if (item.accessMode && item.accessMode !== 'FREE') return null
+  return publicMediaUrl(soundPlaybackKey(item))
 }
 
 function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
@@ -1074,7 +1086,7 @@ function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
       description: i.description ?? '',
       pubDate: i.createdAt,
       duration: i.durationSec ?? 0,
-      enclosureUrl: publicMediaUrl(soundPlaybackKey(i)),
+      enclosureUrl: rssEnclosureUrl(i),
       guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
     })),
   })
@@ -1097,6 +1109,7 @@ type CollectionItemRow = {
     durationSec: number | null
     mp3Key: string | null
     flacKey: string | null
+    accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
     createdAt: Date
   } | null
   release: {
@@ -1116,7 +1129,7 @@ function collectionRssItems(items: CollectionItemRow[], username: string): RssIt
         description: i.sound.description ?? '',
         pubDate: i.sound.createdAt,
         duration: i.sound.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(soundPlaybackKey(i.sound)),
+        enclosureUrl: rssEnclosureUrl(i.sound),
         guid: `${config.appUrl}/u/${username}/c/item/${i.sound.id}`,
       })
     } else if (i.release) {
