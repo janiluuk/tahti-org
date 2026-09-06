@@ -1,8 +1,16 @@
 # Responsive usability audit (mobile simplification)
 
-Open implementation worklist from 2026-09-01. Audit only — **no responsive UI
-changes have been made yet.** Shipped session notes (prod preflight, method) are
-in `docs/todo/HISTORY.md`.
+Open implementation worklist from 2026-09-01. Audit notes (prod preflight,
+method) are in `docs/todo/HISTORY.md`.
+
+## Implementation status
+
+| Item | Status |
+| ---- | ------ |
+| MOB-01, MOB-03, MOB-07, MOB-08 | PR [#446](https://github.com/janiluuk/tahti-org/pull/446) |
+| MOB-04, MOB-05 | PR [#451](https://github.com/janiluuk/tahti-org/pull/451) |
+| MOB-02, MOB-06 | PR [#452](https://github.com/janiluuk/tahti-org/pull/452) |
+| MOB-09, MOB-10 | This branch — Discover Filters sheet; identity/upload disclosure |
 
 ## Scope and method
 
@@ -12,8 +20,7 @@ artist/channel, player, artist studio, settings, and admin surfaces for
 content density, horizontal overflow, fixed-element collisions, touch targets,
 and places where desktop complexity should be progressively disclosed.
 
-This is an audit and implementation worklist; no responsive UI changes were
-made in this pass.
+This file is the implementation worklist from that audit.
 
 ## Production preflight
 
@@ -187,6 +194,11 @@ the active filter plus a `Filters` button that opens a sheet. Add
 `min-width: 0`, `overflow-wrap: anywhere`, and truncation to flex/grid children
 where long labels can widen the page.
 
+**Status:** Discover Live/Replay and Artists genre chips use `ChipFilterBar`
+(active value + Filters sheet on ≤640px). Desktop still shows the full chip
+row. Live card names keep ellipsis with a `title` for the full value. Remaining
+studio/admin chip toolbars can reuse the same component.
+
 ### MOB-10 — Complex forms should become progressive disclosure flows
 
 **Priority:** P2
@@ -203,6 +215,12 @@ are all expanded.
 Essentials, Media, Distribution, Advanced. Keep one sticky primary action,
 show validation beside the field, defer previews/advanced controls until
 requested, and use a confirmation sheet for destructive operations.
+
+**Status:** Channel identity is split into Essentials / Media / Profile / Genres
+(`StudioCollapse`). Remove logo asks for confirmation. Upload keeps title,
+artist, and type visible; year, genre, and collections sit under More details.
+The upload save action is sticky above the studio bottom nav. Broadcast and
+admin editors were not in this slice.
 
 ## Mobile simplification rules to apply consistently
 

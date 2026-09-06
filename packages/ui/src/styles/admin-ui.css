@@ -2196,6 +2196,21 @@
   margin-bottom: var(--tahti-space-8);
 }
 
+.chip-filter-bar {
+  margin-bottom: var(--tahti-space-8);
+}
+
+.chip-filter-bar__desktop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip-filter-bar__compact {
+  display: none;
+}
+
+.chip-filter-bar__chip,
 .listen-genre-filter__chip {
   padding: 0.35rem 0.85rem;
   border-radius: var(--tahti-radius-full);
@@ -2210,15 +2225,85 @@
     background 0.15s;
 }
 
+.chip-filter-bar__chip:hover,
 .listen-genre-filter__chip:hover {
   color: var(--text);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.chip-filter-bar__chip--active,
 .listen-genre-filter__chip--active {
   color: var(--tahti-bg);
   background: var(--cyan);
   border-color: var(--cyan);
+}
+
+.chip-filter-bar__sheet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.chip-filter-bar__sheet .chip-filter-bar__chip {
+  min-height: 44px;
+}
+
+@media (max-width: 640px) {
+  .chip-filter-bar__desktop {
+    display: none;
+  }
+
+  .chip-filter-bar__compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .chip-filter-bar__current {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .chip-filter-bar__current small {
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .chip-filter-bar__current span {
+    overflow: hidden;
+    color: var(--text);
+    font-size: var(--tahti-text-sm);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chip-filter-bar__filters {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--tahti-text-sm);
+    cursor: pointer;
+  }
+
+  .listen-genre-filter__chip {
+    min-height: 44px;
+  }
 }
 
 .listen-live-dot {
@@ -2430,6 +2515,7 @@
   font-size: var(--tahti-text-base);
   font-weight: 500;
   color: var(--text);
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

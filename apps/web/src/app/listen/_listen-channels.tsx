@@ -6,7 +6,7 @@
 import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react'
 import Link from 'next/link'
 import type { ChannelCard } from '@tahti/shared'
-import { WatcherCount } from '@tahti/ui'
+import { WatcherCount, ChipFilterBar } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { usePlayer } from '@/contexts/player-context'
 
@@ -98,7 +98,9 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
             <WatcherCount count={listenerCount} className="listen-live-card__watchers" />
           )}
         </div>
-        <div className="listen-live-card__name">{channel.user.displayName}</div>
+        <div className="listen-live-card__name" title={channel.user.displayName}>
+          {channel.user.displayName}
+        </div>
         <Link href={`/u/${channel.user.username}`} className="listen-live-card__handle">
           @{channel.user.username}
         </Link>
@@ -179,25 +181,13 @@ export function ListenChannels({
   return (
     <>
       {genres.length > 0 && (
-        <div className="listen-genre-filter" role="group" aria-label="Filter by genre">
-          <button
-            type="button"
-            className={`listen-genre-filter__chip${genre === null ? ' listen-genre-filter__chip--active' : ''}`}
-            onClick={() => setGenre(null)}
-          >
-            All
-          </button>
-          {genres.map((g) => (
-            <button
-              key={g}
-              type="button"
-              className={`listen-genre-filter__chip${genre === g ? ' listen-genre-filter__chip--active' : ''}`}
-              onClick={() => setGenre(genre === g ? null : g)}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
+        <ChipFilterBar
+          label="Filter by genre"
+          allLabel="All"
+          value={genre}
+          onChange={setGenre}
+          options={genres.map((g) => ({ value: g, label: g }))}
+        />
       )}
 
       {empty ? (

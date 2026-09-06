@@ -10070,6 +10070,24 @@
   border-top: 1px solid var(--border);
 }
 
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .studio-collapse__summary {
+    min-height: 44px;
+  }
+
+  [data-tahti-ui='studio'] .upload-progress__footer {
+    position: sticky;
+    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));
+    z-index: 4;
+    padding: 0.75rem 0;
+    background: var(--bg);
+  }
+
+  [data-tahti-ui='studio'] .upload-progress__collection-chip {
+    min-height: 44px;
+  }
+}
+
 [data-tahti-ui='studio'] .upload-progress__no-file {
   display: flex;
   flex-direction: column;
