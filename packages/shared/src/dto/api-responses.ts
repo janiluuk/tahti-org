@@ -774,6 +774,14 @@ export const ChannelDirectoryResponseSchema = z.object({
 
 export type ChannelDirectoryEntry = z.infer<typeof ChannelDirectoryEntrySchema>
 
+/** Present when the viewer cannot stream; audioUrl / playUrl is null in that case. */
+export const PlaybackGateSchema = z
+  .object({
+    reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
+    tierId: z.string().optional(),
+  })
+  .nullable()
+
 /** Discover → Tahti Selects gallery: the channel's current curated-rotation
  * tracks, for a browsable thumbnail grid (distinct from the raw fallback M3U
  * the internal Liquidsoap route serves). */
@@ -786,6 +794,7 @@ export const TahtiSelectsGalleryItemSchema = z.object({
   bannerUrl: z.string().nullable(),
   durationSec: z.number().int().nullable(),
   audioUrl: z.string().nullable(),
+  gate: PlaybackGateSchema.optional(),
 })
 
 export const TahtiSelectsGalleryResponseSchema = z.object({
@@ -901,14 +910,7 @@ export const PublicTrackDetailSchema = z
     purchaseTierId: z.string().nullable().optional(),
     purchaseTierName: z.string().nullable().optional(),
     purchaseTierPriceCents: z.number().int().nullable().optional(),
-    /** Present when the viewer cannot stream; audioUrl is null in that case. */
-    gate: z
-      .object({
-        reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
-        tierId: z.string().optional(),
-      })
-      .nullable()
-      .optional(),
+    gate: PlaybackGateSchema.optional(),
   })
   .passthrough()
 

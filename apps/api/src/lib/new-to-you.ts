@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
-import {
-  soundPlaybackKey,
-  parseSocialLinksGenres,
-  type TahtiSelectsGalleryItem,
-} from '@tahti/shared'
-import { presignedGetUrl } from './minio.js'
+import { parseSocialLinksGenres, type TahtiSelectsGalleryItem } from '@tahti/shared'
+import { toGatedGalleryItem } from './playback-url.js'
 
 const CANDIDATE_POOL = 200
 const DEFAULT_LIMIT = 24
@@ -137,6 +133,8 @@ export async function buildNewToYou(
       durationSec: true,
       mp3Key: true,
       flacKey: true,
+      accessMode: true,
+      purchaseTierId: true,
       genre: true,
       genreCustom: true,
       subGenres: true,
@@ -167,22 +165,7 @@ export async function buildNewToYou(
   scored.sort((a, b) => b.score - a.score)
   const picked = scored.slice(0, limit).map((s) => s.item)
 
-  const items = await Promise.all(
-    picked.map(async (item) => {
-      const playbackKey = soundPlaybackKey(item)
-      const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-      return {
-        soundId: item.id,
-        title: item.title,
-        artistName: item.artistName ?? item.channel.user.displayName,
-        artistUsername: item.artistName ? null : item.channel.user.username,
-        channelSlug: item.channel.slug,
-        bannerUrl: item.bannerUrl,
-        durationSec: item.durationSec,
-        audioUrl,
-      } satisfies TahtiSelectsGalleryItem
-    }),
-  )
+  const items = await Promise.all(picked.map((item) => toGatedGalleryItem(prisma, item, userId)))
 
   return { preferenceGenres, items }
 }

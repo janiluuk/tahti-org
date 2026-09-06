@@ -22,6 +22,8 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
+import { playbackForbiddenBody } from '../../lib/playback-url.js'
+import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 
 // M14 — oEmbed discovery endpoint + embed metadata
 // oEmbed spec: https://oembed.com/
@@ -299,12 +301,34 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         where: { collectionId: collection.id, soundId: trackId },
         select: {
           sound: {
-            select: { title: true, mp3Key: true, flacKey: true, status: true, peaks: true },
+            select: {
+              title: true,
+              mp3Key: true,
+              flacKey: true,
+              status: true,
+              peaks: true,
+              accessMode: true,
+              purchaseTierId: true,
+              channel: { select: { userId: true } },
+            },
           },
         },
       })
       if (!item?.sound || item.sound.status !== 'READY') {
         return reply.status(404).send({ error: 'Track not found or not ready' })
+      }
+
+      const gateStatus = await resolvePlaybackGateStatus(
+        fastify.prisma,
+        {
+          artistUserId: item.sound.channel.userId,
+          accessMode: item.sound.accessMode ?? 'FREE',
+          purchaseTierId: item.sound.purchaseTierId ?? null,
+        },
+        request.sessionUser?.id ?? null,
+      )
+      if (!gateStatus.allowed) {
+        return reply.status(403).send(playbackForbiddenBody(gateStatus))
       }
 
       const key = soundPlaybackKey(item.sound)
@@ -342,9 +366,36 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
       const track = await fastify.prisma.releaseTrack.findFirst({
         where: { id: trackId, releaseId: release.id, status: 'READY' },
-        select: { streamKey: true, sourceKey: true, title: true, peaks: true },
+        select: {
+          streamKey: true,
+          sourceKey: true,
+          title: true,
+          peaks: true,
+          sound: {
+            select: {
+              accessMode: true,
+              purchaseTierId: true,
+              channel: { select: { userId: true } },
+            },
+          },
+        },
       })
       if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
+
+      if (track.sound) {
+        const gateStatus = await resolvePlaybackGateStatus(
+          fastify.prisma,
+          {
+            artistUserId: track.sound.channel.userId,
+            accessMode: track.sound.accessMode ?? 'FREE',
+            purchaseTierId: track.sound.purchaseTierId ?? null,
+          },
+          request.sessionUser?.id ?? null,
+        )
+        if (!gateStatus.allowed) {
+          return reply.status(403).send(playbackForbiddenBody(gateStatus))
+        }
+      }
 
       const key = track.streamKey ?? track.sourceKey
       if (!key) return reply.status(409).send({ error: 'Track file not available yet' })

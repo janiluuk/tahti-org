@@ -5,11 +5,10 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   TAHTI_SELECTS_SLUG,
   TahtiSelectsGalleryResponseSchema,
-  soundPlaybackKey,
   openApiResponse,
 } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { toGatedGalleryItem, type GallerySoundRow } from '../../lib/playback-url.js'
 
 const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -21,13 +20,13 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(TahtiSelectsGalleryResponseSchema, 'TahtiSelectsGallery'),
       },
     },
-    async (_request, reply) => {
-      const result = await getCachedJson('tahti-selects:gallery', 60, async () => {
+    async (request, reply) => {
+      const cached = await getCachedJson('tahti-selects:gallery', 60, async () => {
         const channel = await fastify.prisma.channel.findUnique({
           where: { slug: TAHTI_SELECTS_SLUG },
           select: { id: true },
         })
-        if (!channel) return { items: [] }
+        if (!channel) return { items: [] as GallerySoundRow[] }
 
         const rows = await fastify.prisma.curatedRotationItem.findMany({
           where: { channelId: channel.id },
@@ -42,35 +41,29 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
                 durationSec: true,
                 mp3Key: true,
                 flacKey: true,
+                accessMode: true,
+                purchaseTierId: true,
                 channel: {
-                  select: { slug: true, user: { select: { username: true, displayName: true } } },
+                  select: {
+                    slug: true,
+                    userId: true,
+                    user: { select: { username: true, displayName: true } },
+                  },
                 },
               },
             },
           },
         })
 
-        const items = await Promise.all(
-          rows.map(async ({ sound: item }) => {
-            const playbackKey = soundPlaybackKey(item)
-            const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-            return {
-              soundId: item.id,
-              title: item.title,
-              artistName: item.artistName ?? item.channel.user.displayName,
-              artistUsername: item.artistName ? null : item.channel.user.username,
-              channelSlug: item.channel.slug,
-              bannerUrl: item.bannerUrl,
-              durationSec: item.durationSec,
-              audioUrl,
-            }
-          }),
-        )
-
-        return { items }
+        return { items: rows.map(({ sound }) => sound) }
       })
 
-      return reply.send(result)
+      const viewerUserId = request.sessionUser?.id ?? null
+      const items = await Promise.all(
+        cached.items.map((item) => toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
+      )
+
+      return reply.send({ items })
     },
   )
 }

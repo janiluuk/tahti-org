@@ -20,6 +20,7 @@ import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
+import { playbackGatePayload } from '../../lib/playback-url.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
 
@@ -62,7 +63,7 @@ async function applyPlaybackGates(
       )
       if (!status.allowed) {
         track.playUrl = null
-        track.gate = { reason: status.reason, tierId: status.tierId }
+        track.gate = playbackGatePayload(status)
       }
     }),
   )

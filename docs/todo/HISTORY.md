@@ -185,3 +185,11 @@ Last.fm scrobble beside ListenBrainz. Artist plays `range=1` / custom / hourly b
 
 Advisory motions, discussion, public history, meeting/document schema, attendance/quorum, governance journey tests, yearly transparency reports. Open items remain in `docs/governance-worklog.md`.
 
+### 2026-09-06 — channel-designer-blocks.md / stream-manager-artist-page.md / governance-meeting-officers.md
+
+Shipped on main: Channel Designer logo/addon blocks ([#445](https://github.com/janiluuk/tahti-org/pull/445)); stream manager on Studio overview ([#449](https://github.com/janiluuk/tahti-org/pull/449)); meeting officers ([#447](https://github.com/janiluuk/tahti-org/pull/447)).
+
+### 2026-09-06 — restore-download-purchase-gate.md
+
+Download gate was already restored. Public list/play paths now use `resolvePlaybackGateStatus` before presigning: channel items, discover latest-tracks, Selects gallery, new-to-you, followed feed, collection pages, and embed play. Channel-item cache no longer stores URLs. Leftover: release smart-link / RSS enclosures for files without a linked `Sound.accessMode`.
+
