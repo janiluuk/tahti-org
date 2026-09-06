@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TahtiSelectsGalleryResponseSchema, soundPlaybackKey, openApiResponse } from '@tahti/shared'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { TahtiSelectsGalleryResponseSchema, openApiResponse } from '@tahti/shared'
+import { toGatedGalleryItem } from '../../lib/playback-url.js'
 
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
@@ -68,27 +68,21 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           durationSec: true,
           mp3Key: true,
           flacKey: true,
+          accessMode: true,
+          purchaseTierId: true,
           channel: {
-            select: { slug: true, user: { select: { username: true, displayName: true } } },
+            select: {
+              slug: true,
+              userId: true,
+              user: { select: { username: true, displayName: true } },
+            },
           },
         },
       })
 
+      const viewerUserId = request.sessionUser?.id ?? null
       const items = await Promise.all(
-        rows.map(async (item) => {
-          const playbackKey = soundPlaybackKey(item)
-          const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-          return {
-            soundId: item.id,
-            title: item.title,
-            artistName: item.artistName ?? item.channel.user.displayName,
-            artistUsername: item.artistName ? null : item.channel.user.username,
-            channelSlug: item.channel.slug,
-            bannerUrl: item.bannerUrl,
-            durationSec: item.durationSec,
-            audioUrl,
-          }
-        }),
+        rows.map((item) => toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
       )
 
       return reply.send({ items })

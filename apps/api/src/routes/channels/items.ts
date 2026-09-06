@@ -10,9 +10,9 @@ import {
   parseColorScheme,
   parseRouteParams,
 } from '@tahti/shared'
-import { presignedGetUrl } from '../../lib/minio.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -31,14 +31,17 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, userId: true },
       })
 
       if (!channel) {
         return reply.status(404).send({ error: 'Channel not found' })
       }
 
-      const itemsWithUrls = await getCachedJson(`channel:items:${slug}`, 15, async () => {
+      // Cache metadata only — never presigned URLs. Gated tracks must not leak a
+      // URL via Redis or getCachedJson's in-flight promise, and entitlement is
+      // per viewer.
+      const cached = await getCachedJson(`channel:items:${slug}`, 15, async () => {
         const items = await fastify.prisma.sound.findMany({
           where: { channelId: channel.id, status: 'READY', isPublic: true },
           orderBy: { createdAt: 'desc' },
@@ -80,6 +83,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             colorSchemeJson: true,
             embedProvider: true,
             embedUri: true,
+            accessMode: true,
+            purchaseTierId: true,
             _count: { select: { comments: true } },
           },
         })
@@ -99,23 +104,32 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             .map((row) => [row.soundId!, row._count._all]),
         )
 
-        return Promise.all(
-          items.map(async (item) => {
-            const { _count, colorSchemeJson, ...rest } = item
-            const playbackKey = soundPlaybackKey(item)
-            const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-            const accentColor = parseColorScheme(colorSchemeJson)?.accent ?? null
-            return {
-              ...serializeSound(rest),
-              fileSizeBytes: Number(item.fileSizeBytes),
-              audioUrl,
-              commentCount: _count.comments,
-              downloadCount: downloadCountById.get(item.id) ?? 0,
-              accentColor,
-            }
-          }),
-        )
+        return items.map((item) => {
+          const { _count, colorSchemeJson, ...rest } = item
+          const accentColor = parseColorScheme(colorSchemeJson)?.accent ?? null
+          return {
+            ...serializeSound(rest),
+            fileSizeBytes: Number(item.fileSizeBytes),
+            commentCount: _count.comments,
+            downloadCount: downloadCountById.get(item.id) ?? 0,
+            accentColor,
+          }
+        })
       })
+
+      const viewerUserId = request.sessionUser?.id ?? null
+      const itemsWithUrls = await Promise.all(
+        cached.map(async (item) => {
+          const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
+            playbackKey: soundPlaybackKey(item),
+            artistUserId: channel.userId,
+            accessMode: item.accessMode,
+            purchaseTierId: item.purchaseTierId,
+            viewerUserId,
+          })
+          return { ...item, audioUrl: url, gate }
+        }),
+      )
 
       return reply.send(itemsWithUrls)
     },

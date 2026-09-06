@@ -32,6 +32,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -55,7 +56,9 @@ const collectionItemInclude = {
       qualityBadge: true,
       embedUri: true,
       embedProvider: true,
-      channel: { select: { slug: true } },
+      accessMode: true,
+      purchaseTierId: true,
+      channel: { select: { slug: true, userId: true } },
     },
   },
   release: {
@@ -83,11 +86,17 @@ const collectionItemInclude = {
 async function addManagementPlayback<
   T extends {
     items: Array<{
-      sound: { mp3Key: string | null; flacKey: string | null } | null
+      sound: {
+        mp3Key: string | null
+        flacKey: string | null
+        accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+        purchaseTierId: string | null
+        channel: { userId: string }
+      } | null
       release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
     }>
   },
->(collection: T) {
+>(fastify: FastifyInstance, collection: T, viewerUserId: string) {
   return {
     ...collection,
     items: await Promise.all(
@@ -96,10 +105,21 @@ async function addManagementPlayback<
         const releaseTrack = item.release?.tracks[0]
         const releaseKey = releaseTrack?.streamKey ?? releaseTrack?.sourceKey ?? null
         const playbackKey = soundKey ?? releaseKey
-        return {
-          ...item,
-          audioUrl: playbackKey ? await presignedGetUrl(playbackKey, 60 * 60) : null,
+        if (!item.sound) {
+          return {
+            ...item,
+            audioUrl: playbackKey ? await presignedGetUrl(playbackKey, 60 * 60) : null,
+          }
         }
+        const { url } = await resolveGatedPlaybackUrl(fastify.prisma, {
+          playbackKey,
+          artistUserId: item.sound.channel.userId,
+          accessMode: item.sound.accessMode,
+          purchaseTierId: item.sound.purchaseTierId,
+          viewerUserId,
+          ttlSec: 60 * 60,
+        })
+        return { ...item, audioUrl: url }
       }),
     ),
   }
@@ -174,7 +194,11 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!col) return reply.status(404).send({ error: 'Collection not found' })
     return reply.send(
-      await addManagementPlayback({ ...col, coverUrl: await resolveCollectionCoverUrl(col) }),
+      await addManagementPlayback(
+        fastify,
+        { ...col, coverUrl: await resolveCollectionCoverUrl(col) },
+        user.id,
+      ),
     )
   })
 
@@ -682,15 +706,32 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
       const ordered = sortCollectionItems(col.items, col.trackSortMode)
+      const viewerUserId = request.sessionUser?.id ?? null
 
       // Presign playback URLs for items with real Tahti audio — embed-only items have
       // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
+      // Purchase/subscriber gates run per viewer; never cache these URLs.
       const items = await Promise.all(
         ordered.map(async (colItem) => {
           if (!colItem.sound) return colItem
           const playbackKey = soundPlaybackKey(colItem.sound)
-          const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
-          return { ...colItem, sound: { ...colItem.sound, audioUrl } }
+          const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
+            playbackKey,
+            artistUserId: colItem.sound.channel.userId,
+            accessMode: colItem.sound.accessMode,
+            purchaseTierId: colItem.sound.purchaseTierId,
+            viewerUserId,
+          })
+          const { channel, ...soundRest } = colItem.sound
+          return {
+            ...colItem,
+            sound: {
+              ...soundRest,
+              audioUrl: url,
+              gate,
+              channel: { slug: channel.slug },
+            },
+          }
         }),
       )
 
@@ -992,6 +1033,7 @@ type ChannelSoundRssSource = {
     durationSec: number | null
     mp3Key: string | null
     flacKey: string | null
+    accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
     createdAt: Date
   }>
 }
@@ -1016,11 +1058,22 @@ async function loadChannelSoundRssSource(
           durationSec: true,
           mp3Key: true,
           flacKey: true,
+          accessMode: true,
           createdAt: true,
         },
       },
     },
   })
+}
+
+function rssEnclosureUrl(item: {
+  mp3Key: string | null
+  flacKey: string | null
+  accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+}): string | null {
+  // RSS has no viewer session — never publish a stable object URL for gated tracks.
+  if (item.accessMode && item.accessMode !== 'FREE') return null
+  return publicMediaUrl(soundPlaybackKey(item))
 }
 
 function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
@@ -1033,7 +1086,7 @@ function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
       description: i.description ?? '',
       pubDate: i.createdAt,
       duration: i.durationSec ?? 0,
-      enclosureUrl: publicMediaUrl(soundPlaybackKey(i)),
+      enclosureUrl: rssEnclosureUrl(i),
       guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
     })),
   })
@@ -1056,6 +1109,7 @@ type CollectionItemRow = {
     durationSec: number | null
     mp3Key: string | null
     flacKey: string | null
+    accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
     createdAt: Date
   } | null
   release: {
@@ -1075,7 +1129,7 @@ function collectionRssItems(items: CollectionItemRow[], username: string): RssIt
         description: i.sound.description ?? '',
         pubDate: i.sound.createdAt,
         duration: i.sound.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(soundPlaybackKey(i.sound)),
+        enclosureUrl: rssEnclosureUrl(i.sound),
         guid: `${config.appUrl}/u/${username}/c/item/${i.sound.id}`,
       })
     } else if (i.release) {
