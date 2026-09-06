@@ -33,6 +33,14 @@ export const VoteMotionSchema = z.object({
   choice: z.preprocess((v) => (typeof v === 'string' ? v.toUpperCase() : v), MotionChoiceSchema),
 })
 
+export const MOTION_LIST_STATES = ['DRAFT', 'OPEN', 'CLOSED'] as const
+
+export const MotionListQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(100),
+  cursor: z.string().trim().max(256).optional(),
+  state: z.string().trim().max(64).optional(),
+})
+
 export type VoteMotionInput = z.infer<typeof VoteMotionSchema>
 
 export const PostMotionCommentSchema = z.object({

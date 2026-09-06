@@ -326,4 +326,34 @@ describe('M10 — member governance', () => {
     })
     expect(res.statusCode).toBe(409)
   })
+
+  it('paginates the motion list with a cursor and state filter', async () => {
+    const listed = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/motions?state=DRAFT&limit=1',
+      headers: { cookie: memberCookie },
+    })
+    expect(listed.statusCode).toBe(200)
+    const firstPage = listed.json() as Array<{ state: string; id: string }>
+    expect(firstPage).toHaveLength(1)
+    expect(firstPage[0]?.state).toBe('DRAFT')
+    const cursor = listed.headers['x-next-cursor']
+    expect(typeof cursor).toBe('string')
+
+    const second = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions?state=DRAFT&limit=1&cursor=${encodeURIComponent(String(cursor))}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(second.statusCode).toBe(200)
+    const secondPage = second.json() as Array<{ id: string }>
+    expect(secondPage[0]?.id).not.toBe(firstPage[0]?.id)
+
+    const invalid = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/motions?state=NOPE',
+      headers: { cookie: memberCookie },
+    })
+    expect(invalid.statusCode).toBe(400)
+  })
 })

@@ -12,6 +12,7 @@ import {
 import { requireBoard } from '../../plugins/auth.js'
 import { assembleAnnualReportMarkdown, annualReportStorageKey } from '../../lib/annual-report.js'
 import { presignedGetUrl, putObjectText } from '../../lib/minio.js'
+import { auditLog } from '../../lib/audit.js'
 
 const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -83,6 +84,13 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
           generatedAt: new Date(),
           generatedById: actor.id,
         },
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'ANNUAL_REPORT_GENERATE',
+        actorId: actor.id,
+        targetId: String(year),
+        meta: { year, storageKey },
       })
 
       const downloadUrl = await presignedGetUrl(storageKey, 3600)
