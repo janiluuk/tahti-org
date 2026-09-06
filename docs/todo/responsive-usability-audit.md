@@ -7,9 +7,10 @@ method) are in `docs/todo/HISTORY.md`.
 
 | Item | Status |
 | ---- | ------ |
-| MOB-01, MOB-03, MOB-07, MOB-08 | In PR [#446](https://github.com/janiluuk/tahti-org/pull/446) (`cursor/responsive-mobile-audit-5cae`) |
-| MOB-04, MOB-05 | This branch — settings `More settings` sheet + admin logs Filter sheet / compact rows / pause-on-scroll |
-| MOB-02, MOB-06, MOB-09, MOB-10 | Still open |
+| MOB-01, MOB-03, MOB-07, MOB-08 | PR [#446](https://github.com/janiluuk/tahti-org/pull/446) |
+| MOB-04, MOB-05 | PR [#451](https://github.com/janiluuk/tahti-org/pull/451) |
+| MOB-02, MOB-06 | PR [#452](https://github.com/janiluuk/tahti-org/pull/452) |
+| MOB-09, MOB-10 | This branch — Discover Filters sheet; identity/upload disclosure |
 
 ## Scope and method
 
@@ -103,8 +104,9 @@ the sheet, keep the current page and one back link visible, and use an accordion
 only where a sheet would be too deep. Do not hide unsaved-state warnings when
 changing section.
 
-**Status:** Implemented on this branch. Mobile shows the current group/section
-plus `More settings` (`MobileNavSheet`). Desktop pills are unchanged.
+**Status:** Implemented in [#451](https://github.com/janiluuk/tahti-org/pull/451).
+Mobile shows the current group/section plus `More settings` (`MobileNavSheet`).
+Desktop pills are unchanged.
 
 ### MOB-05 — System logs are technically responsive but still too dense to operate
 
@@ -124,9 +126,10 @@ pause-on-scroll rule, and render each entry as a compact service/time row with
 tap-to-expand details. Keep a copy action and clear empty/error states inside
 the expanded row.
 
-**Status:** Implemented on this branch. Mobile requests 80 lines, Filter sheet
-for service/search, Follow live pauses when the viewer is scrolled away from
-the tail, and rows expand to the full line plus Copy.
+**Status:** Implemented in [#451](https://github.com/janiluuk/tahti-org/pull/451).
+Mobile requests 80 lines, Filter sheet for service/search, Follow live pauses
+when the viewer is scrolled away from the tail, and rows expand to the full
+line plus Copy.
 
 ### MOB-06 — Generic admin tables need a deliberate card transformation
 
@@ -200,6 +203,11 @@ the active filter plus a `Filters` button that opens a sheet. Add
 `min-width: 0`, `overflow-wrap: anywhere`, and truncation to flex/grid children
 where long labels can widen the page.
 
+**Status:** Discover Live/Replay and Artists genre chips use `ChipFilterBar`
+(active value + Filters sheet on ≤640px). Desktop still shows the full chip
+row. Live card names keep ellipsis with a `title` for the full value. Remaining
+studio/admin chip toolbars can reuse the same component.
+
 ### MOB-10 — Complex forms should become progressive disclosure flows
 
 **Priority:** P2
@@ -216,6 +224,12 @@ are all expanded.
 Essentials, Media, Distribution, Advanced. Keep one sticky primary action,
 show validation beside the field, defer previews/advanced controls until
 requested, and use a confirmation sheet for destructive operations.
+
+**Status:** Channel identity is split into Essentials / Media / Profile / Genres
+(`StudioCollapse`). Remove logo asks for confirmation. Upload keeps title,
+artist, and type visible; year, genre, and collections sit under More details.
+The upload save action is sticky above the studio bottom nav. Broadcast and
+admin editors were not in this slice.
 
 ## Mobile simplification rules to apply consistently
 

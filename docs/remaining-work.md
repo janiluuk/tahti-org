@@ -159,7 +159,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item                                         | Notes                                                                                                                       |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Mobile UX audit (MOB-01–MOB-10)              | In progress: `docs/todo/responsive-usability-audit.md` (MOB-01/03/07/08 started)                                            |
+| Mobile UX audit (MOB-01–MOB-10)              | Worklist: `docs/todo/responsive-usability-audit.md`. PRs #446, #451, #452; this branch MOB-09/10                            |
 | Stream manager on artist studio page         | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
 | Channel Designer block system                | Logo + addon blocks: `docs/todo/channel-designer-blocks.md`                                                                 |
 | Public list/play `audioUrl` still ungated    | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                   |
