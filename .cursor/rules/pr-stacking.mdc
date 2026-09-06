@@ -1,0 +1,40 @@
+---
+description: Stack related PRs; defer shared catalog edits until a PR is ready to merge.
+alwaysApply: true
+---
+
+# PR stacking and catalog files
+
+`docs/remaining-work.md`, `docs/features.md`, and `docs/todo/HISTORY.md` are
+merge magnets. Parallel PRs that all rewrite the same leftovers table or feature
+bullet will conflict even when the product code is independent.
+
+## Catalog edits
+
+- While implementing: status lives only in `docs/todo/<task>.md` (and a worklog
+  only if that session still has open follow-ups).
+- Do **not** edit `docs/remaining-work.md`, `docs/features.md`, or
+  `docs/todo/HISTORY.md` on intermediate commits.
+- When the PR is otherwise ready to merge (code, tests, lint/format): fold
+  catalogs in **one** commit — append HISTORY, strip shipped rows from
+  remaining-work, update `features.md` if the product surface changed.
+- After merge, delete the todo/worklog as in `todo-history.mdc`.
+- Do not start a session by rewriting those catalogs. If `docs/todo/` still
+  contains already-shipped files, fold them only in a ready-to-merge commit,
+  not as a drive-by on an unrelated branch.
+
+## Stack related PRs
+
+- If work shares files, a todo list, or a feature area (e.g. MOB-01 then MOB-04
+  then MOB-09), branch B from A. Do not open parallel PRs from `main` that will
+  all rewrite the same catalogs or the same test `describe`.
+- Unrelated work may stay parallel **if** it skips catalog edits until each PR
+  is ready, then rebases onto `main` after a sibling lands.
+- Prefer a new test file over appending to a shared `describe` that another
+  open PR is also editing.
+
+## Do not
+
+- Merge `main` into every open PR on every sibling land as a substitute for
+  stacking. That relocates the conflict; it does not prevent it.
+- Open many PRs from slightly different `main`s for slices of one audit.

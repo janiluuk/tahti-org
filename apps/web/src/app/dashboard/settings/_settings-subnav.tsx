@@ -5,7 +5,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Fragment } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { MobileNavSheet } from '@tahti/ui'
 
 type NavItem = { href: string; label: string }
 
@@ -58,12 +59,18 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
 /** Settings area sub-nav — each link is its own focused page, not a tab over shared state. */
 export function SettingsSubnav() {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
   const currentItem = GROUPS.flatMap((group) =>
     group.items.map((item) => ({ ...item, group: group.label })),
   ).find((item) => {
     const itemPath = item.href.split('#')[0]!
     return pathname === itemPath || pathname?.startsWith(`${itemPath}/`)
   })
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [pathname])
 
   return (
     <div className="settings-subnav-row">
@@ -91,36 +98,56 @@ export function SettingsSubnav() {
           </Fragment>
         ))}
       </nav>
-      <details className="settings-subnav-mobile">
-        <summary>
-          <span>
-            <small>{currentItem?.group ?? 'Settings'}</small>
-            {currentItem?.label ?? 'Choose a setting'}
-          </span>
-          <span aria-hidden="true">⌄</span>
-        </summary>
-        <div className="settings-subnav-mobile__menu">
+      <div className="settings-subnav-mobile">
+        <div className="settings-subnav-mobile__current">
+          <small>{currentItem?.group ?? 'Settings'}</small>
+          <span>{currentItem?.label ?? 'Choose a setting'}</span>
+        </div>
+        <button
+          ref={moreButtonRef}
+          type="button"
+          className="settings-subnav-mobile__more"
+          aria-haspopup="dialog"
+          aria-expanded={moreOpen}
+          onClick={() => setMoreOpen(true)}
+        >
+          More settings
+        </button>
+      </div>
+      <MobileNavSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        triggerRef={moreButtonRef}
+        ariaLabel="More settings"
+        closeLabel="Close settings"
+      >
+        <div className="settings-subnav-sheet">
           {GROUPS.map((group) => (
-            <div key={group.label} className="settings-subnav-mobile__group">
-              <span>{group.label}</span>
-              {group.items.map((item) => {
-                const itemPath = item.href.split('#')[0]!
-                const active = pathname === itemPath || pathname?.startsWith(`${itemPath}/`)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={active ? 'settings-subnav-mobile__item--active' : undefined}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
+            <section key={group.label} className="db-mobile-more-sheet__group">
+              <h2 className="db-mobile-more-sheet__group-label">{group.label}</h2>
+              <div className="db-mobile-more-sheet__grid">
+                {group.items.map((item) => {
+                  const itemPath = item.href.split('#')[0]!
+                  const active = pathname === itemPath || pathname?.startsWith(`${itemPath}/`)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`db-mobile-more-sheet__item${
+                        active ? ' settings-subnav-sheet__item--active' : ''
+                      }`}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={() => setMoreOpen(false)}
+                    >
+                      <span>{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
           ))}
         </div>
-      </details>
+      </MobileNavSheet>
     </div>
   )
 }

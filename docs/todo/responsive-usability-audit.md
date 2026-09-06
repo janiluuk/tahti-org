@@ -1,8 +1,15 @@
 # Responsive usability audit (mobile simplification)
 
-Open implementation worklist from 2026-09-01. Audit only — **no responsive UI
-changes have been made yet.** Shipped session notes (prod preflight, method) are
-in `docs/todo/HISTORY.md`.
+Open implementation worklist from 2026-09-01. Audit notes (prod preflight,
+method) are in `docs/todo/HISTORY.md`.
+
+## Implementation status
+
+| Item | Status |
+| ---- | ------ |
+| MOB-01, MOB-03, MOB-07, MOB-08 | In PR [#446](https://github.com/janiluuk/tahti-org/pull/446) (`cursor/responsive-mobile-audit-5cae`) |
+| MOB-04, MOB-05 | This branch — settings `More settings` sheet + admin logs Filter sheet / compact rows / pause-on-scroll |
+| MOB-02, MOB-06, MOB-09, MOB-10 | Still open |
 
 ## Scope and method
 
@@ -12,8 +19,7 @@ artist/channel, player, artist studio, settings, and admin surfaces for
 content density, horizontal overflow, fixed-element collisions, touch targets,
 and places where desktop complexity should be progressively disclosed.
 
-This is an audit and implementation worklist; no responsive UI changes were
-made in this pass.
+This file is the implementation worklist from that audit.
 
 ## Production preflight
 
@@ -97,6 +103,9 @@ the sheet, keep the current page and one back link visible, and use an accordion
 only where a sheet would be too deep. Do not hide unsaved-state warnings when
 changing section.
 
+**Status:** Implemented on this branch. Mobile shows the current group/section
+plus `More settings` (`MobileNavSheet`). Desktop pills are unchanged.
+
 ### MOB-05 — System logs are technically responsive but still too dense to operate
 
 **Priority:** P1
@@ -114,6 +123,10 @@ filters behind a `Filter` sheet, make follow mode an explicit toggle with a
 pause-on-scroll rule, and render each entry as a compact service/time row with
 tap-to-expand details. Keep a copy action and clear empty/error states inside
 the expanded row.
+
+**Status:** Implemented on this branch. Mobile requests 80 lines, Filter sheet
+for service/search, Follow live pauses when the viewer is scrolled away from
+the tail, and rows expand to the full line plus Copy.
 
 ### MOB-06 — Generic admin tables need a deliberate card transformation
 
