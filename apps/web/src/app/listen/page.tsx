@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from '@tahti/shared'
+import type { ChannelCard } from '@tahti/shared'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
@@ -30,30 +30,6 @@ async function fetchChannels(): Promise<{
     }
   } catch {
     return { live: [], replaying: [], recent: [] }
-  }
-}
-
-async function fetchDirectory(): Promise<ChannelDirectoryEntry[]> {
-  try {
-    const res = await fetch(`${API_URL}/api/v1/channels/directory`, { next: { revalidate: 60 } })
-    if (!res.ok) return []
-    const data = (await res.json()) as { items: ChannelDirectoryEntry[] }
-    return data.items
-  } catch {
-    return []
-  }
-}
-
-async function fetchSelectsGallery(): Promise<TahtiSelectsGalleryItem[]> {
-  try {
-    const res = await fetch(`${API_URL}/api/v1/tahti-selects/gallery`, {
-      next: { revalidate: 60 },
-    })
-    if (!res.ok) return []
-    const data = (await res.json()) as { items: TahtiSelectsGalleryItem[] }
-    return data.items
-  } catch {
-    return []
   }
 }
 
@@ -105,33 +81,16 @@ async function fetchListenerCount(slug: string): Promise<number> {
   }
 }
 
-async function fetchRanks(soundIds: string[]): Promise<Record<string, number>> {
-  if (soundIds.length === 0) return {}
-  try {
-    const res = await fetch(`${API_URL}/api/top-lists/ranks?ids=${soundIds.join(',')}`, {
-      next: { revalidate: 60 },
-    })
-    if (!res.ok) return {}
-    const data = (await res.json()) as { ranks: Record<string, number> }
-    return data.ranks
-  } catch {
-    return {}
-  }
-}
-
 export default async function ListenPage() {
-  const [{ live, replaying }, radioPreview, directory, gallery, user] = await Promise.all([
+  const [{ live, replaying }, radioPreview, user] = await Promise.all([
     fetchChannels(),
     fetchTahtiRadioPreview(),
-    fetchDirectory(),
-    fetchSelectsGallery(),
     getSessionUser(),
   ])
   const listenerCountEntries = await Promise.all(
     live.map(async (ch) => [ch.slug, await fetchListenerCount(ch.slug)] as const),
   )
   const listenerCounts = Object.fromEntries(listenerCountEntries)
-  const galleryRanks = await fetchRanks(gallery.map((g) => g.soundId))
 
   return (
     <div className="listen-shell">
@@ -147,20 +106,15 @@ export default async function ListenPage() {
         artworkUrl={radioPreview.artworkUrl}
       />
 
-      <MobileDisclosure title="For you">
-        <YourFeedSection viewerUsername={user?.username ?? null} />
-        <NewToYouSection />
-        <AddonsSection />
-      </MobileDisclosure>
+      {user && (
+        <MobileDisclosure title="For you">
+          <YourFeedSection viewerUsername={user.username} />
+          <NewToYouSection />
+          <AddonsSection />
+        </MobileDisclosure>
+      )}
 
-      <DiscoverTabs
-        live={live}
-        replaying={replaying}
-        listenerCounts={listenerCounts}
-        directory={directory}
-        gallery={gallery}
-        galleryRanks={galleryRanks}
-      />
+      <DiscoverTabs live={live} replaying={replaying} listenerCounts={listenerCounts} />
     </div>
   )
 }

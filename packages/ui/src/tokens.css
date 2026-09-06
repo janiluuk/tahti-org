@@ -119,6 +119,9 @@
   --chat-w:        300px;
   --topnav-h:      56px;
   --mobile-nav-h:  64px;
+  --mini-player-h: 56px;
+  --chat-peek-h:   52px;
+  --fixed-stack-bottom: env(safe-area-inset-bottom, 0px);
   --admin-strip-h: 24px;
   --content-max:   1080px;
   --public-max:    1140px;

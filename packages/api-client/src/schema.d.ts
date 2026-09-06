@@ -11795,6 +11795,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -11917,6 +11922,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -11964,6 +11974,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -12031,6 +12046,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null

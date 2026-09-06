@@ -5,24 +5,24 @@
 
 import { useRef, useState, type ReactNode } from 'react'
 
-type Tab = 'recent' | 'upcoming'
+type Tab = 'upcoming' | 'history'
 
 /** Tahti Radio's player + schedule tab bar. */
 export function RadioTabs({
   player,
-  recent,
   upcoming,
+  history,
 }: {
   player: ReactNode
-  recent: ReactNode
   upcoming: ReactNode
+  history: ReactNode
 }) {
-  const [active, setActive] = useState<Tab>('recent')
-  const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({ recent: null, upcoming: null })
+  const [active, setActive] = useState<Tab>('upcoming')
+  const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({ upcoming: null, history: null })
 
   const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'recent', label: 'Recently played' },
-    { id: 'upcoming', label: 'Upcoming' },
+    { id: 'upcoming', label: "What's next" },
+    { id: 'history', label: 'History' },
   ]
 
   return (
@@ -46,21 +46,21 @@ export function RadioTabs({
         </div>
         <div
           className="prof-tabs__panel"
-          hidden={active !== 'recent'}
-          ref={(el) => {
-            panelRefs.current.recent = el
-          }}
-        >
-          {recent}
-        </div>
-        <div
-          className="prof-tabs__panel"
           hidden={active !== 'upcoming'}
           ref={(el) => {
             panelRefs.current.upcoming = el
           }}
         >
           {upcoming}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'history'}
+          ref={(el) => {
+            panelRefs.current.history = el
+          }}
+        >
+          {history}
         </div>
       </div>
     </>
