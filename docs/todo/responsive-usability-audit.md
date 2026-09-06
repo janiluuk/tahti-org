@@ -20,7 +20,8 @@ artist/channel, player, artist studio, settings, and admin surfaces for
 content density, horizontal overflow, fixed-element collisions, touch targets,
 and places where desktop complexity should be progressively disclosed.
 
-This file is the implementation worklist from that audit.
+This was originally an audit-only pass; implementation of MOB-01/03/07/08 started
+2026-09-06 (see status above).
 
 ## Production preflight
 

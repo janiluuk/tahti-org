@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { formatRecentlyPlayedAgo } from './recently-played-channels'
+import { formatRecentlyPlayedAgo, visibleRecentlyPlayedChannels } from './recently-played-channels'
 
 describe('formatRecentlyPlayedAgo', () => {
   it.each([
@@ -20,5 +20,17 @@ describe('formatRecentlyPlayedAgo', () => {
 
   it('does not show negative time for a future timestamp', () => {
     expect(formatRecentlyPlayedAgo(new Date(Date.now() + 60_000).toISOString())).toBe('just now')
+  })
+})
+
+describe('visibleRecentlyPlayedChannels', () => {
+  const items = [1, 2, 3, 4, 5]
+
+  it('peeks the first three items until expanded', () => {
+    expect(visibleRecentlyPlayedChannels(items, false)).toEqual([1, 2, 3])
+  })
+
+  it('returns the full list when expanded', () => {
+    expect(visibleRecentlyPlayedChannels(items, true)).toEqual(items)
   })
 })

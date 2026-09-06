@@ -185,3 +185,7 @@ Last.fm scrobble beside ListenBrainz. Artist plays `range=1` / custom / hourly b
 
 Advisory motions, discussion, public history, meeting/document schema, attendance/quorum, governance journey tests, yearly transparency reports. Open items remain in `docs/governance-worklog.md`.
 
+### 2026-09-06 — restore-download-purchase-gate.md
+
+Restored `resolvePlaybackGateStatus` on sound downloads (`ca7ee137`). Leftover streaming `audioUrl` bypasses moved to `docs/remaining-work.md`.
+

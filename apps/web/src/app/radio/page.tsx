@@ -264,7 +264,6 @@ export default async function RadioPage() {
                   />
                 )
               }
-              recent={<RecentlyPlayed items={recentlyPlayed} embedded />}
               upcoming={
                 <UpcomingShows
                   slots={upcomingSlots}
@@ -280,8 +279,13 @@ export default async function RadioPage() {
                   embedded
                 />
               }
+              history={
+                <>
+                  <RecentlyPlayed items={recentlyPlayed} embedded />
+                  <RecentlyPlayedChannels items={recentlyPlayedChannels} />
+                </>
+              }
             />
-            <RecentlyPlayedChannels items={recentlyPlayedChannels} />
           </div>
         </div>
       }
