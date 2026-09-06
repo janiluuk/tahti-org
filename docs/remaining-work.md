@@ -157,6 +157,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item | Notes |
 | ---- | ----- |
+| Stream manager on artist studio page | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
 | Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
 | Channel Designer block system | Logo + addon blocks: `docs/todo/channel-designer-blocks.md` |
 | Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |

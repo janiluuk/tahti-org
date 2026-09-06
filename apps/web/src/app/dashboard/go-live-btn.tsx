@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { goLive } from './actions'
 
-export function GoLiveBtn() {
+export function GoLiveBtn({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -30,7 +30,13 @@ export function GoLiveBtn() {
 
   return (
     <>
-      <BrandButton variant="primary" onClick={handleClick} disabled={loading} aria-label="Go live">
+      <BrandButton
+        variant="primary"
+        onClick={handleClick}
+        disabled={loading}
+        aria-label="Go live"
+        className={className}
+      >
         {loading ? 'Going live…' : '● Go live'}
       </BrandButton>
       {error && <Alert variant="error">{error}</Alert>}

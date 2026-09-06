@@ -379,10 +379,10 @@ export function BroadcastStudio({
         <Panel title="Go live" headerTight>
           {isLive ? (
             <Text as="p" tone="muted" size="sm">
-              Manage your stream from the stream manager icon in the top bar.
+              Manage your stream from <Link href="/dashboard">Studio overview</Link>.
             </Text>
           ) : isPreview ? (
-            <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} slug={channelSlug} />
+            <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} />
           ) : (
             <Text as="p" tone="muted" size="sm">
               Start streaming in step 1 to unlock going live.
