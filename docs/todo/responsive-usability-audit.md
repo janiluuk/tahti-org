@@ -104,6 +104,10 @@ the sheet, keep the current page and one back link visible, and use an accordion
 only where a sheet would be too deep. Do not hide unsaved-state warnings when
 changing section.
 
+**Status:** Implemented in [#451](https://github.com/janiluuk/tahti-org/pull/451).
+Mobile shows the current group/section plus `More settings` (`MobileNavSheet`).
+Desktop pills are unchanged.
+
 ### MOB-05 — System logs are technically responsive but still too dense to operate
 
 **Priority:** P1
@@ -121,6 +125,11 @@ filters behind a `Filter` sheet, make follow mode an explicit toggle with a
 pause-on-scroll rule, and render each entry as a compact service/time row with
 tap-to-expand details. Keep a copy action and clear empty/error states inside
 the expanded row.
+
+**Status:** Implemented in [#451](https://github.com/janiluuk/tahti-org/pull/451).
+Mobile requests 80 lines, Filter sheet for service/search, Follow live pauses
+when the viewer is scrolled away from the tail, and rows expand to the full
+line plus Copy.
 
 ### MOB-06 — Generic admin tables need a deliberate card transformation
 
