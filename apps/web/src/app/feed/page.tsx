@@ -32,7 +32,7 @@ export default async function FeedPage() {
 
   return (
     <div className="feed-page">
-      <Heading level={1}>Your feed</Heading>
+      <Heading level={1}>Updates from other people</Heading>
       <Text tone="muted">
         New posts, tracks, and releases from the {followingCount} artist
         {followingCount === 1 ? '' : 's'} you follow.
