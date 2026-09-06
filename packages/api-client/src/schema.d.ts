@@ -1166,6 +1166,11 @@ export interface paths {
                 bannerUrl: string | null
                 durationSec: number | null
                 audioUrl: string | null
+                gate?: {
+                  /** @enum {string} */
+                  reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                  tierId?: string
+                } | null
               }[]
             }
           }
@@ -1215,6 +1220,11 @@ export interface paths {
                 bannerUrl: string | null
                 durationSec: number | null
                 audioUrl: string | null
+                gate?: {
+                  /** @enum {string} */
+                  reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                  tierId?: string
+                } | null
               }[]
             }
           }
@@ -1262,6 +1272,11 @@ export interface paths {
                 bannerUrl: string | null
                 durationSec: number | null
                 audioUrl: string | null
+                gate?: {
+                  /** @enum {string} */
+                  reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                  tierId?: string
+                } | null
               }[]
             }
           }
@@ -20780,6 +20795,11 @@ export interface paths {
                     title: string
                     bannerUrl: string | null
                     audioUrl: string | null
+                    gate?: {
+                      /** @enum {string} */
+                      reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+                      tierId?: string
+                    } | null
                     channelSlug: string
                     liked: boolean
                     likeCount: number

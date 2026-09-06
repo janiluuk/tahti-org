@@ -7,7 +7,7 @@ import { MyFeedResponseSchema, soundPlaybackKey, openApiResponse } from '@tahti/
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 const FEED_LIMIT = 40
 
@@ -55,9 +55,12 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
             mp3Key: true,
             flacKey: true,
             createdAt: true,
+            accessMode: true,
+            purchaseTierId: true,
             channel: {
               select: {
                 slug: true,
+                userId: true,
                 user: { select: { username: true, displayName: true, avatarUrl: true } },
               },
             },
@@ -103,13 +106,24 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           })
         : []
       const likeCountById = new Map(likeCounts.map((l) => [l.soundId, l._count]))
-      const audioUrlByTrackId = new Map<string, string | null>(
-        await Promise.all(
-          tracks.map(async (track) => {
-            const key = soundPlaybackKey(track)
-            return [track.id, key ? await presignedGetUrl(key, 3600) : null] as const
-          }),
-        ),
+      const playbackByTrackId = new Map<
+        string,
+        {
+          audioUrl: string | null
+          gate: { reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'; tierId?: string } | null
+        }
+      >()
+      await Promise.all(
+        tracks.map(async (track) => {
+          const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
+            playbackKey: soundPlaybackKey(track),
+            artistUserId: track.channel.userId,
+            accessMode: track.accessMode,
+            purchaseTierId: track.purchaseTierId,
+            viewerUserId: user.id,
+          })
+          playbackByTrackId.set(track.id, { audioUrl: url, gate })
+        }),
       )
 
       const releaseItems: FeedItem[] = await Promise.all(
@@ -138,19 +152,23 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           linkLabel: p.linkLabel,
           url: `/u/${p.user.username}`,
         })),
-        ...tracks.map((t): FeedItem => ({
-          kind: 'track',
-          id: t.id,
-          date: t.createdAt.toISOString(),
-          artist: t.channel.user,
-          title: t.title,
-          bannerUrl: t.bannerUrl,
-          audioUrl: audioUrlByTrackId.get(t.id) ?? null,
-          channelSlug: t.channel.slug,
-          liked: likedIds.has(t.id),
-          likeCount: likeCountById.get(t.id) ?? 0,
-          url: resolveChannelUrl(t.channel.slug, { hash: `sound-item-${t.id}` }),
-        })),
+        ...tracks.map((t): FeedItem => {
+          const playback = playbackByTrackId.get(t.id)
+          return {
+            kind: 'track',
+            id: t.id,
+            date: t.createdAt.toISOString(),
+            artist: t.channel.user,
+            title: t.title,
+            bannerUrl: t.bannerUrl,
+            audioUrl: playback?.audioUrl ?? null,
+            gate: playback?.gate ?? null,
+            channelSlug: t.channel.slug,
+            liked: likedIds.has(t.id),
+            likeCount: likeCountById.get(t.id) ?? 0,
+            url: resolveChannelUrl(t.channel.slug, { hash: `sound-item-${t.id}` }),
+          }
+        }),
         ...releaseItems,
       ]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
