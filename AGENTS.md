@@ -21,6 +21,7 @@ linked docs; do not invent product rules that contradict them.
 | Do not touch `website/` unless asked | [`.cursor/rules/website-off-limits.mdc`](.cursor/rules/website-off-limits.mdc)   |
 | Project map + remaining work         | [`.cursor/rules/project-context.mdc`](.cursor/rules/project-context.mdc)         |
 | Done todos → HISTORY.md              | [`.cursor/rules/todo-history.mdc`](.cursor/rules/todo-history.mdc)               |
+| Stack PRs; defer catalog edits       | [`.cursor/rules/pr-stacking.mdc`](.cursor/rules/pr-stacking.mdc)                 |
 
 ## What this monorepo is
 
@@ -198,4 +199,5 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 Full list in `docs/AGENT.md`. Never: enforce storage quotas as product limits;
 algorithmic feeds / follow graphs; mutate ledger entries; YouTube/Twitch for
 Tahti Radio; edit `website/` unasked; put UI components in `apps/web` instead of
-`@tahti/ui`.
+`@tahti/ui`; rewrite `remaining-work.md` / `features.md` / `HISTORY.md` on every
+intermediate PR commit (stack related PRs; fold catalogs when ready to merge).
