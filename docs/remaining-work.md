@@ -157,8 +157,9 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item | Notes |
 | ---- | ----- |
-| Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
+| Mobile UX audit (MOB-01–MOB-10) | In progress: `docs/todo/responsive-usability-audit.md` (MOB-01/03/07/08 started) |
 | Channel Designer block system | Logo + addon blocks: `docs/todo/channel-designer-blocks.md` |
+| Public list/play `audioUrl` still ungated | Download gate restored; streaming bypasses remain on list/play `audioUrl` |
 | Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |
 | Client `NEXT_PUBLIC_API_*` env unification | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL` |
 | Deduplicate chat panel logic | `chat-panel.tsx` / `fan-chat-panel.tsx` |

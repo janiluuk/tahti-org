@@ -658,9 +658,9 @@
     padding 0.32s ease;
 }
 
-/* Desktop-only chat collapse (PLAT toggle next to the two-column rail) — on
-   mobile the columns already stack to 1fr and the chat sits below main, so
-   there's nothing to collapse there; see .ch-chat-collapse-toggle below. */
+/* Desktop-only chat collapse (PLAT toggle next to the two-column rail). On
+   mobile the sidebar becomes a bottom sheet (see MOB-08) and this class must
+   not hide it — the sheet open state is `.ch-body--chat-sheet-open`. */
 [data-tahti-ui='brand'] .ch-body--chat-collapsed {
   grid-template-columns: 1fr 0px;
 }
@@ -699,6 +699,10 @@
       background 0.15s,
       color 0.15s,
       border-color 0.15s;
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle__label {
+    display: none;
   }
 
   [data-tahti-ui='brand'] .ch-chat-collapse-toggle:hover {
@@ -2004,6 +2008,28 @@
   white-space: nowrap;
 }
 
+[data-tahti-ui='brand'] .ch-radio-recent-channels__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent-channels__more:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
+  color: var(--cyan);
+}
+
 @media (max-width: 640px) {
   [data-tahti-ui='brand'] .ch-radio-recent-channels {
     margin-inline: -0.25rem;
@@ -2022,6 +2048,10 @@
   [data-tahti-ui='brand'] .ch-radio-recent-channels__card {
     flex-basis: min(16rem, 82vw);
     min-height: 44px;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-recent-channels__body span {
+    display: none;
   }
 }
 
@@ -2292,7 +2322,6 @@
   padding-top: 0.85rem;
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
-
 
 [data-tahti-ui='brand'] .ch-live-releases {
   margin-top: 1.5rem;
@@ -3650,9 +3679,7 @@
  * currently expanded (has the waveform/backdrop) so the stripe doesn't fight
  * with that row's own background treatment. */
 [data-tahti-ui='brand']
-  .ch-sound-item:nth-child(even):not(.ch-sound-item--bg):not(
-    :has(.ch-sound-playback--current)
-  ) {
+  .ch-sound-item:nth-child(even):not(.ch-sound-item--bg):not(:has(.ch-sound-playback--current)) {
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
@@ -4112,6 +4139,8 @@
 @media (max-width: 900px) {
   [data-tahti-ui='brand'] .ch-body {
     grid-template-columns: 1fr;
+    /* Peek bar sits above --fixed-stack-bottom (body padding). */
+    padding-bottom: calc(var(--chat-peek-h) + 8px);
   }
 
   [data-tahti-ui='brand'] .ch-main {
@@ -4119,12 +4148,72 @@
     padding: 16px;
   }
 
+  [data-tahti-ui='brand'] .ch-chat-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    border: 0;
+    padding: 0;
+    background: rgba(4, 7, 12, 0.55);
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(var(--fixed-stack-bottom) + 8px);
+    z-index: 37;
+    width: auto;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle__label {
+    display: inline;
+  }
+
+  [data-tahti-ui='brand'] .ch-body--chat-collapsed .ch-sidebar {
+    opacity: 1;
+    overflow: auto;
+    pointer-events: auto;
+    padding: 12px 16px 16px;
+  }
+
   [data-tahti-ui='brand'] .ch-sidebar {
-    padding: 16px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--fixed-stack-bottom);
+    z-index: 36;
+    max-height: min(70vh, 520px);
+    height: auto;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    background: var(--card);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-tahti-ui='brand'] .ch-body--chat-sheet-open .ch-sidebar {
+    transform: translateY(0);
   }
 
   [data-tahti-ui='brand'] .ch-chat-panel {
-    height: 420px;
+    height: min(55vh, 440px);
     position: static;
   }
 }

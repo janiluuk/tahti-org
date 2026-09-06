@@ -837,14 +837,14 @@ const RADIO_STEPS: TourStep[] = [
     body: 'The live Tahti Radio stream — whoever’s booked for this slot, or the 24/7 curated rotation when nobody is. The visualizer reacts to the audio, and the ♥ loves whatever’s currently playing.',
   },
   {
-    selector: '[data-tour="radio-tab-recent"]',
-    title: 'Recently played',
-    body: 'The tracks Tahti Radio has played most recently, in order — missed a track? It’s here.',
+    selector: '[data-tour="radio-tab-upcoming"]',
+    title: "What's next",
+    body: 'Booked artist slots coming up on the live schedule, plus what the 24/7 rotation queue will play next when nobody’s booked.',
   },
   {
-    selector: '[data-tour="radio-tab-upcoming"]',
-    title: 'Upcoming',
-    body: 'Booked artist slots coming up on the live schedule, plus what the 24/7 rotation queue will play next when nobody’s booked.',
+    selector: '[data-tour="radio-tab-history"]',
+    title: 'History',
+    body: 'Recently played tracks and the last channels featured on Tahti Radio.',
   },
 ]
 

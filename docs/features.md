@@ -9,7 +9,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Artist profiles:** `/u/[username]` presents biography, latest music, archive, collections, upcoming events, and the artist channel.
 - **Discography and recordings:** Tracks, DJ sets, mixes, and recorded shows are presented separately where their metadata differs.
 - **Conditional metadata:** Tracklists and venue/location details appear for shows, recordings, DJ sets, mixes, and other long-form material rather than ordinary tracks.
-- **Discovery:** Channel directory, artist feed, search, radio, latest releases, and artist-curated collections.
+- **Discovery:** `/listen` defaults to Live. Signed-in “For you” (feed, new-to-you, widgets) is collapsed on small screens and omitted when there is no session. Artist directory and Tahti Selects load when those tabs open. Radio keeps the player plus What’s next; track/channel history lives in History.
 - **Engagement:** Likes, follows, reposts, comments where enabled, add-to-queue feedback, and direct artist messaging for signed-in accounts.
 - **Downloads:** Artist-controlled downloads with MP3 or lossless files when available; anonymous download paths remain supported.
 - **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, and HearThis playback surfaces.

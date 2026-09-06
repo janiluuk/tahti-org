@@ -7,15 +7,24 @@ import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 
 export function MobileDisclosure({ title, children }: { title: string; children: ReactNode }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 640px)')
-    const sync = () => setOpen(!media.matches)
+    const sync = () => {
+      const desktop = !media.matches
+      setOpen(desktop)
+      if (desktop) setMounted(true)
+    }
     sync()
     media.addEventListener('change', sync)
     return () => media.removeEventListener('change', sync)
   }, [])
+
+  useEffect(() => {
+    if (open) setMounted(true)
+  }, [open])
 
   return (
     <details
@@ -24,7 +33,7 @@ export function MobileDisclosure({ title, children }: { title: string; children:
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>{title}</summary>
-      <div className="listen-mobile-disclosure__content">{children}</div>
+      <div className="listen-mobile-disclosure__content">{mounted ? children : null}</div>
     </details>
   )
 }

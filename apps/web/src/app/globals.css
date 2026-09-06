@@ -22,6 +22,7 @@ body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
   -webkit-font-smoothing: antialiased;
+  padding-bottom: var(--fixed-stack-bottom);
 }
 
 /* Theme gallery previews use the submitted palette as a dark, glassy stage.
@@ -131,6 +132,8 @@ body {
   border-top: 1px solid var(--border);
   border-radius: 14px 14px 0 0;
   backdrop-filter: blur(8px);
+  /* Own the home-indicator inset when this bar is the bottom-most chrome. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   transition:
     box-shadow 0.28s ease,
     border-color 0.28s ease;
@@ -141,14 +144,31 @@ body {
   box-shadow: 0 -10px 40px color-mix(in srgb, var(--bg) 45%, transparent);
 }
 
-/* The studio dashboard's mobile bottom nav (.db-mobile-nav, z-index 40) sits at the same
- * fixed bottom:0 as this bar — without this it fully covers the mini-player on any
- * dashboard page below the nav's 768px breakpoint. .mini-player itself lives outside
- * [data-tahti-ui='studio'] (mounted once at the app root), so it can't inherit a scoped
- * offset — :has() detects the studio mobile nav's presence in the DOM instead. */
+/*
+ * Shared mobile fixed-stack contract (MOB-07)
+ *
+ * --fixed-stack-bottom is the space page content must leave at the bottom so
+ * the last action stays above mini-player + studio nav + iOS safe-area.
+ * The studio nav already includes safe-area inside --mobile-nav-h (border-box),
+ * so the player offset must not add the inset again when sitting on top of it.
+ */
+body:has(.mini-player) {
+  --fixed-stack-bottom: calc(var(--mini-player-h) + env(safe-area-inset-bottom, 0px));
+}
+
 @media (max-width: 768px) {
+  body:has([data-tahti-ui='studio'] .db-mobile-nav) {
+    --fixed-stack-bottom: var(--mobile-nav-h);
+  }
+
+  body:has(.mini-player):has([data-tahti-ui='studio'] .db-mobile-nav) {
+    --fixed-stack-bottom: calc(var(--mini-player-h) + var(--mobile-nav-h));
+  }
+
+  /* Studio nav is the bottom-most bar and already pads for the home indicator. */
   body:has([data-tahti-ui='studio'] .db-mobile-nav) .mini-player {
-    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));
+    bottom: var(--mobile-nav-h);
+    padding-bottom: 0;
   }
 }
 
@@ -1201,11 +1221,6 @@ body {
   .mini-player__add-to {
     width: 34px;
   }
-}
-
-/* Leave room for the mini-player so it doesn't cover page content */
-body:has(.mini-player) {
-  padding-bottom: 56px;
 }
 
 /* ── Embed player modal (hearthis.at tracks — see EmbedPlayerModal) ──────── */
