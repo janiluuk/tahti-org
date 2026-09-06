@@ -62,7 +62,7 @@ export function UpcomingShows({
    * above the player, since it's specifically about what's coming up next. */
   nextLiveCountdown?: { targetIso: string; note: string } | null
   /** Rendered inside RadioTabs' own card + tab-labeled panel — skip the
-   * redundant outer card chrome (the active tab already says "Upcoming"). */
+   * redundant outer card chrome (the active tab already says "What's next"). */
   embedded?: boolean
 }) {
   const now = Date.now()

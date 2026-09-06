@@ -393,6 +393,31 @@ export function ChannelPageLayout({
   // ~0) — the sidebar subtree stays mounted so the chat websocket doesn't
   // drop and reconnect every time someone tucks it away.
   const [chatCollapsed, setChatCollapsed] = useState(false)
+  const [mobileChatOpen, setMobileChatOpen] = useState(false)
+  const [isNarrow, setIsNarrow] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 900px)')
+    const sync = () => setIsNarrow(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (!isNarrow) setMobileChatOpen(false)
+  }, [isNarrow])
+
+  useEffect(() => {
+    if (!mobileChatOpen) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMobileChatOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [mobileChatOpen])
+
+  const chatExpanded = isNarrow ? mobileChatOpen : !chatCollapsed
 
   return (
     <>
@@ -405,27 +430,48 @@ export function ChannelPageLayout({
         user={user}
         logoutAction={logoutAction}
       />
-      <div className={`ch-body shell-channel${chatCollapsed ? ' ch-body--chat-collapsed' : ''}`}>
+      <div
+        className={`ch-body shell-channel${chatCollapsed ? ' ch-body--chat-collapsed' : ''}${
+          mobileChatOpen ? ' ch-body--chat-sheet-open' : ''
+        }`}
+      >
         <div className="ch-main">{main}</div>
+        {mobileChatOpen && (
+          <button
+            type="button"
+            className="ch-chat-sheet-backdrop"
+            aria-label="Close chat"
+            onClick={() => setMobileChatOpen(false)}
+          />
+        )}
         <button
           type="button"
           className="ch-chat-collapse-toggle"
-          onClick={() => setChatCollapsed((v) => !v)}
-          aria-expanded={!chatCollapsed}
-          aria-label={chatCollapsed ? 'Show chat' : 'Hide chat'}
-          title={chatCollapsed ? 'Show chat' : 'Hide chat'}
+          onClick={() => {
+            if (window.matchMedia('(max-width: 900px)').matches) {
+              setMobileChatOpen((open) => !open)
+            } else {
+              setChatCollapsed((collapsed) => !collapsed)
+            }
+          }}
+          aria-expanded={chatExpanded}
+          aria-label={chatExpanded ? 'Hide chat' : 'Show chat'}
+          title={chatExpanded ? 'Hide chat' : 'Show chat'}
         >
           <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden>
             <path
-              d={chatCollapsed ? 'M2 1l6 7-6 7' : 'M8 1L2 8l6 7'}
+              d={chatExpanded ? 'M8 1L2 8l6 7' : 'M2 1l6 7-6 7'}
               stroke="currentColor"
               strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
+          <span className="ch-chat-collapse-toggle__label">
+            {chatExpanded ? 'Close chat' : 'Chat'}
+          </span>
         </button>
-        <aside className="ch-sidebar" aria-hidden={chatCollapsed}>
+        <aside className="ch-sidebar" aria-hidden={!chatExpanded}>
           {sidebar}
         </aside>
       </div>
