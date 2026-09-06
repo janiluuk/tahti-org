@@ -2293,7 +2293,6 @@
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
 
-
 [data-tahti-ui='brand'] .ch-live-releases {
   margin-top: 1.5rem;
 }
@@ -3650,9 +3649,7 @@
  * currently expanded (has the waveform/backdrop) so the stripe doesn't fight
  * with that row's own background treatment. */
 [data-tahti-ui='brand']
-  .ch-sound-item:nth-child(even):not(.ch-sound-item--bg):not(
-    :has(.ch-sound-playback--current)
-  ) {
+  .ch-sound-item:nth-child(even):not(.ch-sound-item--bg):not(:has(.ch-sound-playback--current)) {
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
@@ -8556,5 +8553,57 @@ html.gpu-limited [data-tahti-ui='brand'] .ch-player-art-backdrop {
 @media (max-width: 640px) {
   [data-tahti-ui='brand'] .page-hero__actions {
     justify-content: center;
+  }
+}
+
+/* Channel Designer logo + addon layout blocks */
+[data-tahti-ui='brand'] .ch-block-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-block-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+[data-tahti-ui='brand'] .ch-block--full {
+  grid-column: span 6;
+}
+
+[data-tahti-ui='brand'] .ch-block--half {
+  grid-column: span 3;
+}
+
+[data-tahti-ui='brand'] .ch-block--third {
+  grid-column: span 2;
+}
+
+[data-tahti-ui='brand'] .ch-block-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 12rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+[data-tahti-ui='brand'] .ch-block-addon-preview {
+  min-height: 4rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--tahti-border);
+  border-radius: 0.5rem;
+  color: var(--tahti-text-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .ch-block--half,
+  [data-tahti-ui='brand'] .ch-block--third {
+    grid-column: span 6;
   }
 }
