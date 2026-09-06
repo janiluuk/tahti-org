@@ -9,6 +9,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { fetchMountSignalStatus } from '../../lib/icecast-status.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
@@ -51,6 +52,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       id: true,
       slug: true,
       state: true,
+      liveSourceMount: true,
       nextBroadcastAt: true,
       nextBroadcastNote: true,
       galleryMode: true,
@@ -111,7 +113,18 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
   const hlsUrl =
     channel.state === 'LIVE' ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier) : null
 
+  // Real ingest signal, not just channel.state -- the 24/7 fallback rotation
+  // also sets state to LIVE (see channel-fallback-reconciler.ts), so state
+  // alone can't tell a listener whether a human is actually broadcasting.
+  const signalConnected =
+    channel.state === 'LIVE'
+      ? (await fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)).connected
+      : false
+
   const { showJoinDate, createdAt, ...userRest } = channel.user
+  // Internal Icecast mount path -- never leak it in the public payload.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { liveSourceMount, ...channelRest } = channel
 
   // Stale poller data (orchestrator down, channel not actually running) is
   // worse than none — a "now playing" that hasn't moved in minutes reads as
@@ -169,13 +182,14 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
   }
 
   return {
-    ...channel,
+    ...channelRest,
     user: {
       ...userRest,
       joinDate: showJoinDate ? createdAt.toISOString() : null,
     },
     nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
     hlsUrl,
+    signalConnected,
     colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
     nowPlaying,
     nowPlayingNext,
