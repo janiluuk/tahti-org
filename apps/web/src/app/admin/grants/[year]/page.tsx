@@ -230,7 +230,7 @@ export default async function AdminGrantYearPage({ params }: { params: { year: s
           <h2>
             Disbursed — {history.grantCount} recipients · {formatEurFromString(history.totalCents)}
           </h2>
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>

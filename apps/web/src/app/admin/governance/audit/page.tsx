@@ -84,7 +84,7 @@ export default async function AdminAuditPage({
         </button>
       </form>
 
-      <div className="admin-table-wrap">
+      <div className="admin-table-wrap admin-table-wrap--tabular">
         <table className="admin-table">
           <thead>
             <tr>

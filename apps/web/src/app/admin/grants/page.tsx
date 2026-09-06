@@ -97,7 +97,7 @@ export default async function AdminGrantsPage() {
             No grant cycles have been run yet. Preview and run the {lastYear} cycle above.
           </p>
         ) : (
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-wrap--tabular">
             <table className="admin-table">
               <thead>
                 <tr>

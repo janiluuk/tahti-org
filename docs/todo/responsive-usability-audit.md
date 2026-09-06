@@ -1,8 +1,16 @@
 # Responsive usability audit (mobile simplification)
 
-Open implementation worklist from 2026-09-01. Audit only — **no responsive UI
-changes have been made yet.** Shipped session notes (prod preflight, method) are
-in `docs/todo/HISTORY.md`.
+Open implementation worklist from 2026-09-01. Audit notes (prod preflight,
+method) are in `docs/todo/HISTORY.md`.
+
+## Implementation status
+
+| Item                           | Status                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| MOB-01, MOB-03, MOB-07, MOB-08 | PR [#446](https://github.com/janiluuk/tahti-org/pull/446)                          |
+| MOB-04, MOB-05                 | PR [#451](https://github.com/janiluuk/tahti-org/pull/451)                          |
+| MOB-02, MOB-06                 | This branch — home primary CTA + capped previews; admin tables as cards vs tabular |
+| MOB-09, MOB-10                 | Still open                                                                         |
 
 ## Scope and method
 
@@ -12,8 +20,7 @@ artist/channel, player, artist studio, settings, and admin surfaces for
 content density, horizontal overflow, fixed-element collisions, touch targets,
 and places where desktop complexity should be progressively disclosed.
 
-This is an audit and implementation worklist; no responsive UI changes were
-made in this pass.
+This file is the implementation worklist from that audit.
 
 ## Production preflight
 
@@ -62,6 +69,13 @@ reading.
 action. Cap the live/news previews and link to full pages. Disable idle
 auto-scroll for normal mobile browsing; reserve it for an explicit kiosk/demo
 mode, with a visible pause control.
+
+**Status:** Implemented on this branch. One primary hero action (beta, or Artist
+panel when a logged-in artist opens `?home=1`); Sign in / Join / About are
+text links. Live is capped at 6 (3 on a phone) with a Discover link; news is
+capped at 3 (2 on a phone). Idle auto-scroll is gone (`_idle-auto-scroll.tsx`
+no longer exists); leftover `data-scroll-section` hooks were removed. No
+kiosk/demo mode was added.
 
 ### MOB-03 — Radio now has several “recent/upcoming” surfaces competing below the player
 
@@ -133,6 +147,11 @@ with a primary value, status, and one primary action; place secondary actions
 under an overflow menu. Retain horizontal scrolling only for genuinely
 columnar/audit data and add a visible “scroll for more” cue. Ensure long IDs,
 URLs, and usernames wrap or truncate with an accessible full-value label.
+
+**Status:** Implemented on this branch. Default admin tables stack as labeled
+cards ≤640px. Ledger, fan-sub payouts, grants, and governance audit/report
+/resolution/meeting tables keep columns via `admin-table-wrap--tabular` plus a
+visible “Scroll sideways for more columns” cue. Long cell values wrap.
 
 ### MOB-07 — Fixed player and bottom navigation require a shared safe-area contract
 

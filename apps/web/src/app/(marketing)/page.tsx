@@ -109,6 +109,9 @@ function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
   return stats.activeArtists > 0 || stats.broadcastsThisMonth > 0 || stats.totalHours > 0
 }
 
+const HOME_LIVE_PREVIEW = 6
+const HOME_NEWS_PREVIEW = 3
+
 export default async function HomePage({ searchParams }: { searchParams?: { home?: string } }) {
   const [{ live, stats, news, addons }, user] = await Promise.all([fetchData(), getSessionUser()])
 
@@ -118,9 +121,26 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
     redirect('/dashboard')
   }
 
+  const livePreview = live.slice(0, HOME_LIVE_PREVIEW)
+  const newsPreview = news.slice(0, HOME_NEWS_PREVIEW)
+  const primaryCta =
+    user?.hasChannel && searchParams?.home === '1' ? (
+      <Link href="/dashboard" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
+        Artist panel
+      </Link>
+    ) : (
+      <Link
+        href="https://beta.tahti.live"
+        className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary"
+      >
+        <ButtonIcon name="play" />
+        Try new beta!
+      </Link>
+    )
+
   return (
     <div className="home-shell">
-      <section className="home-hero" data-scroll-section>
+      <section className="home-hero">
         <BrandLogo />
         <h1 className="home-title">
           Broadcasting for
@@ -129,30 +149,23 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
         </h1>
         <p className="home-sub">A nonprofit platform built to support artists — not algorithms.</p>
         <div className="home-ctas">
-          <Link
-            href="https://beta.tahti.live"
-            className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary"
-          >
-            <ButtonIcon name="play" />
-            Try new beta!
-          </Link>
-          {!user && (
-            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
-              Sign in
-            </Link>
-          )}
-          {user?.hasChannel && (
-            <Link href="/dashboard" className="ui-btn ui-btn--primary ui-btn--lg">
-              Artist panel
-            </Link>
-          )}
-          <Link href="/about" className="ui-btn ui-btn--secondary ui-btn--lg">
-            About Tahti
-          </Link>
+          {primaryCta}
+          <div className="home-ctas__secondary">
+            {user?.hasChannel && searchParams?.home === '1' ? (
+              <Link href="https://beta.tahti.live">Try new beta</Link>
+            ) : null}
+            {!user ? (
+              <>
+                <Link href="/login">Sign in</Link>
+                <Link href="/signup">Join</Link>
+              </>
+            ) : null}
+            <Link href="/about">About Tahti</Link>
+          </div>
         </div>
       </section>
 
-      <section className="home-live-section" data-scroll-section>
+      <section className="home-live-section">
         <div className="home-section-label">
           <span className="listen-live-dot" aria-hidden />
           On air right now
@@ -160,7 +173,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
         {live.length > 0 ? (
           <>
             <div className="listen-live-grid">
-              {live.map((ch) => (
+              {livePreview.map((ch) => (
                 <LiveTile key={ch.slug} channel={ch} />
               ))}
             </div>
@@ -182,17 +195,13 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
         )}
       </section>
 
-      {news.length > 0 && (
-        <section
-          className="home-news-section"
-          aria-labelledby="home-news-heading"
-          data-scroll-section
-        >
+      {newsPreview.length > 0 && (
+        <section className="home-news-section" aria-labelledby="home-news-heading">
           <div className="home-section-label" id="home-news-heading">
             News
           </div>
           <ul className="home-news-list">
-            {news.map((post) => (
+            {newsPreview.map((post) => (
               <li key={post.id} className="home-news-item">
                 <p className="home-news-item__date">{formatNewsDate(post.publishedAt)}</p>
                 <h3 className="home-news-item__headline">{post.headline}</h3>
@@ -205,7 +214,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
       )}
 
       {addons.length > 0 && (
-        <section className="home-news-section" data-scroll-section>
+        <section className="home-news-section">
           {addons.map((w) => (
             <AddonFrame
               key={w.installId}
@@ -219,7 +228,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { home
       )}
 
       {stats && hasMeaningfulPlatformStats(stats) && (
-        <div data-scroll-section>
+        <div>
           <StatCardStrip aria-label="Platform stats">
             <StatCard
               layout="inline"

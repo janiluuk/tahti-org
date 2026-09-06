@@ -158,7 +158,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | Item | Notes |
 | ---- | ----- |
 | Stream manager on artist studio page | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
-| Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
+| Mobile UX audit (MOB-01–MOB-10) | Worklist: `docs/todo/responsive-usability-audit.md`. PRs #446 (01/03/07/08), #451 (04/05), this branch MOB-02/06. MOB-09/10 still open |
 | Channel Designer block system | Logo + addon blocks: `docs/todo/channel-designer-blocks.md` |
 | Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |
 | Client `NEXT_PUBLIC_API_*` env unification | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL` |
