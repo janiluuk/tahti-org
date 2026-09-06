@@ -4,8 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MobileNavSheet } from '@tahti/ui'
-import { previewLogLine } from './preview-log-line'
+import { LogViewer, MobileNavSheet } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const REFRESH_MS = 5_000
@@ -42,14 +41,6 @@ interface LogsResponse {
   lokiReachable: boolean
 }
 
-function formatTimestamp(timestampMs: number): string {
-  return new Date(timestampMs).toLocaleString('fi-FI', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
 function FollowLiveToggle({
   id,
   checked,
@@ -82,15 +73,9 @@ export default function AdminLogsPage() {
   const [loading, setLoading] = useState(true)
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [expandedKey, setExpandedKey] = useState<string | null>(null)
-  const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [mobileLimit, setMobileLimit] = useState(false)
   const filterButtonRef = useRef<HTMLButtonElement>(null)
-  const viewerRef = useRef<HTMLDivElement>(null)
-  const autoRefreshRef = useRef(autoRefresh)
-  const ignoreProgrammaticScroll = useRef(false)
   const limit = mobileLimit ? MOBILE_LIMIT : DESKTOP_LIMIT
-  autoRefreshRef.current = autoRefresh
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 640px)')
@@ -140,17 +125,6 @@ export default function AdminLogsPage() {
 
   const visibleEntries = useMemo(() => entries.slice(-limit), [entries, limit])
 
-  useEffect(() => {
-    if (!autoRefresh) return
-    const viewer = viewerRef.current
-    if (!viewer) return
-    ignoreProgrammaticScroll.current = true
-    viewer.scrollTop = viewer.scrollHeight
-    requestAnimationFrame(() => {
-      ignoreProgrammaticScroll.current = false
-    })
-  }, [autoRefresh, visibleEntries])
-
   const filterActive = Boolean(service || search.trim())
 
   function openFilters() {
@@ -163,16 +137,6 @@ export default function AdminLogsPage() {
     setService(draftService)
     setSearch(draftSearch)
     setFilterOpen(false)
-  }
-
-  async function copyLine(key: string, line: string) {
-    try {
-      await navigator.clipboard.writeText(line)
-      setCopiedKey(key)
-      window.setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), 1500)
-    } catch {
-      setCopiedKey(null)
-    }
   }
 
   return (
@@ -287,57 +251,19 @@ export default function AdminLogsPage() {
         {search.trim() ? ` · “${search.trim()}”` : ''}
       </div>
 
-      <div
-        ref={viewerRef}
-        className="admin-log-viewer"
-        aria-live="polite"
-        onScroll={(event) => {
-          if (ignoreProgrammaticScroll.current || !autoRefreshRef.current) return
-          const viewer = event.currentTarget
-          if (viewer.scrollTop + viewer.clientHeight < viewer.scrollHeight - 24) {
-            setAutoRefresh(false)
-          }
-        }}
-      >
-        {visibleEntries.length === 0 && !loading ? (
-          <p className="admin-stat-sub">No log entries match the current filters.</p>
-        ) : (
-          visibleEntries.map((entry, index) => {
-            const key = `${entry.timestampMs}-${entry.service}-${index}`
-            const open = expandedKey === key
-            return (
-              <div key={key} className={`admin-log-line${open ? ' admin-log-line--open' : ''}`}>
-                <button
-                  type="button"
-                  className="admin-log-line__summary"
-                  aria-expanded={open}
-                  onClick={() => setExpandedKey(open ? null : key)}
-                >
-                  <time dateTime={new Date(entry.timestampMs).toISOString()}>
-                    {formatTimestamp(entry.timestampMs)}
-                  </time>
-                  <strong>{entry.service}</strong>
-                  <span className="admin-log-line__preview">{previewLogLine(entry.line)}</span>
-                </button>
-                <div className="admin-log-line__detail">
-                  {entry.line.trim() ? (
-                    <code>{entry.line}</code>
-                  ) : (
-                    <p className="admin-stat-sub">This entry has no message text.</p>
-                  )}
-                  <button
-                    type="button"
-                    className="admin-log-line__copy"
-                    onClick={() => void copyLine(key, entry.line)}
-                  >
-                    {copiedKey === key ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
+      <LogViewer
+        live={autoRefresh}
+        loading={loading}
+        timestampStyle="time"
+        onFollowPause={() => setAutoRefresh(false)}
+        entries={visibleEntries.map((entry, index) => ({
+          id: `${entry.timestampMs}-${entry.service}-${index}`,
+          timestamp: entry.timestampMs,
+          source: entry.service,
+          title: entry.line,
+        }))}
+        emptyMessage="No log entries match the current filters."
+      />
     </>
   )
 }

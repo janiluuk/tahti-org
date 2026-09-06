@@ -12723,7 +12723,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description M21-G: paginated audit log for admin viewer */
+    /** @description Paginated governance audit log for the board viewer */
     get: {
       parameters: {
         query?: never
@@ -12755,6 +12755,7 @@ export interface paths {
                 createdAt: string
                 actorDisplayName: string | null
                 actorUsername: string | null
+                topic: string | null
               }[]
             }
           }

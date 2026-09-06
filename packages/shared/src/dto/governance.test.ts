@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import {
   CreateGovernanceMeetingSchema,
   CreateMotionSchema,
+  MotionListQuerySchema,
   PatchGovernanceMeetingSchema,
   PatchMotionSchema,
   VoteMotionSchema,
@@ -39,6 +40,11 @@ describe('governance DTOs', () => {
 
   it('accepts patch state', () => {
     expect(PatchMotionSchema.safeParse({ state: 'OPEN' }).success).toBe(true)
+  })
+
+  it('accepts a motion list cursor query and rejects an invalid state', () => {
+    expect(MotionListQuerySchema.safeParse({ limit: '20', state: 'OPEN,DRAFT' }).success).toBe(true)
+    expect(MotionListQuerySchema.safeParse({ limit: 0 }).success).toBe(false)
   })
 
   it('accepts meeting officer names and treats a blank name as null', () => {
