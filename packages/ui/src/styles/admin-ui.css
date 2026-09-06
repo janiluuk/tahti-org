@@ -3102,3 +3102,89 @@ a.signup-wizard__link:hover {
   opacity: 0.7;
   outline: 2px solid var(--admin-accent, currentColor);
 }
+
+/* ---- LogViewer ---- */
+.ui-log-viewer-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-3, 0.75rem);
+}
+
+.ui-log-viewer {
+  overflow: auto;
+  max-height: 70vh;
+  padding: 0.75rem;
+  border: 1px solid var(--tahti-border, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tahti-bg, var(--bg)) 75%, var(--tahti-card, var(--card)));
+  font-family: var(
+    --tahti-font-mono,
+    var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)
+  );
+}
+
+.ui-log-viewer__empty {
+  margin: 0;
+  color: var(--tahti-muted, var(--muted));
+  font-family: var(--tahti-font-body, inherit);
+  font-size: 0.85rem;
+}
+
+.ui-log-line {
+  display: grid;
+  grid-template-columns: 11rem 9.5rem minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.25rem 0;
+  color: var(--tahti-text, var(--text));
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.ui-log-line + .ui-log-line {
+  border-top: 1px solid color-mix(in srgb, var(--tahti-border, var(--border)) 55%, transparent);
+}
+
+.ui-log-line time,
+.ui-log-line > span,
+.ui-log-line strong {
+  color: var(--tahti-muted, var(--muted));
+  white-space: nowrap;
+}
+
+.ui-log-line code,
+.ui-log-line pre {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
+.ui-log-line details {
+  min-width: 0;
+}
+
+.ui-log-line summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.ui-log-line summary::-webkit-details-marker {
+  display: none;
+}
+
+.ui-log-line pre {
+  margin: 0.35rem 0 0;
+  color: var(--tahti-muted, var(--muted));
+}
+
+@media (max-width: 640px) {
+  .ui-log-line {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+    padding: 0.5rem 0;
+  }
+
+  .ui-log-viewer {
+    max-height: 60vh;
+    padding: 0.6rem;
+  }
+}

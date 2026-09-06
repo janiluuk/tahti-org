@@ -29,9 +29,7 @@ and legal review authorize binding electronic voting.
 
 - [ ] Snapshot voting eligibility and quorum denominators.
 - [ ] Separate advisory polls from binding ballots.
-- [ ] Protect secret ballots from operational audit-log disclosure.
 - [ ] Provide immutable result certificates and correction history.
-- [ ] Add pagination and remove governance list N+1 comment loading.
 - [ ] Add backups, retention, legal hold, and restore verification for official records.
 
 ## Plugin registry boundary

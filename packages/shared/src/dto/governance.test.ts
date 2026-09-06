@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { CreateMotionSchema, PatchMotionSchema, VoteMotionSchema } from './governance.js'
+import {
+  CreateMotionSchema,
+  MotionListQuerySchema,
+  PatchMotionSchema,
+  VoteMotionSchema,
+} from './governance.js'
 
 describe('governance DTOs', () => {
   it('accepts valid create motion body', () => {
@@ -33,5 +38,10 @@ describe('governance DTOs', () => {
 
   it('accepts patch state', () => {
     expect(PatchMotionSchema.safeParse({ state: 'OPEN' }).success).toBe(true)
+  })
+
+  it('accepts a motion list cursor query and rejects an invalid state', () => {
+    expect(MotionListQuerySchema.safeParse({ limit: '20', state: 'OPEN,DRAFT' }).success).toBe(true)
+    expect(MotionListQuerySchema.safeParse({ limit: 0 }).success).toBe(false)
   })
 })

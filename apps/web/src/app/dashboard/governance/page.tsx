@@ -71,7 +71,7 @@ export default async function DashboardGovernancePage() {
 
   const [motionsRes, membersRes, featureRequestsRes, meetingsRes, documentsRes] = await Promise.all(
     [
-      fetch(`${apiUrl}/api/v1/governance/motions`, {
+      fetch(`${apiUrl}/api/v1/governance/motions?state=OPEN,DRAFT&limit=50`, {
         headers: { Cookie: cookie },
         cache: 'no-store',
       }),

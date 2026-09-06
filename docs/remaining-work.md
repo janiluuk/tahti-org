@@ -67,13 +67,12 @@ adopted bylaws and legal review.
 | Member notices, reminders, delivery log, and deadline tracking                                         | `[ ]`  | Dev / Board | member communication    |
 | Board roles, terms, election history, conflicts, recusals, and scoped permissions                      | `[ ]`  | Dev / Board | board records           |
 | Privacy controls and historical membership eligibility records                                         | `[ ]`  | Dev / Legal | GDPR / bylaws           |
-| Replace governance list N+1 requests with detail loading and cursor pagination                         | `[ ]`  | Dev         | API/UI refactor         |
 
 Additional governance gaps from the audit:
 
 - [ ] Persist official member eligibility periods and privacy-scoped register views.
 - [ ] Add AGM/board chair, secretary, and signed approval data.
-- [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
+- [ ] Add official ballot receipts, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
 - [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
 - [ ] Add legal association information: Business ID, registered details, contacts, auditor, and signatories.

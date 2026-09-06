@@ -535,6 +535,34 @@
   font-weight: 600;
 }
 
+.admin-audit-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-planned-topics {
+  margin-top: 1.75rem;
+  max-width: 48rem;
+}
+
+.admin-planned-topics ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.admin-planned-topics li + li {
+  margin-top: 0.45rem;
+}
+
+.admin-planned-topics strong {
+  color: var(--text);
+}
+
 .top-lists-buckets {
   display: flex;
   flex-direction: column;

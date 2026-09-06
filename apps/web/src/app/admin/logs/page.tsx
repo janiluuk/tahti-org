@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { LogViewer } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const REFRESH_MS = 5_000
@@ -37,14 +38,6 @@ interface LogEntry {
 interface LogsResponse {
   entries: LogEntry[]
   lokiReachable: boolean
-}
-
-function formatTimestamp(timestampMs: number): string {
-  return new Date(timestampMs).toLocaleString('fi-FI', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
 }
 
 export default function AdminLogsPage() {
@@ -151,21 +144,17 @@ export default function AdminLogsPage() {
         {service || 'all services'}
       </div>
 
-      <div className="admin-log-viewer" aria-live="polite">
-        {visibleEntries.length === 0 && !loading ? (
-          <p className="admin-stat-sub">No log entries match the current filters.</p>
-        ) : (
-          visibleEntries.map((entry, index) => (
-            <div key={`${entry.timestampMs}-${index}`} className="admin-log-line">
-              <time dateTime={new Date(entry.timestampMs).toISOString()}>
-                {formatTimestamp(entry.timestampMs)}
-              </time>
-              <strong>{entry.service}</strong>
-              <code>{entry.line}</code>
-            </div>
-          ))
-        )}
-      </div>
+      <LogViewer
+        live
+        loading={loading}
+        entries={visibleEntries.map((entry, index) => ({
+          id: `${entry.timestampMs}-${index}`,
+          timestamp: entry.timestampMs,
+          source: entry.service,
+          title: entry.line,
+        }))}
+        emptyMessage="No log entries match the current filters."
+      />
     </>
   )
 }

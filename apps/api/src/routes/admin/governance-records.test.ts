@@ -67,6 +67,19 @@ describe('governance meetings and documents', () => {
     })
     expect(create.statusCode).toBe(201)
     expect(create.json().state).toBe('DRAFT')
+    const meetingId = create.json().id as string
+
+    const audited = await app.inject({
+      method: 'GET',
+      url: `/api/admin/audit?topic=meetings&targetId=${meetingId}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(audited.statusCode).toBe(200)
+    expect(
+      (audited.json() as { items: Array<{ action: string }> }).items.some(
+        (item) => item.action === 'MEETING_CREATE',
+      ),
+    ).toBe(true)
     expect(create.json().quorumMet).toBe(false)
 
     const memberList = await app.inject({
