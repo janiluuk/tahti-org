@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
@@ -28,6 +28,13 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'Tahti — your channel, always on',
   description: 'A nonprofit broadcasting platform for independent artists. AGPL-3.0-licensed.',
+}
+
+/** iOS home-indicator / notch insets for the shared --fixed-stack-bottom contract. */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

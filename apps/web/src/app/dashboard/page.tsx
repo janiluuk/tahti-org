@@ -223,11 +223,15 @@ export default async function DashboardPage() {
           <div className="db-greeting-status">
             {user.channel ? (
               <>
-                <span className={`db-header-channel-state${headerStatusClass}`}>
-                  <span className={headerDotClass} aria-hidden />
-                  {headerStatusLabel}
-                </span>
-                <span>·</span>
+                {headerState !== 'OFFLINE' ? (
+                  <>
+                    <span className={`db-header-channel-state${headerStatusClass}`}>
+                      <span className={headerDotClass} aria-hidden />
+                      {headerStatusLabel}
+                    </span>
+                    <span>·</span>
+                  </>
+                ) : null}
                 <NextLink
                   href={resolveChannelUrl(user.channel.slug)}
                   className="db-header-channel-url"

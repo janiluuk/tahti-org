@@ -22,6 +22,7 @@ export { CopyRow, type CopyRowProps } from './copy-row'
 export { Link, type LinkProps } from './link'
 export { Knob, type KnobProps } from './knob'
 export { FileDropzone, type FileDropzoneProps } from './file-dropzone'
+export { LogViewer, previewLogLine, type LogViewerEntry, type LogViewerProps } from './log-viewer'
 
 import { tokens } from '../tokens'
 

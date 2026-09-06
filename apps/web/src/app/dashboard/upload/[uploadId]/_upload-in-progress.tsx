@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ButtonIcon, SidebarNavIconSvg, Button } from '@tahti/ui'
+import { ButtonIcon, SidebarNavIconSvg, Button, StudioCollapse } from '@tahti/ui'
 import type { CollectionOption } from '../upload-actions'
 import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
@@ -381,43 +381,6 @@ export function UploadInProgress({
             />
           </div>
 
-          <div className="upload-progress__row">
-            <div className="upload-progress__field">
-              <label className="upload-progress__label">
-                Year
-                {tags?.fromTag.has('year') && (
-                  <span className="upload-progress__tag-chip">✓ from tag</span>
-                )}
-              </label>
-              <input
-                type="number"
-                className="studio-input"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                min={1900}
-                max={2099}
-                placeholder="2026"
-              />
-            </div>
-
-            <div className="upload-progress__field">
-              <label className="upload-progress__label">
-                Genre
-                {tags?.fromTag.has('genre') && (
-                  <span className="upload-progress__tag-chip">✓ from tag</span>
-                )}
-              </label>
-              <input
-                type="text"
-                className="studio-input"
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-                maxLength={100}
-                placeholder="Techno, Ambient…"
-              />
-            </div>
-          </div>
-
           <div className="upload-progress__field">
             <label className="upload-progress__label">What are you uploading?</label>
             <div className="upload-progress__seg" role="radiogroup" aria-label="Upload type">
@@ -444,29 +407,68 @@ export function UploadInProgress({
             </div>
           </div>
 
-          {collectionOptions.length > 0 && (
-            <div className="upload-progress__field">
-              <label className="upload-progress__label">Add to collection</label>
-              <div className="upload-progress__collection-list">
-                {collectionOptions.map((c) => (
-                  <button
-                    key={c.slug}
-                    type="button"
-                    className={`upload-progress__collection-chip${selectedCollections.includes(c.slug) ? ' upload-progress__collection-chip--active' : ''}`}
-                    onClick={() =>
-                      setSelectedCollections((prev) =>
-                        prev.includes(c.slug)
-                          ? prev.filter((s) => s !== c.slug)
-                          : [...prev, c.slug],
-                      )
-                    }
-                  >
-                    {c.name}
-                  </button>
-                ))}
+          <StudioCollapse title="More details" defaultOpen={false}>
+            <div className="upload-progress__row">
+              <div className="upload-progress__field">
+                <label className="upload-progress__label">
+                  Year
+                  {tags?.fromTag.has('year') && (
+                    <span className="upload-progress__tag-chip">✓ from tag</span>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  className="studio-input"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  min={1900}
+                  max={2099}
+                  placeholder="2026"
+                />
+              </div>
+
+              <div className="upload-progress__field">
+                <label className="upload-progress__label">
+                  Genre
+                  {tags?.fromTag.has('genre') && (
+                    <span className="upload-progress__tag-chip">✓ from tag</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  className="studio-input"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  maxLength={100}
+                  placeholder="Techno, Ambient…"
+                />
               </div>
             </div>
-          )}
+
+            {collectionOptions.length > 0 && (
+              <div className="upload-progress__field">
+                <label className="upload-progress__label">Add to collection</label>
+                <div className="upload-progress__collection-list">
+                  {collectionOptions.map((c) => (
+                    <button
+                      key={c.slug}
+                      type="button"
+                      className={`upload-progress__collection-chip${selectedCollections.includes(c.slug) ? ' upload-progress__collection-chip--active' : ''}`}
+                      onClick={() =>
+                        setSelectedCollections((prev) =>
+                          prev.includes(c.slug)
+                            ? prev.filter((s) => s !== c.slug)
+                            : [...prev, c.slug],
+                        )
+                      }
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </StudioCollapse>
         </div>
       </div>
 

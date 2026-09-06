@@ -402,6 +402,13 @@ enum AuditAction {
   RADIO_SLOT_BOOKING_UPDATE
   RADIO_SLOT_BOOKING_CANCEL
   CHANNEL_GO_LIVE
+  MEETING_CREATE
+  MEETING_UPDATE
+  MEETING_ATTENDANCE_UPSERT
+  DOCUMENT_CREATE
+  RESOLUTION_CREATE
+  RESOLUTION_UPDATE
+  ANNUAL_REPORT_GENERATE
 
   @@schema("governance")
 }
@@ -1399,6 +1406,7 @@ model Channel {
   slugRedirects          ChannelSlugRedirect[]
   addonInstalls          AddonInstall[]
   visualPresets          ChannelVisualPreset[]
+  blocks                 ChannelBlock[]
 
   @@index([state])
   @@schema("channel")
@@ -2256,8 +2264,12 @@ model GovernanceMeeting {
   agenda              Json?
   eligibleMemberCount Int?
   quorumRequired      Int?
+  chairName           String?
+  secretaryName       String?
   minutesKey          String?
   minutesApprovedAt   DateTime?
+  minutesSignedByName String?
+  minutesSignedAt     DateTime?
   createdById         String
   createdBy           User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt           DateTime               @default(now())
@@ -3625,6 +3637,39 @@ model AddonInstall {
   @@index([listenerUserId, position])
   @@index([channelId, position])
   @@index([adminSurface, position])
+  @@schema("core")
+}
+
+// Channel Designer layout blocks (logo + addon widgets). Existing Designer
+// look sections stay on Channel columns; this table is additive layout only.
+enum ChannelBlockType {
+  LOGO
+  ADDON
+
+  @@schema("core")
+}
+
+enum ChannelBlockWidth {
+  FULL
+  HALF
+  THIRD
+
+  @@schema("core")
+}
+
+model ChannelBlock {
+  id         String            @id @default(cuid())
+  channelId  String
+  channel    Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  type       ChannelBlockType
+  width      ChannelBlockWidth @default(FULL)
+  position   Int               @default(0)
+  // LOGO -> { assetId, url? }; ADDON -> { addonInstallId }
+  configJson Json              @default("{}")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([channelId, position])
   @@schema("core")
 }
 

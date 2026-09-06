@@ -23,7 +23,7 @@ const STUDIO_TOP_BAR: TourStep[] = [
   {
     selector: '.studio-top-nav__golive-btn',
     title: 'Go live',
-    body: "Red when you're offline, green while you're actually on air. Click it for a quick status check — how long you've been live, or a countdown if you've got a slot scheduled — plus a one-click way through to the stream manager.",
+    body: "Red when you're offline, green while you're actually on air. Click it for a quick status check — how long you've been live, or a countdown if you've got a slot scheduled. Stream management lives on Studio overview.",
   },
   {
     selector: '.studio-top-nav__icon-btn[aria-label="Upload"]',
@@ -61,7 +61,7 @@ const DASHBOARD_HOME: TourStep[] = [
   {
     selector: '[data-hero]',
     title: 'Channel status',
-    body: 'Shows whether you’re live, previewing, or offline, plus a one-click way to start broadcasting.',
+    body: 'When you’re on air this is the stream manager. When you’re not, Go live starts the broadcast setup.',
   },
   {
     selector: '[aria-label="Channel summary"]',
@@ -837,14 +837,14 @@ const RADIO_STEPS: TourStep[] = [
     body: 'The live Tahti Radio stream — whoever’s booked for this slot, or the 24/7 curated rotation when nobody is. The visualizer reacts to the audio, and the ♥ loves whatever’s currently playing.',
   },
   {
-    selector: '[data-tour="radio-tab-recent"]',
-    title: 'Recently played',
-    body: 'The tracks Tahti Radio has played most recently, in order — missed a track? It’s here.',
+    selector: '[data-tour="radio-tab-upcoming"]',
+    title: "What's next",
+    body: 'Booked artist slots coming up on the live schedule, plus what the 24/7 rotation queue will play next when nobody’s booked.',
   },
   {
-    selector: '[data-tour="radio-tab-upcoming"]',
-    title: 'Upcoming',
-    body: 'Booked artist slots coming up on the live schedule, plus what the 24/7 rotation queue will play next when nobody’s booked.',
+    selector: '[data-tour="radio-tab-history"]',
+    title: 'History',
+    body: 'Recently played tracks and the last channels featured on Tahti Radio.',
   },
 ]
 

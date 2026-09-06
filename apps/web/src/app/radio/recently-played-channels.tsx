@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 
@@ -24,8 +25,22 @@ export function formatRecentlyPlayedAgo(iso: string): string {
   return `${Math.floor(days / 7)}w ago`
 }
 
+export const RECENT_CHANNELS_PEEK = 3
+
+export function visibleRecentlyPlayedChannels<T>(
+  items: T[],
+  expanded: boolean,
+  peek = RECENT_CHANNELS_PEEK,
+): T[] {
+  return expanded ? items : items.slice(0, peek)
+}
+
 export function RecentlyPlayedChannels({ items }: { items: RecentlyPlayedChannel[] }) {
+  const [expanded, setExpanded] = useState(false)
   if (items.length === 0) return null
+
+  const shown = visibleRecentlyPlayedChannels(items, expanded)
+  const canExpand = items.length > RECENT_CHANNELS_PEEK
 
   return (
     <section className="ch-radio-recent-channels" aria-labelledby="recent-radio-channels-title">
@@ -34,7 +49,7 @@ export function RecentlyPlayedChannels({ items }: { items: RecentlyPlayedChannel
         <span>Last featured channels</span>
       </div>
       <div className="ch-radio-recent-channels__slider" tabIndex={0}>
-        {items.map((item) => (
+        {shown.map((item) => (
           <Link
             key={`${item.channelId}-${item.featuredAt}`}
             href={`/radio/show/${encodeURIComponent(item.slug)}`}
@@ -53,6 +68,15 @@ export function RecentlyPlayedChannels({ items }: { items: RecentlyPlayedChannel
           </Link>
         ))}
       </div>
+      {canExpand && (
+        <button
+          type="button"
+          className="ch-radio-recent-channels__more"
+          onClick={() => setExpanded((open) => !open)}
+        >
+          {expanded ? 'Show less' : `See all ${items.length}`}
+        </button>
+      )}
     </section>
   )
 }

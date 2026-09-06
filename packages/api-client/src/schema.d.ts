@@ -883,6 +883,7 @@ export interface paths {
                 socialLinks?: unknown
                 /** Format: date-time */
                 joinDate?: string | null
+                isMember?: boolean
                 chatEnabled?: boolean
                 showPageHero?: boolean
               }
@@ -1003,6 +1004,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -1034,6 +1036,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -1065,6 +1068,7 @@ export interface paths {
                   socialLinks?: unknown
                   /** Format: date-time */
                   joinDate?: string | null
+                  isMember?: boolean
                   chatEnabled?: boolean
                   showPageHero?: boolean
                 }
@@ -11795,6 +11799,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -11917,6 +11926,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -11964,6 +11978,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -12031,6 +12050,11 @@ export interface paths {
               minutesApprovedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
+              chairName: string | null
+              secretaryName: string | null
+              minutesSignedByName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
               attendanceCount: number
               presentCount: number
               quorumMet: boolean | null
@@ -12699,7 +12723,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description M21-G: paginated audit log for admin viewer */
+    /** @description Paginated governance audit log for the board viewer */
     get: {
       parameters: {
         query?: never
@@ -12731,6 +12755,7 @@ export interface paths {
                 createdAt: string
                 actorDisplayName: string | null
                 actorUsername: string | null
+                topic: string | null
               }[]
             }
           }
@@ -14496,6 +14521,7 @@ export interface paths {
                 pronouns?: string | null
                 /** Format: date-time */
                 joinDate?: string | null
+                isMember?: boolean
                 followerCount?: number | null
                 followingCount?: number | null
               }
@@ -23736,6 +23762,230 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/me/channel/blocks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              blocks: {
+                id: string
+                /** @enum {string} */
+                type: 'LOGO' | 'ADDON'
+                /** @enum {string} */
+                width: 'FULL' | 'HALF' | 'THIRD'
+                position: number
+                configJson?: unknown
+                /** Format: date-time */
+                createdAt: string
+                /** Format: date-time */
+                updatedAt: string
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              /** @enum {string} */
+              type: 'LOGO' | 'ADDON'
+              /** @enum {string} */
+              width: 'FULL' | 'HALF' | 'THIRD'
+              position: number
+              configJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/blocks/reorder': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/channel/blocks/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/v1/channels/{slug}/blocks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          slug: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              blocks: {
+                id: string
+                /** @enum {string} */
+                type: 'LOGO' | 'ADDON'
+                /** @enum {string} */
+                width: 'FULL' | 'HALF' | 'THIRD'
+                position: number
+                logoUrl: string | null
+                addon: {
+                  installId: string
+                  widgetSlug: string
+                  name: string
+                  sandboxUrl: string
+                  version: string
+                  position: number
+                  config?: unknown
+                  context?: unknown
+                } | null
+              }[]
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/addons': {
     parameters: {
       query?: never
@@ -30446,6 +30696,7 @@ export interface components {
         socialLinks?: unknown
         /** Format: date-time */
         joinDate?: string | null
+        isMember?: boolean
         chatEnabled?: boolean
         showPageHero?: boolean
       }
@@ -30487,6 +30738,7 @@ export interface components {
         pronouns?: string | null
         /** Format: date-time */
         joinDate?: string | null
+        isMember?: boolean
         followerCount?: number | null
         followingCount?: number | null
       }

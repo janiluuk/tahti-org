@@ -16,7 +16,6 @@ and legal review authorize binding electronic voting.
 ## Board and association operations
 
 - [ ] Review, second, schedule, and circulate member motions.
-- [ ] Record chair/secretary role fields on meetings (attendance/quorum already persist).
 - [ ] Publish notices and retain delivery evidence.
 - [ ] Capture official meeting votes and decisions.
 - [ ] Upload, approve, redact, sign, and publish minutes.
@@ -29,9 +28,7 @@ and legal review authorize binding electronic voting.
 
 - [ ] Snapshot voting eligibility and quorum denominators.
 - [ ] Separate advisory polls from binding ballots.
-- [ ] Protect secret ballots from operational audit-log disclosure.
 - [ ] Provide immutable result certificates and correction history.
-- [ ] Add pagination and remove governance list N+1 comment loading.
 - [ ] Add backups, retention, legal hold, and restore verification for official records.
 
 ## Plugin registry boundary

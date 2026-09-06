@@ -24,6 +24,9 @@ interface GovernanceMeeting {
   state: string
   scheduledAt: string | null
   location: string | null
+  chairName: string | null
+  secretaryName: string | null
+  minutesSignedByName: string | null
   attendanceCount: number
   presentCount: number
   quorumMet: boolean | null
@@ -71,7 +74,7 @@ export default async function DashboardGovernancePage() {
 
   const [motionsRes, membersRes, featureRequestsRes, meetingsRes, documentsRes] = await Promise.all(
     [
-      fetch(`${apiUrl}/api/v1/governance/motions`, {
+      fetch(`${apiUrl}/api/v1/governance/motions?state=OPEN,DRAFT&limit=50`, {
         headers: { Cookie: cookie },
         cache: 'no-store',
       }),
@@ -233,6 +236,9 @@ export default async function DashboardGovernancePage() {
                     {meeting.state.toLowerCase().replace('_', ' ')}
                     {meeting.scheduledAt &&
                       ` · ${new Date(meeting.scheduledAt).toLocaleDateString()}`}
+                    {meeting.chairName && ` · chair ${meeting.chairName}`}
+                    {meeting.secretaryName && ` · secretary ${meeting.secretaryName}`}
+                    {meeting.minutesSignedByName && ` · minutes signed`}
                     {meeting.quorumMet !== null &&
                       ` · quorum ${meeting.quorumMet ? 'met' : 'not met'}`}
                   </span>

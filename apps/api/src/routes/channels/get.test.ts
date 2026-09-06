@@ -26,6 +26,7 @@ describe('GET /api/channels/:slug', () => {
         displayName: 'Channel Get Test',
         emailVerifiedAt: new Date(),
         membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+        isMember: true,
         channel: {
           create: {
             slug: 'channel-get-testuser',
@@ -63,6 +64,7 @@ describe('GET /api/channels/:slug', () => {
     expect(body.slug).toBe('channel-get-testuser')
     expect(body.user.displayName).toBe('Channel Get Test')
     expect(body.user.username).toBe('channel-get-testuser')
+    expect(body.user.isMember).toBe(true)
     expect(body.hlsUrl).toBeNull()
     // Default channel header style — see ChannelDesigner's VIDEO_LOOP header
     // and its videoBackgroundUrl wiring (reused from Gallery & backdrop).

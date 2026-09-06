@@ -6,7 +6,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import type { ChannelDirectoryEntry } from '@tahti/shared'
-import { AvatarTile } from '@tahti/ui'
+import { AvatarTile, ChipFilterBar } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { useInfiniteSlice } from './_use-infinite-slice'
 
@@ -70,25 +70,13 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
           </button>
         </div>
         {genres.length > 0 && (
-          <div className="listen-genre-filter" role="group" aria-label="Filter by genre">
-            <button
-              type="button"
-              className={`listen-genre-filter__chip${genre === null ? ' listen-genre-filter__chip--active' : ''}`}
-              onClick={() => setGenre(null)}
-            >
-              All genres
-            </button>
-            {genres.map((g) => (
-              <button
-                key={g}
-                type="button"
-                className={`listen-genre-filter__chip${genre === g ? ' listen-genre-filter__chip--active' : ''}`}
-                onClick={() => setGenre(genre === g ? null : g)}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
+          <ChipFilterBar
+            label="Filter by genre"
+            allLabel="All genres"
+            value={genre}
+            onChange={setGenre}
+            options={genres.map((g) => ({ value: g, label: g }))}
+          />
         )}
       </div>
 

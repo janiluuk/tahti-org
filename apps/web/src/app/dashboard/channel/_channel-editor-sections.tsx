@@ -19,6 +19,7 @@ import { ChannelHeaderPanel } from '../channel-header-panel'
 import ChannelSlideshowPanel from '../channel-slideshow-panel'
 import ChannelLinksPanel from '../channel-links-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
+import { ChannelBlocksPanel } from './_channel-blocks-panel'
 import type { ChannelLink } from '../channel-links-panel'
 import { DesignerSectionSelect } from './_designer-section-select'
 import { DesignerHelpLayer } from './_designer-help-layer'
@@ -36,6 +37,7 @@ import type {
   ChannelHeaderStyle,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
+  PublicChannelBlock,
   SlideshowPreset,
   VisualPreset,
 } from '@tahti/shared'
@@ -136,6 +138,7 @@ export function ChannelEditorSections({
   const [presetApplyTick, setPresetApplyTick] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [blockPreview, setBlockPreview] = useState<PublicChannelBlock[]>([])
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -368,6 +371,10 @@ export function ChannelEditorSections({
               />
             )}
 
+            <div hidden={activeSection !== 'blocks'}>
+              <ChannelBlocksPanel onPreviewChange={setBlockPreview} />
+            </div>
+
             {(activeSection === 'tracks' ||
               activeSection === 'collections' ||
               activeSection === 'releases') && <DesignerCatalogLinkPanel section={activeSection} />}
@@ -393,6 +400,7 @@ export function ChannelEditorSections({
         <div className="studio-channel-editor__preview-col" data-hero>
           <ChannelLivePreview
             draft={draft}
+            blocks={blockPreview}
             activeSection={activeSection}
             onSectionSelect={selectSection}
           />

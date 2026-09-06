@@ -9,7 +9,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Artist profiles:** `/u/[username]` presents biography, latest music, archive, collections, upcoming events, and the artist channel.
 - **Discography and recordings:** Tracks, DJ sets, mixes, and recorded shows are presented separately where their metadata differs.
 - **Conditional metadata:** Tracklists and venue/location details appear for shows, recordings, DJ sets, mixes, and other long-form material rather than ordinary tracks.
-- **Discovery:** Channel directory, artist feed, search, radio, latest releases, and artist-curated collections.
+- **Discovery:** `/listen` defaults to Live. Signed-in “For you” (feed, new-to-you, widgets) is collapsed on small screens and omitted when there is no session. Artist directory and Tahti Selects load when those tabs open. Radio keeps the player plus What’s next; track/channel history lives in History.
 - **Engagement:** Likes, follows, reposts, comments where enabled, add-to-queue feedback, and direct artist messaging for signed-in accounts.
 - **Downloads:** Artist-controlled downloads with MP3 or lossless files when available; anonymous download paths remain supported.
 - **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, and HearThis playback surfaces.
@@ -77,13 +77,16 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Links:** The link buttons shown in the channel banner (label + URL each,
   platform icon auto-detected from the URL) — persisted as `channelLinksJson`
   via `PATCH /api/me/channel/visual`.
+- **Blocks:** Optional logo images and installed addons laid out full / half /
+  third width on the public channel page (`ChannelBlock`, row-packed). Edited
+  from Designer → Blocks; logos are PNG/WebP via `/api/me/media`.
 - **Player overlay text:** An optional stylized headline/tagline over the
   player stage (`playerOverlay*`), distinct from the channel-page text layer
   (`textLayer*` / designer `textOverlay*`).
 - **Look extras:** Player/background independent gradients, background
   visualizer preset, and now-playing overlay style also persist on Channel
   (see worklog `2026-09-04-channel-look-extras.md`).
-- **Press kit** now lives on Settings → Artist info's Branding tab, not in the designer, since it's identity material rather than a per-look setting. **Addons** was dropped from the designer's section list (the feature itself is unchanged, just not surfaced there).
+- **Press kit** now lives on Settings → Artist info's Branding tab, not in the designer, since it's identity material rather than a per-look setting. Channel **addons** are installed from Designer → Blocks (or the store picker there) and placed as layout blocks; they are not a separate designer section.
 - **Artist info:** Compact Identity, Story, and People tabs for name, avatar, logo, genres, location, biography, project type, and members.
 - **Uploads:** Avatar, logo, artwork, and visual media use the standard drag-and-drop interaction.
 - **Connections:** Separate tabs for streaming platforms, profile links, social accounts, and MusicBrainz.
@@ -117,7 +120,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Tahti Selects:** Generate a ten-track rotation from top-played eligible tracks, add or replace the current list, reorder/remove entries, and auto-fill an empty rotation before stream start.
 - **Radio operations:** Radio stream status, submissions, scheduling, and operational controls.
 - **Financial transparency:** Ledger, fan-subscription operations, grants, payouts, public transparency summaries, and immutable correction entries.
-- **Association governance:** Member register, AGM material, motions, resolutions, voting, audit trail, and public governance documents.
+- **Association governance:** Member register, AGM/board meetings with chair/secretary and minutes-signature fields, motions, resolutions, voting, a board governance audit log (finance, subscriptions, membership, decisions, meetings, radio bookings) on the shared LogViewer, and public governance documents.
 
 ## Platform and integrations
 

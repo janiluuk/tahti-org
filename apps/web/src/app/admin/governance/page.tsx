@@ -42,7 +42,7 @@ const SECTIONS = [
   {
     href: '/admin/governance/audit',
     title: 'Governance audit log',
-    desc: 'Searchable log of privileged actions across the platform.',
+    desc: 'Board LogViewer of finance, subscriptions, membership, decisions, meetings, and related business events.',
   },
   {
     href: '/api/admin/audit/export.csv',
