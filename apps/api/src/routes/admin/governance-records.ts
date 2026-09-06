@@ -16,6 +16,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { auditLog } from '../../lib/audit.js'
 
 async function documentResponse(document: {
   id: string
@@ -161,6 +162,12 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const meeting = await fastify.prisma.governanceMeeting.create({
         data: { ...body, agenda: body.agenda ?? undefined, createdById: request.sessionUser!.id },
       })
+      await auditLog(fastify.prisma, {
+        action: 'MEETING_CREATE',
+        actorId: request.sessionUser!.id,
+        targetId: meeting.id,
+        meta: { title: meeting.title, type: meeting.type, state: meeting.state },
+      })
       return reply.status(201).send({
         ...meeting,
         attendanceCount: 0,
@@ -199,6 +206,12 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           ...parsed.data,
           agenda: parsed.data.agenda === null ? Prisma.JsonNull : parsed.data.agenda,
         },
+      })
+      await auditLog(fastify.prisma, {
+        action: 'MEETING_UPDATE',
+        actorId: request.sessionUser!.id,
+        targetId: updated.id,
+        meta: { title: updated.title, state: updated.state },
       })
       const withAttendance = await fastify.prisma.governanceMeeting.findUniqueOrThrow({
         where: { id: updated.id },
@@ -266,6 +279,12 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             data: parsed.data,
           })
         : await fastify.prisma.governanceAttendance.create({ data: { meetingId, ...parsed.data } })
+      await auditLog(fastify.prisma, {
+        action: 'MEETING_ATTENDANCE_UPSERT',
+        actorId: request.sessionUser!.id,
+        targetId: meetingId,
+        meta: { attendanceId: record.id, status: record.status, memberId: record.memberId },
+      })
       return reply.status(existing ? 200 : 201).send(record)
     },
   )
@@ -307,6 +326,12 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       const document = await fastify.prisma.governanceDocument.create({
         data: { ...parsed.data, createdById: request.sessionUser!.id },
+      })
+      await auditLog(fastify.prisma, {
+        action: 'DOCUMENT_CREATE',
+        actorId: request.sessionUser!.id,
+        targetId: document.id,
+        meta: { title: document.title, type: document.type, version: document.version },
       })
       return reply.status(201).send(await documentResponse(document))
     },

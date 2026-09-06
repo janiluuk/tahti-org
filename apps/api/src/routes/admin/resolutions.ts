@@ -15,6 +15,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 
 const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -94,6 +95,13 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         include: { createdBy: { select: { displayName: true } } },
       })
 
+      await auditLog(fastify.prisma, {
+        action: 'RESOLUTION_CREATE',
+        actorId: actor.id,
+        targetId: row.id.toString(),
+        meta: { title: row.title, outcome: row.outcome },
+      })
+
       return reply.status(201).send({
         id: row.id.toString(),
         title: row.title,
@@ -151,6 +159,17 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id },
         data: parsed.data,
         include: { createdBy: { select: { displayName: true } } },
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'RESOLUTION_UPDATE',
+        actorId: request.sessionUser!.id,
+        targetId: row.id.toString(),
+        meta: {
+          title: row.title,
+          outcome: row.outcome,
+          published: Boolean(row.publishedAt),
+        },
       })
 
       return reply.send({

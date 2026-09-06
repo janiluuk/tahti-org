@@ -11,7 +11,9 @@ import {
   MotionCommentSchema,
   MotionCommentsBulkSchema,
   MotionDetailSchema,
+  MotionListQuerySchema,
   MotionListSchema,
+  MOTION_LIST_STATES,
   MotionRefResponseSchema,
   PatchMotionSchema,
   PostMotionCommentSchema,
@@ -24,6 +26,26 @@ import {
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import type { MotionState, Prisma } from '@tahti/db'
+
+const MOTION_STATE_SET = new Set<string>(MOTION_LIST_STATES)
+
+function encodeMotionCursor(createdAt: Date, id: string): string {
+  return Buffer.from(`${createdAt.toISOString()}|${id}`, 'utf8').toString('base64url')
+}
+
+function decodeMotionCursor(raw: string): { createdAt: Date; id: string } | null {
+  try {
+    const decoded = Buffer.from(raw, 'base64url').toString('utf8')
+    const [iso, id] = decoded.split('|')
+    if (!iso || !id) return null
+    const createdAt = new Date(iso)
+    if (Number.isNaN(createdAt.getTime())) return null
+    return { createdAt, id }
+  } catch {
+    return null
+  }
+}
 
 // M10 — Member governance.
 //
@@ -85,9 +107,46 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const parsed = MotionListQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const { limit, cursor: cursorRaw } = parsed.data
+      const states = parsed.data.state
+        ? [
+            ...new Set(
+              parsed.data.state
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean),
+            ),
+          ]
+        : []
+      if (states.some((state) => !MOTION_STATE_SET.has(state))) {
+        return reply.status(400).send({ error: 'Invalid motion state filter' })
+      }
+      const cursor = cursorRaw ? decodeMotionCursor(cursorRaw) : null
+      if (cursorRaw && !cursor) {
+        return reply.status(400).send({ error: 'Invalid cursor' })
+      }
+
+      const where: Prisma.MotionWhereInput = {}
+      if (states.length > 0) {
+        where.state = { in: states as MotionState[] }
+      }
+      if (cursor) {
+        where.OR = [
+          { createdAt: { lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+        ]
+      }
+
       const motions = await fastify.prisma.motion.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 100,
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
         include: {
           proposer: { select: { displayName: true, username: true } },
           _count: { select: { votes: true, comments: true } },
@@ -100,8 +159,14 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      const page = motions.slice(0, limit)
+      const last = page[page.length - 1]
+      if (motions.length > limit && last) {
+        reply.header('x-next-cursor', encodeMotionCursor(last.createdAt, last.id))
+      }
+
       return reply.send(
-        motions.map((m) => {
+        page.map((m) => {
           const myVote = m.votes.find((v) => v.userId === user.id)
           let tally: { YES: number; NO: number; ABSTAIN: number } | undefined
           if (m.state === 'CLOSED') {
@@ -334,7 +399,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         action: 'VOTE_CAST',
         actorId: user.id,
         targetId: id,
-        meta: { choice },
+        meta: { recorded: true },
       })
 
       return reply.status(201).send({ ok: true, choice })

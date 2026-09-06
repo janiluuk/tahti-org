@@ -15,12 +15,17 @@
 - For every task with a technical implementation (not a one-line fix), write one file under
   `docs/todo/` named for what it tracks — plan and status live there, not only in chat.
 - Session worklogs (`docs/worklogs/`) exist only while that session still has open follow-ups.
-- **When the task ships** (PR merged or landed on main): append a compact dated section to
-  `docs/todo/HISTORY.md` (original filename, what shipped, PR link). Then delete the todo file
-  and any matching worklog. Do not overwrite HISTORY; append.
-- Move leftover open items into `docs/remaining-work.md` or a new slim todo file. Strip `[x]` /
-  done rows from remaining-work, worklogs, and other plan docs.
-- Before starting new work, skim `docs/todo/` (not HISTORY) and fold anything already shipped
-  into HISTORY first.
+- Keep plan/status in `docs/todo/<task>.md` while the PR is in progress. Do **not**
+  edit `docs/remaining-work.md`, `docs/features.md`, or `docs/todo/HISTORY.md` on
+  intermediate commits.
+- **When the PR is otherwise ready to merge:** in one commit, append a compact dated
+  section to `docs/todo/HISTORY.md` (original filename, what shipped, PR link), move
+  leftovers into `docs/remaining-work.md` or a new slim todo, and update `features.md`
+  only if the product surface changed. Do not overwrite HISTORY; append. After merge,
+  delete the todo file and any matching worklog.
+- Stack related PRs (branch B from A). Do not open parallel PRs from `main` that all
+  rewrite the same catalogs or the same test `describe`.
+- Before starting new work, skim `docs/todo/` (not HISTORY). Do not start by rewriting
+  the shared catalogs.
 
-See `.cursor/rules/todo-history.mdc`.
+See `.cursor/rules/todo-history.mdc` and `.cursor/rules/pr-stacking.mdc`.

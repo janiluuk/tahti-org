@@ -41,6 +41,7 @@ alwaysApply: true
 | Escaped user text | `SafePlainText` |
 | Auth wordmark | `BrandLogo` |
 | Iframe embeds | `EmbedShell` + `styles/embed.css` |
+| Admin / system log lists | `LogViewer` |
 
 ## Adding a new component
 
