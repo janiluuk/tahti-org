@@ -35,8 +35,7 @@ export function RecentlyPlayed({
 }: {
   items: RecentlyPlayedItem[]
   /** Rendered inside RadioTabs' own card + tab-labeled panel — skip the
-   * redundant outer card chrome and title (the active tab already says
-   * "Recently played"). */
+   * redundant outer card chrome and title (the History tab already names it). */
   embedded?: boolean
 }) {
   if (items.length === 0) return null

@@ -82,6 +82,18 @@ export const GovernanceDocumentTypeSchema = z.enum([
   'OTHER',
 ])
 
+function emptyToNull(value: unknown): unknown {
+  if (typeof value === 'string' && value.trim() === '') return null
+  return value
+}
+
+const OptionalPersonNameSchema = z.preprocess(
+  emptyToNull,
+  z.string().trim().max(200).nullable().optional(),
+)
+
+const OptionalDateSchema = z.preprocess(emptyToNull, z.coerce.date().nullable().optional())
+
 export const CreateGovernanceMeetingSchema = z.object({
   title: z.string().trim().min(1).max(200),
   type: GovernanceMeetingTypeSchema,
@@ -91,6 +103,10 @@ export const CreateGovernanceMeetingSchema = z.object({
   noticeAt: z.coerce.date().optional(),
   eligibleMemberCount: z.number().int().nonnegative().optional(),
   quorumRequired: z.number().int().positive().optional(),
+  chairName: OptionalPersonNameSchema,
+  secretaryName: OptionalPersonNameSchema,
+  minutesSignedByName: OptionalPersonNameSchema,
+  minutesSignedAt: OptionalDateSchema,
   agenda: z
     .array(
       z.object({
@@ -110,6 +126,10 @@ export const PatchGovernanceMeetingSchema = z.object({
   noticeAt: z.coerce.date().nullable().optional(),
   eligibleMemberCount: z.number().int().nonnegative().nullable().optional(),
   quorumRequired: z.number().int().positive().nullable().optional(),
+  chairName: OptionalPersonNameSchema,
+  secretaryName: OptionalPersonNameSchema,
+  minutesSignedByName: OptionalPersonNameSchema,
+  minutesSignedAt: OptionalDateSchema,
   agenda: z
     .array(
       z.object({
@@ -150,6 +170,10 @@ export const GovernanceMeetingItemSchema = z.object({
   minutesApprovedAt: z.coerce.date().nullable(),
   eligibleMemberCount: z.number().int().nullable(),
   quorumRequired: z.number().int().nullable(),
+  chairName: z.string().nullable(),
+  secretaryName: z.string().nullable(),
+  minutesSignedByName: z.string().nullable(),
+  minutesSignedAt: z.coerce.date().nullable(),
   attendanceCount: z.number().int(),
   presentCount: z.number().int(),
   quorumMet: z.boolean().nullable(),

@@ -16,7 +16,6 @@ and legal review authorize binding electronic voting.
 ## Board and association operations
 
 - [ ] Review, second, schedule, and circulate member motions.
-- [ ] Record chair/secretary role fields on meetings (attendance/quorum already persist).
 - [ ] Publish notices and retain delivery evidence.
 - [ ] Capture official meeting votes and decisions.
 - [ ] Upload, approve, redact, sign, and publish minutes.

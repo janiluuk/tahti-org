@@ -71,8 +71,7 @@ adopted bylaws and legal review.
 Additional governance gaps from the audit:
 
 - [ ] Persist official member eligibility periods and privacy-scoped register views.
-- [ ] Add AGM/board chair, secretary, and signed approval data.
-- [ ] Add official ballot receipts, recount, and correction procedure.
+- [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
 - [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
 - [ ] Add legal association information: Business ID, registered details, contacts, auditor, and signatories.
@@ -156,9 +155,10 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item | Notes |
 | ---- | ----- |
+| Mobile UX audit (MOB-01–MOB-10) | In progress: `docs/todo/responsive-usability-audit.md` (MOB-01/03/07/08 started) |
 | Stream manager on artist studio page | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
-| Mobile UX audit (MOB-01–MOB-10) | Implementation worklist: `docs/todo/responsive-usability-audit.md` |
 | Channel Designer block system | Logo + addon blocks: `docs/todo/channel-designer-blocks.md` |
+| Public list/play `audioUrl` still ungated | Download gate restored; streaming bypasses remain on list/play `audioUrl` |
 | Unify remaining uploaders on `FileDropzone` | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover) |
 | Client `NEXT_PUBLIC_API_*` env unification | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL` |
 | Deduplicate chat panel logic | `chat-panel.tsx` / `fan-chat-panel.tsx` |

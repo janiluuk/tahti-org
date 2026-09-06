@@ -2264,8 +2264,12 @@ model GovernanceMeeting {
   agenda              Json?
   eligibleMemberCount Int?
   quorumRequired      Int?
+  chairName           String?
+  secretaryName       String?
   minutesKey          String?
   minutesApprovedAt   DateTime?
+  minutesSignedByName String?
+  minutesSignedAt     DateTime?
   createdById         String
   createdBy           User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt           DateTime               @default(now())

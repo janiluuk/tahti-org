@@ -62,8 +62,12 @@ function meetingResponse(meeting: {
   agenda: unknown
   minutesKey: string | null
   minutesApprovedAt: Date | null
+  minutesSignedByName: string | null
+  minutesSignedAt: Date | null
   eligibleMemberCount: number | null
   quorumRequired: number | null
+  chairName: string | null
+  secretaryName: string | null
   createdAt: Date
   updatedAt: Date
   attendance: Array<{ status: string }>
@@ -169,6 +173,10 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         attendanceCount: 0,
         presentCount: 0,
         quorumMet: body.quorumRequired ? false : null,
+        chairName: meeting.chairName ?? null,
+        secretaryName: meeting.secretaryName ?? null,
+        minutesSignedByName: meeting.minutesSignedByName ?? null,
+        minutesSignedAt: meeting.minutesSignedAt ?? null,
       })
     },
   )
