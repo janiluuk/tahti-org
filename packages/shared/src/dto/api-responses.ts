@@ -536,6 +536,8 @@ export const PublicChannelUserSchema = z.object({
   pronouns: z.string().nullable().optional(),
   socialLinks: z.unknown().optional(),
   joinDate: z.string().datetime().nullable().optional(),
+  /** True when the artist currently supports Tahti ry (association member). */
+  isMember: z.boolean().optional(),
   chatEnabled: z.boolean().optional(),
   showPageHero: z.boolean().optional(),
 })
@@ -945,6 +947,8 @@ export const PublicProfileArtistSchema = z.object({
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
   joinDate: z.string().datetime().nullable().optional(),
+  /** True when the artist currently supports Tahti ry (association member). */
+  isMember: z.boolean().optional(),
   /** Null when the artist has hidden their followers/following list from their profile. */
   followerCount: z.number().int().nullable().optional(),
   followingCount: z.number().int().nullable().optional(),

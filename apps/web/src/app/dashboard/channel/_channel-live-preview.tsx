@@ -193,7 +193,7 @@ export function ChannelLivePreview({
                 </span>
                 {draft.joinDate && (
                   <span className="ch-artist-flag">
-                    Member since{' '}
+                    Joined{' '}
                     {new Date(draft.joinDate).toLocaleDateString(undefined, {
                       month: 'short',
                       year: 'numeric',
