@@ -97,7 +97,10 @@ function toLiquidsoapColor(hex: string | undefined, fallback: string): string {
  * savonet/liquidsoap:v2.2.5's actual API surface (video.add_image has no `duration`
  * arg; the mux call is `source.mux.video`, not `mux(...)`; the ffmpeg video format
  * key is `%video`, not `%video.raw` — all three differ from what an earlier,
- * never-wired-up draft of this block assumed).
+ * never-wired-up draft of this block assumed). `video.add_rectangle`'s
+ * signature (alpha/color/height/width/x/y, unlabeled source last) was
+ * confirmed the same way via `liquidsoap --check` against the real image —
+ * it exists (`--list-functions` lists it) but wasn't previously used here.
  */
 export function buildRtmpMirrorOutput(
   target: RtmpMirrorTarget,
@@ -105,14 +108,23 @@ export function buildRtmpMirrorOutput(
   titleText?: string,
   subtitleText?: string,
   textColor?: string,
+  scrimEnabled?: boolean,
 ): string {
   const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
   const base = `video.add_image(file="${coverPath}", width=1280, height=720, blank())`
+  // Dark bar behind the title/subtitle text region only — not the whole
+  // frame, so the rest of the cover art stays untouched. Sized to the
+  // bottom strip both text lines already render into (title y=628,
+  // subtitle y=662, frame height 720).
+  const withScrim =
+    scrimEnabled && (titleText || subtitleText)
+      ? `video.add_rectangle(color=0x000000, alpha=0.5, width=1280, height=110, x=0, y=610, ${base})`
+      : base
   const subtitleColor = toLiquidsoapColor(textColor, '0xcbd5e1')
   const titleColor = toLiquidsoapColor(textColor, '0xffffff')
   const withSubtitle = subtitleText
-    ? `video.add_text(color=${subtitleColor}, size=18, x=20, y=662, "${escapeLiquidsoapString(subtitleText)}", ${base})`
-    : base
+    ? `video.add_text(color=${subtitleColor}, size=18, x=20, y=662, "${escapeLiquidsoapString(subtitleText)}", ${withScrim})`
+    : withScrim
   const videoSource = titleText
     ? `video.add_text(color=${titleColor}, size=28, x=20, y=628, "${escapeLiquidsoapString(titleText)}", ${withSubtitle})`
     : withSubtitle
@@ -266,6 +278,7 @@ export async function spawnLiquidsoapContainer(
       streamOverlaySubtitle: true,
       streamOverlayShowTitle: true,
       streamOverlayTextColor: true,
+      streamOverlayScrimEnabled: true,
       streamOverlayCoverUrl: true,
       user: { select: { displayName: true, avatarUrl: true } },
     },
@@ -340,6 +353,7 @@ export async function spawnLiquidsoapContainer(
           overlayTitle,
           overlaySubtitle,
           channel.streamOverlayTextColor ?? undefined,
+          channel.streamOverlayScrimEnabled,
         ),
       )
       .join('\n\n')

@@ -155,6 +155,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(getInitial.json().streamOverlayTitle).toBeNull()
     expect(getInitial.json().streamOverlayShowTitle).toBe(false)
     expect(getInitial.json().streamOverlayTextColor).toBeNull()
+    expect(getInitial.json().streamOverlayScrimEnabled).toBe(false)
 
     const patch = await app.inject({
       method: 'PATCH',
@@ -165,6 +166,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
         streamOverlaySubtitle: 'Every Friday, 8pm CET',
         streamOverlayShowTitle: true,
         streamOverlayTextColor: TEST_OVERLAY_COLOR,
+        streamOverlayScrimEnabled: true,
         streamOverlayCoverUrl: 'https://cdn.example/overlay-cover.jpg',
       },
     })
@@ -173,6 +175,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(patch.json().streamOverlaySubtitle).toBe('Every Friday, 8pm CET')
     expect(patch.json().streamOverlayShowTitle).toBe(true)
     expect(patch.json().streamOverlayTextColor).toBe(TEST_OVERLAY_COLOR)
+    expect(patch.json().streamOverlayScrimEnabled).toBe(true)
     expect(patch.json().streamOverlayCoverUrl).toBe('https://cdn.example/overlay-cover.jpg')
 
     const clear = await app.inject({
@@ -184,6 +187,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
         streamOverlaySubtitle: '',
         streamOverlayShowTitle: false,
         streamOverlayTextColor: '',
+        streamOverlayScrimEnabled: false,
         streamOverlayCoverUrl: '',
       },
     })
@@ -192,6 +196,7 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(clear.json().streamOverlaySubtitle).toBeNull()
     expect(clear.json().streamOverlayShowTitle).toBe(false)
     expect(clear.json().streamOverlayTextColor).toBeNull()
+    expect(clear.json().streamOverlayScrimEnabled).toBe(false)
     expect(clear.json().streamOverlayCoverUrl).toBeNull()
   })
 

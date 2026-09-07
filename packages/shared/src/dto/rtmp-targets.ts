@@ -70,6 +70,9 @@ export const ChannelStreamOverlayPatchSchema = z.object({
       z.literal(''),
     ])
     .optional(),
+  // Off by default — see the schema.prisma comment on
+  // Channel.streamOverlayScrimEnabled.
+  streamOverlayScrimEnabled: z.boolean().optional(),
   streamOverlayCoverUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayBackdropUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayVisualPreset: z.enum(VISUAL_PRESETS).optional(),
