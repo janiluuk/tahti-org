@@ -23,7 +23,7 @@ async function main() {
 
   if (user.channel) {
     await prisma.download.deleteMany({ where: { channelId: user.channel.id } })
-    await prisma.archiveItem.deleteMany({ where: { channelId: user.channel.id } })
+    await prisma.sound.deleteMany({ where: { channelId: user.channel.id } })
     await prisma.channel.delete({ where: { id: user.channel.id } })
   }
 

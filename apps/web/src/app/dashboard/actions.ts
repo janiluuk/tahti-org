@@ -181,6 +181,75 @@ export async function setFanTierActive(
   return { error: null }
 }
 
+export async function createPurchaseTier(params: {
+  name: string
+  priceCents: number
+  priceOptional?: boolean
+  description?: string
+}): Promise<{ error: string | null }> {
+  const response = await fetch(`${apiUrl}/api/me/purchase-tiers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to create tier' }
+  }
+  return { error: null }
+}
+
+export async function setPurchaseTierActive(
+  id: string,
+  active: boolean,
+): Promise<{ error: string | null }> {
+  const response = await fetch(`${apiUrl}/api/me/purchase-tiers/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ active }),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update tier' }
+  }
+  return { error: null }
+}
+
+export async function setStoreEnabled(storeEnabled: boolean): Promise<{ error: string | null }> {
+  const response = await fetch(`${apiUrl}/api/me/store-settings`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ storeEnabled }),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update store settings' }
+  }
+  return { error: null }
+}
+
+// Reuses the existing DM system as-is — no follow-relationship gate on
+// starting a conversation, so an artist can message any buyer by username.
+export async function messageBuyer(username: string): Promise<{
+  error: string | null
+  conversationId?: string
+}> {
+  const response = await fetch(`${apiUrl}/api/me/messages/conversations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ username }),
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Could not start conversation' }
+  }
+  return { error: null, conversationId: (data as { conversationId?: string }).conversationId }
+}
+
 export async function startFanSubConnectOnboarding(): Promise<{
   error: string | null
   onboardingUrl?: string

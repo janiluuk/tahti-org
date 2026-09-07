@@ -7564,6 +7564,245 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/u/{username}/purchase-tiers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          username: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/purchase-tiers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/purchase-tiers/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/me/purchase-tiers/orders': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/u/{username}/purchase-tiers/{tierId}/checkout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          username: string
+          tierId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/me/store-settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
   '/api/me/fan-subs/connect': {
     parameters: {
       query?: never
@@ -13966,6 +14205,14 @@ export interface paths {
                 name: string
                 amountCents: number
               }[]
+              purchaseTiers: {
+                id: string
+                name: string
+                description: string | null
+                priceCents: number
+                priceOptional: boolean
+              }[]
+              storePaymentsReady: boolean
               collections: {
                 slug: string
                 name: string
@@ -13973,6 +14220,13 @@ export interface paths {
                 style: string
                 description: string | null
                 coverUrl: string | null
+                colorScheme: {
+                  bg: string
+                  accent: string
+                  text: string
+                  muted: string
+                  highlight: string
+                } | null
                 isFeatured: boolean
                 itemCount: number
                 url: string
@@ -16993,9 +17247,16 @@ export interface paths {
                   connectionTest: boolean
                   fileList: boolean
                   import: boolean
+                  /** @default false */
+                  search: boolean
+                  /** @default false */
+                  playback: boolean
                 }
                 oauthStartPath: string | null
-                statusPath: string
+                statusPath: string | null
+                searchPath?: string | null
+                listPath?: string | null
+                importPath?: string | null
               }[]
             }
           }
@@ -21393,6 +21654,41 @@ export interface paths {
     }
     trace?: never
   }
+  '/api/me/sound/{id}/access': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    trace?: never
+  }
   '/api/me/sound/{id}/export/hearthis': {
     parameters: {
       query?: never
@@ -22891,6 +23187,7 @@ export interface paths {
                 currentVersion: string
                 bundleSizeBytes: number
                 moderationNote: string | null
+                defaultConfigJson?: unknown
                 /** Format: date-time */
                 createdAt: string
                 /** Format: date-time */
@@ -22932,6 +23229,7 @@ export interface paths {
               currentVersion: string
               bundleSizeBytes: number
               moderationNote: string | null
+              defaultConfigJson?: unknown
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -23030,6 +23328,7 @@ export interface paths {
               currentVersion: string
               bundleSizeBytes: number
               moderationNote: string | null
+              defaultConfigJson?: unknown
               /** Format: date-time */
               createdAt: string
               /** Format: date-time */
@@ -23141,6 +23440,63 @@ export interface paths {
             [name: string]: unknown
           }
           content?: never
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/disco-widgets/{id}/default-config': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              slug: string
+              /** @enum {string} */
+              scope: 'LISTENER' | 'ARTIST' | 'ADMIN'
+              /** @enum {string} */
+              status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISABLED'
+              name: string
+              description: string
+              authorName: string
+              categories: string[]
+              iconUrl: string | null
+              currentVersion: string
+              bundleSizeBytes: number
+              moderationNote: string | null
+              defaultConfigJson?: unknown
+              /** Format: date-time */
+              createdAt: string
+              /** Format: date-time */
+              updatedAt: string
+            }
+          }
         }
       }
     }
@@ -29353,6 +29709,14 @@ export interface components {
         name: string
         amountCents: number
       }[]
+      purchaseTiers: {
+        id: string
+        name: string
+        description: string | null
+        priceCents: number
+        priceOptional: boolean
+      }[]
+      storePaymentsReady: boolean
       collections: {
         slug: string
         name: string
@@ -29360,6 +29724,13 @@ export interface components {
         style: string
         description: string | null
         coverUrl: string | null
+        colorScheme: {
+          bg: string
+          accent: string
+          text: string
+          muted: string
+          highlight: string
+        } | null
         isFeatured: boolean
         itemCount: number
         url: string

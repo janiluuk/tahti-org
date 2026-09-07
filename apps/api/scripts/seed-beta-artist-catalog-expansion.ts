@@ -199,14 +199,14 @@ async function seedArchiveSet(
   genre: string,
   cursor: ReturnType<typeof makeCursor>,
 ): Promise<boolean> {
-  const existing = await prisma.archiveItem.findFirst({ where: { channelId, title } })
+  const existing = await prisma.sound.findFirst({ where: { channelId, title } })
   if (existing) return false
 
   const source = cursor.next()
   const coverKey = `archive/${channelSlug}/${slugify(title)}-${randomBytes(3).toString('hex')}/cover.svg`
   await putObjectText(coverKey, generateCoverArtSvg(title, displayName), 'image/svg+xml')
 
-  await prisma.archiveItem.create({
+  await prisma.sound.create({
     data: {
       channelId,
       title,
@@ -239,7 +239,7 @@ async function main() {
   })
   if (artists.length === 0) throw new Error('No @beta.tahti.live artists found')
 
-  const sourceTracks = (await prisma.archiveItem.findMany({
+  const sourceTracks = (await prisma.sound.findMany({
     where: { channel: { slug: TAHTI_SELECTS_SLUG }, status: 'READY', isPublic: true },
     select: {
       title: true,
@@ -339,7 +339,7 @@ async function main() {
           (n, r) => n + (r.ep1 ? 1 : 0) + (r.ep2 ? 1 : 0) + (r.single ? 1 : 0),
           0,
         ),
-        newArchiveItems: results.reduce((n, r) => n + r.archiveSets, 0),
+        newSounds: results.reduce((n, r) => n + r.archiveSets, 0),
         results,
       },
       null,

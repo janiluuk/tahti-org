@@ -10,7 +10,7 @@
  *   - No externally-fetched audio. Each channel's content (album, DJ set,
  *     live show, single) is a DB-row copy pointing at the SAME
  *     already-CC0-licensed MinIO objects Tahti Selects already legitimately
- *     hosts (safe: no unique constraint on ArchiveItem.mp3Key/flacKey, no S3
+ *     hosts (safe: no unique constraint on Sound.mp3Key/flacKey, no S3
  *     delete-cascade in this codebase — confirmed before writing this
  *     script). Original artist attribution is preserved in
  *     artistName/commentary; nothing is misattributed to the placeholder
@@ -382,7 +382,7 @@ async function seedArchiveSet(
   contentType: 'DJ_SET' | 'LIVE',
   cursor: ReturnType<typeof makeCursor>,
 ): Promise<boolean> {
-  const existing = await prisma.archiveItem.findFirst({ where: { channelId, title } })
+  const existing = await prisma.sound.findFirst({ where: { channelId, title } })
   if (existing) return false
 
   const source = cursor.next()
@@ -390,7 +390,7 @@ async function seedArchiveSet(
   await putObjectText(coverKey, generateCoverArtSvg(title, spec.displayName), 'image/svg+xml')
 
   const kind = contentType === 'DJ_SET' ? 'DJ set' : 'live show'
-  await prisma.archiveItem.create({
+  await prisma.sound.create({
     data: {
       channelId,
       title,
@@ -418,7 +418,7 @@ async function seedArchiveSet(
 async function main() {
   const specs = buildSpecs()
 
-  const sourceTracks = (await prisma.archiveItem.findMany({
+  const sourceTracks = (await prisma.sound.findMany({
     where: { channel: { slug: TAHTI_SELECTS_SLUG }, status: 'READY', isPublic: true },
     select: {
       title: true,

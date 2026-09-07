@@ -2,9 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
+import type { VisualPreset } from '@tahti/shared'
 import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
+import type { ManageStats } from '../../c/[slug]/_manage-panel'
 import { BroadcastStudio } from './_broadcast-studio'
 import { fetchAutoRecordEnabled } from './recording-actions'
 import { fetchAutoPublishBroadcast } from './publish-actions'
@@ -19,6 +21,8 @@ interface StreamOverlay {
   streamOverlayTitle: string | null
   streamOverlaySubtitle: string | null
   streamOverlayCoverUrl: string | null
+  streamOverlayBackdropUrl: string | null
+  streamOverlayVisualPreset: VisualPreset
 }
 
 type BroadcastUsageInfo = {
@@ -51,18 +55,22 @@ export default async function BroadcastStudioPage() {
   let broadcastUsage: BroadcastUsageInfo | null = null
   let autoRecordEnabled = true
   let autoPublishBroadcast = true
+  let manageStats: ManageStats | null = null
   let streamOverlay: StreamOverlay = {
     streamOverlayTitle: null,
     streamOverlaySubtitle: null,
     streamOverlayCoverUrl: null,
+    streamOverlayBackdropUrl: null,
+    streamOverlayVisualPreset: 'MINIMAL',
   }
 
   try {
-    const [streamSettingsRes, broadcastUsageRes, overlayRes, autoRecord, autoPublish] =
+    const [streamSettingsRes, broadcastUsageRes, overlayRes, statsRes, autoRecord, autoPublish] =
       await Promise.all([
         get('/api/me/stream-settings'),
         get('/api/me/broadcast-usage'),
         get('/api/me/channel/stream-overlay'),
+        get(`/api/channels/${user.channel.slug}/manage-stats`),
         fetchAutoRecordEnabled(),
         fetchAutoPublishBroadcast(),
       ])
@@ -72,6 +80,7 @@ export default async function BroadcastStudioPage() {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
     if (overlayRes.ok) streamOverlay = (await overlayRes.json()) as StreamOverlay
+    if (statsRes.ok) manageStats = (await statsRes.json()) as ManageStats
     autoRecordEnabled = autoRecord
     autoPublishBroadcast = autoPublish
   } catch {
@@ -118,6 +127,7 @@ export default async function BroadcastStudioPage() {
             autoRecordEnabled={autoRecordEnabled}
             autoPublishBroadcast={autoPublishBroadcast}
             streamOverlay={streamOverlay}
+            manageStats={manageStats}
           />
         ) : (
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>

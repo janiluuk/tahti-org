@@ -16,6 +16,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedGetUrl, presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
 import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
+import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 
 const COVER_PRESIGN_SEC = 3600
 
@@ -90,6 +91,7 @@ const collectionCoverRoutes: FastifyPluginAsync = async (fastify) => {
         data: { coverKey: parsed.data.uploadKey, coverUrl: null },
       })
       const url = await presignedGetUrl(parsed.data.uploadKey, COVER_PRESIGN_SEC)
+      refreshCollectionCoverPalette(fastify.prisma, col.id, url)
       return reply.send({ url })
     },
   )
@@ -126,6 +128,7 @@ const collectionCoverRoutes: FastifyPluginAsync = async (fastify) => {
         data: { coverKey: uploadKey, coverUrl: null },
       })
       const url = await presignedGetUrl(uploadKey, COVER_PRESIGN_SEC)
+      refreshCollectionCoverPalette(fastify.prisma, col.id, url)
       return reply.send({ url })
     },
   )

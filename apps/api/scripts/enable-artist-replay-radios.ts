@@ -38,7 +38,7 @@ async function main() {
   const forceVisual = process.argv.includes('--force-visual')
   const allArtists = process.argv.includes('--all')
 
-  const sourceTracks = await prisma.archiveItem.findMany({
+  const sourceTracks = await prisma.sound.findMany({
     where: { channel: { slug: TAHTI_SELECTS_SLUG }, status: 'READY', isPublic: true },
     select: {
       title: true,
@@ -79,7 +79,7 @@ async function main() {
       fallbackEnabled: true,
       visualPreset: true,
       user: { select: { displayName: true } },
-      archiveItems: {
+      sounds: {
         where: { status: 'READY' },
         orderBy: { createdAt: 'asc' },
         select: { id: true, isFallback: true },
@@ -104,13 +104,13 @@ async function main() {
         : (channel.visualPreset as VisualPreset)
 
     let tracksAttached = 0
-    let items: Array<{ id: string; isFallback: boolean }> = [...channel.archiveItems]
+    let items: Array<{ id: string; isFallback: boolean }> = [...channel.sounds]
 
     while (items.length < TRACKS_PER_CHANNEL) {
       const source = sourceTracks[trackCursor % sourceTracks.length]!
       trackCursor++
       const order = items.length
-      const row = await prisma.archiveItem.create({
+      const row = await prisma.sound.create({
         data: {
           channelId: channel.id,
           title: source.title,
@@ -142,7 +142,7 @@ async function main() {
         .filter((t) => !t.isFallback)
         .slice(0, TRACKS_PER_CHANNEL - fallbackFlagged)
       for (let i = 0; i < toFlag.length; i++) {
-        await prisma.archiveItem.update({
+        await prisma.sound.update({
           where: { id: toFlag[i]!.id },
           data: { isFallback: true, fallbackOrder: fallbackFlagged + i },
         })

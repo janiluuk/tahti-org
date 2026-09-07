@@ -9,6 +9,7 @@ import {
   fetchDiscoWidgetInstalls,
   fetchDiscoWidgetStore,
   patchDiscoWidgetInstall,
+  type DiscoWidgetConfig,
 } from '@/lib/disco-widgets-client'
 
 const INSTALLS_PATH = '/api/me/channel/disco-widgets/installs'
@@ -27,7 +28,7 @@ export async function installChannelDiscoWidget(widgetId: string) {
 
 export async function patchChannelDiscoWidgetInstall(
   id: string,
-  patch: { enabled?: boolean; position?: number },
+  patch: { enabled?: boolean; position?: number; configJson?: DiscoWidgetConfig },
 ) {
   return patchDiscoWidgetInstall(INSTALLS_PATH, id, patch)
 }

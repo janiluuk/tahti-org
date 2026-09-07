@@ -29,6 +29,7 @@ import { SoundGateStats } from './sound-gate-stats'
 import { SoundMixcloudUpload } from './sound-mixcloud'
 import { SoundHearthisExportPanel } from './sound-hearthis-export-panel'
 import SoundVisualPanel from './sound-visual-panel'
+import SoundAccessPanel from './sound-access-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
 import { shouldShowTracklist, shouldShowVenueLocation } from './sound-editor-visibility'
 
@@ -169,13 +170,14 @@ function RowToolsActions({
   )
 }
 
-type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'sharing' | 'advanced'
+type EditorTab = 'basics' | 'tracklist' | 'audio' | 'visuals' | 'access' | 'sharing' | 'advanced'
 
 const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
   { id: 'basics', label: 'Basics', icon: '📝' },
   { id: 'tracklist', label: 'Tracklist', icon: '🎼' },
   { id: 'audio', label: 'Audio', icon: '🎚️' },
   { id: 'visuals', label: 'Cover & visuals', icon: '🖼️' },
+  { id: 'access', label: 'Access', icon: '🔒' },
   { id: 'sharing', label: 'Sharing', icon: '🔗' },
   { id: 'advanced', label: 'Advanced', icon: '⚙️' },
 ]
@@ -566,6 +568,16 @@ export default function SoundEditor({
                   }}
                 />
               </>
+            )}
+            {tab === 'access' && (
+              <SoundAccessPanel
+                itemId={item.id}
+                initial={{
+                  accessMode: ((item.accessMode as string | undefined) ??
+                    'FREE') as import('@tahti/shared').SoundAccessPatch['accessMode'],
+                  purchaseTierId: (item.purchaseTierId as string | null | undefined) ?? null,
+                }}
+              />
             )}
             {tab === 'sharing' && (
               <>

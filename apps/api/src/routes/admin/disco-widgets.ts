@@ -7,6 +7,7 @@
 // in v1 — see packages/widget-sdk/README.md for the full author-facing flow.
 
 import type { FastifyPluginAsync } from 'fastify'
+import { Prisma } from '@tahti/db'
 import {
   AdminDiscoWidgetInstallQuerySchema,
   CreateAdminDiscoWidgetInstallSchema,
@@ -23,6 +24,7 @@ import {
   PublishDiscoWidgetVersionSchema,
   RegisterDiscoWidgetSchema,
   RejectDiscoWidgetSchema,
+  SetDiscoWidgetDefaultConfigSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -45,6 +47,7 @@ const ADMIN_ITEM_SELECT = {
   currentVersion: true,
   bundleSizeBytes: true,
   moderationNote: true,
+  defaultConfigJson: true,
   createdAt: true,
   updatedAt: true,
 } as const
@@ -335,6 +338,43 @@ const adminDiscoWidgetsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // POST /api/admin/disco-widgets/:id/default-config — board-only: sets (or
+  // clears, with null) the starting configJson every NEW install of this
+  // widget gets from here on, across every scope. Existing installs are
+  // untouched — "default" seeds future installs, it doesn't retroactively
+  // overwrite what artists/listeners have already configured.
+  fastify.post(
+    '/api/admin/disco-widgets/:id/default-config',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(DiscoWidgetAdminItemSchema, 'DiscoWidgetAdminItem'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(DiscoWidgetIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = SetDiscoWidgetDefaultConfigSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const widget = await fastify.prisma.discoWidget.findUnique({ where: { id: routeParams.id } })
+      if (!widget) return reply.status(404).send({ error: 'Widget not found' })
+
+      const updated = await fastify.prisma.discoWidget.update({
+        where: { id: routeParams.id },
+        data: {
+          defaultConfigJson:
+            parsed.data.defaultConfigJson === null
+              ? Prisma.DbNull
+              : (parsed.data.defaultConfigJson as Prisma.InputJsonValue),
+        },
+        select: ADMIN_ITEM_SELECT,
+      })
+      return reply.send(updated)
+    },
+  )
+
   // ── ADMIN-scope installs (shared surfaces, e.g. the homepage) ───────────
 
   fastify.get(
@@ -391,7 +431,12 @@ const adminDiscoWidgetsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const install = await fastify.prisma.discoWidgetInstall.create({
-        data: { widgetId: widget.id, adminSurface: parsed.data.surface, position },
+        data: {
+          widgetId: widget.id,
+          adminSurface: parsed.data.surface,
+          position,
+          configJson: (widget.defaultConfigJson ?? {}) as Prisma.InputJsonValue,
+        },
         include: { widget: { select: STORE_ITEM_SELECT } },
       })
       return reply.status(201).send(install)

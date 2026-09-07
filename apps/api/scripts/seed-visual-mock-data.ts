@@ -187,7 +187,7 @@ async function main() {
     })
     if (existing) {
       if (existing.channel) {
-        await prisma.archiveItem.deleteMany({ where: { channelId: existing.channel.id } })
+        await prisma.sound.deleteMany({ where: { channelId: existing.channel.id } })
       }
       await prisma.collection.deleteMany({ where: { userId: existing.id } })
       await prisma.release.deleteMany({ where: { userId: existing.id } })
@@ -225,9 +225,9 @@ async function main() {
       include: { channel: true },
     })
 
-    const archiveItems: Record<string, { id: string }> = {}
+    const sounds: Record<string, { id: string }> = {}
     for (const [i, track] of spec.tracks.entries()) {
-      const item = await prisma.archiveItem.create({
+      const item = await prisma.sound.create({
         data: {
           channelId: artist.channel!.id,
           title: track.title,
@@ -241,7 +241,7 @@ async function main() {
           isPublic: true,
         },
       })
-      archiveItems[track.title] = item
+      sounds[track.title] = item
       await Promise.all([
         uploadFixtureAudio(item.rawKey!, 'audio/wav'),
         uploadFixtureAudio(item.mp3Key!, 'audio/mpeg'),
@@ -263,10 +263,10 @@ async function main() {
           create: spec.release.tracks.map((title, i) => ({
             position: i + 1,
             title,
-            durationSec: archiveItems[title]?.id
+            durationSec: sounds[title]?.id
               ? spec.tracks.find((t) => t.title === title)?.durationSec
               : undefined,
-            archiveItemId: archiveItems[title]?.id,
+            soundId: sounds[title]?.id,
           })),
         },
       },
@@ -284,7 +284,7 @@ async function main() {
         coverUrl: coverUrl(`${spec.username}-collection`),
         items: {
           create: spec.tracks.slice(0, 3).map((track, i) => ({
-            archiveItemId: archiveItems[track.title].id,
+            soundId: sounds[track.title].id,
             position: i + 1,
           })),
         },

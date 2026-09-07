@@ -8,7 +8,7 @@
  * rather than randomly gradiented. Also adds a matching widescreen channel
  * banner (videoBackgroundUrl) per artist.
  *
- * Release/ArchiveItem art is overwritten IN PLACE at the same MinIO keys
+ * Release/Sound art is overwritten IN PLACE at the same MinIO keys
  * already referenced by existing DB rows — no DB writes needed for those
  * (artworkKey/bannerUrl already point at these objects). Only the channel
  * banner is new, so that's the one field this script updates.
@@ -59,7 +59,7 @@ async function main() {
   const results: Array<{
     username: string
     releasesUpdated: number
-    archiveItemsUpdated: number
+    soundsUpdated: number
     bannerUpdated: boolean
   }> = []
 
@@ -85,12 +85,12 @@ async function main() {
       releasesUpdated++
     }
 
-    const archiveItems = await prisma.archiveItem.findMany({
+    const sounds = await prisma.sound.findMany({
       where: { channelId: channel.id },
       select: { id: true, title: true, genre: true, bannerUrl: true },
     })
-    let archiveItemsUpdated = 0
-    for (const item of archiveItems) {
+    let soundsUpdated = 0
+    for (const item of sounds) {
       const key = keyFromPublicUrl(item.bannerUrl)
       if (!key) continue
       const svg = generateAlbumArtSvg(item.title, displayName, {
@@ -98,7 +98,7 @@ async function main() {
         colors,
       })
       await putObjectText(key, svg, 'image/svg+xml')
-      archiveItemsUpdated++
+      soundsUpdated++
     }
 
     // Genre for the banner: whatever this artist's releases already use (set
@@ -121,7 +121,7 @@ async function main() {
     results.push({
       username: artist.username,
       releasesUpdated,
-      archiveItemsUpdated,
+      soundsUpdated,
       bannerUpdated: Boolean(bannerUrl),
     })
   }
@@ -132,7 +132,7 @@ async function main() {
         ok: true,
         artists: results.length,
         totalReleaseArtUpdated: results.reduce((n, r) => n + r.releasesUpdated, 0),
-        totalArchiveArtUpdated: results.reduce((n, r) => n + r.archiveItemsUpdated, 0),
+        totalArchiveArtUpdated: results.reduce((n, r) => n + r.soundsUpdated, 0),
         results,
       },
       null,

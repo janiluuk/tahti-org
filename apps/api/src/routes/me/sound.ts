@@ -9,6 +9,7 @@ import {
   ChannelTextLayerPatchSchema,
   ChannelVisualPatchSchema,
   SoundVisualPatchSchema,
+  SoundAccessPatchSchema,
   SoundListSchema,
   SoundListQuerySchema,
   SoundRecentSchema,
@@ -484,6 +485,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,
         slideshowAutoplay: true,
+        topBarText: true,
       },
     })
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -507,6 +509,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
       slideshowIntervalSeconds,
       slideshowTransitionMs,
       slideshowAutoplay,
+      topBarText,
     } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -550,6 +553,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
         ...(slideshowIntervalSeconds !== undefined ? { slideshowIntervalSeconds } : {}),
         ...(slideshowTransitionMs !== undefined ? { slideshowTransitionMs } : {}),
         ...(slideshowAutoplay !== undefined ? { slideshowAutoplay } : {}),
+        ...(topBarText !== undefined ? { topBarText: topBarText || null } : {}),
       },
       select: {
         colorSchemeJson: true,
@@ -562,6 +566,7 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,
         slideshowAutoplay: true,
+        topBarText: true,
       },
     })
     return reply.send(updated)
@@ -581,6 +586,8 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
           streamOverlayCoverUrl: true,
+          streamOverlayBackdropUrl: true,
+          streamOverlayVisualPreset: true,
         },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -597,7 +604,13 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
-      const { streamOverlayTitle, streamOverlaySubtitle, streamOverlayCoverUrl } = parsed.data
+      const {
+        streamOverlayTitle,
+        streamOverlaySubtitle,
+        streamOverlayCoverUrl,
+        streamOverlayBackdropUrl,
+        streamOverlayVisualPreset,
+      } = parsed.data
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
@@ -617,11 +630,17 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
           ...(streamOverlayCoverUrl !== undefined
             ? { streamOverlayCoverUrl: streamOverlayCoverUrl || null }
             : {}),
+          ...(streamOverlayBackdropUrl !== undefined
+            ? { streamOverlayBackdropUrl: streamOverlayBackdropUrl || null }
+            : {}),
+          ...(streamOverlayVisualPreset !== undefined ? { streamOverlayVisualPreset } : {}),
         },
         select: {
           streamOverlayTitle: true,
           streamOverlaySubtitle: true,
           streamOverlayCoverUrl: true,
+          streamOverlayBackdropUrl: true,
+          streamOverlayVisualPreset: true,
         },
       })
       return reply.send(updated)
@@ -660,6 +679,46 @@ const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
           : {}),
       },
       select: { visualPreset: true, colorSchemeJson: true },
+    })
+    return reply.send(updated)
+  })
+
+  // Per-track paywall: gate a track behind an active fan subscription or a
+  // one-time PurchaseTier. See apps/api/src/lib/purchase-tiers.ts.
+  fastify.patch('/api/me/sound/:id/access', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+    const parsed = SoundAccessPatchSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+    }
+
+    const item = await fastify.prisma.sound.findFirst({
+      where: { id: routeParams.id, channel: { userId: user.id } },
+      select: { id: true },
+    })
+    if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+
+    if (parsed.data.accessMode === 'PURCHASE') {
+      if (!parsed.data.purchaseTierId) {
+        return reply.status(400).send({ error: 'purchaseTierId is required for PURCHASE access' })
+      }
+      const tier = await fastify.prisma.purchaseTier.findFirst({
+        where: { id: parsed.data.purchaseTierId, artistUserId: user.id },
+        select: { id: true },
+      })
+      if (!tier) return reply.status(404).send({ error: 'Tier not found' })
+    }
+
+    const updated = await fastify.prisma.sound.update({
+      where: { id: item.id },
+      data: {
+        accessMode: parsed.data.accessMode,
+        purchaseTierId: parsed.data.accessMode === 'PURCHASE' ? parsed.data.purchaseTierId : null,
+      },
+      select: { accessMode: true, purchaseTierId: true },
     })
     return reply.send(updated)
   })

@@ -187,7 +187,7 @@ function readStoredMuted(): boolean {
   return window.localStorage.getItem(MUTED_STORAGE_KEY) === '1'
 }
 
-interface PlayerContextValue extends PlayerState {
+export interface PlayerContextValue extends PlayerState {
   audioRef: React.RefObject<HTMLAudioElement>
   /** Single shared analyser node connected to the playing audio, for visualizers. */
   analyser: AnalyserNode | null

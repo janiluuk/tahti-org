@@ -58,7 +58,7 @@ async function main() {
     take: ARTISTS_TO_SEED,
   })
 
-  const radioResults: Array<{ title: string; archiveItemId: string; position: number }> = []
+  const radioResults: Array<{ title: string; soundId: string; position: number }> = []
   const artistResults: Array<{ slug: string; title: string }> = []
 
   let lastPos =
@@ -75,12 +75,12 @@ async function main() {
     const flacBuf = await readFile(path.join(dir, track.flacFile))
     const mp3Buf = await readFile(path.join(dir, track.mp3File))
 
-    let archive = await prisma.archiveItem.findFirst({
+    let archive = await prisma.sound.findFirst({
       where: { channelId: radio.id, title: track.title, artistName: track.artist },
       select: { id: true, mp3Key: true, flacKey: true },
     })
     if (!archive) {
-      archive = await prisma.archiveItem.create({
+      archive = await prisma.sound.create({
         data: {
           channelId: radio.id,
           title: track.title,
@@ -117,7 +117,7 @@ async function main() {
     )
     await putObjectText(coverKey, generateCoverArtSvg(track.title, track.artist), 'image/svg+xml')
 
-    await prisma.archiveItem.update({
+    await prisma.sound.update({
       where: { id: archive.id },
       data: {
         status: 'READY',
@@ -136,11 +136,11 @@ async function main() {
     lastPos += 1
     const rotation = await prisma.curatedRotationItem.upsert({
       where: {
-        channelId_archiveItemId: { channelId: radio.id, archiveItemId: archive.id },
+        channelId_soundId: { channelId: radio.id, soundId: archive.id },
       },
       create: {
         channelId: radio.id,
-        archiveItemId: archive.id,
+        soundId: archive.id,
         position: lastPos,
         addedById: radio.userId,
       },
@@ -149,7 +149,7 @@ async function main() {
     })
     radioResults.push({
       title: track.title,
-      archiveItemId: archive.id,
+      soundId: archive.id,
       position: rotation.position,
     })
 
@@ -157,15 +157,15 @@ async function main() {
     // replay radio has atmospheric lossless material without re-uploading.
     const artist = betaChannels[i % Math.max(betaChannels.length, 1)]
     if (artist) {
-      const existing = await prisma.archiveItem.findFirst({
+      const existing = await prisma.sound.findFirst({
         where: { channelId: artist.id, title: track.title, artistName: track.artist },
         select: { id: true },
       })
       if (!existing) {
-        const fallbackCount = await prisma.archiveItem.count({
+        const fallbackCount = await prisma.sound.count({
           where: { channelId: artist.id, isFallback: true },
         })
-        await prisma.archiveItem.create({
+        await prisma.sound.create({
           data: {
             channelId: artist.id,
             title: track.title,

@@ -57,6 +57,8 @@ export const soundMetadataSelect = {
   visualPreset: true,
   colorSchemeJson: true,
   paletteJson: true,
+  accessMode: true,
+  purchaseTierId: true,
   status: true,
   streamingCopyStatus: true,
   durationSec: true,

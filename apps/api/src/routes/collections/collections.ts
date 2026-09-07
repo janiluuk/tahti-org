@@ -29,6 +29,7 @@ import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
 
@@ -246,6 +247,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           coverUrl: body.coverUrl?.trim() || null,
         },
       })
+      if (col.coverUrl) refreshCollectionCoverPalette(fastify.prisma, col.id, col.coverUrl)
       return reply.status(201).send(col)
     } catch (err) {
       if (isUniqueConstraintError(err)) {
@@ -290,6 +292,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
+      if (body.coverUrl !== undefined && updated.coverUrl) {
+        refreshCollectionCoverPalette(fastify.prisma, updated.id, updated.coverUrl)
+      }
       return reply.send(updated)
     },
   )

@@ -5,38 +5,12 @@
 
 import { useRef, useState } from 'react'
 import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from '@tahti/shared'
-import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 import { ListenChannels } from './_listen-channels'
 import { ArtistDirectory } from './_artist-directory'
 import { SelectsGallery } from './_selects-gallery'
 import { TopListsTab } from './_top-lists-tab'
 
 type Tab = 'live' | 'selects' | 'artists' | 'top-lists'
-
-const HELP_STEPS: HelpSpotlightStep[] = [
-  {
-    id: 'live',
-    label: 'Live',
-    description: 'Channels streaming or airing their rotation right now.',
-  },
-  {
-    id: 'selects',
-    label: 'Tahti Selects',
-    description:
-      'A curated gallery of standout tracks and sets, picked out from across the platform.',
-  },
-  {
-    id: 'artists',
-    label: 'Artists & genres',
-    description:
-      'Every artist on Tahti, browsable by genre — the place to go digging for something new.',
-  },
-  {
-    id: 'top-lists',
-    label: 'Top lists',
-    description: 'The most-played and most-followed artists and tracks on the platform right now.',
-  },
-]
 
 export function DiscoverTabs({
   live,
@@ -67,17 +41,12 @@ export function DiscoverTabs({
 
   return (
     <>
-      <HelpSpotlight
-        steps={HELP_STEPS}
-        activeId={tab}
-        onNavigate={(id) => setTab(id as Tab)}
-        getTargetEl={(step) => panelRefs.current[step.id as Tab]}
-      />
       <div className="discover-tabs" role="tablist" aria-label="Discover view">
         <button
           type="button"
           role="tab"
           aria-selected={tab === 'live'}
+          data-tour="discover-tab-live"
           className={`discover-tab${tab === 'live' ? ' discover-tab--active' : ''}`}
           onClick={() => setTab('live')}
         >
@@ -87,6 +56,7 @@ export function DiscoverTabs({
           type="button"
           role="tab"
           aria-selected={tab === 'selects'}
+          data-tour="discover-tab-selects"
           className={`discover-tab${tab === 'selects' ? ' discover-tab--active' : ''}`}
           onClick={() => setTab('selects')}
         >
@@ -96,6 +66,7 @@ export function DiscoverTabs({
           type="button"
           role="tab"
           aria-selected={tab === 'artists'}
+          data-tour="discover-tab-artists"
           className={`discover-tab${tab === 'artists' ? ' discover-tab--active' : ''}`}
           onClick={() => setTab('artists')}
         >
@@ -105,6 +76,7 @@ export function DiscoverTabs({
           type="button"
           role="tab"
           aria-selected={tab === 'top-lists'}
+          data-tour="discover-tab-top-lists"
           className={`discover-tab${tab === 'top-lists' ? ' discover-tab--active' : ''}`}
           onClick={() => setTab('top-lists')}
         >

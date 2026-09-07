@@ -5,7 +5,8 @@ Cursor agents: also read root **`AGENTS.md`** (session map) and
 live in **`docs/project-roadmap.md`**; product surface in **`docs/features.md`**;
 test commands in **`docs/testing.md`**. [Tahti Player](https://github.com/janiluuk/tahti-player)
 beta cutover:
-**`ops/nuclear-web-cutover.md`**.
+**`ops/nuclear-web-cutover.md`**. Player Store catalog:
+**[tahti-registry](https://github.com/janiluuk/tahti-registry)** (`../tahti-registry`) — see root **`AGENTS.md`**.
 
 ## READ THIS FIRST
 

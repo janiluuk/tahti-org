@@ -39,23 +39,25 @@ Where:
   and dedup (see below).
 - **`paid_downloads`** = number of times a fan-subscriber to artist A
   downloaded one of A's tracks/mixes. Weighted 5× because the strongest signal
-  of value is "this person is paying *and* downloading."
+  of value is "this person is paying _and_ downloading."
 - **`fan_sub_euros_received`** = total euros that fans paid artist A in direct
   subscriptions during the year. €1/month = 12 units/year. €10/month = 120 units/year.
 
 ### Worked example
 
 Artist Long Doe in fiscal year 2027:
+
 - 800 free-tier listeners downloaded the new mix → 800 × 1 = 800 units
 - 40 fan-subscribers downloaded 3 tracks each on average → 120 × 5 = 600 units
 - 40 fan-subscribers paying avg €5/month → 40 × €60 = €2,400 → 2,400 units
 - **Total units: 3,800**
 
 If the platform total is 1,000,000 units and the grant pool is €172,649 (Y3 modeled):
+
 - Long Doe's share = 3,800 / 1,000,000 = 0.38%
 - Long Doe's grant = €656
 
-This is *in addition to* the €2,400/year that flowed directly to Long Doe via
+This is _in addition to_ the €2,400/year that flowed directly to Long Doe via
 fan-subs (gross). After Stripe + 2% org fee, Long received ~€2,162 directly,
 plus the €656 grant — total ~€2,818 for the year.
 
@@ -82,17 +84,19 @@ keeping the bar accessible — 5 free downloads or one €5/month fan-sub clears
 
 ### Permissions matrix
 
-|                       | Streaming | Free download | Paid download |
-|-----------------------|-----------|---------------|---------------|
-| Anonymous listener    | ✓         | ✓ (rate-limited) | — |
-| Free account listener | ✓         | ✓ (rate-limited) | — |
-| Fan-subscriber        | ✓         | ✓ (unlimited) | ✓ (unlimited, FLAC available) |
+|                       | Streaming | Free download    | Paid download                 |
+| --------------------- | --------- | ---------------- | ----------------------------- |
+| Anonymous listener    | ✓         | ✓ (rate-limited) | —                             |
+| Free account listener | ✓         | ✓ (rate-limited) | —                             |
+| Fan-subscriber        | ✓         | ✓ (unlimited)    | ✓ (unlimited, FLAC available) |
 
 What "free download" gets:
+
 - The Opus 256 streaming derivative (~6 MB per 3-minute track)
 - OR the MP3 320 derivative (~7 MB per 3-minute track) — artist's choice per release
 
 What "paid download" gets (fan-subscribers only):
+
 - The original-source file as uploaded (WAV / FLAC / 24-bit / whatever)
 - AND/OR the FLAC 16/44 derivative
 - AND/OR any lower-quality format
@@ -123,13 +127,15 @@ Without account requirement, we rely on layered defenses:
    of legitimate research / journalism IPs that override this.
 
 Daily cron runs fraud detection: flags any artist whose download volume grew
->20× day-over-day, queues for manual review. Fraud convictions result in unit
-reversal in the ledger (with audit trail) and possibly account suspension per
-bylaws §3 (member misconduct).
+
+> 20× day-over-day, queues for manual review. Fraud convictions result in unit
+> reversal in the ledger (with audit trail) and possibly account suspension per
+> bylaws §3 (member misconduct).
 
 ### Bandwidth and storage implications
 
 At Y3 scale (4,000 member artists, ~400k downloads/year):
+
 - Average download ~6 MB (Opus 256 derivative)
 - Total ~2.4 TB/year of download bandwidth
 - Cost: ~€3,000/yr on Bunny CDN (modeled in financials)
@@ -137,6 +143,7 @@ At Y3 scale (4,000 member artists, ~400k downloads/year):
   generating new files per download
 
 For paid (FLAC) downloads at Y3 scale (~60k FLAC downloads/year, ~30 MB each):
+
 - ~1.8 TB/year
 - Cost: included in same line
 
@@ -176,11 +183,13 @@ that's between artist and fan.
 ### The money flow
 
 Listener pays €5/month →
+
 - Stripe processes: ~€0.45 in fees (2.9% + €0.30 per transaction) →
 - Org takes: €0.10 (2% operational fee) →
 - Artist receives: €4.45/month via Stripe Connect Express
 
 The 2% operational fee is consumed by:
+
 - Stripe Connect Express platform fees we owe Stripe
 - GDPR compliance overhead (subscriber data subject access requests, deletion)
 - Refund and dispute handling
@@ -211,15 +220,15 @@ constants); tests lock the numbers below.
 **2 fans at €5/month for 10 months**, and receives a small **€1** engagement
 grant from the annual pool.
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | +€100.00 (2 × €5 × 10 mo) |
-| Stripe processing | −€9.00 (20 charges × ~€0.45) |
-| Tahti operational fee (2%) | −€2.00 (20 × €0.10) |
-| **Net from fan-subs** | **+€89.00** |
-| Annual engagement grant (M9) | +€1.00 |
-| Tahti membership (Artist tier) | −€40.00 |
-| **Net profit (year)** | **+€50.00** |
+| Line (artist perspective)      | Amount                       |
+| ------------------------------ | ---------------------------- |
+| Fan subscriptions (gross)      | +€100.00 (2 × €5 × 10 mo)    |
+| Stripe processing              | −€9.00 (20 charges × ~€0.45) |
+| Tahti operational fee (2%)     | −€2.00 (20 × €0.10)          |
+| **Net from fan-subs**          | **+€89.00**                  |
+| Annual engagement grant (M9)   | +€1.00                       |
+| Tahti membership (Artist tier) | −€40.00                      |
+| **Net profit (year)**          | **+€50.00**                  |
 
 Long keeps **€89** via Stripe Connect during the year; the **€1** grant and
 **€40** membership sit on top of that for a **€50** personal surplus after
@@ -231,13 +240,13 @@ platform costs.
 fan-subscribers. Only cost is membership — **€50** in this example (e.g. list
 price or first-year bundle above the default €40).
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | €0.00 |
-| Net from fan-subs | €0.00 |
-| Annual engagement grant | €0.00 |
-| Tahti membership | −€50.00 |
-| **Net profit (year)** | **−€50.00** |
+| Line (artist perspective) | Amount      |
+| ------------------------- | ----------- |
+| Fan subscriptions (gross) | €0.00       |
+| Net from fan-subs         | €0.00       |
+| Annual engagement grant   | €0.00       |
+| Tahti membership          | −€50.00     |
+| **Net profit (year)**     | **−€50.00** |
 
 No grant eligibility without engagement units; fan-sub tooling still works but
 generates no offsetting income.
@@ -248,15 +257,15 @@ generates no offsetting income.
 membership. Fan-sub net is **€40.05** (9 × €4.45); after membership the year
 is within a few cents of zero.
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | +€45.00 (1 × €5 × 9 mo) |
-| Stripe processing | −€4.05 (9 × ~€0.45) |
-| Tahti operational fee (2%) | −€0.90 (9 × €0.10) |
-| **Net from fan-subs** | **+€40.05** |
-| Annual engagement grant | €0.00 |
-| Tahti membership | −€40.00 |
-| **Net profit (year)** | **≈ €0.00** (+€0.05) |
+| Line (artist perspective)  | Amount                  |
+| -------------------------- | ----------------------- |
+| Fan subscriptions (gross)  | +€45.00 (1 × €5 × 9 mo) |
+| Stripe processing          | −€4.05 (9 × ~€0.45)     |
+| Tahti operational fee (2%) | −€0.90 (9 × €0.10)      |
+| **Net from fan-subs**      | **+€40.05**             |
+| Annual engagement grant    | €0.00                   |
+| Tahti membership           | −€40.00                 |
+| **Net profit (year)**      | **≈ €0.00** (+€0.05)    |
 
 This is the minimum viable supporter story: **one dedicated fan for most of a
 year** roughly pays for the artist's Tahti seat. Extra fans, paid downloads
@@ -266,6 +275,7 @@ above).
 ### Subscriber accounts
 
 Fan-subscribers have full user accounts:
+
 - Email + password (or OAuth via Google/Apple)
 - Stripe customer ID
 - One or more active subscriptions (per artist)
@@ -273,6 +283,7 @@ Fan-subscribers have full user accounts:
 - GDPR-compliant data: full export, full deletion on request
 
 When a subscriber cancels:
+
 - Subscription marked as canceled in Stripe; access continues through end of
   current billing period
 - After grace period (7 days post-period-end), Supporter badge removed,
@@ -301,6 +312,7 @@ When a subscriber cancels:
 ### Subscribe page design
 
 On `tahti.live/u/<handle>/subscribe`:
+
 - Artist hero (same as profile)
 - Intro text: why subscribe (artist-written)
 - Tier cards: name, price, benefits
@@ -401,13 +413,42 @@ enum FanSubPayoutState { PENDING PAID FAILED REFUNDED }
 - `fan-sub-grant-units-rollup` — monthly, aggregates fan-sub euros received per artist
 - `fan-sub-churn-monitor` — daily, identifies past-due subs, sends reminder emails
 
+## One-time purchase tiers
+
+The "defer one-time payments to v7" anti-pattern below has since been implemented: `PurchaseTier`
+and `Purchase` (separate models from `FanTier`/`FanSubscription`) let an artist price a tier once —
+optionally "pay what you want," including a free €0 claim — and assign it to specific `ArchiveItem`
+tracks from the track editor's Access tab, independent of the recurring fan-sub system.
+
+- **Access modes** live on `ArchiveItem.accessMode` (`FREE` / `SUBSCRIBERS_ONLY` / `PURCHASE`), with
+  `purchaseTierId` set only for `PURCHASE`. An active fan-subscriber always bypasses any gate — a
+  subscription is a superset of every purchase tier. Buying tier A never unlocks tier B's tracks.
+- **Checkout** mirrors fan-subs: Stripe Connect destination charge, `mode: 'payment'` instead of
+  `'subscription'`, same 2% operational fee. A `priceOptional` tier's `amountCents: 0` path skips
+  Stripe entirely and records the purchase as paid immediately (a free claim, still logged as an
+  order).
+- **Playback gating** happens per-request in `GET /api/v1/u/:username/profile` (not baked into the
+  20s-cached, viewer-agnostic profile payload) — see `resolvePlaybackGateStatus` in
+  `apps/api/src/lib/purchase-tiers.ts`. This is the first gate on the play/stream path itself; the
+  existing fan-sub gates (`resolveDownloadGateStatus`, chat access) only ever covered downloads and
+  chat, not playback.
+- **Orders**: `GET /api/me/purchase-tiers/orders` lists an artist's sales; the studio's Orders list
+  lets the artist message a buyer directly through the existing DM system (no new messaging code —
+  `POST /api/me/messages/conversations` already has no follow-relationship gate).
+- **Store section**: `Channel.storeEnabled` (a plain boolean, same pattern as `commentsEnabled` /
+  `pressKitGalleryPublic`) controls whether active tiers render as a Store section on the artist's
+  public page.
+
 ## Ledger entries
 
-Two new categories under `ledger.LedgerCategory`:
+Five categories under `ledger.LedgerCategory`:
 
 - `FAN_SUB_GROSS_RECEIVED` — gross amount fans paid (one entry per period, per artist)
 - `FAN_SUB_NET_TO_ARTIST` — net amount paid to artist after fees
 - `FAN_SUB_OPERATIONAL_FEE` — the 2% org fee taken from fan-sub gross
+- `PURCHASE_TIER_GROSS_RECEIVED` / `PURCHASE_TIER_NET_TO_ARTIST` / `PURCHASE_TIER_OPERATIONAL_FEE` —
+  same split, one-time purchase tiers instead of recurring fan-subs (skipped entirely for a €0 free
+  claim — nothing to split)
 - `DOWNLOAD_LOGGED` — not a financial entry, but a parallel `engagement_ledger` table tracks all eligible downloads for audit
 
 ## Anti-patterns to avoid
@@ -419,8 +460,9 @@ Two new categories under `ledger.LedgerCategory`:
   to the artist, minus 2% operational fee.
 - Allowing artists to subscribe to themselves (or sock-puppet accounts to
   themselves). Same email/payment-method dedup.
-- Building "tip" or "one-time payment" features in v6. Defer to v7 — adds
-  scope, doesn't change the math.
+- ~~Building "tip" or "one-time payment" features in v6. Defer to v7~~ — done;
+  see "One-time purchase tiers" above. Kept as a reminder that scope creep
+  here was deliberately deferred once already.
 - Showing per-artist fan-sub revenue publicly without consent. The artist's
   fan-sub income is their business; it appears on the transparency dashboard
   only as aggregate "Channel #N received €X in fan-subs this year" with the

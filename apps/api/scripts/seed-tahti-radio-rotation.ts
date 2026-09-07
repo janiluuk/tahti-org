@@ -27,7 +27,7 @@ async function main() {
         id: true,
         curatedRotationItems: {
           orderBy: { position: 'asc' },
-          select: { archiveItemId: true, position: true, addedById: true },
+          select: { soundId: true, position: true, addedById: true },
         },
       },
     }),
@@ -46,11 +46,11 @@ async function main() {
   for (const item of selects.curatedRotationItems) {
     await prisma.curatedRotationItem.upsert({
       where: {
-        channelId_archiveItemId: { channelId: radio.id, archiveItemId: item.archiveItemId },
+        channelId_soundId: { channelId: radio.id, soundId: item.soundId },
       },
       create: {
         channelId: radio.id,
-        archiveItemId: item.archiveItemId,
+        soundId: item.soundId,
         position: item.position,
         addedById: item.addedById,
       },

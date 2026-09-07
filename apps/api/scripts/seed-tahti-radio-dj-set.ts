@@ -187,13 +187,13 @@ async function main() {
   })
   if (!radio) throw new Error('Tahti Radio channel not found — run seed-tahti-radio.ts first')
 
-  let archive = await prisma.archiveItem.findFirst({
+  let archive = await prisma.sound.findFirst({
     where: { channelId: radio.id, title: TITLE },
     select: { id: true, mp3Key: true, flacKey: true, durationSec: true },
   })
 
   if (!archive) {
-    archive = await prisma.archiveItem.create({
+    archive = await prisma.sound.create({
       data: {
         channelId: radio.id,
         title: TITLE,
@@ -273,7 +273,7 @@ async function main() {
   const coverKey = `archive/${TAHTI_RADIO_SLUG}/${archive.id}/banner-cover.svg`
   await putObjectText(coverKey, generateCoverArtSvg(TITLE, ARTIST), 'image/svg+xml')
 
-  await prisma.archiveItem.update({
+  await prisma.sound.update({
     where: { id: archive.id },
     data: {
       status: 'READY',
@@ -297,11 +297,11 @@ async function main() {
 
   const rotation = await prisma.curatedRotationItem.upsert({
     where: {
-      channelId_archiveItemId: { channelId: radio.id, archiveItemId: archive.id },
+      channelId_soundId: { channelId: radio.id, soundId: archive.id },
     },
     create: {
       channelId: radio.id,
-      archiveItemId: archive.id,
+      soundId: archive.id,
       position,
       addedById: radio.userId,
     },
@@ -314,7 +314,7 @@ async function main() {
     JSON.stringify(
       {
         ok: true,
-        archiveItemId: archive.id,
+        soundId: archive.id,
         ...(isFlac ? { flacKey: destKey } : { mp3Key: destKey }),
         durationSec,
         rotationItemId: rotation.id,

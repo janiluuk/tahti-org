@@ -111,6 +111,12 @@ Choose the smallest extension point that matches your idea:
 4. Use a **core platform change** when the capability needs private data,
    permissions, storage, billing, or moderation.
 
+Player Store listings (installable plugins and themes) live in the sibling
+[tahti-registry](https://github.com/janiluuk/tahti-registry) checkout
+(`../tahti-registry`), not in this API monorepo. A new Store plugin must appear
+in that repo's `plugins.json`; a changed one must bump `version` there. See
+root `AGENTS.md`.
+
 Security, permissions, and public/private boundaries are part of the design,
 not an afterthought. An extension should declare what it needs, work when
 optional context is missing, and fail without hiding the rest of the app.

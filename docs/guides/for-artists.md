@@ -34,24 +34,45 @@ Copy these from the dashboard **Your channel** section:
 
 Open `/dashboard` after login.
 
-| Section                   | What it does                                                                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Tahti ry membership**   | Pay €40/year or **Manage billing** (Stripe portal when enabled).                                                                                                          |
-| **Channel**               | Live/offline status, transport, now playing, active playlist, and channel links.                                                                                          |
-| **24/7 playlist**         | Add archive or release tracks, preview, remove, and drag the offline queue into order.                                                                                    |
-| **Broadcast**             | RTMP/Icecast setup, OBS preset, test signal, pre-flight, recording, publishing, and Go Live.                                                                              |
-| **Multistream**           | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)). |
-| **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices.                                                                                                     |
-| **Fan subscriptions**     | Stripe Connect + fan tiers + perk codes.                                                                                                                                  |
-| **Releases**              | Draft/publish releases + **DSP URLs** for smart links.                                                                                                                    |
-| **Discography**           | Upload and manage tracks, sets, mixes, and catalog metadata.                                                                                                              |
-| **Recordings**            | Review recorded live shows separately from the rest of the discography.                                                                                                   |
-| **Audio editor**          | Preview processing, edit waveforms, export, and retain numbered revisions.                                                                                                |
-| **Channel design**        | Identity, backgrounds, visualizer, gallery, media, and press kit with live preview.                                                                                       |
+| Section                   | What it does                                                                                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tahti ry membership**   | Pay €40/year or **Manage billing** (Stripe portal when enabled).                                                                                                                                  |
+| **Channel**               | Live/offline status, transport, now playing, active playlist, and channel links.                                                                                                                  |
+| **24/7 playlist**         | Add archive or release tracks, preview, remove, and drag the offline queue into order.                                                                                                            |
+| **Broadcast**             | RTMP/Icecast setup, OBS preset, test signal, pre-flight, recording, publishing, and Go Live.                                                                                                      |
+| **Multistream**           | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)).                         |
+| **Radio & announcements** | Tahti Radio tools, announcement audio clips, and pinned chat notices.                                                                                                                             |
+| **Fan subscriptions**     | Stripe Connect + fan tiers + perk codes.                                                                                                                                                          |
+| **One-time tiers**        | Price a track once (optionally "pay what you want"), assign it in the track editor's Access tab, and see who bought what.                                                                        |
+| **Releases**              | Draft/publish releases + **DSP URLs** for smart links.                                                                                                                                            |
+| **Discography**           | Upload and manage tracks, sets, mixes, and catalog metadata.                                                                                                                                      |
+| **Recordings**            | Review recorded live shows separately from the rest of the discography.                                                                                                                           |
+| **Audio editor**          | Preview processing, edit waveforms, export, and retain numbered revisions.                                                                                                                        |
+| **Channel design**        | Visual style (visualizer, brand accent, Saved Looks), header/backdrop, slideshow transitions, links, and player overlay text — with a live preview. See [below](#channel-designer-look-and-feel). |
 
 ---
 
-## Step-by-step: look good in public
+## Channel Designer: look and feel
+
+`/dashboard/channel/edit` is where you shape how your live channel page looks. It's one focused section at a time: pick a section on the left, edit it in the middle, and watch the live preview on the right update as you type — click a part of the preview to jump straight to the section that controls it. Nothing is published until you hit **Save** (or **Done**, which saves and returns to the dashboard).
+
+| Section                   | What it controls                                                                                                                                                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Visual style**          | The background visualizer behind your player (eleven presets — Water ripple, Aurora, Particle field, and others — each with its own speed/intensity/scale and an audio-reactive toggle), and your brand accent (six preset gradients, or a custom 5-color scheme).              |
+| **Header & backdrop**     | The banner style at the top of your page — gradient, solid color, or a looping video (paid tiers) — plus the backdrop media that style uses, and whether your join date and live listener count show next to your name.                                                         |
+| **Slideshow transitions** | Only appears once you turn on a gallery mode in Header & backdrop. Eight transition styles between images: four simple crossfades and four richer ones (particle dissolve, glitch wipe, cube flip, liquid distortion), plus how long each image shows and whether it autoplays. |
+| **Links**                 | The link buttons in your channel banner — label and URL for each; the platform icon is picked automatically from the URL.                                                                                                                                                       |
+| **Player overlay text**   | An optional stylized headline over your player — five text effects, with alignment control.                                                                                                                                                                                     |
+
+Your name, avatar, country, pronouns, and tags aren't edited here — Header & backdrop links out to **Settings → Artist info** for those, so there's one place that saves them. Press kit lives there too, under the Branding tab.
+
+### Saving a Look
+
+Once you've got Visual style set up the way you want, you can save it as a named **Look** and switch between looks later (for a themed stream, a seasonal look, etc.) without re-doing the settings each time:
+
+1. In **Visual style**, use the **Saved Looks** picker to pick an existing Look — it applies immediately to the section (still needs Save to go live).
+2. Click **Save preset**, give it a name, and confirm. Saving under a name you've already used asks you to confirm before it overwrites that Look.
+3. Select a Look and click **Delete** to remove it — this can't be undone.
 
 ### Profile
 
@@ -115,6 +136,24 @@ Fans pay monthly via Stripe. You receive payouts minus Stripe fees and a **2% op
 ### 4. When a fan cancels
 
 They keep perks until the **billing period ends**, then about **7 days grace**. You do not need to do anything — status updates automatically.
+
+---
+
+## Step-by-step: one-time tiers (sell a track without a subscription)
+
+Separate from fan subscriptions above — a fan buys access once instead of subscribing monthly. Uses
+the same Stripe Connect account, so complete onboarding there first.
+
+1. Dashboard → **One-time tiers** → **Add tier**: name, price, and optionally check **price is
+   optional** to let fans name their own amount (including free — it still counts as an order).
+2. Open the track in **Discography**, go to its **Access** tab, turn on **Restrict who can play this
+   track**, and choose **One-time purchase** → pick the tier.
+3. A fan who buys that tier can play the track; anyone with an active fan subscription to you can
+   always play it too. Buying one tier never unlocks a different tier's tracks.
+4. See who bought what under **One-time tiers** → **Orders**, and click **Message** to thank a buyer
+   directly — same money split as fan subscriptions (Stripe fees + 2% operational fee).
+5. Turn on **Show a Store section on my public artist page** to list your active tiers at
+   `/u/your-username` for fans to browse and buy.
 
 ---
 

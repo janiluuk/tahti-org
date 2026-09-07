@@ -137,7 +137,7 @@ async function main() {
           'MOTION_OPEN',
           'BOARD_ROLE_CHANGE',
           'GRANT_RUN',
-          'ARCHIVE_EDIT_PUBLISH',
+          'SOUND_EDIT_PUBLISH',
           'RTMP_TARGET_ADD',
         ],
       },
@@ -336,7 +336,7 @@ async function main() {
     },
   })
 
-  const archiveItem = await prisma.archiveItem.create({
+  const sound = await prisma.sound.create({
     data: {
       channelId: artist.channel!.id,
       title: 'Live at Klubi — March 2026',
@@ -370,19 +370,19 @@ async function main() {
   })
 
   await Promise.all([
-    uploadFixtureAudio(archiveItem.rawKey!, 'audio/wav'),
-    uploadFixtureAudio(archiveItem.mp3Key!, 'audio/mpeg'),
-    uploadFixtureAudio(archiveItem.flacKey!, 'audio/flac'),
+    uploadFixtureAudio(sound.rawKey!, 'audio/wav'),
+    uploadFixtureAudio(sound.mp3Key!, 'audio/mpeg'),
+    uploadFixtureAudio(sound.flacKey!, 'audio/flac'),
   ])
 
   const editorProject = await prisma.editorProject.create({
     data: {
       userId: artist.id,
       title: 'Live at Klubi — edit',
-      archiveItemId: archiveItem.id,
+      soundId: sound.id,
       timeline: {
         tracks: [],
-        seedArchiveItemId: archiveItem.id,
+        seedSoundId: sound.id,
       },
     },
   })
@@ -397,7 +397,7 @@ async function main() {
       isFeatured: true,
       description: 'Seeded mix series for e2e screenshots.',
       items: {
-        create: [{ archiveItemId: archiveItem.id, position: 1 }],
+        create: [{ soundId: sound.id, position: 1 }],
       },
     },
   })
@@ -800,10 +800,10 @@ async function main() {
         meta: { grantCount: 1, poolCents: 35000 },
       },
       {
-        action: 'ARCHIVE_EDIT_PUBLISH',
+        action: 'SOUND_EDIT_PUBLISH',
         actorId: artist.id,
-        targetId: archiveItem.id,
-        meta: { title: archiveItem.title },
+        targetId: sound.id,
+        meta: { title: sound.title },
       },
       {
         action: 'RTMP_TARGET_ADD',
@@ -821,7 +821,7 @@ async function main() {
       const createdAt = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
       return {
         channelId: artist.channel!.id,
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         format: ['mp3_320', 'flac', 'opus256'][i % 3],
         byFingerprint: `screenshot-fp-${i}`,
         byIpHash: `screenshot-ip-${i}`,
@@ -843,7 +843,7 @@ async function main() {
       source: 'ICECAST',
       startedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
       endedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000),
-      archiveItemId: archiveItem.id,
+      soundId: sound.id,
     },
   })
 
@@ -888,7 +888,7 @@ async function main() {
         catalogSingleSlug: catalogSingle.smartLinkSlug,
         albumStashCollection: `${ARTIST.username}-album-stash`,
         collectionSlug: COLLECTION_SLUG,
-        archiveItemId: archiveItem.id,
+        soundId: sound.id,
         editorProjectId: editorProject.id,
         nextBroadcastAt: NEXT_BROADCAST_AT.toISOString(),
         nextBroadcastNote: NEXT_BROADCAST_NOTE,

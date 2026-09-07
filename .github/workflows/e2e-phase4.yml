@@ -34,7 +34,7 @@ jobs:
       MAILHOG_URL: ${{ secrets.E2E_MAILHOG_URL || '' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Run Phase 4 exit criteria
         run: bash tests/e2e/phase-4.sh

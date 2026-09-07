@@ -6591,6 +6591,26 @@
   background: var(--card2);
 }
 
+/* Chroma variant — accent/bg/highlight are set inline per-row from the
+   collection cover's extracted palette (see palette-extract.ts), so each
+   row's tint follows its own cover art instead of one fixed brand color. */
+[data-tahti-ui='brand'] .prof-collection-row--chroma {
+  border-bottom-color: color-mix(in srgb, var(--collection-accent) 30%, var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-row--chroma:hover {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--collection-accent) 18%, var(--card2)),
+    var(--card2) 75%
+  );
+  box-shadow: inset 3px 0 0 var(--collection-accent);
+}
+
+[data-tahti-ui='brand'] .prof-collection-row--chroma .prof-collection-title {
+  color: color-mix(in srgb, var(--collection-highlight) 60%, var(--text));
+}
+
 /* The clickable cover+title area of a track row (opens TrackDetailModal) —
    a <button> instead of the row itself so the owner reorder controls beside
    it (also buttons) don't fight it for clicks. */
@@ -6709,7 +6729,9 @@
   background: center/cover no-repeat var(--ambient-cover-image);
   filter: blur(70px) saturate(1.5) brightness(0.5);
   transform: scale(1.25);
-  opacity: 0.85;
+  /* Fully opaque — the ambient wash from the cover art is the page
+     background now, not a tint layered over a flat platform color. */
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -8243,208 +8265,6 @@
 [data-tahti-ui='brand'] .prof-add-track-row__add:disabled {
   opacity: 0.6;
   cursor: default;
-}
-
-/* ── Help spotlight ("?" tour) ──────────────────────────────────────────────
-   Desktop-only affordance that dims the page and walks the visitor through
-   whatever tabs the host component owns, one panel at a time. */
-[data-tahti-ui='brand'] .help-spotlight-trigger {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 220;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--card2);
-  color: var(--muted);
-  font-family: var(--font-head);
-  font-size: 16px;
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-trigger:hover {
-  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
-  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
-  color: var(--cyan);
-}
-
-@media (max-width: 900px) {
-  [data-tahti-ui='brand'] .help-spotlight-trigger {
-    display: none;
-  }
-}
-
-[data-tahti-ui='brand'] .help-spotlight-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-veil {
-  position: fixed;
-  left: 0;
-  right: 0;
-  background: rgba(4, 6, 12, 0.86);
-  opacity: 0;
-  transition: opacity 0.32s ease;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-veil--top {
-  top: 0;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-veil--bottom {
-  bottom: 0;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-ring {
-  position: fixed;
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 0 0 3px var(--cyan),
-    0 0 40px 8px color-mix(in srgb, var(--cyan) 55%, transparent);
-  opacity: 0;
-  transform: scale(0.97);
-  transition:
-    opacity 0.32s ease,
-    transform 0.32s ease;
-  pointer-events: none;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-veil,
-[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-ring {
-  opacity: 1;
-  transform: scale(1);
-}
-
-[data-tahti-ui='brand'] .help-spotlight-close {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 302;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
-  background: var(--card);
-  color: var(--text);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0;
-  transform: scale(0.9);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease,
-    background 0.15s;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-close {
-  opacity: 1;
-  transform: scale(1);
-}
-
-[data-tahti-ui='brand'] .help-spotlight-close:hover {
-  background: color-mix(in srgb, var(--coral) 16%, var(--card));
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card {
-  position: fixed;
-  left: 50%;
-  bottom: 40px;
-  transform: translate(-50%, 12px);
-  z-index: 302;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  max-width: min(560px, calc(100vw - 48px));
-  padding: 1.1rem 1.25rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  transition:
-    opacity 0.32s ease,
-    transform 0.32s ease;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-card {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__body {
-  flex: 1;
-  min-width: 0;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__label {
-  font-family: var(--font-head);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-semibold);
-  color: var(--cyan);
-  margin-bottom: 4px;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__desc {
-  font-size: var(--text-sm);
-  color: var(--text);
-  line-height: 1.5;
-  margin: 0;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__dots {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border);
-}
-
-[data-tahti-ui='brand'] .help-spotlight-card__dot--active {
-  background: var(--cyan);
-}
-
-[data-tahti-ui='brand'] .help-spotlight-nav {
-  flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--card2);
-  color: var(--text);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-
-[data-tahti-ui='brand'] .help-spotlight-nav:hover {
-  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
-  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
-}
-
-@media (max-width: 640px) {
-  [data-tahti-ui='brand'] .help-spotlight-card {
-    flex-direction: column;
-    text-align: center;
-    bottom: 20px;
-  }
 }
 
 /* Artist page ambient clip — Mute / Unmute (ducks when the mini-player plays). */

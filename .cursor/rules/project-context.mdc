@@ -24,4 +24,5 @@ alwaysApply: true
 ## Clients
 
 - Production app: `apps/web` (this repo).
-- Tahti Player beta: separate repo; cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.
+- Tahti Player beta: separate repo (`../tahti-player` or `../tahti-nuclear`); cutover docs in `ops/nuclear-web-cutover.md` — do not flip prod without that checklist.
+- Plugin/theme **Store** catalog: `../tahti-registry` ([janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry)). After adding a plugin, it must appear there; after changing one, bump `version` in both the plugin and the catalog. See root `AGENTS.md`.

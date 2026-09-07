@@ -10,6 +10,7 @@ import {
   parseAvatarTheme,
   parseLogoPlacement,
   parseRouteParams,
+  resolveColorScheme,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -17,6 +18,53 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
+import { stripeEnabled } from '../../lib/stripe.js'
+
+interface GatedTrack {
+  playUrl: string | null
+  accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
+  purchaseTierId?: string | null
+  gate?: { reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'; tierId?: string } | null
+}
+
+// Playback gating is resolved here (per-request, per-viewer) rather than
+// inside buildPublicProfile — that function's result is cached and shared
+// across every viewer (including via getCachedJson's in-flight promise
+// dedup, which can hand the *same* object to concurrent requests on a
+// cache miss), so the caller must pass in a deep clone rather than the
+// cached object itself. Mutates the clone in place, nulling playUrl for
+// anyone not entitled and attaching `gate` info the frontend can render a
+// CTA from.
+async function applyPlaybackGates(
+  fastify: FastifyInstance,
+  profile: { tracks?: unknown[]; releases?: Array<{ tracks?: unknown[] }> },
+  artistUserId: string,
+  viewerUserId: string | null,
+) {
+  const allTracks: GatedTrack[] = [
+    ...((profile.tracks as GatedTrack[] | undefined) ?? []),
+    ...(profile.releases ?? []).flatMap((r) => (r.tracks as GatedTrack[] | undefined) ?? []),
+  ]
+  await Promise.all(
+    allTracks.map(async (track) => {
+      if (!track.accessMode || track.accessMode === 'FREE' || !track.playUrl) return
+      const status = await resolvePlaybackGateStatus(
+        fastify.prisma,
+        {
+          artistUserId,
+          accessMode: track.accessMode,
+          purchaseTierId: track.purchaseTierId ?? null,
+        },
+        viewerUserId,
+      )
+      if (!status.allowed) {
+        track.playUrl = null
+        track.gate = { reason: status.reason, tierId: status.tierId }
+      }
+    }),
+  )
+}
 
 // M12: public artist profile at tahti.live/u/<username>
 const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -38,7 +86,13 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
         buildPublicProfile(fastify, username),
       )
       if (!profile) return reply.status(404).send({ error: 'Artist not found' })
-      return reply.send(profile)
+
+      // Clone before touching anything — `profile` may be shared with a
+      // concurrent request via getCachedJson's in-flight dedup.
+      const { _internalArtistId, ...publicProfile } = structuredClone(profile)
+      const viewerId = request.sessionUser?.id ?? null
+      await applyPlaybackGates(fastify, publicProfile, _internalArtistId, viewerId)
+      return reply.send(publicProfile)
     },
   )
 }
@@ -65,6 +119,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       showJoinDate: true,
       showFollowers: true,
       showFollowing: true,
+      stripeConnectChargesEnabled: true,
       createdAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
       channel: {
@@ -76,6 +131,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           visualPreset: true,
           galleryMode: true,
           slideshowImages: true,
+          storeEnabled: true,
           profileBackgroundClip: {
             select: { audioKey: true, renderStatus: true },
           },
@@ -112,6 +168,11 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         orderBy: { position: 'asc' },
         select: { id: true, name: true, amountCents: true },
       },
+      purchaseTiers: {
+        where: { active: true },
+        orderBy: { position: 'asc' },
+        select: { id: true, name: true, description: true, priceCents: true, priceOptional: true },
+      },
       collections: {
         where: { isPublic: true },
         orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
@@ -125,6 +186,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           coverUrl: true,
           coverKey: true,
           isFeatured: true,
+          paletteJson: true,
+          colorSchemeJson: true,
           _count: { select: { items: true } },
         },
       },
@@ -152,6 +215,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           pinnedAt: true,
           trackOrder: true,
           createdAt: true,
+          accessMode: true,
+          purchaseTierId: true,
           source: true,
           embedProvider: true,
           embedUri: true,
@@ -177,6 +242,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
   }
 
   const playUrlBySoundId = new Map<string, string | null>()
+  const accessBySoundId = new Map<
+    string,
+    { accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'; purchaseTierId: string | null }
+  >()
   if (soundIds.size > 0) {
     const items = await fastify.prisma.sound.findMany({
       where: {
@@ -184,12 +253,16 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         status: 'READY',
         channel: { userId: user.id },
       },
-      select: { id: true, mp3Key: true, flacKey: true },
+      select: { id: true, mp3Key: true, flacKey: true, accessMode: true, purchaseTierId: true },
     })
     await Promise.all(
       items.map(async (item) => {
         const key = soundPlaybackKey(item)
         playUrlBySoundId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
+        accessBySoundId.set(item.id, {
+          accessMode: item.accessMode,
+          purchaseTierId: item.purchaseTierId,
+        })
       }),
     )
   }
@@ -202,6 +275,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     durationSec: item.durationSec,
     bannerUrl: item.bannerUrl,
     playUrl: playUrlBySoundId.get(item.id) ?? null,
+    accessMode: item.accessMode,
+    purchaseTierId: item.purchaseTierId,
     pinned: item.pinnedAt != null,
     pinnedAt: item.pinnedAt?.toISOString() ?? null,
     trackOrder: item.trackOrder,
@@ -232,12 +307,15 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           } else if (track.streamKey) {
             playUrl = await presignedGetUrl(track.streamKey, 3600)
           }
+          const access = track.soundId ? accessBySoundId.get(track.soundId) : null
           return {
             position: track.position,
             title: track.title,
             durationSec: track.durationSec,
             soundId: track.soundId,
             playUrl,
+            accessMode: access?.accessMode ?? 'FREE',
+            purchaseTierId: access?.purchaseTierId ?? null,
             channelItemUrl:
               track.soundId && channelSlug
                 ? resolveChannelUrl(channelSlug, { hash: `sound-item-${track.soundId}` })
@@ -255,6 +333,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       : null
 
   return {
+    // Internal-only — used by the route handler to resolve per-viewer playback
+    // gates after this (viewer-agnostic, cached) payload is read back. Stripped
+    // before the response is sent; never validated against the public schema.
+    _internalArtistId: user.id,
     artist: {
       username: user.username,
       displayName: user.displayName,
@@ -287,6 +369,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     releases,
     tracks,
     fanTiers: user.fanTiers,
+    purchaseTiers: user.channel?.storeEnabled ? user.purchaseTiers : [],
+    storePaymentsReady: !stripeEnabled || user.stripeConnectChargesEnabled,
     collections: await Promise.all(
       user.collections.map(async ({ _count, ...c }) => ({
         slug: c.slug,
@@ -295,6 +379,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         style: c.style,
         description: c.description,
         coverUrl: await resolveCollectionCoverUrl(c),
+        colorScheme:
+          c.colorSchemeJson || c.paletteJson
+            ? resolveColorScheme(c.colorSchemeJson, c.paletteJson)
+            : null,
         isFeatured: c.isFeatured,
         itemCount: _count.items,
         url: `/u/${user.username}/c/${c.slug}`,
