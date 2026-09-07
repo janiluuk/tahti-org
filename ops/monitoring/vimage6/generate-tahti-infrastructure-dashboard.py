@@ -777,7 +777,7 @@ def main() -> None:
         cwd=repo_root,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        check=False,
+        check=True,
     )
     print(f"wrote {out}")
 
