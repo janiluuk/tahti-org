@@ -22,9 +22,18 @@ scp "${V6}/blackbox.yml" "${HOST}:${BLACKBOX_DIR}/blackbox.yml"
 scp "${V6}/tahti-vital-services.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-vital-services.json"
 scp "${V6}/tahti-overview.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-overview.json"
 scp "${V6}/tahti-infrastructure.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-infrastructure.json"
+scp "${V6}/vimage-docker-os-metrics.json" "${HOST}:${GRAFANA_DASH_DIR}/vimage-docker-os-metrics.json"
 scp "${V6}/prometheus-tahti-alerts.yml" "${HOST}:${PROM_DIR}/rules/prometheus-tahti-alerts.yml"
 scp "${V6}/prometheus-tahti.snippet.yml" "${HOST}:/tmp/prometheus-tahti.snippet.yml"
 scp "${V6}/patch-prometheus-tahti.py" "${HOST}:/tmp/patch-prometheus-tahti.py"
+
+echo "==> Provision tahti_api_metrics bearer token (SEC-014 requires it for LAN scrapes)"
+INTERNAL_SECRET_VALUE="$(grep '^INTERNAL_SECRET=' "${ROOT}/infra/stack.env" | cut -d= -f2-)"
+if [ -z "$INTERNAL_SECRET_VALUE" ]; then
+  echo "error: INTERNAL_SECRET not found in ${ROOT}/infra/stack.env" >&2
+  exit 1
+fi
+echo "$INTERNAL_SECRET_VALUE" | ssh "$HOST" "cat > '${PROM_DIR}/tahti-api-metrics.token'"
 
 echo "==> Patch Prometheus scrape jobs + alert rules"
 ssh "$HOST" "python3 /tmp/patch-prometheus-tahti.py '${PROM_DIR}/prometheus.yml' /tmp/prometheus-tahti.snippet.yml"
@@ -54,5 +63,6 @@ echo "Done. Grafana on vimage6 → dashboards:"
 echo "  - Tahti — infrastructure & services (uid: tahti-infrastructure)"
 echo "  - Tahti vital services (uid: tahti-vital-services)"
 echo "  - Tahti — lab overview (uid: tahti-overview)"
+echo "  - Vimage — Docker & OS metrics (uid: vimage-docker-os-metrics)"
 echo ""
 echo "Prometheus targets: tahti_api_metrics, tahti_blackbox, tahti_blackbox_public, tahti_blackbox_tcp"

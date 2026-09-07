@@ -8,7 +8,7 @@ from pathlib import Path
 
 DS = {"type": "prometheus", "uid": "P501B54A0D5548634"}
 LOKI_DS = {"type": "loki", "uid": "loki-main"}
-HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|pi4|pi5|web"
+HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web"
 NET_DEV = 'device!~"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*"'
 # scripts/backup.sh (tahti) and /usr/local/sbin/backup-other-services.sh (sparkki, giggi)
 # on vimage both write tahti_ops_backup_* via node_exporter's textfile collector.
@@ -73,6 +73,59 @@ def stat_panel(
             {
                 "expr": expr,
                 "legendFormat": legend,
+                "instant": True,
+                "refId": "A",
+            }
+        ],
+    }
+
+
+def host_stat_panel(
+    panel_id: int,
+    host: str,
+    y: int,
+    x: int,
+    w: int = 4,
+    h: int = 6,
+) -> dict:
+    """One UP/DOWN widget per host, hostname as the panel header, large
+    status text in the body (no more cramped multi-series label text)."""
+    return {
+        "id": panel_id,
+        "type": "stat",
+        "title": host,
+        "gridPos": {"h": h, "w": w, "x": x, "y": y},
+        "datasource": DS,
+        "fieldConfig": {
+            "defaults": {
+                "mappings": [
+                    {
+                        "type": "value",
+                        "options": {
+                            "1": {"text": "UP", "color": "green"},
+                            "0": {"text": "DOWN", "color": "red"},
+                        },
+                    }
+                ],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {"color": "red", "value": None},
+                        {"color": "green", "value": 1},
+                    ],
+                },
+            }
+        },
+        "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "orientation": "horizontal",
+            "textMode": "value",
+            "text": {"valueSize": 36},
+        },
+        "targets": [
+            {
+                "expr": f'up{{job="node",instance="{host}"}}',
                 "instant": True,
                 "refId": "A",
             }
@@ -249,17 +302,23 @@ def main() -> None:
     panels.append(row("Host availability", y, pid))
     pid += 1
     y += 1
-    panels.append(
-        stat_panel(
-            pid,
-            "Hosts — node exporter",
-            f'up{{job="node",instance=~"{HOSTS}"}}',
-            y,
-            description="1 = host reachable and node_exporter responding.",
+    host_list = HOSTS.split("|")
+    cols = 6
+    host_row_h = 6
+    for i, host in enumerate(host_list):
+        panels.append(
+            host_stat_panel(
+                pid,
+                host,
+                y + (i // cols) * host_row_h,
+                (i % cols) * (24 // cols),
+                w=24 // cols,
+                h=host_row_h,
+            )
         )
-    )
-    pid += 1
-    y += 4
+        pid += 1
+    rows_used = -(-len(host_list) // cols)  # ceil
+    y += rows_used * host_row_h
     panels.append(
         stat_panel(
             pid,
@@ -776,7 +835,7 @@ def main() -> None:
         cwd=repo_root,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        check=False,
+        check=True,
     )
     print(f"wrote {out}")
 

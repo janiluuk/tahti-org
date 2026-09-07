@@ -15,6 +15,7 @@ Installs / updates:
 | **Tahti — infrastructure & services** (`uid: tahti-infrastructure`) | Host UP, CPU, memory, disk, network, disk I/O, Tahti containers, lab + public probes, SMTP |
 | **Tahti vital services** (`uid: tahti-vital-services`) | API health, dependencies, blackbox probes |
 | **Tahti — lab overview** (`uid: tahti-overview`) | App metrics, users, Stripe counters, storage/R2 budget, tracks, releases, registrations today, Giggi active gigs |
+| **Vimage — Docker & OS metrics** (`uid: vimage-docker-os-metrics`) | Per-container CPU/memory/network/disk I/O and host uptime/load/temp, hardcoded to the `vimage` host only. Adapted from the Grafana.com "Docker and OS Metrics for Raspberry Pi" dashboard (#15120); static JSON, not generated — edit `vimage-docker-os-metrics.json` directly. |
 | Blackbox exporter `:9115` | HTTP/TCP probes |
 | Prometheus jobs | `tahti_api_metrics`, `tahti_blackbox`, `tahti_blackbox_public`, `tahti_blackbox_tcp` |
 | Alert rules | Postgres backup age (WARN >26h, critical >48h) |
