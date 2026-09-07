@@ -1374,6 +1374,11 @@ model Channel {
   // Null keeps the historical hardcoded colors (white title, light-slate
   // subtitle) — set once an artist actually picks a color from the editor.
   streamOverlayTextColor    String?
+  // Off by default (matches streamOverlayShowTitle's off-by-default
+  // precedent). When true and there is title/subtitle text to render, a
+  // semi-transparent dark rectangle is drawn behind that text region for
+  // readability over busy cover art.
+  streamOverlayScrimEnabled Boolean      @default(false)
   streamOverlayCoverUrl     String?
   streamOverlayBackdropUrl  String?
   streamOverlayVisualPreset VisualPreset @default(MINIMAL)

@@ -152,4 +152,39 @@ describe('buildRtmpMirrorOutput', () => {
     expect(out).toContain('video.add_text(color=0xffffff, size=28')
     expect(out).not.toContain('not-a-color')
   })
+
+  it('draws a scrim rectangle behind the text when enabled and title text is present', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target11', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+      undefined,
+      undefined,
+      true,
+    )
+    expect(out).toContain(
+      `video.add_rectangle(color=0x000000, alpha=0.5, width=1280, height=110, x=0, y=610, video.add_image(file="${coverPath}", width=1280, height=720, blank()))`,
+    )
+  })
+
+  it('omits the scrim when enabled but there is no title or subtitle to show', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target12', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      undefined,
+      undefined,
+      undefined,
+      true,
+    )
+    expect(out).not.toContain('video.add_rectangle')
+  })
+
+  it('omits the scrim by default when not passed, even with title text', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target13', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+    )
+    expect(out).not.toContain('video.add_rectangle')
+  })
 })
