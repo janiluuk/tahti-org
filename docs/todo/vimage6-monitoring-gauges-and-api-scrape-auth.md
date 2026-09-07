@@ -1,4 +1,4 @@
-# vimage6 Grafana: fix API metrics scrape auth (+ vimage7 IP, taller hosts panel)
+# vimage6 Grafana: fix API metrics scrape auth (+ vimage7 IP, per-host widgets, vimage-only Docker/OS dashboard)
 
 **Status:** partial
 
@@ -85,6 +85,48 @@ gauges showing status + CPU usage.
   bearer-token config yet** — it's still running the pre-fix config
   (metrics scrape still 403s) until that token file exists and someone
   runs the reload.
+
+## Later additions (2026-09-08)
+
+- **Hosts panel → per-host widgets.** Replaced the single multi-series
+  "Hosts — node exporter" stat panel with one widget per host (hostname
+  as the panel title/header, 36px UP/DOWN text) — the shared panel's
+  inline instance labels were too small to read at a glance. 6 per row,
+  2 rows for the 10 hosts. Deployed live.
+- **New dashboard: Vimage — Docker & OS metrics** (`uid:
+  vimage-docker-os-metrics`). The user pointed at
+  `grafana.tahti.live/d/Ss3q6hSZkw/docker-and-os-metrics-for-raspberry-pi-15120`
+  and asked to scope it to the vimage host. That dashboard turned out to
+  be a Grafana.com community import (#15120), DB-only (not provisioned
+  from any file, not in this repo), and every panel was silently broken
+  — its datasource UID (`adjynfpq40jr4c`) no longer exists on vimage6
+  (only `P501B54A0D5548634`/Prometheus and `loki-main` do now). Rather
+  than mutate that live DB-only dashboard blind (no Grafana credentials
+  available to this session — see Grafana access note below), added a
+  new git-tracked dashboard instead: same panel layout, repointed at the
+  real Prometheus datasource, `$job`/`$node` template vars replaced with
+  fixed constants (`cadvisor` / `vimage` — this dashboard intentionally
+  has no host picker, single-purpose per the request). Also fixed
+  several query bugs found while verifying each panel against live
+  Prometheus: missing `instance` filters (many panels silently
+  aggregated every scraped host's containers together), a hardcoded
+  `fstype="ext4"` + a stray `mountpoint="/etc/resolv.conf"` (vimage's
+  root fs is `xfs`), a hardcoded `type="cpu-thermal"` (Pi-specific;
+  vimage is x86 and reports `type="x86_pkg_temp"`), and a
+  `job="$job"` filter wrongly applied to a `node_cpu_seconds_total`
+  query (that metric is scraped under `job="node"`, not `cadvisor`).
+  The original `Ss3q6hSZkw` dashboard was left untouched.
+- **Grafana access note.** vimage6's Grafana requires login for both
+  the UI and the HTTP API (confirmed 401 even from localhost); this
+  session has no credentials and, per its own safety rules, must not
+  attempt to log in or guess them. All verification of what's live
+  (panel layout, provisioning success, datasource list) was done via
+  read-only `docker cp` of `grafana.db` + local `sqlite3`/`python3`
+  queries over SSH — never via the authenticated API. Note Grafana 13
+  stores file-provisioned dashboards in a new `resource` table
+  (`group='dashboard.grafana.app'`), not the legacy `dashboard` SQL
+  table — check there, not `dashboard`, when confirming a provisioned
+  file actually loaded.
 
 ## Remaining
 
