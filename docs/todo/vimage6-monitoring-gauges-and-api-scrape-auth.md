@@ -128,11 +128,38 @@ gauges showing status + CPU usage.
   table — check there, not `dashboard`, when confirming a provisioned
   file actually loaded.
 
+## vimage7 agents installed (2026-09-08)
+
+SSH to vimage7 worked (`jani@vimage7.local`, no `/opt` write access —
+no passwordless sudo — so files went under `/home/jani/monitoring/`
+instead). Installed the same three containers vimage6 runs, matching
+image/flags/mounts exactly (checked via `docker inspect` on vimage6):
+
+- `node-exporter` (`prom/node-exporter:latest`, host network, path.rootfs=/host)
+- `cadvisor` (`gcr.io/cadvisor/cadvisor:latest`, host network, privileged, `--port=8081` — vimage7 needs port 8081 like most hosts, not 8080 like vimage2/vimage6)
+- `docker-catalog-exporter` (`python:3-alpine`, host network, `HOST_NAME=vimage7 HOST_IP=192.168.2.106 EXPORTER_PORT=9096`, same `url-overrides.json` copied from vimage6)
+
+Verified all three serve `/metrics` locally on vimage7 and are
+reachable from vimage6 across the LAN. Confirmed live in Prometheus:
+`up{instance="192.168.2.106:9100|8081|9096"} == 1` for all three jobs.
+
+**Found and fixed a second bug from the earlier vimage7 IP fix**: that
+fix updated the static target IP (`.187` → `.106`) and the `host_ip`
+relabel rule, but missed the `__address__ → instance` relabel regex —
+it still matched `192\.168\.2\.187` in all three jobs (`node`,
+`cadvisor`, `docker-catalog`), so vimage7 was being scraped
+successfully but its `instance` label stayed as the raw
+`192.168.2.106:<port>` instead of the friendly `vimage7` — meaning it
+would never have matched the dashboards' `instance=~"{HOSTS}"` queries
+even once scraping worked. Fixed directly on vimage6
+(`prometheus.yml`, all 3 occurrences, timestamped backup taken first).
+
 ## Remaining
 
 - [ ] User runs the token-provisioning command (or `deploy.sh`, which
-      now does it automatically) so the `tahti_api_metrics` scrape can
-      actually be reloaded with the new bearer-token config.
-- [ ] Install `node_exporter`/`cadvisor`/docker-catalog exporter on
-      vimage7 so it actually shows up — separate task, no access to
-      that host from this session.
+      now does it automatically) so `tahti_api_metrics` can be reloaded
+      with the bearer-token config **and** the vimage7 relabel fix
+      above can go live — both are written to `prometheus.yml` on disk
+      but blocked behind the same `promtool check config` failure
+      (missing `/etc/prometheus/tahti-api-metrics.token`) that's been
+      open all session.
