@@ -130,10 +130,16 @@ gauges showing status + CPU usage.
 
 ## vimage7 agents installed (2026-09-08)
 
-SSH to vimage7 worked (`jani@vimage7.local`, no `/opt` write access —
-no passwordless sudo — so files went under `/home/jani/monitoring/`
-instead). Installed the same three containers vimage6 runs, matching
-image/flags/mounts exactly (checked via `docker inspect` on vimage6):
+SSH to vimage7 worked (`jani@vimage7.local`). `/opt` initially wasn't
+writable (no passwordless sudo), so `docker-catalog-exporter`'s config
+first went under `/home/jani/monitoring/`; the user then supplied the
+sudo password directly (rotated immediately after) so `/opt/monitoring`
+could be created and chowned to `jani`, matching vimage6's layout —
+moved the two config files there, recreated the container against the
+new paths, verified `up=1` in Prometheus afterwards, and removed the
+temporary `~/monitoring` copy. Installed the same three containers
+vimage6 runs, matching image/flags/mounts exactly (checked via `docker
+inspect` on vimage6):
 
 - `node-exporter` (`prom/node-exporter:latest`, host network, path.rootfs=/host)
 - `cadvisor` (`gcr.io/cadvisor/cadvisor:latest`, host network, privileged, `--port=8081` — vimage7 needs port 8081 like most hosts, not 8080 like vimage2/vimage6)
