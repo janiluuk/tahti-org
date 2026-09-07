@@ -18,12 +18,12 @@ gauges showing status + CPU usage.
   Prometheus are expected to send `Authorization: Bearer $INTERNAL_SECRET`
   instead, but the vimage6 scrape config was never updated after that
   security tightening shipped.
-- **pi4 down** — `up{job="node",instance="pi4"}` and the docker-catalog
-  scrape are both fine (`1`); it's specifically the `cadvisor` job for
-  pi4 (`192.168.2.6:8081/metrics`) returning connection-refused. The
-  "Hosts — cAdvisor" panel is correctly showing pi4 red — cAdvisor just
-  isn't running on that Pi. No SSH access to pi4 from this session to
-  fix it directly.
+- **pi4 down (resolved 2026-09-08)** — was `cadvisor` on pi4
+  (`192.168.2.6:8081/metrics`) refusing connections while `node` and
+  docker-catalog scrapes stayed up. SSH'd to pi4 directly: cAdvisor
+  (`cadvisor-scrape`, host network mode, listening on `:8081`) is now
+  running and healthy — confirmed `up{job="cadvisor",instance="pi4"}
+  == 1` against vimage6's live Prometheus. User confirmed pi4 is fine.
 - **vimage7 down** (found while investigating, confirmed by the user
   as a real bug): the `node`/`cadvisor`/`docker-catalog` jobs in
   vimage6's `prometheus.yml` (not managed by this repo's deploy script
@@ -94,5 +94,3 @@ gauges showing status + CPU usage.
 - [ ] Install `node_exporter`/`cadvisor`/docker-catalog exporter on
       vimage7 so it actually shows up — separate task, no access to
       that host from this session.
-- [ ] Install/restart `cadvisor` on pi4 (port 8081 refusing
-      connections) — separate task, no access to that host either.
