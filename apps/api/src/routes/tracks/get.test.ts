@@ -121,6 +121,7 @@ describe('GET /api/tracks/:id', () => {
         artistUserId: artist.userId,
         name: 'Digital download',
         priceCents: 500,
+        priceOptional: true,
         active: true,
         position: 0,
       },
@@ -148,6 +149,7 @@ describe('GET /api/tracks/:id', () => {
     expect(body.purchaseTierId).toBe(tier.id)
     expect(body.purchaseTierName).toBe('Digital download')
     expect(body.purchaseTierPriceCents).toBe(500)
+    expect(body.purchaseTierPriceOptional).toBe(true)
     expect(body.gate).toEqual({ reason: 'PURCHASE', tierId: tier.id })
   })
 

@@ -917,6 +917,9 @@ export const PublicTrackDetailSchema = z
     purchaseTierId: z.string().nullable().optional(),
     purchaseTierName: z.string().nullable().optional(),
     purchaseTierPriceCents: z.number().int().nullable().optional(),
+    /** True = buyer may enter any amount >= 0 ("pay what you want", incl.
+     * free) instead of paying purchaseTierPriceCents exactly. */
+    purchaseTierPriceOptional: z.boolean().optional(),
     gate: PlaybackGateSchema.optional(),
   })
   .passthrough()
