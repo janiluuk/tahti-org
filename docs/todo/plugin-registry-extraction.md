@@ -1,19 +1,22 @@
 # Plugin registry extraction — inventory + interface (non-breaking prep)
 
-**Status:** inventory complete; minimal `PluginRegistryStore` / `PluginRegistryHost`
-interface and adapter plan defined (section 5). Do **not** move files, change
-storage keys, alter discovery semantics, or change bootstrap order until adapter
-contract tests and rollback plan are accepted.
+**Status:** §5.1/§5.2 adapter shipped (2026-09-07) in `../tahti-nuclear` —
+`pluginRegistryContract.ts` + `pluginRegistryAdapter.ts`, additive only
+(callers have **not** been migrated to it yet — see §5.4, still to do). A
+first contract-test suite exists against the adapter (§6, store-layer
+subset). Do **not** move files, change storage keys, alter discovery
+semantics, or change bootstrap order until the full contract-test set and
+rollback plan are accepted.
 
 **Repos:**
 
-| Repo | Path |
-| ---- | ---- |
-| Tahti (this doc, remaining-work home) | `docs/todo/plugin-registry-extraction.md` |
-| Player (Nuclear) pointer | `../tahti-nuclear/docs/todo/plugin-registry-extraction.md` |
+| Repo                                  | Path                                                       |
+| ------------------------------------- | ---------------------------------------------------------- |
+| Tahti (this doc, remaining-work home) | `docs/todo/plugin-registry-extraction.md`                  |
+| Player (Nuclear) pointer              | `../tahti-nuclear/docs/todo/plugin-registry-extraction.md` |
 
 **Source of truth for remaining-work bullets:**
-`docs/remaining-work.md` → *Plugin registry separation*.
+`docs/remaining-work.md` → _Plugin registry separation_.
 
 ---
 
@@ -21,14 +24,16 @@ contract tests and rollback plan are accepted.
 
 - [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
 - [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [§5](#5-minimal-compatibility-interface-and-adapter-plan)
-- [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior.
+- [x] Implement the §5.1/§5.2 contract module + adapter (additive, callers not yet migrated).
+- [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior. **Partial (2026-09-07):** store-layer subset done (`pluginRegistryAdapter.test.ts` — upsert/get/list round-trip, setEnabled incl. missing-id no-op, setWarnings incl. empty-array-omits-field, remove incl. orphan-remove, dev-install originalPath). Still missing: install-from-marketplace/install-from-path/update/discovery cases from §6, since those live on `PluginRegistryHost` (bootstrap/store/auto-update), which has no implementation yet — only the `PluginRegistryStore` half does.
+- [ ] Migrate callers to the adapter (§5.4) — not started; `pluginBootstrap.ts`/`pluginStore.tsx`/`pluginAutoUpdate.ts`/`useInstallPlugin.ts` still import `pluginRegistry.ts` directly.
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
 
 **Guardrail (do not violate during prep):** keep current registry as runtime
 source of truth; no key / path / bootstrap-order changes until adapter +
 rollback plan are accepted. Same wording in
-`../tahti-nuclear/AGENTS.md` (*Runtime registry separation guardrail*) and
+`../tahti-nuclear/AGENTS.md` (_Runtime registry separation guardrail_) and
 root `AGENTS.md` / `docs/remaining-work.md`.
 
 ---
@@ -38,11 +43,11 @@ root `AGENTS.md` / `docs/remaining-work.md`.
 There are **three** different “plugin registry / store” concepts. Only the
 first is the extraction target.
 
-| Concept | What it is | Where |
-| ------- | ---------- | ----- |
-| **Runtime install registry** | Local list of *installed* plugins (enable flag, path, warnings) | Player: `packages/player/src/services/plugins/pluginRegistry.ts` → Tauri `LazyStore('plugins.json')` under AppData |
-| **Marketplace catalog** | Remote list of *available* store plugins (version, downloadUrl, repo) | [janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry) `plugins.json`; fetched by `packages/player/src/apis/pluginMarketplaceApi.ts` from `https://raw.githubusercontent.com/janiluuk/tahti-registry/master` |
-| **tahti-web Add-ons UI** | Browser over in-app subsystems (import, radio, widgets, export metadata, …) | `packages/tahti-web` `PluginStorePanel`, `PLUGIN-STORE-PLAN.md` — **not** the Tauri runtime registry |
+| Concept                      | What it is                                                                  | Where                                                                                                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Runtime install registry** | Local list of _installed_ plugins (enable flag, path, warnings)             | Player: `packages/player/src/services/plugins/pluginRegistry.ts` → Tauri `LazyStore('plugins.json')` under AppData                                                                                                          |
+| **Marketplace catalog**      | Remote list of _available_ store plugins (version, downloadUrl, repo)       | [janiluuk/tahti-registry](https://github.com/janiluuk/tahti-registry) `plugins.json`; fetched by `packages/player/src/apis/pluginMarketplaceApi.ts` from `https://raw.githubusercontent.com/janiluuk/tahti-registry/master` |
+| **tahti-web Add-ons UI**     | Browser over in-app subsystems (import, radio, widgets, export metadata, …) | `packages/tahti-web` `PluginStorePanel`, `PLUGIN-STORE-PLAN.md` — **not** the Tauri runtime registry                                                                                                                        |
 
 Auto-update compares **catalog** `version` / `downloadUrl` to **runtime**
 registry entries with `installationMethod === 'store'`. A code-only version
@@ -66,23 +71,23 @@ Owned by **player core** today (`@tahti-player/player`), centered on
 `pluginRegistry.ts` + consumers (`pluginStore`, `pluginBootstrap`,
 `pluginAutoUpdate`, `useInstallPlugin`).
 
-| Responsibility | Behavior today |
-| -------------- | -------------- |
-| **Persist install list** | Keyed entries in AppData `plugins.json` (`plugins.<id>` → `PluginRegistryEntry`) |
-| **Discovery on startup** | `listRegistryEntries()`, sort by `installedAt` ascending, load only paths under managed `plugins/` dir |
-| **Install (store)** | Download zip → extract → `upsertRegistryEntry` (`installationMethod: 'store'`) → `loadPluginFromPath` → `enablePlugin` |
-| **Install (dev)** | User picks folder → `loadPluginFromPath` copies into managed dir, upserts with `installationMethod: 'dev'` + `originalPath` |
-| **Load / compile** | `PluginLoader` reads `package.json`, compiles entry, creates instance + API (`createPluginAPI`) |
-| **Enable / disable** | Zustand `enablePlugin` / `disablePlugin` call plugin lifecycle hooks, then `setRegistryEntryEnabled` |
-| **Warnings** | Manifest/permission warnings on load; load failures on hydrate merge into `warnings` via `setRegistryEntryWarnings` (entry kept) |
-| **Update (store)** | After hydrate, `checkAndUpdatePlugins` if `core.plugins.autoUpdate`; semver-gt catalog version → unload → load new → re-enable |
-| **Reload (dev only)** | Re-read `originalPath`, reinstall managed copy, upsert registry |
-| **Removal** | Unload → delete managed files → `removeRegistryEntry` (also works for orphan registry-only entries) |
+| Responsibility           | Behavior today                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Persist install list** | Keyed entries in AppData `plugins.json` (`plugins.<id>` → `PluginRegistryEntry`)                                                 |
+| **Discovery on startup** | `listRegistryEntries()`, sort by `installedAt` ascending, load only paths under managed `plugins/` dir                           |
+| **Install (store)**      | Download zip → extract → `upsertRegistryEntry` (`installationMethod: 'store'`) → `loadPluginFromPath` → `enablePlugin`           |
+| **Install (dev)**        | User picks folder → `loadPluginFromPath` copies into managed dir, upserts with `installationMethod: 'dev'` + `originalPath`      |
+| **Load / compile**       | `PluginLoader` reads `package.json`, compiles entry, creates instance + API (`createPluginAPI`)                                  |
+| **Enable / disable**     | Zustand `enablePlugin` / `disablePlugin` call plugin lifecycle hooks, then `setRegistryEntryEnabled`                             |
+| **Warnings**             | Manifest/permission warnings on load; load failures on hydrate merge into `warnings` via `setRegistryEntryWarnings` (entry kept) |
+| **Update (store)**       | After hydrate, `checkAndUpdatePlugins` if `core.plugins.autoUpdate`; semver-gt catalog version → unload → load new → re-enable   |
+| **Reload (dev only)**    | Re-read `originalPath`, reinstall managed copy, upsert registry                                                                  |
+| **Removal**              | Unload → delete managed files → `removeRegistryEntry` (also works for orphan registry-only entries)                              |
 
 **Out of scope for this registry (but adjacent):**
 
 - Choosing active metadata/streaming/discovery providers (`providersHost` /
-  Sources UI) — runs *after* hydrate via `providersHost.resolveActiveOnBootstrap()`.
+  Sources UI) — runs _after_ hydrate via `providersHost.resolveActiveOnBootstrap()`.
 - Marketplace browse/search UI (`PluginStore.tsx`) — reads catalog API, not
   local `plugins.json` keys (except “is installed” via `usePluginStore`).
 
@@ -108,19 +113,19 @@ Owned by **player core** today (`@tahti-player/player`), centered on
 ### Entry type (`PluginRegistryEntry`)
 
 ```ts
-type PluginInstallationMethod = 'dev' | 'store';
+type PluginInstallationMethod = 'dev' | 'store'
 
 type PluginRegistryEntry = {
-  id: string;
-  version: string;
-  path: string; // absolute managed path …/plugins/{id}/{version}
-  installationMethod: PluginInstallationMethod;
-  originalPath?: string; // set for dev (reload source)
-  enabled: boolean;
-  installedAt: string; // ISO-8601
-  lastUpdatedAt: string; // ISO-8601
-  warnings?: string[]; // omitted when empty
-};
+  id: string
+  version: string
+  path: string // absolute managed path …/plugins/{id}/{version}
+  installationMethod: PluginInstallationMethod
+  originalPath?: string // set for dev (reload source)
+  enabled: boolean
+  installedAt: string // ISO-8601
+  lastUpdatedAt: string // ISO-8601
+  warnings?: string[] // omitted when empty
+}
 ```
 
 ### Example shape (from builders / seed helpers)
@@ -181,50 +186,50 @@ rename without an explicit migration plan.
 
 ### Core persistence API
 
-| File | Role |
-| ---- | ---- |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginRegistry.ts` | LazyStore CRUD: list/get/upsert/enabled/warnings/remove |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginBootstrap.ts` | Startup hydrate from registry; warnings on failure; kicks auto-update |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/stores/pluginStore.tsx` | In-memory plugin instances; install/enable/disable/reload/remove; writes registry |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginAutoUpdate.ts` | Store-plugin updates vs marketplace catalog |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/hooks/useInstallPlugin.ts` | Store install mutation (upsert + load + enable) |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/initPlayerApp.tsx` | Schedules `hydratePluginsFromRegistry()` after settings/themes init |
+| File                                                                                          | Role                                                                              |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginRegistry.ts`   | LazyStore CRUD: list/get/upsert/enabled/warnings/remove                           |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginBootstrap.ts`  | Startup hydrate from registry; warnings on failure; kicks auto-update             |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/stores/pluginStore.tsx`               | In-memory plugin instances; install/enable/disable/reload/remove; writes registry |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginAutoUpdate.ts` | Store-plugin updates vs marketplace catalog                                       |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/hooks/useInstallPlugin.ts`            | Store install mutation (upsert + load + enable)                                   |
+| `/home/jani/workspace/tahti-nuclear/packages/player/src/initPlayerApp.tsx`                    | Schedules `hydratePluginsFromRegistry()` after settings/themes init               |
 
 ### Load / filesystem / marketplace (depend on registry flow)
 
-| File | Role |
-| ---- | ---- |
-| `…/services/plugins/PluginLoader.ts` | Manifest parse, compile, instantiate |
-| `…/services/plugins/pluginDir.ts` | Managed `plugins/{id}/{version}` install/remove |
-| `…/services/plugins/pluginDownloader.ts` | Zip download/extract for store install/update |
-| `…/services/plugins/createPluginAPI.ts` | Host API passed into plugin instances |
-| `…/apis/pluginMarketplaceApi.ts` | **Catalog** client (`PluginRegistryApi` class name — remote only) |
+| File                                     | Role                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------- |
+| `…/services/plugins/PluginLoader.ts`     | Manifest parse, compile, instantiate                              |
+| `…/services/plugins/pluginDir.ts`        | Managed `plugins/{id}/{version}` install/remove                   |
+| `…/services/plugins/pluginDownloader.ts` | Zip download/extract for store install/update                     |
+| `…/services/plugins/createPluginAPI.ts`  | Host API passed into plugin instances                             |
+| `…/apis/pluginMarketplaceApi.ts`         | **Catalog** client (`PluginRegistryApi` class name — remote only) |
 
 ### UI
 
-| File | Role |
-| ---- | ---- |
-| `…/views/Plugins/PluginStore.tsx` | Store tab; `useInstallPlugin` |
-| `…/views/Plugins/InstalledPlugins.tsx` | Dev folder install via `loadPluginFromPath` |
-| `…/views/Plugins/ConnectedPluginItem.tsx` | Enable/disable/reload/remove |
-| `…/views/Settings/CustomWidgetField.tsx` | Reads `usePluginStore` API for settings widgets |
+| File                                      | Role                                            |
+| ----------------------------------------- | ----------------------------------------------- |
+| `…/views/Plugins/PluginStore.tsx`         | Store tab; `useInstallPlugin`                   |
+| `…/views/Plugins/InstalledPlugins.tsx`    | Dev folder install via `loadPluginFromPath`     |
+| `…/views/Plugins/ConnectedPluginItem.tsx` | Enable/disable/reload/remove                    |
+| `…/views/Settings/CustomWidgetField.tsx`  | Reads `usePluginStore` API for settings widgets |
 
 ### Tests / builders (contract-test foundation)
 
-| File | Role |
-| ---- | ---- |
-| `…/App.hydration.test.tsx` | Bootstrap order, managed-path filter, warnings persistence, timings; **todo** for enable persist across restart |
-| `…/stores/pluginStore.test.ts` | load/enable/disable/reload/remove/unload |
-| `…/services/plugins/pluginAutoUpdate.test.ts` | Update skip/apply vs catalog |
-| `…/test/utils/seedPlugins.ts` | Seeds registry + optional store state |
-| `…/test/builders/PluginRegistryEntryBuilder.ts` | Entry factory |
-| `…/views/Plugins/PluginStore.test.tsx` | Catalog UI (mocks remote `plugins.json`) |
-| `…/services/plugins/PluginLoader.test.ts` | Loader only (no registry file) |
+| File                                            | Role                                                                                                            |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `…/App.hydration.test.tsx`                      | Bootstrap order, managed-path filter, warnings persistence, timings; **todo** for enable persist across restart |
+| `…/stores/pluginStore.test.ts`                  | load/enable/disable/reload/remove/unload                                                                        |
+| `…/services/plugins/pluginAutoUpdate.test.ts`   | Update skip/apply vs catalog                                                                                    |
+| `…/test/utils/seedPlugins.ts`                   | Seeds registry + optional store state                                                                           |
+| `…/test/builders/PluginRegistryEntryBuilder.ts` | Entry factory                                                                                                   |
+| `…/views/Plugins/PluginStore.test.tsx`          | Catalog UI (mocks remote `plugins.json`)                                                                        |
+| `…/services/plugins/PluginLoader.test.ts`       | Loader only (no registry file)                                                                                  |
 
 ### Devtools
 
-| File | Role |
-| ---- | ---- |
+| File                                  | Role                                 |
+| ------------------------------------- | ------------------------------------ |
 | `…/devtools/registerZustandStores.ts` | Exposes `usePluginStore` to DevTools |
 
 **Non-callers (easy to mis-grep):** tahti-web `PluginStorePanel`,
@@ -286,44 +291,44 @@ types + interfaces, no Tauri imports:
 
 ```ts
 /** Mirrors exports from pluginRegistry.ts today — keep in sync until extraction. */
-export type PluginInstallationMethod = 'dev' | 'store';
+export type PluginInstallationMethod = 'dev' | 'store'
 
 export type PluginRegistryEntry = {
-  id: string;
-  version: string;
-  path: string;
-  installationMethod: PluginInstallationMethod;
-  originalPath?: string;
-  enabled: boolean;
-  installedAt: string;
-  lastUpdatedAt: string;
-  warnings?: string[];
-};
+  id: string
+  version: string
+  path: string
+  installationMethod: PluginInstallationMethod
+  originalPath?: string
+  enabled: boolean
+  installedAt: string
+  lastUpdatedAt: string
+  warnings?: string[]
+}
 
 /** Storage constants — frozen for adapter compatibility. */
-export const PLUGIN_REGISTRY_FILE = 'plugins.json' as const;
-export const PLUGIN_REGISTRY_KEY_PREFIX = 'plugins.' as const;
+export const PLUGIN_REGISTRY_FILE = 'plugins.json' as const
+export const PLUGIN_REGISTRY_KEY_PREFIX = 'plugins.' as const
 
 /**
  * Persistence + query — maps 1:1 to pluginRegistry.ts free functions.
  * Only implementation of this interface may touch LazyStore / plugins.json.
  */
 export interface PluginRegistryStore {
-  list(): Promise<PluginRegistryEntry[]>;
-  get(id: string): Promise<PluginRegistryEntry | undefined>;
-  upsert(entry: PluginRegistryEntry): Promise<void>;
-  setEnabled(id: string, enabled: boolean): Promise<void>;
-  setWarnings(id: string, warnings: string[]): Promise<void>;
-  remove(id: string): Promise<void>;
+  list(): Promise<PluginRegistryEntry[]>
+  get(id: string): Promise<PluginRegistryEntry | undefined>
+  upsert(entry: PluginRegistryEntry): Promise<void>
+  setEnabled(id: string, enabled: boolean): Promise<void>
+  setWarnings(id: string, warnings: string[]): Promise<void>
+  remove(id: string): Promise<void>
 }
 
 /** Marketplace row subset needed for store install (from pluginMarketplaceApi). */
 export type MarketplacePluginRelease = {
-  id: string;
-  version: string;
-  downloadUrl: string;
-  repo?: string;
-};
+  id: string
+  version: string
+  downloadUrl: string
+  repo?: string
+}
 
 /**
  * Host-facing lifecycle — UI, bootstrap, auto-update.
@@ -331,14 +336,14 @@ export type MarketplacePluginRelease = {
  * useInstallPlugin; not owned by pluginRegistry.ts alone.
  */
 export interface PluginRegistryHost {
-  hydrateFromRegistry(): Promise<void>;
-  installFromPath(path: string): Promise<void>;
-  installFromMarketplace(plugin: MarketplacePluginRelease): Promise<void>;
-  enable(id: string): Promise<void>;
-  disable(id: string): Promise<void>;
-  reloadDev(id: string): Promise<void>;
-  remove(id: string): Promise<void>;
-  checkAndUpdateStorePlugins(): Promise<void>;
+  hydrateFromRegistry(): Promise<void>
+  installFromPath(path: string): Promise<void>
+  installFromMarketplace(plugin: MarketplacePluginRelease): Promise<void>
+  enable(id: string): Promise<void>
+  disable(id: string): Promise<void>
+  reloadDev(id: string): Promise<void>
+  remove(id: string): Promise<void>
+  checkAndUpdateStorePlugins(): Promise<void>
 }
 ```
 
@@ -350,7 +355,7 @@ re-exports) so existing imports keep compiling until callers migrate.
 Add `packages/player/src/services/plugins/pluginRegistryAdapter.ts`:
 
 ```ts
-import type { PluginRegistryStore } from './pluginRegistryContract';
+import type { PluginRegistryStore } from './pluginRegistryContract'
 import {
   getRegistryEntry,
   listRegistryEntries,
@@ -358,7 +363,7 @@ import {
   setRegistryEntryEnabled,
   setRegistryEntryWarnings,
   upsertRegistryEntry,
-} from './pluginRegistry';
+} from './pluginRegistry'
 
 /** Default runtime adapter — wraps today's pluginRegistry.ts without changing storage. */
 export const createLazyStorePluginRegistry = (): PluginRegistryStore => ({
@@ -368,11 +373,10 @@ export const createLazyStorePluginRegistry = (): PluginRegistryStore => ({
   setEnabled: (id, enabled) => setRegistryEntryEnabled(id, enabled),
   setWarnings: (id, warnings) => setRegistryEntryWarnings(id, warnings),
   remove: (id) => removeRegistryEntry(id),
-});
+})
 
 /** Process-wide singleton for player core (same LazyStore instance as today). */
-export const pluginRegistryStore: PluginRegistryStore =
-  createLazyStorePluginRegistry();
+export const pluginRegistryStore: PluginRegistryStore = createLazyStorePluginRegistry()
 ```
 
 `pluginRegistry.ts` stays the LazyStore owner; the adapter is the **only**
@@ -382,38 +386,38 @@ touching callers.
 
 ### 5.3 Function mapping (today → contract)
 
-| `pluginRegistry.ts` export | `PluginRegistryStore` method | Notes |
-| -------------------------- | ---------------------------- | ----- |
-| `listRegistryEntries()` | `list()` | No sort in store layer; bootstrap sorts by `installedAt` |
-| `getRegistryEntry(id)` | `get(id)` | Returns `undefined` when missing |
-| `upsertRegistryEntry(entry)` | `upsert(entry)` | Always calls `store.save()` |
-| `setRegistryEntryEnabled(id, enabled)` | `setEnabled(id, enabled)` | No-op + warn log if entry missing |
-| `setRegistryEntryWarnings(id, warnings)` | `setWarnings(id, warnings)` | Empty array → omit `warnings` field |
-| `removeRegistryEntry(id)` | `remove(id)` | Deletes `plugins.{id}` key |
+| `pluginRegistry.ts` export               | `PluginRegistryStore` method | Notes                                                    |
+| ---------------------------------------- | ---------------------------- | -------------------------------------------------------- |
+| `listRegistryEntries()`                  | `list()`                     | No sort in store layer; bootstrap sorts by `installedAt` |
+| `getRegistryEntry(id)`                   | `get(id)`                    | Returns `undefined` when missing                         |
+| `upsertRegistryEntry(entry)`             | `upsert(entry)`              | Always calls `store.save()`                              |
+| `setRegistryEntryEnabled(id, enabled)`   | `setEnabled(id, enabled)`    | No-op + warn log if entry missing                        |
+| `setRegistryEntryWarnings(id, warnings)` | `setWarnings(id, warnings)`  | Empty array → omit `warnings` field                      |
+| `removeRegistryEntry(id)`                | `remove(id)`                 | Deletes `plugins.{id}` key                               |
 
-| Current module / symbol | `PluginRegistryHost` method | Notes |
-| ----------------------- | --------------------------- | ----- |
-| `hydratePluginsFromRegistry()` in `pluginBootstrap.ts` | `hydrateFromRegistry()` | Preserves bootstrap order (§4) |
-| `usePluginStore.loadPluginFromPath` | `installFromPath()` | Dev folder + managed copy |
-| `useInstallPlugin` mutation | `installFromMarketplace()` | Catalog download → upsert → load → enable |
-| `usePluginStore.enablePlugin` | `enable()` | Calls `onEnable`, then `setEnabled` |
-| `usePluginStore.disablePlugin` | `disable()` | Calls `onDisable`, then `setEnabled` |
-| `usePluginStore.reloadPlugin` | `reloadDev()` | Dev entries only (`originalPath`) |
-| `usePluginStore.removePlugin` | `remove()` | Unload + managed dir + registry key |
-| `checkAndUpdatePlugins()` in `pluginAutoUpdate.ts` | `checkAndUpdateStorePlugins()` | Uses `list()` + marketplace catalog |
+| Current module / symbol                                | `PluginRegistryHost` method    | Notes                                     |
+| ------------------------------------------------------ | ------------------------------ | ----------------------------------------- |
+| `hydratePluginsFromRegistry()` in `pluginBootstrap.ts` | `hydrateFromRegistry()`        | Preserves bootstrap order (§4)            |
+| `usePluginStore.loadPluginFromPath`                    | `installFromPath()`            | Dev folder + managed copy                 |
+| `useInstallPlugin` mutation                            | `installFromMarketplace()`     | Catalog download → upsert → load → enable |
+| `usePluginStore.enablePlugin`                          | `enable()`                     | Calls `onEnable`, then `setEnabled`       |
+| `usePluginStore.disablePlugin`                         | `disable()`                    | Calls `onDisable`, then `setEnabled`      |
+| `usePluginStore.reloadPlugin`                          | `reloadDev()`                  | Dev entries only (`originalPath`)         |
+| `usePluginStore.removePlugin`                          | `remove()`                     | Unload + managed dir + registry key       |
+| `checkAndUpdatePlugins()` in `pluginAutoUpdate.ts`     | `checkAndUpdateStorePlugins()` | Uses `list()` + marketplace catalog       |
 
 ### 5.4 Caller migration (tahti-nuclear, incremental)
 
 Migrate imports **one PR at a time**; behavior must stay identical.
 
-| File | Today | After adapter step |
-| ---- | ----- | ------------------ |
-| `pluginBootstrap.ts` | `listRegistryEntries`, `getRegistryEntry`, `setRegistryEntryWarnings` | `pluginRegistryStore.list/get/setWarnings` |
-| `pluginStore.tsx` | `get/upsert/setEnabled/removeRegistryEntry` | `pluginRegistryStore.*` |
-| `pluginAutoUpdate.ts` | `listRegistryEntries` | `pluginRegistryStore.list` |
-| `useInstallPlugin.ts` | `upsertRegistryEntry` | `pluginRegistryStore.upsert` |
-| `test/utils/seedPlugins.ts` | `upsertRegistryEntry` | `pluginRegistryStore.upsert` |
-| Tests importing `getRegistryEntry` directly | direct import | `pluginRegistryStore.get` |
+| File                                        | Today                                                                 | After adapter step                         |
+| ------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------ |
+| `pluginBootstrap.ts`                        | `listRegistryEntries`, `getRegistryEntry`, `setRegistryEntryWarnings` | `pluginRegistryStore.list/get/setWarnings` |
+| `pluginStore.tsx`                           | `get/upsert/setEnabled/removeRegistryEntry`                           | `pluginRegistryStore.*`                    |
+| `pluginAutoUpdate.ts`                       | `listRegistryEntries`                                                 | `pluginRegistryStore.list`                 |
+| `useInstallPlugin.ts`                       | `upsertRegistryEntry`                                                 | `pluginRegistryStore.upsert`               |
+| `test/utils/seedPlugins.ts`                 | `upsertRegistryEntry`                                                 | `pluginRegistryStore.upsert`               |
+| Tests importing `getRegistryEntry` directly | direct import                                                         | `pluginRegistryStore.get`                  |
 
 **Do not migrate yet:** `PluginLoader`, `pluginDir`, `pluginDownloader`,
 `pluginMarketplaceApi` — they do not touch `plugins.json` keys.
@@ -502,14 +506,14 @@ yet.
 
 ## 7. Ownership split draft
 
-| Boundary | Owns | Does not own |
-| -------- | ---- | ------------ |
-| **Player core** (`packages/player`) | Runtime registry persistence, bootstrap, PluginLoader host, managed dirs, Install/Installed UI, auto-update orchestration, providersHost wiring | Marketplace catalog content; tahti-web Add-ons; API import-provider list |
-| **Plugin SDK** (`packages/plugin-sdk`) | `TahtiPlugin` lifecycle (`onLoad`/`onEnable`/…), `TahtiPluginAPI`, manifest/metadata types, widget registry *types* | Persistence of `plugins.json`; download/install |
-| **Zip / Nuclear-style plugins** (external repos + catalog rows) | Plugin implementation, `package.json` / `tahti` manifest, GitHub `plugin.zip` releases | Local install list |
-| **tahti-registry** | Public Store catalog (`plugins.json`, themes), versions/downloadUrls users see | Runtime enable state; on-disk managed copies |
-| **Import-provider plugins / tahti-web** | Studio import OAuth/search/tool adapters; Settings → Add-ons categories; talks to Tahti API `GET /api/me/import-plugins` | Desktop Tauri runtime registry |
-| **Tahti API** (`../tahti`) | Server import/export plugin catalogs, credentials | Desktop `LazyStore` `plugins.json` |
+| Boundary                                                        | Owns                                                                                                                                            | Does not own                                                             |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Player core** (`packages/player`)                             | Runtime registry persistence, bootstrap, PluginLoader host, managed dirs, Install/Installed UI, auto-update orchestration, providersHost wiring | Marketplace catalog content; tahti-web Add-ons; API import-provider list |
+| **Plugin SDK** (`packages/plugin-sdk`)                          | `TahtiPlugin` lifecycle (`onLoad`/`onEnable`/…), `TahtiPluginAPI`, manifest/metadata types, widget registry _types_                             | Persistence of `plugins.json`; download/install                          |
+| **Zip / Nuclear-style plugins** (external repos + catalog rows) | Plugin implementation, `package.json` / `tahti` manifest, GitHub `plugin.zip` releases                                                          | Local install list                                                       |
+| **tahti-registry**                                              | Public Store catalog (`plugins.json`, themes), versions/downloadUrls users see                                                                  | Runtime enable state; on-disk managed copies                             |
+| **Import-provider plugins / tahti-web**                         | Studio import OAuth/search/tool adapters; Settings → Add-ons categories; talks to Tahti API `GET /api/me/import-plugins`                        | Desktop Tauri runtime registry                                           |
+| **Tahti API** (`../tahti`)                                      | Server import/export plugin catalogs, credentials                                                                                               | Desktop `LazyStore` `plugins.json`                                       |
 
 **Extraction end-state (aspirational, not now):** runtime registry (+
 optionally loader/dir helpers) as a separately owned package or repo with a
@@ -520,14 +524,14 @@ on the adapter; catalog and tahti-web Add-ons remain separate products.
 
 ## Related docs
 
-| Doc | Why |
-| --- | --- |
-| `docs/remaining-work.md` | Checklist this file tracks |
-| `../tahti-nuclear/AGENTS.md` | Catalog vs runtime + separation guardrail |
-| `../tahti-nuclear/packages/docs/plugins/plugin-system.md` | User-facing install + registry description |
-| `../tahti-nuclear/packages/docs/plugins/plugin-store.md` | Store UI + auto-update |
+| Doc                                                        | Why                                                    |
+| ---------------------------------------------------------- | ------------------------------------------------------ |
+| `docs/remaining-work.md`                                   | Checklist this file tracks                             |
+| `../tahti-nuclear/AGENTS.md`                               | Catalog vs runtime + separation guardrail              |
+| `../tahti-nuclear/packages/docs/plugins/plugin-system.md`  | User-facing install + registry description             |
+| `../tahti-nuclear/packages/docs/plugins/plugin-store.md`   | Store UI + auto-update                                 |
 | `../tahti-nuclear/packages/tahti-web/PLUGIN-STORE-PLAN.md` | **Different** Add-ons extraction map (do not conflate) |
-| `docs/technical/import-plugin-contracts.md` | API import-provider catalog (server) |
+| `docs/technical/import-plugin-contracts.md`                | API import-provider catalog (server)                   |
 
 ---
 
