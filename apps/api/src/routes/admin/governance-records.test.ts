@@ -62,31 +62,15 @@ describe('governance meetings and documents', () => {
         location: 'Helsinki / video call',
         eligibleMemberCount: 2,
         quorumRequired: 2,
+        chairName: 'Chair',
+        secretaryName: 'Secretary',
         agenda: [{ title: 'Approve annual accounts' }, { title: 'Elect the board' }],
       },
     })
     expect(create.statusCode).toBe(201)
     expect(create.json().state).toBe('DRAFT')
-    const meetingId = create.json().id as string
-
-    const audited = await app.inject({
-      method: 'GET',
-      url: `/api/admin/audit?topic=meetings&targetId=${meetingId}`,
-      headers: { cookie: boardCookie },
-    })
-    expect(audited.statusCode).toBe(200)
-    expect(
-      (audited.json() as { items: Array<{ action: string }> }).items.some(
-        (item) => item.action === 'MEETING_CREATE',
-      ),
-    ).toBe(true)
     expect(create.json().quorumMet).toBe(false)
-    expect(create.json()).toMatchObject({
-      chairName: null,
-      secretaryName: null,
-      minutesSignedByName: null,
-      minutesSignedAt: null,
-    })
+    expect(create.json()).toMatchObject({ chairName: 'Chair', secretaryName: 'Secretary' })
 
     const memberList = await app.inject({
       method: 'GET',
@@ -173,69 +157,6 @@ describe('governance meetings and documents', () => {
       eligibleMemberCount: 2,
       quorumRequired: 2,
       quorumMet: true,
-    })
-  })
-
-  it('records chair, secretary, and a minutes signature snapshot', async () => {
-    const create = await app.inject({
-      method: 'POST',
-      url: '/api/admin/governance/meetings',
-      headers: { cookie: boardCookie },
-      payload: {
-        title: 'June 2026 board meeting',
-        type: 'BOARD',
-        chairName: 'Aino Chair',
-        secretaryName: 'Simo Secretary',
-      },
-    })
-    expect(create.statusCode).toBe(201)
-    expect(create.json()).toMatchObject({
-      chairName: 'Aino Chair',
-      secretaryName: 'Simo Secretary',
-      minutesSignedByName: null,
-    })
-    const meetingId = create.json().id as string
-
-    const signed = await app.inject({
-      method: 'PATCH',
-      url: `/api/admin/governance/meetings/${meetingId}`,
-      headers: { cookie: boardCookie },
-      payload: {
-        state: 'SCHEDULED',
-        minutesSignedByName: 'Aino Chair',
-        minutesSignedAt: '2026-06-15T18:00:00.000Z',
-      },
-    })
-    expect(signed.statusCode).toBe(200)
-    expect(signed.json()).toMatchObject({
-      chairName: 'Aino Chair',
-      secretaryName: 'Simo Secretary',
-      minutesSignedByName: 'Aino Chair',
-      minutesSignedAt: '2026-06-15T18:00:00.000Z',
-    })
-
-    const cleared = await app.inject({
-      method: 'PATCH',
-      url: `/api/admin/governance/meetings/${meetingId}`,
-      headers: { cookie: boardCookie },
-      payload: { secretaryName: '' },
-    })
-    expect(cleared.statusCode).toBe(200)
-    expect(cleared.json().secretaryName).toBeNull()
-
-    const memberList = await app.inject({
-      method: 'GET',
-      url: '/api/v1/governance/meetings',
-      headers: { cookie: memberCookie },
-    })
-    expect(memberList.statusCode).toBe(200)
-    const row = (memberList.json() as Array<{ title: string; chairName: string | null }>).find(
-      (meeting) => meeting.title === 'June 2026 board meeting',
-    )
-    expect(row).toMatchObject({
-      chairName: 'Aino Chair',
-      secretaryName: null,
-      minutesSignedByName: 'Aino Chair',
     })
   })
 

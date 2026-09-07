@@ -33,14 +33,6 @@ export const VoteMotionSchema = z.object({
   choice: z.preprocess((v) => (typeof v === 'string' ? v.toUpperCase() : v), MotionChoiceSchema),
 })
 
-export const MOTION_LIST_STATES = ['DRAFT', 'OPEN', 'CLOSED'] as const
-
-export const MotionListQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(100),
-  cursor: z.string().trim().max(256).optional(),
-  state: z.string().trim().max(64).optional(),
-})
-
 export type VoteMotionInput = z.infer<typeof VoteMotionSchema>
 
 export const PostMotionCommentSchema = z.object({
@@ -82,18 +74,6 @@ export const GovernanceDocumentTypeSchema = z.enum([
   'OTHER',
 ])
 
-function emptyToNull(value: unknown): unknown {
-  if (typeof value === 'string' && value.trim() === '') return null
-  return value
-}
-
-const OptionalPersonNameSchema = z.preprocess(
-  emptyToNull,
-  z.string().trim().max(200).nullable().optional(),
-)
-
-const OptionalDateSchema = z.preprocess(emptyToNull, z.coerce.date().nullable().optional())
-
 export const CreateGovernanceMeetingSchema = z.object({
   title: z.string().trim().min(1).max(200),
   type: GovernanceMeetingTypeSchema,
@@ -103,10 +83,8 @@ export const CreateGovernanceMeetingSchema = z.object({
   noticeAt: z.coerce.date().optional(),
   eligibleMemberCount: z.number().int().nonnegative().optional(),
   quorumRequired: z.number().int().positive().optional(),
-  chairName: OptionalPersonNameSchema,
-  secretaryName: OptionalPersonNameSchema,
-  minutesSignedByName: OptionalPersonNameSchema,
-  minutesSignedAt: OptionalDateSchema,
+  chairName: z.string().trim().max(200).optional(),
+  secretaryName: z.string().trim().max(200).optional(),
   agenda: z
     .array(
       z.object({
@@ -126,10 +104,6 @@ export const PatchGovernanceMeetingSchema = z.object({
   noticeAt: z.coerce.date().nullable().optional(),
   eligibleMemberCount: z.number().int().nonnegative().nullable().optional(),
   quorumRequired: z.number().int().positive().nullable().optional(),
-  chairName: OptionalPersonNameSchema,
-  secretaryName: OptionalPersonNameSchema,
-  minutesSignedByName: OptionalPersonNameSchema,
-  minutesSignedAt: OptionalDateSchema,
   agenda: z
     .array(
       z.object({
@@ -142,6 +116,10 @@ export const PatchGovernanceMeetingSchema = z.object({
     .optional(),
   minutesKey: z.string().trim().max(500).nullable().optional(),
   minutesApprovedAt: z.coerce.date().nullable().optional(),
+  chairName: z.string().trim().max(200).nullable().optional(),
+  secretaryName: z.string().trim().max(200).nullable().optional(),
+  minutesSignedAt: z.coerce.date().nullable().optional(),
+  minutesSignedByName: z.string().trim().max(200).nullable().optional(),
 })
 
 export const CreateGovernanceDocumentSchema = z.object({
@@ -168,12 +146,12 @@ export const GovernanceMeetingItemSchema = z.object({
   agenda: z.unknown().nullable(),
   minutesKey: z.string().nullable(),
   minutesApprovedAt: z.coerce.date().nullable(),
-  eligibleMemberCount: z.number().int().nullable(),
-  quorumRequired: z.number().int().nullable(),
   chairName: z.string().nullable(),
   secretaryName: z.string().nullable(),
-  minutesSignedByName: z.string().nullable(),
   minutesSignedAt: z.coerce.date().nullable(),
+  minutesSignedByName: z.string().nullable(),
+  eligibleMemberCount: z.number().int().nullable(),
+  quorumRequired: z.number().int().nullable(),
   attendanceCount: z.number().int(),
   presentCount: z.number().int(),
   quorumMet: z.boolean().nullable(),

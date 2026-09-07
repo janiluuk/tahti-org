@@ -11814,6 +11814,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              chairName: string | null
+              secretaryName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
+              minutesSignedByName: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -11941,6 +11946,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              chairName: string | null
+              secretaryName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
+              minutesSignedByName: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -11993,6 +12003,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              chairName: string | null
+              secretaryName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
+              minutesSignedByName: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -12065,6 +12080,11 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              chairName: string | null
+              secretaryName: string | null
+              /** Format: date-time */
+              minutesSignedAt: string | null
+              minutesSignedByName: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null

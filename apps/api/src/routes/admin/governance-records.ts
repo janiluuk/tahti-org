@@ -16,7 +16,6 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { auditLog } from '../../lib/audit.js'
 
 async function documentResponse(document: {
   id: string
@@ -62,12 +61,12 @@ function meetingResponse(meeting: {
   agenda: unknown
   minutesKey: string | null
   minutesApprovedAt: Date | null
-  minutesSignedByName: string | null
-  minutesSignedAt: Date | null
-  eligibleMemberCount: number | null
-  quorumRequired: number | null
   chairName: string | null
   secretaryName: string | null
+  minutesSignedAt: Date | null
+  minutesSignedByName: string | null
+  eligibleMemberCount: number | null
+  quorumRequired: number | null
   createdAt: Date
   updatedAt: Date
   attendance: Array<{ status: string }>
@@ -82,6 +81,28 @@ function meetingResponse(meeting: {
   }
 }
 
+function pagination(request: { query?: unknown }) {
+  const query = (request.query ?? {}) as { limit?: string; cursor?: string }
+  const parsedLimit = Number(query.limit)
+  return {
+    cursor: query.cursor?.trim() || undefined,
+    limit: Number.isInteger(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50,
+  }
+}
+
+function nextCursor(
+  reply: { header: (name: string, value: string) => unknown },
+  rows: Array<{ id: string }>,
+  limit: number,
+) {
+  if (rows.length > limit) {
+    const page = rows.slice(0, limit)
+    reply.header('x-next-cursor', page.at(-1)!.id)
+    return page
+  }
+  return rows
+}
+
 const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/v1/governance/meetings',
@@ -92,14 +113,16 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceMeetingListSchema, 'GovernanceMeetingList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const meetings = await fastify.prisma.governanceMeeting.findMany({
         where: { state: { not: 'DRAFT' } },
         orderBy: { scheduledAt: 'desc' },
-        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings.map(meetingResponse))
+      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
     },
   )
 
@@ -112,13 +135,16 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceDocumentListSchema, 'GovernanceDocumentList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const documents = await fastify.prisma.governanceDocument.findMany({
         where: { publishedAt: { not: null } },
         orderBy: [{ type: 'asc' }, { effectiveAt: 'desc' }, { version: 'desc' }],
-        take: 200,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
       })
-      return reply.send(await Promise.all(documents.map(documentResponse)))
+      const rows = await Promise.all(documents.map(documentResponse))
+      return reply.send(nextCursor(reply, rows, limit))
     },
   )
 
@@ -131,13 +157,15 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceMeetingListSchema, 'AdminGovernanceMeetingList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const { cursor, limit } = pagination(request)
       const meetings = await fastify.prisma.governanceMeeting.findMany({
         orderBy: { scheduledAt: 'desc' },
-        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetings.map(meetingResponse))
+      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
     },
   )
 
@@ -162,21 +190,11 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const meeting = await fastify.prisma.governanceMeeting.create({
         data: { ...body, agenda: body.agenda ?? undefined, createdById: request.sessionUser!.id },
       })
-      await auditLog(fastify.prisma, {
-        action: 'MEETING_CREATE',
-        actorId: request.sessionUser!.id,
-        targetId: meeting.id,
-        meta: { title: meeting.title, type: meeting.type, state: meeting.state },
-      })
       return reply.status(201).send({
         ...meeting,
         attendanceCount: 0,
         presentCount: 0,
         quorumMet: body.quorumRequired ? false : null,
-        chairName: meeting.chairName ?? null,
-        secretaryName: meeting.secretaryName ?? null,
-        minutesSignedByName: meeting.minutesSignedByName ?? null,
-        minutesSignedAt: meeting.minutesSignedAt ?? null,
       })
     },
   )
@@ -206,12 +224,6 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           ...parsed.data,
           agenda: parsed.data.agenda === null ? Prisma.JsonNull : parsed.data.agenda,
         },
-      })
-      await auditLog(fastify.prisma, {
-        action: 'MEETING_UPDATE',
-        actorId: request.sessionUser!.id,
-        targetId: updated.id,
-        meta: { title: updated.title, state: updated.state },
       })
       const withAttendance = await fastify.prisma.governanceMeeting.findUniqueOrThrow({
         where: { id: updated.id },
@@ -279,12 +291,6 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             data: parsed.data,
           })
         : await fastify.prisma.governanceAttendance.create({ data: { meetingId, ...parsed.data } })
-      await auditLog(fastify.prisma, {
-        action: 'MEETING_ATTENDANCE_UPSERT',
-        actorId: request.sessionUser!.id,
-        targetId: meetingId,
-        meta: { attendanceId: record.id, status: record.status, memberId: record.memberId },
-      })
       return reply.status(existing ? 200 : 201).send(record)
     },
   )
@@ -326,12 +332,6 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       const document = await fastify.prisma.governanceDocument.create({
         data: { ...parsed.data, createdById: request.sessionUser!.id },
-      })
-      await auditLog(fastify.prisma, {
-        action: 'DOCUMENT_CREATE',
-        actorId: request.sessionUser!.id,
-        targetId: document.id,
-        meta: { title: document.title, type: document.type, version: document.version },
       })
       return reply.status(201).send(await documentResponse(document))
     },
