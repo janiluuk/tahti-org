@@ -80,7 +80,13 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
             },
           },
           purchaseTier: {
-            select: { id: true, name: true, priceCents: true, active: true },
+            select: {
+              id: true,
+              name: true,
+              priceCents: true,
+              priceOptional: true,
+              active: true,
+            },
           },
         },
       })
@@ -131,6 +137,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         purchaseTierId: purchaseTierId ?? null,
         purchaseTierName: purchaseTier?.name ?? null,
         purchaseTierPriceCents: purchaseTier?.priceCents ?? null,
+        purchaseTierPriceOptional: purchaseTier?.priceOptional ?? false,
         gate: playback.gate,
       })
     },
