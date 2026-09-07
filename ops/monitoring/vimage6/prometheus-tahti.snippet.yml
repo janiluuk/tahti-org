@@ -3,6 +3,12 @@
   - job_name: tahti_api_metrics
     scrape_interval: 30s
     metrics_path: /metrics
+    # SEC-014 (apps/api/src/lib/internal-request.ts) removed 192.168.0.0/16
+    # from the API's trusted-internal range, so this LAN scrape now needs
+    # to authenticate the same way vimage's other cross-host callers do —
+    # see infra/stack.env's INTERNAL_SECRET, copied to this token file by
+    # ops/monitoring/vimage6/deploy.sh (never committed to git).
+    bearer_token_file: /etc/prometheus/tahti-api-metrics.token
     static_configs:
       - targets: ["192.168.2.100:15011"]
         labels:

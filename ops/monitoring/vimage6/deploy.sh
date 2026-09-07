@@ -26,6 +26,14 @@ scp "${V6}/prometheus-tahti-alerts.yml" "${HOST}:${PROM_DIR}/rules/prometheus-ta
 scp "${V6}/prometheus-tahti.snippet.yml" "${HOST}:/tmp/prometheus-tahti.snippet.yml"
 scp "${V6}/patch-prometheus-tahti.py" "${HOST}:/tmp/patch-prometheus-tahti.py"
 
+echo "==> Provision tahti_api_metrics bearer token (SEC-014 requires it for LAN scrapes)"
+INTERNAL_SECRET_VALUE="$(grep '^INTERNAL_SECRET=' "${ROOT}/infra/stack.env" | cut -d= -f2-)"
+if [ -z "$INTERNAL_SECRET_VALUE" ]; then
+  echo "error: INTERNAL_SECRET not found in ${ROOT}/infra/stack.env" >&2
+  exit 1
+fi
+echo "$INTERNAL_SECRET_VALUE" | ssh "$HOST" "cat > '${PROM_DIR}/tahti-api-metrics.token'"
+
 echo "==> Patch Prometheus scrape jobs + alert rules"
 ssh "$HOST" "python3 /tmp/patch-prometheus-tahti.py '${PROM_DIR}/prometheus.yml' /tmp/prometheus-tahti.snippet.yml"
 
