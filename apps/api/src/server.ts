@@ -196,7 +196,6 @@ import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
 import adminAnnouncementsRoutes from './routes/admin/announcements.js'
 import meAddonsRoutes from './routes/me/addons.js'
-import meChannelBlockRoutes from './routes/me/channel-blocks.js'
 import adminAddonsRoutes from './routes/admin/addons.js'
 import addonStoreRoutes from './routes/addons/store.js'
 import addonPublicRoutes from './routes/addons/public.js'
@@ -207,7 +206,6 @@ import meThemesRoutes from './routes/me/themes.js'
 import adminThemesRoutes from './routes/admin/themes.js'
 import themeGalleryRoute from './routes/themes/gallery.js'
 import meIntegrationsRoutes from './routes/me/integrations.js'
-import lastfmIntegrationRoutes from './routes/me/integrations-lastfm.js'
 import adminNotificationsRoutes from './routes/admin/notifications.js'
 import meStorageRoutes from './routes/me/storage.js'
 import adminStorageRoutes from './routes/admin/storage.js'
@@ -613,6 +611,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M6: RTMP multistream targets
   await fastify.register(rtmpTargetRoutes)
+  await fastify.register(rtmpTargetRoutes, { scope: 'radio' })
   await fastify.register(obsPresetRoutes)
 
   // Personal API tokens (Bearer auth for third-party / scripted access)
@@ -770,7 +769,6 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meAnnouncementsRoutes)
   await fastify.register(adminAnnouncementsRoutes)
   await fastify.register(meAddonsRoutes)
-  await fastify.register(meChannelBlockRoutes)
   await fastify.register(adminAddonsRoutes)
   await fastify.register(addonStoreRoutes)
   await fastify.register(addonPublicRoutes)
@@ -781,7 +779,6 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminThemesRoutes)
   await fastify.register(themeGalleryRoute)
   await fastify.register(meIntegrationsRoutes)
-  await fastify.register(lastfmIntegrationRoutes)
   await fastify.register(adminNotificationsRoutes)
   await fastify.register(meStorageRoutes)
   await fastify.register(adminStorageRoutes)

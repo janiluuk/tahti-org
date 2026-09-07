@@ -27,6 +27,7 @@ export const CreateRtmpTargetSchema = z.object({
   streamKey: z.string().trim().min(1, 'streamKey is required'),
   rtmpUrl: z.string().trim().optional(),
   alwaysMirror: z.boolean().optional(),
+  enabled: z.boolean().optional(),
 })
 
 export type CreateRtmpTargetInput = z.infer<typeof CreateRtmpTargetSchema>
@@ -57,22 +58,6 @@ export type RtmpTargetTestResult = z.infer<typeof RtmpTargetTestResultSchema>
 export const ChannelStreamOverlayPatchSchema = z.object({
   streamOverlayTitle: z.string().trim().max(80).optional(),
   streamOverlaySubtitle: z.string().trim().max(120).optional(),
-  // Off by default — see the schema.prisma comment on Channel.streamOverlayShowTitle.
-  streamOverlayShowTitle: z.boolean().optional(),
-  // Empty string clears back to the hardcoded default colors (white
-  // title, light-slate subtitle) — see Channel.streamOverlayTextColor.
-  streamOverlayTextColor: z
-    .union([
-      z
-        .string()
-        .trim()
-        .regex(/^#[0-9a-fA-F]{6}$/),
-      z.literal(''),
-    ])
-    .optional(),
-  // Off by default — see the schema.prisma comment on
-  // Channel.streamOverlayScrimEnabled.
-  streamOverlayScrimEnabled: z.boolean().optional(),
   streamOverlayCoverUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayBackdropUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   streamOverlayVisualPreset: z.enum(VISUAL_PRESETS).optional(),

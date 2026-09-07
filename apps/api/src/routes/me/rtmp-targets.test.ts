@@ -79,6 +79,27 @@ describe('M6 — RTMP multistream targets', () => {
     expect(reveal.json().streamKey).toBe('yt-secret-key-123')
   })
 
+  it('keeps an add-on destination disabled when saved for connection testing', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/me/rtmp-targets',
+      headers: { cookie },
+      payload: {
+        provider: 'MIXCLOUD_LIVE',
+        label: 'Mixcloud pending verification',
+        streamKey: 'pending-key',
+        enabled: false,
+      },
+    })
+    expect(response.statusCode).toBe(201)
+    expect(response.json().enabled).toBe(false)
+    const target = await prisma.rtmpTarget.findUniqueOrThrow({
+      where: { id: response.json().id },
+    })
+    expect(target.enabled).toBe(false)
+    await prisma.rtmpTarget.delete({ where: { id: target.id } })
+  })
+
   it('rejects invalid provider and missing label', async () => {
     const badProvider = await app.inject({
       method: 'POST',
