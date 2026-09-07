@@ -2405,6 +2405,7 @@ export interface paths {
               purchaseTierId?: string | null
               purchaseTierName?: string | null
               purchaseTierPriceCents?: number | null
+              purchaseTierPriceOptional?: boolean
               gate?: {
                 /** @enum {string} */
                 reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
