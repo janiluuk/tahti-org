@@ -9,7 +9,11 @@
     "to": "now"
   },
   "timezone": "browser",
-  "tags": ["tahti", "infrastructure", "vimage6"],
+  "tags": [
+    "tahti",
+    "infrastructure",
+    "vimage6"
+  ],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -59,9 +63,9 @@
     },
     {
       "id": 2,
-      "type": "gauge",
-      "title": "Hosts \u2014 status & CPU",
-      "description": "One gauge per host: CPU usage % when up, DOWN when node_exporter isn't responding.",
+      "type": "stat",
+      "title": "Hosts \u2014 node exporter",
+      "description": "1 = host reachable and node_exporter responding.",
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -74,14 +78,15 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "min": -1,
-          "max": 100,
           "mappings": [
             {
               "type": "value",
               "options": {
-                "-1": {
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                },
+                "0": {
                   "text": "DOWN",
                   "color": "red"
                 }
@@ -97,15 +102,7 @@
               },
               {
                 "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 60
-              },
-              {
-                "color": "red",
-                "value": 85
+                "value": 1
               }
             ]
           }
@@ -113,17 +110,17 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
+          "calcs": [
+            "lastNotNull"
+          ]
         },
+        "colorMode": "background",
         "orientation": "horizontal",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m])) * 100)) and on(instance) (up{job=\"node\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"} == 1) or (up{job=\"node\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"} == 0) * 0 - 1",
+          "expr": "up{job=\"node\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}",
           "legendFormat": "{{instance}}",
           "instant": true,
           "refId": "A"
@@ -179,7 +176,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -243,7 +242,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -319,7 +320,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -383,7 +386,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -447,7 +452,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -511,7 +518,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -565,7 +574,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background"
       },
@@ -612,7 +623,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -649,7 +662,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -686,7 +701,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -723,7 +740,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -760,7 +779,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -797,7 +818,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "none",
         "orientation": "horizontal",
@@ -873,7 +896,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -937,7 +962,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "colorMode": "background",
         "orientation": "horizontal",
@@ -1149,7 +1176,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "horizontal",
         "displayMode": "gradient"

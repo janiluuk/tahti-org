@@ -201,74 +201,6 @@ def bargauge_panel(
     }
 
 
-def host_gauge_panel(
-    panel_id: int,
-    title: str,
-    hosts_regex: str,
-    y: int,
-    h: int = 8,
-    description: str = "",
-) -> dict:
-    """One small gauge per host: CPU usage % when the host is up, or a
-    distinct "DOWN" state when node_exporter isn't responding. A single
-    query returning one series per `instance` label renders as Grafana's
-    native per-series gauge grid — no per-host panel needed.
-
-    -1 is a sentinel outside the 0-100 CPU range so "down" can't be
-    mistaken for "0% CPU, host healthy and idle" — mapped to the text
-    "DOWN" below rather than shown as a number."""
-    cpu_pct = (
-        "100 - (avg by (instance) "
-        f'(rate(node_cpu_seconds_total{{mode="idle",instance=~"{hosts_regex}"}}[5m])) * 100)'
-    )
-    up = f'up{{job="node",instance=~"{hosts_regex}"}}'
-    expr = f"({cpu_pct}) and on(instance) ({up} == 1) or ({up} == 0) * 0 - 1"
-    return {
-        "id": panel_id,
-        "type": "gauge",
-        "title": title,
-        "description": description,
-        "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
-        "datasource": DS,
-        "fieldConfig": {
-            "defaults": {
-                "unit": "percent",
-                "min": -1,
-                "max": 100,
-                "mappings": [
-                    {
-                        "type": "value",
-                        "options": {"-1": {"text": "DOWN", "color": "red"}},
-                    }
-                ],
-                "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                        {"color": "red", "value": None},
-                        {"color": "green", "value": 0},
-                        {"color": "yellow", "value": 60},
-                        {"color": "red", "value": 85},
-                    ],
-                },
-            }
-        },
-        "options": {
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False},
-            "orientation": "horizontal",
-            "showThresholdLabels": False,
-            "showThresholdMarkers": True,
-        },
-        "targets": [
-            {
-                "expr": expr,
-                "legendFormat": "{{instance}}",
-                "instant": True,
-                "refId": "A",
-            }
-        ],
-    }
-
-
 def logs_panel(
     panel_id: int,
     title: str,
@@ -318,12 +250,13 @@ def main() -> None:
     pid += 1
     y += 1
     panels.append(
-        host_gauge_panel(
+        stat_panel(
             pid,
-            "Hosts — status & CPU",
-            HOSTS,
+            "Hosts — node exporter",
+            f'up{{job="node",instance=~"{HOSTS}"}}',
             y,
-            description="One gauge per host: CPU usage % when up, DOWN when node_exporter isn't responding.",
+            h=8,
+            description="1 = host reachable and node_exporter responding.",
         )
     )
     pid += 1

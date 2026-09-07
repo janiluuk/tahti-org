@@ -1,4 +1,4 @@
-# vimage6 Grafana: host gauges + fix API metrics scrape auth
+# vimage6 Grafana: fix API metrics scrape auth (+ vimage7 IP, taller hosts panel)
 
 **Status:** partial
 
@@ -18,9 +18,12 @@ gauges showing status + CPU usage.
   Prometheus are expected to send `Authorization: Bearer $INTERNAL_SECRET`
   instead, but the vimage6 scrape config was never updated after that
   security tightening shipped.
-- **pi4 down** was stale/already resolved by the time this was
-  investigated (`up{instance="pi4"}` was `1` in Prometheus). Not a real
-  ongoing issue.
+- **pi4 down** — `up{job="node",instance="pi4"}` and the docker-catalog
+  scrape are both fine (`1`); it's specifically the `cadvisor` job for
+  pi4 (`192.168.2.6:8081/metrics`) returning connection-refused. The
+  "Hosts — cAdvisor" panel is correctly showing pi4 red — cAdvisor just
+  isn't running on that Pi. No SSH access to pi4 from this session to
+  fix it directly.
 - **vimage7 down** (found while investigating, confirmed by the user
   as a real bug): the `node`/`cadvisor`/`docker-catalog` jobs in
   vimage6's `prometheus.yml` (not managed by this repo's deploy script
@@ -46,12 +49,17 @@ gauges showing status + CPU usage.
   added `vimage7` to the `HOSTS` constant (it was already referenced
   in the Worker-nodes section's queries but missing from the main host
   list — so even after the IP fix it wouldn't have shown up in the
-  general host panels). Added `host_gauge_panel()`: a single `gauge`
-  panel whose query returns one series per host (CPU usage % when up,
-  a `-1` sentinel mapped to "DOWN" text when `up == 0`) — Grafana
-  renders one series per query result as its own small gauge
-  automatically, no per-host panel needed. Replaced the old "Hosts —
-  node exporter" stat panel (plain UP/DOWN blocks) with this.
+  general host panels).
+- **Gauge redesign tried and reverted.** First pass replaced the
+  "Hosts — node exporter" stat panel with a single `gauge` panel (one
+  series per host, CPU% via `and on(instance)` filtered by `up == 1`,
+  `-1` sentinel mapped to "DOWN" text) — the query was correct against
+  Prometheus directly, but rendered in Grafana as a cramped vertical
+  column of tiny gauges showing no data, not the intended small-gauge
+  grid. Reverted per live feedback: kept the original stat panel
+  (plain UP/DOWN colored blocks), just doubled its height (`h: 4` →
+  `h: 8`) so it's easier to read. `host_gauge_panel()` removed again —
+  not used anywhere.
 
 ## Verified
 
@@ -84,5 +92,7 @@ gauges showing status + CPU usage.
       now does it automatically) so the `tahti_api_metrics` scrape can
       actually be reloaded with the new bearer-token config.
 - [ ] Install `node_exporter`/`cadvisor`/docker-catalog exporter on
-      vimage7 so its gauge actually goes green — separate task, no
-      access to that host from this session.
+      vimage7 so it actually shows up — separate task, no access to
+      that host from this session.
+- [ ] Install/restart `cadvisor` on pi4 (port 8081 refusing
+      connections) — separate task, no access to that host either.
