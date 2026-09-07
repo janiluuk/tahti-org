@@ -178,6 +178,12 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | Revelator export webhook sync                | Webhook accepts + logs; body → release status not wired                                                                     |
 | Per-DSP export submit                        | hearthis-export and storefront stubs; product API TBD                                                                       |
 | `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                            |
+| Homepage news feed (`feat/homepage-news-feed`) | Admin-managed news feed on landing page; 1 commit, no PR. Needs extraction or discard.                                  |
+| Kick.com integration (`feat/kick-integration`) | Kick.com channel link + live embed on profile; 2 commits, no PR.                                                        |
+| Two-factor auth (`feat/two-factor-auth`)    | TOTP 2FA on accounts; 2 commits, no PR. Needs rebase + PR or merge确认.                                                   |
+| Subscribers-only chat (`feat/subscribers-only-chat`) | Chat gated to subscribers; 2 commits, no PR.                                                               |
+| Radio admin RTMP targets (p2 worktree)      | Board-scoped RTMP target API for Tahti Radio; uncommitted, in `/tmp/tahti-p2`. Needs PR extraction.                      |
+| Tauri desktop CORS (`PLAT-084`)             | CORS origins for Tauri desktop build; uncommitted, in p2 worktree. Added to roadmap as PLAT-084.                          |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 
