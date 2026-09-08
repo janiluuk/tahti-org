@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { connect as netConnect } from 'node:net'
 import {
+  TAHTI_RADIO_SLUG,
   ChatOkResponseSchema,
   CreateRtmpTargetSchema,
   IdParamSchema,
@@ -16,7 +17,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { requireAuth } from '../../plugins/auth.js'
+import { requireAuth, requireBoard } from '../../plugins/auth.js'
 import { encryptStreamKey, decryptStreamKey } from '../../lib/stream-key-enc.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -74,21 +75,24 @@ const PROVIDER_RTMP_URLS: Record<string, string> = {
   CUSTOM: '',
 }
 
-const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
+const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify, options) => {
+  const radioScope = options.scope === 'radio'
+  const basePath = radioScope ? '/api/admin/radio/rtmp-targets' : '/api/me/rtmp-targets'
+  const authorize = radioScope ? requireBoard : requireAuth
   // GET /api/me/rtmp-targets — list targets (stream keys masked)
   fastify.get(
-    '/api/me/rtmp-targets',
+    basePath,
     {
-      preHandler: requireAuth,
+      preHandler: authorize,
       schema: {
-        tags: ['channel'],
+        tags: [radioScope ? 'admin' : 'channel'],
         response: openApiResponse(RtmpTargetListSchema, 'RtmpTargetList'),
       },
     },
     async (request, reply) => {
       const user = request.sessionUser!
       const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
+        where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -119,11 +123,11 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
 
   // POST /api/me/rtmp-targets — add a new target
   fastify.post(
-    '/api/me/rtmp-targets',
+    basePath,
     {
-      preHandler: requireAuth,
+      preHandler: authorize,
       schema: {
-        tags: ['channel'],
+        tags: [radioScope ? 'admin' : 'channel'],
         response: openApiResponses([
           { status: 201, schema: RtmpTargetViewSchema, name: 'RtmpTarget' },
         ]),
@@ -144,7 +148,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'rtmpUrl is required for CUSTOM provider' })
 
       const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
+        where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -163,7 +167,8 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
           label: body.label,
           rtmpUrl,
           streamKeyEnc,
-          alwaysMirror: body.alwaysMirror === true && user.tier === 'STUDIO',
+          enabled: body.enabled ?? true,
+          alwaysMirror: body.alwaysMirror === true && (radioScope || user.tier === 'STUDIO'),
         },
         select: {
           id: true,
@@ -188,11 +193,11 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
 
   // PATCH /api/me/rtmp-targets/:id — toggle enabled / update stream key
   fastify.patch(
-    '/api/me/rtmp-targets/:id',
+    `${basePath}/:id`,
     {
-      preHandler: requireAuth,
+      preHandler: authorize,
       schema: {
-        tags: ['channel'],
+        tags: [radioScope ? 'admin' : 'channel'],
         response: openApiResponse(ChatOkResponseSchema, 'ChatOk'),
       },
     },
@@ -208,7 +213,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
       const body = parsed.data
 
       const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
+        where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -237,11 +242,11 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   // target's ingest host:port, so an artist can sanity-check a destination
   // before enabling it. Not a full RTMP handshake / stream-key validation.
   fastify.post(
-    '/api/me/rtmp-targets/:id/test',
+    `${basePath}/:id/test`,
     {
-      preHandler: requireAuth,
+      preHandler: authorize,
       schema: {
-        tags: ['channel'],
+        tags: [radioScope ? 'admin' : 'channel'],
         response: openApiResponse(RtmpTargetTestResultSchema, 'RtmpTargetTestResult'),
       },
     },
@@ -252,7 +257,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = routeParams
 
       const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
+        where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -269,46 +274,42 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // DELETE /api/me/rtmp-targets/:id
-  fastify.delete(
-    '/api/me/rtmp-targets/:id',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      const user = request.sessionUser!
-      const routeParams = parseRouteParams(IdParamSchema, request.params)
-      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-      const { id } = routeParams
+  fastify.delete(`${basePath}/:id`, { preHandler: authorize }, async (request, reply) => {
+    const user = request.sessionUser!
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      })
-      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+    const channel = await fastify.prisma.channel.findUnique({
+      where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
+      select: { id: true },
+    })
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const target = await fastify.prisma.rtmpTarget.findFirst({
-        where: { id, channelId: channel.id },
-      })
-      if (!target) return reply.status(404).send({ error: 'Target not found' })
+    const target = await fastify.prisma.rtmpTarget.findFirst({
+      where: { id, channelId: channel.id },
+    })
+    if (!target) return reply.status(404).send({ error: 'Target not found' })
 
-      await fastify.prisma.rtmpTarget.delete({ where: { id } })
+    await fastify.prisma.rtmpTarget.delete({ where: { id } })
 
-      await auditLog(fastify.prisma, {
-        action: 'RTMP_TARGET_DELETE',
-        actorId: user.id,
-        targetId: id,
-        meta: { label: target.label },
-      })
+    await auditLog(fastify.prisma, {
+      action: 'RTMP_TARGET_DELETE',
+      actorId: user.id,
+      targetId: id,
+      meta: { label: target.label },
+    })
 
-      return reply.status(204).send()
-    },
-  )
+    return reply.status(204).send()
+  })
 
   // GET /api/me/rtmp-targets/:id/stream-key — reveal decrypted stream key (logged)
   fastify.get(
-    '/api/me/rtmp-targets/:id/stream-key',
+    `${basePath}/:id/stream-key`,
     {
-      preHandler: requireAuth,
+      preHandler: authorize,
       schema: {
-        tags: ['channel'],
+        tags: [radioScope ? 'admin' : 'channel'],
         response: openApiResponse(RtmpStreamKeyRevealSchema, 'RtmpStreamKeyReveal'),
       },
     },
@@ -319,7 +320,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = routeParams
 
       const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
+        where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })

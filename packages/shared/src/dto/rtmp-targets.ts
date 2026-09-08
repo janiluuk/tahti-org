@@ -27,6 +27,7 @@ export const CreateRtmpTargetSchema = z.object({
   streamKey: z.string().trim().min(1, 'streamKey is required'),
   rtmpUrl: z.string().trim().optional(),
   alwaysMirror: z.boolean().optional(),
+  enabled: z.boolean().optional(),
 })
 
 export type CreateRtmpTargetInput = z.infer<typeof CreateRtmpTargetSchema>

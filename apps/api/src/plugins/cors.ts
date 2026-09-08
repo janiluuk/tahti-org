@@ -24,6 +24,10 @@ function isAllowedOrigin(origin: string): boolean {
 
   if (origin === config.appUrl) return true
 
+  if (['tauri://localhost', 'http://tauri.localhost', 'https://tauri.localhost'].includes(origin)) {
+    return true
+  }
+
   if (
     url.protocol === 'https:' &&
     (url.hostname === 'tahti.live' || url.hostname.endsWith('.tahti.live'))
