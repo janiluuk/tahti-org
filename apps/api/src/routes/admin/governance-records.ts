@@ -136,9 +136,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(
-        nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit),
-      )
+      return reply.send(nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit))
     },
   )
 
@@ -181,9 +179,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(
-        nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit),
-      )
+      return reply.send(nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit))
     },
   )
 
