@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import {
   SOUND_GENRES,
   AVATAR_THEME_PRESETS,
@@ -24,7 +24,7 @@ import {
   prepareAvatarUpload,
   prepareLogoUpload,
 } from './channel-identity-actions'
-import { ButtonIcon, brandTokens, StudioCollapse } from '@tahti/ui'
+import { ButtonIcon, brandTokens, FileDropzone, StudioCollapse } from '@tahti/ui'
 
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -133,11 +133,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
   const [cropKind, setCropKind] = useState<'avatar' | 'logo'>('avatar')
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState(false)
-  const [logoDragOver, setLogoDragOver] = useState(false)
   const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     onDraftChange?.({
@@ -380,35 +376,21 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
         <div className="studio-field--block">
           <span className="studio-label">Avatar</span>
           <div className="studio-avatar-picker">
-            <div
-              className={`studio-avatar-picker__drop${dragOver ? ' studio-avatar-picker__drop--drag' : ''}${avatarBusy ? ' studio-avatar-picker__drop--busy' : ''}`}
+            <FileDropzone
+              bare
+              label="Upload avatar — drop an image or click to browse"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={avatarBusy}
+              className={`studio-avatar-picker__drop${avatarBusy ? ' studio-avatar-picker__drop--busy' : ''}`}
               style={
                 {
                   ['--avatar-pick-color' as string]: avatarColor,
                   ...(themeCss && !previewSrc ? { background: themeCss } : {}),
                 } as CSSProperties
               }
-              onDragOver={(e) => {
-                e.preventDefault()
-                if (!avatarBusy) setDragOver(true)
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault()
-                setDragOver(false)
-                if (avatarBusy) return
-                const f = e.dataTransfer.files?.[0]
+              onFiles={(files) => {
+                const f = files[0]
                 if (f) onFile(f)
-              }}
-              onClick={() => !avatarBusy && fileInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload avatar — drop an image or click to browse"
-              onKeyDown={(e) => {
-                if (!avatarBusy && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault()
-                  fileInputRef.current?.click()
-                }
               }}
             >
               {previewSrc ? (
@@ -424,21 +406,9 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
                 <img src={logoUrl} alt="" className="studio-avatar-picker__logo" />
               ) : null}
               <span className="studio-avatar-picker__hint">
-                {avatarBusy ? '…' : dragOver ? 'Drop' : 'Drop / click'}
+                {avatarBusy ? '…' : 'Drop / click'}
               </span>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                disabled={avatarBusy}
-                className="studio-avatar-picker__file"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) onFile(f)
-                  e.target.value = ''
-                }}
-              />
-            </div>
+            </FileDropzone>
 
             <div className="studio-avatar-picker__tools">
               {!previewSrc && (
@@ -594,31 +564,16 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
         <div className="studio-field--block">
           <span className="studio-label">Logo</span>
           <div className="studio-logo-picker">
-            <div
-              className={`studio-logo-picker__drop${logoDragOver ? ' studio-logo-picker__drop--drag' : ''}`}
-              onClick={() => !avatarBusy && logoInputRef.current?.click()}
-              onDragOver={(event) => {
-                event.preventDefault()
-                if (!avatarBusy) setLogoDragOver(true)
-              }}
-              onDragLeave={() => setLogoDragOver(false)}
-              onDrop={(event) => {
-                event.preventDefault()
-                setLogoDragOver(false)
-                if (avatarBusy) return
-                const file = event.dataTransfer.files?.[0]
+            <FileDropzone
+              bare
+              label="Drop a transparent PNG or WebP logo, or click to browse"
+              accept="image/png,image/webp"
+              disabled={avatarBusy}
+              className="studio-logo-picker__drop"
+              onFiles={(files) => {
+                const file = files[0]
                 if (file) onLogoFile(file)
               }}
-              onKeyDown={(event) => {
-                if (!avatarBusy && (event.key === 'Enter' || event.key === ' ')) {
-                  event.preventDefault()
-                  logoInputRef.current?.click()
-                }
-              }}
-              role="button"
-              tabIndex={avatarBusy ? -1 : 0}
-              aria-disabled={avatarBusy}
-              aria-label="Drop a transparent PNG or WebP logo, or click to browse"
             >
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -626,23 +581,11 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
               ) : (
                 <span className="studio-logo-picker__placeholder">
                   <ButtonIcon name="import" />
-                  <strong>{logoDragOver ? 'Drop logo' : 'Drop logo or click'}</strong>
+                  <strong>Drop logo or click</strong>
                   <small>Transparent PNG or WebP</small>
                 </span>
               )}
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/png,image/webp"
-                disabled={avatarBusy}
-                className="studio-avatar-picker__file"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) onLogoFile(f)
-                  e.target.value = ''
-                }}
-              />
-            </div>
+            </FileDropzone>
             <div className="studio-logo-picker__meta">
               <div
                 className="studio-logo-picker__placements"

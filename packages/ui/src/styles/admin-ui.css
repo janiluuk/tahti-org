@@ -466,9 +466,14 @@
 
 .bg-canvas {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
+  /* Large viewport height — ignores mobile URL-bar show/hide so the gateway
+   * scene does not reflow (and appear to "scroll") when the chrome collapses.
+   * Falls back to 100% for older browsers. */
   height: 100%;
+  height: 100lvh;
   z-index: -1;
   background: var(--bg);
   display: block;
