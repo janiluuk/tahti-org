@@ -104,6 +104,7 @@ export const ScheduledLiveShowViewSchema = z.object({
   id: z.string(),
   seriesId: z.string(),
   startAt: z.string().datetime(),
+  endAt: z.string().datetime().nullable(),
   episodeNumber: z.number().int().min(1).nullable(),
   title: z.string(),
   description: z.string().nullable(),

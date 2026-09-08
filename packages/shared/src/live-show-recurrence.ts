@@ -115,6 +115,68 @@ export function nextRecurrenceOccurrences(
   return occurrences
 }
 
+/** End instant for a scheduled show given start + duration minutes. */
+export function scheduledShowEndAt(
+  startAt: Date,
+  durationMin: number | null | undefined,
+): Date | null {
+  if (durationMin == null || !Number.isFinite(durationMin) || durationMin <= 0) return null
+  return new Date(startAt.getTime() + durationMin * 60_000)
+}
+
+/**
+ * Preferred duration for a series: explicit recurrenceDurationMin, else
+ * intervalHours (radio-slot preference) converted to minutes.
+ */
+export function seriesShowDurationMin(series: {
+  recurrenceDurationMin?: number | null
+  intervalHours?: number | null
+}): number | null {
+  if (series.recurrenceDurationMin != null && series.recurrenceDurationMin > 0) {
+    return series.recurrenceDurationMin
+  }
+  if (series.intervalHours != null && series.intervalHours > 0) {
+    return series.intervalHours * 60
+  }
+  return null
+}
+
+export type TimeRange = { startAt: Date; endAt: Date | null }
+
+/** Half-open overlap: [aStart, aEnd) ∩ [bStart, bEnd). Point events (null end)
+ * only collide with ranges that contain their start, or with another point at
+ * the same start. */
+export function timeRangesOverlap(a: TimeRange, b: TimeRange): boolean {
+  const aEnd = a.endAt?.getTime() ?? a.startAt.getTime()
+  const bEnd = b.endAt?.getTime() ?? b.startAt.getTime()
+  const aStart = a.startAt.getTime()
+  const bStart = b.startAt.getTime()
+  if (aEnd === aStart && bEnd === bStart) return aStart === bStart
+  if (aEnd === aStart) return aStart >= bStart && aStart < bEnd
+  if (bEnd === bStart) return bStart >= aStart && bStart < aEnd
+  return aStart < bEnd && bStart < aEnd
+}
+
+/** Drop candidate starts that would overlap any existing show window. */
+export function filterNonOverlappingOccurrences(
+  candidates: Date[],
+  durationMin: number | null | undefined,
+  existing: TimeRange[],
+): Date[] {
+  const accepted: TimeRange[] = []
+  const out: Date[] = []
+  for (const startAt of [...candidates].sort((a, b) => a.getTime() - b.getTime())) {
+    const endAt = scheduledShowEndAt(startAt, durationMin)
+    const range = { startAt, endAt }
+    const hitsExisting = existing.some((e) => timeRangesOverlap(range, e))
+    const hitsAccepted = accepted.some((e) => timeRangesOverlap(range, e))
+    if (hitsExisting || hitsAccepted) continue
+    accepted.push(range)
+    out.push(startAt)
+  }
+  return out
+}
+
 export const WEEKDAY_LABELS = [
   'Sunday',
   'Monday',

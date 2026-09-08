@@ -564,8 +564,11 @@ export default function ChannelSchedulePanel({
                 <div>
                   <strong>{show.title}</strong>
                   <p className="studio-text-muted-sm">
-                    {new Date(show.startAt).toLocaleString()} ·{' '}
-                    {show.showType === 'TALK' ? 'Podcast' : 'DJ set'}
+                    {new Date(show.startAt).toLocaleString()}
+                    {show.endAt
+                      ? ` – ${new Date(show.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                      : ''}{' '}
+                    · {show.showType === 'TALK' ? 'Podcast' : 'DJ set'}
                     {show.venue ? ` · ${show.venue}` : ''}
                     {show.location ? `, ${show.location}` : ''}
                   </p>
