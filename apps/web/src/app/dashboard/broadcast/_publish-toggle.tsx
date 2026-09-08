@@ -5,9 +5,9 @@
 
 import { useEffect, useState } from 'react'
 import { updateAutoPublishBroadcast } from './publish-actions'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export function PublishToggle({ initialEnabled }: { initialEnabled: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled)
   const [pending, setPending] = useState(false)

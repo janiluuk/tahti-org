@@ -1,5 +1,7 @@
 'use client'
 
+import { resolveClientApiUrl } from '@/lib/api-url'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
@@ -30,7 +32,7 @@ export function SmartLinkDspButtons({ smartLinkSlug, targets }: Props) {
   const services = Object.entries(targets).filter(([, url]) => url?.trim())
 
   function logClick(platform: string) {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+    const apiBase = resolveClientApiUrl()
     void fetch(`${apiBase}/api/smartlink/click`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

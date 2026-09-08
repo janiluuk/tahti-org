@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState, type ReactNode } from 'react'
 import { Button, CopyRow, Panel, Stack, StudioTabs } from '@tahti/ui'
@@ -29,8 +30,7 @@ interface ObsPreset {
   sceneCollectionFilename: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export default function StreamSettingsPanel({
   initial,
   isLive = false,

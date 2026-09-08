@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
@@ -9,8 +10,7 @@ import { SortableList, type SortableItemHandle } from '@tahti/ui'
 import { STYLE_LABEL, STYLE_COLOR } from './collection-labels'
 import { CollectionEmbedButton } from './_collection-embed-button'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface CollectionSummary {
   slug: string
   name: string

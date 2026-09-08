@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { LiveChatPanel, type LiveChatMessage } from '@tahti/ui'
 import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface ChatMessage {
   id: string
@@ -14,8 +15,7 @@ interface ChatMessage {
   ts: number
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export default function FanChatPanel({ slug }: { slug: string }) {
   const [token, setToken] = useState<string | null>(null)
   const [channel, setChannel] = useState<string | null>(null)

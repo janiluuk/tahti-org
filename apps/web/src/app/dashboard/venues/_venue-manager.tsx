@@ -6,7 +6,9 @@
 import { useState } from 'react'
 import { ButtonIcon, Panel, StudioCollapse, Button } from '@tahti/ui'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+import { resolveClientApiUrl } from '@/lib/api-url'
+
+const API_BASE = resolveClientApiUrl()
 
 interface VenueBroadcast {
   id: string
@@ -89,12 +91,7 @@ function VenueCard({ venue, onUpdate }: { venue: Venue; onUpdate: (v: Venue) => 
     >
       <div className="venue-card__meta studio-text-muted-sm studio-mb-sm">
         <span>
-          <a
-            href={`/venues/${venue.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="studio-link"
-          >
+          <a href={`/v/${venue.slug}`} target="_blank" rel="noreferrer" className="studio-link">
             {venue.slug}.tahti.live/venues/…
           </a>
         </span>

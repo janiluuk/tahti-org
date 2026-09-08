@@ -24,6 +24,7 @@ import { PublishToggle } from './_publish-toggle'
 import { ChannelControlsPanel } from '../channel-controls-panel'
 import { ManagePanel, type ManageStats } from '../../c/[slug]/_manage-panel'
 import { StreamDesignerPanel } from './_stream-designer-panel'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -54,8 +55,7 @@ function statusFromState(state: string | undefined): LiveStatus {
   return 'offline'
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 const WIZARD_STEPS = [
   { num: 1, label: 'Setup' },
   { num: 2, label: 'Pre-flight' },

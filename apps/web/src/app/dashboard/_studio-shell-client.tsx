@@ -5,8 +5,9 @@
 
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react'
 import { StudioShell } from '@tahti/ui'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 /** Layouts don't re-fetch on client-side navigation within the same route
  * tree — only on a hard load or an explicit router.refresh(). Going live
  * from OBS/Mixxx directly (no browser round-trip through /dashboard/

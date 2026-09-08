@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -18,7 +19,7 @@ import { resolveActiveTrackPreset } from '@/components/active-track-stage'
 import { usePlayer } from '@/contexts/player-context'
 import { resolveChannelUrl } from '@/lib/app-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const NOW_PLAYING_POLL_MS = 8_000
 
 interface NowPlayingTrack {

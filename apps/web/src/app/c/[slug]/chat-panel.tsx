@@ -15,6 +15,7 @@ import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { usePlayer } from '@/contexts/player-context'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface Announcement {
   id: string
@@ -34,7 +35,7 @@ interface ChatMessage {
   href?: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 /** How long the connection must actually be down before the "reconnecting"
  * banner shows — a blip that resolves faster than this never flickers it. */
 const RECONNECT_BANNER_DELAY_MS = 3000

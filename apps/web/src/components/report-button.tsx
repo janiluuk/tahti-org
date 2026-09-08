@@ -1,12 +1,12 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
-
+const apiUrl = resolveClientApiUrl()
 type TargetType = 'SOUND_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION'
 
 const REASONS: { value: string; label: string }[] = [

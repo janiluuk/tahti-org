@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import {
@@ -29,7 +30,7 @@ import { ButtonIcon, brandTokens, StudioCollapse } from '@tahti/ui'
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ALLOWED_LOGO_MIME = ['image/png', 'image/webp']
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const POSTER_SIZE = 512
 const DEFAULT_AVATAR_COLOR = brandTokens.color.accent.cyan
 

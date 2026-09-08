@@ -11,8 +11,9 @@ import ReactionsOverlay from '../c/[slug]/reactions'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { usePlayer } from '@/contexts/player-context'
 import { useSuspendBackgroundCanvas } from '@/contexts/background-canvas-context'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 // Module-level (not a literal in JSX props) so the reference stays stable across
 // this page's frequent re-renders (1s live-elapsed tick, 8s now-playing poll) —
 // see ChannelVisualizer's memo() comment for why a fresh object there would

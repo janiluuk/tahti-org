@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
@@ -11,8 +12,7 @@ import { ActiveTrackStage } from '@/components/active-track-stage'
 import type { VisualPreset } from '@tahti/shared'
 import { CollectionCoverButton } from './_collection-gallery'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 type Props = {
   id: string
   title: string

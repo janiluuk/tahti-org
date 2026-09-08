@@ -11,6 +11,7 @@ import {
   MANAGE_METRIC_KEYS,
   type MetricBreakdown,
 } from './manage-metric-breakdown'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 export interface ManageStats {
   audioBitrateKbps: number | null
@@ -24,7 +25,7 @@ export interface ManageStats {
   rotationTrackCount: number
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+const API_URL = resolveClientApiUrl()
 const REFRESH_MS = 15_000
 
 function MetricDetailModal({

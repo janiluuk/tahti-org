@@ -7,10 +7,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SortableList } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 export interface RotationItem {
   id: string
   position: number

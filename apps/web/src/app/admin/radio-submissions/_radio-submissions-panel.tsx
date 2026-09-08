@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,8 +10,7 @@ import { Button } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { approveRadioSubmission, rejectRadioSubmission } from './actions'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export type RadioSubmissionRow = {
   id: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'

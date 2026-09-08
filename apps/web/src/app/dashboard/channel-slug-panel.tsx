@@ -1,12 +1,13 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useRef, useState } from 'react'
 import { Panel, Button } from '@tahti/ui'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
+const API_BASE = resolveClientApiUrl()
 const CHECK_DEBOUNCE_MS = 400
 
 type Availability = {

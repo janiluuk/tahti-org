@@ -1,13 +1,13 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 /** Subscribe to a public playlist — surfaces it in the listener's library and
  * (future work) notifies them when a track is added. Distinct from
  * FollowButton (follows an artist) and AddTrackButton (contributes a track

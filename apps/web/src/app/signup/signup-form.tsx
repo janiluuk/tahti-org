@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -24,7 +25,7 @@ import { flagEmoji } from '@/lib/flag-emoji'
 import { register } from '@/app/auth/actions'
 import { SignupWizard } from './signup-wizard'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const HANDLE_PATTERN = /^[a-z0-9_-]{2,32}$/
 const GENDER_OPTIONS = ['Woman', 'Man', 'Non-binary', 'Other']
 

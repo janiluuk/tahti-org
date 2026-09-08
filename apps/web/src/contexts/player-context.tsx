@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import {
   createContext,
@@ -146,8 +147,7 @@ interface PlayerState {
 
 const VOLUME_STORAGE_KEY = 'tahti-player-volume'
 const MUTED_STORAGE_KEY = 'tahti-player-muted'
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 /** Seconds between listen-heartbeat "still listening" pings while actively
  * playing — the server tracks sessions (start/last-seen/end), not seconds
  * self-reported by the client, so this only needs to be frequent enough

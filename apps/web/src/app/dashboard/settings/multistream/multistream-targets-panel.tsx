@@ -19,6 +19,7 @@ import {
   RTMP_PROVIDER_HELP,
   type RtmpProviderValue,
 } from '../../../../lib/rtmp-provider-help'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface RtmpTarget {
   id: string
@@ -32,7 +33,7 @@ interface RtmpTarget {
 
 const TARGET_COLUMNS = 'auto 1fr auto auto'
 const GUIDE_PATH = '/help/multistream'
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const MAX_TARGETS = 5
 
 const { platformBrand, base } = brandTokens.color

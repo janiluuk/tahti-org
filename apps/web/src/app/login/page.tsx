@@ -3,6 +3,8 @@
 
 'use client'
 
+import { resolveClientApiUrl } from '@/lib/api-url'
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -72,7 +74,7 @@ export default function LoginPage() {
     const pathOnly = nextPath.split('?')[0] ?? nextPath
     if (browseRoots.has(pathOnly)) {
       try {
-        const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+        const api = resolveClientApiUrl()
         const me = await fetch(`${api}/api/auth/me`, { credentials: 'include' })
         if (me.ok) {
           const data = (await me.json()) as { channel?: { slug?: string } | null }

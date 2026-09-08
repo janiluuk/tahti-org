@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { Link, Text } from '@tahti/ui'
@@ -25,8 +26,7 @@ interface CollectionEmbed {
   tracks: Track[]
 }
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? 'http://localhost:3001'
-
+const apiUrl = resolveClientApiUrl()
 function formatDuration(sec: number | null): string {
   if (sec == null) return ''
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
