@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState, useCallback, useEffect, useMemo, useRef, type DragEvent } from 'react'
 import Link from 'next/link'
@@ -14,8 +15,7 @@ import { LoginPromptModal } from '@/components/login-prompt-modal'
 import { fetchMyCollections, type MyCollectionSummary } from '@/app/dashboard/collection-actions'
 import { HearthisEmbedSurface } from '@/contexts/player-embed-plugins/hearthis-embed-plugin'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 type TrackReactionType = 'LOVE' | 'LAUGH' | 'SURPRISE' | 'HANDS_UP'
 
 interface TrackReactionItem {

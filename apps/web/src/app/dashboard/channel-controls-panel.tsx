@@ -6,10 +6,9 @@
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { Button, Panel, SortableList } from '@tahti/ui'
 import { channelPlaylistLabel } from './channel-controls-label'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 type ProgrammeItem = {
   id: string
   title: string

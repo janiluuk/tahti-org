@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
@@ -13,8 +14,7 @@ import {
   searchMixcloudTracks,
 } from '../../collection-actions'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
-
+const apiUrl = resolveClientApiUrl()
 type Tab = 'mine' | 'search' | 'url'
 
 type AddedResult = {

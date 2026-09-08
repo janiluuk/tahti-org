@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -9,8 +10,7 @@ import type { FeedItem } from '@tahti/shared'
 import { FeedPostModal } from './_feed-post-modal'
 import { feedCover, feedHeadline, feedTeaser, formatFeedDate } from './_feed-format'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface FeedData {
   items: FeedItem[]
   followingCount: number

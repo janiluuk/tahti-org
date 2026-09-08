@@ -6,9 +6,9 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { ButtonIcon, Button, Panel } from '@tahti/ui'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface SetupData {
   secret: string
   otpauthUri: string

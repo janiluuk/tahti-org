@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { Button, ButtonIcon, FileDropzone, Panel } from '@tahti/ui'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface StreamOverlay {
   streamOverlayTitle: string | null
@@ -12,8 +13,7 @@ interface StreamOverlay {
   streamOverlayCoverUrl: string | null
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 /** YouTube/Twitch reject audio-only RTMP, so every mirror push carries a static
  * video frame — this is what's baked into it. Distinct from each *platform's*
  * own stream title (set in YouTube Studio / Twitch dashboard, out of our

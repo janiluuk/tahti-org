@@ -4,9 +4,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface Prefs {
   notifyMoneyMovesEmail: boolean
   notifyMoneyMovesInApp: boolean

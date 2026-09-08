@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState, type FormEvent } from 'react'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 function IconMail() {
   return (
@@ -27,8 +28,7 @@ type Props = {
 
 type Status = 'idle' | 'loading' | 'sent' | 'subscribed' | 'error'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 /** Logged-in viewer — subscribe/unsubscribe with one click using the account's own email. */
 function LoggedInToggle({
   artistUsername,

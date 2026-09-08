@@ -6,9 +6,9 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@tahti/ui'
 import type { BroadcastShowType } from '@tahti/shared'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface RtmpTarget {
   id: string
   provider: string

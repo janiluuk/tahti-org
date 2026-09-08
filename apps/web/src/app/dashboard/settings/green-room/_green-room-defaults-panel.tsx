@@ -7,9 +7,9 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Panel } from '@tahti/ui'
 import type { GreenRoomDefaults, GreenRoomInvitePool } from '@tahti/shared'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 const POOL_OPTIONS: Array<{ value: GreenRoomInvitePool; label: string }> = [
   { value: 'EVERYONE', label: 'Everyone (any signed-in listener)' },
   { value: 'MODERATORS_AND_SUBS', label: 'Moderators + active fan subscribers' },

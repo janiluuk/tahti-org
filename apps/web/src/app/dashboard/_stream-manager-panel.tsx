@@ -11,8 +11,9 @@ import ChatPanel from '@/app/c/[slug]/chat-panel'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { RTMP_PROVIDERS } from '@/lib/rtmp-provider-help'
 import { endBroadcast } from './actions'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const STATS_POLL_MS = 5000
 const MULTISTREAM_POLL_MS = 15000
 /** How long the signal must actually be down before the "Reconnecting…" pill

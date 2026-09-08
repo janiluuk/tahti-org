@@ -5,8 +5,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LogViewer, MobileNavSheet } from '@tahti/ui'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const REFRESH_MS = 5_000
 const DESKTOP_LIMIT = 1000
 const MOBILE_LIMIT = 80

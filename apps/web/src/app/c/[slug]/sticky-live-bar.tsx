@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { resolveClientApiUrl } from '@/lib/api-url'
+
 import { StickyLiveBar as StickyLiveBarUi } from '@tahti/ui'
 import { useEffect, useState } from 'react'
 import { resolveChannelUrl } from '@/lib/app-url'
@@ -20,7 +22,7 @@ export function StickyLiveBar({ slug, artistName, isFlac }: Props) {
     let cancelled = false
     const poll = async () => {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+        const apiBase = resolveClientApiUrl()
         const res = await fetch(`${apiBase}/api/channels/${slug}/presence`)
         if (!res.ok || cancelled) return
         const data = (await res.json()) as { numClients: number }

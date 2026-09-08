@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import {
   useCallback,
@@ -23,7 +24,7 @@ import {
 import { Alert } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const API_BASE = resolveClientApiUrl()
 const PRESETS_KEY = 'tahti-admin-files-filter-presets'
 
 interface FilterPreset {

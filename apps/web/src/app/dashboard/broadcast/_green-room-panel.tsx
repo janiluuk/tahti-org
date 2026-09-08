@@ -11,9 +11,9 @@ import type {
   GreenRoomInviteView,
   GreenRoomSessionView,
 } from '@tahti/shared'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 const POOL_LABELS: Record<GreenRoomInvitePool, string> = {
   MODERATORS_AND_SUBS: 'Moderators + fan subscribers',
   SUBS_ONLY: 'Fan subscribers only',

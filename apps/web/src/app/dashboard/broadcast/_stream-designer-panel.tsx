@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import type { VisualPreset } from '@tahti/shared'
 import { Button, ButtonIcon, FileDropzone } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 interface StreamOverlay {
   streamOverlayTitle: string | null
@@ -16,8 +17,7 @@ interface StreamOverlay {
   streamOverlayVisualPreset: VisualPreset
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 type UploadTarget = 'cover' | 'backdrop'
 
 /** Icon-button-triggered panel for what's baked into the RTMP mirror pushes'

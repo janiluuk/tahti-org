@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 /** Browser-only: relies on `fetch(credentials: 'include')` and `EventSource`,
  * so every export here must be called from a Client Component. */
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 export type JamParticipant = {
   userId: string
   username: string

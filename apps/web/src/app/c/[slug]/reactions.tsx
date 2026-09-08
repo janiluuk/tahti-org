@@ -1,15 +1,15 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
 
 const EMOJIS = ['💜', '🔥', '🎶', '🎵', '🌟', '👏']
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 interface FlyingEmoji {
   id: string
   emoji: string
