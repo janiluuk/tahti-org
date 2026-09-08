@@ -6230,19 +6230,15 @@
   position: relative;
 }
 
-[data-tahti-ui='brand'] .ch-sound-playback__title-overlay {
-  position: absolute;
-  left: 0.6rem;
-  bottom: 0.4rem;
-  right: 0.6rem;
-  pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+[data-tahti-ui='brand'] .ch-sound-playback__title-area {
+  flex: 1;
+  min-width: 0;
 }
 
 [data-tahti-ui='brand'] .ch-sound-playback__title {
   font-weight: 500;
   font-size: var(--text-sm);
-  color: #fff;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6250,7 +6246,7 @@
 
 [data-tahti-ui='brand'] .ch-sound-playback__subtitle {
   font-size: var(--text-xs);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

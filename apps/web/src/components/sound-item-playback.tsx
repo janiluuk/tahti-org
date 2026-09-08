@@ -99,7 +99,7 @@ export function SoundItemPlayback({
     <div
       className={`ch-sound-playback${isCurrent ? ' ch-sound-playback--current' : ''}${isCurrent && playing ? ' ch-sound-playback--playing' : ''}`}
     >
-      <div className={titleOverlay ? 'ch-sound-playback__wf-wrap' : undefined}>
+      <div className="ch-sound-playback__wf-wrap">
         {isCurrent ? (
           <ActiveTrackStage
             playing={playing}
@@ -130,14 +130,6 @@ export function SoundItemPlayback({
             </button>
           )
         )}
-        {titleOverlay && (
-          <div className="ch-sound-playback__title-overlay" aria-hidden>
-            <div className="ch-sound-playback__title">{titleOverlay.title}</div>
-            {titleOverlay.subtitle && (
-              <div className="ch-sound-playback__subtitle">{titleOverlay.subtitle}</div>
-            )}
-          </div>
-        )}
       </div>
       <div className="ch-sound-controls-row">
         <div className="ch-sound-controls">
@@ -152,6 +144,14 @@ export function SoundItemPlayback({
           </button>
           <LoveButton channelSlug={channelSlug} itemId={item.id} />
         </div>
+        {titleOverlay && (
+          <div className="ch-sound-playback__title-area">
+            <div className="ch-sound-playback__title">{titleOverlay.title}</div>
+            {titleOverlay.subtitle && (
+              <div className="ch-sound-playback__subtitle">{titleOverlay.subtitle}</div>
+            )}
+          </div>
+        )}
         <button
           type="button"
           className={`ch-sound-controls__queue${queuePulsing ? ' ch-sound-controls__queue--pulsing' : ''}`}
