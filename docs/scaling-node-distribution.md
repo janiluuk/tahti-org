@@ -266,14 +266,14 @@ flowchart LR
 | Node split | All services on one host | Labels enforce separation |
 | Ports | `3010` / `3011` (avoid host conflicts) | 443 via Caddy |
 | Orchestrator | Docker socket on same host | Manager only |
-| Scale test | Not representative of egress | Use staging + `k6` per `docs/delivery-phases.md` |
+| Scale test | Not representative of egress | Use staging + `k6` per `docs/archive/delivery-phases.md` |
 
 ---
 
 ## Related docs
 
-- Swarm topology (phase 5): [`docs/technical/phase-5.md`](technical/phase-5.md)
-- Scaling triggers table: [`docs/delivery-phases.md`](delivery-phases.md#scaling-reference)
+- Swarm topology (phase 5): [`docs/archive/phase-5.md`](archive/phase-5.md)
+- Scaling triggers table: [`docs/archive/delivery-phases.md`](archive/delivery-phases.md#scaling-reference)
 - Infra ownership: [`docs/infra-strategy.md`](infra-strategy.md)
 - CDN offload path: [`docs/cdn-strategy.md`](cdn-strategy.md)
 - User-facing routes / screenshots: [`docs/user-flows.md`](user-flows.md)

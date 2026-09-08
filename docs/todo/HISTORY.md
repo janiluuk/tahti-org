@@ -6,6 +6,36 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-08 — stale-todo sweep: 3 already-merged files never folded
+
+Building `docs/todo/INDEX.md` surfaced three todo files whose branches
+had already merged to `main` weeks ago but were never folded per this
+file's own rule — folding them now instead of indexing stale entries:
+
+- **stream-overlay-scrim-toggle.md** (PR merged via `d0478fb8`,
+  2026-09-07): `Channel.streamOverlayScrimEnabled` + RTMP mirror scrim
+  rectangle behind baked title/subtitle text. tahti-player frontend
+  toggle confirmed wired (`StreamOverlayEditor.tsx`).
+- **stream-overlay-show-title-toggle.md** (PR #441 merged, 2026-09-05):
+  `Channel.streamOverlayShowTitle` — RTMP mirror renders no title/subtitle
+  text at all unless the artist opts in (previously always rendered,
+  falling back to display name). tahti-player frontend toggle confirmed
+  wired.
+- **recurrence-duration-overlap.md** (PR #476 merged): `ScheduledLiveShow.endAt`
+  now set from `LiveShowSeries.recurrenceDurationMin` (falling back to
+  `intervalHours`); overlapping generated/manual episodes rejected
+  (409). Doc's own "Leftovers" note (public channel schedule cards
+  still start-only) not re-verified — check before assuming still open.
+
+## 2026-09-08 — pwyw-track-purchase-frontend.md
+
+Doc said backend-only, frontend still to do in `../tahti-player`. Checked
+`tahti-player/packages/tahti-web/src/views/TrackDetailView.tsx`: `buyTrack()`
+already branches on `detail?.purchaseTierPriceOptional` and shows an amount
+input; `api/types.ts` has the field on its track-detail type; `api/client.ts`'s
+mock populates it from `tier?.priceOptional`. The doc's own "Not done here"
+checklist is fully done — folding as shipped on both sides.
+
 ## 2026-09-04 — export-provider-contracts.md
 
 Branch: `feat/export-provider-contracts` (checkout: `tahti-export-api`).

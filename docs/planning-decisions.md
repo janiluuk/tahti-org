@@ -395,7 +395,7 @@ There are two incompatible grant formulas in the codebase:
 grant = (channel_listener_hours / total_eligible_listener_hours) × grant_pool
 ```
 
-**docs/technical/phase-11.md** (updated per backlog item):
+**docs/archive/phase-11.md** (updated per backlog item):
 ```
 engagement_units = SUM(downloads.weight) + SUM(fan_sub_euros × 10)
 grant = (artist_engagement_units / total_eligible_units) × grant_pool

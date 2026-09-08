@@ -3,7 +3,7 @@
 Canonical money-movement spec for fan-subs, grants, royalties, and membership.
 Product split and worked euro amounts live in
 [`engagement-and-fansubs.md`](../engagement-and-fansubs.md). This page is the
-**flow** source of truth. Older phase docs (`technical/phase-11.md`,
+**flow** source of truth. Older phase docs (`archive/phase-11.md`,
 `AGENT.md` M19) that still say “97.9%”, “monthly payout cron”, “2% covers
 processing”, or “€1 fan-sub = 10 grant units” are superseded here.
 
