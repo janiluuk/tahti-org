@@ -148,6 +148,19 @@ export const RegisterAddonSchema = z.object({
 })
 export type RegisterAddonInput = z.infer<typeof RegisterAddonSchema>
 
+// Metadata edit — slug and scope are immutable after registration (the
+// frontend's editor form disables the slug field once editing an
+// existing addon), so this is everything else, full-replace like the
+// frontend's AdminAddonPatch (not a partial patch).
+export const PatchAddonSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  description: z.string().trim().min(1).max(400),
+  authorName: z.string().trim().min(1).max(80),
+  categories: z.array(CategorySchema).min(1).max(5),
+  iconUrl: z.string().url().optional(),
+})
+export type PatchAddonInput = z.infer<typeof PatchAddonSchema>
+
 // 2 MB — generous for a display widget, small enough that a review of the
 // diff/size is still meaningful and hosting cost stays trivial.
 export const ADDON_BUNDLE_MAX_BYTES = 2 * 1024 * 1024

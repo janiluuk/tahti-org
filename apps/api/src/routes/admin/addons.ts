@@ -19,6 +19,7 @@ import {
   AddonInstallViewSchema,
   ModerateAddonSchema,
   PatchAddonInstallSchema,
+  PatchAddonSchema,
   PrepareAddonUploadResponseSchema,
   PrepareAddonUploadSchema,
   PublishAddonVersionSchema,
@@ -138,6 +139,52 @@ const adminAddonsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(201).send(widget)
     },
   )
+
+  // PATCH /api/admin/addons/:id — edit metadata (name/description/
+  // authorName/categories/iconUrl). Slug and scope are immutable once
+  // registered; version/bundle/status are managed by the
+  // publish-version/approve/reject/disable actions above, not here.
+  fastify.patch(
+    '/api/admin/addons/:id',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AddonAdminItemSchema, 'AddonAdminItem'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = PatchAddonSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const widget = await fastify.prisma.addon.findUnique({ where: { id: routeParams.id } })
+      if (!widget) return reply.status(404).send({ error: 'Widget not found' })
+
+      const updated = await fastify.prisma.addon.update({
+        where: { id: routeParams.id },
+        data: parsed.data,
+        select: ADMIN_ITEM_SELECT,
+      })
+      return reply.send(updated)
+    },
+  )
+
+  // DELETE /api/admin/addons/:id — permanently removes the widget, its
+  // published versions, and every install row (all cascade via FK —
+  // see Addon.versions/installs in schema.prisma). Unlike /disable,
+  // there is no undo: re-adding it means registering a new widget.
+  fastify.delete('/api/admin/addons/:id', { preHandler: requireBoard }, async (request, reply) => {
+    const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+    const widget = await fastify.prisma.addon.findUnique({ where: { id: routeParams.id } })
+    if (!widget) return reply.status(404).send({ error: 'Widget not found' })
+
+    await fastify.prisma.addon.delete({ where: { id: routeParams.id } })
+    return reply.status(204).send()
+  })
 
   // POST /api/admin/addons/:id/prepare-upload
   fastify.post(
