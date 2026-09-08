@@ -13,6 +13,9 @@ html {
      affect intentional horizontal scrollers, which still handle their own
      overscroll independently. */
   overscroll-behavior-x: none;
+  /* Mobile URL-bar show/hide used to rubber-band the whole document (and the
+     fixed gateway canvas with it). Keep vertical overscroll contained. */
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -21,6 +24,7 @@ body {
   font-family: var(--tahti-font-body);
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   padding-bottom: var(--fixed-stack-bottom);
 }
