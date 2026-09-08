@@ -90,4 +90,19 @@ describe('liquidsoap rotation template', () => {
     expect(template).toContain('normalize_url=false')
     expect(template).toContain('file.extension(leading_dot=true, dir_sep="/", path_only)')
   })
+
+  it('#311 fix carries over: playlist mode is hardcoded "normal", not templated from fallbackMode', async () => {
+    const template = await readFile(rotationTemplatePath, 'utf8')
+    // This exact bug (mode="{{FALLBACK_MODE}}" passed straight through to
+    // Liquidsoap's playlist(), which only accepts "normal"/"random"/
+    // "randomize") was fixed in liquidsoap-channel.liq.template by #311 but
+    // left in place here, unnoticed, because orchestrator/src/liquidsoap.ts's
+    // FALLBACK_MODE substitution was removed globally as part of that same
+    // fix — leaving this template's placeholder forever unrendered. That
+    // silently took every rotation channel (Tahti Radio, Tahti Selects) off
+    // the air: playlist() failed to initialize, so `archive` never became a
+    // ready source and Icecast saw no output at all.
+    expect(template).not.toContain('{{FALLBACK_MODE}}')
+    expect(template).toContain('mode="normal"')
+  })
 })
