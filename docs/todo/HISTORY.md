@@ -207,3 +207,18 @@ Channel page mobile/desktop chat and live-player polish, shipped on `feat/channe
 ### 2026-09-08 — responsive-usability-audit.md
 
 All ten MOB-01–MOB-10 implementation items shipped: mobile-first `/listen` and `/radio` chrome plus shared `--fixed-stack-bottom` safe-area/mini-player/studio-nav contract ([#446](https://github.com/janiluuk/tahti-org/pull/446)); settings `MobileNavSheet` and admin logs Filter sheet ([#451](https://github.com/janiluuk/tahti-org/pull/451)); home single primary CTA + capped previews, idle auto-scroll removed, admin tables as stacked cards with `admin-table-wrap--tabular` opt-out for audit/ledger data (this repo's earlier session); Discover `ChipFilterBar` sheets and progressive-disclosure `StudioCollapse` forms ([#453](https://github.com/janiluuk/tahti-org/pull/453)). Audit notes stay in this file's 2026-09-01 entry above.
+
+### 2026-09-08 — pwyw-track-purchase-frontend.md (stale — already done)
+
+This repo's backend piece (`GET /api/tracks/:id` returning
+`purchaseTier.priceOptional`, commit `032c804d`) shipped and merged to
+`main` on 2026-09-07 as documented. Re-checked the sibling `tahti-player`
+repo before picking up the "not done here" frontend leftover the doc
+described, and it was already built: `TrackDetailView.tsx`'s buy button
+checks `purchaseTierPriceOptional` and opens a PWYW amount dialog
+(`pwywOpen`/`pwywAmt`) instead of always sending the suggested price,
+`api/types.ts` and the mock `client.ts` carry the field, and
+`PurchaseTiersEditor.tsx` already exposes the "pay what you want" toggle
+artists use to create such a tier — folded there as part of
+`tahti-player`'s own 2026-09-07 "Purchase-tier artist editor built"
+HISTORY entry. No code changed in this repo; removing the stale todo file.
