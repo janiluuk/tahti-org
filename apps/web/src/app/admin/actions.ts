@@ -226,6 +226,8 @@ export async function createResolution(input: {
   voteFor: number
   voteAgainst: number
   voteAbstain: number
+  meetingId?: string
+  binding?: boolean
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/admin/resolutions`, {
     method: 'POST',

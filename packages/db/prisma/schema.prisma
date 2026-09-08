@@ -418,6 +418,7 @@ enum AuditAction {
   MINUTES_PUBLISH
   MEETING_NOTICE_PUBLISH
   MEETING_NOTICE_SEND
+  CONFLICT_DECLARE
 
   @@schema("governance")
 }
@@ -904,6 +905,7 @@ model User {
   governanceDocumentsCreated     GovernanceDocument[]
   governanceAttendance           GovernanceAttendance[]
   governanceNoticeDeliveries     GovernanceNoticeDelivery[]
+  governanceConflictDeclarations GovernanceConflictDeclaration[]
   socialConnections              SocialConnection[]
   socialPosts                    SocialPost[]
   stashFiles                     StashFile[]
@@ -2304,10 +2306,11 @@ model GovernanceMeeting {
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
 
-  documents        GovernanceDocument[]
-  attendance       GovernanceAttendance[]
-  noticeDeliveries GovernanceNoticeDelivery[]
-  boardResolutions BoardResolution[]
+  documents            GovernanceDocument[]
+  attendance           GovernanceAttendance[]
+  noticeDeliveries     GovernanceNoticeDelivery[]
+  conflictDeclarations GovernanceConflictDeclaration[]
+  boardResolutions     BoardResolution[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -2346,6 +2349,28 @@ model GovernanceAttendance {
 
   @@unique([meetingId, memberId])
   @@index([meetingId, status])
+  @@schema("governance")
+}
+
+/// A declared conflict of interest tied to a meeting, mirroring
+/// GovernanceAttendance's shape (optional memberId + required displayName,
+/// so a non-member or a member without a linked account can still be
+/// recorded). `matter` is free text describing what agenda item/motion/vote
+/// the conflict concerns — this repo does not model FKs to every possible
+/// related entity, just enough to answer "who declared what, and did they
+/// recuse".
+model GovernanceConflictDeclaration {
+  id          String            @id @default(cuid())
+  meetingId   String
+  meeting     GovernanceMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId    String?
+  member      User?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  displayName String
+  matter      String
+  recused     Boolean           @default(true)
+  declaredAt  DateTime          @default(now())
+
+  @@index([meetingId])
   @@schema("governance")
 }
 

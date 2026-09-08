@@ -159,16 +159,18 @@ export default async function AdminGovernanceAuditPage({
         {page < totalPages ? <Link href={pageHref(page + 1)}>Next →</Link> : null}
       </nav>
 
-      <section className="admin-planned-topics">
-        <h2 className="admin-subsection-title">Planned audit topics</h2>
-        <ul>
-          {GOVERNANCE_AUDIT_PLANNED_TOPICS.map((item) => (
-            <li key={item.id}>
-              <strong>{item.label}.</strong> {item.description}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {GOVERNANCE_AUDIT_PLANNED_TOPICS.length > 0 && (
+        <section className="admin-planned-topics">
+          <h2 className="admin-subsection-title">Planned audit topics</h2>
+          <ul>
+            {GOVERNANCE_AUDIT_PLANNED_TOPICS.map((item) => (
+              <li key={item.id}>
+                <strong>{item.label}.</strong> {item.description}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   )
 }

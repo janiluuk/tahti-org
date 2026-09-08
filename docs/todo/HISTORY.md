@@ -295,3 +295,30 @@ healthy. Also confirmed every other job (`cadvisor`/`node`/
 `docker-catalog` across all 10 hosts incl. vimage7) reports `up == 1`,
 so the whole dashboard's data is now clean. No code or config touched
 this session — read-only verification only.
+
+### 2026-09-08 — governance-audit-log.md
+
+All ten topics on `/admin/governance/audit` shipped across three slices:
+notice publication (`MEETING_NOTICE_PUBLISH`) plus real per-recipient
+delivery evidence (`GovernanceNoticeDelivery`, sent via
+`sendGovernanceMeetingNoticeEmail`, bounce-marked by the existing
+email-bounce webhook, `MEETING_NOTICE_SEND` audited, surfaced at
+`GET /api/admin/governance/meetings/:id/notice-deliveries` and in
+`governance-records-panel.tsx`'s expanded meeting row); minutes upload/
+approve/sign/redact/publish as five distinct audited steps
+(`minutesRedacted`, `minutesPublishedAt`); `BoardResolution` optionally
+linked to a `GovernanceMeeting` (`meetingId`, cross-schema `admin`→
+`governance`) with a `binding` flag, wired into `resolutions/page.tsx`'s
+create form and table; and a new `conflicts` topic
+(`GovernanceConflictDeclaration`, `CONFLICT_DECLARE`) replacing what had
+been a "no data model yet" placeholder. Migrations
+`20260908090000_governance_notice_delivery_minutes_publish_resolution_link`
+and `20260908100000_governance_conflict_declarations`, both hand-verified
+against a scratch `postgres:16-alpine` container (`prisma migrate dev`'s
+shadow-db validation is blocked by a pre-existing, unrelated
+migration-history bug — an early migration references the `channel`
+schema before any migration creates it). Backend slice 2: PR
+[#484](https://github.com/janiluuk/tahti-org/pull/484); frontend +
+conflict-declarations slice 3 landed in the same commit as this fold.
+Remaining known gap: notice open-tracking — no tracking-pixel infra
+exists anywhere in this codebase, deliberately out of scope.

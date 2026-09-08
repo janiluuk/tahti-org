@@ -4,9 +4,11 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { Prisma } from '@tahti/db'
 import {
+  CreateGovernanceConflictDeclarationSchema,
   CreateGovernanceDocumentSchema,
   CreateGovernanceMeetingSchema,
   GovernanceAttendanceListSchema,
+  GovernanceConflictDeclarationListSchema,
   GovernanceDocumentListSchema,
   GovernanceMeetingListSchema,
   GovernanceNoticeDeliveryListSchema,
@@ -439,6 +441,73 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { attendanceId: record.id, status: record.status, memberId: record.memberId },
       })
       return reply.status(existing ? 200 : 201).send(record)
+    },
+  )
+
+  fastify.get(
+    '/api/admin/governance/meetings/:id/conflicts',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(
+          GovernanceConflictDeclarationListSchema,
+          'GovernanceConflictDeclarationList',
+        ),
+      },
+    },
+    async (request, reply) => {
+      const meetingId = (request.params as { id?: string }).id
+      if (!meetingId) return reply.status(400).send({ error: 'Meeting id is required' })
+      const records = await fastify.prisma.governanceConflictDeclaration.findMany({
+        where: { meetingId },
+        orderBy: { declaredAt: 'asc' },
+      })
+      return reply.send(records)
+    },
+  )
+
+  fastify.post(
+    '/api/admin/governance/meetings/:id/conflicts',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponses([
+          {
+            status: 201,
+            schema: GovernanceConflictDeclarationListSchema.element,
+            name: 'GovernanceConflictDeclaration',
+          },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const meetingId = (request.params as { id?: string }).id
+      if (!meetingId) return reply.status(400).send({ error: 'Meeting id is required' })
+      const parsed = CreateGovernanceConflictDeclarationSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const meeting = await fastify.prisma.governanceMeeting.findUnique({
+        where: { id: meetingId },
+      })
+      if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      const record = await fastify.prisma.governanceConflictDeclaration.create({
+        data: { meetingId, ...parsed.data },
+      })
+      await auditLog(fastify.prisma, {
+        action: 'CONFLICT_DECLARE',
+        actorId: request.sessionUser!.id,
+        targetId: meetingId,
+        meta: {
+          conflictId: record.id,
+          displayName: record.displayName,
+          recused: record.recused,
+        },
+      })
+      return reply.status(201).send(record)
     },
   )
 

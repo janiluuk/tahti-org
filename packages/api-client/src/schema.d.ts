@@ -12475,6 +12475,80 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/governance/meetings/{id}/conflicts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              memberId: string | null
+              displayName: string
+              matter: string
+              recused: boolean
+              /** Format: date-time */
+              declaredAt: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              memberId: string | null
+              displayName: string
+              matter: string
+              recused: boolean
+              /** Format: date-time */
+              declaredAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/governance/documents': {
     parameters: {
       query?: never

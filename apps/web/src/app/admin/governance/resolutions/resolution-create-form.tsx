@@ -6,7 +6,11 @@
 import { useState } from 'react'
 import { createResolution } from '../../actions'
 
-export function ResolutionCreateForm() {
+export function ResolutionCreateForm({
+  meetings,
+}: {
+  meetings: Array<{ id: string; title: string }>
+}) {
   const [msg, setMsg] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -15,6 +19,7 @@ export function ResolutionCreateForm() {
     setPending(true)
     setMsg(null)
     const fd = new FormData(e.currentTarget)
+    const meetingId = String(fd.get('meetingId') ?? '')
     const { error } = await createResolution({
       title: String(fd.get('title')),
       body: String(fd.get('body')),
@@ -23,6 +28,8 @@ export function ResolutionCreateForm() {
       voteFor: Number(fd.get('voteFor')),
       voteAgainst: Number(fd.get('voteAgainst')),
       voteAbstain: Number(fd.get('voteAbstain')),
+      meetingId: meetingId || undefined,
+      binding: fd.get('binding') === 'on',
     })
     setPending(false)
     if (error) {
@@ -68,6 +75,23 @@ export function ResolutionCreateForm() {
           <label>
             Abstain
             <input name="voteAbstain" type="number" min={0} defaultValue={0} required />
+          </label>
+          <label>
+            Meeting (optional)
+            <select name="meetingId" defaultValue="">
+              <option value="">Not linked to a meeting</option>
+              {meetings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexDirection: 'row' }}
+          >
+            <input type="checkbox" name="binding" defaultChecked />
+            Binding decision
           </label>
           <button type="submit" className="admin-btn" disabled={pending}>
             {pending ? 'Saving…' : 'Save draft'}

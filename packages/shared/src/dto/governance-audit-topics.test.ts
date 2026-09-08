@@ -29,6 +29,7 @@ describe('governance audit topics', () => {
     expect(topicForAuditAction('MINUTES_PUBLISH')).toBe('minutes')
     expect(topicForAuditAction('RESOLUTION_CREATE')).toBe('official-votes')
     expect(topicForAuditAction('RESOLUTION_UPDATE')).toBe('official-votes')
+    expect(topicForAuditAction('CONFLICT_DECLARE')).toBe('conflicts')
   })
 
   it('keeps vote-change and vote-retract actions in the same topic as the original ballot', () => {
