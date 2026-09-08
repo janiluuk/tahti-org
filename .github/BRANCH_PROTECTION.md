@@ -1,17 +1,22 @@
 # Branch protection (PLAT-002)
 
-Verified 2026-09-05: active repository ruleset **Main CI gate (PLAT-002)**
-(`22306827`) applies to `refs/heads/main`. It requires **All checks**, an
-up-to-date branch, one PR approval, and resolved review threads. It blocks
-deletion and force pushes and has no bypass actors. The effective rules were
-confirmed through `GET /repos/janiluuk/tahti-org/rules/branches/main`.
-The aggregate includes `user-journeys-e2e`, so that suite is covered by the gate.
+**2026-09-08: removed at the author's request.** `main` is unprotected —
+direct pushes, force pushes, and branch deletion are all allowed
+(`GET /repos/janiluuk/tahti-org/rules/branches/main` returns `[]`). The
+**Main CI gate (PLAT-002)** ruleset (`22306827`, verified 2026-09-05, required
+**All checks** + PR + resolved threads) was deleted, and the repo-wide
+`default` ruleset now excludes `refs/heads/main` from its PR/no-force-push
+rules while still applying to every other branch.
+
+CI (`.github/workflows/ci.yml`) still runs on pushes to `main` and gates the
+**Release images & changelog** job on **All checks** passing — only the
+GitHub-side requirement to go through a reviewed PR before merging is gone.
 
 GitHub branch protection cannot be committed to the repo; configure it in the repository settings for `main`.
 
-## Required status checks
+## CI jobs (informational — no longer required by branch protection)
 
-Require the **`All checks`** job from the [CI workflow](./workflows/ci.yml) before merge. That job fails if any of these jobs fail:
+The **`All checks`** job in the [CI workflow](./workflows/ci.yml) still aggregates these:
 
 | Job name                                    | Purpose                         |
 | ------------------------------------------- | ------------------------------- |
@@ -23,18 +28,9 @@ Require the **`All checks`** job from the [CI workflow](./workflows/ci.yml) befo
 | User journey e2e (listener, artist, member) | Guides-backed journeys          |
 | AGPL header check                           | License headers on source files |
 
-Optional but recommended: also require **Generate OpenAPI spec** if you want OpenAPI artifacts on every merge.
-
-## Settings checklist
-
-Configured as ruleset **Main CI gate (PLAT-002)** on `main` (not classic branch protection).
-
-1. **Require a pull request before merging** — still required; pushes to `main` are blocked.
-2. **Required approving reviews: 0** — GitHub does not allow authors to approve their own PRs. This repo is a solo-maintainer project, so reviews are optional; the author can merge after CI.
-3. **Require status checks to pass** → select **All checks**, and require the branch to be up to date.
-4. **Do not allow bypassing** the CI/PR gate (no ruleset bypass actors).
-
-Do not set required reviews to 1 unless a second person with write access is actually reviewing.
+To restore the gate later: recreate a ruleset targeting `refs/heads/main`
+with `pull_request` + `required_status_checks` (context `All checks`), and
+drop `refs/heads/main` from the `default` ruleset's exclude list.
 
 ## Release gate
 
