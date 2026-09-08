@@ -68,14 +68,23 @@ archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
 archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"
 archive = if file.exists(archive_local_path) then
   playlist(
-    mode="{{FALLBACK_MODE}}",
+    # The API already orders the M3U entries per the channel's fallbackMode
+    # (shuffle/ordered/time/name — an app-level vocabulary, not Liquidsoap's).
+    # Passing that value straight through as Liquidsoap's own playlist mode
+    # broke it outright: "shuffle" isn't a valid Liquidsoap mode ("normal",
+    # "random", "randomize" are), so playlist() failed to initialize — see
+    # liquidsoap-channel.liq.template's #311 fix, which patched this same
+    # bug there but missed this sibling rotation template. "normal" respects
+    # the order already computed server-side.
+    mode="normal",
     reload=300,
     reload_mode="rounds",
     archive_local_path
   )
 else
   playlist(
-    mode="{{FALLBACK_MODE}}",
+    # See the comment on the branch above — same fix, same reason.
+    mode="normal",
     reload=300,
     reload_mode="rounds",
     archive_remote_url
