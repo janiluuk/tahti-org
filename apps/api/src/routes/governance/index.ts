@@ -19,6 +19,7 @@ import {
   PostMotionCommentSchema,
   VoteCastResponseSchema,
   VoteMotionSchema,
+  VoteRetractResponseSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -185,6 +186,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             youVoted: Boolean(myVote),
             yourChoice: myVote?.choice ?? null,
             commentCount: m._count.comments,
+            eligibleMemberCount: m.eligibleMemberCount,
             tally,
           }
         }),
@@ -278,6 +280,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         youVoted: Boolean(myVote),
         yourChoice: myVote?.choice ?? null,
         commentCount: motion._count.comments,
+        eligibleMemberCount: motion.eligibleMemberCount,
       }
 
       // Per-choice tally is published only once voting has closed.
@@ -325,6 +328,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         if (body.description) data.description = body.description
       }
 
+      let eligibleMemberCount: number | undefined
       if (body.state) {
         const target = body.state
         const valid: Record<string, string> = { DRAFT: 'OPEN', OPEN: 'CLOSED' }
@@ -334,10 +338,18 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             .send({ error: `Cannot transition motion from ${motion.state} to ${target}` })
         }
         data.state = target
+        if (target === 'OPEN') {
+          // Snapshot the eligible-voter denominator as of when voting opens,
+          // not at read time — the live member count drifts after the fact
+          // and a closed motion's "X of Y voted" turnout must stay accurate.
+          eligibleMemberCount = await fastify.prisma.user.count({ where: { isMember: true } })
+          data.eligibleMemberCount = eligibleMemberCount
+        }
         await auditLog(fastify.prisma, {
           action: target === 'OPEN' ? 'MOTION_OPEN' : 'MOTION_CLOSE',
           actorId: user.id,
           targetId: motion.id,
+          meta: eligibleMemberCount !== undefined ? { eligibleMemberCount } : undefined,
         })
       }
 
@@ -350,7 +362,10 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/governance/motions/:id/vote — one vote per member while OPEN
+  // POST /api/v1/governance/motions/:id/vote — cast or change a vote while OPEN.
+  // A second POST from the same member updates their existing choice rather
+  // than erroring, matching the member-journey rule that a vote may be
+  // changed up until the motion closes.
   fastify.post(
     '/api/v1/governance/motions/:id/vote',
     {
@@ -358,6 +373,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['governance'],
         response: openApiResponses([
+          { status: 200, schema: VoteCastResponseSchema, name: 'VoteChanged' },
           { status: 201, schema: VoteCastResponseSchema, name: 'VoteCast' },
         ]),
       },
@@ -387,8 +403,22 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       const existing = await fastify.prisma.vote.findUnique({
         where: { motionId_userId: { motionId: id, userId: user.id } },
       })
+
       if (existing) {
-        return reply.status(409).send({ error: 'You have already voted on this motion' })
+        if (existing.choice === choice) {
+          return reply.status(200).send({ ok: true, choice })
+        }
+        await fastify.prisma.vote.update({
+          where: { motionId_userId: { motionId: id, userId: user.id } },
+          data: { choice, castAt: now },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'VOTE_CHANGE',
+          actorId: user.id,
+          targetId: id,
+          meta: { recorded: true },
+        })
+        return reply.status(200).send({ ok: true, choice })
       }
 
       await fastify.prisma.vote.create({
@@ -403,6 +433,53 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.status(201).send({ ok: true, choice })
+    },
+  )
+
+  // DELETE /api/v1/governance/motions/:id/vote — retract a vote while OPEN.
+  fastify.delete(
+    '/api/v1/governance/motions/:id/vote',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(VoteRetractResponseSchema, 'VoteRetracted'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const motion = await fastify.prisma.motion.findUnique({ where: { id } })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+
+      const now = new Date()
+      if (motion.state !== 'OPEN') {
+        return reply.status(409).send({ error: 'Motion is not open for voting' })
+      }
+      if (now < motion.openAt || now > motion.closeAt) {
+        return reply.status(409).send({ error: 'Voting window is not currently open' })
+      }
+
+      const existing = await fastify.prisma.vote.findUnique({
+        where: { motionId_userId: { motionId: id, userId: user.id } },
+      })
+      if (!existing) return reply.status(404).send({ error: 'You have not voted on this motion' })
+
+      await fastify.prisma.vote.delete({
+        where: { motionId_userId: { motionId: id, userId: user.id } },
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'VOTE_RETRACT',
+        actorId: user.id,
+        targetId: id,
+        meta: { recorded: true },
+      })
+
+      return reply.status(200).send({ ok: true })
     },
   )
 

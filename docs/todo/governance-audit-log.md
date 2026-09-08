@@ -41,6 +41,11 @@ Filter sheet and an 80-line mobile window.
 
 Still planned (no events, no data model yet): conflicts/recusals.
 
+**Also 2026-09-08:** `VOTE_CHANGE`/`VOTE_RETRACT` audit actions added
+alongside `VOTE_CAST` (same `decisions` topic, same ballot-secrecy redaction)
+now that changing/retracting a vote while a motion is OPEN is a real,
+previously-missing member-journey capability (see `governance-worklog.md`).
+
 ## Also in this slice
 
 - Cursor + `state` filter on `GET /api/v1/governance/motions` (`x-next-cursor`).

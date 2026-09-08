@@ -9,7 +9,7 @@ binding electronic voting.
 ## Member journey
 
 - [ ] View association identity, current bylaws, policies, board, auditor, and contacts.
-- [ ] Change/retract a vote according to approved voting rules.
+- [x] Change/retract a vote according to approved voting rules: `POST .../motions/:id/vote` now updates an existing OPEN vote instead of rejecting it, and `DELETE .../motions/:id/vote` retracts it. Fixes the documented gap where motion-card.tsx offered this and the API rejected it with 409.
 - [ ] Receive motion, meeting, and result notifications.
 - [ ] View complete historical decisions and meeting records.
 - [ ] Request correction of member-register data or governance records.
@@ -27,10 +27,10 @@ binding electronic voting.
 
 ## Technical integrity
 
-- [ ] Snapshot voting eligibility and quorum denominators.
-- [ ] Separate advisory polls from binding ballots.
+- [~] Snapshot voting eligibility and quorum denominators: `Motion.eligibleMemberCount` now freezes the `isMember` count when a motion opens (mirrors `GovernanceMeeting`'s pattern), so turnout % on a closed motion no longer drifts as membership changes. No "quorum" concept applies here — advisory motions have no quorum rule; only meeting-linked (official) decisions do, and `GovernanceMeeting.quorumRequired` already covers that.
+- [x] Separate advisory polls from binding ballots: already true by construction (`Motion.advisory`, `BoardResolution` as a wholly separate model/route/topic) — no code change needed this pass, just confirmed and closed out.
 - [ ] Provide immutable result certificates and correction history.
-- [~] Motion lists support bounded cursor continuation through `x-next-cursor`; the member directory and any remaining archive consumers still need the same UI pagination affordance.
+- [x] Motion lists support bounded cursor continuation through `x-next-cursor`; the member directory (`/dashboard/governance/motions`) now paginates client-side via `MemberDirectoryTable`'s "Show more" — the full list is already fetched server-side for the turnout-% stat on the same page, so a second network-paginated round trip would be redundant. No remaining archive consumers identified.
 - [ ] Add backups, retention, legal hold, and restore verification for official records.
 
 ## Plugin registry boundary

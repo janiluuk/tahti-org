@@ -238,14 +238,38 @@ describe('M10 — member governance', () => {
     })
     expect(vote1.statusCode).toBe(201)
 
-    // Double-voting is rejected
-    const vote1again = await app.inject({
+    // Voting again while still OPEN changes the existing vote instead of erroring
+    const vote1changed = await app.inject({
       method: 'POST',
       url: `/api/v1/governance/motions/${motionId}/vote`,
       headers: { cookie: memberCookie },
       payload: { choice: 'NO' },
     })
-    expect(vote1again.statusCode).toBe(409)
+    expect(vote1changed.statusCode).toBe(200)
+    expect(vote1changed.json().choice).toBe('NO')
+
+    // Retracting removes the vote entirely
+    const retracted = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/governance/motions/${motionId}/vote`,
+      headers: { cookie: memberCookie },
+    })
+    expect(retracted.statusCode).toBe(200)
+    const afterRetract = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(afterRetract.json().youVoted).toBe(false)
+
+    // Re-cast the vote so the rest of the lifecycle test has its expected YES ballot
+    const vote1recast = await app.inject({
+      method: 'POST',
+      url: `/api/v1/governance/motions/${motionId}/vote`,
+      headers: { cookie: memberCookie },
+      payload: { choice: 'YES' },
+    })
+    expect(vote1recast.statusCode).toBe(201)
 
     // Other member votes NO; board votes ABSTAIN
     const vote2 = await app.inject({
@@ -302,6 +326,72 @@ describe('M10 — member governance', () => {
     })
     expect(closedDetail.statusCode).toBe(200)
     expect(closedDetail.json().tally).toEqual({ YES: 1, NO: 1, ABSTAIN: 1 })
+  })
+
+  it('freezes the eligible-member count when voting opens and does not drift afterward', async () => {
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Eligibility snapshot check',
+        description: 'Confirms the turnout denominator freezes at open time.',
+        openAt: new Date().toISOString(),
+        closeAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+      },
+    })
+    expect(createRes.statusCode).toBe(201)
+    const motionId = createRes.json().id as string
+
+    // Still DRAFT — no snapshot taken yet.
+    const draftDetail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(draftDetail.json().eligibleMemberCount).toBeNull()
+
+    const eligibleAtOpen = await prisma.user.count({ where: { isMember: true } })
+    const openRes = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+      payload: { state: 'OPEN' },
+    })
+    expect(openRes.statusCode).toBe(200)
+
+    const openDetail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(openDetail.json().eligibleMemberCount).toBe(eligibleAtOpen)
+
+    // A member joining after the motion opened must not change the snapshot.
+    const passwordHash = await hashPassword('testpassword')
+    const late = await prisma.user.create({
+      data: {
+        email: `${TEST_EMAIL_PREFIX}late-joiner@example.com`,
+        passwordHash,
+        username: 'gov-late-joiner',
+        displayName: 'Late Joiner',
+        emailVerifiedAt: new Date(),
+        isMember: true,
+        memberNumber: 97110,
+        memberSince: new Date(),
+        membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+      },
+    })
+    try {
+      const afterJoin = await app.inject({
+        method: 'GET',
+        url: `/api/v1/governance/motions/${motionId}`,
+        headers: { cookie: memberCookie },
+      })
+      expect(afterJoin.json().eligibleMemberCount).toBe(eligibleAtOpen)
+    } finally {
+      await prisma.user.delete({ where: { id: late.id } })
+    }
   })
 
   it('rejects an invalid state transition (DRAFT → CLOSED)', async () => {

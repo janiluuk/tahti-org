@@ -28,6 +28,11 @@ describe('governance audit topics', () => {
     expect(topicForAuditAction('RESOLUTION_UPDATE')).toBe('official-votes')
   })
 
+  it('keeps vote-change and vote-retract actions in the same topic as the original ballot', () => {
+    expect(topicForAuditAction('VOTE_CHANGE')).toBe('decisions')
+    expect(topicForAuditAction('VOTE_RETRACT')).toBe('decisions')
+  })
+
   it('returns all governance actions when no topic is selected', () => {
     const all = actionsForGovernanceAuditTopic()
     expect(all).toEqual(GOVERNANCE_AUDIT_ACTIONS)
@@ -49,8 +54,14 @@ describe('governance audit topics', () => {
     }
   })
 
-  it('redacts ballot choice from vote audit meta', () => {
+  it('redacts ballot choice from vote audit meta, including change/retract', () => {
     expect(redactSecretBallotAuditMeta('VOTE_CAST', { choice: 'YES' })).toEqual({
+      ballot: 'secret',
+    })
+    expect(redactSecretBallotAuditMeta('VOTE_CHANGE', { choice: 'NO' })).toEqual({
+      ballot: 'secret',
+    })
+    expect(redactSecretBallotAuditMeta('VOTE_RETRACT', { choice: 'ABSTAIN' })).toEqual({
       ballot: 'secret',
     })
     expect(redactSecretBallotAuditMeta('GRANT_RUN', { year: 2026 })).toEqual({ year: 2026 })

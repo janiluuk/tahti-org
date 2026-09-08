@@ -31,6 +31,20 @@ export async function castVote(
   return { error: null }
 }
 
+export async function retractVote(motionId: string): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/v1/governance/motions/${motionId}/vote`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to retract vote' }
+  }
+  revalidatePath('/governance')
+  return { error: null }
+}
+
 export async function transitionMotion(
   motionId: string,
   state: 'OPEN' | 'CLOSED',

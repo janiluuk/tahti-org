@@ -366,6 +366,8 @@ enum AuditAction {
   MOTION_CLOSE
   MOTION_COMMENT_CREATE
   VOTE_CAST
+  VOTE_CHANGE
+  VOTE_RETRACT
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -2242,17 +2244,21 @@ model AuditLog {
 // electronic voting; `advisory` flips to false once that clause is filed.
 
 model Motion {
-  id          String      @id @default(cuid())
-  title       String
-  description String
-  proposedBy  String
-  proposer    User        @relation(fields: [proposedBy], references: [id])
-  advisory    Boolean     @default(true)
-  openAt      DateTime
-  closeAt     DateTime
-  state       MotionState @default(DRAFT)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                  String      @id @default(cuid())
+  title               String
+  description         String
+  proposedBy          String
+  proposer            User        @relation(fields: [proposedBy], references: [id])
+  advisory            Boolean     @default(true)
+  openAt              DateTime
+  closeAt             DateTime
+  state               MotionState @default(DRAFT)
+  /// Count of `isMember` users at the moment voting opened — the turnout
+  /// denominator, frozen so it doesn't drift as membership changes after the
+  /// fact. Null for motions opened before this field existed.
+  eligibleMemberCount Int?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
   votes    Vote[]
   comments MotionComment[]

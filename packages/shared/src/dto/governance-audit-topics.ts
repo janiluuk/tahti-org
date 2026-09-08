@@ -79,6 +79,8 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'MOTION_CLOSE',
       'MOTION_COMMENT_CREATE',
       'VOTE_CAST',
+      'VOTE_CHANGE',
+      'VOTE_RETRACT',
       'FEATURE_REQUEST_QUARTERLY_REPORT',
     ],
   },
@@ -161,6 +163,8 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MOTION_CLOSE: 'Motion closed',
   MOTION_COMMENT_CREATE: 'Motion comment posted',
   VOTE_CAST: 'Vote recorded',
+  VOTE_CHANGE: 'Vote changed',
+  VOTE_RETRACT: 'Vote retracted',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',
@@ -212,7 +216,7 @@ export function governanceAuditActionLabel(action: string): string {
   return GOVERNANCE_AUDIT_ACTION_LABELS[action] ?? action
 }
 
-const SECRET_BALLOT_ACTIONS = new Set(['VOTE_CAST'])
+const SECRET_BALLOT_ACTIONS = new Set(['VOTE_CAST', 'VOTE_CHANGE', 'VOTE_RETRACT'])
 
 export function isSecretBallotAuditAction(action: string): boolean {
   return SECRET_BALLOT_ACTIONS.has(action)
