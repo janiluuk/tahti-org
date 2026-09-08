@@ -32,14 +32,14 @@ listed for completeness but are not coding tasks.
 | ID / item                                                                                                              | Status | Owner       | Source                           |
 | ---------------------------------------------------------------------------------------------------------------------- | :----: | ----------- | -------------------------------- |
 | **STREAM-011 B** — live/24-7 multi-bitrate HLS (lossless or high-bitrate ABR); spike Liquidsoap fMP4 + master playlist | `[ ]`  | Dev         | `project-roadmap.md` §STREAM-011 |
-| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection                                                   | `[~]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
-| **PLAT-053** — Tahti Radio → Mixcloud Live (add-on Configure + radio destination scope)                                | `[~]`  | Dev         | `technical/radio-mixcloud-addon.md` |
+| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection (removed 2026-09-08, author's request)            | `[ ]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
+| **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                         | `[~]`  | Dev         | roadmap PLAT-053                 |
 | **M11** — live Upptime fork deploy                                                                                     | `[~]`  | Ops         | roadmap M11                      |
 | **M29** — pgBackRest PITR (interim `backup.sh` exists)                                                                 | `[~]`  | Dev / Ops   | roadmap M29                      |
 | MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test        | `[ ]`  | Dev         | roadmap Phase 3 test matrix      |
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                        | `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                | `[~]`  | Dev         | future-improvements              |
-| `user-journeys-e2e` required in branch protection                                                                      | `[ ]`  | Dev         | future-improvements              |
+| `user-journeys-e2e` required in branch protection (moot — branch protection removed 2026-09-08)                        | `[ ]`  | Dev         | Still runs in CI, not enforced   |
 
 ---
 
@@ -158,32 +158,30 @@ transfer, governance rhythms, post-handover cadences — see roadmap Phases 8–
 
 Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
-| Item                                         | Notes                                                                                                                       |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Mobile UX audit (MOB-01–MOB-10)              | Done: PRs #446 (01/03/07/08), #451 (04/05), this branch (02/06), #453 (09/10)                                               |
-| Stream manager on artist studio page         | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
-| Channel Designer block system                | Logo + addon blocks: `docs/todo/channel-designer-blocks.md`                                                                 |
-| Public list/play `audioUrl` still ungated    | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                   |
-| Unify remaining uploaders on `FileDropzone`  | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover)                                     |
-| Client `NEXT_PUBLIC_API_*` env unification   | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL`                                                     |
-| Deduplicate chat panel logic                 | `chat-panel.tsx` / `fan-chat-panel.tsx`                                                                                     |
-| Collapse overlapping e2e seed scripts        | Four `apps/api/scripts/seed-e2e-*` scripts                                                                                  |
-| hearthis.at real-audio import                | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                             |
-| Member badge on public artist profiles       | Not started                                                                                                                 |
-| Fallback cover for releases without artwork  | Gradient placeholder exists; no approved fallback asset                                                                     |
-| Recurrence duration unused                   | `recurrenceDurationMin` stored, not used for overlap/end time                                                               |
-| Orphan public routes                         | `/status` unlinked; `/transparency/grants/[year]` and `/venues/[slug]` 404                                                  |
-| Jam SSE multi-instance                       | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                          |
-| Discord bot → Tahti Radio                    | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                             |
-| Revelator export webhook sync                | Webhook accepts + logs; body → release status not wired                                                                     |
-| Per-DSP export submit                        | hearthis-export and storefront stubs; product API TBD                                                                       |
-| `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                            |
-| Homepage news feed (`feat/homepage-news-feed`) | Admin-managed news feed on landing page; 1 commit, no PR. Needs extraction or discard.                                  |
-| Kick.com integration (`feat/kick-integration`) | Kick.com channel link + live embed on profile; 2 commits, no PR.                                                        |
-| Two-factor auth (`feat/two-factor-auth`)    | TOTP 2FA on accounts; 2 commits, no PR. Needs rebase + PR or merge确认.                                                   |
-| Subscribers-only chat (`feat/subscribers-only-chat`) | Chat gated to subscribers; 2 commits, no PR.                                                               |
-| Radio admin RTMP targets (p2 worktree)      | Board-scoped RTMP target API for Tahti Radio; uncommitted, in `/tmp/tahti-p2`. Needs PR extraction.                      |
-| Tauri desktop CORS (`PLAT-084`)             | CORS origins for Tauri desktop build; uncommitted, in p2 worktree. Added to roadmap as PLAT-084.                          |
+| Item                                                 | Notes                                                                                                                       |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Mobile UX audit (MOB-01–MOB-10)                      | Done: PRs #446 (01/03/07/08), #451 (04/05), this branch (02/06), #453 (09/10)                                               |
+| Stream manager on artist studio page                 | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md` |
+| Channel Designer block system                        | Logo + addon blocks: `docs/todo/channel-designer-blocks.md`                                                                 |
+| Public list/play `audioUrl` still ungated            | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                   |
+| Unify remaining uploaders on `FileDropzone`          | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover)                                     |
+| Client `NEXT_PUBLIC_API_*` env unification           | ~70 components still mix `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_URL`                                                     |
+| Deduplicate chat panel logic                         | `chat-panel.tsx` / `fan-chat-panel.tsx`                                                                                     |
+| Collapse overlapping e2e seed scripts                | Four `apps/api/scripts/seed-e2e-*` scripts                                                                                  |
+| hearthis.at real-audio import                        | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                             |
+| Fallback cover for releases without artwork          | Gradient placeholder exists; no approved fallback asset                                                                     |
+| Recurrence duration unused                           | `recurrenceDurationMin` stored, not used for overlap/end time                                                               |
+| Orphan public routes                                 | `/status` unlinked; `/transparency/grants/[year]` and `/venues/[slug]` 404                                                  |
+| Jam SSE multi-instance                               | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                          |
+| Discord bot → Tahti Radio                            | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                             |
+| Revelator export webhook sync                        | Webhook accepts + logs; body → release status not wired                                                                     |
+| Per-DSP export submit                                | hearthis-export and storefront stubs; product API TBD                                                                       |
+| `streaming-architecture.md` vs shipped infra         | Confirm how much of the target edge-encoder/MinIO design is live                                                            |
+| Homepage news feed (`feat/homepage-news-feed`)       | Admin-managed news feed on landing page; 1 commit, no PR. Needs extraction or discard.                                      |
+| Kick.com integration (`feat/kick-integration`)       | Kick.com channel link + live embed on profile; 2 commits, no PR.                                                            |
+| Two-factor auth (`feat/two-factor-auth`)             | TOTP 2FA on accounts; 2 commits, no PR. Needs rebase and a PR, or a decision to drop it.                                    |
+| Subscribers-only chat (`feat/subscribers-only-chat`) | Chat gated to subscribers; 2 commits, no PR.                                                                                |
+| Radio admin RTMP targets (p2 worktree)               | Board-scoped RTMP target API for Tahti Radio; uncommitted, in `/tmp/tahti-p2`. Needs PR extraction.                         |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 

@@ -138,14 +138,14 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ## Hardening backlog (cross-cutting)
 
-| P      | Item                                                                                         | Tracks as                                                 |
-| ------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [x]    | Branch protection: all `ci.yml` jobs required on merge                                       | PLAT-002 — verified ruleset 22306827, 2026-09-05          |
-| [~]    | Automate DB migrate in deploy (no manual `db push` after release)                            | OPS-002 — `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md` |
-| P1     | PgBouncer before API horizontal scale                                                        | `scaling-node-distribution.md`                            |
-| P2     | Swagger `/docs` auth from secrets, rotate default password                                   | PLAT-005                                                  |
-| P2     | Redis-down policy for rate limit + sessions documented and tested                            | PLAT-006                                                  |
-| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done) | PLAT-004                                                  |
+| P      | Item                                                                                         | Tracks as                                                                             |
+| ------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [ ]    | Branch protection: all `ci.yml` jobs required on merge                                       | PLAT-002 — removed 2026-09-08 at author's request; see `.github/BRANCH_PROTECTION.md` |
+| [~]    | Automate DB migrate in deploy (no manual `db push` after release)                            | OPS-002 — `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`                             |
+| P1     | PgBouncer before API horizontal scale                                                        | `scaling-node-distribution.md`                                                        |
+| P2     | Swagger `/docs` auth from secrets, rotate default password                                   | PLAT-005                                                                              |
+| P2     | Redis-down policy for rate limit + sessions documented and tested                            | PLAT-006                                                                              |
+| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done) | PLAT-004                                                                              |
 
 ---
 
@@ -192,13 +192,13 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ### CI / DX
 
-| P        | Item                                                                                                        | Benefit                      |
-| -------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| ~~P1~~   | ~~Merge vital-flows into CI~~ — done                                                                        | —                            |
-| ~~P1~~   | ~~`user-journeys-e2e` required in branch protection~~ — included in required **All checks**                 | Verified 2026-09-05          |
-| `[~]` P2 | Coverage report command (`pnpm test:coverage`) added; hard threshold deferred until per-worker DB isolation | Untested money paths visible |
-| P2       | Docker stack smoke job in CI (build + health, weekly)                                                       | Catches Dockerfile drift     | **Done** — `.github/workflows/stack-smoke.yml` + `scripts/stack-smoke.sh` |
-| P3       | Preview deployments per PR                                                                                  | Stakeholder review           |
+| P        | Item                                                                                                        | Benefit                        |
+| -------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| ~~P1~~   | ~~Merge vital-flows into CI~~ — done                                                                        | —                              |
+| P1       | `user-journeys-e2e` required in branch protection — moot, branch protection removed 2026-09-08              | Still runs in CI, not enforced |
+| `[~]` P2 | Coverage report command (`pnpm test:coverage`) added; hard threshold deferred until per-worker DB isolation | Untested money paths visible   |
+| P2       | Docker stack smoke job in CI (build + health, weekly)                                                       | Catches Dockerfile drift       | **Done** — `.github/workflows/stack-smoke.yml` + `scripts/stack-smoke.sh` |
+| P3       | Preview deployments per PR                                                                                  | Stakeholder review             |
 
 ### Code quality
 

@@ -190,20 +190,20 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 
 ## Doc map (quick)
 
-| Need                          | Doc                                              |
-| ----------------------------- | ------------------------------------------------ |
-| Mission / money / AGPL        | `docs/about.md`, `docs/CONSTITUTION.md`          |
-| Milestone specs               | `docs/AGENT.md`                                  |
-| Incomplete work (all owners)  | `docs/remaining-work.md`                         |
+| Need                          | Doc                                                  |
+| ----------------------------- | ---------------------------------------------------- |
+| Mission / money / AGPL        | `docs/about.md`, `docs/CONSTITUTION.md`              |
+| Milestone specs               | `docs/AGENT.md`                                      |
+| Incomplete work (all owners)  | `docs/remaining-work.md`                             |
 | Active todos (open only)      | `docs/todo/` — shipped work → `docs/todo/HISTORY.md` |
-| Status matrix                 | `docs/project-roadmap.md`                        |
-| Deferred / efficiency backlog | `docs/future-improvements.md`                    |
-| Streaming scale rules         | `docs/technical/streaming-architecture.md`       |
-| Discord bot credentials       | `docs/technical/discord-bot-credentials.md`      |
-| Grants + fan-subs             | `docs/engagement-and-fansubs.md`                 |
-| Infra / no CDN                | `docs/infra-strategy.md`                         |
-| Design                        | `docs/design/README.md`, `docs/e2e-screenshots/` |
-| User journeys                 | `docs/user-flows.md`, `docs/guides/`             |
+| Status matrix                 | `docs/project-roadmap.md`                            |
+| Deferred / efficiency backlog | `docs/future-improvements.md`                        |
+| Streaming scale rules         | `docs/technical/streaming-architecture.md`           |
+| Discord bot credentials       | `docs/technical/discord-bot-credentials.md`          |
+| Grants + fan-subs             | `docs/engagement-and-fansubs.md`                     |
+| Infra / no CDN                | `docs/infra-strategy.md`                             |
+| Design                        | `docs/design/README.md`, `docs/e2e-screenshots/`     |
+| User journeys                 | `docs/user-flows.md`, `docs/guides/`                 |
 
 ## Anti-patterns (short list)
 
