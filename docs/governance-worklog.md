@@ -17,9 +17,9 @@ binding electronic voting.
 ## Board and association operations
 
 - [ ] Review, second, schedule, and circulate member motions.
-- [ ] Publish notices and retain delivery evidence.
-- [ ] Capture official meeting votes and decisions.
-- [ ] Upload, approve, redact, sign, and publish minutes.
+- [~] Publish notices and retain delivery evidence: notice publication is now audited (`MEETING_NOTICE_PUBLISH`); no per-recipient delivery evidence (send/bounce/open) exists yet.
+- [~] Capture official meeting votes and decisions: `BoardResolution` audited under its own "Official meeting votes" topic; still not linked to a `GovernanceMeeting` row and has no `binding` flag.
+- [~] Upload, approve, redact, sign, and publish minutes: upload/approve/sign are now individually audited (`MINUTES_UPLOAD`/`MINUTES_APPROVE`/`MINUTES_SIGN`); redact and a distinct publish step still have no backing field.
 - [ ] Maintain versioned bylaws and association documents.
 - [ ] Link decisions to meetings, agenda items, motions, and minutes.
 - [ ] Maintain board roles, terms, elections, conflicts, and recusals.

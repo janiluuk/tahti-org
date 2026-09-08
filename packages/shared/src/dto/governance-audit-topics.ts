@@ -16,6 +16,9 @@ export const GOVERNANCE_AUDIT_TOPIC_IDS = [
   'officers',
   'meetings',
   'radio',
+  'notices',
+  'minutes',
+  'official-votes',
 ] as const
 
 export type GovernanceAuditTopicId = (typeof GOVERNANCE_AUDIT_TOPIC_IDS)[number]
@@ -67,17 +70,15 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
   },
   {
     id: 'decisions',
-    label: 'Motions, votes & resolutions',
+    label: 'Motions & advisory votes',
     description:
-      'Advisory motion lifecycle, comments, vote records (ballot choices redacted), board resolutions, and quarterly feature reports.',
+      'Advisory motion lifecycle, comments, vote records (ballot choices redacted), and quarterly feature reports. Board-recorded resolutions live under Official meeting votes.',
     actions: [
       'MOTION_CREATE',
       'MOTION_OPEN',
       'MOTION_CLOSE',
       'MOTION_COMMENT_CREATE',
       'VOTE_CAST',
-      'RESOLUTION_CREATE',
-      'RESOLUTION_UPDATE',
       'FEATURE_REQUEST_QUARTERLY_REPORT',
     ],
   },
@@ -110,31 +111,35 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'RADIO_SLOT_BOOKING_CANCEL',
     ],
   },
-]
-
-export const GOVERNANCE_AUDIT_PLANNED_TOPICS = [
   {
     id: 'notices',
     label: 'Notices & delivery',
     description:
-      'Member notices, reminders, delivery evidence, and circulation deadlines (not yet written to AuditLog).',
+      'Meeting notice publication (notice date set or changed). Only publication is audited so far — per-recipient send/bounce/open evidence is not yet tracked; see remaining-work.md.',
+    actions: ['MEETING_NOTICE_PUBLISH'],
   },
   {
     id: 'minutes',
     label: 'Minutes workflow',
     description:
-      'Upload, redact, approve, sign, and publish minutes as distinct audited steps (signature snapshot exists on the meeting; full workflow does not).',
-  },
-  {
-    id: 'conflicts',
-    label: 'Conflicts & recusals',
-    description: 'Declared conflicts of interest and recusals on motions or meeting votes.',
+      'Upload, approval, and signature as distinct audited steps. Redaction and a separate publish step are not yet modeled — see the planned "Conflicts & recusals" note and remaining-work.md.',
+    actions: ['MINUTES_UPLOAD', 'MINUTES_APPROVE', 'MINUTES_SIGN'],
   },
   {
     id: 'official-votes',
     label: 'Official meeting votes',
     description:
-      'Binding AGM/board ballots, distinct from advisory member polls. Stays out until bylaws authorize electronic voting.',
+      'Board-recorded resolutions and outcomes, distinct from advisory member motions. Not yet linked to a specific meeting record or flagged binding vs. advisory at the schema level.',
+    actions: ['RESOLUTION_CREATE', 'RESOLUTION_UPDATE'],
+  },
+]
+
+export const GOVERNANCE_AUDIT_PLANNED_TOPICS = [
+  {
+    id: 'conflicts',
+    label: 'Conflicts & recusals',
+    description:
+      'Declared conflicts of interest and recusals on motions or meeting votes (no data model yet).',
   },
 ] as const
 
@@ -170,6 +175,10 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   RADIO_SLOT_BOOKING_CREATE: 'Radio slot booked',
   RADIO_SLOT_BOOKING_UPDATE: 'Radio slot updated',
   RADIO_SLOT_BOOKING_CANCEL: 'Radio slot cancelled',
+  MEETING_NOTICE_PUBLISH: 'Meeting notice published',
+  MINUTES_UPLOAD: 'Minutes uploaded',
+  MINUTES_APPROVE: 'Minutes approved',
+  MINUTES_SIGN: 'Minutes signed',
 }
 
 const TOPIC_BY_ACTION = new Map<string, GovernanceAuditTopicId>()

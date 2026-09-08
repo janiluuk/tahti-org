@@ -241,6 +241,69 @@ describe('governance meetings and documents', () => {
     })
   })
 
+  it('audits notice publication and each minutes-workflow step distinctly', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/admin/governance/meetings',
+      headers: { cookie: boardCookie },
+      payload: { title: 'September 2026 board meeting', type: 'BOARD' },
+    })
+    expect(create.statusCode).toBe(201)
+    const meetingId = create.json().id as string
+
+    const noticed = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { noticeAt: '2026-09-01T12:00:00.000Z' },
+    })
+    expect(noticed.statusCode).toBe(200)
+
+    const uploaded = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { state: 'MINUTES_DRAFT', minutesKey: 'governance/minutes-sept-2026.pdf' },
+    })
+    expect(uploaded.statusCode).toBe(200)
+
+    const approved = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { minutesApprovedAt: '2026-09-05T12:00:00.000Z' },
+    })
+    expect(approved.statusCode).toBe(200)
+
+    const signed = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: {
+        state: 'APPROVED',
+        minutesSignedByName: 'Aino Chair',
+        minutesSignedAt: '2026-09-06T12:00:00.000Z',
+      },
+    })
+    expect(signed.statusCode).toBe(200)
+
+    const fetchTopic = async (topic: string) => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/audit?topic=${topic}&targetId=${meetingId}`,
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      return (res.json() as { items: Array<{ action: string }> }).items.map((i) => i.action)
+    }
+
+    expect(await fetchTopic('notices')).toContain('MEETING_NOTICE_PUBLISH')
+    const minutesActions = await fetchTopic('minutes')
+    expect(minutesActions).toContain('MINUTES_UPLOAD')
+    expect(minutesActions).toContain('MINUTES_APPROVE')
+    expect(minutesActions).toContain('MINUTES_SIGN')
+  })
+
   it('does not expose governance records to non-members', async () => {
     const response = await app.inject({ method: 'GET', url: '/api/v1/governance/documents' })
     expect(response.statusCode).toBe(401)
