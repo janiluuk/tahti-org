@@ -13,12 +13,10 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see the Fold rule below.
 
-| Status | File | One-line |
-| --- | --- | --- |
-| partial | [governance-audit-log.md](governance-audit-log.md) | Board audit viewer wired for 3 of 4 planned topics; per-recipient notice delivery evidence, minutes redact/publish step, and conflicts/recusals still open |
-| open | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there) |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md) | §5.1/§5.2 adapter shipped 2026-09-07 in `../tahti-player` (additive, non-breaking); caller migration (§5.4) and the `PluginRegistryHost` half not started |
-| partial | [vimage6-monitoring-gauges-and-api-scrape-auth.md](vimage6-monitoring-gauges-and-api-scrape-auth.md) | Grafana "API unhealthy"/no-data root causes found on vimage6; some fixes still open |
+| Status  | File                                                                                         | One-line                                                                                                                                                                                                           |
+| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                                               |
+| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | §5.1/§5.2 store adapter + §5 `PluginRegistryHost` façade both shipped in `../tahti-player` (additive, non-breaking), §6 contract tests cover both; caller migration (§5.4) and ownership-split sign-off still open |
 
 ## Roadmap & planning (broader than a single task)
 
@@ -26,15 +24,15 @@ These aren't per-task todos — they're the standing status/decision docs this
 repo already uses. `docs/AGENT.md` names them as canonical; this table adds
 the "is it actually fresh" read before you trust one blindly.
 
-| Doc | What it's for | Freshness |
-| --- | --- | --- |
-| [`../project-roadmap.md`](../project-roadmap.md) | Master milestone matrix (M0–M21) + handover checklist — the single source of truth for build status | Header says "updated 2026-06-05"; cross-check against `remaining-work.md` (2026-09-05) and this INDEX before quoting an exact milestone state |
-| [`../remaining-work.md`](../remaining-work.md) | Consolidated `[ ]`/`[~]` checklist compiled from `project-roadmap.md` + `future-improvements.md` + archived session leftovers | Last compiled 2026-09-05 |
-| [`../planning-decisions.md`](../planning-decisions.md) | Every unresolved architectural/legal/product decision blocking a milestone — work through in order, early decisions unblock later ones | Not date-stamped; skim the `OPEN` rows |
-| [`../future-improvements.md`](../future-improvements.md) | Deferred-from-roadmap work + engineering efficiency backlog | "Last reviewed: 2026-06-05" — 3 months stale as of this pass, re-verify before acting on any single line |
-| [`../cloud-import-roadmap.md`](../cloud-import-roadmap.md) | Scoped: cloud-drive import beyond the shipped Google Drive phase 1 | Small, self-contained, not part of the milestone matrix |
-| [`../governance-worklog.md`](../governance-worklog.md) | Open-items-only governance checklist (member journey / board ops / technical integrity / plugin-registry boundary) — already follows the "open only" hygiene rule | Current |
-| [`../worklogs/`](../worklogs/) | Session worklogs — kept only while a session still has open follow-ups | Empty right now (just its own `README.md`) |
+| Doc                                                        | What it's for                                                                                                                                                     | Freshness                                                                                                                                     |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`../project-roadmap.md`](../project-roadmap.md)           | Master milestone matrix (M0–M21) + handover checklist — the single source of truth for build status                                                               | Header says "updated 2026-06-05"; cross-check against `remaining-work.md` (2026-09-05) and this INDEX before quoting an exact milestone state |
+| [`../remaining-work.md`](../remaining-work.md)             | Consolidated `[ ]`/`[~]` checklist compiled from `project-roadmap.md` + `future-improvements.md` + archived session leftovers                                     | Last compiled 2026-09-05                                                                                                                      |
+| [`../planning-decisions.md`](../planning-decisions.md)     | Every unresolved architectural/legal/product decision blocking a milestone — work through in order, early decisions unblock later ones                            | Not date-stamped; skim the `OPEN` rows                                                                                                        |
+| [`../future-improvements.md`](../future-improvements.md)   | Deferred-from-roadmap work + engineering efficiency backlog                                                                                                       | "Last reviewed: 2026-06-05" — 3 months stale as of this pass, re-verify before acting on any single line                                      |
+| [`../cloud-import-roadmap.md`](../cloud-import-roadmap.md) | Scoped: cloud-drive import beyond the shipped Google Drive phase 1                                                                                                | Small, self-contained, not part of the milestone matrix                                                                                       |
+| [`../governance-worklog.md`](../governance-worklog.md)     | Open-items-only governance checklist (member journey / board ops / technical integrity / plugin-registry boundary) — already follows the "open only" hygiene rule | Current                                                                                                                                       |
+| [`../worklogs/`](../worklogs/)                             | Session worklogs — kept only while a session still has open follow-ups                                                                                            | Empty right now (just its own `README.md`)                                                                                                    |
 
 ## Cross-repo pointers
 
