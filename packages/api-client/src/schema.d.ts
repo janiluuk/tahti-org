@@ -26893,6 +26893,8 @@ export interface paths {
                 seriesId: string
                 /** Format: date-time */
                 startAt: string
+                /** Format: date-time */
+                endAt: string | null
                 episodeNumber: number | null
                 title: string
                 description: string | null
