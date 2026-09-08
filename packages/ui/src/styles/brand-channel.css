@@ -653,6 +653,10 @@
   min-width: 0;
   background: color-mix(in srgb, var(--bg) 80%, var(--card));
   opacity: 1;
+  position: sticky;
+  top: 68px;
+  max-height: calc(100vh - 4rem);
+  overflow: hidden;
   transition:
     opacity 0.22s ease,
     padding 0.32s ease;
@@ -3735,6 +3739,8 @@
 [data-tahti-ui='brand'] .ch-chat-panel {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
   border-radius: var(--radius);
   /* More opaque so sticky scroll doesn't need a live backdrop-filter sample
@@ -3742,9 +3748,6 @@
    * major scroll-jank contributor on /radio next to the player visualizer. */
   background: color-mix(in srgb, var(--cyan) 5%, color-mix(in srgb, var(--card) 94%, transparent));
   contain: layout style paint;
-  height: calc(100vh - 6rem);
-  position: sticky;
-  top: 68px;
   overflow: hidden;
 }
 
@@ -6230,19 +6233,15 @@
   position: relative;
 }
 
-[data-tahti-ui='brand'] .ch-sound-playback__title-overlay {
-  position: absolute;
-  left: 0.6rem;
-  bottom: 0.4rem;
-  right: 0.6rem;
-  pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+[data-tahti-ui='brand'] .ch-sound-playback__title-area {
+  flex: 1;
+  min-width: 0;
 }
 
 [data-tahti-ui='brand'] .ch-sound-playback__title {
   font-weight: 500;
   font-size: var(--text-sm);
-  color: #fff;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6250,7 +6249,7 @@
 
 [data-tahti-ui='brand'] .ch-sound-playback__subtitle {
   font-size: var(--text-xs);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
