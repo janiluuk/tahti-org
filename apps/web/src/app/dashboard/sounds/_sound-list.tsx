@@ -141,12 +141,23 @@ export function SoundList({
                 const providerLabel = play?.embedProvider
                   ? (EMBED_PROVIDER_LABELS[play.embedProvider] ?? play.embedProvider)
                   : null
+                // Embed-only rows (no hosted audioUrl) render their own provider
+                // badge inline in the player controls — skip the cover's badge
+                // there so the provider name doesn't show twice on one row.
+                const showsOwnProviderBadge = Boolean(play?.embedUri && !play?.audioUrl)
+                // Tie the row's ambient background to the track's own artwork
+                // (tinted with its extracted/accent color scheme) instead of a
+                // flat swatch gradient unrelated to what's actually on screen.
+                const rowBackground = cover
+                  ? `linear-gradient(135deg, ${scheme.bg}e6 0%, ${scheme.accent}66 100%), url(${cover})`
+                  : `linear-gradient(135deg, ${scheme.bg} 0%, ${scheme.accent}33 100%)`
                 return (
                   <li
                     key={item.id}
                     className="sound-list__row"
                     style={{
-                      background: `linear-gradient(135deg, ${scheme.bg} 0%, ${scheme.accent}33 100%)`,
+                      background: rowBackground,
+                      ...(cover ? { backgroundSize: 'cover', backgroundPosition: 'center' } : null),
                     }}
                   >
                     <div className="sound-list__cover">
@@ -159,7 +170,7 @@ export function SoundList({
                           aria-hidden
                         />
                       )}
-                      {providerLabel && (
+                      {providerLabel && !showsOwnProviderBadge && (
                         <span className="sound-list__cover-embed-badge">{providerLabel}</span>
                       )}
                     </div>

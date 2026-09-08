@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ButtonIcon, Button, useAutoCollapseSidebar } from '@tahti/ui'
+import { ButtonIcon, Button, FileDropzone, useAutoCollapseSidebar } from '@tahti/ui'
 import type { ClipTrack } from '@waveform-playlist/browser'
 import {
   PauseButton,
@@ -398,19 +398,15 @@ export function MultitrackEditor({
       ))}
 
       <div className="studio-row studio-row--wrap studio-mb-md">
-        <label className="studio-file-label">
-          Add track
-          <input
-            type="file"
-            accept="audio/*"
-            className="studio-hidden-input"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) addTracks([file])
-              e.target.value = ''
-            }}
-          />
-        </label>
+        <FileDropzone
+          label="Add track"
+          hint="Drop an audio file or click to browse"
+          accept="audio/*"
+          onFiles={(files) => {
+            const file = files[0]
+            if (file) addTracks([file])
+          }}
+        />
       </div>
 
       <StemSeparationPanel

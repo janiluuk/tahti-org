@@ -3,6 +3,7 @@
 
 [data-tahti-ui='brand'].brand-channel {
   min-height: 100vh;
+  min-height: 100svh;
   background: transparent;
   color: var(--text);
   font-family: var(--font-body);
@@ -70,7 +71,11 @@
 .app-bg-veil {
   content: '';
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  height: 100lvh;
   z-index: -1;
   pointer-events: none;
   /* Stronger veil stands in for the removed fullscreen blur — keeps the
@@ -82,6 +87,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100svh;
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .ch-body {
@@ -606,6 +612,17 @@
   border: 1px solid color-mix(in srgb, var(--green) 25%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-live--replay {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  border-color: color-mix(in srgb, var(--amber) 28%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-live--replay .signal-dot {
+  background: var(--amber);
+  animation: none;
+}
+
 [data-tahti-ui='brand'] .signal-dot {
   display: inline-block;
   width: 10px;
@@ -633,6 +650,7 @@
   grid-template-columns: 1fr var(--chat-w);
   gap: var(--space-4);
   min-height: calc(100vh - 52px);
+  min-height: calc(100svh - 52px);
   max-width: var(--public-max);
   margin: 0 auto;
   position: relative;
@@ -718,6 +736,19 @@
   [data-tahti-ui='brand'] .ch-body--chat-collapsed .ch-chat-collapse-toggle {
     right: 4px;
   }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle--dock {
+    width: 40px;
+    height: 40px;
+    right: 12px;
+    top: auto;
+    bottom: calc(var(--fixed-stack-bottom, 72px) + 16px);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    background: color-mix(in srgb, var(--cyan) 16%, var(--card2));
+    border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+    color: var(--cyan);
+  }
 }
 
 @media (max-width: 768px) {
@@ -733,6 +764,7 @@
   [data-tahti-ui='brand'] .ch-body,
   [data-tahti-ui='brand'] .shell-channel {
     min-height: calc(100vh - 77px);
+    min-height: calc(100svh - 77px);
   }
 }
 
@@ -1303,9 +1335,19 @@
 [data-tahti-ui='brand'] .ch-sound-controls-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.4rem;
   padding: 0.1rem 0 0;
+}
+
+[data-tahti-ui='brand'] .ch-sound-controls-row > * {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  [data-tahti-ui='brand'] .ch-sound-controls-row {
+    gap: 0.2rem;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-sound-controls {
@@ -4202,15 +4244,16 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--fixed-stack-bottom);
+    top: 0;
+    bottom: 0;
     z-index: 36;
-    max-height: min(70vh, 520px);
-    height: auto;
-    padding: 12px 16px 16px;
-    border-top: 1px solid var(--border);
-    border-radius: 16px 16px 0 0;
+    max-height: none;
+    height: 100dvh;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    border-top: none;
+    border-radius: 0;
     background: var(--card);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: none;
     transform: translateY(100%);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -4219,8 +4262,24 @@
     transform: translateY(0);
   }
 
+  [data-tahti-ui='brand'] .ch-body--chat-sheet-open .ch-chat-collapse-toggle {
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+    left: auto;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  [data-tahti-ui='brand'] .ch-body--chat-sheet-open .ch-chat-collapse-toggle__label {
+    display: none;
+  }
+
   [data-tahti-ui='brand'] .ch-chat-panel {
-    height: min(55vh, 440px);
+    height: calc(100dvh - 7rem);
+    max-height: none;
     position: static;
   }
 }
@@ -6090,8 +6149,15 @@
 }
 
 [data-tahti-ui='brand'] .ch-page-visualizer {
-  position: absolute;
-  inset: 0;
+  /* Viewport-locked ambient layer — must not grow/shrink with 100vh document
+   * reflow when the mobile URL bar collapses (that read as the background
+   * "scrolling"). Fixed + lvh keeps the scene static while page content scrolls. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  height: 100lvh;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
@@ -6233,15 +6299,27 @@
   position: relative;
 }
 
-[data-tahti-ui='brand'] .ch-sound-playback__title-area {
-  flex: 1;
-  min-width: 0;
+[data-tahti-ui='brand'] .ch-sound-playback__title-overlay {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0;
+  right: 0.6rem;
+  padding: 1.4rem 0 0.4rem;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(6, 8, 16, 0.82) 0%,
+    rgba(6, 8, 16, 0.35) 65%,
+    transparent 100%
+  );
+  border-radius: 0 0 8px 8px;
 }
 
 [data-tahti-ui='brand'] .ch-sound-playback__title {
   font-weight: 500;
   font-size: var(--text-sm);
-  color: var(--text);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6249,7 +6327,8 @@
 
 [data-tahti-ui='brand'] .ch-sound-playback__subtitle {
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

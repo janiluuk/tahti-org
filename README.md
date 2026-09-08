@@ -162,6 +162,12 @@ cd packages/db && pnpm db:push   # or pnpm db:migrate:test in CI
 cd ../.. && pnpm test
 ```
 
+For a clean checkout, the full local CI bootstrap is:
+
+```bash
+docker compose -f infra/docker-compose.dev.yml up -d postgres redis && pnpm install --frozen-lockfile && pnpm --filter @tahti/db db:generate && pnpm format && pnpm ci:check
+```
+
 Run the same lint, format, and typecheck gates as CI locally:
 
 ```bash

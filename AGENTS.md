@@ -23,6 +23,17 @@ linked docs; do not invent product rules that contradict them.
 | Done todos → HISTORY.md              | [`.cursor/rules/todo-history.mdc`](.cursor/rules/todo-history.mdc)               |
 | Stack PRs; defer catalog edits       | [`.cursor/rules/pr-stacking.mdc`](.cursor/rules/pr-stacking.mdc)                 |
 
+### UI component reuse
+
+When creating a new view, always use an applicable existing Storybook/
+`@tahti/ui` component. Add a new component to the shared UI kit and its
+Storybook coverage when no suitable component exists; do not introduce a
+one-off view primitive in `apps/web`.
+
+Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
+Prettier command for the files changed) and then confirm with
+`pnpm format:check`.
+
 ## What this monorepo is
 
 Nonprofit AGPL broadcasting platform (Tahti ry). Artists get always-on channels
@@ -179,20 +190,20 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 
 ## Doc map (quick)
 
-| Need                          | Doc                                              |
-| ----------------------------- | ------------------------------------------------ |
-| Mission / money / AGPL        | `docs/about.md`, `docs/CONSTITUTION.md`          |
-| Milestone specs               | `docs/AGENT.md`                                  |
-| Incomplete work (all owners)  | `docs/remaining-work.md`                         |
+| Need                          | Doc                                                  |
+| ----------------------------- | ---------------------------------------------------- |
+| Mission / money / AGPL        | `docs/about.md`, `docs/CONSTITUTION.md`              |
+| Milestone specs               | `docs/AGENT.md`                                      |
+| Incomplete work (all owners)  | `docs/remaining-work.md`                             |
 | Active todos (open only)      | `docs/todo/` — shipped work → `docs/todo/HISTORY.md` |
-| Status matrix                 | `docs/project-roadmap.md`                        |
-| Deferred / efficiency backlog | `docs/future-improvements.md`                    |
-| Streaming scale rules         | `docs/technical/streaming-architecture.md`       |
-| Discord bot credentials       | `docs/technical/discord-bot-credentials.md`      |
-| Grants + fan-subs             | `docs/engagement-and-fansubs.md`                 |
-| Infra / no CDN                | `docs/infra-strategy.md`                         |
-| Design                        | `docs/design/README.md`, `docs/e2e-screenshots/` |
-| User journeys                 | `docs/user-flows.md`, `docs/guides/`             |
+| Status matrix                 | `docs/project-roadmap.md`                            |
+| Deferred / efficiency backlog | `docs/future-improvements.md`                        |
+| Streaming scale rules         | `docs/technical/streaming-architecture.md`           |
+| Discord bot credentials       | `docs/technical/discord-bot-credentials.md`          |
+| Grants + fan-subs             | `docs/engagement-and-fansubs.md`                     |
+| Infra / no CDN                | `docs/infra-strategy.md`                             |
+| Design                        | `docs/design/README.md`, `docs/e2e-screenshots/`     |
+| User journeys                 | `docs/user-flows.md`, `docs/guides/`                 |
 
 ## Anti-patterns (short list)
 

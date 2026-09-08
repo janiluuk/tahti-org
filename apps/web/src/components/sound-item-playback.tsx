@@ -99,7 +99,7 @@ export function SoundItemPlayback({
     <div
       className={`ch-sound-playback${isCurrent ? ' ch-sound-playback--current' : ''}${isCurrent && playing ? ' ch-sound-playback--playing' : ''}`}
     >
-      <div className={titleOverlay ? 'ch-sound-playback__wf-wrap' : undefined}>
+      <div className="ch-sound-playback__wf-wrap">
         {isCurrent ? (
           <ActiveTrackStage
             playing={playing}

@@ -8,8 +8,6 @@ import { useEffect, useRef, useState } from 'react'
 import { resolveChannelUrl } from '@/lib/app-url'
 import {
   BRAND_ACCENT_PRESETS,
-  CHANNEL_HEADER_STYLES,
-  CHANNEL_HEADER_STYLE_LABELS,
   ColorSchemeSchema,
   DEFAULT_COLOR_SCHEME,
   parseVisualSettingsMap,
@@ -65,16 +63,13 @@ export type ChannelVisualDraft = {
 
 export default function ChannelVisualPresetPanel({
   channelSlug,
-  tier,
+  tier: _tier,
   hasVideoBackground: _hasVideoBackground,
   initial,
   bare = false,
-  hideHeaderStyle = false,
   onDraftChange,
 }: Props & {
   bare?: boolean
-  /** Header style now lives in the Header & backdrop section (ChannelHeaderStylePanel) — hide it here. */
-  hideHeaderStyle?: boolean
   onDraftChange?: (draft: ChannelVisualDraft) => void
 }) {
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
@@ -84,12 +79,9 @@ export default function ChannelVisualPresetPanel({
   const parsed = parseOrNull(initial.colorSchemeJson)
   const [scheme, setScheme] = useState<ColorScheme>(parsed ?? DEFAULT_COLOR_SCHEME)
   const [brandAccentPreset, setBrandAccentPreset] = useState(initial.brandAccentPreset)
-  const [headerStyle, setHeaderStyle] = useState<ChannelHeaderStyle>(initial.headerStyle)
   const [settingsMap, setSettingsMap] = useState<VisualSettingsMap>(() =>
     parseVisualSettingsMap(initial.visualSettingsJson),
   )
-
-  const canUseVideoLoop = tier !== 'FREE'
 
   // Always persist a full color scheme so page backgrounds are never stuck on
   // the platform purple default when the artist only touched brand swatches.
@@ -98,7 +90,7 @@ export default function ChannelVisualPresetPanel({
       visualPreset: preset,
       colorSchemeJson: JSON.stringify(scheme),
       visualSettingsJson: Object.keys(settingsMap).length > 0 ? JSON.stringify(settingsMap) : null,
-      headerStyle,
+      headerStyle: initial.headerStyle,
       brandAccentPreset,
       slideshowPreset: initial.slideshowPreset,
       slideshowIntervalSeconds: initial.slideshowIntervalSeconds,
@@ -106,7 +98,7 @@ export default function ChannelVisualPresetPanel({
       slideshowAutoplay: initial.slideshowAutoplay,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, scheme, headerStyle, brandAccentPreset, settingsMap])
+  }, [preset, scheme, brandAccentPreset, settingsMap])
 
   function updateColor(key: keyof ColorScheme, value: string) {
     setScheme((s) => ({ ...s, [key]: value }))
@@ -117,11 +109,6 @@ export default function ChannelVisualPresetPanel({
     if (!accentPreset) return
     setBrandAccentPreset(presetId)
     setScheme((s) => ({ ...s, accent: accentPreset.accent, highlight: accentPreset.highlight }))
-  }
-
-  function selectHeaderStyle(style: ChannelHeaderStyle) {
-    if (style === 'VIDEO_LOOP' && !canUseVideoLoop) return
-    setHeaderStyle(style)
   }
 
   function setVisualizerEnabled(enabled: boolean) {
@@ -187,30 +174,6 @@ export default function ChannelVisualPresetPanel({
           ))}
         </div>
       </div>
-
-      {!hideHeaderStyle ? (
-        <div className="studio-field--block">
-          <span className="studio-label">Header style</span>
-          <div className="channel-header-style-tiles">
-            {CHANNEL_HEADER_STYLES.map((style) => {
-              const locked = style === 'VIDEO_LOOP' && !canUseVideoLoop
-              return (
-                <button
-                  key={style}
-                  type="button"
-                  disabled={locked}
-                  className={`channel-header-style-tile${headerStyle === style ? ' channel-header-style-tile--active' : ''}`}
-                  aria-pressed={headerStyle === style}
-                  onClick={() => selectHeaderStyle(style)}
-                >
-                  {CHANNEL_HEADER_STYLE_LABELS[style]}
-                  {locked ? <span className="channel-header-style-tile__badge">paid</span> : null}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ) : null}
 
       <div className="studio-field--block">
         <div className="channel-visualizer-toggle-row">

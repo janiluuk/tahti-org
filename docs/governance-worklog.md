@@ -1,9 +1,10 @@
 # Governance implementation checklist
 
 Open items only. Shipped advisory motions, discussion, transparency history,
-meeting/attendance records, and related tests — see `docs/todo/HISTORY.md`
-(2026-09-05 governance). Product behavior stays advisory until adopted bylaws
-and legal review authorize binding electronic voting.
+meeting/attendance records, meeting officer/minutes sign-off metadata, and
+related tests — see `docs/todo/HISTORY.md` (2026-09-05 governance). Product
+behavior stays advisory until adopted bylaws and legal review authorize
+binding electronic voting.
 
 ## Member journey
 
@@ -29,6 +30,7 @@ and legal review authorize binding electronic voting.
 - [ ] Snapshot voting eligibility and quorum denominators.
 - [ ] Separate advisory polls from binding ballots.
 - [ ] Provide immutable result certificates and correction history.
+- [~] Motion lists support bounded cursor continuation through `x-next-cursor`; the member directory and any remaining archive consumers still need the same UI pagination affordance.
 - [ ] Add backups, retention, legal hold, and restore verification for official records.
 
 ## Plugin registry boundary
