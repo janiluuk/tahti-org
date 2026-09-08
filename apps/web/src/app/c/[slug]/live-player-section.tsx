@@ -39,8 +39,10 @@ interface LivePlayerSectionProps {
   artworkUrl?: string | null
   isReplay?: boolean
   nextUpLabel?: string
-  /** Curated rotation (Tahti Radio / Selects) — poll track handoffs + animate title. */
+  /** Curated rotation (Tahti Radio / Selects) — animate title handoffs + viz. */
   isRotationChannel?: boolean
+  /** Poll `/api/channels/:slug` for now-playing metadata (rotation or any stream with titles). */
+  pollNowPlaying?: boolean
   colorSchemeJson?: string | null
   visualPreset?: VisualPreset
   visualSettingsJson?: string | null
@@ -63,6 +65,7 @@ export function LivePlayerSection({
   isReplay = false,
   nextUpLabel: initialNextUpLabel,
   isRotationChannel = false,
+  pollNowPlaying = false,
   colorSchemeJson,
   visualPreset = 'MINIMAL',
   visualSettingsJson,
@@ -72,18 +75,17 @@ export function LivePlayerSection({
   const { analyser, track, updateTrackMeta } = usePlayer()
   const [nowPlaying, setNowPlaying] = useState(initialNowPlaying)
   const [nextUp, setNextUp] = useState(initialNowPlayingNext)
+  const shouldPoll = pollNowPlaying || isRotationChannel
 
-  const title = isRotationChannel ? (nowPlaying?.title ?? initialTitle) : initialTitle
-  const subtitle = isRotationChannel ? (nowPlaying?.artistName ?? initialSubtitle) : initialSubtitle
+  const title = shouldPoll ? (nowPlaying?.title ?? initialTitle) : initialTitle
+  const subtitle = shouldPoll ? (nowPlaying?.artistName ?? initialSubtitle) : initialSubtitle
   const subtitleHref =
-    isRotationChannel && nowPlaying?.artistUsername
+    shouldPoll && nowPlaying?.artistUsername
       ? `/u/${nowPlaying.artistUsername}`
       : initialSubtitleHref
-  const artworkUrl = isRotationChannel
-    ? (nowPlaying?.artworkUrl ?? initialArtworkUrl)
-    : initialArtworkUrl
+  const artworkUrl = shouldPoll ? (nowPlaying?.artworkUrl ?? initialArtworkUrl) : initialArtworkUrl
   const nextUpLabel =
-    isRotationChannel && nextUp ? `${nextUp.title} — ${nextUp.artistName}` : initialNextUpLabel
+    shouldPoll && nextUp ? `${nextUp.title} — ${nextUp.artistName}` : initialNextUpLabel
 
   useEffect(() => {
     setNowPlaying(initialNowPlaying)
@@ -94,7 +96,7 @@ export function LivePlayerSection({
   }, [initialNowPlayingNext])
 
   useEffect(() => {
-    if (!isRotationChannel) return
+    if (!shouldPoll) return
     let cancelled = false
 
     async function refresh() {
@@ -121,10 +123,10 @@ export function LivePlayerSection({
       cancelled = true
       window.clearInterval(id)
     }
-  }, [isRotationChannel, slug])
+  }, [shouldPoll, slug])
 
   useEffect(() => {
-    if (!isRotationChannel) return
+    if (!shouldPoll) return
     if (!track || track.id !== url) return
     updateTrackMeta({
       title: title ?? 'Live stream',
@@ -132,7 +134,7 @@ export function LivePlayerSection({
       artworkUrl,
       href: resolveChannelUrl(slug),
     })
-  }, [isRotationChannel, track, url, title, subtitle, artworkUrl, slug, updateTrackMeta])
+  }, [shouldPoll, track, url, title, subtitle, artworkUrl, slug, updateTrackMeta])
 
   const scheme = resolveColorScheme(colorSchemeJson, null)
   const hasArt = Boolean(artworkUrl)
@@ -154,7 +156,7 @@ export function LivePlayerSection({
 
   useEffect(() => {
     const incoming = artworkUrl ?? null
-    if (!hasArt || !isRotationChannel) {
+    if (!hasArt || !shouldPoll) {
       setDisplayedArt(incoming)
       setBackdropPhase('idle')
       setOutgoingArt(null)
@@ -193,7 +195,7 @@ export function LivePlayerSection({
     backdropTimers.current.push(outTimer)
 
     return () => clearBackdropTimers()
-  }, [artworkUrl, hasArt, isRotationChannel])
+  }, [artworkUrl, hasArt, shouldPoll])
 
   const backdropUrl =
     backdropPhase === 'out' && outgoingArt ? outgoingArt : (displayedArt ?? artworkUrl)
@@ -244,7 +246,7 @@ export function LivePlayerSection({
           isReplay={isReplay}
           nextUpLabel={nextUpLabel}
           hideWaveform={showViz}
-          animateTrackChange={isRotationChannel}
+          animateTrackChange={shouldPoll}
           hideArtBackdrop={hasArt}
         />
       </div>

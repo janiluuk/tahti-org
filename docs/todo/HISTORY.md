@@ -195,3 +195,7 @@ Download gate restored (`ca7ee137`). Public list/play paths now use `resolvePlay
 ### 2026-09-08 — sounds-player-artwork-overlay.md
 
 Dashboard Sounds player: title/artist restored as a legible overlay on the waveform (was getting squeezed out of the icon row entirely), controls row stays one line, embed rows (Mixcloud/Spotify/Hearthis) no longer double up the provider label, row background now tints from the track's own artwork, and cover art renders as a consistent 1:1 square. Also fixed the Mixcloud/Spotify embed branch missing its `data-tahti-ui="brand"` wrapper (styles weren't applying at all) and added the missing Love/Download/Repost/Comments icons to embed-only rows. PR [#469](https://github.com/janiluuk/tahti-org/pull/469). Not verified against a live seeded app — see `docs/remaining-work.md`.
+
+### 2026-09-06 — member-badge-profiles.md
+
+Tahti ry `MemberBadge` on public profile + channel identity; join-date copy renamed to “Joined …”. PR [#456](https://github.com/janiluuk/tahti-org/pull/456).

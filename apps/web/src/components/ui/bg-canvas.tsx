@@ -99,15 +99,14 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    // Mobile URL chrome changes window.innerHeight without a real layout
+    // resize — keep a stable (non-shrinking) height so the scene doesn't jump.
+    let stableW = window.innerWidth
+    let stableH = window.innerHeight
+    renderer.setSize(stableW, stableH)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      2000,
-    )
+    const camera = new THREE.PerspectiveCamera(60, stableW / stableH, 0.1, 2000)
     camera.position.z = 400
 
     const palette: [number, number, number][] = [
@@ -483,9 +482,21 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     scene.add(pulseSphere2)
 
     const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
+      const nextW = window.innerWidth
+      const nextH = window.innerHeight
+      if (Math.abs(nextW - stableW) > 1) {
+        // Orientation / real window resize — accept both axes.
+        stableW = nextW
+        stableH = nextH
+      } else {
+        // Height-only change is almost always the mobile URL bar. Grow if the
+        // large viewport appears; never shrink (avoids the "background scrolls"
+        // jump when chrome collapses).
+        stableH = Math.max(stableH, nextH)
+      }
+      camera.aspect = stableW / stableH
       camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setSize(stableW, stableH)
     }
     window.addEventListener('resize', onResize)
 
