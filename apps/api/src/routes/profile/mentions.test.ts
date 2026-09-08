@@ -35,6 +35,43 @@ describe('M15 — public mentions API', () => {
         sourceId: mentioner.id,
       },
     })
+
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: mentioner.channel!.id,
+        title: 'Aurora Drift',
+        status: 'READY',
+      },
+    })
+    await prisma.mention.create({
+      data: {
+        mentionerUserId: mentioner.id,
+        targetUserId: target.id,
+        surface: 'TRACKLIST',
+        sourceId: sound.id,
+      },
+    })
+
+    const announcement = await prisma.channelAnnouncement.create({
+      data: { channelId: mentioner.channel!.id, body: 'hey @pub-mention-target' },
+    })
+    await prisma.mention.create({
+      data: {
+        mentionerUserId: mentioner.id,
+        targetUserId: target.id,
+        surface: 'ANNOUNCEMENT',
+        sourceId: announcement.id,
+      },
+    })
+
+    await prisma.mention.create({
+      data: {
+        mentionerUserId: mentioner.id,
+        targetUserId: target.id,
+        surface: 'CHAT',
+        sourceId: `chat:${mentioner.channel!.id}:${Date.now()}:${mentioner.id}`,
+      },
+    })
   })
 
   afterAll(async () => {
@@ -50,7 +87,7 @@ describe('M15 — public mentions API', () => {
     expect(res.statusCode).toBe(404)
   })
 
-  it('returns mentions when opted in', async () => {
+  it('resolves a real sourceUrl per surface', async () => {
     await prisma.user.update({
       where: { id: targetId },
       data: { publicMentionsEnabled: true },
@@ -61,8 +98,22 @@ describe('M15 — public mentions API', () => {
       url: '/api/v1/u/pub-mention-target/mentions',
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as Array<{ mentioner: { username: string } }>
-    expect(body.length).toBe(1)
-    expect(body[0]?.mentioner.username).toBe('pub-mentioner')
+    const body = res.json() as Array<{
+      surface: string
+      sourceUrl: string | null
+      sourceTitle: string | null
+      mentioner: { username: string }
+    }>
+    expect(body.length).toBe(4)
+    for (const m of body) {
+      expect(m.mentioner.username).toBe('pub-mentioner')
+    }
+
+    const bySurface = Object.fromEntries(body.map((m) => [m.surface, m]))
+    expect(bySurface.BIO?.sourceUrl).toBe('/u/pub-mentioner')
+    expect(bySurface.TRACKLIST?.sourceUrl).toMatch(/^\/t\//)
+    expect(bySurface.TRACKLIST?.sourceTitle).toBe('Aurora Drift')
+    expect(bySurface.ANNOUNCEMENT?.sourceUrl).toBe('/channel/pub-mentioner')
+    expect(bySurface.CHAT?.sourceUrl).toBe('/chat/pub-mentioner')
   })
 })
