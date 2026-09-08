@@ -117,21 +117,27 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'notices',
     label: 'Notices & delivery',
     description:
-      'Meeting notice publication (notice date set or changed). Only publication is audited so far — per-recipient send/bounce/open evidence is not yet tracked; see remaining-work.md.',
-    actions: ['MEETING_NOTICE_PUBLISH'],
+      'Meeting notice publication (notice date set or changed) plus per-recipient delivery evidence: on first publish, a notice email goes to every current member and a GovernanceNoticeDelivery row records it, with bounce evidence filled in later by the email-bounce webhook. No open-tracking (no tracking-pixel infra exists anywhere in this codebase).',
+    actions: ['MEETING_NOTICE_PUBLISH', 'MEETING_NOTICE_SEND'],
   },
   {
     id: 'minutes',
     label: 'Minutes workflow',
     description:
-      'Upload, approval, and signature as distinct audited steps. Redaction and a separate publish step are not yet modeled — see the planned "Conflicts & recusals" note and remaining-work.md.',
-    actions: ['MINUTES_UPLOAD', 'MINUTES_APPROVE', 'MINUTES_SIGN'],
+      'Upload, approval, and signature as distinct audited steps, plus redaction (a flag on the stored file, not partial-document redaction) and a publish step distinct from internal sign-off.',
+    actions: [
+      'MINUTES_UPLOAD',
+      'MINUTES_APPROVE',
+      'MINUTES_SIGN',
+      'MINUTES_REDACT',
+      'MINUTES_PUBLISH',
+    ],
   },
   {
     id: 'official-votes',
     label: 'Official meeting votes',
     description:
-      'Board-recorded resolutions and outcomes, distinct from advisory member motions. Not yet linked to a specific meeting record or flagged binding vs. advisory at the schema level.',
+      'Board-recorded resolutions and outcomes, distinct from advisory member motions. Optionally linked to a GovernanceMeeting record and flagged binding vs. non-binding at the schema level.',
     actions: ['RESOLUTION_CREATE', 'RESOLUTION_UPDATE'],
   },
 ]
@@ -180,9 +186,12 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   RADIO_SLOT_BOOKING_UPDATE: 'Radio slot updated',
   RADIO_SLOT_BOOKING_CANCEL: 'Radio slot cancelled',
   MEETING_NOTICE_PUBLISH: 'Meeting notice published',
+  MEETING_NOTICE_SEND: 'Meeting notice sent to members',
   MINUTES_UPLOAD: 'Minutes uploaded',
   MINUTES_APPROVE: 'Minutes approved',
   MINUTES_SIGN: 'Minutes signed',
+  MINUTES_REDACT: 'Minutes marked redacted',
+  MINUTES_PUBLISH: 'Minutes published',
 }
 
 const TOPIC_BY_ACTION = new Map<string, GovernanceAuditTopicId>()

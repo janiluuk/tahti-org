@@ -131,4 +131,38 @@ describe('M13 — email bounce webhook', () => {
     const sub = await prisma.newsletterSubscriber.findUnique({ where: { id: subscriberId } })
     expect(sub?.unsubscribedAt).toBeNull()
   })
+
+  it('marks a governance notice delivery bounced even on a soft bounce', async () => {
+    const meeting = await prisma.governanceMeeting.create({
+      data: { title: 'Bounce test meeting', type: 'BOARD', createdById: artistId },
+    })
+    const delivery = await prisma.governanceNoticeDelivery.create({
+      data: {
+        meetingId: meeting.id,
+        memberId: artistId,
+        email: `${PREFIX}artist@example.com`,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/email/bounce',
+      headers: { 'x-tahti-webhook-secret': WEBHOOK_SECRET },
+      payload: {
+        RecordType: 'Bounce',
+        Type: 'SoftBounce',
+        Email: `${PREFIX}artist@example.com`,
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().marked).toBe(1)
+
+    const updated = await prisma.governanceNoticeDelivery.findUnique({
+      where: { id: delivery.id },
+    })
+    expect(updated?.bouncedAt).not.toBeNull()
+
+    await prisma.governanceNoticeDelivery.deleteMany({ where: { meetingId: meeting.id } })
+    await prisma.governanceMeeting.delete({ where: { id: meeting.id } })
+  })
 })

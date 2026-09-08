@@ -151,6 +151,42 @@ export async function sendVerificationEmail(
   })
 }
 
+export async function sendGovernanceMeetingNoticeEmail(opts: {
+  to: string
+  displayName: string
+  meetingTitle: string
+  meetingType: string
+  scheduledAt: Date | null
+  location: string | null
+  remoteUrl: string | null
+}): Promise<void> {
+  const when = opts.scheduledAt ? opts.scheduledAt.toISOString() : 'to be confirmed'
+  const where = [opts.location, opts.remoteUrl].filter(Boolean).join(' / ') || 'to be confirmed'
+  const text = [
+    `Hi ${opts.displayName},`,
+    '',
+    `You are being notified of an upcoming Tahti ry meeting: ${opts.meetingTitle} (${opts.meetingType}).`,
+    '',
+    `When: ${when}`,
+    `Where: ${where}`,
+    '',
+    '— Tahti ry',
+  ].join('\n')
+
+  await sendMail({
+    to: opts.to,
+    subject: `Meeting notice: ${opts.meetingTitle}`,
+    text,
+    html: `
+      <p>Hi ${opts.displayName.replace(/</g, '&lt;')},</p>
+      <p>You are being notified of an upcoming Tahti ry meeting: ${opts.meetingTitle.replace(/</g, '&lt;')} (${opts.meetingType}).</p>
+      <p>When: ${when}</p>
+      <p>Where: ${where.replace(/</g, '&lt;')}</p>
+      <p>— Tahti ry</p>
+    `,
+  })
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   displayName: string,

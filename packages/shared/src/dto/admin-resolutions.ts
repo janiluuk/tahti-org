@@ -24,6 +24,8 @@ export const AdminResolutionRowSchema = z.object({
   publishedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   createdByDisplayName: z.string().nullable(),
+  meetingId: z.string().nullable(),
+  binding: z.boolean(),
 })
 
 export const AdminResolutionListSchema = z.array(AdminResolutionRowSchema)
@@ -52,6 +54,8 @@ export const AdminResolutionCreateSchema = z
     voteFor: z.number().int().min(0),
     voteAgainst: z.number().int().min(0),
     voteAbstain: z.number().int().min(0),
+    meetingId: z.string().optional(),
+    binding: z.boolean().optional(),
   })
   .refine(outcomeMatchesVotes, {
     message: 'outcome does not match the vote counts (PASSED needs voteFor > voteAgainst)',
@@ -64,6 +68,8 @@ export const AdminResolutionPatchSchema = z
     body: z.string().trim().min(1).max(20000).optional(),
     publishedAt: z.coerce.date().nullable().optional(),
     outcome: ResolutionOutcomeSchema.optional(),
+    meetingId: z.string().nullable().optional(),
+    binding: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 
