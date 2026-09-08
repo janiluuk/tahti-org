@@ -94,7 +94,7 @@ jobs:
       - name: Export deploy targets
         run: |
           jump_user="${DEPLOY_JUMP_USER:-pi}"
-          jump_host="${DEPLOY_JUMP_HOST:-sparkki.dudeisland.eu}"
+          jump_host="${DEPLOY_JUMP_HOST:-tahti.dudeisland.eu}"
           jump_port="${DEPLOY_JUMP_PORT:-4322}"
           {
             echo "DEPLOY_JUMP_USER=${jump_user}"
