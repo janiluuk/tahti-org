@@ -7,6 +7,10 @@
   checkout unless the user says otherwise).
 - Always run `pnpm format` (Prettier) on changed files before pushing — CI's `format:check` fails
   the build otherwise. `pnpm exec eslint`/`tsc --noEmit` catch logic issues but not formatting.
+- If `apps/api` or `packages/api-client` changed, run `pnpm --filter @tahti/api-client generate`
+  and commit the result — CI's "Typecheck + SDK drift" job fails on a stale `schema.d.ts`.
+- Both checks run automatically as a pre-push hook (`.githooks/pre-push`, wired up via the
+  `prepare` script on `pnpm install`) and block the push locally instead of failing in CI.
 
 ## Todos → HISTORY.md
 
