@@ -364,6 +364,64 @@ describe('governance meetings and documents', () => {
     expect(noticeSendCount).toBe(1)
   })
 
+  it('records a declared conflict of interest and audits it', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/admin/governance/meetings',
+      headers: { cookie: boardCookie },
+      payload: { title: 'October 2026 board meeting', type: 'BOARD' },
+    })
+    expect(create.statusCode).toBe(201)
+    const meetingId = create.json().id as string
+
+    const declared = await app.inject({
+      method: 'POST',
+      url: `/api/admin/governance/meetings/${meetingId}/conflicts`,
+      headers: { cookie: boardCookie },
+      payload: {
+        displayName: 'Board Member X',
+        matter: 'Vendor contract with a company they co-own',
+        recused: true,
+      },
+    })
+    expect(declared.statusCode).toBe(201)
+    expect(declared.json()).toMatchObject({
+      displayName: 'Board Member X',
+      matter: 'Vendor contract with a company they co-own',
+      recused: true,
+    })
+
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/admin/governance/meetings/${meetingId}/conflicts`,
+      headers: { cookie: boardCookie },
+    })
+    expect(list.statusCode).toBe(200)
+    expect(list.json()).toHaveLength(1)
+
+    const audit = await app.inject({
+      method: 'GET',
+      url: `/api/admin/audit?topic=conflicts&targetId=${meetingId}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(audit.statusCode).toBe(200)
+    expect(
+      (audit.json() as { items: Array<{ action: string }> }).items.some(
+        (item) => item.action === 'CONFLICT_DECLARE',
+      ),
+    ).toBe(true)
+  })
+
+  it('404s a conflict declaration for a nonexistent meeting', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/governance/meetings/does-not-exist/conflicts',
+      headers: { cookie: boardCookie },
+      payload: { displayName: 'X', matter: 'Y' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
   it('does not expose governance records to non-members', async () => {
     const response = await app.inject({ method: 'GET', url: '/api/v1/governance/documents' })
     expect(response.statusCode).toBe(401)

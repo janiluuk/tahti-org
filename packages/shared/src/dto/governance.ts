@@ -202,6 +202,24 @@ export const GovernanceAttendanceItemSchema = z.object({
 })
 export const GovernanceAttendanceListSchema = z.array(GovernanceAttendanceItemSchema)
 
+export const CreateGovernanceConflictDeclarationSchema = z.object({
+  memberId: z.string().cuid().nullable().optional(),
+  displayName: z.string().trim().min(1).max(200),
+  matter: z.string().trim().min(1).max(2000),
+  recused: z.boolean().optional(),
+})
+export const GovernanceConflictDeclarationItemSchema = z.object({
+  id: z.string(),
+  memberId: z.string().nullable(),
+  displayName: z.string(),
+  matter: z.string(),
+  recused: z.boolean(),
+  declaredAt: z.coerce.date(),
+})
+export const GovernanceConflictDeclarationListSchema = z.array(
+  GovernanceConflictDeclarationItemSchema,
+)
+
 export const GovernanceNoticeDeliveryItemSchema = z.object({
   id: z.string(),
   memberId: z.string(),

@@ -19,6 +19,7 @@ export const GOVERNANCE_AUDIT_TOPIC_IDS = [
   'notices',
   'minutes',
   'official-votes',
+  'conflicts',
 ] as const
 
 export type GovernanceAuditTopicId = (typeof GOVERNANCE_AUDIT_TOPIC_IDS)[number]
@@ -140,16 +141,20 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'Board-recorded resolutions and outcomes, distinct from advisory member motions. Optionally linked to a GovernanceMeeting record and flagged binding vs. non-binding at the schema level.',
     actions: ['RESOLUTION_CREATE', 'RESOLUTION_UPDATE'],
   },
-]
-
-export const GOVERNANCE_AUDIT_PLANNED_TOPICS = [
   {
     id: 'conflicts',
     label: 'Conflicts & recusals',
     description:
-      'Declared conflicts of interest and recusals on motions or meeting votes (no data model yet).',
+      'Declared conflicts of interest tied to a meeting, and whether the declarant recused themselves. Free-text "matter" field, not linked to a specific motion/resolution row.',
+    actions: ['CONFLICT_DECLARE'],
   },
-] as const
+]
+
+export const GOVERNANCE_AUDIT_PLANNED_TOPICS: Array<{
+  id: string
+  label: string
+  description: string
+}> = []
 
 export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   LEDGER_ENTRY_CREATE: 'Ledger entry created',
@@ -192,6 +197,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MINUTES_SIGN: 'Minutes signed',
   MINUTES_REDACT: 'Minutes marked redacted',
   MINUTES_PUBLISH: 'Minutes published',
+  CONFLICT_DECLARE: 'Conflict of interest declared',
 }
 
 const TOPIC_BY_ACTION = new Map<string, GovernanceAuditTopicId>()

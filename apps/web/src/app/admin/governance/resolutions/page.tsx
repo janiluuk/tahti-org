@@ -16,7 +16,10 @@ function boardFetch(path: string) {
 }
 
 export default async function AdminResolutionsPage() {
-  const res = await boardFetch('/api/admin/resolutions')
+  const [res, meetingsRes] = await Promise.all([
+    boardFetch('/api/admin/resolutions'),
+    boardFetch('/api/admin/governance/meetings'),
+  ])
   const rows = res.ok
     ? ((await res.json()) as Array<{
         id: string
@@ -27,8 +30,14 @@ export default async function AdminResolutionsPage() {
         voteAbstain: number
         votedAt: string
         publishedAt: string | null
+        meetingId: string | null
+        binding: boolean
       }>)
     : []
+  const meetings = meetingsRes.ok
+    ? ((await meetingsRes.json()) as Array<{ id: string; title: string }>)
+    : []
+  const meetingTitleById = new Map(meetings.map((m) => [m.id, m.title]))
 
   return (
     <>
@@ -37,7 +46,7 @@ export default async function AdminResolutionsPage() {
         <Link href="/admin/governance">← Governance</Link>
       </p>
 
-      <ResolutionCreateForm />
+      <ResolutionCreateForm meetings={meetings} />
 
       <section className="admin-card">
         <h2>Recorded resolutions</h2>
@@ -52,6 +61,8 @@ export default async function AdminResolutionsPage() {
                   <th>Voted</th>
                   <th>Outcome</th>
                   <th>Vote</th>
+                  <th>Meeting</th>
+                  <th>Binding</th>
                   <th>Status</th>
                   <th />
                 </tr>
@@ -65,6 +76,10 @@ export default async function AdminResolutionsPage() {
                     <td>
                       {r.voteFor}/{r.voteAgainst}/{r.voteAbstain}
                     </td>
+                    <td>
+                      {r.meetingId ? (meetingTitleById.get(r.meetingId) ?? r.meetingId) : '—'}
+                    </td>
+                    <td>{r.binding ? 'Binding' : 'Non-binding'}</td>
                     <td>{r.publishedAt ? 'Published' : 'Draft'}</td>
                     <td>
                       <PublishResolutionButton id={r.id} published={!!r.publishedAt} />

@@ -27,9 +27,20 @@ interface Meeting {
   secretaryName: string | null
   minutesSignedByName: string | null
   minutesSignedAt: string | null
+  minutesRedacted: boolean
+  minutesPublishedAt: string | null
   attendanceCount: number
   presentCount: number
   quorumMet: boolean | null
+}
+
+interface NoticeDelivery {
+  id: string
+  memberId: string
+  displayName: string | null
+  email: string
+  sentAt: string
+  bouncedAt: string | null
 }
 
 interface DocumentItem {
@@ -103,6 +114,7 @@ export function GovernanceRecordsPanel({
   const [error, setError] = useState<string | null>(null)
   const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null)
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({})
+  const [noticeDeliveries, setNoticeDeliveries] = useState<Record<string, NoticeDelivery[]>>({})
 
   async function createMeeting(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -169,6 +181,10 @@ export function GovernanceRecordsPanel({
         minutesSignedAt: fieldString(fd, 'minutesSignedAt')
           ? localDateTimeToIso(fieldString(fd, 'minutesSignedAt'))
           : null,
+        minutesRedacted: fd.get('minutesRedacted') === 'on',
+        minutesPublishedAt: fieldString(fd, 'minutesPublishedAt')
+          ? localDateTimeToIso(fieldString(fd, 'minutesPublishedAt'))
+          : null,
       }),
     })
     if (!response.ok) return setError('Could not update meeting officers')
@@ -187,10 +203,24 @@ export function GovernanceRecordsPanel({
     setAttendance((prev) => ({ ...prev, [meetingId]: records }))
   }
 
+  async function loadNoticeDeliveries(meetingId: string) {
+    if (noticeDeliveries[meetingId]) return
+    const response = await fetch(
+      `${API_BASE}/api/admin/governance/meetings/${meetingId}/notice-deliveries`,
+      { credentials: 'include' },
+    )
+    if (!response.ok) return
+    const records = (await response.json()) as NoticeDelivery[]
+    setNoticeDeliveries((prev) => ({ ...prev, [meetingId]: records }))
+  }
+
   async function toggleExpand(meetingId: string) {
     const next = expandedMeetingId === meetingId ? null : meetingId
     setExpandedMeetingId(next)
-    if (next) await loadAttendance(next)
+    if (next) {
+      await loadAttendance(next)
+      await loadNoticeDeliveries(next)
+    }
   }
 
   async function addAttendance(meetingId: string, event: FormEvent<HTMLFormElement>) {
@@ -526,6 +556,29 @@ export function GovernanceRecordsPanel({
                                     defaultValue={isoToLocalDateTime(meeting.minutesSignedAt)}
                                   />
                                 </label>
+                                <label>
+                                  Minutes published at
+                                  <input
+                                    name="minutesPublishedAt"
+                                    type="datetime-local"
+                                    defaultValue={isoToLocalDateTime(meeting.minutesPublishedAt)}
+                                  />
+                                </label>
+                                <label
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    flexDirection: 'row',
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name="minutesRedacted"
+                                    defaultChecked={meeting.minutesRedacted}
+                                  />
+                                  Minutes redacted
+                                </label>
                                 <button type="submit" className="admin-btn">
                                   Save officers
                                 </button>
@@ -575,6 +628,26 @@ export function GovernanceRecordsPanel({
                                   </button>
                                 </form>
                               </div>
+                              {meeting.noticeAt && (
+                                <div>
+                                  <p className="admin-stat-sub" style={{ marginBottom: '0.35rem' }}>
+                                    Notice deliveries ({noticeDeliveries[meeting.id]?.length ?? 0})
+                                  </p>
+                                  {(noticeDeliveries[meeting.id] ?? []).map((delivery) => (
+                                    <p
+                                      key={delivery.id}
+                                      style={{ fontSize: '0.8125rem', margin: '0.2rem 0' }}
+                                    >
+                                      {delivery.displayName ?? delivery.email} ·{' '}
+                                      {delivery.bouncedAt ? (
+                                        <span className="admin-err">bounced</span>
+                                      ) : (
+                                        <span className="admin-ok">sent</span>
+                                      )}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
