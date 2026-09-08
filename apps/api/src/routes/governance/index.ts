@@ -21,6 +21,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
+import type { MotionState } from '@tahti/db'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
@@ -85,10 +86,15 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const query = request.query as { limit?: string; cursor?: string }
+      const query = request.query as { limit?: string; cursor?: string; state?: string }
       const parsedLimit = Number(query.limit)
       const limit = Number.isInteger(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50
+      const validStates: MotionState[] = ['DRAFT', 'OPEN', 'CLOSED']
+      if (query.state !== undefined && !validStates.includes(query.state as MotionState)) {
+        return reply.status(400).send({ error: `Invalid state filter: ${query.state}` })
+      }
       const motions = await fastify.prisma.motion.findMany({
+        ...(query.state ? { where: { state: query.state as MotionState } } : {}),
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         orderBy: { createdAt: 'desc' },
         take: limit + 1,
