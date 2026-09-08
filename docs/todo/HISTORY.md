@@ -247,3 +247,21 @@ studio schedule list surfaces the end time when known. PR
 [#476](https://github.com/janiluuk/tahti-org/pull/476), merged. Public
 channel schedule cards still show start-only — noted in
 `docs/remaining-work.md`.
+
+### 2026-09-08 — vimage6-monitoring-gauges-and-api-scrape-auth.md
+
+Last open item was the bearer-token file for the `tahti_api_metrics`
+Prometheus scrape — written to `prometheus.yml` but blocked on
+`/opt/monitoring/prometheus/config/tahti-api-metrics.token` existing on
+vimage6 (needs `INTERNAL_SECRET`, which this session can't read
+unsupervised). SSH'd to `vimage6.local` (session had no route to the
+plain `vimage6` hostname, but `.local` resolves) to check without
+touching secrets: the token file exists (`tahti-api-metrics.token`,
+written 2026-09-08 03:53, presumably via `deploy.sh`), `prometheus.yml`
+has `bearer_token_file: /etc/prometheus/tahti-api-metrics.token` on the
+`tahti_api_metrics` job, and Prometheus's own `/api/v1/query?query=up`
+confirms `up{job="tahti_api_metrics"} == 1` — scrape is live and
+healthy. Also confirmed every other job (`cadvisor`/`node`/
+`docker-catalog` across all 10 hosts incl. vimage7) reports `up == 1`,
+so the whole dashboard's data is now clean. No code or config touched
+this session — read-only verification only.
