@@ -12,6 +12,7 @@ import {
 
 vi.mock('../../lib/minio.js', () => ({
   presignedGetUrl: vi.fn().mockResolvedValue('https://minio.test/governance-document.pdf'),
+  presignedPutUrl: vi.fn().mockResolvedValue('https://minio.test/upload-minutes'),
 }))
 
 const sendGovernanceMeetingNoticeEmail = vi.fn().mockResolvedValue(undefined)
@@ -420,6 +421,52 @@ describe('governance meetings and documents', () => {
       payload: { displayName: 'X', matter: 'Y' },
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  it('prepares a presigned minutes upload and exposes a download URL once minutesKey is set', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/admin/governance/meetings',
+      headers: { cookie: boardCookie },
+      payload: { title: 'October 2026 board meeting', type: 'BOARD' },
+    })
+    expect(create.statusCode).toBe(201)
+    expect(create.json().minutesUrl).toBeNull()
+    const meetingId = create.json().id as string
+
+    const prepared = await app.inject({
+      method: 'POST',
+      url: `/api/admin/governance/meetings/${meetingId}/minutes/prepare-upload`,
+      headers: { cookie: boardCookie },
+      payload: { contentType: 'application/pdf', fileSizeBytes: 1024 },
+    })
+    expect(prepared.statusCode).toBe(200)
+    const { uploadUrl, minutesKey, expiresAt } = prepared.json() as {
+      uploadUrl: string
+      minutesKey: string
+      expiresAt: string
+    }
+    expect(uploadUrl).toBe('https://minio.test/upload-minutes')
+    expect(minutesKey).toContain(`governance/meetings/${meetingId}/minutes-`)
+    expect(new Date(expiresAt).getTime()).toBeGreaterThan(Date.now())
+
+    const finalized = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { minutesKey },
+    })
+    expect(finalized.statusCode).toBe(200)
+    expect(finalized.json().minutesUrl).toContain('governance-document.pdf')
+
+    // A non-board member can't prepare an upload.
+    const forbidden = await app.inject({
+      method: 'POST',
+      url: `/api/admin/governance/meetings/${meetingId}/minutes/prepare-upload`,
+      headers: { cookie: memberCookie },
+      payload: { contentType: 'application/pdf', fileSizeBytes: 1024 },
+    })
+    expect(forbidden.statusCode).toBe(403)
   })
 
   it('does not expose governance records to non-members', async () => {

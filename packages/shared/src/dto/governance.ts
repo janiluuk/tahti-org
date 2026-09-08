@@ -146,6 +146,23 @@ export const PatchGovernanceMeetingSchema = z.object({
   minutesPublishedAt: z.coerce.date().nullable().optional(),
 })
 
+// 10 MB — generous for a scanned/signed PDF, small enough to keep hosting
+// cost and review-diff size trivial (mirrors ADDON_BUNDLE_MAX_BYTES's
+// reasoning in dto/addons.ts).
+export const GOVERNANCE_MINUTES_MAX_BYTES = 10 * 1024 * 1024
+
+export const PrepareMinutesUploadSchema = z.object({
+  contentType: z.string().trim().min(1).max(100),
+  fileSizeBytes: z.number().int().min(1).max(GOVERNANCE_MINUTES_MAX_BYTES),
+})
+export type PrepareMinutesUploadInput = z.infer<typeof PrepareMinutesUploadSchema>
+
+export const PrepareMinutesUploadResponseSchema = z.object({
+  uploadUrl: z.string().url(),
+  minutesKey: z.string(),
+  expiresAt: z.string(),
+})
+
 export const CreateGovernanceDocumentSchema = z.object({
   title: z.string().trim().min(1).max(200),
   type: GovernanceDocumentTypeSchema,
@@ -169,6 +186,7 @@ export const GovernanceMeetingItemSchema = z.object({
   noticeAt: z.coerce.date().nullable(),
   agenda: z.unknown().nullable(),
   minutesKey: z.string().nullable(),
+  minutesUrl: z.string().nullable(),
   minutesApprovedAt: z.coerce.date().nullable(),
   minutesRedacted: z.boolean(),
   minutesPublishedAt: z.coerce.date().nullable(),
