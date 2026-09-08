@@ -8,6 +8,7 @@
   },
   "scripts": {
     "preinstall": "node scripts/check-node-version.mjs",
+    "prepare": "git config core.hooksPath .githooks || true",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
