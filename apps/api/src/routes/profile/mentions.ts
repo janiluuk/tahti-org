@@ -56,9 +56,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
       // Batch-resolve TRACKLIST (Sound) and CHAT (Channel, from a composite
       // `chat:${channelId}:${ts}:${mentionerId}` sourceId) — BIO and
       // ANNOUNCEMENT resolve from `mentioner` alone, already loaded above.
-      const soundIds = mentions
-        .filter((m) => m.surface === 'TRACKLIST')
-        .map((m) => m.sourceId)
+      const soundIds = mentions.filter((m) => m.surface === 'TRACKLIST').map((m) => m.sourceId)
       const chatChannelIds = mentions
         .filter((m) => m.surface === 'CHAT')
         .map((m) => m.sourceId.split(':')[1])
