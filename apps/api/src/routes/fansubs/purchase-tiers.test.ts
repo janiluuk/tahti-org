@@ -192,6 +192,30 @@ describe('Purchase tiers (per-track paywall)', () => {
     expect(orders.json()).toHaveLength(1)
     expect(orders.json()[0]).toMatchObject({ tier: { id: tierA.id } })
 
+    // The buyer's own purchases list shows the same sale, from their side.
+    const purchases = await app.inject({
+      method: 'GET',
+      url: '/api/me/purchases',
+      headers: { cookie: buyerCookie },
+    })
+    expect(purchases.statusCode).toBe(200)
+    expect(purchases.json()).toHaveLength(1)
+    expect(purchases.json()[0]).toMatchObject({
+      tierName: 'Tier A',
+      amountCents: 0,
+      artist: { username: artistUsername },
+      tracks: [{ id: trackA.id, title: 'Tier A track' }],
+    })
+
+    // A stranger who never bought anything sees an empty list, not tierB's track.
+    const strangerPurchases = await app.inject({
+      method: 'GET',
+      url: '/api/me/purchases',
+      headers: { cookie: strangerCookie },
+    })
+    expect(strangerPurchases.statusCode).toBe(200)
+    expect(strangerPurchases.json()).toEqual([])
+
     await prisma.sound.deleteMany({ where: { id: { in: [trackA.id, trackB.id] } } })
   })
 
