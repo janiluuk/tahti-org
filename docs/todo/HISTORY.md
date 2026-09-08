@@ -322,3 +322,11 @@ schema before any migration creates it). Backend slice 2: PR
 conflict-declarations slice 3 landed in the same commit as this fold.
 Remaining known gap: notice open-tracking — no tracking-pixel infra
 exists anywhere in this codebase, deliberately out of scope.
+
+### 2026-09-08 — release-artwork-delete.md
+
+`DELETE /api/me/releases/:id/artwork` plus the frontend wiring
+(`CoverImageUpload`'s Remove button previously discarded its `null`
+argument and just refreshed, so removing artwork never actually
+persisted). PR [#480](https://github.com/janiluuk/tahti-org/pull/480),
+merged. Todo file left un-folded after merge — folding now.
