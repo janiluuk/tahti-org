@@ -606,6 +606,17 @@
   border: 1px solid color-mix(in srgb, var(--green) 25%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-live--replay {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  border-color: color-mix(in srgb, var(--amber) 28%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-live--replay .signal-dot {
+  background: var(--amber);
+  animation: none;
+}
+
 [data-tahti-ui='brand'] .signal-dot {
   display: inline-block;
   width: 10px;
@@ -717,6 +728,19 @@
 
   [data-tahti-ui='brand'] .ch-body--chat-collapsed .ch-chat-collapse-toggle {
     right: 4px;
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle--dock {
+    width: 40px;
+    height: 40px;
+    right: 12px;
+    top: auto;
+    bottom: calc(var(--fixed-stack-bottom, 72px) + 16px);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    background: color-mix(in srgb, var(--cyan) 16%, var(--card2));
+    border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+    color: var(--cyan);
   }
 }
 
@@ -4212,15 +4236,16 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--fixed-stack-bottom);
+    top: 0;
+    bottom: 0;
     z-index: 36;
-    max-height: min(70vh, 520px);
-    height: auto;
-    padding: 12px 16px 16px;
-    border-top: 1px solid var(--border);
-    border-radius: 16px 16px 0 0;
+    max-height: none;
+    height: 100dvh;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    border-top: none;
+    border-radius: 0;
     background: var(--card);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: none;
     transform: translateY(100%);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -4229,8 +4254,24 @@
     transform: translateY(0);
   }
 
+  [data-tahti-ui='brand'] .ch-body--chat-sheet-open .ch-chat-collapse-toggle {
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+    left: auto;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  [data-tahti-ui='brand'] .ch-body--chat-sheet-open .ch-chat-collapse-toggle__label {
+    display: none;
+  }
+
   [data-tahti-ui='brand'] .ch-chat-panel {
-    height: min(55vh, 440px);
+    height: calc(100dvh - 7rem);
+    max-height: none;
     position: static;
   }
 }

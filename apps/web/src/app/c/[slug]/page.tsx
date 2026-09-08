@@ -74,6 +74,8 @@ interface ChannelResponse {
   slug: string
   state: string
   hlsUrl: string | null
+  /** Real Icecast ingest — false when only 24/7 archive fallback is playing */
+  signalConnected?: boolean
   nextBroadcastAt: string | null
   nextBroadcastNote: string | null
   galleryMode: ChannelGalleryMode
@@ -299,9 +301,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   // it sits in the tab bar permanently empty. Bio (with a latest-releases
   // preview) is the landing tab the rest of the time (see PublicChannelTabs).
   const showLiveTab = Boolean(hlsUrl)
-  // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
-  // actually broadcasting — channel.state is still 'LIVE' while they run, but
-  // "LIVE NOW" is misleading here; show the currently-rotating track instead.
+  // channel.state === 'LIVE' also covers 24/7 archive fallback — Icecast
+  // signalConnected is the real "human is broadcasting" bit (API get.ts).
+  const signalConnected = Boolean(channel.signalConnected)
+  const isReplayStream = Boolean(hlsUrl) && !signalConnected
+  // Tahti Radio and Tahti Selects are always-on curated rotations — poll
+  // now-playing + next-up and animate title handoffs.
   const isRotationChannel = slug === TAHTI_RADIO_SLUG || slug === TAHTI_SELECTS_SLUG
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveSoundBackground(channel.videoBackgroundUrl ?? null)
@@ -354,7 +359,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   return (
     <ChannelPageShell
-      isLive={channel.state === 'LIVE'}
+      isLive={Boolean(hlsUrl) || channel.state === 'LIVE'}
+      isReplay={isReplayStream}
       artistHandle={channel.user.username}
       listenerCount={listenerCount}
       user={user}
@@ -392,9 +398,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               )}
               <div className="ch-header-banner" style={headerBannerStyle}>
                 <header className="ch-artist-header">
-                  <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                    Profile <span aria-hidden>»</span>
-                  </Link>
                   <Row className="ui-row--gap-3 ch-artist-header-row">
                     <AvatarTile
                       size="lg"
@@ -537,33 +540,24 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             <LivePlayerSection
                               url={hlsUrl}
                               slug={slug}
-                              title={
-                                isRotationChannel
-                                  ? (channel.nowPlaying?.title ?? channel.user.displayName)
-                                  : channel.user.displayName
-                              }
+                              title={channel.nowPlaying?.title ?? channel.user.displayName}
                               subtitle={
-                                isRotationChannel && channel.nowPlaying
-                                  ? channel.nowPlaying.artistName
-                                  : undefined
+                                channel.nowPlaying ? channel.nowPlaying.artistName : undefined
                               }
                               subtitleHref={
-                                isRotationChannel && channel.nowPlaying?.artistUsername
+                                channel.nowPlaying?.artistUsername
                                   ? `/u/${channel.nowPlaying.artistUsername}`
                                   : undefined
                               }
-                              artworkUrl={
-                                isRotationChannel
-                                  ? channel.nowPlaying?.artworkUrl
-                                  : channel.user.avatarUrl
-                              }
-                              isReplay={isRotationChannel}
+                              artworkUrl={channel.nowPlaying?.artworkUrl ?? channel.user.avatarUrl}
+                              isReplay={isReplayStream}
                               nextUpLabel={
-                                isRotationChannel && channel.nowPlayingNext
+                                channel.nowPlayingNext
                                   ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
                                   : undefined
                               }
                               isRotationChannel={isRotationChannel}
+                              pollNowPlaying={Boolean(hlsUrl)}
                               colorSchemeJson={channel.colorSchemeJson}
                               visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
                               visualSettingsJson={channel.visualSettingsJson}
