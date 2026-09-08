@@ -5382,6 +5382,7 @@
 
 [data-tahti-ui='studio'] .studio-channel-editor__layout--dropdown {
   grid-template-columns: minmax(0, 1fr) minmax(320px, 40%);
+  grid-template-rows: 1fr;
 }
 
 [data-tahti-ui='studio'] .studio-designer-active-panel__toolbar {
