@@ -11,6 +11,10 @@ import { SoundItemPlayback, HearthisSoundItemPlayback } from '@/components/sound
 import { HearthisEmbedRow } from '../u/[username]/c/[slug]/_hearthis-embed-row'
 import { MixcloudEmbedRow } from '../u/[username]/c/[slug]/_mixcloud-embed-row'
 import { SpotifyEmbedRow } from '../u/[username]/c/[slug]/_spotify-embed-row'
+import { LoveButton } from '@/components/love-button'
+import { RepostButton } from '@/components/repost-button'
+import { TrackCommentsToggle } from '@/components/track-comments-toggle'
+import { SoundDownloadButton } from '@/components/sound-download-button'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { deleteSoundItem, updateSoundMetadata } from './sound-actions'
 import {
@@ -404,10 +408,31 @@ export default function SoundEditor({
             embedUri={play.embedUri}
             queue={queue}
           />
-          <div className="sound-list__row-actions">{rowActions}</div>
+          <div className="sound-list__row-actions">
+            {channelSlug && (
+              <>
+                <LoveButton channelSlug={channelSlug} itemId={item.id} />
+                <SoundDownloadButton
+                  channelSlug={channelSlug}
+                  artistUsername={artistUsername ?? ''}
+                  itemId={item.id}
+                  repostToDownload={Boolean(play.repostToDownload)}
+                  followToDownload={Boolean(play.followToDownload)}
+                  downloadCount={play.downloadCount ?? 0}
+                />
+                <RepostButton channelSlug={channelSlug} itemId={item.id} />
+                <TrackCommentsToggle
+                  soundId={item.id}
+                  isLoggedIn
+                  commentCount={play.commentCount ?? 0}
+                />
+              </>
+            )}
+            {rowActions}
+          </div>
         </div>
       ) : isReady && isPublic && !open && play?.embedUri ? (
-        <div className="sound-list__playback-row">
+        <div className="sound-list__playback-row" data-tahti-ui="brand">
           <div className="sound-list__embed-row">
             {play.embedProvider === 'MIXCLOUD' ? (
               <MixcloudEmbedRow title={item.title} embedUri={play.embedUri} />
@@ -417,7 +442,28 @@ export default function SoundEditor({
               <HearthisEmbedRow title={item.title} embedUri={play.embedUri} />
             )}
           </div>
-          <div className="sound-list__row-actions">{rowActions}</div>
+          <div className="sound-list__row-actions">
+            {channelSlug && (
+              <>
+                <LoveButton channelSlug={channelSlug} itemId={item.id} />
+                <SoundDownloadButton
+                  channelSlug={channelSlug}
+                  artistUsername={artistUsername ?? ''}
+                  itemId={item.id}
+                  repostToDownload={Boolean(play.repostToDownload)}
+                  followToDownload={Boolean(play.followToDownload)}
+                  downloadCount={play.downloadCount ?? 0}
+                />
+                <RepostButton channelSlug={channelSlug} itemId={item.id} />
+                <TrackCommentsToggle
+                  soundId={item.id}
+                  isLoggedIn
+                  commentCount={play.commentCount ?? 0}
+                />
+              </>
+            )}
+            {rowActions}
+          </div>
         </div>
       ) : (
         <div className="studio-card-row">
