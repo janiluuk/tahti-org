@@ -156,6 +156,32 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(result)
     },
   )
+
+  fastify.delete(
+    '/api/me/releases/:id/artwork',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(ReleaseArtworkCompleteResponseSchema, 'ReleaseArtworkDelete'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const release = await ownedRelease(user.id, id)
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      await fastify.prisma.release.update({
+        where: { id },
+        data: { artworkKey: null, artworkUrl: null },
+      })
+
+      return reply.send({ artworkUrl: null, artworkKey: null })
+    },
+  )
 }
 
 export default releaseArtworkRoutes

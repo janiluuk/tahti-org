@@ -237,3 +237,61 @@ Channel page mobile/desktop chat and live-player polish, shipped on `feat/channe
 ### 2026-09-08 — responsive-usability-audit.md
 
 All ten MOB-01–MOB-10 implementation items shipped: mobile-first `/listen` and `/radio` chrome plus shared `--fixed-stack-bottom` safe-area/mini-player/studio-nav contract ([#446](https://github.com/janiluuk/tahti-org/pull/446)); settings `MobileNavSheet` and admin logs Filter sheet ([#451](https://github.com/janiluuk/tahti-org/pull/451)); home single primary CTA + capped previews, idle auto-scroll removed, admin tables as stacked cards with `admin-table-wrap--tabular` opt-out for audit/ledger data (this repo's earlier session); Discover `ChipFilterBar` sheets and progressive-disclosure `StudioCollapse` forms ([#453](https://github.com/janiluuk/tahti-org/pull/453)). Audit notes stay in this file's 2026-09-01 entry above.
+
+### 2026-09-08 — pwyw-track-purchase-frontend.md (stale — already done)
+
+This repo's backend piece (`GET /api/tracks/:id` returning
+`purchaseTier.priceOptional`, commit `032c804d`) shipped and merged to
+`main` on 2026-09-07 as documented. Re-checked the sibling `tahti-player`
+repo before picking up the "not done here" frontend leftover the doc
+described, and it was already built: `TrackDetailView.tsx`'s buy button
+checks `purchaseTierPriceOptional` and opens a PWYW amount dialog
+(`pwywOpen`/`pwywAmt`) instead of always sending the suggested price,
+`api/types.ts` and the mock `client.ts` carry the field, and
+`PurchaseTiersEditor.tsx` already exposes the "pay what you want" toggle
+artists use to create such a tier — folded there as part of
+`tahti-player`'s own 2026-09-07 "Purchase-tier artist editor built"
+HISTORY entry. No code changed in this repo; removing the stale todo file.
+
+### 2026-09-08 — stream-overlay-scrim-toggle.md / stream-overlay-show-title-toggle.md (stale — already done)
+
+Backend pieces (`Channel.streamOverlayScrimEnabled` and
+`streamOverlayShowTitle`, `buildRtmpMirrorOutput` support) shipped
+2026-09-05/07 as documented. Re-checked the sibling `tahti-player` repo
+before picking up either doc's "not done here" frontend leftover, and
+both toggles are already wired end-to-end: `StreamOverlayEditor.tsx`
+renders both toggles, gates the title/subtitle inputs and the scrim on
+`OverlayTextPreview`, and `api/broadcast.ts`'s `StreamOverlay` type/mock
+fallback carry both fields — folded there as `tahti-player`'s own
+2026-09-05 "cover upload UX fix + show title toggle + preview" and
+2026-09-07 "Stream overlay scrim toggle: frontend piece" HISTORY entries.
+No code changed in this repo; removing both stale todo files.
+
+### 2026-09-08 — recurrence-duration-overlap.md
+
+`ScheduledLiveShow.endAt` (nullable) now set from
+`LiveShowSeries.recurrenceDurationMin` (fallback `intervalHours`);
+generated recurrence occurrences that would overlap an existing channel
+show are filtered out, manual schedule returns 409 on conflict, and the
+studio schedule list surfaces the end time when known. PR
+[#476](https://github.com/janiluuk/tahti-org/pull/476), merged. Public
+channel schedule cards still show start-only — noted in
+`docs/remaining-work.md`.
+
+### 2026-09-08 — vimage6-monitoring-gauges-and-api-scrape-auth.md
+
+Last open item was the bearer-token file for the `tahti_api_metrics`
+Prometheus scrape — written to `prometheus.yml` but blocked on
+`/opt/monitoring/prometheus/config/tahti-api-metrics.token` existing on
+vimage6 (needs `INTERNAL_SECRET`, which this session can't read
+unsupervised). SSH'd to `vimage6.local` (session had no route to the
+plain `vimage6` hostname, but `.local` resolves) to check without
+touching secrets: the token file exists (`tahti-api-metrics.token`,
+written 2026-09-08 03:53, presumably via `deploy.sh`), `prometheus.yml`
+has `bearer_token_file: /etc/prometheus/tahti-api-metrics.token` on the
+`tahti_api_metrics` job, and Prometheus's own `/api/v1/query?query=up`
+confirms `up{job="tahti_api_metrics"} == 1` — scrape is live and
+healthy. Also confirmed every other job (`cadvisor`/`node`/
+`docker-catalog` across all 10 hosts incl. vimage7) reports `up == 1`,
+so the whole dashboard's data is now clean. No code or config touched
+this session — read-only verification only.

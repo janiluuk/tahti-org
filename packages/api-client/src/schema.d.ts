@@ -14740,6 +14740,46 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/me/releases/{id}/artwork': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              artworkUrl: string | null
+              artworkKey: string | null
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/u/{username}/profile': {
     parameters: {
       query?: never
