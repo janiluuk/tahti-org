@@ -5665,6 +5665,7 @@ export interface paths {
               youVoted: boolean
               yourChoice: string | null
               commentCount: number
+              eligibleMemberCount: number | null
               tally?: {
                 YES: number
                 NO: number
@@ -5743,6 +5744,7 @@ export interface paths {
               youVoted: boolean
               yourChoice: string | null
               commentCount: number
+              eligibleMemberCount: number | null
               tally?: {
                 YES: number
                 NO: number
@@ -5807,6 +5809,19 @@ export interface paths {
       requestBody?: never
       responses: {
         /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+              choice: string
+            }
+          }
+        }
+        /** @description Default Response */
         201: {
           headers: {
             [name: string]: unknown
@@ -5821,7 +5836,31 @@ export interface paths {
         }
       }
     }
-    delete?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+            }
+          }
+        }
+      }
+    }
     options?: never
     head?: never
     patch?: never
@@ -30911,6 +30950,7 @@ export interface components {
       youVoted: boolean
       yourChoice: string | null
       commentCount: number
+      eligibleMemberCount: number | null
       tally?: {
         YES: number
         NO: number
@@ -30931,6 +30971,7 @@ export interface components {
       youVoted: boolean
       yourChoice: string | null
       commentCount: number
+      eligibleMemberCount: number | null
       tally?: {
         YES: number
         NO: number
