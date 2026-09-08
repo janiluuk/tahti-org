@@ -131,6 +131,37 @@ const purchaseTierRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // GET /api/me/purchases — this buyer's own paid purchases, for their account panel
+  fastify.get('/api/me/purchases', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const purchases = await fastify.prisma.purchase.findMany({
+      where: { buyerUserId: user.id, state: 'PAID' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        amountCents: true,
+        createdAt: true,
+        tier: {
+          select: {
+            name: true,
+            artist: { select: { username: true, displayName: true } },
+            sounds: { select: { id: true, title: true } },
+          },
+        },
+      },
+    })
+    return reply.send(
+      purchases.map((p) => ({
+        id: p.id,
+        tierName: p.tier.name,
+        amountCents: p.amountCents,
+        createdAt: p.createdAt,
+        artist: p.tier.artist,
+        tracks: p.tier.sounds,
+      })),
+    )
+  })
+
   // POST /api/v1/u/:username/purchase-tiers/:tierId/checkout — buy a tier
   fastify.post(
     '/api/v1/u/:username/purchase-tiers/:tierId/checkout',
