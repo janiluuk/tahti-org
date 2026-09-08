@@ -21,6 +21,8 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   # GitHub Actions mirror — avoids Docker Hub pull timeouts on ubuntu runners.
   NGINX_BASE_IMAGE: mirror.gcr.io/library/nginx:1.27-alpine
 
@@ -52,9 +54,6 @@ jobs:
     name: Lint & format
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
 
     steps:
       - uses: actions/checkout@v7
@@ -79,85 +78,8 @@ jobs:
       - name: Prettier (format:check)
         run: pnpm format:check
 
-  api-client-sdk-drift:
-    name: SDK drift check (@tahti/api-client)
-    needs: lint
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-
-    # export-openapi.ts builds the real Fastify app (buildApp/ready), which
-    # constructs a BullMQ QueueEvents — that opens an eager Redis connection
-    # (not the lazy one-shot Queue might get away with), and Prisma needs a
-    # reachable Postgres too. Without both, this hangs until the ioredis
-    # retry loop or the job timeout kills it — same fix as the typecheck job.
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: tahti
-          POSTGRES_PASSWORD: tahti_test
-          POSTGRES_DB: tahti_test
-        options: >-
-          --health-cmd "pg_isready -U tahti -d tahti_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 3s
-          --health-retries 3
-        ports:
-          - 6379:6379
-
-    env:
-      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
-      REDIS_URL: redis://localhost:6379
-      NODE_ENV: test
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm --filter @tahti/db db:generate
-
-      - name: Push DB schema (test database)
-        run: pnpm --filter @tahti/db db:migrate:test
-
-      # Regenerates src/schema.d.ts fresh from the current route schemas and
-      # fails if that's not what's committed — the enforcement half of "the
-      # SDK stays in sync with the API" (the other half is turbo.json making
-      # apps/web's dev/build/typecheck regenerate it automatically; see
-      # packages/api-client/README.md).
-      - name: Regenerate SDK types
-        run: pnpm --filter @tahti/api-client generate
-
-      - name: Fail if schema.d.ts is out of date
-        run: |
-          if ! git diff --quiet -- packages/api-client/src/schema.d.ts; then
-            echo "::error::packages/api-client/src/schema.d.ts is stale. Run 'pnpm --filter @tahti/api-client generate' and commit the result."
-            git diff -- packages/api-client/src/schema.d.ts | head -100
-            exit 1
-          fi
-
   typecheck:
-    name: Typecheck
+    name: Typecheck + SDK drift
     needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -191,8 +113,6 @@ jobs:
           - 6379:6379
 
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
@@ -219,6 +139,22 @@ jobs:
 
       - name: Typecheck (tsc --noEmit)
         run: pnpm typecheck
+
+      # SDK drift check — folded from the former api-client-sdk-drift job to
+      # avoid spinning up a second Postgres + Redis + pnpm install (~3 min saved).
+      # export-openapi.ts builds the real Fastify app, which constructs a
+      # BullMQ QueueEvents (eager Redis) and needs Prisma — same infra as
+      # typecheck, so this is free once we're here.
+      - name: Regenerate SDK types
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Fail if schema.d.ts is out of date
+        run: |
+          if ! git diff --quiet -- packages/api-client/src/schema.d.ts; then
+            echo "::error::packages/api-client/src/schema.d.ts is stale. Run 'pnpm --filter @tahti/api-client generate' and commit the result."
+            git diff -- packages/api-client/src/schema.d.ts | head -100
+            exit 1
+          fi
 
   test:
     name: Unit + integration tests
@@ -597,7 +533,6 @@ jobs:
       - vital-flows-e2e
       - user-journeys-e2e
       - agpl-check
-      - api-client-sdk-drift
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs passed
@@ -610,7 +545,6 @@ jobs:
           ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
           ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
-          ok "${{ needs.api-client-sdk-drift.result }}" || { echo "api-client-sdk-drift failed"; exit 1; }
           echo "All checks passed ✓"
 
   release:
@@ -626,6 +560,9 @@ jobs:
       cancel-in-progress: false
     env:
       REGISTRY: registry.tahti.live
+
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v7

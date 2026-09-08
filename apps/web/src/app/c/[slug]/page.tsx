@@ -53,7 +53,6 @@ import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
-import { ReportButton } from '@/components/report-button'
 import { FollowButton } from '@/components/follow-button'
 import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
@@ -887,7 +886,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
             </div>
           )}
-          <ReportButton targetType="CHANNEL" targetId={slug} />
         </>
       }
     />
