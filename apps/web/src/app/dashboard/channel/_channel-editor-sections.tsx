@@ -299,7 +299,6 @@ export function ChannelEditorSections({
                   hasVideoBackground={Boolean(draft.gallery.videoBackgroundUrl)}
                   initial={draft.visual}
                   bare
-                  hideHeaderStyle
                   onDraftChange={(visual) =>
                     setDraft((d) => ({
                       ...d,
