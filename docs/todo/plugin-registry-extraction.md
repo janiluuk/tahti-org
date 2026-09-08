@@ -1,19 +1,30 @@
 # Plugin registry extraction — inventory + interface (non-breaking prep)
 
-**Status:** §5.1/§5.2 adapter shipped (2026-09-07) in `../tahti-nuclear` —
+**Status:** §5.1/§5.2 adapter shipped (2026-09-07) in `../tahti-player` —
 `pluginRegistryContract.ts` + `pluginRegistryAdapter.ts`, additive only
-(callers have **not** been migrated to it yet — see §5.4, still to do). A
-first contract-test suite exists against the adapter (§6, store-layer
-subset). Do **not** move files, change storage keys, alter discovery
-semantics, or change bootstrap order until the full contract-test set and
-rollback plan are accepted.
+(callers have **not** been migrated to it yet — see §5.4, still to do).
+**2026-09-08:** the §5 `PluginRegistryHost` half also now has an
+implementation — `pluginRegistryHost.ts`, a façade composing
+`pluginBootstrap`/`pluginStore`/`pluginAutoUpdate` behind the interface
+without changing their behavior — plus a contract-test suite covering all
+8 host methods (§6; PR pending in `../tahti-player`, branch
+`feat/plugin-registry-host-contract-tests`). Store-layer §6 coverage from
+2026-09-07 still stands separately. Do **not** move files, change storage
+keys, alter discovery semantics, or change bootstrap order until the full
+contract-test set and rollback plan are accepted.
+
+**Note (2026-09-08):** this doc previously said the player fork lived at
+`../tahti-nuclear`; the actual full monorepo (with `packages/player`) is
+checked out at `../tahti-player` on this machine — `../tahti-nuclear` here
+only has `packages/tahti-web`. Updated all fork references below
+accordingly.
 
 **Repos:**
 
-| Repo                                  | Path                                                       |
-| ------------------------------------- | ---------------------------------------------------------- |
-| Tahti (this doc, remaining-work home) | `docs/todo/plugin-registry-extraction.md`                  |
-| Player (Nuclear) pointer              | `../tahti-nuclear/docs/todo/plugin-registry-extraction.md` |
+| Repo                                  | Path                                                      |
+| ------------------------------------- | --------------------------------------------------------- |
+| Tahti (this doc, remaining-work home) | `docs/todo/plugin-registry-extraction.md`                 |
+| Player pointer                        | `../tahti-player/docs/todo/plugin-registry-extraction.md` |
 
 **Source of truth for remaining-work bullets:**
 `docs/remaining-work.md` → _Plugin registry separation_.
@@ -25,7 +36,7 @@ rollback plan are accepted.
 - [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
 - [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [§5](#5-minimal-compatibility-interface-and-adapter-plan)
 - [x] Implement the §5.1/§5.2 contract module + adapter (additive, callers not yet migrated).
-- [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior. **Partial (2026-09-07):** store-layer subset done (`pluginRegistryAdapter.test.ts` — upsert/get/list round-trip, setEnabled incl. missing-id no-op, setWarnings incl. empty-array-omits-field, remove incl. orphan-remove, dev-install originalPath). Still missing: install-from-marketplace/install-from-path/update/discovery cases from §6, since those live on `PluginRegistryHost` (bootstrap/store/auto-update), which has no implementation yet — only the `PluginRegistryStore` half does.
+- [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. Store-layer subset (2026-09-07): `pluginRegistryAdapter.test.ts` — upsert/get/list round-trip, setEnabled incl. missing-id no-op, setWarnings incl. empty-array-omits-field, remove incl. orphan-remove, dev-install originalPath. Host-layer (2026-09-08): `pluginRegistryHost.test.ts` — installFromMarketplace (incl. locking the double-upsert final entry shape, and cleanup-on-failure), installFromPath, enable/disable, reloadDev (incl. non-dev rejection), remove (incl. orphan), checkAndUpdateStorePlugins, hydrateFromRegistry (incl. `providersHost.resolveActiveOnBootstrap` ordering). Not re-covered through the new host interface: the exhaustive per-scenario matrix in §6 below (e.g. every individual update-skip condition) — those stay covered only against the underlying functions directly (`pluginAutoUpdate.test.ts`, `pluginStore.test.ts`, `App.hydration.test.tsx`), which is judged sufficient since the host façade is a thin pass-through with no independent logic for those paths.
 - [ ] Migrate callers to the adapter (§5.4) — not started; `pluginBootstrap.ts`/`pluginStore.tsx`/`pluginAutoUpdate.ts`/`useInstallPlugin.ts` still import `pluginRegistry.ts` directly.
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
@@ -33,7 +44,7 @@ rollback plan are accepted.
 **Guardrail (do not violate during prep):** keep current registry as runtime
 source of truth; no key / path / bootstrap-order changes until adapter +
 rollback plan are accepted. Same wording in
-`../tahti-nuclear/AGENTS.md` (_Runtime registry separation guardrail_) and
+`../tahti-player/AGENTS.md` (_Runtime registry separation guardrail_) and
 root `AGENTS.md` / `docs/remaining-work.md`.
 
 ---
@@ -186,14 +197,14 @@ rename without an explicit migration plan.
 
 ### Core persistence API
 
-| File                                                                                          | Role                                                                              |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginRegistry.ts`   | LazyStore CRUD: list/get/upsert/enabled/warnings/remove                           |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginBootstrap.ts`  | Startup hydrate from registry; warnings on failure; kicks auto-update             |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/stores/pluginStore.tsx`               | In-memory plugin instances; install/enable/disable/reload/remove; writes registry |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/services/plugins/pluginAutoUpdate.ts` | Store-plugin updates vs marketplace catalog                                       |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/hooks/useInstallPlugin.ts`            | Store install mutation (upsert + load + enable)                                   |
-| `/home/jani/workspace/tahti-nuclear/packages/player/src/initPlayerApp.tsx`                    | Schedules `hydratePluginsFromRegistry()` after settings/themes init               |
+| File                                                                                         | Role                                                                              |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `/home/jani/workspace/tahti-player/packages/player/src/services/plugins/pluginRegistry.ts`   | LazyStore CRUD: list/get/upsert/enabled/warnings/remove                           |
+| `/home/jani/workspace/tahti-player/packages/player/src/services/plugins/pluginBootstrap.ts`  | Startup hydrate from registry; warnings on failure; kicks auto-update             |
+| `/home/jani/workspace/tahti-player/packages/player/src/stores/pluginStore.tsx`               | In-memory plugin instances; install/enable/disable/reload/remove; writes registry |
+| `/home/jani/workspace/tahti-player/packages/player/src/services/plugins/pluginAutoUpdate.ts` | Store-plugin updates vs marketplace catalog                                       |
+| `/home/jani/workspace/tahti-player/packages/player/src/hooks/useInstallPlugin.ts`            | Store install mutation (upsert + load + enable)                                   |
+| `/home/jani/workspace/tahti-player/packages/player/src/initPlayerApp.tsx`                    | Schedules `hydratePluginsFromRegistry()` after settings/themes init               |
 
 ### Load / filesystem / marketplace (depend on registry flow)
 
@@ -277,7 +288,7 @@ not make hydrate block first paint unless a later accepted plan says so.
 
 ## 5. Minimal compatibility interface and adapter plan
 
-**Target repo (implementation):** `../tahti-nuclear` →
+**Target repo (implementation):** `../tahti-player` →
 `packages/player/src/services/plugins/`.
 
 Wrap existing functions; do **not** change LazyStore keys, file name
@@ -406,7 +417,7 @@ touching callers.
 | `usePluginStore.removePlugin`                          | `remove()`                     | Unload + managed dir + registry key       |
 | `checkAndUpdatePlugins()` in `pluginAutoUpdate.ts`     | `checkAndUpdateStorePlugins()` | Uses `list()` + marketplace catalog       |
 
-### 5.4 Caller migration (tahti-nuclear, incremental)
+### 5.4 Caller migration (tahti-player, incremental)
 
 Migrate imports **one PR at a time**; behavior must stay identical.
 
@@ -524,14 +535,14 @@ on the adapter; catalog and tahti-web Add-ons remain separate products.
 
 ## Related docs
 
-| Doc                                                        | Why                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------ |
-| `docs/remaining-work.md`                                   | Checklist this file tracks                             |
-| `../tahti-nuclear/AGENTS.md`                               | Catalog vs runtime + separation guardrail              |
-| `../tahti-nuclear/packages/docs/plugins/plugin-system.md`  | User-facing install + registry description             |
-| `../tahti-nuclear/packages/docs/plugins/plugin-store.md`   | Store UI + auto-update                                 |
-| `../tahti-nuclear/packages/tahti-web/PLUGIN-STORE-PLAN.md` | **Different** Add-ons extraction map (do not conflate) |
-| `docs/technical/import-plugin-contracts.md`                | API import-provider catalog (server)                   |
+| Doc                                                       | Why                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------ |
+| `docs/remaining-work.md`                                  | Checklist this file tracks                             |
+| `../tahti-player/AGENTS.md`                               | Catalog vs runtime + separation guardrail              |
+| `../tahti-player/packages/docs/plugins/plugin-system.md`  | User-facing install + registry description             |
+| `../tahti-player/packages/docs/plugins/plugin-store.md`   | Store UI + auto-update                                 |
+| `../tahti-player/packages/tahti-web/PLUGIN-STORE-PLAN.md` | **Different** Add-ons extraction map (do not conflate) |
+| `docs/technical/import-plugin-contracts.md`               | API import-provider catalog (server)                   |
 
 ---
 
