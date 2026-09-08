@@ -32,14 +32,14 @@ listed for completeness but are not coding tasks.
 | ID / item                                                                                                              | Status | Owner       | Source                           |
 | ---------------------------------------------------------------------------------------------------------------------- | :----: | ----------- | -------------------------------- |
 | **STREAM-011 B** — live/24-7 multi-bitrate HLS (lossless or high-bitrate ABR); spike Liquidsoap fMP4 + master playlist | `[ ]`  | Dev         | `project-roadmap.md` §STREAM-011 |
-| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection                                                   | `[~]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
+| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection (removed 2026-09-08, author's request)            | `[ ]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
 | **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                         | `[~]`  | Dev         | roadmap PLAT-053                 |
 | **M11** — live Upptime fork deploy                                                                                     | `[~]`  | Ops         | roadmap M11                      |
 | **M29** — pgBackRest PITR (interim `backup.sh` exists)                                                                 | `[~]`  | Dev / Ops   | roadmap M29                      |
 | MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test        | `[ ]`  | Dev         | roadmap Phase 3 test matrix      |
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                        | `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                | `[~]`  | Dev         | future-improvements              |
-| `user-journeys-e2e` required in branch protection                                                                      | `[ ]`  | Dev         | future-improvements              |
+| `user-journeys-e2e` required in branch protection (moot — branch protection removed 2026-09-08)                        | `[ ]`  | Dev         | Still runs in CI, not enforced   |
 
 ---
 
@@ -101,6 +101,7 @@ as part of this preparation.
 | ID           | Item                                               | Status | P   |
 | ------------ | -------------------------------------------------- | :----: | --- |
 | **PLAT-081** | Cloud import abstraction (Dropbox/OneDrive/WebDAV) | `[ ]`  | P3  |
+| **PLAT-084** | Tauri desktop app CORS origins                     | `[ ]`  | P2  |
 | **PLAT-053** | Radio Mixcloud Live (see above)                    | `[~]`  | P2  |
 
 Most PLAT-001–080 / SEC / UX / PERF items are **done** — see roadmap tables.

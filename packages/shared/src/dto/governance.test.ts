@@ -42,6 +42,23 @@ describe('governance DTOs', () => {
     expect(PatchMotionSchema.safeParse({ state: 'OPEN' }).success).toBe(true)
   })
 
+  it('accepts meeting officer and minutes sign-off metadata', () => {
+    expect(
+      CreateGovernanceMeetingSchema.safeParse({
+        title: 'Board meeting',
+        type: 'BOARD',
+        chairName: 'Chair',
+        secretaryName: 'Secretary',
+      }).success,
+    ).toBe(true)
+    expect(
+      PatchGovernanceMeetingSchema.safeParse({
+        minutesSignedAt: '2026-09-05T12:00:00.000Z',
+        minutesSignedByName: 'Chair',
+      }).success,
+    ).toBe(true)
+  })
+
   it('accepts a motion list cursor query and rejects an invalid state', () => {
     expect(MotionListQuerySchema.safeParse({ limit: '20', state: 'OPEN,DRAFT' }).success).toBe(true)
     expect(MotionListQuerySchema.safeParse({ limit: 0 }).success).toBe(false)
