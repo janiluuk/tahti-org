@@ -203,3 +203,7 @@ Tahti ry `MemberBadge` on public profile + channel identity; join-date copy rena
 ### 2026-09-08 — channel-mobile-chat-and-live-player-ux.md
 
 Channel page mobile/desktop chat and live-player polish, shipped on `feat/channel-mobile-chat-live-player-ux`: mobile chat hidden by default, fullscreen sheet on tap; desktop right-edge chat rail that collapses to a dock expand control; header/player shows REPLAY vs LIVE from Icecast `signalConnected`; live player title from `nowPlaying` metadata; corner "Profile »" link removed. PR [#472](https://github.com/janiluuk/tahti-org/pull/472).
+
+### 2026-09-08 — responsive-usability-audit.md
+
+All ten MOB-01–MOB-10 implementation items shipped: mobile-first `/listen` and `/radio` chrome plus shared `--fixed-stack-bottom` safe-area/mini-player/studio-nav contract ([#446](https://github.com/janiluuk/tahti-org/pull/446)); settings `MobileNavSheet` and admin logs Filter sheet ([#451](https://github.com/janiluuk/tahti-org/pull/451)); home single primary CTA + capped previews, idle auto-scroll removed, admin tables as stacked cards with `admin-table-wrap--tabular` opt-out for audit/ledger data (this repo's earlier session); Discover `ChipFilterBar` sheets and progressive-disclosure `StudioCollapse` forms ([#453](https://github.com/janiluuk/tahti-org/pull/453)). Audit notes stay in this file's 2026-09-01 entry above.
