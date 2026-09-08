@@ -2594,7 +2594,8 @@
 [data-tahti-ui='studio'] .sound-list__cover {
   position: relative;
   width: 96px;
-  align-self: stretch;
+  aspect-ratio: 1 / 1;
+  align-self: flex-start;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
