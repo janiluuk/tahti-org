@@ -1,9 +1,9 @@
 'use client'
 
-import { resolveClientApiUrl } from '@/lib/api-url'
-
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { StickyLiveBar as StickyLiveBarUi } from '@tahti/ui'
 import { useEffect, useState } from 'react'

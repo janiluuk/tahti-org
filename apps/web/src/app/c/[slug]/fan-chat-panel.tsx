@@ -1,32 +1,26 @@
-'use client'
-
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useRef, useState } from 'react'
-import { LiveChatPanel, type LiveChatMessage } from '@tahti/ui'
-import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
-import { resolveClientApiUrl } from '@/lib/api-url'
+'use client'
 
-interface ChatMessage {
-  id: string
-  handle: string
-  text: string
-  ts: number
-}
+import { useEffect, useState } from 'react'
+import { LiveChatPanel, type LiveChatMessage } from '@tahti/ui'
+import { resolveClientApiUrl } from '@/lib/api-url'
+import { searchChatMentions, useCentrifugoChat } from '@/hooks/use-centrifugo-chat'
 
 const API_BASE = resolveClientApiUrl()
+
 export default function FanChatPanel({ slug }: { slug: string }) {
   const [token, setToken] = useState<string | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
   const [handle, setHandle] = useState('')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
-  const [error, setError] = useState<string | null>(null)
-  const wsRef = useRef<WebSocket | null>(null)
-  const msgIdRef = useRef(1)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [accessError, setAccessError] = useState<string | null>(null)
+
+  const { messages, status, error, setError, scrollRef, publish } = useCentrifugoChat({
+    token,
+    channel,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -41,7 +35,7 @@ export default function FanChatPanel({ slug }: { slug: string }) {
         credentials: 'include',
       })
       if (!res.ok || cancelled) {
-        if (res.status === 403) setError('Fan chat is for active subscribers.')
+        if (res.status === 403) setAccessError('Fan chat is for active subscribers.')
         return
       }
       const tok = (await res.json()) as { token: string; handle: string; channel: string }
@@ -55,72 +49,21 @@ export default function FanChatPanel({ slug }: { slug: string }) {
     }
   }, [slug])
 
-  useEffect(() => {
-    if (!token || !channel) return
-    const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
-    let ws: WebSocket
-    try {
-      ws = new WebSocket(wsUrl)
-    } catch (e) {
-      console.warn('[chat] WebSocket connect failed', e)
-      return
-    }
-    wsRef.current = ws
-    setStatus('connecting')
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ id: 1, connect: { token, name: 'js' } }))
-    }
-
-    ws.onmessage = (ev) => {
-      for (const line of (ev.data as string).split('\n')) {
-        if (!line.trim()) continue
-        try {
-          const msg = JSON.parse(line) as {
-            connect?: { client: string }
-            push?: { channel: string; pub: { data: { handle: string; text: string; ts: number } } }
-          }
-          if (msg.connect) {
-            setStatus('connected')
-            ws.send(JSON.stringify({ id: 2, subscribe: { channel } }))
-          }
-          if (msg.push?.pub?.data) {
-            const d = msg.push.pub.data
-            setMessages((prev) => [
-              ...prev,
-              { id: `${d.ts}-${prev.length}`, handle: d.handle, text: d.text, ts: d.ts },
-            ])
-          }
-        } catch {
-          // malformed message
-        }
-      }
-    }
-
-    ws.onclose = () => setStatus('disconnected')
-    return () => ws.close()
-  }, [token, channel])
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [messages])
-
   function sendMessage() {
-    if (!input.trim() || !wsRef.current || !channel || status !== 'connected') return
-    const text = input.trim().slice(0, 500)
-    wsRef.current.send(
-      JSON.stringify({
-        id: msgIdRef.current++,
-        publish: {
-          channel,
-          data: { handle, text, ts: Date.now(), supporter: true },
-        },
-      }),
-    )
-    setInput('')
+    if (!handle || !input.trim()) return
+    if (
+      publish({
+        handle,
+        text: input,
+        supporter: true,
+      })
+    ) {
+      setInput('')
+      setError(null)
+    }
   }
 
-  if (!token && !error) return null
+  if (!token && !accessError) return null
 
   const liveMessages: LiveChatMessage[] = messages.map((m) => ({
     id: m.id,
@@ -144,24 +87,9 @@ export default function FanChatPanel({ slug }: { slug: string }) {
       inputPlaceholder="Fans only…"
       inputDisabled={status !== 'connected'}
       sendDisabled={status !== 'connected'}
-      error={error}
+      error={accessError ?? error}
       readOnly={!token}
-      onSearchMentions={async (query) => {
-        if (query.trim().length < 1) return []
-        try {
-          const res = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`, {
-            credentials: 'include',
-          })
-          if (!res.ok) return []
-          const data = (await res.json()) as Array<{
-            username: string
-            displayName: string
-          }>
-          return data.map((u) => ({ username: u.username, displayName: u.displayName }))
-        } catch {
-          return []
-        }
-      }}
+      onSearchMentions={searchChatMentions}
     />
   )
 }
