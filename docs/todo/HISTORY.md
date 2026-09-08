@@ -199,3 +199,7 @@ Dashboard Sounds player: title/artist restored as a legible overlay on the wavef
 ### 2026-09-06 — member-badge-profiles.md
 
 Tahti ry `MemberBadge` on public profile + channel identity; join-date copy renamed to “Joined …”. PR [#456](https://github.com/janiluuk/tahti-org/pull/456).
+
+### 2026-09-08 — channel-mobile-chat-and-live-player-ux.md
+
+Channel page mobile/desktop chat and live-player polish, shipped on `feat/channel-mobile-chat-live-player-ux`: mobile chat hidden by default, fullscreen sheet on tap; desktop right-edge chat rail that collapses to a dock expand control; header/player shows REPLAY vs LIVE from Icecast `signalConnected`; live player title from `nowPlaying` metadata; corner "Profile »" link removed. PR [#472](https://github.com/janiluuk/tahti-org/pull/472).
