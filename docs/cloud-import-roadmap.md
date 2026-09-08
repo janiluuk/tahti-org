@@ -1,7 +1,7 @@
 # Cloud drive import — roadmap
 
 Sprint 9 already ships OAuth import from Bandcamp and SoundCloud
-(`docs/technical/phase-9.md` / roadmap memory). This doc plans the next
+(`docs/archive/phase-9.md` / roadmap memory). This doc plans the next
 import source: letting an artist pull tracks directly from their own cloud
 storage instead of a drag-and-drop upload from disk.
 

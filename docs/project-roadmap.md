@@ -200,7 +200,7 @@ runbook for reboot / failover exists.
 ## Phase 2b — Backup & disaster recovery (before public beta)
 
 Strategy summary from [`infra-strategy.md`](./infra-strategy.md) and
-[`technical/phase-3.md`](./technical/phase-3.md). **Primary site:** owned Helsinki
+[`archive/phase-3.md`](./archive/phase-3.md). **Primary site:** owned Helsinki
 hardware (Postgres, Redis, MinIO, Swarm). **Offsite copy:** UpCloud Helsinki
 object storage (EU jurisdiction, DPA before launch).
 
@@ -222,12 +222,12 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | Done | Task                                                                                                    | Owner     | Depends                                                                                               | Doc                        |
 | :--: | ------------------------------------------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------- | -------------------------- |
 | [ ]  | UpCloud object storage buckets provisioned (`pg/`, `minio/`, lifecycle rules)                           | Dev       | UpCloud account                                                                                       | `infra-strategy.md`        |
-| [ ]  | MinIO `backups` bucket on primary; `mc` alias configured on manager node                                | Dev       | MinIO up                                                                                              | `technical/phase-3.md`     |
+| [ ]  | MinIO `backups` bucket on primary; `mc` alias configured on manager node                                | Dev       | MinIO up                                                                                              | `archive/phase-3.md`     |
 | [x]  | `scripts/backup.sh` — unified postgres + minio + restore-test + status (wrappers deprecated)            | Dev       | Postgres + MinIO up                                                                                   | `ops/RUNBOOK.md`           |
-| [x]  | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`)         | Dev       | `scripts/backup.sh` + `install-crons.sh`                                                              | `technical/phase-3.md`     |
+| [x]  | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`)         | Dev       | `scripts/backup.sh` + `install-crons.sh`                                                              | `archive/phase-3.md`     |
 | [x]  | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call                                 | Dev       | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** + `prometheus-tahti-alerts.yml` | `technical/journey-ops.md` |
 | [ ]  | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping                              | Dev       | Postgres prod                                                                                         | `future-improvements.md`   |
-| [x]  | Pre-destructive-op snapshot: `scripts/pre-destructive-db-snapshot.sh` before migrations / volume resize | Dev       | —                                                                                                     | `technical/phase-7.md`     |
+| [x]  | Pre-destructive-op snapshot: `scripts/pre-destructive-db-snapshot.sh` before migrations / volume resize | Dev       | —                                                                                                     | `archive/phase-7.md`     |
 | [x]  | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover                         | Dev       | restore test passed once                                                                              | Phase 9                    |
 | [~]  | Operator drill: restore from yesterday's backup without director (timed exercise)                       | Operators | `./scripts/backup-drill.sh` automates restore-test + status                                           | Phase 9 §8b                |
 | [ ]  | DPA signed with UpCloud before storing artist/listener data offsite                                     | Director  | association                                                                                           | `infra-strategy.md` §GDPR  |
@@ -844,7 +844,7 @@ doesn't hold up. Collective open list: [`remaining-work.md`](./remaining-work.md
 | E2E screenshots / flows?                           | `user-flows.md`, `e2e-screenshots/README.md`                                                                                    |
 | Platform hardening backlog?                        | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md`                                         |
 | UI / design alignment?                             | [UI / Design alignment](#ui--design-alignment-historical-mockup-parity--done), `docs/design/README.md`, `docs/e2e-screenshots/` |
-| Backup & restore flow?                             | `technical/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)                                     |
+| Backup & restore flow?                             | `archive/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)                                     |
 | Ops journeys (restore drill)?                      | `technical/journey-ops.md`                                                                                                      |
 
 ---
