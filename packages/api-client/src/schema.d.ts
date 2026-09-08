@@ -4982,6 +4982,218 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/radio/rtmp-targets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              provider: string
+              label: string
+              rtmpUrl: string
+              alwaysMirror: boolean
+              enabled: boolean
+              /** Format: date-time */
+              createdAt?: string
+              keyLast4?: string
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              provider: string
+              label: string
+              rtmpUrl: string
+              alwaysMirror: boolean
+              enabled: boolean
+              /** Format: date-time */
+              createdAt?: string
+              keyLast4?: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/radio/rtmp-targets/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/api/admin/radio/rtmp-targets/{id}/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              ok: boolean
+              error?: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/radio/rtmp-targets/{id}/stream-key': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              streamKey: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/obs-preset': {
     parameters: {
       query?: never
@@ -5665,6 +5877,7 @@ export interface paths {
               youVoted: boolean
               yourChoice: string | null
               commentCount: number
+              eligibleMemberCount: number | null
               tally?: {
                 YES: number
                 NO: number
@@ -5743,6 +5956,7 @@ export interface paths {
               youVoted: boolean
               yourChoice: string | null
               commentCount: number
+              eligibleMemberCount: number | null
               tally?: {
                 YES: number
                 NO: number
@@ -5807,6 +6021,19 @@ export interface paths {
       requestBody?: never
       responses: {
         /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+              choice: string
+            }
+          }
+        }
+        /** @description Default Response */
         201: {
           headers: {
             [name: string]: unknown
@@ -5821,7 +6048,31 @@ export interface paths {
         }
       }
     }
-    delete?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+            }
+          }
+        }
+      }
+    }
     options?: never
     head?: never
     patch?: never
@@ -26893,6 +27144,8 @@ export interface paths {
                 seriesId: string
                 /** Format: date-time */
                 startAt: string
+                /** Format: date-time */
+                endAt: string | null
                 episodeNumber: number | null
                 title: string
                 description: string | null
@@ -30911,6 +31164,7 @@ export interface components {
       youVoted: boolean
       yourChoice: string | null
       commentCount: number
+      eligibleMemberCount: number | null
       tally?: {
         YES: number
         NO: number
@@ -30931,6 +31185,7 @@ export interface components {
       youVoted: boolean
       yourChoice: string | null
       commentCount: number
+      eligibleMemberCount: number | null
       tally?: {
         YES: number
         NO: number

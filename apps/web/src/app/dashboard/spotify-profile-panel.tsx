@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,8 +13,7 @@ import {
   type SpotifyArtistProfile,
 } from './spotify-profile-actions'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
-
+const apiUrl = resolveClientApiUrl()
 function coverProxySrc(imageUrl: string | null): string | null {
   if (!imageUrl) return null
   return `${apiUrl}/api/v1/imports/spotify/cover?url=${encodeURIComponent(imageUrl)}`

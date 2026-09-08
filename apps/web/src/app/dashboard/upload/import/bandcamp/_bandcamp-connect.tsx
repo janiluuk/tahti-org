@@ -1,13 +1,13 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { ButtonIcon, StatusPill, Button } from '@tahti/ui'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
-
+const apiUrl = resolveClientApiUrl()
 export function BandcampConnectPanel({
   connected,
   configured,

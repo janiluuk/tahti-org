@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,8 +13,7 @@ import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
 import { extractUploadTags, type TaggedMeta } from './upload-metadata'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`

@@ -613,6 +613,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M6: RTMP multistream targets
   await fastify.register(rtmpTargetRoutes)
+  await fastify.register(rtmpTargetRoutes, { scope: 'radio' })
   await fastify.register(obsPresetRoutes)
 
   // Personal API tokens (Bearer auth for third-party / scripted access)

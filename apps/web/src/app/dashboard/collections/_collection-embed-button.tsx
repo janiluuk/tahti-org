@@ -1,15 +1,15 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveAppUrl } from '@/lib/app-url'
 import { collectionRssUrl } from '@/lib/rss-feeds'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 const SHARE_TARGETS = [
   [
     'X / Twitter',

@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { Fragment, type FormEvent, useState } from 'react'
 
@@ -73,8 +74,7 @@ const DOCUMENT_TYPES = [
   { value: 'OTHER', label: 'Other' },
 ]
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 function fieldString(fd: FormData, name: string): string {
   return String(fd.get(name) ?? '').trim()
 }

@@ -197,6 +197,14 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: meeting.id,
         meta: { title: meeting.title, type: meeting.type, state: meeting.state },
       })
+      if (meeting.noticeAt) {
+        await auditLog(fastify.prisma, {
+          action: 'MEETING_NOTICE_PUBLISH',
+          actorId: request.sessionUser!.id,
+          targetId: meeting.id,
+          meta: { noticeAt: meeting.noticeAt, eligibleMemberCount: meeting.eligibleMemberCount },
+        })
+      }
       return reply.status(201).send({
         ...meeting,
         attendanceCount: 0,
@@ -242,6 +250,45 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: updated.id,
         meta: { title: updated.title, state: updated.state },
       })
+      if ('noticeAt' in parsed.data && updated.noticeAt) {
+        await auditLog(fastify.prisma, {
+          action: 'MEETING_NOTICE_PUBLISH',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: { noticeAt: updated.noticeAt, eligibleMemberCount: updated.eligibleMemberCount },
+        })
+      }
+      if ('minutesKey' in parsed.data && updated.minutesKey) {
+        await auditLog(fastify.prisma, {
+          action: 'MINUTES_UPLOAD',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: { minutesKey: updated.minutesKey },
+        })
+      }
+      if ('minutesApprovedAt' in parsed.data && updated.minutesApprovedAt) {
+        await auditLog(fastify.prisma, {
+          action: 'MINUTES_APPROVE',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: { minutesApprovedAt: updated.minutesApprovedAt },
+        })
+      }
+      if (
+        ('minutesSignedByName' in parsed.data || 'minutesSignedAt' in parsed.data) &&
+        updated.minutesSignedByName &&
+        updated.minutesSignedAt
+      ) {
+        await auditLog(fastify.prisma, {
+          action: 'MINUTES_SIGN',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: {
+            minutesSignedByName: updated.minutesSignedByName,
+            minutesSignedAt: updated.minutesSignedAt,
+          },
+        })
+      }
       const withAttendance = await fastify.prisma.governanceMeeting.findUniqueOrThrow({
         where: { id: updated.id },
         include: { attendance: { select: { status: true } } },

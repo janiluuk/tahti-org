@@ -1,14 +1,14 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import type { TracklistEntry } from '@tahti/shared'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 /** STREAM-008 phase 4: poll live chromaprint tracklist while channel is LIVE. */
 export function LiveTracklistPanel({
   slug,

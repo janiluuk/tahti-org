@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -13,7 +14,7 @@ interface FollowUser {
   avatarUrl: string | null
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+const API_URL = resolveClientApiUrl()
 const PREVIEW_COUNT = 5
 
 async function fetchPage(

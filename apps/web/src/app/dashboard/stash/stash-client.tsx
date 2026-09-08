@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { Alert, FileDropzone } from '@tahti/ui'
@@ -55,8 +56,7 @@ function fileLabel(f: StashFile): string {
   return parts.join(' · ')
 }
 
-const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const apiBase = resolveClientApiUrl()
 async function apiFetch(path: string, opts?: RequestInit) {
   return fetch(`${apiBase}${path}`, { credentials: 'include', ...opts })
 }

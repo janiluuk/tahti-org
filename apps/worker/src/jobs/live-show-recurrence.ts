@@ -3,7 +3,12 @@
 
 import type { Job } from 'bullmq'
 import { prisma, generateForSeries, syncNextBroadcast } from '@tahti/db'
-import { isValidRecurrenceRule, nextRecurrenceOccurrences } from '@tahti/shared'
+import {
+  filterNonOverlappingOccurrences,
+  isValidRecurrenceRule,
+  nextRecurrenceOccurrences,
+  seriesShowDurationMin,
+} from '@tahti/shared'
 
 /** Daily cron: rolls every recurrence-enabled series' generated episodes
  * forward so the horizon never runs dry between artist visits to the
@@ -28,8 +33,22 @@ export async function processLiveShowRecurrenceJob(_job: Job): Promise<{
       timezone: s.recurrenceTimezone,
     }
     if (!isValidRecurrenceRule(rule)) continue
-    const occurrences = nextRecurrenceOccurrences(rule, now, s.recurrenceHorizonDays)
-    const created = await generateForSeries(prisma, { ...s, userId: s.channel.userId }, occurrences)
+    const durationMin = seriesShowDurationMin(s)
+    const raw = nextRecurrenceOccurrences(rule, now, s.recurrenceHorizonDays)
+    const existing = await prisma.scheduledLiveShow.findMany({
+      where: {
+        channelId: s.channelId,
+        canceledAt: null,
+        startAt: { gte: new Date(now.getTime() - 7 * 86_400_000) },
+      },
+      select: { startAt: true, endAt: true },
+    })
+    const occurrences = filterNonOverlappingOccurrences(raw, durationMin, existing)
+    const created = await generateForSeries(
+      prisma,
+      { ...s, userId: s.channel.userId, durationMin },
+      occurrences,
+    )
     episodesCreated += created
     if (created > 0) touchedChannels.add(s.channelId)
   }

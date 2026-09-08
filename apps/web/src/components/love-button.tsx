@@ -1,14 +1,14 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import { LoginPromptModal } from './login-prompt-modal'
 import { useToast } from '@/contexts/toast-context'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+const API_URL = resolveClientApiUrl()
 function IconHeart({ filled }: { filled: boolean }) {
   return (
     <svg

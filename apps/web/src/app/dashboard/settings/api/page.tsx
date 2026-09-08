@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { resolveClientApiUrl, resolveServerApiUrl } from '@/lib/api-url'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createTahtiClient } from '@tahti/api-client'
@@ -11,7 +12,7 @@ export default async function ApiTokensSettingsPage() {
   const sessionCookie = cookieStore.get('tahti_session')
   if (!sessionCookie) redirect('/login')
 
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const apiUrl = resolveServerApiUrl()
   const api = createTahtiClient({ baseUrl: apiUrl, cookie: `tahti_session=${sessionCookie.value}` })
 
   const { data: tokens } = await api.GET('/api/me/api-tokens')
@@ -31,7 +32,7 @@ export default async function ApiTokensSettingsPage() {
         </div>
       </div>
 
-      <ApiTokensPanel initial={tokens ?? []} apiBase={process.env.NEXT_PUBLIC_API_BASE ?? apiUrl} />
+      <ApiTokensPanel initial={tokens ?? []} apiBase={resolveClientApiUrl()} />
     </>
   )
 }

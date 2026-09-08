@@ -1,15 +1,15 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import { Button, Panel } from '@tahti/ui'
 import { RADIO_SUBMISSION_MAX_TRACKS } from '@tahti/shared'
 import { LibraryBrowser } from '@/components/library/library-browser'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 type SoundRow = {
   id: string
   title: string

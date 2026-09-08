@@ -1,15 +1,15 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { NewToYouResponse } from '@tahti/shared'
 import { SelectsGallery } from './_selects-gallery'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export function NewToYouSection() {
   const [data, setData] = useState<NewToYouResponse | null>(null)
   const [loading, setLoading] = useState(true)

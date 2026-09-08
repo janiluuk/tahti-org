@@ -1,7 +1,8 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-
-'use client'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState } from 'react'
 import { Button, Input, Panel, StatusPill } from '@tahti/ui'
@@ -9,8 +10,7 @@ import { INTEGRATION_PROVIDERS, type IntegrationField, type IntegrationScope } f
 import type { IntegrationView } from '@/lib/integrations-client'
 import { installIntegration, removeIntegration } from './integrations-actions'
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
-
+const apiUrl = resolveClientApiUrl()
 const SCOPE_SECTIONS: Array<{ scope: IntegrationScope; title: string }> = [
   { scope: 'IMPORT', title: 'Import sources' },
   { scope: 'EXPORT', title: 'Export' },

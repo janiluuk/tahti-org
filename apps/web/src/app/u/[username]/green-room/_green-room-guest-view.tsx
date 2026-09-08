@@ -8,9 +8,9 @@ import Link from 'next/link'
 import { Callout, Text } from '@tahti/ui'
 import type { GreenRoomAccessView } from '@tahti/shared'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
+import { resolveClientApiUrl } from '@/lib/api-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-
+const API_BASE = resolveClientApiUrl()
 export function GreenRoomGuestView({
   channelSlug,
   artistUsername,
