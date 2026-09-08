@@ -142,6 +142,8 @@ export const PatchGovernanceMeetingSchema = z.object({
     .optional(),
   minutesKey: z.string().trim().max(500).nullable().optional(),
   minutesApprovedAt: z.coerce.date().nullable().optional(),
+  minutesRedacted: z.boolean().optional(),
+  minutesPublishedAt: z.coerce.date().nullable().optional(),
 })
 
 export const CreateGovernanceDocumentSchema = z.object({
@@ -168,6 +170,8 @@ export const GovernanceMeetingItemSchema = z.object({
   agenda: z.unknown().nullable(),
   minutesKey: z.string().nullable(),
   minutesApprovedAt: z.coerce.date().nullable(),
+  minutesRedacted: z.boolean(),
+  minutesPublishedAt: z.coerce.date().nullable(),
   eligibleMemberCount: z.number().int().nullable(),
   quorumRequired: z.number().int().nullable(),
   chairName: z.string().nullable(),
@@ -197,6 +201,16 @@ export const GovernanceAttendanceItemSchema = z.object({
   recordedAt: z.coerce.date(),
 })
 export const GovernanceAttendanceListSchema = z.array(GovernanceAttendanceItemSchema)
+
+export const GovernanceNoticeDeliveryItemSchema = z.object({
+  id: z.string(),
+  memberId: z.string(),
+  displayName: z.string().nullable(),
+  email: z.string(),
+  sentAt: z.coerce.date(),
+  bouncedAt: z.coerce.date().nullable(),
+})
+export const GovernanceNoticeDeliveryListSchema = z.array(GovernanceNoticeDeliveryItemSchema)
 
 export const GovernanceDocumentItemSchema = z.object({
   id: z.string(),

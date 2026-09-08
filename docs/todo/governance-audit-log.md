@@ -39,6 +39,42 @@ Filter sheet and an 80-line mobile window.
   `GovernanceMeeting` row and has no `binding` flag, so "distinct from
   advisory polls" holds only by virtue of being a separate model/table.
 
+**2026-09-08 slice 2 (backend):** closed out the three open threads above.
+Frontend for all three is not done here — see "Not done here" below.
+
+- Notices & delivery: on first publish (noticeAt going from unset to set,
+  create or PATCH), a `GovernanceNoticeDelivery` row is now created per
+  current member and a real notice email sent (`sendGovernanceMeetingNoticeEmail`,
+  `apps/api/src/lib/governance-notice.ts`), audited as `MEETING_NOTICE_SEND`
+  alongside the existing `MEETING_NOTICE_PUBLISH`. Re-saving a meeting whose
+  notice was already published does not re-send (avoids spamming members on
+  every subsequent edit). The email-bounce webhook
+  (`POST /api/webhooks/email/bounce`) now also marks matching delivery rows'
+  `bouncedAt`, on any bounce kind (not gated by the newsletter unsubscribe
+  policy — a soft bounce is still real delivery evidence here). New
+  `GET /api/admin/governance/meetings/:id/notice-deliveries` surfaces the
+  per-recipient rows. **Still not tracked: opens** — no tracking-pixel infra
+  exists anywhere in this codebase, and adding one was judged out of scope
+  for this slice.
+- Minutes workflow: `GovernanceMeeting.minutesRedacted` (boolean flag on the
+  stored file — this repo doesn't model partial-document redaction) and
+  `minutesPublishedAt` (distinct from `minutesSignedAt`) are new fields,
+  audited as `MINUTES_REDACT` / `MINUTES_PUBLISH` from the same PATCH
+  handler, same pattern as the existing minutes actions.
+- Official meeting votes: `BoardResolution.meetingId` (optional FK to
+  `GovernanceMeeting`, cross-schema `admin` → `governance`) and
+  `BoardResolution.binding` (boolean, default `true`) are new fields on
+  `POST`/`PATCH /api/admin/resolutions`; an invalid `meetingId` 400s rather
+  than hitting the FK constraint.
+
+Migration: `20260908090000_governance_notice_delivery_minutes_publish_resolution_link`.
+
+**Not done here (frontend):** `apps/web/src/app/admin/agm/governance-records-panel.tsx`
+(611 lines — meeting create/PATCH forms, minutes fields) has no UI yet for
+`minutesRedacted`/`minutesPublishedAt`, and `apps/web/src/app/admin/governance/resolutions/page.tsx`
+has none for `meetingId`/`binding`. Neither surfaces the new
+notice-deliveries endpoint (who was actually notified, bounce status).
+
 Still planned (no events, no data model yet): conflicts/recusals.
 
 **Also 2026-09-08:** `VOTE_CHANGE`/`VOTE_RETRACT` audit actions added

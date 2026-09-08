@@ -414,7 +414,10 @@ enum AuditAction {
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
+  MINUTES_REDACT
+  MINUTES_PUBLISH
   MEETING_NOTICE_PUBLISH
+  MEETING_NOTICE_SEND
 
   @@schema("governance")
 }
@@ -900,6 +903,7 @@ model User {
   governanceMeetingsCreated      GovernanceMeeting[]
   governanceDocumentsCreated     GovernanceDocument[]
   governanceAttendance           GovernanceAttendance[]
+  governanceNoticeDeliveries     GovernanceNoticeDelivery[]
   socialConnections              SocialConnection[]
   socialPosts                    SocialPost[]
   stashFiles                     StashFile[]
@@ -2288,16 +2292,45 @@ model GovernanceMeeting {
   minutesApprovedAt   DateTime?
   minutesSignedByName String?
   minutesSignedAt     DateTime?
+  /// Whether the uploaded minutes have confidential portions redacted before
+  /// board approval/publish. A flag, not a diff — this repo doesn't model
+  /// partial-document redaction, only whether the stored file has it applied.
+  minutesRedacted     Boolean                @default(false)
+  /// Distinct from minutesSignedAt: minutes can be approved+signed
+  /// internally well before the board chooses to publish them to members.
+  minutesPublishedAt  DateTime?
   createdById         String
   createdBy           User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
 
-  documents  GovernanceDocument[]
-  attendance GovernanceAttendance[]
+  documents        GovernanceDocument[]
+  attendance       GovernanceAttendance[]
+  noticeDeliveries GovernanceNoticeDelivery[]
+  boardResolutions BoardResolution[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
+  @@schema("governance")
+}
+
+/// Per-recipient evidence that a meeting notice was actually sent, so
+/// "Notices & delivery" can prove more than just that noticeAt was set.
+/// One row per eligible member at send time; bouncedAt is filled in later
+/// by the existing email-bounce webhook. No open-tracking — this codebase
+/// has no tracking-pixel infra anywhere else, so that stays unimplemented.
+model GovernanceNoticeDelivery {
+  id        String            @id @default(cuid())
+  meetingId String
+  meeting   GovernanceMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    User              @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  email     String
+  sentAt    DateTime          @default(now())
+  bouncedAt DateTime?
+
+  @@unique([meetingId, memberId])
+  @@index([meetingId])
   @@schema("governance")
 }
 
@@ -3472,7 +3505,7 @@ model SupportTicketNote {
 }
 
 model BoardResolution {
-  id          BigInt            @id @default(autoincrement())
+  id          BigInt             @id @default(autoincrement())
   title       String
   body        String
   votedAt     DateTime
@@ -3481,11 +3514,18 @@ model BoardResolution {
   voteAgainst Int
   voteAbstain Int
   createdById String
-  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
   publishedAt DateTime?
-  createdAt   DateTime          @default(now())
+  createdAt   DateTime           @default(now())
+  meetingId   String?
+  meeting     GovernanceMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// A board resolution is a binding decision by default (that's what
+  /// distinguishes it from an advisory Motion); false marks one recorded
+  /// for the register without binding force (e.g. a formal statement).
+  binding     Boolean            @default(true)
 
   @@index([votedAt(sort: Desc)])
+  @@index([meetingId])
   @@schema("admin")
 }
 

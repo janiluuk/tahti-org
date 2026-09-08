@@ -9,6 +9,7 @@ import {
   GovernanceAttendanceListSchema,
   GovernanceDocumentListSchema,
   GovernanceMeetingListSchema,
+  GovernanceNoticeDeliveryListSchema,
   PatchGovernanceMeetingSchema,
   UpsertGovernanceAttendanceSchema,
   openApiResponse,
@@ -17,6 +18,7 @@ import {
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { auditLog } from '../../lib/audit.js'
+import { sendMeetingNoticeAndRecordDeliveries } from '../../lib/governance-notice.js'
 
 async function documentResponse(document: {
   id: string
@@ -62,6 +64,8 @@ function meetingResponse(meeting: {
   agenda: unknown
   minutesKey: string | null
   minutesApprovedAt: Date | null
+  minutesRedacted: boolean
+  minutesPublishedAt: Date | null
   minutesSignedByName: string | null
   minutesSignedAt: Date | null
   eligibleMemberCount: number | null
@@ -204,6 +208,13 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           targetId: meeting.id,
           meta: { noticeAt: meeting.noticeAt, eligibleMemberCount: meeting.eligibleMemberCount },
         })
+        const recipientCount = await sendMeetingNoticeAndRecordDeliveries(fastify.prisma, meeting)
+        await auditLog(fastify.prisma, {
+          action: 'MEETING_NOTICE_SEND',
+          actorId: request.sessionUser!.id,
+          targetId: meeting.id,
+          meta: { recipientCount },
+        })
       }
       return reply.status(201).send({
         ...meeting,
@@ -257,6 +268,20 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           targetId: updated.id,
           meta: { noticeAt: updated.noticeAt, eligibleMemberCount: updated.eligibleMemberCount },
         })
+        // Only send/record on the first publish (noticeAt going from unset to
+        // set) — re-saving the same meeting shouldn't re-email every member.
+        // A deliberately changed notice date is a new MEETING_UPDATE, not
+        // re-triggered here; board can re-publish by clearing then resetting
+        // noticeAt if a real re-notify is intended.
+        if (!meeting.noticeAt) {
+          const recipientCount = await sendMeetingNoticeAndRecordDeliveries(fastify.prisma, updated)
+          await auditLog(fastify.prisma, {
+            action: 'MEETING_NOTICE_SEND',
+            actorId: request.sessionUser!.id,
+            targetId: updated.id,
+            meta: { recipientCount },
+          })
+        }
       }
       if ('minutesKey' in parsed.data && updated.minutesKey) {
         await auditLog(fastify.prisma, {
@@ -289,11 +314,63 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           },
         })
       }
+      if ('minutesRedacted' in parsed.data && updated.minutesRedacted && !meeting.minutesRedacted) {
+        await auditLog(fastify.prisma, {
+          action: 'MINUTES_REDACT',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: { minutesKey: updated.minutesKey },
+        })
+      }
+      if ('minutesPublishedAt' in parsed.data && updated.minutesPublishedAt) {
+        await auditLog(fastify.prisma, {
+          action: 'MINUTES_PUBLISH',
+          actorId: request.sessionUser!.id,
+          targetId: updated.id,
+          meta: {
+            minutesPublishedAt: updated.minutesPublishedAt,
+            redacted: updated.minutesRedacted,
+          },
+        })
+      }
       const withAttendance = await fastify.prisma.governanceMeeting.findUniqueOrThrow({
         where: { id: updated.id },
         include: { attendance: { select: { status: true } } },
       })
       return reply.send(meetingResponse(withAttendance))
+    },
+  )
+
+  fastify.get(
+    '/api/admin/governance/meetings/:id/notice-deliveries',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(
+          GovernanceNoticeDeliveryListSchema,
+          'GovernanceNoticeDeliveryList',
+        ),
+      },
+    },
+    async (request, reply) => {
+      const meetingId = (request.params as { id?: string }).id
+      if (!meetingId) return reply.status(400).send({ error: 'Meeting id is required' })
+      const records = await fastify.prisma.governanceNoticeDelivery.findMany({
+        where: { meetingId },
+        orderBy: { sentAt: 'asc' },
+        include: { member: { select: { displayName: true } } },
+      })
+      return reply.send(
+        records.map((r) => ({
+          id: r.id,
+          memberId: r.memberId,
+          displayName: r.member.displayName,
+          email: r.email,
+          sentAt: r.sentAt,
+          bouncedAt: r.bouncedAt,
+        })),
+      )
     },
   )
 

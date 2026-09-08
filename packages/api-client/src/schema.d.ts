@@ -11927,6 +11927,8 @@ export interface paths {
               /** Format: date-time */
               createdAt: string
               createdByDisplayName: string | null
+              meetingId: string | null
+              binding: boolean
             }[]
           }
         }
@@ -11963,6 +11965,8 @@ export interface paths {
               /** Format: date-time */
               createdAt: string
               createdByDisplayName: string | null
+              meetingId: string | null
+              binding: boolean
             }
           }
         }
@@ -12019,6 +12023,8 @@ export interface paths {
               /** Format: date-time */
               createdAt: string
               createdByDisplayName: string | null
+              meetingId: string | null
+              binding: boolean
             }
           }
         }
@@ -12065,6 +12071,9 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              minutesRedacted: boolean
+              /** Format: date-time */
+              minutesPublishedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -12192,6 +12201,9 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              minutesRedacted: boolean
+              /** Format: date-time */
+              minutesPublishedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -12244,6 +12256,9 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              minutesRedacted: boolean
+              /** Format: date-time */
+              minutesPublishedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -12316,6 +12331,9 @@ export interface paths {
               minutesKey: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
+              minutesRedacted: boolean
+              /** Format: date-time */
+              minutesPublishedAt: string | null
               eligibleMemberCount: number | null
               quorumRequired: number | null
               chairName: string | null
@@ -12335,6 +12353,52 @@ export interface paths {
         }
       }
     }
+    trace?: never
+  }
+  '/api/admin/governance/meetings/{id}/notice-deliveries': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              memberId: string
+              displayName: string | null
+              email: string
+              /** Format: date-time */
+              sentAt: string
+              /** Format: date-time */
+              bouncedAt: string | null
+            }[]
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/admin/governance/meetings/{id}/attendance': {

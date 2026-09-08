@@ -14,6 +14,12 @@ vi.mock('../../lib/minio.js', () => ({
   presignedGetUrl: vi.fn().mockResolvedValue('https://minio.test/governance-document.pdf'),
 }))
 
+const sendGovernanceMeetingNoticeEmail = vi.fn().mockResolvedValue(undefined)
+vi.mock('../../lib/email.js', () => ({
+  sendGovernanceMeetingNoticeEmail: (...args: unknown[]) =>
+    sendGovernanceMeetingNoticeEmail(...args),
+}))
+
 const PREFIX = 'governance-records-test-'
 
 describe('governance meetings and documents', () => {
@@ -287,6 +293,24 @@ describe('governance meetings and documents', () => {
     })
     expect(signed.statusCode).toBe(200)
 
+    const redacted = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { minutesRedacted: true },
+    })
+    expect(redacted.statusCode).toBe(200)
+    expect(redacted.json().minutesRedacted).toBe(true)
+
+    const published = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { minutesPublishedAt: '2026-09-07T12:00:00.000Z' },
+    })
+    expect(published.statusCode).toBe(200)
+    expect(published.json().minutesPublishedAt).toBe('2026-09-07T12:00:00.000Z')
+
     const fetchTopic = async (topic: string) => {
       const res = await app.inject({
         method: 'GET',
@@ -297,11 +321,47 @@ describe('governance meetings and documents', () => {
       return (res.json() as { items: Array<{ action: string }> }).items.map((i) => i.action)
     }
 
-    expect(await fetchTopic('notices')).toContain('MEETING_NOTICE_PUBLISH')
+    expect(await fetchTopic('notices')).toEqual(
+      expect.arrayContaining(['MEETING_NOTICE_PUBLISH', 'MEETING_NOTICE_SEND']),
+    )
     const minutesActions = await fetchTopic('minutes')
-    expect(minutesActions).toContain('MINUTES_UPLOAD')
-    expect(minutesActions).toContain('MINUTES_APPROVE')
-    expect(minutesActions).toContain('MINUTES_SIGN')
+    expect(minutesActions).toEqual(
+      expect.arrayContaining([
+        'MINUTES_UPLOAD',
+        'MINUTES_APPROVE',
+        'MINUTES_SIGN',
+        'MINUTES_REDACT',
+        'MINUTES_PUBLISH',
+      ]),
+    )
+
+    // Both board and member fixtures have isMember: true, so both are
+    // eligible recipients of the notice sent when noticeAt was first set.
+    expect(sendGovernanceMeetingNoticeEmail).toHaveBeenCalled()
+    const deliveries = await app.inject({
+      method: 'GET',
+      url: `/api/admin/governance/meetings/${meetingId}/notice-deliveries`,
+      headers: { cookie: boardCookie },
+    })
+    expect(deliveries.statusCode).toBe(200)
+    const deliveryRows = deliveries.json() as Array<{ email: string; bouncedAt: string | null }>
+    expect(deliveryRows.length).toBeGreaterThanOrEqual(2)
+    expect(deliveryRows.every((row) => row.bouncedAt === null)).toBe(true)
+
+    // Re-saving the meeting with the same noticeAt must not re-send/re-audit.
+    const sendCallsBefore = sendGovernanceMeetingNoticeEmail.mock.calls.length
+    const resaved = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/meetings/${meetingId}`,
+      headers: { cookie: boardCookie },
+      payload: { noticeAt: '2026-09-01T12:00:00.000Z' },
+    })
+    expect(resaved.statusCode).toBe(200)
+    expect(sendGovernanceMeetingNoticeEmail.mock.calls.length).toBe(sendCallsBefore)
+    const noticeSendCount = (await fetchTopic('notices')).filter(
+      (a) => a === 'MEETING_NOTICE_SEND',
+    ).length
+    expect(noticeSendCount).toBe(1)
   })
 
   it('does not expose governance records to non-members', async () => {

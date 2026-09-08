@@ -15,6 +15,7 @@ const PREFIX = 'admin-res-'
 describe('M21-G — board resolutions', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let boardCookie: string
+  let boardId: string
   let resolutionId: string
 
   beforeAll(async () => {
@@ -26,17 +27,19 @@ describe('M21-G — board resolutions', () => {
       email: `${PREFIX}board@example.com`,
       username: 'admin-res-board',
     })
+    boardId = board.id
     await prisma.user.update({ where: { id: board.id }, data: { isBoard: true, isMember: true } })
     boardCookie = await sessionCookieFor(prisma, board.id)
   })
 
   afterAll(async () => {
     await prisma.boardResolution.deleteMany({})
+    await prisma.governanceMeeting.deleteMany({ where: { createdById: boardId } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })
 
-  it('POST /api/admin/resolutions creates draft', async () => {
+  it('POST /api/admin/resolutions creates draft, binding true by default', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/admin/resolutions',
@@ -54,6 +57,63 @@ describe('M21-G — board resolutions', () => {
     expect(res.statusCode).toBe(201)
     resolutionId = (res.json() as { id: string }).id
     expect(resolutionId).toBeTruthy()
+    expect(res.json().binding).toBe(true)
+    expect(res.json().meetingId).toBeNull()
+  })
+
+  it('links a resolution to a meeting and marks it non-binding', async () => {
+    const meeting = await prisma.governanceMeeting.create({
+      data: { title: 'Board meeting for resolution link', type: 'BOARD', createdById: boardId },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/resolutions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Informational statement',
+        body: 'Not a binding decision.',
+        votedAt: '2026-03-15T12:00:00.000Z',
+        outcome: 'PASSED',
+        voteFor: 3,
+        voteAgainst: 0,
+        voteAbstain: 0,
+        meetingId: meeting.id,
+        binding: false,
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json().meetingId).toBe(meeting.id)
+    expect(res.json().binding).toBe(false)
+
+    const patched = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/resolutions/${res.json().id}`,
+      headers: { cookie: boardCookie },
+      payload: { binding: true },
+    })
+    expect(patched.statusCode).toBe(200)
+    expect(patched.json().binding).toBe(true)
+    expect(patched.json().meetingId).toBe(meeting.id)
+  })
+
+  it('rejects a meetingId that does not exist', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/resolutions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Bad link',
+        body: 'x',
+        votedAt: '2026-03-15T12:00:00.000Z',
+        outcome: 'PASSED',
+        voteFor: 3,
+        voteAgainst: 0,
+        voteAbstain: 0,
+        meetingId: 'does-not-exist',
+      },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('PATCH publishes resolution', async () => {

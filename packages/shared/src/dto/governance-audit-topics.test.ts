@@ -21,9 +21,12 @@ describe('governance audit topics', () => {
 
   it('maps notices, minutes-workflow, and official-vote actions onto their own topics', () => {
     expect(topicForAuditAction('MEETING_NOTICE_PUBLISH')).toBe('notices')
+    expect(topicForAuditAction('MEETING_NOTICE_SEND')).toBe('notices')
     expect(topicForAuditAction('MINUTES_UPLOAD')).toBe('minutes')
     expect(topicForAuditAction('MINUTES_APPROVE')).toBe('minutes')
     expect(topicForAuditAction('MINUTES_SIGN')).toBe('minutes')
+    expect(topicForAuditAction('MINUTES_REDACT')).toBe('minutes')
+    expect(topicForAuditAction('MINUTES_PUBLISH')).toBe('minutes')
     expect(topicForAuditAction('RESOLUTION_CREATE')).toBe('official-votes')
     expect(topicForAuditAction('RESOLUTION_UPDATE')).toBe('official-votes')
   })

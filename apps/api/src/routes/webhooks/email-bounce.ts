@@ -7,6 +7,7 @@ import {
   recordNewsletterBounce,
   shouldUnsubscribeForBounce,
 } from '../../lib/newsletter-bounce.js'
+import { recordGovernanceNoticeBounce } from '../../lib/governance-notice.js'
 
 function webhookAuthorized(request: { headers: Record<string, unknown> }): boolean {
   const secret = process.env.EMAIL_BOUNCE_WEBHOOK_SECRET?.trim() ?? ''
@@ -41,18 +42,26 @@ const emailBounceWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({ ok: true, action: 'sns_subscribed' })
     }
 
+    // Any bounce is real evidence a governance notice may not have landed —
+    // unlike the newsletter unsubscribe policy below, this isn't gated on
+    // hard-vs-soft: record it regardless of what happens next.
+    const governanceResult = await recordGovernanceNoticeBounce(fastify.prisma, parsed.email)
+
     if (!shouldUnsubscribeForBounce(parsed.kind)) {
-      request.log.info({ email: parsed.email, kind: parsed.kind }, 'soft bounce ignored')
-      return reply.send({ ok: true, action: 'ignored', kind: parsed.kind })
+      request.log.info(
+        { email: parsed.email, kind: parsed.kind, ...governanceResult },
+        'soft bounce ignored (newsletter); governance notice deliveries updated',
+      )
+      return reply.send({ ok: true, action: 'ignored', kind: parsed.kind, ...governanceResult })
     }
 
     const result = await recordNewsletterBounce(fastify.prisma, parsed.email)
     request.log.info(
-      { email: parsed.email, kind: parsed.kind, ...result },
+      { email: parsed.email, kind: parsed.kind, ...result, ...governanceResult },
       'newsletter bounce processed',
     )
 
-    return reply.send({ ok: true, action: 'unsubscribed', ...result })
+    return reply.send({ ok: true, action: 'unsubscribed', ...result, ...governanceResult })
   })
 }
 

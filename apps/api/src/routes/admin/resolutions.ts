@@ -55,6 +55,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           publishedAt: r.publishedAt,
           createdAt: r.createdAt,
           createdByDisplayName: r.createdBy.displayName,
+          meetingId: r.meetingId,
+          binding: r.binding,
         })),
       )
     },
@@ -81,6 +83,14 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const body = parsed.data
 
+      if (body.meetingId) {
+        const meeting = await fastify.prisma.governanceMeeting.findUnique({
+          where: { id: body.meetingId },
+          select: { id: true },
+        })
+        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
+      }
+
       const row = await fastify.prisma.boardResolution.create({
         data: {
           title: body.title,
@@ -91,6 +101,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           voteAgainst: body.voteAgainst,
           voteAbstain: body.voteAbstain,
           createdById: actor.id,
+          meetingId: body.meetingId,
+          binding: body.binding,
         },
         include: { createdBy: { select: { displayName: true } } },
       })
@@ -99,7 +111,12 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         action: 'RESOLUTION_CREATE',
         actorId: actor.id,
         targetId: row.id.toString(),
-        meta: { title: row.title, outcome: row.outcome },
+        meta: {
+          title: row.title,
+          outcome: row.outcome,
+          meetingId: row.meetingId,
+          binding: row.binding,
+        },
       })
 
       return reply.status(201).send({
@@ -114,6 +131,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         publishedAt: row.publishedAt,
         createdAt: row.createdAt,
         createdByDisplayName: row.createdBy.displayName,
+        meetingId: row.meetingId,
+        binding: row.binding,
       })
     },
   )
@@ -155,6 +174,14 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      if (parsed.data.meetingId) {
+        const meeting = await fastify.prisma.governanceMeeting.findUnique({
+          where: { id: parsed.data.meetingId },
+          select: { id: true },
+        })
+        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
+      }
+
       const row = await fastify.prisma.boardResolution.update({
         where: { id },
         data: parsed.data,
@@ -169,6 +196,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           title: row.title,
           outcome: row.outcome,
           published: Boolean(row.publishedAt),
+          meetingId: row.meetingId,
+          binding: row.binding,
         },
       })
 
@@ -184,6 +213,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         publishedAt: row.publishedAt,
         createdAt: row.createdAt,
         createdByDisplayName: row.createdBy.displayName,
+        meetingId: row.meetingId,
+        binding: row.binding,
       })
     },
   )
