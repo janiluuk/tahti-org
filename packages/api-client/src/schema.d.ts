@@ -15010,6 +15010,9 @@ export interface paths {
                 username: string
                 displayName: string
               }
+              sourceId?: string
+              sourceTitle?: string | null
+              sourceUrl?: string | null
             }[]
           }
         }

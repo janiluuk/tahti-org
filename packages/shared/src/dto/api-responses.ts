@@ -1870,6 +1870,9 @@ export const PublicMentionItemSchema = z.object({
     username: z.string(),
     displayName: z.string(),
   }),
+  sourceId: z.string().optional(),
+  sourceTitle: z.string().nullable().optional(),
+  sourceUrl: z.string().nullable().optional(),
 })
 
 export const PublicMentionListSchema = z.array(PublicMentionItemSchema)
