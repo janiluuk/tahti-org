@@ -177,6 +177,8 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | Revelator export webhook sync                | Webhook accepts + logs; body → release status not wired                                                                     |
 | Per-DSP export submit                        | hearthis-export and storefront stubs; product API TBD                                                                       |
 | `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                            |
+| Sounds player: verify in live app            | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport |
+| Channel mobile chat / live player UX         | Not started: mobile hide/fullscreen chat, desktop right-edge dock, Live→Replay indicator, live player track title, remove "Profile" corner link. See `docs/todo/channel-mobile-chat-and-live-player-ux.md` |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 
