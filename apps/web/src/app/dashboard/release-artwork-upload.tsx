@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import {
   completeReleaseArtworkUpload,
+  deleteReleaseArtwork,
   fetchReleaseArtworkFromUrl,
   prepareReleaseArtworkUpload,
 } from './release-actions'
@@ -33,7 +34,10 @@ export function ReleaseArtworkUpload({
         const res = await fetchReleaseArtworkFromUrl(releaseId, sourceUrl)
         return { url: res.artworkUrl ?? null, error: res.error }
       }}
-      onUploaded={() => router.refresh()}
+      onUploaded={(url) => {
+        if (url === null) void deleteReleaseArtwork(releaseId).then(() => router.refresh())
+        else router.refresh()
+      }}
     />
   )
 }

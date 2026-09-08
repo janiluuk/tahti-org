@@ -268,6 +268,19 @@ export async function fetchReleaseArtworkFromUrl(
   return { ...(await res.json()), error: null }
 }
 
+export async function deleteReleaseArtwork(releaseId: string): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/artwork`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to remove artwork' }
+  }
+  return { error: null }
+}
+
 export async function fetchReleaseTrackVersions(
   releaseId: string,
   trackId: string,
