@@ -33,6 +33,8 @@ export type RecurringSeriesInput = {
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
   autoPublish: boolean
+  /** Preferred show length in minutes — written to ScheduledLiveShow.endAt. */
+  durationMin?: number | null
 }
 
 function episodeTitle(seriesName: string, episodeNumber: number | null): string {
@@ -96,7 +98,10 @@ export async function restrictionErrorMessage(
  * the daily cron. Returns the number of episodes created. A channel under
  * an active booking ban generates nothing — checked here (not just at the
  * artist-facing save action) so the daily cron can't route around a ban
- * that was issued after recurrence was already turned on. */
+ * that was issued after recurrence was already turned on.
+ *
+ * Callers should pre-filter `occurrences` for channel overlaps (see
+ * `@tahti/shared` filterNonOverlappingOccurrences) using series duration. */
 export async function generateForSeries(
   prisma: PrismaClient,
   series: RecurringSeriesInput,
@@ -115,14 +120,19 @@ export async function generateForSeries(
     .sort((a, b) => a.getTime() - b.getTime())
   if (toCreate.length === 0) return 0
 
+  const durationMin =
+    series.durationMin != null && series.durationMin > 0 ? series.durationMin : null
+
   let nextNumber = series.nextEpisodeNumber
   for (const startAt of toCreate) {
     const episodeNumber = series.episodeNumberEnabled ? nextNumber : null
+    const endAt = durationMin != null ? new Date(startAt.getTime() + durationMin * 60_000) : null
     await prisma.scheduledLiveShow.create({
       data: {
         channelId: series.channelId,
         seriesId: series.id,
         startAt,
+        endAt,
         episodeNumber,
         title: episodeTitle(series.name, episodeNumber),
         description: series.description,

@@ -1674,6 +1674,9 @@ model ScheduledLiveShow {
   seriesId      String
   series        LiveShowSeries      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   startAt       DateTime
+  /// Inclusive window end when known (from recurrenceDurationMin or
+  /// intervalHours). Null = point-in-time announcement (legacy rows).
+  endAt         DateTime?
   episodeNumber Int?
   title         String
   description   String?

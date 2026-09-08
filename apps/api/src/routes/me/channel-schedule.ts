@@ -14,11 +14,15 @@ import {
   PatchLiveShowEpisodeSchema,
   PatchLiveShowSeriesSchema,
   ScheduleLiveShowSchema,
+  filterNonOverlappingOccurrences,
   isValidRecurrenceRule,
   liveShowEpisodeTitle,
   nextRecurrenceOccurrences,
   openApiResponse,
   parseRouteParams,
+  scheduledShowEndAt,
+  seriesShowDurationMin,
+  timeRangesOverlap,
 } from '@tahti/shared'
 import {
   generateForSeries,
@@ -72,6 +76,7 @@ type ScheduledLiveShowDbRow = {
   channelId: string
   seriesId: string
   startAt: Date
+  endAt: Date | null
   episodeNumber: number | null
   title: string
   description: string | null
@@ -145,8 +150,22 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       timezone: series.recurrenceTimezone,
     }
     if (!series.recurrenceEnabled || !isValidRecurrenceRule(rule)) return
-    const occurrences = nextRecurrenceOccurrences(rule, new Date(), series.recurrenceHorizonDays)
-    const created = await generateForSeries(fastify.prisma, { ...series, userId }, occurrences)
+    const durationMin = seriesShowDurationMin(series)
+    const raw = nextRecurrenceOccurrences(rule, new Date(), series.recurrenceHorizonDays)
+    const existing = await fastify.prisma.scheduledLiveShow.findMany({
+      where: {
+        channelId: series.channelId,
+        canceledAt: null,
+        startAt: { gte: new Date(Date.now() - 7 * 86_400_000) },
+      },
+      select: { startAt: true, endAt: true },
+    })
+    const occurrences = filterNonOverlappingOccurrences(raw, durationMin, existing)
+    const created = await generateForSeries(
+      fastify.prisma,
+      { ...series, userId, durationMin },
+      occurrences,
+    )
     if (created > 0) await syncNextBroadcast(series.channelId)
   }
 
@@ -248,6 +267,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
         scheduledShows: scheduledShows.map((show) => ({
           ...show,
           startAt: show.startAt.toISOString(),
+          endAt: show.endAt?.toISOString() ?? null,
           createdAt: undefined,
           updatedAt: undefined,
           channelId: undefined,
@@ -366,12 +386,30 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
         })
         if (!series) return null
 
+        const durationMin = seriesShowDurationMin(series)
+        const endAt = scheduledShowEndAt(startAt, durationMin)
+        const neighbors = await transactionDb.scheduledLiveShow.findMany({
+          where: {
+            channelId: channel.id,
+            canceledAt: null,
+            startAt: {
+              gte: new Date(startAt.getTime() - 24 * 60 * 60_000),
+              lte: new Date((endAt ?? startAt).getTime() + 24 * 60 * 60_000),
+            },
+          },
+        })
+        const overlaps = neighbors.some((show) =>
+          timeRangesOverlap({ startAt, endAt }, { startAt: show.startAt, endAt: show.endAt }),
+        )
+        if (overlaps) return { conflict: true as const }
+
         const episodeNumber = series.episodeNumberEnabled ? series.nextEpisodeNumber : null
         const show = await transactionDb.scheduledLiveShow.create({
           data: {
             channelId: channel.id,
             seriesId: series.id,
             startAt,
+            endAt,
             episodeNumber,
             title: parsed.data.title?.trim() || liveShowEpisodeTitle(series.name, episodeNumber),
             description: series.description,
@@ -390,14 +428,18 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
             data: { nextEpisodeNumber: { increment: 1 } },
           })
         }
-        return show
+        return { show }
       })
 
       if (!scheduled) return reply.status(404).send({ error: 'Series not found' })
+      if ('conflict' in scheduled) {
+        return reply.status(409).send({ error: 'That time overlaps another scheduled show' })
+      }
       await syncNextBroadcast(channel.id)
       return reply.status(201).send({
-        ...scheduled,
-        startAt: scheduled.startAt.toISOString(),
+        ...scheduled.show,
+        startAt: scheduled.show.startAt.toISOString(),
+        endAt: scheduled.show.endAt?.toISOString() ?? null,
         createdAt: undefined,
         updatedAt: undefined,
         channelId: undefined,
