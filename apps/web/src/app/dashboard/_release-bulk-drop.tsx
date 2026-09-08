@@ -3,10 +3,10 @@
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SOUND_GENRES } from '@tahti/shared'
-import { Button, ButtonIcon } from '@tahti/ui'
+import { Button, ButtonIcon, FileDropzone } from '@tahti/ui'
 import { createRelease, finalizeReleaseTrack, prepareReleaseTrackUpload } from './release-actions'
 
 const GENRE_OPTIONS: readonly string[] = SOUND_GENRES
@@ -101,11 +101,9 @@ interface ReviewTrack {
 
 export function ReleaseBulkDrop() {
   const router = useRouter()
-  const inputRef = useRef<HTMLInputElement>(null)
   const [releaseTitle, setReleaseTitle] = useState('')
   const [genre, setGenre] = useState<string>(GENRE_OPTIONS[0] ?? '')
   const [genreCustom, setGenreCustom] = useState('')
-  const [dragOver, setDragOver] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<Record<string, TrackProgress>>({})
@@ -270,47 +268,16 @@ export function ReleaseBulkDrop() {
       </div>
 
       {!review && (
-        <div
-          className={`upload-entry__tile upload-entry__tile--drop studio-mt-sm${dragOver ? ' upload-entry__tile--dragover' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setDragOver(false)
-            void filesFromDataTransfer(e.dataTransfer).then(stageFiles)
-          }}
-          onClick={() => inputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          aria-label="Drop a folder or multiple audio files to create an album"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".flac,.wav,.aiff,.aif,.mp3,.m4a,.aac,audio/*"
-            multiple
-            className="upload-entry__file-input"
-            onChange={(e) => {
-              if (e.target.files?.length) stageFiles(Array.from(e.target.files))
-              e.target.value = ''
-            }}
-          />
-          <div className="upload-entry__drop-icon" aria-hidden>
-            ↑
-          </div>
-          <p className="upload-entry__drop-label">
-            Drop a folder of tracks, or select multiple files
-          </p>
-          <p className="upload-entry__drop-formats">
-            Track order and titles are taken from filenames — WAV · FLAC · MP3 · AAC · AIFF
-          </p>
-        </div>
+        <FileDropzone
+          className="upload-entry__tile upload-entry__tile--drop studio-mt-sm"
+          label="Drop a folder or multiple audio files to create an album"
+          hint="Track order and titles are taken from filenames — WAV · FLAC · MP3 · AAC · AIFF"
+          accept=".flac,.wav,.aiff,.aif,.mp3,.m4a,.aac,audio/*"
+          multiple
+          disabled={busy}
+          resolveDroppedFiles={filesFromDataTransfer}
+          onFiles={(files) => void stageFiles(files)}
+        />
       )}
 
       {review && !busy && (
