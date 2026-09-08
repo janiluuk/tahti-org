@@ -3,6 +3,7 @@
 
 [data-tahti-ui='brand'].brand-channel {
   min-height: 100vh;
+  min-height: 100svh;
   background: transparent;
   color: var(--text);
   font-family: var(--font-body);
@@ -70,7 +71,11 @@
 .app-bg-veil {
   content: '';
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  height: 100lvh;
   z-index: -1;
   pointer-events: none;
   /* Stronger veil stands in for the removed fullscreen blur — keeps the
@@ -82,6 +87,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100svh;
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .ch-body {
@@ -644,6 +650,7 @@
   grid-template-columns: 1fr var(--chat-w);
   gap: var(--space-4);
   min-height: calc(100vh - 52px);
+  min-height: calc(100svh - 52px);
   max-width: var(--public-max);
   margin: 0 auto;
   position: relative;
@@ -757,6 +764,7 @@
   [data-tahti-ui='brand'] .ch-body,
   [data-tahti-ui='brand'] .shell-channel {
     min-height: calc(100vh - 77px);
+    min-height: calc(100svh - 77px);
   }
 }
 
@@ -6141,8 +6149,15 @@
 }
 
 [data-tahti-ui='brand'] .ch-page-visualizer {
-  position: absolute;
-  inset: 0;
+  /* Viewport-locked ambient layer — must not grow/shrink with 100vh document
+   * reflow when the mobile URL bar collapses (that read as the background
+   * "scrolling"). Fixed + lvh keeps the scene static while page content scrolls. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  height: 100lvh;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
