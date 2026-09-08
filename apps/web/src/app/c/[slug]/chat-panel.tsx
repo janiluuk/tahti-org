@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
 import {
@@ -14,7 +14,8 @@ import {
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { usePlayer } from '@/contexts/player-context'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
-import { resolveChatWebSocketUrl } from '@/lib/chat-websocket'
+import { resolveClientApiUrl } from '@/lib/api-url'
+import { searchChatMentions, useCentrifugoChat } from '@/hooks/use-centrifugo-chat'
 
 interface Announcement {
   id: string
@@ -22,22 +23,7 @@ interface Announcement {
   createdAt: string
 }
 
-interface ChatMessage {
-  id: string
-  handle: string
-  text: string
-  ts: number
-  supporter?: boolean
-  channelRole?: 'owner' | 'moderator' | null
-  countryCode?: string | null
-  system?: boolean
-  href?: string
-}
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
-/** How long the connection must actually be down before the "reconnecting"
- * banner shows — a blip that resolves faster than this never flickers it. */
-const RECONNECT_BANNER_DELAY_MS = 3000
+const API_BASE = resolveClientApiUrl()
 
 /** Heart button in the chat header — loves whatever archive track is currently
  * playing (from the shared player), posting a reaction pinned to the current
@@ -121,16 +107,10 @@ export default function ChatPanel({
   const [supporter, setSupporter] = useState(false)
   const [channelRole, setChannelRole] = useState<'owner' | 'moderator' | null>(null)
   const [myCountryCode, setMyCountryCode] = useState<string | null>(null)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
-  const [error, setError] = useState<string | null>(null)
   const [listenerCount, setListenerCount] = useState<number | null>(null)
   const [dailyListenerCount, setDailyListenerCount] = useState<number | null>(null)
   const [subscribersOnly, setSubscribersOnly] = useState(false)
-  const wsRef = useRef<WebSocket | null>(null)
-  const msgIdRef = useRef(1)
-  const scrollRef = useRef<HTMLDivElement>(null)
   const {
     captchaRef,
     required: hcaptchaConfigured,
@@ -142,6 +122,11 @@ export default function ChatPanel({
   // decision below, so it's never true for them even though hCaptcha itself
   // is configured site-wide.
   const captchaRequired = hcaptchaConfigured && !isLoggedIn
+
+  const { messages, setMessages, status, error, setError, scrollRef, publish } = useCentrifugoChat({
+    token: connectionToken,
+    channel: connectionToken ? `channel:${slug}` : null,
+  })
 
   // A returning visitor already has a handle saved from a previous visit —
   // silently rejoin with it to get a fresh publish token. Previously this just
@@ -207,21 +192,36 @@ export default function ChatPanel({
     let cancelled = false
     fetch(`${API_BASE}/api/chat/${slug}/history`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { messages: Omit<ChatMessage, 'id'>[] } | null) => {
-        if (cancelled || !data?.messages?.length) return
-        setMessages((prev) => {
-          const seen = new Set(prev.map((m) => `${m.ts}-${m.handle}-${m.text}`))
-          const history = data.messages
-            .filter((m) => !seen.has(`${m.ts}-${m.handle}-${m.text}`))
-            .map((m, i) => ({ ...m, id: `history-${m.ts}-${i}` }))
-          return [...history, ...prev].sort((a, b) => a.ts - b.ts).slice(-100)
-        })
-      })
+      .then(
+        (
+          data: {
+            messages: Array<{
+              handle: string
+              text: string
+              ts: number
+              supporter?: boolean
+              channelRole?: 'owner' | 'moderator' | null
+              countryCode?: string | null
+              system?: boolean
+              href?: string
+            }>
+          } | null,
+        ) => {
+          if (cancelled || !data?.messages?.length) return
+          setMessages((prev) => {
+            const seen = new Set(prev.map((m) => `${m.ts}-${m.handle}-${m.text}`))
+            const history = data.messages
+              .filter((m) => !seen.has(`${m.ts}-${m.handle}-${m.text}`))
+              .map((m, i) => ({ ...m, id: `history-${m.ts}-${i}` }))
+            return [...history, ...prev].sort((a, b) => a.ts - b.ts).slice(-100)
+          })
+        },
+      )
       .catch(() => undefined)
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [slug, setMessages])
 
   useEffect(() => {
     let cancelled = false
@@ -258,136 +258,6 @@ export default function ChatPanel({
       cancelled = true
     }
   }, [slug])
-
-  useEffect(() => {
-    if (!connectionToken) return
-    const wsUrl = resolveChatWebSocketUrl(process.env.NEXT_PUBLIC_CENTRIFUGO_WS, window.location)
-    let ws: WebSocket | null = null
-    let retryTimer: ReturnType<typeof setTimeout> | null = null
-    // A blip that reconnects within RECONNECT_BANNER_DELAY_MS never shows this
-    // at all — only a connection that's genuinely been down that long does.
-    let errorTimer: ReturnType<typeof setTimeout> | null = null
-    let retryAttempt = 0
-    let cancelled = false
-
-    function connect() {
-      setStatus('connecting')
-      try {
-        ws = new WebSocket(wsUrl)
-      } catch (connectError) {
-        console.warn('[chat] WebSocket connect failed', connectError)
-        scheduleReconnect()
-        return
-      }
-      wsRef.current = ws
-
-      ws.onopen = () => {
-        ws?.send(JSON.stringify({ id: msgIdRef.current++, connect: { token: connectionToken } }))
-      }
-
-      ws.onmessage = (ev) => {
-        for (const line of (ev.data as string).split('\n')) {
-          if (!line.trim()) continue
-          try {
-            const data = JSON.parse(line) as {
-              connect?: { client: string }
-              error?: { message?: string }
-              push?: { pub?: { data: unknown } }
-            }
-            if (data.error) {
-              setError(data.error.message ?? 'Could not connect to live chat.')
-              continue
-            }
-            if (data.connect) {
-              retryAttempt = 0
-              if (errorTimer) {
-                clearTimeout(errorTimer)
-                errorTimer = null
-              }
-              setError(null)
-              ws?.send(
-                JSON.stringify({
-                  id: msgIdRef.current++,
-                  subscribe: { channel: `channel:${slug}` },
-                }),
-              )
-              setStatus('connected')
-            }
-            if (!data.push?.pub) continue
-            const msg = data.push.pub.data as {
-              handle?: string
-              text?: string
-              ts?: number
-              supporter?: boolean
-              channelRole?: 'owner' | 'moderator' | null
-              countryCode?: string | null
-              system?: boolean
-              href?: string
-            }
-            const messageText = msg.text
-            if (!messageText) continue
-            setMessages((prev) =>
-              [
-                ...prev,
-                {
-                  id: `${Date.now()}-${Math.random()}`,
-                  handle: msg.handle ?? 'anon',
-                  text: messageText,
-                  ts: msg.ts ?? Date.now(),
-                  supporter: msg.supporter,
-                  channelRole: msg.channelRole ?? null,
-                  countryCode: msg.countryCode ?? null,
-                  system: msg.system,
-                  href: msg.href,
-                },
-              ].slice(-100),
-            )
-          } catch {
-            // malformed message
-          }
-        }
-      }
-
-      ws.onerror = () => ws?.close()
-      ws.onclose = () => {
-        if (wsRef.current === ws) wsRef.current = null
-        if (!cancelled) scheduleReconnect()
-      }
-    }
-
-    function scheduleReconnect() {
-      if (cancelled || retryTimer) return
-      setStatus('connecting')
-      // Don't show the banner for a blip that self-resolves — only once the
-      // connection has genuinely been down for RECONNECT_BANNER_DELAY_MS does
-      // the user need to know. Cleared above the instant a reconnect succeeds.
-      if (!errorTimer) {
-        errorTimer = setTimeout(() => {
-          errorTimer = null
-          setError('Chat connection lost — reconnecting…')
-        }, RECONNECT_BANNER_DELAY_MS)
-      }
-      const delay = Math.min(1000 * 2 ** retryAttempt++, 15_000)
-      retryTimer = setTimeout(() => {
-        retryTimer = null
-        connect()
-      }, delay)
-    }
-
-    connect()
-    return () => {
-      cancelled = true
-      if (retryTimer) clearTimeout(retryTimer)
-      if (errorTimer) clearTimeout(errorTimer)
-      ws?.close()
-    }
-  }, [connectionToken, slug])
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages])
 
   async function joinChat(h: string) {
     try {
@@ -446,27 +316,18 @@ export default function ChatPanel({
   }
 
   function sendMessage() {
-    if (!handle || !publishToken || !input.trim() || !wsRef.current || status !== 'connected') {
-      return
+    if (!handle || !publishToken || !input.trim()) return
+    if (
+      publish({
+        handle,
+        text: input,
+        supporter: supporter || undefined,
+        channelRole: channelRole || undefined,
+        countryCode: myCountryCode || undefined,
+      })
+    ) {
+      setInput('')
     }
-    const text = input.trim().slice(0, 500)
-    wsRef.current.send(
-      JSON.stringify({
-        id: msgIdRef.current++,
-        publish: {
-          channel: `channel:${slug}`,
-          data: {
-            handle,
-            text,
-            ts: Date.now(),
-            supporter: supporter || undefined,
-            channelRole: channelRole || undefined,
-            countryCode: myCountryCode || undefined,
-          },
-        },
-      }),
-    )
-    setInput('')
   }
 
   // Tahti Radio's chat aggregates every listener on the platform, so this
@@ -530,22 +391,7 @@ export default function ChatPanel({
       inputDisabled={!publishToken || status !== 'connected'}
       sendDisabled={!publishToken || status !== 'connected'}
       error={displayError}
-      onSearchMentions={async (query) => {
-        if (query.trim().length < 1) return []
-        try {
-          const res = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`, {
-            credentials: 'include',
-          })
-          if (!res.ok) return []
-          const data = (await res.json()) as Array<{
-            username: string
-            displayName: string
-          }>
-          return data.map((u) => ({ username: u.username, displayName: u.displayName }))
-        } catch {
-          return []
-        }
-      }}
+      onSearchMentions={searchChatMentions}
     />
   )
 }

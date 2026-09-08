@@ -54,8 +54,11 @@ type HeaderUser = {
 }
 
 type ChannelHeaderProps = {
-  /** Live member channel — hides site nav, shows @handle in header centre */
+  /** Active stream on a member channel — hides site nav, shows @handle in header centre.
+   * True for both real broadcasts and 24/7 archive fallback (always-on channels). */
   isLive?: boolean
+  /** Archive/rotation fallback rather than a live Icecast ingest — badge reads REPLAY */
+  isReplay?: boolean
   artistHandle?: string
   /** Chat/presence listeners — shown beside LIVE pill on member channels */
   listenerCount?: number | null
@@ -63,7 +66,7 @@ type ChannelHeaderProps = {
   contextLink?: HeaderContextLink
   /** Highlights the current top-nav item (Discover, Radio, Venues, Home) */
   activeNav?: SiteNavId
-  /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
+  /** LIVE/REPLAY pill on the right without hiding site nav (e.g. Tahti Radio) */
   showLiveBadge?: boolean
   user?: HeaderUser | null
   /** Server action for the "Log out" form. The old hardcoded
@@ -125,6 +128,7 @@ function resolveHomeHref(): string {
  * page having to pass its own id down through props it may not even receive. */
 export function ChannelHeader({
   isLive,
+  isReplay = false,
   artistHandle,
   listenerCount,
   contextLink,
@@ -146,6 +150,7 @@ export function ChannelHeader({
   // differently scoped) tour steps. Only an explicitly-passed activeNav
   // (a real top-level nav page) should ever suppress live mode.
   const channelLiveMode = Boolean(isLive && artistHandle && !activeNav && !contextLink)
+  const showStreamBadge = Boolean(showLiveBadge || channelLiveMode)
   const homeHref = resolveHomeHref()
   const radioHref = resolveRadioNavHref()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -213,13 +218,13 @@ export function ChannelHeader({
         </nav>
       )}
       <div className="ch-header__right">
-        {(showLiveBadge || channelLiveMode) && (
+        {showStreamBadge && (
           <>
-            <div className="ch-live">
+            <div className={isReplay ? 'ch-live ch-live--replay' : 'ch-live'}>
               <span className="signal-dot" aria-hidden />
-              LIVE
+              {isReplay ? 'REPLAY' : 'LIVE'}
             </div>
-            {channelLiveMode && listenerCount != null && listenerCount > 0 && (
+            {channelLiveMode && !isReplay && listenerCount != null && listenerCount > 0 && (
               <WatcherCount count={listenerCount} className="ch-header__listeners" />
             )}
           </>
@@ -367,6 +372,7 @@ export function ChannelHeader({
 
 type ChannelPageLayoutProps = {
   isLive?: boolean
+  isReplay?: boolean
   artistHandle?: string
   listenerCount?: number | null
   activeNav?: SiteNavId
@@ -380,6 +386,7 @@ type ChannelPageLayoutProps = {
 /** PLAT-020: two-column channel layout (main + chat sidebar). */
 export function ChannelPageLayout({
   isLive,
+  isReplay = false,
   artistHandle,
   listenerCount,
   activeNav,
@@ -392,6 +399,7 @@ export function ChannelPageLayout({
   // Collapsing only hides the chat rail visually (grid column animates to
   // ~0) — the sidebar subtree stays mounted so the chat websocket doesn't
   // drop and reconnect every time someone tucks it away.
+  // Desktop starts expanded; mobile starts closed (sheet opens on tap).
   const [chatCollapsed, setChatCollapsed] = useState(false)
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
   const [isNarrow, setIsNarrow] = useState(false)
@@ -423,6 +431,7 @@ export function ChannelPageLayout({
     <>
       <ChannelHeader
         isLive={isLive}
+        isReplay={isReplay}
         artistHandle={artistHandle}
         listenerCount={listenerCount}
         activeNav={activeNav}
@@ -446,7 +455,7 @@ export function ChannelPageLayout({
         )}
         <button
           type="button"
-          className="ch-chat-collapse-toggle"
+          className={`ch-chat-collapse-toggle${chatCollapsed && !isNarrow ? ' ch-chat-collapse-toggle--dock' : ''}`}
           onClick={() => {
             if (window.matchMedia('(max-width: 900px)').matches) {
               setMobileChatOpen((open) => !open)
@@ -458,15 +467,37 @@ export function ChannelPageLayout({
           aria-label={chatExpanded ? 'Hide chat' : 'Show chat'}
           title={chatExpanded ? 'Hide chat' : 'Show chat'}
         >
-          <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden>
-            <path
-              d={chatExpanded ? 'M8 1L2 8l6 7' : 'M2 1l6 7-6 7'}
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {isNarrow ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M4 6h16M4 12h10M4 18h14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+              <circle cx="19" cy="12" r="2.2" fill="currentColor" />
+            </svg>
+          ) : chatCollapsed ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M4 6h16M4 12h10M4 18h14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+              <circle cx="19" cy="12" r="2.2" fill="currentColor" />
+            </svg>
+          ) : (
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden>
+              <path
+                d="M8 1L2 8l6 7"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
           <span className="ch-chat-collapse-toggle__label">
             {chatExpanded ? 'Close chat' : 'Chat'}
           </span>
