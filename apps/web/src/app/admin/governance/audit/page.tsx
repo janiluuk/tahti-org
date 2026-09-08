@@ -118,8 +118,9 @@ export default async function AdminGovernanceAuditPage({
         </p>
       ) : (
         <p className="admin-help">
-          Topics: finance and grants, fan subscriptions, membership register, motions and
-          resolutions, board roles, meetings and documents, and radio bookings.
+          Topics: finance and grants, fan subscriptions, membership register, advisory motions,
+          board roles, meetings and documents, radio bookings, notices, minutes workflow, and
+          official meeting votes.
         </p>
       )}
 

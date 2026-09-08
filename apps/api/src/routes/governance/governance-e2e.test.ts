@@ -253,10 +253,10 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     return motionId
   })
 
-  it('GAP (a): a member cannot change their vote — UI implies otherwise', async () => {
+  it('a member can change their vote, and retract it, while the motion is OPEN', async () => {
     const motionId = await proposeAndOpen(
-      'Sanity check motion for the double-vote gap',
-      'Exists only to exercise the double-vote rejection path.',
+      'Sanity check motion for vote change/retract',
+      'Exercises changing and retracting a vote while voting is still open.',
     )
     const first = await app.inject({
       method: 'POST',
@@ -266,23 +266,46 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     })
     expect(first.statusCode).toBe(201)
 
-    // motion-card.tsx shows "✓ You voted · change before close" once youVoted is
-    // true, implying a second vote updates the first. The API has no such path.
+    // motion-card.tsx offers a "change to ..." button once youVoted is true —
+    // a second vote from the same member updates their choice in place.
     const second = await app.inject({
       method: 'POST',
       url: `/api/v1/governance/motions/${motionId}/vote`,
       headers: { cookie: members[0].cookie },
       payload: { choice: 'NO' },
     })
-    expect(second.statusCode).toBe(409)
+    expect(second.statusCode).toBe(200)
+    expect(second.json().choice).toBe('NO')
 
-    // Confirm the original YES vote is unchanged.
-    const detail = await app.inject({
+    const changedDetail = await app.inject({
       method: 'GET',
       url: `/api/v1/governance/motions/${motionId}`,
       headers: { cookie: members[0].cookie },
     })
-    expect(detail.json().yourChoice).toBe('YES')
+    expect(changedDetail.json().yourChoice).toBe('NO')
+
+    const retracted = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/governance/motions/${motionId}/vote`,
+      headers: { cookie: members[0].cookie },
+    })
+    expect(retracted.statusCode).toBe(200)
+
+    const afterRetract = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: members[0].cookie },
+    })
+    expect(afterRetract.json().youVoted).toBe(false)
+    expect(afterRetract.json().yourChoice).toBeNull()
+
+    // Retracting twice is a no-op error, not a silent success.
+    const doubleRetract = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/governance/motions/${motionId}/vote`,
+      headers: { cookie: members[0].cookie },
+    })
+    expect(doubleRetract.statusCode).toBe(404)
   })
 
   it('publishes a closed advisory motion in the public governance history without retyping it', async () => {

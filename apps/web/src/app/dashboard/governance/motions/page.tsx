@@ -8,7 +8,7 @@ import { type MotionComment, type MotionSummary } from '@/app/governance/motion-
 import MotionsList from '@/app/governance/motions-list'
 import NewMotionForm from '@/app/governance/new-motion-form'
 import GrantPreviewPanel from '@/app/governance/grant-preview-panel'
-import { resolveChannelUrl } from '@/lib/app-url'
+import MemberDirectoryTable from './member-directory-table'
 
 interface MeResponse {
   displayName: string
@@ -243,40 +243,7 @@ export default async function DashboardMotionsPage() {
         <h2 className="brand-section__title brand-section-heading">
           Member directory ({members.length})
         </h2>
-        <div className="brand-table-wrap">
-          <table className="brand-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Member</th>
-                <th>Channel</th>
-                <th>Since</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((m) => (
-                <tr key={m.username}>
-                  <td className="brand-muted">{m.memberNumber ?? '—'}</td>
-                  <td>
-                    {m.displayName}
-                    {m.username === me.username && <span className="brand-badge">you</span>}
-                    {m.isBoard && <span className="brand-badge">board</span>}
-                  </td>
-                  <td>
-                    {m.channelSlug ? (
-                      <Link href={resolveChannelUrl(m.channelSlug)}>{m.channelSlug}</Link>
-                    ) : (
-                      <span className="brand-empty">—</span>
-                    )}
-                  </td>
-                  <td className="brand-muted">
-                    {m.memberSince ? new Date(m.memberSince).toLocaleDateString('fi-FI') : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MemberDirectoryTable members={members} currentUsername={me.username} />
       </section>
     </>
   )

@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { Alert, Button, ButtonIcon, Heading, StatusPill, Text, Textarea } from '@tahti/ui'
-import { castVote, postMotionComment, transitionMotion } from './actions'
+import { castVote, postMotionComment, retractVote, transitionMotion } from './actions'
 
 export interface MotionComment {
   id: string
@@ -29,6 +29,9 @@ export interface MotionSummary {
   commentCount: number
   comments?: MotionComment[]
   tally?: { YES: number; NO: number; ABSTAIN: number }
+  /** Eligible-voter count frozen when voting opened; null for older motions
+   *  or ones still in DRAFT, in which case the live member count is used. */
+  eligibleMemberCount: number | null
 }
 
 function DiscussionThread({ motion }: { motion: MotionSummary }) {
@@ -142,11 +145,22 @@ export default function MotionCard({
 }) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  // Prefer the eligibility snapshot frozen when voting opened; fall back to
+  // the live member count for motions opened before that field existed.
+  const eligibleCount = motion.eligibleMemberCount ?? totalMembers
 
   function vote(choice: 'YES' | 'NO' | 'ABSTAIN') {
     setError(null)
     startTransition(async () => {
       const res = await castVote(motion.id, choice)
+      if (res.error) setError(res.error)
+    })
+  }
+
+  function retract() {
+    setError(null)
+    startTransition(async () => {
+      const res = await retractVote(motion.id)
       if (res.error) setError(res.error)
     })
   }
@@ -205,9 +219,26 @@ export default function MotionCard({
         </Text>
 
         {motion.youVoted ? (
-          <Text tone="success" size="sm">
-            ✓ You voted {motion.yourChoice?.toLowerCase()} · votes can&apos;t be changed
-          </Text>
+          <div className="gov-motion-card__vote-row">
+            <Text tone="success" size="sm">
+              ✓ You voted {motion.yourChoice?.toLowerCase()} · change your vote or retract it before
+              close
+            </Text>
+            {CHOICES.filter((c) => c.value !== motion.yourChoice).map((c) => (
+              <Button
+                key={c.value}
+                variant="secondary"
+                size="sm"
+                disabled={pending}
+                onClick={() => vote(c.value)}
+              >
+                Change to {c.label.toLowerCase()}
+              </Button>
+            ))}
+            <Button variant="ghost" size="sm" disabled={pending} onClick={retract}>
+              Retract vote
+            </Button>
+          </div>
         ) : (
           <div className="gov-motion-card__vote-row">
             {CHOICES.map((c) => (
@@ -222,7 +253,7 @@ export default function MotionCard({
               </Button>
             ))}
             <span className="gov-motion-card__tally-note">
-              {motion.totalVotes} of {totalMembers} members voted · tally revealed at close
+              {motion.totalVotes} of {eligibleCount} members voted · tally revealed at close
             </span>
           </div>
         )}
@@ -269,7 +300,7 @@ export default function MotionCard({
       </div>
       {tally && (
         <Text size="sm" tone="muted">
-          {totalCast} of {totalMembers} members voted · {tally.YES} for · {tally.NO} against ·{' '}
+          {totalCast} of {eligibleCount} members voted · {tally.YES} for · {tally.NO} against ·{' '}
           {tally.ABSTAIN} abstained
           {motion.advisory && ' (advisory — not legally binding)'}
         </Text>

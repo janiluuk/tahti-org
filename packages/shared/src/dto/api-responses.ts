@@ -1131,6 +1131,9 @@ export const MotionSummarySchema = z.object({
   youVoted: z.boolean(),
   yourChoice: z.string().nullable(),
   commentCount: z.number().int(),
+  // Eligible-voter count frozen when voting opened (null for motions opened
+  // before this field existed, and for motions still in DRAFT).
+  eligibleMemberCount: z.number().int().nullable(),
   // Only present once CLOSED (hidden while OPEN to avoid a bandwagon effect —
   // see comment in apps/api/src/routes/governance/index.ts). Included in the
   // list response, not just the detail one, since the governance page has no
@@ -1465,6 +1468,10 @@ export const MotionRefResponseSchema = z.object({
 export const VoteCastResponseSchema = z.object({
   ok: z.literal(true),
   choice: z.string(),
+})
+
+export const VoteRetractResponseSchema = z.object({
+  ok: z.literal(true),
 })
 
 export const LedgerEntryCreatedSchema = z.object({
