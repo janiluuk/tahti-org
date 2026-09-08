@@ -222,3 +222,28 @@ checks `purchaseTierPriceOptional` and opens a PWYW amount dialog
 artists use to create such a tier — folded there as part of
 `tahti-player`'s own 2026-09-07 "Purchase-tier artist editor built"
 HISTORY entry. No code changed in this repo; removing the stale todo file.
+
+### 2026-09-08 — stream-overlay-scrim-toggle.md / stream-overlay-show-title-toggle.md (stale — already done)
+
+Backend pieces (`Channel.streamOverlayScrimEnabled` and
+`streamOverlayShowTitle`, `buildRtmpMirrorOutput` support) shipped
+2026-09-05/07 as documented. Re-checked the sibling `tahti-player` repo
+before picking up either doc's "not done here" frontend leftover, and
+both toggles are already wired end-to-end: `StreamOverlayEditor.tsx`
+renders both toggles, gates the title/subtitle inputs and the scrim on
+`OverlayTextPreview`, and `api/broadcast.ts`'s `StreamOverlay` type/mock
+fallback carry both fields — folded there as `tahti-player`'s own
+2026-09-05 "cover upload UX fix + show title toggle + preview" and
+2026-09-07 "Stream overlay scrim toggle: frontend piece" HISTORY entries.
+No code changed in this repo; removing both stale todo files.
+
+### 2026-09-08 — recurrence-duration-overlap.md
+
+`ScheduledLiveShow.endAt` (nullable) now set from
+`LiveShowSeries.recurrenceDurationMin` (fallback `intervalHours`);
+generated recurrence occurrences that would overlap an existing channel
+show are filtered out, manual schedule returns 409 on conflict, and the
+studio schedule list surfaces the end time when known. PR
+[#476](https://github.com/janiluuk/tahti-org/pull/476), merged. Public
+channel schedule cards still show start-only — noted in
+`docs/remaining-work.md`.
