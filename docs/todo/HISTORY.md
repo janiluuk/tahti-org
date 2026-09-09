@@ -370,3 +370,18 @@ sessions may have hit without realizing why.
 
 Full `apps/api` admin/governance/webhooks/transparency suite (40 files,
 187 tests) green after the migration fix.
+
+### 2026-09-08 — governance meeting-minutes upload
+
+Board admins had no way to actually upload a minutes file — the meeting
+PATCH route accepted a `minutesKey` string, but nothing generated one,
+and the field was never turned into a fetchable download URL either.
+Added `POST /api/admin/governance/meetings/:id/minutes/prepare-upload`
+(mirrors the addon bundle-upload pattern: presigned PUT, client PUTs
+the file, then finalizes via the existing `PATCH .../:id`); `meetingResponse`
+now computes a presigned `minutesUrl` (forces `Content-Disposition:
+attachment`) instead of leaking the raw storage key. Frontend wiring
+(`uploadAdminGovernanceMinutes()` in the AGM admin tab, plus a
+member-facing meeting detail page) already shipped in the sibling
+`tahti-player` repo. No separate todo file was tracked for this task.
+PR [#489](https://github.com/janiluuk/tahti-org/pull/489).

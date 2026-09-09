@@ -12102,6 +12102,7 @@ export interface paths {
               noticeAt: string | null
               agenda?: unknown
               minutesKey: string | null
+              minutesUrl: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
               minutesRedacted: boolean
@@ -12232,6 +12233,7 @@ export interface paths {
               noticeAt: string | null
               agenda?: unknown
               minutesKey: string | null
+              minutesUrl: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
               minutesRedacted: boolean
@@ -12287,6 +12289,7 @@ export interface paths {
               noticeAt: string | null
               agenda?: unknown
               minutesKey: string | null
+              minutesUrl: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
               minutesRedacted: boolean
@@ -12362,6 +12365,7 @@ export interface paths {
               noticeAt: string | null
               agenda?: unknown
               minutesKey: string | null
+              minutesUrl: string | null
               /** Format: date-time */
               minutesApprovedAt: string | null
               minutesRedacted: boolean
@@ -12386,6 +12390,48 @@ export interface paths {
         }
       }
     }
+    trace?: never
+  }
+  '/api/admin/governance/meetings/{id}/minutes/prepare-upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uri */
+              uploadUrl: string
+              minutesKey: string
+              expiresAt: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/admin/governance/meetings/{id}/notice-deliveries': {
