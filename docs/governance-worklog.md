@@ -17,9 +17,9 @@ binding electronic voting.
 ## Board and association operations
 
 - [ ] Review, second, schedule, and circulate member motions.
-- [~] Publish notices and retain delivery evidence: notice publication is now audited (`MEETING_NOTICE_PUBLISH`); no per-recipient delivery evidence (send/bounce/open) exists yet.
+- [x] Publish notices and retain delivery evidence: notice publication is audited (`MEETING_NOTICE_PUBLISH`), and on first publish a `GovernanceNoticeDelivery` row records send evidence per recipient, with bounce evidence filled in later by the email-bounce webhook. No open-tracking (no tracking-pixel infra exists in this codebase). Landed in #484, frontend wired in #487.
 - [x] Capture official meeting votes and decisions: `BoardResolution` audited under its own "Official meeting votes" topic (`RESOLUTION_CREATE`/`RESOLUTION_UPDATE`), optionally linked to a `GovernanceMeeting` via `meetingId`, and flagged `binding` (default `true`, distinguishing it from advisory `Motion`) vs. non-binding at the schema level. Landed in #484, frontend wired in #487.
-- [~] Upload, approve, redact, sign, and publish minutes: upload/approve/sign are now individually audited (`MINUTES_UPLOAD`/`MINUTES_APPROVE`/`MINUTES_SIGN`); redact and a distinct publish step still have no backing field.
+- [x] Upload, approve, redact, sign, and publish minutes: upload/approve/sign, redact (a flag on the stored file, not partial-document redaction), and publish (distinct from internal sign-off) are all individually audited (`MINUTES_UPLOAD`/`MINUTES_APPROVE`/`MINUTES_SIGN`/`MINUTES_REDACT`/`MINUTES_PUBLISH`). Landed in #484, frontend wired in #487.
 - [ ] Maintain versioned bylaws and association documents.
 - [ ] Link decisions to meetings, agenda items, motions, and minutes.
 - [ ] Maintain board roles, terms, elections, conflicts, and recusals.
