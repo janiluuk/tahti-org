@@ -88,10 +88,13 @@ export function SignupForm() {
       return
     }
 
+    const username = (form.get('username') as string).toLowerCase().trim()
     const result = await register({
       email: form.get('email') as string,
-      username: (form.get('username') as string).toLowerCase().trim(),
-      displayName: form.get('displayName') as string,
+      username,
+      // Artist name moved to /signup/profile — default to the handle so the
+      // account has a non-empty displayName until they set the real one.
+      displayName: username,
       password,
       gender: declineDemographics ? null : gender || null,
       countryCode: declineDemographics ? null : countryCode || null,
@@ -160,71 +163,54 @@ export function SignupForm() {
                 />
               </Field>
 
-              <div className="signup-password-row">
-                <Field
-                  label="Handle"
-                  htmlFor="signup-username"
-                  hint={
-                    handleStatus === 'available' ? (
-                      <span className="signup-handle-status signup-handle-status--ok">
-                        ✓ available — your channel will live at{' '}
-                        <span className="signup-handle-status__url">{handle}.tahti.live</span>
-                      </span>
-                    ) : handleStatus === 'taken' ? (
-                      <span className="signup-handle-status signup-handle-status--error">
-                        Already taken
-                        {handleSuggestions.length > 0 && (
-                          <>
-                            {' — try '}
-                            {handleSuggestions.map((s, i) => (
-                              <span key={s}>
-                                {i > 0 && ' or '}
-                                <button
-                                  type="button"
-                                  className="signup-handle-suggestion"
-                                  onClick={() => setHandle(s)}
-                                >
-                                  {s}
-                                </button>
-                              </span>
-                            ))}
-                          </>
-                        )}
-                      </span>
-                    ) : (
-                      `Lowercase letters, numbers, - and _ only. Your channel URL: ${handle || 'your-handle'}.tahti.live`
-                    )
-                  }
-                >
-                  <Input
-                    id="signup-username"
-                    name="username"
-                    required
-                    minLength={2}
-                    maxLength={32}
-                    pattern="[a-z0-9_-]+"
-                    autoComplete="username"
-                    placeholder="dj-moonrise"
-                    value={handle}
-                    onChange={(e) => setHandle(e.target.value.toLowerCase())}
-                  />
-                </Field>
-
-                <Field label="Artist name" htmlFor="signup-display-name">
-                  <Input
-                    id="signup-display-name"
-                    name="displayName"
-                    required
-                    maxLength={64}
-                    autoComplete="name"
-                    placeholder="DJ Moonrise"
-                    data-1p-ignore
-                    data-lpignore="true"
-                    data-bwignore="true"
-                    data-form-type="other"
-                  />
-                </Field>
-              </div>
+              <Field
+                label="Handle"
+                htmlFor="signup-username"
+                hint={
+                  handleStatus === 'available' ? (
+                    <span className="signup-handle-status signup-handle-status--ok">
+                      ✓ available — your channel will live at{' '}
+                      <span className="signup-handle-status__url">{handle}.tahti.live</span>
+                    </span>
+                  ) : handleStatus === 'taken' ? (
+                    <span className="signup-handle-status signup-handle-status--error">
+                      Already taken
+                      {handleSuggestions.length > 0 && (
+                        <>
+                          {' — try '}
+                          {handleSuggestions.map((s, i) => (
+                            <span key={s}>
+                              {i > 0 && ' or '}
+                              <button
+                                type="button"
+                                className="signup-handle-suggestion"
+                                onClick={() => setHandle(s)}
+                              >
+                                {s}
+                              </button>
+                            </span>
+                          ))}
+                        </>
+                      )}
+                    </span>
+                  ) : (
+                    `Lowercase letters, numbers, - and _ only. Your channel URL: ${handle || 'your-handle'}.tahti.live — pick your artist name on the next step.`
+                  )
+                }
+              >
+                <Input
+                  id="signup-username"
+                  name="username"
+                  required
+                  minLength={2}
+                  maxLength={32}
+                  pattern="[a-z0-9_-]+"
+                  autoComplete="username"
+                  placeholder="dj-moonrise"
+                  value={handle}
+                  onChange={(e) => setHandle(e.target.value.toLowerCase())}
+                />
+              </Field>
 
               <div className="signup-password-row">
                 <Field
