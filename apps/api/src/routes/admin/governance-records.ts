@@ -13,14 +13,18 @@ import {
   GovernanceMeetingListSchema,
   GovernanceNoticeDeliveryListSchema,
   PatchGovernanceMeetingSchema,
+  PrepareMinutesUploadResponseSchema,
+  PrepareMinutesUploadSchema,
   UpsertGovernanceAttendanceSchema,
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { presignedGetUrl, presignedPutUrl } from '../../lib/minio.js'
 import { auditLog } from '../../lib/audit.js'
 import { sendMeetingNoticeAndRecordDeliveries } from '../../lib/governance-notice.js'
+
+const MINUTES_PRESIGN_TTL_SEC = 900
 
 async function documentResponse(document: {
   id: string
@@ -54,7 +58,7 @@ async function documentResponse(document: {
   }
 }
 
-function meetingResponse(meeting: {
+async function meetingResponse(meeting: {
   id: string
   title: string
   type: string
@@ -82,6 +86,9 @@ function meetingResponse(meeting: {
   return {
     ...meeting,
     attendance: undefined,
+    minutesUrl: meeting.minutesKey
+      ? await presignedGetUrl(meeting.minutesKey, 3600, 'minutes.pdf').catch(() => null)
+      : null,
     attendanceCount: meeting.attendance.length,
     presentCount,
     quorumMet: meeting.quorumRequired === null ? null : presentCount >= meeting.quorumRequired,
@@ -129,7 +136,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
+      return reply.send(nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit))
     },
   )
 
@@ -172,7 +179,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(nextCursor(reply, meetings.map(meetingResponse), limit))
+      return reply.send(nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit))
     },
   )
 
@@ -227,6 +234,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         secretaryName: meeting.secretaryName ?? null,
         minutesSignedByName: meeting.minutesSignedByName ?? null,
         minutesSignedAt: meeting.minutesSignedAt ?? null,
+        minutesUrl: null,
       })
     },
   )
@@ -339,7 +347,42 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: updated.id },
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(meetingResponse(withAttendance))
+      return reply.send(await meetingResponse(withAttendance))
+    },
+  )
+
+  // POST /api/admin/governance/meetings/:id/minutes/prepare-upload — presigned
+  // PUT for the minutes file. The client PUTs the bytes directly to storage,
+  // then finalizes by PATCHing the meeting with { minutesKey } (existing
+  // route above already audits that as MINUTES_UPLOAD).
+  fastify.post(
+    '/api/admin/governance/meetings/:id/minutes/prepare-upload',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(PrepareMinutesUploadResponseSchema, 'PrepareMinutesUpload'),
+      },
+    },
+    async (request, reply) => {
+      const id = (request.params as { id?: string }).id
+      if (!id) return reply.status(400).send({ error: 'Meeting id is required' })
+      const parsed = PrepareMinutesUploadSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const meeting = await fastify.prisma.governanceMeeting.findUnique({ where: { id } })
+      if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+
+      const minutesKey = `governance/meetings/${id}/minutes-${Date.now()}.pdf`
+      const uploadUrl = await presignedPutUrl(
+        minutesKey,
+        parsed.data.contentType,
+        MINUTES_PRESIGN_TTL_SEC,
+        parsed.data.fileSizeBytes,
+      )
+      const expiresAt = new Date(Date.now() + MINUTES_PRESIGN_TTL_SEC * 1000).toISOString()
+      return reply.send({ uploadUrl, minutesKey, expiresAt })
     },
   )
 
