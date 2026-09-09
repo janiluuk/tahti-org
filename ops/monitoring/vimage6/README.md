@@ -17,7 +17,8 @@ Installs / updates:
 | **Tahti — lab overview** (`uid: tahti-overview`) | App metrics, users, Stripe counters, storage/R2 budget, tracks, releases, registrations today, Giggi active gigs |
 | **Vimage — Docker & OS metrics** (`uid: vimage-docker-os-metrics`) | Per-container CPU/memory/network/disk I/O and host uptime/load/temp, hardcoded to the `vimage` host only. Adapted from the Grafana.com "Docker and OS Metrics for Raspberry Pi" dashboard (#15120); static JSON, not generated — edit `vimage-docker-os-metrics.json` directly. |
 | Blackbox exporter `:9115` | HTTP/TCP probes |
-| Prometheus jobs | `tahti_api_metrics`, `tahti_blackbox`, `tahti_blackbox_public`, `tahti_blackbox_tcp` |
+| Mail exporter `:9275` | Contact-inbox counts (`mail_inbox_unseen/total{mailbox="hello@…"/"support@…"}` via doveadm, cron every 5 min) |
+| Prometheus jobs | `tahti_api_metrics`, `tahti_blackbox`, `tahti_blackbox_public`, `tahti_blackbox_tcp`, `tahti_mail_metrics` |
 | Alert rules | Postgres backup age (WARN >26h, critical >48h) |
 
 The deploy script **replaces** the managed Prometheus snippet on each run (marker `tahti-vital-services`).

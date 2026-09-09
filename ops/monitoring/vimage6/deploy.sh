@@ -51,6 +51,21 @@ else
   ssh "$HOST" "docker restart monitoring-blackbox"
 fi
 
+echo "==> Deploy contact-inbox mail metrics (hello@/support@tahti.live)"
+ssh "$HOST" "mkdir -p ~/infra/mail/metrics"
+scp "${V6}/mail-metrics.sh" "${HOST}:~/infra/mail/metrics/mail-metrics.sh"
+scp "${V6}/mail-exporter.py" "${HOST}:~/infra/mail/metrics/mail-exporter.py"
+ssh "$HOST" "chmod +x ~/infra/mail/metrics/mail-metrics.sh && ~/infra/mail/metrics/mail-metrics.sh"
+if ! ssh "$HOST" "docker ps --format '{{.Names}}' | grep -qx monitoring-mail-exporter"; then
+  echo "==> Starting mail exporter (:9275)"
+  ssh "$HOST" "docker rm -f monitoring-mail-exporter 2>/dev/null || true"
+  ssh "$HOST" "docker run -d --name monitoring-mail-exporter --restart unless-stopped \
+    -p 127.0.0.1:9275:9275 \
+    -v /home/jani/infra/mail/metrics:/metrics:ro \
+    python:3-alpine python3 /metrics/mail-exporter.py"
+fi
+ssh "$HOST" "(crontab -l 2>/dev/null | grep -v mail-metrics.sh; echo '*/5 * * * * /home/jani/infra/mail/metrics/mail-metrics.sh') | crontab -"
+
 echo "==> Validate Prometheus config"
 ssh "$HOST" "docker exec monitoring-prometheus promtool check config /etc/prometheus/prometheus.yml"
 
@@ -65,4 +80,4 @@ echo "  - Tahti vital services (uid: tahti-vital-services)"
 echo "  - Tahti — lab overview (uid: tahti-overview)"
 echo "  - Vimage — Docker & OS metrics (uid: vimage-docker-os-metrics)"
 echo ""
-echo "Prometheus targets: tahti_api_metrics, tahti_blackbox, tahti_blackbox_public, tahti_blackbox_tcp"
+echo "Prometheus targets: tahti_api_metrics, tahti_blackbox, tahti_blackbox_public, tahti_blackbox_tcp, tahti_mail_metrics"

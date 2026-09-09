@@ -7,12 +7,14 @@ import {
   AdminChatStatsSchema,
   AdminChatTimeseriesSchema,
   AdminCronRunListSchema,
+  AdminMailStatsSchema,
   AdminMemberStatsSchema,
   AdminQueueStatsListSchema,
   AdminSystemHealthSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { config } from '../../config.js'
 import { getQueueStatsByJobName } from '../../lib/queue-stats.js'
 import { WORKER_CRON_JOBS } from '@tahti/shared'
 import { runDependencyChecks } from '../../lib/health-checks.js'
@@ -238,6 +240,61 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       )
     },
   )
+
+  // Contact-inbox mail counts (hello@ / support@tahti.live) for the admin
+  // dashboard KPI tiles. Read from Prometheus on vimage6 (tahti_mail_metrics
+  // job fed by doveadm via mail-metrics.sh); fail-open with zeros so the
+  // dashboard never breaks when Prometheus is unreachable (dev, CI, blip).
+  fastify.get(
+    '/api/admin/stats/mail',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Unread/total mails to hello@/support@tahti.live for the admin dashboard',
+        response: openApiResponse(AdminMailStatsSchema, 'AdminMailStats'),
+      },
+    },
+    async (_request, reply) => {
+      const zeros = () => ({ unseen: 0, total: 0 })
+      const snapshot: Record<'hello' | 'support', { unseen: number; total: number }> = {
+        hello: zeros(),
+        support: zeros(),
+      }
+      try {
+        const [unseen, total] = await Promise.all([
+          queryPromMailboxCounts('mail_inbox_unseen'),
+          queryPromMailboxCounts('mail_inbox_total'),
+        ])
+        for (const key of ['hello', 'support'] as const) {
+          snapshot[key].unseen = unseen.get(`${key}@tahti.live`) ?? 0
+          snapshot[key].total = total.get(`${key}@tahti.live`) ?? 0
+        }
+      } catch (err) {
+        fastify.log.warn({ err }, '[admin/stats/mail] prometheus unreachable, returning zeros')
+      }
+      return reply.send(snapshot)
+    },
+  )
+}
+
+async function queryPromMailboxCounts(metric: string): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  const res = await fetch(`${config.promUrl}/api/v1/query?query=${metric}`, {
+    signal: AbortSignal.timeout(5000),
+  })
+  if (!res.ok) throw new Error(`prometheus query ${metric}: HTTP ${res.status}`)
+  const body = (await res.json()) as {
+    data?: { result?: Array<{ metric?: { mailbox?: string }; value?: [number, string] }> }
+  }
+  for (const row of body.data?.result ?? []) {
+    const mailbox = row.metric?.mailbox
+    const raw = row.value?.[1]
+    if (!mailbox || raw == null) continue
+    const n = Number.parseInt(raw, 10)
+    if (Number.isFinite(n) && n >= 0) counts.set(mailbox, n)
+  }
+  return counts
 }
 
 export default adminStatsRoutes

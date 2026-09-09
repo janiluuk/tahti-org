@@ -158,6 +158,10 @@ export const config = {
    * server-to-server for the admin logs page. Confirmed live 2026-08-25, not
    * something this app deploys or owns. */
   lokiUrl: process.env.LOKI_URL ?? 'http://192.168.2.105:3100',
+  /** Prometheus on vimage6 — queried server-to-server for contact-inbox
+   * mail counts on the admin dashboard. Fail-open: the endpoint returns
+   * zeros when Prometheus is unreachable. */
+  promUrl: process.env.PROM_URL ?? 'http://192.168.2.105:9090',
   /** Public ingest URL shown in dashboard (e.g. https://ingest-icecast.tahti.live or http://localhost:8100). */
   icecastPublicUrl:
     process.env.ICECAST_PUBLIC_URL ??

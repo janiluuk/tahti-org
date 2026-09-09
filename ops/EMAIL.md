@@ -51,6 +51,22 @@ ssh jani@vimage6.local 'cd ~/infra/mail && docker exec vimage6-mailserver postma
 
 Roundcube (`webmail.tahti.live`) submits via the local mailserver, so no Roundcube config change is needed — the relay switch applies to all `@tahti.live` sends.
 
+### Contact-inbox metrics (hello@ / support@)
+
+Both addresses are aliases to `jani@tahti.live`, so Grafana and the Tahti
+admin dashboard count them via `HEADER To` searches instead of a plain
+unread counter:
+
+- `ops/monitoring/vimage6/mail-metrics.sh` (cron every 5 min on vimage6)
+  writes `mail_inbox_unseen/total{mailbox="hello@tahti.live"|"support@tahti.live"}`
+- `ops/monitoring/vimage6/mail-exporter.py` serves the file on `:9275`
+  (`monitoring-mail-exporter` container) for the `tahti_mail_metrics` job
+- Grafana “Contact inbox (tahti.live)” row in `tahti-infrastructure`
+- Tahti app: `GET /api/admin/stats/mail` (board-only, fail-open zeros) →
+  “Unread mail” KPI on `/admin/dashboard`
+
+Redeploy everything with `./ops/monitoring/vimage6/deploy.sh`.
+
 ### DKIM / SPF for @tahti.live via Mailgun
 
 `@tahti.live` deliverability is now Mailgun's DNS: SPF include + DKIM (`mailo._domainkey`) + DMARC from the Mailgun dashboard. The vimage6 OpenDKIM `mail._domainkey.tahti.live` entry below is legacy (harmless pre-relay signature, only relevant if you switch back to direct vimage6 delivery).

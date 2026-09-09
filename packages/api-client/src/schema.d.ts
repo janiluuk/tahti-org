@@ -9197,6 +9197,51 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/admin/stats/mail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Unread/total mails to hello@/support@tahti.live for the admin dashboard */
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              hello: {
+                unseen: number
+                total: number
+              }
+              support: {
+                unseen: number
+                total: number
+              }
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/admin/streams': {
     parameters: {
       query?: never
