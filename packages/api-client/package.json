@@ -14,14 +14,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "openapi-fetch": "^0.13.4"
+    "openapi-fetch": "^0.13.8"
   },
   "devDependencies": {
     "@tahti/api": "workspace:*",
     "@tahti/db": "workspace:*",
-    "@types/node": "^24.0.0",
-    "openapi-typescript": "^7.4.3",
-    "typescript": "^5.5.2",
-    "vitest": "^1.6.0"
+    "@types/node": "^24.13.4",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   }
 }

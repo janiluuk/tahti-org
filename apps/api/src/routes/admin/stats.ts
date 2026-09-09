@@ -124,6 +124,7 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         icecast: byId.get('icecast') === 'up' ? 'up' : 'down',
         minio: byId.get('minio') === 'up' ? 'up' : 'down',
+        discordBot: byId.get('discord-bot') === 'up' ? 'up' : 'down',
         postgresBackupAgeHours: backup.postgresBackupAgeHours,
         failedFanSubPayouts: failedPayouts,
       })

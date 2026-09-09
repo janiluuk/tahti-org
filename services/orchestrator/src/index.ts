@@ -18,6 +18,7 @@ import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
 import { startNowPlayingSync } from './now-playing-sync.js'
 import { cleanupOrphanedSidecars } from './sidecar-cleanup.js'
+import { restartDiscordBotContainer, DiscordBotNotRunningError } from './discord-bot.js'
 import {
   LIQUIDSOAP_SKIP_COMMAND,
   LIQUIDSOAP_PAUSE_COMMAND,
@@ -166,6 +167,22 @@ fastify.post('/resume', async (request, reply) => {
   })
   if (early !== undefined) return early
   return reply.send({ ok: true })
+})
+
+// Restart the radio-discord-bot Compose service (e.g. after a board admin
+// updates its Client ID/token — the bot only reads credentials at startup).
+fastify.post('/restart-discord-bot', async (request, reply) => {
+  try {
+    const result = await restartDiscordBotContainer()
+    request.log.info({ container: result.container }, 'discord bot container restarted')
+    return reply.send({ ok: true, container: result.container })
+  } catch (err) {
+    if (err instanceof DiscordBotNotRunningError) {
+      return reply.status(404).send({ error: err.message })
+    }
+    request.log.error({ err }, 'discord bot restart failed')
+    return reply.status(500).send({ error: 'docker restart failed' })
+  }
 })
 
 // Sweep orphaned recorder/fingerprint sidecar containers — see sidecar-cleanup.ts

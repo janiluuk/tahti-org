@@ -17,25 +17,45 @@ Nodemailer with `SMTP_*` environment variables.
 
 Local dev uses Mailhog (`infra/docker-compose.stack.yml`). Production Swarm typically uses Postmark or SES (below).
 
-## Lab stack on vimage (relay via vimage6)
+## Lab stack on vimage (Mailgun EU direct)
 
-The Docker stack on **vimage** (`192.168.2.100`, `deploy_prod.sh`) must **not** run its own MTA. Outbound mail submits to **docker-mailserver on vimage6** via **`mail.tahti.live:587`** (use the hostname, not the LAN IP — TLS cert is for `mail.tahti.live`).
+The Docker stack on **vimage** (`192.168.2.100`, `deploy_prod.sh`) must **not** run its own MTA. `@tahti.live` outbound sends direct via **Mailgun EU** (`smtp.eu.mailgun.org:587`, verified domain `tahti.live`).
 
-1. Ensure `noreply@tahti.live` exists on vimage6 (`docker exec vimage6-mailserver setup email add …`).
-2. Copy `infra/stack.env.vimage.example` → `infra/stack.env` on vimage (`chmod 600`), set `SMTP_PASS`, quote `SMTP_FROM`.
-3. Redeploy or recreate api/worker: `docker compose -f infra/docker-compose.stack.yml --env-file infra/stack.env up -d --force-recreate api worker`
+1. Copy `infra/stack.env.vimage.example` → `infra/stack.env` on vimage (`chmod 600`), set `SMTP_PASS` to the Mailgun **SMTP password** for `postmaster@tahti.live` (not the HTTP API key), quote `SMTP_FROM`.
+2. Redeploy or recreate api/worker: `docker compose -f infra/docker-compose.stack.yml --env-file infra/stack.env up -d --force-recreate api worker`
 
 | Variable | Value |
 |----------|--------|
-| `SMTP_HOST` | `mail.tahti.live` |
+| `SMTP_HOST` | `smtp.eu.mailgun.org` |
 | `SMTP_PORT` | `587` |
-| `SMTP_USER` | `noreply@tahti.live` |
+| `SMTP_USER` | `postmaster@tahti.live` |
 | `SMTP_FROM` | `"Tahti <noreply@tahti.live>"` |
 | `APP_URL` | `https://app.tahti.live` (links in beta invite / verify mail) |
 
 Beta applications always notify **`support@tahti.live`** (hardcoded). Mailhog remains the compose default when `stack.env` is absent (capture only).
 
-### DKIM on vimage6 (lab relay)
+### vimage6 relay split (Roundcube `webmail.tahti.live`)
+
+docker-mailserver on **vimage6** (`~/infra/mail`, `vimage6-mailserver`) relays per-sender domain via `config/postfix-relaymap.cf` + `config/postfix-sasl-password.cf`:
+
+| Sender | Relay |
+|--------|-------|
+| `@sparkki.fi`, `@giggi.fi` | Brevo `smtp-relay.brevo.com:587` (default `relayhost`) |
+| `@tahti.live` | Mailgun EU `smtp.eu.mailgun.org:587` as `postmaster@tahti.live` |
+
+After editing either file, rebuild the maps and restart:
+
+```bash
+ssh jani@vimage6.local 'cd ~/infra/mail && docker exec vimage6-mailserver postmap /tmp/docker-mailserver/postfix-sasl-password.cf && docker exec vimage6-mailserver postmap /tmp/docker-mailserver/postfix-relaymap.cf && docker restart vimage6-mailserver'
+```
+
+Roundcube (`webmail.tahti.live`) submits via the local mailserver, so no Roundcube config change is needed — the relay switch applies to all `@tahti.live` sends.
+
+### DKIM / SPF for @tahti.live via Mailgun
+
+`@tahti.live` deliverability is now Mailgun's DNS: SPF include + DKIM (`mailo._domainkey`) + DMARC from the Mailgun dashboard. The vimage6 OpenDKIM `mail._domainkey.tahti.live` entry below is legacy (harmless pre-relay signature, only relevant if you switch back to direct vimage6 delivery).
+
+### DKIM on vimage6 (sparkki.fi / giggi.fi direct)
 
 docker-mailserver signs all `@tahti.live` senders (including `noreply@tahti.live`) via `*@tahti.live` in OpenDKIM `SigningTable`, selector **`mail`**, DNS record `mail._domainkey.tahti.live`.
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { encryptStreamKey } from '../../lib/stream-key-enc.js'
@@ -12,6 +12,16 @@ import {
   cleanupUsersByEmailPrefix,
   allocateMemberNumber,
 } from '../../test/helpers.js'
+
+const restartDiscordBot = vi.fn()
+
+vi.mock('../../lib/orchestrator.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/orchestrator.js')>()
+  return {
+    ...actual,
+    restartDiscordBot: (...args: unknown[]) => restartDiscordBot(...args),
+  }
+})
 
 const PREFIX = 'admin-discord-bot-'
 const CLIENT_ID = '1168742859038531594'
@@ -45,6 +55,7 @@ describe('admin discord-bot settings', () => {
 
   beforeEach(async () => {
     await prisma.discordBotSettings.deleteMany()
+    restartDiscordBot.mockReset()
   })
 
   afterAll(async () => {
@@ -147,6 +158,65 @@ describe('admin discord-bot settings', () => {
       clientId: nextId,
       tokenConfigured: true,
       tokenHint: '••••f4eb',
+    })
+  })
+
+  describe('POST /api/admin/discord-bot/restart', () => {
+    it('rejects non-board users', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/admin/discord-bot/restart',
+        headers: { cookie: artistCookie },
+      })
+      expect(res.statusCode).toBe(403)
+      expect(restartDiscordBot).not.toHaveBeenCalled()
+    })
+
+    it('restarts the bot container and audits', async () => {
+      restartDiscordBot.mockResolvedValue({ container: 'tahti-stack-radio-discord-bot-1' })
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/admin/discord-bot/restart',
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({
+        ok: true,
+        action: 'restart',
+        container: 'tahti-stack-radio-discord-bot-1',
+      })
+
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'DISCORD_BOT_RESTART' },
+        orderBy: { createdAt: 'desc' },
+      })
+      expect(audit).toBeTruthy()
+      expect(audit?.meta).toMatchObject({ container: 'tahti-stack-radio-discord-bot-1' })
+    })
+
+    it('returns 409 when the container is not running', async () => {
+      const err = new Error('Orchestrator restart-discord-bot returned 404')
+      ;(err as Error & { status?: number }).status = 404
+      restartDiscordBot.mockRejectedValue(err)
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/admin/discord-bot/restart',
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(409)
+    })
+
+    it('returns 502 when the orchestrator is unreachable', async () => {
+      restartDiscordBot.mockRejectedValue(new Error('fetch failed'))
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/admin/discord-bot/restart',
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(502)
     })
   })
 })

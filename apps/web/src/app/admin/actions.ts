@@ -65,6 +65,21 @@ export async function resumeLiveStream(slug: string): Promise<{ error: string | 
   return postAdminStreamControl(slug, 'resume')
 }
 
+export async function restartDiscordBot(): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/discord-bot/restart`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Restart failed' }
+  }
+  revalidatePath('/admin/dashboard')
+  revalidatePath('/admin/status')
+  return { error: null }
+}
+
 export async function retryFanSubPayout(payoutId: string): Promise<{ error: string | null }> {
   const res = await fetch(
     `${apiUrl}/api/admin/fansubs/payouts/${encodeURIComponent(payoutId)}/retry`,

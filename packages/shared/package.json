@@ -19,12 +19,12 @@
   "dependencies": {
     "@tahti/audio-edit": "workspace:*",
     "@tahti/db": "workspace:*",
-    "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.23.5"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "typescript": "^5.5.2",
-    "vitest": "^1.6.0"
+    "@types/node": "^24.13.4",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   }
 }

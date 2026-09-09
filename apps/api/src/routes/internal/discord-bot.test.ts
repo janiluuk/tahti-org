@@ -49,4 +49,26 @@ describe('internal discord-bot credentials', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ clientId: CLIENT_ID, token: TOKEN })
   })
+
+  describe('POST heartbeat', () => {
+    it('rejects missing internal auth', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/internal/discord-bot/heartbeat',
+        payload: { guildCount: 1, uptimeSecs: 10 },
+      })
+      expect(res.statusCode).toBe(401)
+    })
+
+    it('accepts a heartbeat from the bot process', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/internal/discord-bot/heartbeat',
+        headers: { authorization: `Bearer ${config.internalSecret}` },
+        payload: { guildCount: 3, uptimeSecs: 120, currentTrack: 'Artist - Title' },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ ok: true })
+    })
+  })
 })

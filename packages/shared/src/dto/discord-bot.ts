@@ -30,3 +30,19 @@ export const InternalDiscordBotCredentialsSchema = z.object({
   token: DiscordBotTokenSchema,
 })
 export type InternalDiscordBotCredentials = z.infer<typeof InternalDiscordBotCredentialsSchema>
+
+/** Bot self-reported liveness ping. Internal only — no secrets. */
+export const DiscordBotHeartbeatSchema = z.object({
+  guildCount: z.number().int().nonnegative(),
+  uptimeSecs: z.number().int().nonnegative(),
+  currentTrack: z.string().nullable().optional(),
+})
+export type DiscordBotHeartbeatInput = z.infer<typeof DiscordBotHeartbeatSchema>
+
+export const DiscordBotHeartbeatAckSchema = z.object({ ok: z.literal(true) })
+
+export const AdminDiscordBotRestartResponseSchema = z.object({
+  ok: z.literal(true),
+  action: z.literal('restart'),
+  container: z.string(),
+})

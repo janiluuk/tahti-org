@@ -6,6 +6,8 @@ import type { PrismaClient } from '@tahti/db'
 import { config } from '../config.js'
 import { getRedisClient } from './redis.js'
 import { s3 } from './minio.js'
+import { isHeartbeatStale, readDiscordBotHeartbeat } from './discord-bot-heartbeat.js'
+import { ONLINE_THRESHOLD_MS } from './liveness.js'
 
 export type DependencyState = 'up' | 'down' | 'skipped'
 
@@ -92,19 +94,37 @@ async function checkHttp(id: string, url: string, critical: boolean): Promise<De
   }
 }
 
+async function checkDiscordBot(): Promise<DependencyCheck> {
+  const start = Date.now()
+  const heartbeat = await readDiscordBotHeartbeat()
+  const latencyMs = Date.now() - start
+  if (!heartbeat) {
+    return fail('discord-bot', false, latencyMs, 'no heartbeat received yet')
+  }
+  const now = Date.now()
+  if (isHeartbeatStale(heartbeat.updatedAt, now, ONLINE_THRESHOLD_MS)) {
+    const age = now - heartbeat.updatedAt
+    return fail('discord-bot', false, latencyMs, `last heartbeat ${Math.round(age / 1000)}s ago`)
+  }
+  return ok('discord-bot', false, latencyMs)
+}
+
 export async function runDependencyChecks(prisma: PrismaClient): Promise<DependencyCheck[]> {
   const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
 
-  const [postgres, redis, minio, centrifugo, orchestrator, icecast] = await Promise.all([
-    checkPostgres(prisma),
-    checkRedis(),
-    checkMinio(),
-    checkHttp('centrifugo', centrifugoHealthUrl(), false),
-    checkHttp('orchestrator', `${config.orchestratorUrl.replace(/\/$/, '')}/health`, false),
-    checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false),
-  ])
+  const [postgres, redis, minio, centrifugo, orchestrator, icecast, discordBot] = await Promise.all(
+    [
+      checkPostgres(prisma),
+      checkRedis(),
+      checkMinio(),
+      checkHttp('centrifugo', centrifugoHealthUrl(), false),
+      checkHttp('orchestrator', `${config.orchestratorUrl.replace(/\/$/, '')}/health`, false),
+      checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false),
+      checkDiscordBot(),
+    ],
+  )
 
-  return [postgres, redis, minio, centrifugo, orchestrator, icecast]
+  return [postgres, redis, minio, centrifugo, orchestrator, icecast, discordBot]
 }
 
 export function summarizeChecks(checks: DependencyCheck[]): {

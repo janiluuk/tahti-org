@@ -108,6 +108,20 @@ export async function fetchRtmpTargetStatuses(
   }
 }
 
+/** Restart the radio-discord-bot Compose service (picks up new credentials, etc). */
+export async function restartDiscordBot(): Promise<{ container: string }> {
+  const res = await fetch(`${config.orchestratorUrl}/restart-discord-bot`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${config.internalSecret}` },
+  })
+  if (!res.ok) {
+    const err = new Error(`Orchestrator restart-discord-bot returned ${res.status}`)
+    ;(err as Error & { status?: number }).status = res.status
+    throw err
+  }
+  return (await res.json()) as { container: string }
+}
+
 /** M20/M21: stop per-channel Liquidsoap (warn-only — channel may already be offline). */
 export async function stopOrchestratorChannel(channelId: string): Promise<void> {
   try {

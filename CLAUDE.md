@@ -11,6 +11,9 @@
   and commit the result — CI's "Typecheck + SDK drift" job fails on a stale `schema.d.ts`.
 - Both checks run automatically as a pre-push hook (`.githooks/pre-push`, wired up via the
   `prepare` script on `pnpm install`) and block the push locally instead of failing in CI.
+- Once a task's commits are done and passing locally, push the branch — don't leave
+  finished work sitting only in the local worktree. Push once at the end of the task,
+  not after every individual commit.
 
 ## Todos → HISTORY.md
 

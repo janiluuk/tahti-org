@@ -2994,6 +2994,53 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/internal/discord-bot/heartbeat': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Discord bot self-reports liveness. INTERNAL_SECRET only. */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody: {
+        content: {
+          'application/json': {
+            guildCount: number
+            uptimeSecs: number
+            currentTrack?: string | null
+          }
+        }
+      }
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/me/stream-settings': {
     parameters: {
       query?: never
@@ -9007,6 +9054,8 @@ export interface paths {
               icecast: 'up' | 'down'
               /** @enum {string} */
               minio: 'up' | 'down'
+              /** @enum {string} */
+              discordBot: 'up' | 'down'
               postgresBackupAgeHours: number | null
               failedFanSubPayouts: number
             }
@@ -13895,6 +13944,48 @@ export interface paths {
       }
     }
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/discord-bot/restart': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Restart the radio-discord-bot container via the orchestrator */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** @enum {boolean} */
+              ok: true
+              /** @enum {string} */
+              action: 'restart'
+              container: string
+            }
+          }
+        }
+      }
+    }
     delete?: never
     options?: never
     head?: never

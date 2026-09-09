@@ -17,9 +17,9 @@ import {
 import type { z } from 'zod'
 import { requireBoard } from '../../plugins/auth.js'
 import { getRedisClient } from '../../lib/redis.js'
+import { ONLINE_THRESHOLD_MS } from '../../lib/liveness.js'
 
 const KNOWN_SET_KEY = 'workers:known'
-const ONLINE_THRESHOLD_MS = 60_000
 
 type WorkerSummary = z.infer<typeof AdminWorkersResponseSchema>['workers'][number]
 

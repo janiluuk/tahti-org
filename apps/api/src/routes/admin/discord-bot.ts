@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  AdminDiscordBotRestartResponseSchema,
   AdminDiscordBotSettingsSchema,
   UpdateDiscordBotSettingsSchema,
   openApiResponse,
@@ -13,6 +14,8 @@ import {
   saveDiscordBotSettings,
   toSettingsView,
 } from '../../lib/discord-bot-settings.js'
+import { restartDiscordBot } from '../../lib/orchestrator.js'
+import { auditLog } from '../../lib/audit.js'
 
 const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -81,6 +84,39 @@ const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
           })
         }
         throw error
+      }
+    },
+  )
+
+  fastify.post(
+    '/api/admin/discord-bot/restart',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Restart the radio-discord-bot container via the orchestrator',
+        response: openApiResponse(AdminDiscordBotRestartResponseSchema, 'AdminDiscordBotRestart'),
+      },
+    },
+    async (request, reply) => {
+      const actor = request.sessionUser!
+      try {
+        const { container } = await restartDiscordBot()
+        await auditLog(fastify.prisma, {
+          action: 'DISCORD_BOT_RESTART',
+          actorId: actor.id,
+          meta: { container },
+        })
+        return reply.send({ ok: true as const, action: 'restart' as const, container })
+      } catch (error) {
+        const status = (error as Error & { status?: number }).status
+        if (status === 404) {
+          return reply.status(409).send({ error: 'Discord bot container is not currently running' })
+        }
+        request.log.error({ err: error }, 'orchestrator restart-discord-bot failed')
+        return reply
+          .status(502)
+          .send({ error: 'Orchestrator restart failed — check the orchestrator service' })
       }
     },
   )

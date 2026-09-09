@@ -13,6 +13,7 @@ import {
   StatusPill,
 } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { DiscordBotRestartButton } from './discord-bot-restart-button'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -133,12 +134,14 @@ export default async function AdminDashboardPage() {
     ? ((await healthRes.json()) as {
         icecast: 'up' | 'down'
         minio: 'up' | 'down'
+        discordBot: 'up' | 'down'
         postgresBackupAgeHours: number | null
         failedFanSubPayouts: number
       })
     : {
         icecast: 'down' as const,
         minio: 'down' as const,
+        discordBot: 'down' as const,
         postgresBackupAgeHours: null,
         failedFanSubPayouts: 0,
       }
@@ -305,6 +308,12 @@ export default async function AdminDashboardPage() {
               </StatusPill>
             </DataRowListRow>
             <DataRowListRow columns={HEALTH_COLUMNS}>
+              <span>Discord bot</span>
+              <StatusPill tone={health.discordBot === 'up' ? 'green' : 'coral'}>
+                {health.discordBot === 'up' ? 'OK' : 'DOWN'}
+              </StatusPill>
+            </DataRowListRow>
+            <DataRowListRow columns={HEALTH_COLUMNS}>
               <span>Fan-sub payouts</span>
               <StatusPill tone={health.failedFanSubPayouts > 0 ? 'amber' : 'green'}>
                 {health.failedFanSubPayouts > 0 ? `${health.failedFanSubPayouts} RETRY` : 'OK'}
@@ -316,6 +325,7 @@ export default async function AdminDashboardPage() {
             <Link href="/admin/governance/audit">/admin/governance/audit</Link> · force-offline in{' '}
             <Link href="/admin/streams">Streams</Link>
           </p>
+          <DiscordBotRestartButton />
         </div>
       </div>
 
