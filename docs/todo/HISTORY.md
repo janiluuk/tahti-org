@@ -331,6 +331,46 @@ argument and just refreshed, so removing artwork never actually
 persisted). PR [#480](https://github.com/janiluuk/tahti-org/pull/480),
 merged. Todo file left un-folded after merge — folding now.
 
+### 2026-09-08 — admin addons metadata edit + delete routes
+
+`../tahti-player`'s admin Add-ons panel called `PATCH`/`DELETE
+/api/admin/addons/:id` for metadata editing and deleting a widget, but
+neither route existed server-side — only ever worked in that frontend's
+mock mode (discovered while wiring the `enabled-by-default`/
+`default-config` actions on the player side, a separate change). Added
+both: `PatchAddonSchema` (`packages/shared/src/dto/addons.ts`, full
+metadata replace — name/description/authorName/categories/iconUrl; slug
+and scope stay immutable after registration) and the two Fastify routes
+in `apps/api/src/routes/admin/addons.ts`, matching the file's existing
+board-only/`ADMIN_ITEM_SELECT` conventions. `DELETE` relies on the
+`Addon.versions`/`Addon.installs` cascade FKs already in `schema.prisma`
+— no manual cleanup needed. New `addons.test.ts` (8 tests, register →
+list → enabled-by-default/default-config → PATCH incl. 400/404 →
+DELETE incl. 404) — this route file had **zero** test coverage before
+this pass, despite being a fairly sophisticated board-only system
+(moderation, MinIO-backed bundle upload/versioning).
+
+**Found and fixed while testing:** the shared local dev Postgres
+(`infra-postgres-1`, port 5432) was missing the two governance
+migrations from this session's earlier PRs #484/#487
+(`governance_notice_delivery_minutes_publish_resolution_link`,
+`governance_conflict_declarations`) — `prisma migrate status` showed
+them (and 146 other older migrations going back to June) as
+"not yet applied" despite the live schema clearly having most of that
+history's tables already, meaning `_prisma_migrations` bookkeeping on
+this shared dev DB is badly out of sync with its actual schema (`migrate
+deploy` refuses with P3005, "needs baselining"). Applied just this
+session's own two migrations' SQL directly and marked them resolved,
+narrowly — did **not** attempt to baseline or fix the other 146, that's
+a separate, bigger job. This was silently failing `resolutions.test.ts`
+(500s from missing `binding`/`meetingId` columns) for anyone running the
+full suite locally against the shared dev DB; now passes. Flagging here
+since it likely explains other "flaky" local-only failures other
+sessions may have hit without realizing why.
+
+Full `apps/api` admin/governance/webhooks/transparency suite (40 files,
+187 tests) green after the migration fix.
+
 ### 2026-09-08 — governance meeting-minutes upload
 
 Board admins had no way to actually upload a minutes file — the meeting
