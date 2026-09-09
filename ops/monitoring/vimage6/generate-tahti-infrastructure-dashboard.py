@@ -491,6 +491,49 @@ def main() -> None:
     pid += 1
     y += 4
 
+    panels.append(row("Contact inbox (tahti.live)", y, pid))
+    pid += 1
+    y += 1
+    panels.append(
+        metric_stat_panel(
+            pid,
+            "Unread: hello@tahti.live",
+            'mail_inbox_unseen{job="tahti_mail_metrics",mailbox="hello@tahti.live"}',
+            y,
+            w=8,
+            legend="hello",
+            description="Unread mails to hello@tahti.live (alias to jani@tahti.live). Source: doveadm via mail-metrics.sh on vimage6, scraped every 60s.",
+        )
+    )
+    pid += 1
+    panels.append(
+        metric_stat_panel(
+            pid,
+            "Unread: support@tahti.live",
+            'mail_inbox_unseen{job="tahti_mail_metrics",mailbox="support@tahti.live"}',
+            y,
+            w=8,
+            x=8,
+            legend="support",
+            description="Unread mails to support@tahti.live (alias to jani@tahti.live). Source: doveadm via mail-metrics.sh on vimage6, scraped every 60s.",
+        )
+    )
+    pid += 1
+    panels.append(
+        stat_panel(
+            pid,
+            "Inbox exporter",
+            'up{job="tahti_mail_metrics"}',
+            y,
+            w=8,
+            x=16,
+            legend="{{instance}}",
+            description="mail-exporter on vimage6 (:9275) serving doveadm counts.",
+        )
+    )
+    pid += 1
+    y += 4
+
     panels.append(row("CPU & load", y, pid))
     pid += 1
     y += 1

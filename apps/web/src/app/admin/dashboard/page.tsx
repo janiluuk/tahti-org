@@ -63,6 +63,7 @@ export default async function AdminDashboardPage() {
     venuesRes,
     healthRes,
     chatStatsRes,
+    mailRes,
   ] = await Promise.all([
     boardFetch('/api/v1/transparency/ytd'),
     boardFetch('/api/admin/stats/members'),
@@ -77,11 +78,23 @@ export default async function AdminDashboardPage() {
     boardFetch('/api/admin/venues'),
     boardFetch('/api/admin/stats/system-health'),
     boardFetch('/api/admin/stats/chat'),
+    boardFetch('/api/admin/stats/mail'),
   ])
 
   const chatLast24h = chatStatsRes.ok
     ? ((await chatStatsRes.json()) as { last24h: number }).last24h
     : 0
+
+  const mail = mailRes.ok
+    ? ((await mailRes.json()) as {
+        hello: { unseen: number; total: number }
+        support: { unseen: number; total: number }
+      })
+    : {
+        hello: { unseen: 0, total: 0 },
+        support: { unseen: 0, total: 0 },
+      }
+  const unreadMail = mail.hello.unseen + mail.support.unseen
 
   const failedPayoutCount = fansubsRes.ok
     ? ((await fansubsRes.json()) as { failedPayouts: { count: number } }).failedPayouts.count
@@ -232,6 +245,11 @@ export default async function AdminDashboardPage() {
         <KpiCard color="green" value={streams.count} label="Live now" />
         <KpiCard color="amber" value={betaApplications.length} label="Beta queue" />
         <KpiCard color="coral" value={openSupportCount} label="Open tickets" />
+        <KpiCard
+          color={unreadMail > 0 ? 'amber' : 'green'}
+          value={unreadMail}
+          label="Unread mail (hello+support)"
+        />
         <Link
           href="/admin/chat-stats"
           className="admin-kpi-link"
@@ -240,6 +258,16 @@ export default async function AdminDashboardPage() {
           <KpiCard color="purple" value={chatLast24h} label="Chat msgs (24h)" />
         </Link>
       </KpiCardRow>
+
+      {unreadMail > 0 && (
+        <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
+          New mail: hello@tahti.live {mail.hello.unseen} unread · support@tahti.live{' '}
+          {mail.support.unseen} unread ·{' '}
+          <a href="https://webmail.tahti.live/" target="_blank" rel="noreferrer">
+            Open webmail →
+          </a>
+        </p>
+      )}
 
       <div className="admin-dashboard-grid">
         <div>

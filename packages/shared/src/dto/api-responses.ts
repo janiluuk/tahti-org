@@ -1736,6 +1736,16 @@ export const AdminChatStatsSchema = z.object({
   last24h: z.number().int().nonnegative(),
 })
 
+export const AdminMailBoxStatsSchema = z.object({
+  unseen: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+})
+
+export const AdminMailStatsSchema = z.object({
+  hello: AdminMailBoxStatsSchema,
+  support: AdminMailBoxStatsSchema,
+})
+
 export const AdminChatTimeseriesPointSchema = z.object({
   date: z.string(),
   count: z.number().int().nonnegative(),

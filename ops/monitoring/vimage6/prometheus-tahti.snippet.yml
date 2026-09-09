@@ -153,4 +153,15 @@
       - target_label: __address__
         replacement: 127.0.0.1:9115
 
+  - job_name: tahti_mail_metrics
+    scrape_interval: 60s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:9275"]
+        labels:
+          environment: production
+          host: vimage6
+          service: contact-inbox
+          site: tahti
+
   # --- end tahti-vital-services ---

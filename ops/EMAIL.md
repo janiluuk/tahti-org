@@ -6,14 +6,14 @@ Nodemailer with `SMTP_*` environment variables.
 
 ## Environment variables
 
-| Variable | Service | Purpose |
-|----------|---------|---------|
-| `SMTP_HOST` | api, worker-light | SMTP server hostname |
-| `SMTP_PORT` | api, worker-light | Usually `587` (TLS) or `465` |
-| `SMTP_USER` | api, worker-light | SMTP username (if required) |
-| `SMTP_PASSWORD_FILE` | api, worker-light | Swarm secret mount |
-| `SMTP_FROM` | api, worker-light | Default From header |
-| `EMAIL_BOUNCE_WEBHOOK_SECRET` | api | Bounce webhook auth ([M13](#bounces)) |
+| Variable                      | Service           | Purpose                               |
+| ----------------------------- | ----------------- | ------------------------------------- |
+| `SMTP_HOST`                   | api, worker-light | SMTP server hostname                  |
+| `SMTP_PORT`                   | api, worker-light | Usually `587` (TLS) or `465`          |
+| `SMTP_USER`                   | api, worker-light | SMTP username (if required)           |
+| `SMTP_PASSWORD_FILE`          | api, worker-light | Swarm secret mount                    |
+| `SMTP_FROM`                   | api, worker-light | Default From header                   |
+| `EMAIL_BOUNCE_WEBHOOK_SECRET` | api               | Bounce webhook auth ([M13](#bounces)) |
 
 Local dev uses Mailhog (`infra/docker-compose.stack.yml`). Production Swarm typically uses Postmark or SES (below).
 
@@ -24,13 +24,13 @@ The Docker stack on **vimage** (`192.168.2.100`, `deploy_prod.sh`) must **not** 
 1. Copy `infra/stack.env.vimage.example` → `infra/stack.env` on vimage (`chmod 600`), set `SMTP_PASS` to the Mailgun **SMTP password** for `postmaster@tahti.live` (not the HTTP API key), quote `SMTP_FROM`.
 2. Redeploy or recreate api/worker: `docker compose -f infra/docker-compose.stack.yml --env-file infra/stack.env up -d --force-recreate api worker`
 
-| Variable | Value |
-|----------|--------|
-| `SMTP_HOST` | `smtp.eu.mailgun.org` |
-| `SMTP_PORT` | `587` |
-| `SMTP_USER` | `postmaster@tahti.live` |
-| `SMTP_FROM` | `"Tahti <noreply@tahti.live>"` |
-| `APP_URL` | `https://app.tahti.live` (links in beta invite / verify mail) |
+| Variable    | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| `SMTP_HOST` | `smtp.eu.mailgun.org`                                         |
+| `SMTP_PORT` | `587`                                                         |
+| `SMTP_USER` | `postmaster@tahti.live`                                       |
+| `SMTP_FROM` | `"Tahti <noreply@tahti.live>"`                                |
+| `APP_URL`   | `https://app.tahti.live` (links in beta invite / verify mail) |
 
 Beta applications always notify **`support@tahti.live`** (hardcoded). Mailhog remains the compose default when `stack.env` is absent (capture only).
 
@@ -38,10 +38,10 @@ Beta applications always notify **`support@tahti.live`** (hardcoded). Mailhog re
 
 docker-mailserver on **vimage6** (`~/infra/mail`, `vimage6-mailserver`) relays per-sender domain via `config/postfix-relaymap.cf` + `config/postfix-sasl-password.cf`:
 
-| Sender | Relay |
-|--------|-------|
-| `@sparkki.fi`, `@giggi.fi` | Brevo `smtp-relay.brevo.com:587` (default `relayhost`) |
-| `@tahti.live` | Mailgun EU `smtp.eu.mailgun.org:587` as `postmaster@tahti.live` |
+| Sender                     | Relay                                                           |
+| -------------------------- | --------------------------------------------------------------- |
+| `@sparkki.fi`, `@giggi.fi` | Brevo `smtp-relay.brevo.com:587` (default `relayhost`)          |
+| `@tahti.live`              | Mailgun EU `smtp.eu.mailgun.org:587` as `postmaster@tahti.live` |
 
 After editing either file, rebuild the maps and restart:
 
@@ -50,6 +50,22 @@ ssh jani@vimage6.local 'cd ~/infra/mail && docker exec vimage6-mailserver postma
 ```
 
 Roundcube (`webmail.tahti.live`) submits via the local mailserver, so no Roundcube config change is needed — the relay switch applies to all `@tahti.live` sends.
+
+### Contact-inbox metrics (hello@ / support@)
+
+Both addresses are aliases to `jani@tahti.live`, so Grafana and the Tahti
+admin dashboard count them via `HEADER To` searches instead of a plain
+unread counter:
+
+- `ops/monitoring/vimage6/mail-metrics.sh` (cron every 5 min on vimage6)
+  writes `mail_inbox_unseen/total{mailbox="hello@tahti.live"|"support@tahti.live"}`
+- `ops/monitoring/vimage6/mail-exporter.py` serves the file on `:9275`
+  (`monitoring-mail-exporter` container) for the `tahti_mail_metrics` job
+- Grafana “Contact inbox (tahti.live)” row in `tahti-infrastructure`
+- Tahti app: `GET /api/admin/stats/mail` (board-only, fail-open zeros) →
+  “Unread mail” KPI on `/admin/dashboard`
+
+Redeploy everything with `./ops/monitoring/vimage6/deploy.sh`.
 
 ### DKIM / SPF for @tahti.live via Mailgun
 
@@ -122,11 +138,11 @@ Hard bounces and complaints **auto-unsubscribe** the address across all artists.
 
 Endpoint: `POST /api/webhooks/email/bounce`
 
-| Payload | Source |
-|---------|--------|
-| Postmark `RecordType: Bounce` / `SpamComplaint` | Postmark webhook |
-| SNS `Notification` with `notificationType: Bounce` | AWS SES |
-| `{ "email": "…", "type": "hard" }` | Manual / test |
+| Payload                                            | Source           |
+| -------------------------------------------------- | ---------------- |
+| Postmark `RecordType: Bounce` / `SpamComplaint`    | Postmark webhook |
+| SNS `Notification` with `notificationType: Bounce` | AWS SES          |
+| `{ "email": "…", "type": "hard" }`                 | Manual / test    |
 
 Soft bounces are logged but do not unsubscribe.
 
@@ -140,12 +156,12 @@ Per artist tier (see `/help/tier-limits`): weekly send caps enforced in
 
 Public contact addresses on the marketing site (`hello@tahti.live`) are **not** handled by the Tahti app — they land on **docker-mailserver** on **vimage6** (`192.168.2.105`, compose project `vimage6`, deploy tree `~/infra/mail` on that host). Stack source of truth: `sparkki/infra/mail` in the monorepo workspace.
 
-| DNS | Value |
-|-----|--------|
-| `tahti.live` MX | `10` → A record `91.154.165.175` (home gateway; must reach vimage6 `:25`) |
+| DNS               | Value                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `tahti.live` MX   | `10` → A record `91.154.165.175` (home gateway; must reach vimage6 `:25`)                                          |
 | `mail.tahti.live` | Used for **SMTP submission** (`:587`, TLS cert); often proxied — prefer hostname over LAN IP for relay from vimage |
-| SPF | `v=spf1 mx a:mail.tahti.live ~all` |
-| DKIM | selector `mail`, domain `tahti.live` (OpenDKIM on vimage6) |
+| SPF               | `v=spf1 mx a:mail.tahti.live ~all`                                                                                 |
+| DKIM              | selector `mail`, domain `tahti.live` (OpenDKIM on vimage6)                                                         |
 
 ### Mailboxes and aliases
 
@@ -156,12 +172,12 @@ docker exec vimage6-mailserver setup email list
 docker exec vimage6-mailserver setup alias list
 ```
 
-| Address | Role |
-|---------|------|
-| `jani@tahti.live` | Primary mailbox (IMAP) |
-| `hello@tahti.live` | Alias → `jani@tahti.live` (public contact) |
-| `support@tahti.live` | Alias → `jani@tahti.live` |
-| `hi@tahti.live` | Alias → `jani@tahti.live` |
+| Address              | Role                                           |
+| -------------------- | ---------------------------------------------- |
+| `jani@tahti.live`    | Primary mailbox (IMAP)                         |
+| `hello@tahti.live`   | Alias → `jani@tahti.live` (public contact)     |
+| `support@tahti.live` | Alias → `jani@tahti.live`                      |
+| `hi@tahti.live`      | Alias → `jani@tahti.live`                      |
 | `noreply@tahti.live` | SMTP auth user for lab stack relay from vimage |
 
 Add or refresh a public alias:
@@ -173,7 +189,6 @@ docker exec vimage6-mailserver setup alias add hello@tahti.live jani@tahti.live
 Persisted lines live in `~/infra/mail/config/postfix-virtual.cf` on vimage6 (also mirrored in [`ops/mail/tahti-aliases.example`](mail/tahti-aliases.example)).
 
 Beta application mail from the lab API uses **`support@tahti.live`** (hardcoded); ensure that alias exists.
-
 
 ## Related
 
