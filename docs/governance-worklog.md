@@ -22,7 +22,7 @@ binding electronic voting.
 - [x] Upload, approve, redact, sign, and publish minutes: upload/approve/sign, redact (a flag on the stored file, not partial-document redaction), and publish (distinct from internal sign-off) are all individually audited (`MINUTES_UPLOAD`/`MINUTES_APPROVE`/`MINUTES_SIGN`/`MINUTES_REDACT`/`MINUTES_PUBLISH`). Landed in #484, frontend wired in #487.
 - [ ] Maintain versioned bylaws and association documents.
 - [ ] Link decisions to meetings, agenda items, motions, and minutes.
-- [ ] Maintain board roles, terms, elections, conflicts, and recusals.
+- [~] Maintain board roles, terms, elections, conflicts, and recusals: conflict-of-interest declarations (`GovernanceConflictDeclaration`, with a `recused` flag) are modeled, routed, audited (`CONFLICT_DECLARE`), and tested per #487, but have no frontend UI yet. Board roles, terms, and elections remain unmodeled beyond the free-text `chairName`/`secretaryName` on `GovernanceMeeting`.
 - [ ] Approve, publish, correct, and archive yearly reports with filing status.
 
 ## Technical integrity
