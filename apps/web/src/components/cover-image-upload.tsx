@@ -9,7 +9,13 @@ type PrepareResult = { uploadUrl?: string; uploadKey?: string; error?: string | 
 type CompleteResult = { url?: string | null; error?: string | null }
 type FromUrlResult = { url?: string | null; error?: string | null }
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const DEFAULT_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+const MIME_LABELS: Record<string, string> = {
+  'image/jpeg': 'JPEG',
+  'image/png': 'PNG',
+  'image/webp': 'WebP',
+}
 
 /**
  * Unified cover-image upload widget: drag-and-drop, click-to-browse, or paste a URL
@@ -22,6 +28,7 @@ export function CoverImageUpload({
   complete,
   fromUrl,
   label = 'Cover image',
+  acceptedTypes = DEFAULT_ACCEPTED_TYPES,
 }: {
   currentUrl?: string | null
   onUploaded: (url: string | null) => void
@@ -29,6 +36,10 @@ export function CoverImageUpload({
   complete: (uploadKey: string) => Promise<CompleteResult>
   fromUrl?: (sourceUrl: string) => Promise<FromUrlResult>
   label?: string
+  /** Defaults to JPEG/PNG/WebP — narrow this when the endpoint requires alpha
+   * (e.g. PNG/WebP-only logo uploads), so the file picker matches what the
+   * server will actually accept instead of failing after the fact. */
+  acceptedTypes?: string[]
 }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,8 +51,11 @@ export function CoverImageUpload({
   async function onFile(file: File) {
     setError(null)
     const type = file.type || 'image/jpeg'
-    if (!ACCEPTED_TYPES.includes(type)) {
-      setError('Use JPEG, PNG, or WebP')
+    if (!acceptedTypes.includes(type)) {
+      const names = acceptedTypes.map((t) => MIME_LABELS[t] ?? t)
+      const list =
+        names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}` : names[0]
+      setError(`Use ${list}`)
       return
     }
     setUploading(true)
@@ -151,7 +165,7 @@ export function CoverImageUpload({
         <input
           ref={inputRef}
           type="file"
-          accept={ACCEPTED_TYPES.join(',')}
+          accept={acceptedTypes.join(',')}
           disabled={uploading}
           className="cover-upload__file-input"
           onChange={(e) => {

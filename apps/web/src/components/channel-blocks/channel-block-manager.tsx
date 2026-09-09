@@ -8,10 +8,13 @@ import { Button } from '@tahti/ui'
 import type { AddonInstallView, ChannelBlockView } from '@tahti/shared'
 import { listChannelAddonInstalls } from '@/app/dashboard/channel-addons-actions'
 import { unblockedAddonInstalls } from '@/lib/channel-block-summary'
+import { CoverImageUpload } from '@/components/cover-image-upload'
 import {
   addChannelBlock,
+  completeChannelBlockLogo,
   listChannelBlocks,
   patchChannelBlockAction,
+  prepareChannelBlockLogo,
   removeChannelBlock,
 } from '@/app/dashboard/channel/channel-blocks-actions'
 import { ChannelBlockList } from './channel-block-list'
@@ -41,9 +44,7 @@ export function ChannelBlockManager() {
     })()
   }, [])
 
-  async function handleAddLogo() {
-    const assetUrl = logoUrl.trim()
-    if (!assetUrl) return
+  async function addLogoBlock(assetUrl: string) {
     setError(null)
     setPendingId('add')
     const result = await addChannelBlock('LOGO', { assetUrl })
@@ -53,7 +54,18 @@ export function ChannelBlockManager() {
       return
     }
     setBlocks((prev) => [...(prev ?? []), result.block!])
+  }
+
+  async function handleAddLogo() {
+    const assetUrl = logoUrl.trim()
+    if (!assetUrl) return
+    await addLogoBlock(assetUrl)
     setLogoUrl('')
+  }
+
+  async function handleLogoUploaded(url: string | null) {
+    if (!url) return
+    await addLogoBlock(url)
   }
 
   async function handleAddAddon() {
@@ -134,11 +146,18 @@ export function ChannelBlockManager() {
 
       <div className="studio-mt-lg">
         <h3>Add a block</h3>
+        <CoverImageUpload
+          label="Logo image"
+          acceptedTypes={['image/png', 'image/webp']}
+          prepare={prepareChannelBlockLogo}
+          complete={(uploadKey) => completeChannelBlockLogo(uploadKey)}
+          onUploaded={(url) => void handleLogoUploaded(url)}
+        />
         <div className="studio-row studio-gap-sm studio-mt-sm" style={{ alignItems: 'center' }}>
           <input
             type="url"
             className="studio-input"
-            placeholder="Logo image URL"
+            placeholder="…or paste a logo image URL"
             value={logoUrl}
             onChange={(e) => setLogoUrl(e.target.value)}
           />

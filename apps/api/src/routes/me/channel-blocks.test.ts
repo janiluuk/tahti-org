@@ -197,4 +197,56 @@ describe('me/channel/blocks', () => {
     })
     expect(again.statusCode).toBe(404)
   })
+
+  it('POST logo/prepare requires auth', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks/logo/prepare',
+      payload: { filename: 'logo.png', contentType: 'image/png' },
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('POST logo/prepare returns a presigned upload URL scoped to the artist, PNG/WebP only', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks/logo/prepare',
+      headers: { cookie },
+      payload: { filename: 'logo.png', contentType: 'image/png' },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { uploadKey: string; uploadUrl: string }
+    expect(body.uploadKey).toContain(`channel-blocks/${PREFIX}artist/logo-`)
+    expect(body.uploadUrl).toMatch(/^https?:\/\//)
+
+    const rejected = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks/logo/prepare',
+      headers: { cookie },
+      payload: { filename: 'logo.jpg', contentType: 'image/jpeg' },
+    })
+    expect(rejected.statusCode).toBe(400)
+  })
+
+  it('POST logo/complete rejects an upload key belonging to a different account', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks/logo/complete',
+      headers: { cookie },
+      payload: { uploadKey: 'channel-blocks/someone-else/logo-x.png' },
+    })
+    expect(res.statusCode).toBe(403)
+  })
+
+  it('POST logo/complete resolves an owned upload key to a public URL, with no DB write', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks/logo/complete',
+      headers: { cookie },
+      payload: { uploadKey: `channel-blocks/${PREFIX}artist/logo-abc123.png` },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { url: string }
+    expect(body.url).toContain(`channel-blocks/${PREFIX}artist/logo-abc123.png`)
+  })
 })

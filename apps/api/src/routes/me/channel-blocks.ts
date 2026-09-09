@@ -8,16 +8,25 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { Prisma } from '@tahti/db'
+import { nanoid } from 'nanoid'
 import {
   ChannelBlockIdParamSchema,
   ChannelBlockListSchema,
   ChannelBlockViewSchema,
   CreateChannelBlockSchema,
+  ImageUploadCompleteResponseSchema,
+  ImageUploadCompleteSchema,
+  ImageUploadPrepareResponseSchema,
+  LogoUploadPrepareSchema,
   PatchChannelBlockSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireArtist } from '../../plugins/auth.js'
+import { presignedPutUrl } from '../../lib/minio.js'
+import { publicMediaUrl } from '../../lib/public-media-url.js'
+
+const PRESIGN_TTL_SEC = 900
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -121,6 +130,59 @@ const meChannelBlocksRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (count === 0) return reply.status(404).send({ error: 'Block not found' })
       return reply.status(204).send()
+    },
+  )
+
+  // LOGO block image upload — same presigned-PUT flow as the avatar/profile-logo
+  // pipeline (routes/me/avatar.ts), PNG/WebP only so alpha is preserved, but its
+  // own `channel-blocks/` key space since a block's logo is a distinct asset from
+  // the User.logoUrl overlay stamp. complete() only resolves uploadKey -> a public
+  // URL (no DB write) — the caller persists it via POST/PATCH .../blocks with
+  // configJson: { assetUrl }, same as the manual-URL path already supported.
+  fastify.post(
+    '/api/me/channel/blocks/logo/prepare',
+    {
+      preHandler: requireArtist,
+      schema: {
+        tags: ['channel-blocks'],
+        response: openApiResponse(ImageUploadPrepareResponseSchema, 'ChannelBlockLogoUploadPrepare'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = LogoUploadPrepareSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const ext = parsed.data.contentType === 'image/webp' ? 'webp' : 'png'
+      const uploadKey = `channel-blocks/${request.sessionUser!.username}/logo-${nanoid(8)}.${ext}`
+      const uploadUrl = await presignedPutUrl(uploadKey, parsed.data.contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+
+      return reply.send({ uploadKey, uploadUrl, expiresAt })
+    },
+  )
+
+  fastify.post(
+    '/api/me/channel/blocks/logo/complete',
+    {
+      preHandler: requireArtist,
+      schema: {
+        tags: ['channel-blocks'],
+        response: openApiResponse(ImageUploadCompleteResponseSchema, 'ChannelBlockLogoUploadComplete'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ImageUploadCompleteSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const prefix = `channel-blocks/${request.sessionUser!.username}/`
+      if (!parsed.data.uploadKey.startsWith(prefix)) {
+        return reply.status(403).send({ error: 'Upload does not belong to this account' })
+      }
+
+      const url = publicMediaUrl(parsed.data.uploadKey)
+      if (!url) return reply.status(500).send({ error: 'Failed to resolve logo URL' })
+
+      return reply.send({ url })
     },
   )
 }

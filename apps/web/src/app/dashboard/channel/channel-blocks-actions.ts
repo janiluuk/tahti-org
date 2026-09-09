@@ -4,10 +4,12 @@
 'use server'
 
 import {
+  completeChannelBlockLogoUpload,
   createChannelBlock,
   deleteChannelBlock,
   fetchChannelBlocks,
   patchChannelBlock,
+  prepareChannelBlockLogoUpload,
 } from '@/lib/channel-blocks-client'
 
 export async function listChannelBlocks() {
@@ -31,4 +33,12 @@ export async function patchChannelBlockAction(
 
 export async function removeChannelBlock(id: string) {
   return deleteChannelBlock(id)
+}
+
+export async function prepareChannelBlockLogo(body: { filename: string; contentType: string }) {
+  return prepareChannelBlockLogoUpload(body)
+}
+
+export async function completeChannelBlockLogo(uploadKey: string) {
+  return completeChannelBlockLogoUpload(uploadKey)
 }

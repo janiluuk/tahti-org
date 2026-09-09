@@ -321,7 +321,36 @@ rest of this session's work.
       `me/channel-blocks.test.ts` (8), `channels/blocks.test.ts` (4), plus
       7 pre-existing `channels/*` suites — 59/59 passing together; `apps/web`
       typecheck/lint green and a full `next build` succeeds with zero errors.
-  - Remaining: phase 5 (logo upload + size-variant pipeline, reuse the
-    existing avatar/cover pipeline — the editor's logo-URL text input from
-    phase 3 stays as a fallback/manual-override path once that lands, not
-    something to delete).
+  - **Phase 5 (logo upload) — done.** Reused the existing presigned-PUT
+    pipeline (same mechanism as the avatar/profile-logo uploader in
+    `routes/me/avatar.ts`, confirmed to be the actual "avatar/cover
+    pipeline" — there is no server-side image-resizing anywhere in this
+    codebase, so no size-variant step was needed; block widths are CSS
+    flex-basis on one asset, not multiple resolutions). New
+    `POST /api/me/channel/blocks/logo/prepare` and `/logo/complete` in
+    `apps/api/src/routes/me/channel-blocks.ts`, `requireArtist`-gated, own
+    `channel-blocks/<username>/logo-*` key space (kept separate from
+    `User.logoUrl`'s `avatars/` prefix since it's a distinct asset,
+    not the overlay stamp). Reused existing generic DTOs
+    (`LogoUploadPrepareSchema` for PNG/WebP-only content-type validation,
+    `ImageUploadCompleteSchema`/`ImageUploadCompleteResponseSchema` for the
+    stateless uploadKey→URL resolve — `complete` makes no DB write, since
+    persistence happens through the existing block create/patch endpoint
+    the same way the manual-URL path already worked) — no new shared
+    schemas needed. `apps/web`: `ChannelBlockManager` now renders
+    `CoverImageUpload` (drag/drop/click) above the manual URL input, which
+    stays as the fallback/manual-override path per the original plan.
+    `CoverImageUpload` gained an `acceptedTypes` prop (was a hardcoded
+    JPEG/PNG/WebP list) so its file picker and the PNG/WebP-only endpoint
+    agree, instead of the client accepting JPEG only to fail server-side.
+    Verified: `apps/api`/`apps/web`/`packages/shared`/`packages/api-client`
+    typecheck green, `apps/api` lint clean, `apps/web` lint clean (only
+    pre-existing unrelated warnings), full `apps/api` test suite 1079/1082
+    passing (3 pre-existing skips, none related) including 4 new
+    `channel-blocks.test.ts` cases (auth-required, prepare scoped to
+    artist + content-type rejection, complete rejects cross-account key,
+    complete resolves an owned key with no DB write) — **against a real
+    local Postgres**, `packages/api-client` schema regenerated via
+    `pnpm --filter @tahti/api-client generate`, full `next build` succeeds
+    with zero errors.
+  - All five phases of Workstream B.1 are now done.

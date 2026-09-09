@@ -76,3 +76,24 @@ export async function patchChannelBlock(
 export async function deleteChannelBlock(id: string): Promise<{ error: string | null }> {
   return request(`${BLOCKS_PATH}/${id}`, { method: 'DELETE' })
 }
+
+export async function prepareChannelBlockLogoUpload(body: {
+  filename: string
+  contentType: string
+}): Promise<{ error: string | null; uploadKey?: string; uploadUrl?: string }> {
+  const result = await request<{ uploadKey: string; uploadUrl: string }>(`${BLOCKS_PATH}/logo/prepare`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return { error: result.error, uploadKey: result.data?.uploadKey, uploadUrl: result.data?.uploadUrl }
+}
+
+export async function completeChannelBlockLogoUpload(
+  uploadKey: string,
+): Promise<{ error: string | null; url?: string | null }> {
+  const result = await request<{ url: string | null }>(`${BLOCKS_PATH}/logo/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ uploadKey }),
+  })
+  return { error: result.error, url: result.data?.url }
+}
