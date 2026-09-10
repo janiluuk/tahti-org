@@ -61,20 +61,24 @@ describe('M21-A — admin stats API', () => {
     expect(body.total).toBeGreaterThanOrEqual(1)
   })
 
-  it('GET /api/admin/stats/mail returns hello/support counts (zeros when prometheus is down)', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/admin/stats/mail',
-      headers: { cookie: boardCookie },
-    })
-    expect(res.statusCode).toBe(200)
-    const body = res.json() as {
-      hello: { unseen: number; total: number }
-      support: { unseen: number; total: number }
-    }
-    expect(body.hello.unseen).toBeGreaterThanOrEqual(0)
-    expect(body.support.unseen).toBeGreaterThanOrEqual(0)
-  })
+  it(
+    'GET /api/admin/stats/mail returns hello/support counts (zeros when prometheus is down)',
+    { timeout: 15000 },
+    async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/admin/stats/mail',
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as {
+        hello: { unseen: number; total: number }
+        support: { unseen: number; total: number }
+      }
+      expect(body.hello.unseen).toBeGreaterThanOrEqual(0)
+      expect(body.support.unseen).toBeGreaterThanOrEqual(0)
+    },
+  )
 
   it('GET /api/admin/stats/mail rejects non-board users', async () => {
     const res = await app.inject({

@@ -280,8 +280,11 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
 
 async function queryPromMailboxCounts(metric: string): Promise<Map<string, number>> {
   const counts = new Map<string, number>()
+  // Short timeout: CI runners blackhole the vimage6 LAN address, so a hung
+  // SYN would otherwise eat the whole vitest 5s test budget (fail-open
+  // must stay fast as well as safe).
   const res = await fetch(`${config.promUrl}/api/v1/query?query=${metric}`, {
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(2500),
   })
   if (!res.ok) throw new Error(`prometheus query ${metric}: HTTP ${res.status}`)
   const body = (await res.json()) as {
