@@ -79,7 +79,7 @@ jobs:
         run: pnpm format:check
 
   typecheck:
-    name: Typecheck + SDK drift
+    name: Typecheck
     needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -137,24 +137,15 @@ jobs:
       - name: Push DB schema (test database)
         run: pnpm --filter @tahti/db db:migrate:test
 
-      - name: Typecheck (tsc --noEmit)
-        run: pnpm typecheck
-
-      # SDK drift check — folded from the former api-client-sdk-drift job to
-      # avoid spinning up a second Postgres + Redis + pnpm install (~3 min saved).
-      # export-openapi.ts builds the real Fastify app, which constructs a
-      # BullMQ QueueEvents (eager Redis) and needs Prisma — same infra as
-      # typecheck, so this is free once we're here.
+      # schema.d.ts is generated, never committed — build it before anything
+      # that typechecks @tahti/api-client. export-openapi.ts builds the real
+      # Fastify app, which constructs a BullMQ QueueEvents (eager Redis) and
+      # needs Prisma — same infra as typecheck, so this is free once we're here.
       - name: Regenerate SDK types
         run: pnpm --filter @tahti/api-client generate
 
-      - name: Fail if schema.d.ts is out of date
-        run: |
-          if ! git diff --quiet -- packages/api-client/src/schema.d.ts; then
-            echo "::error::packages/api-client/src/schema.d.ts is stale. Run 'pnpm --filter @tahti/api-client generate' and commit the result."
-            git diff -- packages/api-client/src/schema.d.ts | head -100
-            exit 1
-          fi
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm typecheck
 
   test:
     name: Unit + integration tests

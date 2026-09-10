@@ -65,6 +65,12 @@ import {
 } from '@/lib/audio-editor/ffmpeg-client'
 import { loadPeaksCache, savePeaksCache } from '@/lib/audio-editor/peaks-cache'
 import {
+  formatDuration,
+  formatDurationDecimal,
+  formatRelativeSave,
+} from '@/lib/audio-editor/format'
+import { v2ToV1 } from '@/lib/audio-editor/edit-list-convert'
+import {
   attachPreviewGraph,
   createPreviewSource,
   readPeakLevel,
@@ -86,87 +92,8 @@ const MINIMAP_HEIGHT = 38
 type EditorTab = 'waveform' | 'tracklist'
 type ToolId = 'select' | 'cut' | 'fade' | 'marker'
 
-/** Convert EditListV2 → EditList v1 for audio pipeline boundaries. */
-function v2ToV1(v2: EditListV2): EditList {
-  const gainP = v2.plugins.find((p) => p.pluginId === 'gain')
-  const eqP = v2.plugins.find((p) => p.pluginId === 'eq')
-  const compP = v2.plugins.find((p) => p.pluginId === 'comp')
-  const limP = v2.plugins.find((p) => p.pluginId === 'limiter')
-  const filterP = v2.plugins.find((p) => p.pluginId === 'filter')
-  const gp = gainP?.params as GainParams | undefined
-  const ep = eqP?.params as EqParams | undefined
-  const cp = compP?.params as CompParams | undefined
-  const lp = limP?.params as LimiterParams | undefined
-  const fp = filterP?.params as FilterParams | undefined
-  return {
-    version: 1 as const,
-    sourceDuration: v2.sourceDuration,
-    gainDb: gp?.db ?? 0,
-    highPassHz: 0,
-    lowPassHz: 0,
-    loudnorm: {
-      enabled: gainP?.enabled !== false && (gp?.normalize.enabled ?? false),
-      targetLufs: gp?.normalize.targetLufs ?? -14,
-      targetTp: gp?.normalize.targetTp ?? -1.5,
-      measured: gp?.measured,
-    },
-    eq: {
-      enabled: eqP?.enabled ?? false,
-      bands: (ep?.bands ?? DEFAULT_EQ_PARAMS.bands).map((b) => ({
-        freq: b.freq,
-        gainDb: b.gainDb,
-        q: b.q,
-      })),
-    },
-    comp: {
-      enabled: compP?.enabled ?? false,
-      thresholdDb: cp?.thresholdDb ?? DEFAULT_COMP_PARAMS.thresholdDb,
-      ratio: cp?.ratio ?? DEFAULT_COMP_PARAMS.ratio,
-      attackMs: cp?.attackMs ?? DEFAULT_COMP_PARAMS.attackMs,
-      releaseMs: cp?.releaseMs ?? DEFAULT_COMP_PARAMS.releaseMs,
-      makeupDb: cp?.makeupDb ?? DEFAULT_COMP_PARAMS.makeupDb,
-    },
-    limiter: {
-      enabled: limP?.enabled ?? false,
-      ceilingDb: lp?.ceilingDb ?? DEFAULT_LIMITER_PARAMS.ceilingDb,
-      releaseMs: lp?.releaseMs ?? DEFAULT_LIMITER_PARAMS.releaseMs,
-    },
-    filter: {
-      enabled: filterP?.enabled ?? false,
-      mode: fp?.mode ?? DEFAULT_FILTER_PARAMS.mode,
-      freq: fp?.freq ?? DEFAULT_FILTER_PARAMS.freq,
-      slope: fp?.slope ?? DEFAULT_FILTER_PARAMS.slope,
-    },
-    cuts: v2.cuts.map((c) => ({ start: c.start, end: c.end })),
-    fades: v2.fades.map((f) => ({ type: f.type, at: f.at, duration: f.duration, curve: f.curve })),
-  }
-}
-
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
-}
-
-function formatRelativeSave(ts: number): string {
-  const sec = Math.floor((Date.now() - ts) / 1000)
-  if (sec < 12) return 'just now'
-  if (sec < 60) return `${sec}s ago`
-  const min = Math.floor(sec / 60)
-  if (min < 60) return `${min}m ago`
-  return new Date(ts).toLocaleTimeString()
-}
-
-function formatDuration(sec: number): string {
-  if (!Number.isFinite(sec) || sec < 0) sec = 0
-  const m = Math.floor(sec / 60)
-  const s = Math.floor(sec % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
-function formatDurationDecimal(sec: number): string {
-  if (!Number.isFinite(sec) || sec < 0) sec = 0
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return `${m}:${s.toFixed(1).padStart(4, '0')}`
 }
 
 function Switch({

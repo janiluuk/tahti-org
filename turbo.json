@@ -35,6 +35,9 @@
     },
     "@tahti/web#typecheck": {
       "dependsOn": ["^build", "@tahti/api-client#generate"]
+    },
+    "@tahti/api-client#typecheck": {
+      "dependsOn": ["generate"]
     }
   }
 }

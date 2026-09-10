@@ -153,6 +153,37 @@ describe('GET /api/v1/u/:username/profile', () => {
     const track = body.tracks.find((t) => t.id === item.id)
     expect(track?.releaseSlug).toBe(release.smartLinkSlug)
   })
+
+  it('nulls playUrl with a gate for subscriber-only tracks viewed anonymously', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: 'public-profile-artist' },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    const item = await createReadySound(prisma, artist.channel!.id, 'Gated track')
+    await prisma.sound.update({
+      where: { id: item.id },
+      data: { accessMode: 'SUBSCRIBERS_ONLY' },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-artist/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      tracks: Array<{
+        id: string
+        playUrl: string | null
+        accessMode: string
+        gate: { reason: string } | null
+      }>
+    }
+    const track = body.tracks.find((t) => t.id === item.id)
+    expect(track).toBeTruthy()
+    expect(track!.accessMode).toBe('SUBSCRIBERS_ONLY')
+    expect(track!.playUrl).toBeNull()
+    expect(track!.gate?.reason).toBe('SUBSCRIBERS_ONLY')
+  })
 })
 
 describe('GET /api/v1/u/:username/news', () => {
