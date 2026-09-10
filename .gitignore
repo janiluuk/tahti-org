@@ -27,6 +27,10 @@ dist/
 /openapi.json
 /openapi.public.json
 
+# Generated API SDK types (regenerate via `pnpm --filter @tahti/api-client generate`;
+# CI regenerates before typecheck/test — do not commit)
+packages/api-client/src/schema.d.ts
+
 # Large media — marketing hero assets are tracked under website/
 *.mp4
 !website/output_vhs.mp4

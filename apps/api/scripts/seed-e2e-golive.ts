@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '@tahti/db'
-import { hashPassword } from '../src/lib/password.js'
+import { buildSeedChannelData, buildSeedUserData } from './seed-e2e-helpers.js'
 
 export const E2E_PASS = 'e2e-golive-pass'
 
@@ -29,33 +29,27 @@ async function main() {
     include: { channel: true },
   })
 
-  const rtmpStreamKeyHash = await hashPassword(RTMP_STREAM_KEY)
-  const channelData = {
-    slug: GOLIVE_ARTIST.username,
-    liveSourceMount: `/live/${GOLIVE_ARTIST.username}`,
-    liveSourcePass: `${GOLIVE_ARTIST.username}-pass`,
-    liveSourcePassHash: await hashPassword(`${GOLIVE_ARTIST.username}-pass`),
+  const channelData = await buildSeedChannelData(GOLIVE_ARTIST.username, {
     rtmpStreamKey: RTMP_STREAM_KEY,
-    rtmpStreamKeyHash,
-    state: 'OFFLINE' as const,
-    goneLiveAt: null,
-  }
+    liveSourcePass: `${GOLIVE_ARTIST.username}-pass`,
+  })
+  // Channel state is journey state, not seed identity — always reset.
+  const channelState = { state: 'OFFLINE' as const, goneLiveAt: null }
 
   if (existing?.channel) {
-    await prisma.channel.update({ where: { id: existing.channel.id }, data: channelData })
+    await prisma.channel.update({
+      where: { id: existing.channel.id },
+      data: { ...channelData, ...channelState },
+    })
   } else if (existing) {
-    await prisma.channel.create({ data: { ...channelData, userId: existing.id } })
+    await prisma.channel.create({ data: { ...channelData, ...channelState, userId: existing.id } })
   } else {
     await prisma.user.create({
       data: {
-        email: GOLIVE_ARTIST.email,
-        passwordHash: await hashPassword(E2E_PASS),
-        username: GOLIVE_ARTIST.username,
-        displayName: GOLIVE_ARTIST.displayName,
-        emailVerifiedAt: new Date(),
+        ...(await buildSeedUserData(GOLIVE_ARTIST, E2E_PASS)),
         tier: 'FREE',
         membership: { create: { status: 'PENDING_PAYMENT' } },
-        channel: { create: channelData },
+        channel: { create: { ...channelData, ...channelState } },
       },
     })
   }

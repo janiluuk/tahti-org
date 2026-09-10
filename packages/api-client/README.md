@@ -58,9 +58,9 @@ This exports a fresh `openapi.json` from apps/api's live route graph (no server
 needs to be running — see `apps/api/scripts/export-openapi.ts`) and feeds it to
 `openapi-typescript`. turbo also runs this automatically before apps/web's
 `dev`/`build`/`typecheck` (see the root `turbo.json` — this package's `generate`
-task is keyed on apps/api's route/schema/plugin sources), and CI fails the build
-if the committed `schema.d.ts` drifts from what a fresh generate produces — see
-`.github/workflows/ci.yml`'s `api-client-sdk-drift` job.
+task is keyed on apps/api's route/schema/plugin sources), and CI regenerates it
+before typecheck (see `.github/workflows/ci.yml`). The file is gitignored —
+never commit it, never edit it directly.
 
 ### Versioning
 
@@ -73,8 +73,8 @@ this package's does, since apps/web and any external consumer depend on it):
   a scope requirement changes.
 - **major** — an endpoint is removed or its auth model changes.
 
-Bump `version` in `package.json` and add an entry to `CHANGELOG.md` in the same
-commit as the regenerated `schema.d.ts`.
+Bump `version` in `package.json` and add an entry to `CHANGELOG.md` alongside
+the route change (the regenerated `schema.d.ts` itself is gitignored).
 
 ## Testing
 

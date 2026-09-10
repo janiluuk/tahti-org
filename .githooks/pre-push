@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Mirrors two CI checks locally so pushes don't bounce off "Lint & format" /
-# "Typecheck + SDK drift" for something fixable in one command.
+# "Typecheck" for something fixable in one command.
 set -uo pipefail
 
 echo "[pre-push] Checking Prettier formatting..."
@@ -14,17 +14,11 @@ fi
 
 changed_files=$(git diff --name-only @{push} HEAD 2>/dev/null || git diff --name-only origin/main...HEAD 2>/dev/null)
 if echo "$changed_files" | grep -qE '^(apps/api/|packages/api-client/)'; then
-  echo "[pre-push] apps/api or packages/api-client changed — checking generated schema.d.ts is fresh..."
+  echo "[pre-push] apps/api or packages/api-client changed — verifying schema.d.ts regenerates..."
   if ! pnpm --filter @tahti/api-client generate >/tmp/tahti-pre-push-schema.log 2>&1; then
     echo
     echo "❌ 'pnpm --filter @tahti/api-client generate' failed:"
     tail -n 30 /tmp/tahti-pre-push-schema.log
-    exit 1
-  fi
-  if ! git diff --quiet -- packages/api-client/src/schema.d.ts; then
-    echo
-    echo "❌ packages/api-client/src/schema.d.ts was stale and has now been regenerated."
-    echo "   Review the diff, then: git add packages/api-client/src/schema.d.ts && git commit --amend --no-edit (or a new commit)"
     exit 1
   fi
 fi

@@ -11,7 +11,7 @@
  */
 
 import { prisma } from '@tahti/db'
-import { hashPassword } from '../src/lib/password.js'
+import { buildSeedChannelData, buildSeedUserData } from './seed-e2e-helpers.js'
 
 export const E2E_SOCIAL_PASS = 'e2e-social-pass'
 
@@ -34,8 +34,6 @@ export const FRIEND_B = {
 const ALL = [MAIN, FRIEND_A, FRIEND_B]
 
 async function main() {
-  const passwordHash = await hashPassword(E2E_SOCIAL_PASS)
-
   // Idempotent: wipe any prior run's rows before recreating.
   for (const { email } of ALL) {
     const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } })
@@ -45,24 +43,10 @@ async function main() {
   for (const account of ALL) {
     await prisma.user.create({
       data: {
-        email: account.email,
-        passwordHash,
-        username: account.username,
-        displayName: account.displayName,
-        emailVerifiedAt: new Date(),
+        ...(await buildSeedUserData(account, E2E_SOCIAL_PASS)),
         tier: 'FREE',
         isMember: false,
-        channel: {
-          create: {
-            slug: account.username,
-            liveSourceMount: `/live/${account.username}`,
-            liveSourcePass: `pass-${account.username}`,
-            liveSourcePassHash: await hashPassword(`pass-${account.username}`),
-            rtmpStreamKey: `${account.username}__e2e`,
-            rtmpStreamKeyHash: await hashPassword(`${account.username}__e2e`),
-            state: 'OFFLINE',
-          },
-        },
+        channel: { create: await buildSeedChannelData(account.username) },
       },
     })
   }
