@@ -681,6 +681,22 @@ Artists should import audio from their own cloud storage without downloading to 
 
 **Out of scope for v1:** writing back to Drive, shared-drive team folders, Google Workspace admin install.
 
+### Player loading states + channel autoplay (PLAT-085–086)
+
+Requested 2026-09-11. Two listener-facing player gaps: no loading feedback while a
+track or the live stream is buffering, and channels never start playing on their
+own — a listener has to click play even when they landed specifically to hear
+what's live right now.
+
+| Status | ID           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |  Size  | Priority |
+| :----: | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | :------: |
+|  [ ]   | **PLAT-085** | **Loading animation for player + queue items** — `mini-player.tsx` already shows a spinner (`mini-player__spinner`) on the main play button while `buffering` is true, but individual `QueueThumb` items and the expanded full-player view have no loading indication of their own. Add a per-item loading/skeleton state to `QueueThumb` (history + up-next columns) while a queued track's metadata/artwork is resolving, and extend the buffering indicator to the full-player transport controls, not just the mini bar.                                                                                                                                                                                                  | Medium |    P2    |
+|  [ ]   | **PLAT-086** | **Channel autoplay, configurable per channel** — New channel setting (surfaced in `channel-controls-panel.tsx`), default **on**, persisted alongside existing channel visual/playback settings. On landing on a channel page with autoplay enabled: if the listener had nothing playing before, start the channel **muted** (browser autoplay policies block unmuted audio without a prior gesture anyway); if something else was already playing, cross-fade — fade out the current track/stream while fading in the channel — instead of a hard cut. Needs a fade helper in the player context (`player-context.tsx`) shared with any future cross-fade use, and an explicit user unmute action once autoplay starts muted. | Medium |    P2    |
+
+**Open questions before implementation:** exact fade duration/curve, and whether
+the "nothing playing before" check should also cover a fully-elapsed queue
+(finished, not just never-started).
+
 ### Security, UX & performance audit (2026-06-05)
 
 Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items marked `[x]` were implemented in the same sprint; others remain backlog.

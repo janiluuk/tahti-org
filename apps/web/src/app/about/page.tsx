@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { Breadcrumb } from '@tahti/ui'
 import '@tahti/ui/src/styles/about-page.css'
 import channelImg from '/public/screenshots/channel.png'
@@ -11,6 +10,8 @@ import listenImg from '/public/screenshots/listen.png'
 import profileImg from '/public/screenshots/profile.png'
 import statsImg from '/public/screenshots/stats.png'
 import { AboutArtistCtas } from './_about-artist-ctas'
+import { AboutShowcase } from './_about-showcase'
+import { AboutHero } from './_about-hero'
 
 export const metadata: Metadata = {
   title: 'About Tahti',
@@ -18,90 +19,12 @@ export const metadata: Metadata = {
     'Tahti is a home for music and live shows: a nonprofit broadcasting platform with a real release system, direct fan support, and artist governance.',
 }
 
-function Showcase({
-  url,
-  img,
-  alt,
-  eyeline,
-  title,
-  children,
-  reverse,
-}: {
-  url: string
-  img: typeof channelImg
-  alt: string
-  eyeline: string
-  title: string
-  children: string
-  reverse?: boolean
-}) {
-  return (
-    <div className={`about-showcase${reverse ? ' about-showcase--reverse' : ''}`}>
-      <div className="about-showcase-text">
-        <div className="about-eyeline">{eyeline}</div>
-        <h2>{title}</h2>
-        <p>{children}</p>
-      </div>
-      <div className="about-showcase-frame">
-        <div className="about-showcase-chrome">
-          <span className="about-showcase-dot" aria-hidden />
-          <span className="about-showcase-dot" aria-hidden />
-          <span className="about-showcase-dot" aria-hidden />
-          <span className="about-showcase-url">{url}</span>
-        </div>
-        <Image src={img} alt={alt} />
-      </div>
-    </div>
-  )
-}
-
 export default async function AboutPage() {
   return (
     <div className="about-page">
       <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'About' }]} />
 
-      <header className="about-hero">
-        <div>
-          <div className="about-eyebrow">About tahti.live</div>
-          <h1>A home for your music, and your live shows.</h1>
-          <p className="about-lede">
-            We built Tahti on one belief: artists should spend their time making art. So we automate
-            the tedious, mechanical work drawn from two decades in streaming, and leave you free to
-            do what you are actually good at.
-          </p>
-          <div className="about-callouts">
-            <div className="about-callout">
-              <div className="about-label">Release system</div>
-              <div className="about-value">
-                A real discography, publishing workflow, and distribution path.
-              </div>
-            </div>
-            <div className="about-callout">
-              <div className="about-label">Broadcast platform</div>
-              <div className="about-value">
-                A proper live stack for performers, DJs, podcasters, and collectives.
-              </div>
-            </div>
-            <div className="about-callout">
-              <div className="about-label">Quality</div>
-              <div className="about-value">
-                Lossless sound for listeners, without turning it into a premium paywall.
-              </div>
-            </div>
-          </div>
-          <div className="about-cta-row">
-            <AboutArtistCtas />
-          </div>
-        </div>
-        <aside className="about-hero-card">
-          <div className="about-k">Time back for your art</div>
-          <div className="about-v">
-            We handle the busywork: metadata, numbering, delivery, platform reach, and the rest of
-            the mechanical load.
-          </div>
-          <p>You make the music. We take care of the rest.</p>
-        </aside>
-      </header>
+      <AboutHero />
 
       <section className="about-section" id="what">
         <div className="about-section-head">
@@ -169,7 +92,7 @@ export default async function AboutPage() {
         <div className="about-quote">The music never stops because someone clicked a menu.</div>
       </section>
 
-      <Showcase
+      <AboutShowcase
         url="tahti.live/c/your-channel"
         img={channelImg}
         alt="Channel page — live broadcast, archive, and chat"
@@ -179,7 +102,7 @@ export default async function AboutPage() {
       >
         Listeners land on one page for everything: the live player when you are on air, your archive
         the rest of the time, and chat running alongside either way.
-      </Showcase>
+      </AboutShowcase>
 
       <section className="about-section" id="listeners">
         <div className="about-section-head">
@@ -207,7 +130,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Showcase
+      <AboutShowcase
         url="tahti.live/listen"
         img={listenImg}
         alt="Discover page — live channels, replays, and new releases"
@@ -216,7 +139,7 @@ export default async function AboutPage() {
       >
         Live channels, recent replays, and new releases from across Tahti, without an algorithm
         deciding what you are allowed to see.
-      </Showcase>
+      </AboutShowcase>
 
       <section className="about-section" id="for">
         <div className="about-section-head">
@@ -376,7 +299,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Showcase
+      <AboutShowcase
         url="tahti.live/dashboard"
         img={dashboardImg}
         alt="Artist dashboard — broadcast, library, releases, stats"
@@ -386,7 +309,7 @@ export default async function AboutPage() {
       >
         Go live, manage the library, cut releases, watch stats, and design the channel — the control
         room, not a scattered set of settings pages.
-      </Showcase>
+      </AboutShowcase>
 
       <section className="about-section" id="space">
         <div className="about-section-head">
@@ -412,7 +335,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Showcase
+      <AboutShowcase
         url="your-name.tahti.live"
         img={profileImg}
         alt="Public artist profile — bio, music, releases"
@@ -421,7 +344,7 @@ export default async function AboutPage() {
       >
         Bio, releases, and archive on a name that&apos;s yours, not a profile competing for
         attention against a feed of everyone else on the platform.
-      </Showcase>
+      </AboutShowcase>
 
       <section className="about-section" id="support">
         <div className="about-section-head">
@@ -524,7 +447,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Showcase
+      <AboutShowcase
         url="tahti.live/dashboard/stats"
         img={statsImg}
         alt="Artist stats — plays, downloads, and grant estimate"
@@ -534,7 +457,7 @@ export default async function AboutPage() {
       >
         No listener-hours as a vanity headline. Just the engagement units that actually feed the
         annual grant formula, visible to you as they accrue.
-      </Showcase>
+      </AboutShowcase>
 
       <section className="about-section" id="mixes">
         <div className="about-section-head">
