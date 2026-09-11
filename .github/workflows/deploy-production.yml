@@ -124,7 +124,13 @@ jobs:
           repository: janiluuk/tahti-radio-discord-bot
           path: tahti-radio-discord-bot
 
+      # actions/checkout above puts the repo under tahti/, not $GITHUB_WORKSPACE
+      # root, so pnpm/action-setup can't auto-detect the packageManager field
+      # from tahti/package.json — pin the version explicitly (matches
+      # packageManager: pnpm@9.0.0 and every Dockerfile's corepack prepare).
       - uses: pnpm/action-setup@v5
+        with:
+          version: 9
 
       - uses: actions/setup-node@v7
         with:
