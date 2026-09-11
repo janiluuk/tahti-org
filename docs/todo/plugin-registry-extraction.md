@@ -1,8 +1,9 @@
 # Plugin registry extraction — inventory + interface (non-breaking prep)
 
 **Status:** §5.1/§5.2 adapter shipped (2026-09-07) in `../tahti-player` —
-`pluginRegistryContract.ts` + `pluginRegistryAdapter.ts`, additive only
-(callers have **not** been migrated to it yet — see §5.4, still to do).
+`pluginRegistryContract.ts` + `pluginRegistryAdapter.ts`, additive only.
+Core callers were migrated to the adapter in player PR #46; ownership and
+final extraction approval remain open.
 **2026-09-08:** the §5 `PluginRegistryHost` half also now has an
 implementation — `pluginRegistryHost.ts`, a façade composing
 `pluginBootstrap`/`pluginStore`/`pluginAutoUpdate` behind the interface
@@ -37,7 +38,7 @@ accordingly.
 - [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [§5](#5-minimal-compatibility-interface-and-adapter-plan)
 - [x] Implement the §5.1/§5.2 contract module + adapter (additive, callers not yet migrated).
 - [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. Store-layer and host-layer suites in `../tahti-player` cover the registry contract, including install cleanup, enable/disable, dev reload, update checks, hydration ordering, warnings, and orphan removal. The exhaustive per-scenario matrix remains covered against the underlying functions directly because the host façade is a thin pass-through.
-- [ ] Migrate callers to the adapter (§5.4) — not started; `pluginBootstrap.ts`/`pluginStore.tsx`/`pluginAutoUpdate.ts`/`useInstallPlugin.ts` still import `pluginRegistry.ts` directly.
+- [x] Migrate callers to the adapter (§5.4) — `pluginBootstrap.ts`, `pluginStore.tsx`, `pluginAutoUpdate.ts`, and `useInstallPlugin.ts` now use `pluginRegistryStore` (player PR #46).
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
 
