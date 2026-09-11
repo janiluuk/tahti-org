@@ -44,10 +44,15 @@ Break oversized modules into focused files without behavior changes.
 - `sound-editor.ts` aggregator → draft / source / render / publish + helpers
 - `_collection-editor-utils.ts` (`formatDuration`, `itemTitle`, `itemThumb`, `toPlayerTrack`)
 
+### Slice 7 — five leftovers
+
+1. **T1** `use-waveform-canvas.ts` — canvas/redraw/view helpers (**1523 → 1288** with T5)
+2. **T2** `use-player-load.ts` + `use-player-queue.ts` (**687 → 448**)
+3. **T3** `_collection-track-row.tsx` + `_collection-editor-settings.tsx` (**1004 → 696**)
+4. **T4** channel gallery/text/visual/overlay register in `studio.ts`; `sound.ts` is sound-only
+5. **T5** `pro-audio-editor-toolbar.tsx`
+
 ## Leftovers
 
-- Further split `pro-audio-editor.tsx` (~1.5k) — canvas/redraw / transport UI
-- Further thin `player-context.tsx` (~687) — `load` / queue body
-- `_collection-editor.tsx` (~1.0k) — still large UI surface
-- Optionally move channel-* plugins out of `meSoundRoutes` registration into
-  `register-routes/studio.ts` for clearer ownership (behavior-neutral rename)
+- Further split `pro-audio-editor.tsx` (~1.3k) — transport / plugin-chain panels
+- `_collection-editor.tsx` (~696) — library picker / import modals could still move out

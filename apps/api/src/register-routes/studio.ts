@@ -3,6 +3,10 @@
 
 import type { FastifyInstance } from 'fastify'
 import meSoundRoutes from '../routes/me/sound.js'
+import meChannelGalleryRoutes from '../routes/me/channel-gallery.js'
+import meChannelTextLayerRoutes from '../routes/me/channel-text-layer.js'
+import meChannelVisualRoutes from '../routes/me/channel-visual.js'
+import meChannelStreamOverlayRoutes from '../routes/me/channel-stream-overlay.js'
 import meChannelVisualPresetsRoutes from '../routes/me/channel-visual-presets.js'
 import meSoundBannerRoutes from '../routes/me/sound-banner.js'
 import meProgrammeRoutes from '../routes/me/programme.js'
@@ -52,6 +56,10 @@ import meUsersRoutes from '../routes/me/users.js'
 
 export async function registerStudioRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(meSoundRoutes)
+  await fastify.register(meChannelGalleryRoutes)
+  await fastify.register(meChannelTextLayerRoutes)
+  await fastify.register(meChannelVisualRoutes)
+  await fastify.register(meChannelStreamOverlayRoutes)
   await fastify.register(meChannelVisualPresetsRoutes)
   await fastify.register(meSoundBannerRoutes)
   await fastify.register(meProgrammeRoutes)

@@ -7,9 +7,6 @@ import { useState, useCallback, useEffect, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ButtonIcon, Button, SortableList } from '@tahti/ui'
-import type { SoundSource, SoundQualityBadge } from '@tahti/shared'
-import { QUALITY_BADGE_LABEL } from '@tahti/shared'
-import { CoverImageUpload } from '@/components/cover-image-upload'
 import { LibraryBrowser } from '@/components/library/library-browser'
 import { usePlayer } from '@/contexts/player-context'
 import { useToast } from '@/contexts/toast-context'
@@ -18,9 +15,6 @@ import {
   reorderCollectionItems,
   deleteCollection,
   addCollectionItem,
-  prepareCollectionCoverUpload,
-  completeCollectionCoverUpload,
-  fetchCollectionCoverFromUrl,
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { CollectionEmbedButton } from '../_collection-embed-button'
@@ -30,33 +24,12 @@ import {
   type CollectionItem,
   formatDuration,
   itemTitle,
-  itemThumb,
   toPlayerTrack,
 } from './_collection-editor-utils'
 import { HearthisImportModal } from './_hearthis-import-modal'
 import { listMyIntegrations } from '../../integrations-actions'
-import { MixcloudEmbedRow } from '../../../u/[username]/c/[slug]/_mixcloud-embed-row'
-import { SpotifyEmbedRow } from '../../../u/[username]/c/[slug]/_spotify-embed-row'
-
-const SOURCE_BADGE_LABEL: Partial<Record<SoundSource, string>> = {
-  SPOTIFY_EMBED: 'SPOTIFY EMBED',
-  MIXCLOUD_EMBED: 'MIXCLOUD EMBED',
-  HEARTHIS_EMBED: 'HEARTHIS EMBED',
-  URL_EMBED: 'EMBED',
-}
-
-const SOURCE_BADGE_CLASS: Partial<Record<SoundSource, string>> = {
-  SPOTIFY_EMBED: 'collection-tracklist__badge--spotify',
-  MIXCLOUD_EMBED: 'collection-tracklist__badge--mixcloud',
-  HEARTHIS_EMBED: 'collection-tracklist__badge--hearthis',
-  URL_EMBED: 'collection-tracklist__badge--embed',
-}
-
-const QUALITY_BADGE_CLASS: Record<SoundQualityBadge, string> = {
-  LOSSLESS: '',
-  TRANSCODED: 'collection-tracklist__badge--transcoded',
-  EMBED_ONLY: 'collection-tracklist__badge--embed',
-}
+import { CollectionTrackRowBody } from './_collection-track-row'
+import { CollectionEditorSettings, SORT_MODE_OPTIONS } from './_collection-editor-settings'
 
 interface CollectionDetail {
   id: string
@@ -74,14 +47,6 @@ interface CollectionDetail {
   collaborative: boolean
   items: CollectionItem[]
 }
-
-const SORT_MODE_OPTIONS = [
-  { value: 'MANUAL', label: 'Manual (drag to reorder)' },
-  { value: 'TIME', label: 'By time added' },
-  { value: 'NAME', label: 'By name' },
-]
-
-const STYLE_OPTIONS = ['PLAYLIST', 'ALBUM', 'EP', 'SINGLE', 'DJ_SET_SERIES', 'PODCAST']
 
 export function CollectionEditor({
   collection: initial,
@@ -317,131 +282,6 @@ export function CollectionEditor({
     [availableSoundItems, availableReleases],
   )
 
-  const renderTrackRowBody = useCallback(
-    (item: CollectionItem, idx: number) => {
-      const thumb = itemThumb(item)
-      const title = itemTitle(item)
-      const dur = item.sound?.durationSec
-      const source = item.sound?.source
-      const quality = item.sound?.qualityBadge
-      const badgeLabel =
-        (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
-        (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
-      const badgeClass =
-        (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
-        (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
-      const embedUri = item.sound?.embedUri
-      const embedProvider = item.sound?.embedProvider
-      const isEmbedExpanded = expandedEmbedItemId === item.id
-      return (
-        <>
-          <span className="collection-tracklist__pos">{idx + 1}</span>
-          {thumb ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={thumb} alt="" className="collection-tracklist__thumb" />
-          ) : (
-            <div className="collection-tracklist__thumb collection-tracklist__thumb--ph" />
-          )}
-          <span className="collection-tracklist__title">{title}</span>
-          {item.audioUrl ? (
-            <span className="collection-tracklist__playback">
-              <button
-                type="button"
-                onClick={() => void toggleItemPlayback(item)}
-                title={track?.id === toPlayerTrack(item).id && playing ? 'Pause' : 'Play'}
-                aria-label={
-                  track?.id === toPlayerTrack(item).id && playing
-                    ? `Pause ${title}`
-                    : `Play ${title}`
-                }
-              >
-                {track?.id === toPlayerTrack(item).id && playing ? '❚❚' : '▶'}
-              </button>
-              <button
-                type="button"
-                onClick={() => queueItem(item)}
-                title="Add to queue"
-                aria-label={`Add ${title} to queue`}
-              >
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
-                  <path
-                    d="M2.5 4h11M2.5 8h11M2.5 12h7"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M12 10.5v4M10 12.5h4"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </span>
-          ) : embedUri ? (
-            <span className="collection-tracklist__playback">
-              <button
-                type="button"
-                onClick={() =>
-                  embedProvider === 'HEARTHIS'
-                    ? void toggleItemPlayback(item)
-                    : setExpandedEmbedItemId(isEmbedExpanded ? null : item.id)
-                }
-                title={
-                  embedProvider === 'HEARTHIS' ? 'Play' : isEmbedExpanded ? 'Hide player' : 'Play'
-                }
-                aria-label={
-                  embedProvider === 'HEARTHIS'
-                    ? `Play ${title}`
-                    : isEmbedExpanded
-                      ? `Hide ${title} player`
-                      : `Play ${title}`
-                }
-                aria-expanded={embedProvider === 'HEARTHIS' ? undefined : isEmbedExpanded}
-              >
-                {embedProvider === 'HEARTHIS' && track?.id === toPlayerTrack(item).id && playing
-                  ? '❚❚'
-                  : isEmbedExpanded
-                    ? '❚❚'
-                    : '▶'}
-              </button>
-              {embedProvider === 'HEARTHIS' && (
-                <button
-                  type="button"
-                  onClick={() => queueItem(item)}
-                  title="Add to queue"
-                  aria-label={`Add ${title} to queue`}
-                >
-                  +
-                </button>
-              )}
-            </span>
-          ) : null}
-          {badgeLabel ? (
-            <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>{badgeLabel}</span>
-          ) : null}
-          {dur != null && <span className="collection-tracklist__dur">{formatDuration(dur)}</span>}
-          {isEmbedExpanded && embedUri && embedProvider !== 'HEARTHIS' && (
-            <ul className="collection-tracklist__embed">
-              {embedProvider === 'MIXCLOUD' ? (
-                <MixcloudEmbedRow title={title} embedUri={embedUri} />
-              ) : embedProvider === 'SPOTIFY' ? (
-                <SpotifyEmbedRow title={title} embedUri={embedUri} />
-              ) : null}
-            </ul>
-          )}
-          {reorderSaving && (
-            <span className="collection-tracklist__saving" aria-hidden>
-              …
-            </span>
-          )}
-        </>
-      )
-    },
-    [playing, reorderSaving, track, expandedEmbedItemId, queueItem, toggleItemPlayback],
-  )
-
   const handleDelete = useCallback(async () => {
     setDeleting(true)
     const { error } = await deleteCollection(initial.slug)
@@ -453,6 +293,23 @@ export function CollectionEditor({
       router.push('/dashboard/collections')
     }
   }, [initial.slug, router])
+
+  const renderTrackRowBody = useCallback(
+    (item: CollectionItem, idx: number) => (
+      <CollectionTrackRowBody
+        item={item}
+        idx={idx}
+        playing={playing}
+        reorderSaving={reorderSaving}
+        track={track}
+        expandedEmbedItemId={expandedEmbedItemId}
+        onToggleEmbedExpanded={setExpandedEmbedItemId}
+        onQueueItem={queueItem}
+        onToggleItemPlayback={toggleItemPlayback}
+      />
+    ),
+    [playing, reorderSaving, track, expandedEmbedItemId, queueItem, toggleItemPlayback],
+  )
 
   return (
     <div className="collection-editor">
@@ -511,227 +368,59 @@ export function CollectionEditor({
       <div
         className={`collection-editor__body${mode === 'view' ? ' collection-editor__body--view' : ''}`}
       >
-        {/* ── Left: settings (edit mode only) ── */}
         {mode === 'edit' && (
-          <aside className="collection-editor__settings">
-            <h2 className="collection-editor__section-title">Settings</h2>
-
-            <div className="studio-field">
-              <label className="studio-label" htmlFor={`collection-name-${initial.id}`}>
-                Name
-              </label>
-              <input
-                id={`collection-name-${initial.id}`}
-                className="studio-input"
-                type="text"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value)
-                  markDirty()
-                }}
-                maxLength={100}
-              />
-            </div>
-
-            {(style === 'DJ_SET_SERIES' || style === 'PODCAST') && (
-              <Link
-                href={`/dashboard/schedule?seriesName=${encodeURIComponent(name)}&format=${style === 'PODCAST' ? 'TALK' : 'LIVE_SET'}${coverUrl ? `&artwork=${encodeURIComponent(coverUrl)}` : ''}`}
-                className="ui-btn ui-btn--secondary"
-              >
-                <ButtonIcon name="plus" />
-                Schedule next episode
-              </Link>
-            )}
-
-            <div className="studio-field">
-              <span className="studio-label">Style</span>
-              <div className="collection-form__style-grid">
-                {STYLE_OPTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={`collection-form__style-pill${
-                      style === s ? ' collection-form__style-pill--active' : ''
-                    }`}
-                    onClick={() => {
-                      setStyle(s)
-                      markDirty()
-                    }}
-                  >
-                    {STYLE_LABEL[s] ?? s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="studio-field">
-              <label className="studio-label" htmlFor={`collection-sort-${initial.id}`}>
-                Track order
-              </label>
-              <select
-                id={`collection-sort-${initial.id}`}
-                className="studio-input"
-                value={trackSortMode}
-                onChange={(e) => {
-                  setTrackSortMode(e.target.value)
-                  markDirty()
-                }}
-              >
-                {SORT_MODE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="studio-field">
-              <CoverImageUpload
-                currentUrl={coverUrl}
-                label="Cover image"
-                prepare={(args) => prepareCollectionCoverUpload(initial.slug, args)}
-                complete={(uploadKey) => completeCollectionCoverUpload(initial.slug, uploadKey)}
-                fromUrl={(sourceUrl) => fetchCollectionCoverFromUrl(initial.slug, sourceUrl)}
-                onUploaded={(url) => setCoverUrl(url)}
-              />
-            </div>
-
-            <fieldset className="collection-form__vis-fieldset">
-              <legend className="studio-label">Visibility</legend>
-              <div className="collection-form__vis-row">
-                <label className="collection-form__vis-option">
-                  <input
-                    type="radio"
-                    name={`vis-${initial.id}`}
-                    checked={isPublic}
-                    onChange={() => {
-                      setIsPublic(true)
-                      markDirty()
-                    }}
-                  />
-                  <span className="collection-form__vis-copy">
-                    <span className="collection-form__vis-label">Public</span>
-                    <span className="collection-form__vis-desc">Visible on your profile</span>
-                  </span>
-                </label>
-                <label className="collection-form__vis-option">
-                  <input
-                    type="radio"
-                    name={`vis-${initial.id}`}
-                    checked={!isPublic}
-                    onChange={() => {
-                      setIsPublic(false)
-                      markDirty()
-                    }}
-                  />
-                  <span className="collection-form__vis-copy">
-                    <span className="collection-form__vis-label">Draft</span>
-                    <span className="collection-form__vis-desc">Only you can see it</span>
-                  </span>
-                </label>
-              </div>
-            </fieldset>
-
-            <label className="collection-form__vis-option collection-form__featured-row">
-              <input
-                type="checkbox"
-                checked={isFeatured}
-                onChange={(e) => {
-                  setIsFeatured(e.target.checked)
-                  markDirty()
-                }}
-              />
-              <span className="collection-form__vis-label">Featured on profile</span>
-            </label>
-
-            {style === 'PLAYLIST' && (
-              <label className="collection-form__vis-option collection-form__featured-row">
-                <input
-                  type="checkbox"
-                  checked={collaborative}
-                  disabled={!isPublic}
-                  onChange={(e) => {
-                    setCollaborative(e.target.checked)
-                    markDirty()
-                  }}
-                />
-                <span className="collection-form__vis-copy">
-                  <span className="collection-form__vis-label">Collaborative playlist</span>
-                  <span className="collection-form__vis-desc">
-                    {isPublic
-                      ? 'Any logged-in listener can add tracks from the Tahti catalog'
-                      : 'Only public playlists can be collaborative'}
-                  </span>
-                </span>
-              </label>
-            )}
-
-            <div className="studio-field">
-              <label className="studio-label" htmlFor={`collection-desc-${initial.id}`}>
-                Description
-              </label>
-              <textarea
-                id={`collection-desc-${initial.id}`}
-                className="studio-input collection-form__textarea"
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value)
-                  markDirty()
-                }}
-                maxLength={1000}
-                rows={4}
-              />
-            </div>
-
-            {settingsError && <p className="studio-text-error studio-text-sm">{settingsError}</p>}
-
-            {settingsDirty && (
-              <Button
-                onClick={() => void saveSettings()}
-                disabled={settingsSaving || isPending}
-                variant="primary"
-              >
-                <ButtonIcon name="save" />
-                {settingsSaving ? 'Saving…' : 'Save settings'}
-              </Button>
-            )}
-            {settingsSaved && !settingsDirty && (
-              <span className="collection-editor__saved">Saved</span>
-            )}
-
-            {/* Danger zone */}
-            <div className="collection-editor__danger">
-              <h3 className="collection-editor__danger-title">Danger zone</h3>
-              {!confirmDelete ? (
-                <Button
-                  onClick={() => setConfirmDelete(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="collection-editor__delete-btn"
-                >
-                  Delete collection
-                </Button>
-              ) : (
-                <div className="collection-editor__confirm-delete">
-                  <p>Delete &ldquo;{initial.name}&rdquo;? This removes it from all smart links.</p>
-                  <div className="collection-editor__confirm-btns">
-                    <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => void handleDelete()}
-                      disabled={deleting}
-                      variant="primary"
-                      className="collection-editor__delete-confirm"
-                    >
-                      <ButtonIcon name="trash" />
-                      {deleting ? 'Deleting…' : 'Yes, delete'}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </aside>
+          <CollectionEditorSettings
+            collectionId={initial.id}
+            collectionSlug={initial.slug}
+            collectionName={initial.name}
+            name={name}
+            onNameChange={(value) => {
+              setName(value)
+              markDirty()
+            }}
+            style={style}
+            onStyleChange={(value) => {
+              setStyle(value)
+              markDirty()
+            }}
+            trackSortMode={trackSortMode}
+            onTrackSortModeChange={(value) => {
+              setTrackSortMode(value)
+              markDirty()
+            }}
+            isPublic={isPublic}
+            onIsPublicChange={(value) => {
+              setIsPublic(value)
+              markDirty()
+            }}
+            isFeatured={isFeatured}
+            onIsFeaturedChange={(value) => {
+              setIsFeatured(value)
+              markDirty()
+            }}
+            collaborative={collaborative}
+            onCollaborativeChange={(value) => {
+              setCollaborative(value)
+              markDirty()
+            }}
+            description={description}
+            onDescriptionChange={(value) => {
+              setDescription(value)
+              markDirty()
+            }}
+            coverUrl={coverUrl}
+            onCoverUrlChange={setCoverUrl}
+            settingsError={settingsError}
+            settingsDirty={settingsDirty}
+            settingsSaving={settingsSaving}
+            isPending={isPending}
+            onSaveSettings={saveSettings}
+            settingsSaved={settingsSaved}
+            confirmDelete={confirmDelete}
+            onConfirmDeleteChange={setConfirmDelete}
+            onDelete={handleDelete}
+            deleting={deleting}
+          />
         )}
 
         {/* ── Right: tracklist ── */}

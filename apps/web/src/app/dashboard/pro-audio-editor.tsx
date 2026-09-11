@@ -13,7 +13,6 @@ import {
   mergeCuts,
   remapTracklistTimestamps,
   shouldRenderInBrowser,
-  snapToNearestZeroCrossing,
   History,
   migrateV1toV2,
   gainChainSummary,
@@ -54,20 +53,16 @@ import {
   createPreviewSource,
   readPeakLevel,
 } from '@/lib/audio-editor/preview-audio'
-import {
-  drawMinimapLayer,
-  drawOverlayLayer,
-  drawWaveformLayer,
-} from '@/lib/audio-editor/waveform-draw'
 import { useDraftAutosave } from '@/lib/audio-editor/use-draft-autosave'
 import { useEditHistory } from '@/lib/audio-editor/use-edit-history'
 import { useExportAndClip } from '@/lib/audio-editor/use-export-and-clip'
+import {
+  MINIMAP_HEIGHT,
+  useWaveformCanvas,
+  WAVE_HEIGHT,
+} from '@/lib/audio-editor/use-waveform-canvas'
 import { ChainTile, Switch, cx } from './pro-audio-editor-controls'
-
-const CANVAS_MIN_WIDTH = 320
-const CANVAS_DEFAULT_WIDTH = 1280
-const WAVE_HEIGHT = 340
-const MINIMAP_HEIGHT = 38
+import { ProAudioEditorToolbar } from './pro-audio-editor-toolbar'
 
 type EditorTab = 'waveform' | 'tracklist'
 type ToolId = 'select' | 'cut' | 'fade' | 'marker'
@@ -137,29 +132,50 @@ export function ProAudioEditor({
     versionLabel: string
   } | null>(null)
   const [meterPeak, setMeterPeak] = useState(0)
-  const [viewStart, setViewStart] = useState(0)
-  const [viewEnd, setViewEnd] = useState(1)
-  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
   const [activeTool, setActiveTool] = useState<ToolId>('select')
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [playing, setPlaying] = useState(false)
-  const [previewingSelection, setPreviewingSelection] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
   const [measuring, setMeasuring] = useState(false)
   const [activeTab, setActiveTab] = useState<EditorTab>('waveform')
   const [tracklist, setTracklist] = useState<TracklistEntry[] | null>(initialTracklist ?? null)
   const [tracklistError, setTracklistError] = useState<string | null>(null)
   const [tracklistSaving, setTracklistSaving] = useState(false)
-  const [canvasWidth, setCanvasWidth] = useState(CANVAS_DEFAULT_WIDTH)
   const [exportPhase, setExportPhase] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
 
-  const wavePanelRef = useRef<HTMLDivElement>(null)
-  const waveRef = useRef<HTMLCanvasElement>(null)
-  const overlayRef = useRef<HTMLCanvasElement>(null)
-  const minimapRef = useRef<HTMLCanvasElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const {
+    wavePanelRef,
+    waveRef,
+    overlayRef,
+    minimapRef,
+    audioRef,
+    viewStart,
+    setViewStart,
+    setViewEnd,
+    selection,
+    setSelection,
+    previewingSelection,
+    setPreviewingSelection,
+    currentTime,
+    canvasWidth,
+    snapSec,
+    setSpan,
+    span,
+    zoomSliderValue,
+    msPerPx,
+    snappedSelection,
+    secFromCanvasEvent,
+    seekToSec,
+    handlePreviewSelection,
+    ruler,
+  } = useWaveformCanvas({
+    peaks,
+    cuts: editList.cuts,
+    sourceDuration: editList.sourceDuration,
+    snapEnabled,
+  })
+
   const inputPathRef = useRef<string | null>(null)
   const sourceFileRef = useRef<File | null>(null)
   const sourceBlobUrlRef = useRef<string | null>(null)
@@ -179,14 +195,6 @@ export function ProAudioEditor({
   useEffect(() => {
     setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)
   }, [])
-
-  const snapSec = useCallback(
-    (sec: number) => {
-      if (!snapEnabled || !peaks?.zeroCrossingsSec?.length) return sec
-      return snapToNearestZeroCrossing(peaks.zeroCrossingsSec, sec)
-    },
-    [snapEnabled, peaks?.zeroCrossingsSec],
-  )
 
   useEffect(() => {
     let cancelled = false
@@ -316,7 +324,7 @@ export function ProAudioEditor({
     }
     previewRef.current = attachPreviewGraph(source, audio, previewEdit)
     return () => previewRef.current?.disconnect()
-  }, [editList, previewMode, previewBypassedPluginId])
+  }, [editList, previewMode, previewBypassedPluginId, audioRef])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -329,7 +337,7 @@ export function ProAudioEditor({
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
     }
-  }, [])
+  }, [audioRef])
 
   useEffect(() => {
     let raf = 0
@@ -345,63 +353,6 @@ export function ProAudioEditor({
     }
     return () => cancelAnimationFrame(raf)
   }, [playing, measuring, previewLoading])
-
-  const redraw = useCallback(() => {
-    const pyramid = peaks
-    const wave = waveRef.current
-    const overlay = overlayRef.current
-    const minimap = minimapRef.current
-    const audio = audioRef.current
-    if (!pyramid || !wave || !overlay) return
-
-    const view = {
-      viewStart,
-      viewEnd,
-      playheadSec: audio?.currentTime ?? 0,
-      selection,
-    }
-
-    const wctx = wave.getContext('2d')
-    const octx = overlay.getContext('2d')
-    if (wctx) drawWaveformLayer(wctx, pyramid, view, editList.cuts)
-    if (octx) drawOverlayLayer(octx, pyramid, view)
-    if (minimap) {
-      const mctx = minimap.getContext('2d')
-      if (mctx) drawMinimapLayer(mctx, pyramid)
-    }
-  }, [peaks, viewStart, viewEnd, selection, editList.cuts])
-
-  useEffect(() => {
-    redraw()
-  }, [redraw])
-
-  useEffect(() => {
-    redraw()
-  }, [canvasWidth, redraw])
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    const onTime = () => {
-      setCurrentTime(audio.currentTime)
-      redraw()
-      if (previewingSelection && selection && audio.currentTime >= selection.end) {
-        audio.pause()
-        audio.currentTime = selection.start
-        setPreviewingSelection(false)
-      }
-    }
-    audio.addEventListener('timeupdate', onTime)
-    return () => audio.removeEventListener('timeupdate', onTime)
-  }, [redraw, previewingSelection, selection])
-
-  function handlePreviewSelection() {
-    const audio = audioRef.current
-    if (!audio || !selection || selection.end - selection.start <= 0) return
-    audio.currentTime = selection.start
-    setPreviewingSelection(true)
-    void audio.play()
-  }
 
   const segments = useMemo(
     () => computeKeepSegments(editList.sourceDuration, mergeCuts(editList.cuts)),
@@ -422,40 +373,6 @@ export function ProAudioEditor({
         ? 'Loading ffmpeg…'
         : `LOCAL · ffmpeg.wasm${!isolated ? ' · 1 thread' : ''}`
       : 'Server worker render'
-
-  function setSpan(rawSpan: number) {
-    const span = Math.min(1, Math.max(0.001, rawSpan))
-    const center = (viewStart + viewEnd) / 2
-    let ns = center - span / 2
-    let ne = ns + span
-    if (ns < 0) {
-      ne -= ns
-      ns = 0
-    }
-    if (ne > 1) {
-      ns -= ne - 1
-      ne = 1
-    }
-    setViewStart(Math.max(0, ns))
-    setViewEnd(Math.min(1, ne))
-  }
-
-  const span = viewEnd - viewStart
-  const zoomSliderValue = Math.round(
-    Math.min(1000, Math.max(0, -1000 * Math.log10(span) * (1 / 3))),
-  )
-  const msPerPx = (span * editList.sourceDuration * 1000) / canvasWidth
-
-  const snappedSelection = useCallback((): { start: number; end: number } | null => {
-    if (!selection) return null
-    if (snapEnabled && peaks?.zeroCrossingsSec?.length) {
-      return {
-        start: snapToNearestZeroCrossing(peaks.zeroCrossingsSec, selection.start),
-        end: snapToNearestZeroCrossing(peaks.zeroCrossingsSec, selection.end),
-      }
-    }
-    return selection
-  }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
 
   const {
     openClipDialog,
@@ -502,48 +419,6 @@ export function ProAudioEditor({
     [tracklist, editListV1],
   )
 
-  useEffect(() => {
-    const el = wavePanelRef.current
-    if (!el) return
-    const measure = () => setCanvasWidth(Math.max(CANVAS_MIN_WIDTH, Math.floor(el.clientWidth)))
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  const secFromCanvasEvent = useCallback(
-    (clientX: number, rect: DOMRect) => {
-      if (!peaks) return 0
-      const frac = (clientX - rect.left) / rect.width
-      return peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
-    },
-    [peaks, viewStart, viewEnd],
-  )
-
-  const seekToSec = useCallback(
-    (sec: number) => {
-      const clamped = Math.max(0, Math.min(editList.sourceDuration, sec))
-      if (audioRef.current) audioRef.current.currentTime = clamped
-      setPreviewingSelection(false)
-      const center = clamped / editList.sourceDuration
-      const half = span / 2
-      let ns = center - half
-      let ne = ns + span
-      if (ns < 0) {
-        ne -= ns
-        ns = 0
-      }
-      if (ne > 1) {
-        ns -= ne - 1
-        ne = 1
-      }
-      setViewStart(Math.max(0, ns))
-      setViewEnd(Math.min(1, ne))
-    },
-    [editList.sourceDuration, span],
-  )
-
   const beginKnobDrag = useCallback(() => setKnobDragging(true), [])
 
   const removeSelection = useCallback(() => {
@@ -557,7 +432,7 @@ export function ProAudioEditor({
       'Cut',
     )
     setSelection(null)
-  }, [editList, pushEdit, snappedSelection])
+  }, [editList, pushEdit, snappedSelection, setSelection])
 
   const applyFadeAtSelection = useCallback(() => {
     const final = snappedSelection()
@@ -587,7 +462,7 @@ export function ProAudioEditor({
       'Fade',
     )
     setSelection(null)
-  }, [editList, pushEdit, snappedSelection])
+  }, [editList, pushEdit, snappedSelection, setSelection])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -629,21 +504,23 @@ export function ProAudioEditor({
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selection, activeTool, undo, redo, removeSelection, applyFadeAtSelection])
+  }, [
+    selection,
+    activeTool,
+    undo,
+    redo,
+    removeSelection,
+    applyFadeAtSelection,
+    audioRef,
+    setPreviewingSelection,
+    setSelection,
+  ])
 
   useEffect(() => {
     return () => {
       if (ffmpeg) void unmountSource(ffmpeg)
     }
   }, [ffmpeg])
-
-  const ruler = useMemo(() => {
-    const ticks: number[] = []
-    for (let i = 0; i <= 6; i++) {
-      ticks.push((viewStart + (i / 6) * span) * editList.sourceDuration)
-    }
-    return ticks
-  }, [viewStart, span, editList.sourceDuration])
 
   // ---- Derived plugin values ----
   const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')
@@ -775,127 +652,25 @@ export function ProAudioEditor({
         </section>
       ) : (
         <>
-          {/* ---- Toolbar ---- */}
-          <div className="pro-editor-toolbar">
-            <div className="pro-editor-tool-group" role="group" aria-label="Edit tools">
-              {(
-                [
-                  ['select', '↖', 'Select'],
-                  ['cut', '✂', 'Cut'],
-                  ['fade', '◢', 'Fade'],
-                  ['marker', '◆', 'Marker'],
-                ] as const
-              ).map(([id, glyph, name]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={cx(
-                    'pro-editor-tool-btn',
-                    activeTool === id && 'pro-editor-tool-btn--active',
-                  )}
-                  aria-pressed={activeTool === id}
-                  title={name}
-                  onClick={() => setActiveTool(id)}
-                >
-                  {glyph}
-                </button>
-              ))}
-            </div>
-
-            <div className="pro-editor-toolbar-divider" />
-
-            <div className="pro-editor-zoom-group">
-              <button
-                type="button"
-                className="pro-editor-tool-btn"
-                onClick={() => setSpan(span * 1.25)}
-                aria-label="Zoom out"
-              >
-                −
-              </button>
-              <input
-                type="range"
-                className="pro-editor-zoom-slider"
-                min={0}
-                max={1000}
-                value={zoomSliderValue}
-                onChange={(e) => setSpan(10 ** ((-3 * Number(e.target.value)) / 1000))}
-                aria-label="Zoom"
-              />
-              <button
-                type="button"
-                className="pro-editor-tool-btn"
-                onClick={() => setSpan(span * 0.8)}
-                aria-label="Zoom in"
-              >
-                +
-              </button>
-              <span className="pro-editor-zoom-ratio">1 px = {msPerPx.toFixed(0)} ms</span>
-              <Button
-                onClick={() => {
-                  setViewStart(0)
-                  setViewEnd(1)
-                  setSelection(null)
-                }}
-                variant="ghost"
-                size="sm"
-              >
-                Reset zoom
-              </Button>
-              <Button
-                disabled={!selection}
-                onClick={() => {
-                  if (!selection) return
-                  setViewStart(Math.max(0, selection.start / editList.sourceDuration))
-                  setViewEnd(Math.min(1, selection.end / editList.sourceDuration))
-                }}
-                variant="ghost"
-                size="sm"
-              >
-                Sel
-              </Button>
-            </div>
-
-            <div className="pro-editor-toolbar-divider" />
-
-            <div className="pro-editor-undo-group">
-              <button
-                type="button"
-                className="pro-editor-tool-btn"
-                onClick={undo}
-                disabled={!History.canUndo(historyState)}
-              >
-                ↶
-              </button>
-              <button
-                type="button"
-                className="pro-editor-tool-btn"
-                onClick={redo}
-                disabled={!History.canRedo(historyState)}
-              >
-                ↷
-              </button>
-              <button
-                type="button"
-                className={cx('pro-editor-snap', snapEnabled && 'pro-editor-snap--on')}
-                onClick={() => setSnapEnabled((s) => !s)}
-              >
-                snap {snapEnabled ? 'on' : 'off'}
-              </button>
-            </div>
-
-            <div className="pro-editor-toolbar-spacer" />
-
-            <Button onClick={openClipDialog} variant="ghost" size="sm" title="Create a ≤60s clip">
-              Create clip
-            </Button>
-
-            <div className="pro-editor-shortcut-hints">
-              <span>space play/pause</span>
-              <span>x cut</span>
-              <span>⌘z undo</span>
-            </div>
-          </div>
+          <ProAudioEditorToolbar
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            span={span}
+            setSpan={setSpan}
+            zoomSliderValue={zoomSliderValue}
+            msPerPx={msPerPx}
+            setViewStart={setViewStart}
+            setViewEnd={setViewEnd}
+            setSelection={setSelection}
+            selection={selection}
+            sourceDuration={editList.sourceDuration}
+            undo={undo}
+            redo={redo}
+            historyState={historyState}
+            snapEnabled={snapEnabled}
+            setSnapEnabled={setSnapEnabled}
+            openClipDialog={openClipDialog}
+          />
 
           {peaks?.silenceRegionsSec && peaks.silenceRegionsSec.length > 0 && (
             <div className="pro-editor-silence-row" aria-label="Silence regions">
