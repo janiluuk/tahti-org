@@ -27,6 +27,32 @@ env:
   NGINX_BASE_IMAGE: mirror.gcr.io/library/nginx:1.27-alpine
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check for backend/e2e-relevant changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/api/**'
+              - 'apps/worker/**'
+              - 'packages/db/**'
+              - 'packages/shared/**'
+              - 'tests/e2e/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - '.github/workflows/ci.yml'
+
   script-syntax:
     name: Validate shell scripts
     runs-on: ubuntu-24.04
@@ -245,7 +271,8 @@ jobs:
 
   vital-flows-e2e:
     name: API vital flows (curl e2e)
-    needs: lint
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -333,7 +360,8 @@ jobs:
 
   user-journeys-e2e:
     name: User journey e2e (all personas)
-    needs: lint
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
