@@ -93,7 +93,7 @@ as part of this preparation.
 
 - [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers. → [`docs/todo/plugin-registry-extraction.md`](todo/plugin-registry-extraction.md)
 - [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [`docs/todo/plugin-registry-extraction.md` §5](todo/plugin-registry-extraction.md#5-minimal-compatibility-interface-and-adapter-plan)
-- [ ] Add contract tests for install, enable/disable, warnings, update, and removal behavior.
+- [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. → `../tahti-player` adapter and host suites cover the registry contract; caller migration remains open there.
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
 

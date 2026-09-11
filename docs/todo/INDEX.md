@@ -13,10 +13,10 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see the Fold rule below.
 
-| Status  | File                                                                                         | One-line                                                                                                                                                                                                           |
-| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                                               |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | §5.1/§5.2 store adapter + §5 `PluginRegistryHost` façade both shipped in `../tahti-player` (additive, non-breaking), §6 contract tests cover both; caller migration (§5.4) and ownership-split sign-off still open |
+| Status  | File                                                                                         | One-line                                                                                                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                            |
+| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, and contract tests shipped in `../tahti-player` (additive, non-breaking); caller migration (§5.4) and ownership-split sign-off remain open |
 
 ## Roadmap & planning (broader than a single task)
 
