@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { ALL_WORKER_LANES, jobNamesForLanes } from './worker-job-lanes'
-import { WORKER_CRON_JOBS } from './worker-cron-jobs'
+import { ALL_WORKER_LANES, jobNamesForLanes } from './worker-job-lanes.js'
+import { WORKER_CRON_JOBS } from './worker-cron-jobs.js'
 
 describe('WORKER_JOB_LANES', () => {
   it('covers every scheduled cron job name', () => {
