@@ -67,7 +67,15 @@ Break oversized modules into focused files without behavior changes.
 5. **S15** channel-controls icons/transport/playlist; channel-identity utils/media
    → controls **750 → 511**, identity **744 → 430**
 
+### Slice 16–20 — profile, about, presets, sound editor, schedule
+
+1. **S16** profile utils + `_collection-row-list.tsx` → **857 → 774**
+2. **S17** `visual-preset-thumbs/icons` → picker **725 → 478**
+3. **S18** sound-editor icons + row-tools → **710 → 573**
+4. **S19** schedule utils + add-show panel → **639 → 431**
+5. **S20** about hero + showcase → **851 → 774**
+
 ## Leftovers
 
-- Optional further peel of channel page (~759) or pro-audio (~805)
-- Seed scripts (`seed-local-dev-catalog`, `seed-e2e-screenshots`) still large but out of product UI scope
+- Optional further peel of channel page (~759), pro-audio (~805), profile/about (~774)
+- Seed scripts and `tour-steps.ts` still large (data/catalog, lower priority)
