@@ -73,6 +73,39 @@ jobs:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      NODE_VERSION: '24'
+
+    # packages/api-client/src/schema.d.ts is generated, never committed (see
+    # ci.yml's "Regenerate SDK types" step). apps/web/Dockerfile's builder
+    # stage only COPYs already-generated source — it has no network path to
+    # a Postgres/Redis on the production host (postgres/redis publish no
+    # host port; only pgbouncer does) — so the SDK types must be generated
+    # here, on the runner, and rsynced up with the rest of the tree before
+    # `docker compose build` runs on the production host.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
 
     steps:
       # Checked out under an explicit path (rather than $GITHUB_WORKSPACE
@@ -90,6 +123,38 @@ jobs:
         with:
           repository: janiluuk/tahti-radio-discord-bot
           path: tahti-radio-discord-bot
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: tahti/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: tahti
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        working-directory: tahti
+        run: pnpm --filter @tahti/db db:generate
+        env:
+          DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+
+      - name: Push DB schema (test database)
+        working-directory: tahti
+        run: pnpm --filter @tahti/db db:migrate:test
+        env:
+          DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+
+      - name: Regenerate SDK types
+        working-directory: tahti
+        run: pnpm --filter @tahti/api-client generate
+        env:
+          DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
 
       - name: Export deploy targets
         run: |
