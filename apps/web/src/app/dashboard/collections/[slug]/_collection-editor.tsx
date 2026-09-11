@@ -3,33 +3,33 @@
 
 'use client'
 
-import { useState, useCallback, useEffect, useMemo, useTransition } from 'react'
+import { useState, useCallback, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ButtonIcon, Button, SortableList } from '@tahti/ui'
-import { LibraryBrowser } from '@/components/library/library-browser'
 import { usePlayer } from '@/contexts/player-context'
 import { useToast } from '@/contexts/toast-context'
 import {
   updateCollection,
   reorderCollectionItems,
   deleteCollection,
-  addCollectionItem,
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { CollectionEmbedButton } from '../_collection-embed-button'
-import { SpotifyImportModal } from './_spotify-import-modal'
-import { MixcloudImportModal } from './_mixcloud-import-modal'
 import {
   type CollectionItem,
   formatDuration,
   itemTitle,
   toPlayerTrack,
 } from './_collection-editor-utils'
-import { HearthisImportModal } from './_hearthis-import-modal'
-import { listMyIntegrations } from '../../integrations-actions'
 import { CollectionTrackRowBody } from './_collection-track-row'
 import { CollectionEditorSettings, SORT_MODE_OPTIONS } from './_collection-editor-settings'
+import {
+  CollectionImportChrome,
+  CollectionImportChromeHeader,
+  CollectionImportChromePanels,
+  type ImportAddedPayload,
+} from './_collection-import-chrome'
 
 interface CollectionDetail {
   id: string
@@ -80,36 +80,9 @@ export function CollectionEditor({
   const [items, setItems] = useState(initial.items)
   const [reorderSaving, setReorderSaving] = useState(false)
   const [reorderError, setReorderError] = useState<string | null>(null)
-  const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
-  const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
-  const [hearthisModalOpen, setHearthisModalOpen] = useState(false)
   // Which row's embed player (Hearthis/Mixcloud/Spotify — no audio file of
   // their own, so no shared-mini-player playback) is currently expanded.
   const [expandedEmbedItemId, setExpandedEmbedItemId] = useState<string | null>(null)
-  // null = still loading — fail open so the buttons aren't stuck disabled if this is slow.
-  const [installedProviders, setInstalledProviders] = useState<Record<string, boolean> | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    void listMyIntegrations().then((result) => {
-      if (cancelled) return
-      const map: Record<string, boolean> = {}
-      for (const i of result.integrations) map[i.slug] = i.installed || i.connected
-      setInstalledProviders(map)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const isProviderReady = useCallback(
-    (slug: string) => installedProviders === null || (installedProviders[slug] ?? true),
-    [installedProviders],
-  )
-  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
-  const [libraryPick, setLibraryPick] = useState('')
-  const [libraryAdding, setLibraryAdding] = useState(false)
-  const [libraryError, setLibraryError] = useState<string | null>(null)
 
   // Delete
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -246,26 +219,27 @@ export function CollectionEditor({
     [addToQueue, showToast],
   )
 
-  const addFromLibrary = useCallback(
-    async (selectedPick = libraryPick) => {
-      if (!selectedPick) return
-      setLibraryAdding(true)
-      setLibraryError(null)
-      const [kind, id] = selectedPick.split(':')
-      const { error } = await addCollectionItem(
-        initial.slug,
-        kind === 'sound' ? { soundId: id } : { releaseId: id },
-      )
-      setLibraryAdding(false)
-      if (error) {
-        setLibraryError(error)
-        return
-      }
-      setLibraryPick('')
-      setLibraryPickerOpen(false)
-      startTransition(() => router.refresh())
+  const handleImportAdded = useCallback(
+    ({ soundId, collectionItemId, track, source }: ImportAddedPayload) => {
+      setItems((prev) => [
+        ...prev,
+        {
+          id: collectionItemId,
+          position: prev.length + 1,
+          sound: {
+            id: soundId,
+            title: track.title,
+            durationSec: track.durationSec,
+            bannerUrl: track.coverUrl,
+            createdAt: new Date().toISOString(),
+            source,
+            qualityBadge: 'EMBED_ONLY',
+          },
+          release: null,
+        },
+      ])
     },
-    [initial.slug, libraryPick, router],
+    [],
   )
 
   const usedSoundIds = new Set(items.map((i) => i.sound?.id).filter(Boolean))
@@ -424,269 +398,91 @@ export function CollectionEditor({
         )}
 
         {/* ── Right: tracklist ── */}
-        <section className="collection-editor__tracklist">
-          <div className="collection-editor__tracklist-header">
-            <h2 className="collection-editor__section-title">
-              Tracks &amp; releases
-              <span className="collection-editor__count">{items.length}</span>
-            </h2>
-            {mode === 'edit' && (
-              <div className="collection-editor__add-buttons">
-                <Button onClick={() => setLibraryPickerOpen((v) => !v)} variant="ghost" size="sm">
-                  + Tahti library
-                </Button>
-                <Button
-                  onClick={() => setSpotifyModalOpen(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="collection-editor__add-btn--spotify"
-                  disabled={!isProviderReady('spotify')}
-                  title={
-                    isProviderReady('spotify')
-                      ? undefined
-                      : 'Install the Spotify integration in Settings → Integrations first'
-                  }
-                >
-                  + Spotify
-                </Button>
-                <Button
-                  onClick={() => setMixcloudModalOpen(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="collection-editor__add-btn--mixcloud"
-                  disabled={!isProviderReady('mixcloud-import')}
-                  title={
-                    isProviderReady('mixcloud-import')
-                      ? undefined
-                      : 'Install the Mixcloud integration in Settings → Integrations first'
-                  }
-                >
-                  + Mixcloud
-                </Button>
-                <Button
-                  onClick={() => setHearthisModalOpen(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="collection-editor__add-btn--hearthis"
-                  disabled={!isProviderReady('hearthis-import')}
-                  title={
-                    isProviderReady('hearthis-import')
-                      ? undefined
-                      : 'Install the hearthis.at integration in Settings → Integrations first'
-                  }
-                >
-                  + hearthis.at
-                </Button>
-              </div>
-            )}
-            {mode === 'edit' &&
-              (!isProviderReady('spotify') ||
-                !isProviderReady('mixcloud-import') ||
-                !isProviderReady('hearthis-import')) && (
-                <p className="studio-text-muted-sm studio-mt-xs">
-                  Some import sources need installing first —{' '}
-                  <Link href="/dashboard/settings/integrations">Settings → Integrations</Link>.
-                </p>
-              )}
-          </div>
-
-          {mode === 'edit' && libraryPickerOpen ? (
-            <div className="collection-editor__library-picker studio-mt-sm">
-              <LibraryBrowser
-                items={availableLibraryItems}
-                getTitle={(item) => item.title}
-                showStatusFilters={false}
-                searchPlaceholder="Search your library…"
-                emptyMessage="No unused library items available."
-                noMatchMessage="No unused library items match."
-              >
-                {(visible) => (
-                  <ul className="studio-list studio-mt-sm">
-                    {visible.map((item) => {
-                      const value = `${item.kind}:${item.id}`
-                      const selected = libraryPick === value
-                      return (
-                        <li key={value} className="studio-programme-row">
-                          <button
-                            type="button"
-                            className="studio-programme-label"
-                            aria-pressed={selected}
-                            onClick={() => setLibraryPick(selected ? '' : value)}
-                          >
-                            <span>{item.title}</span>
-                            <span className="studio-text-muted-sm">
-                              {item.kind === 'sound' ? 'Sound item' : `Release · ${item.state}`}
-                            </span>
-                          </button>
-                          <Button
-                            onClick={() => {
-                              setLibraryPick(value)
-                              void addFromLibrary(value)
-                            }}
-                            disabled={libraryAdding}
-                            variant={selected ? 'primary' : 'secondary'}
-                            size="sm"
-                          >
-                            <ButtonIcon name="plus" />
-                            {libraryAdding && selected ? 'Adding…' : 'Add'}
-                          </Button>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </LibraryBrowser>
-              {libraryError && <p className="studio-text-error studio-text-sm">{libraryError}</p>}
+        <CollectionImportChrome
+          collectionId={initial.id}
+          collectionSlug={initial.slug}
+          collectionTitle={name || initial.name}
+          availableLibraryItems={availableLibraryItems}
+          onImportAdded={handleImportAdded}
+        >
+          <section className="collection-editor__tracklist">
+            <div className="collection-editor__tracklist-header">
+              <h2 className="collection-editor__section-title">
+                Tracks &amp; releases
+                <span className="collection-editor__count">{items.length}</span>
+              </h2>
+              {mode === 'edit' && <CollectionImportChromeHeader />}
             </div>
-          ) : null}
 
-          {spotifyModalOpen ? (
-            <SpotifyImportModal
-              collectionId={initial.id}
-              collectionTitle={name || initial.name}
-              onClose={() => setSpotifyModalOpen(false)}
-              onAdded={({ soundId, collectionItemId, track }) => {
-                setItems((prev) => [
-                  ...prev,
-                  {
-                    id: collectionItemId,
-                    position: prev.length + 1,
-                    sound: {
-                      id: soundId,
-                      title: track.title,
-                      durationSec: track.durationSec,
-                      bannerUrl: track.coverUrl,
-                      createdAt: new Date().toISOString(),
-                      source: 'SPOTIFY_EMBED',
-                      qualityBadge: 'EMBED_ONLY',
-                    },
-                    release: null,
-                  },
-                ])
-              }}
-            />
-          ) : null}
+            {mode === 'edit' && <CollectionImportChromePanels />}
 
-          {mixcloudModalOpen ? (
-            <MixcloudImportModal
-              collectionId={initial.id}
-              collectionTitle={name || initial.name}
-              onClose={() => setMixcloudModalOpen(false)}
-              onAdded={({ soundId, collectionItemId, track }) => {
-                setItems((prev) => [
-                  ...prev,
-                  {
-                    id: collectionItemId,
-                    position: prev.length + 1,
-                    sound: {
-                      id: soundId,
-                      title: track.title,
-                      durationSec: track.durationSec,
-                      bannerUrl: track.coverUrl,
-                      createdAt: new Date().toISOString(),
-                      source: 'MIXCLOUD_EMBED',
-                      qualityBadge: 'EMBED_ONLY',
-                    },
-                    release: null,
-                  },
-                ])
-              }}
-            />
-          ) : null}
-
-          {hearthisModalOpen ? (
-            <HearthisImportModal
-              collectionId={initial.id}
-              collectionTitle={name || initial.name}
-              onClose={() => setHearthisModalOpen(false)}
-              onAdded={({ soundId, collectionItemId, track }) => {
-                setItems((prev) => [
-                  ...prev,
-                  {
-                    id: collectionItemId,
-                    position: prev.length + 1,
-                    sound: {
-                      id: soundId,
-                      title: track.title,
-                      durationSec: track.durationSec,
-                      bannerUrl: track.coverUrl,
-                      createdAt: new Date().toISOString(),
-                      source: 'HEARTHIS_EMBED',
-                      qualityBadge: 'EMBED_ONLY',
-                    },
-                    release: null,
-                  },
-                ])
-              }}
-            />
-          ) : null}
-
-          {!canManualReorder && (
-            <p className="studio-text-muted-sm collection-editor__sort-hint">
-              Track order is set to &ldquo;
-              {SORT_MODE_OPTIONS.find((o) => o.value === initial.trackSortMode)?.label ??
-                initial.trackSortMode}
-              &rdquo; — switch Track order to Manual to drag-reorder.
-            </p>
-          )}
-          {reorderError && <p className="studio-text-error studio-text-sm">{reorderError}</p>}
-
-          {items.length === 0 ? (
-            <div className="studio-empty-card collection-editor__empty">
-              <p className="studio-empty-card__text">No items yet</p>
-              <p className="studio-empty-card__hint">
-                Add archive recordings or releases from your catalog tab.
+            {!canManualReorder && (
+              <p className="studio-text-muted-sm collection-editor__sort-hint">
+                Track order is set to &ldquo;
+                {SORT_MODE_OPTIONS.find((o) => o.value === initial.trackSortMode)?.label ??
+                  initial.trackSortMode}
+                &rdquo; — switch Track order to Manual to drag-reorder.
               </p>
-              <Link
-                href="/dashboard/sounds"
-                className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
-              >
-                <ButtonIcon name="link" />
-                Open archive →
-              </Link>
-            </div>
-          ) : canManualReorder ? (
-            <SortableList
-              as="ol"
-              className="collection-tracklist"
-              items={items}
-              itemId={(item) => item.id}
-              onReorder={handleReorderItems}
-              renderItem={(item, idx, sortable) => (
-                <li
-                  key={item.id}
-                  ref={sortable.ref}
-                  className={`collection-tracklist__row${
-                    sortable.isDragging ? ' collection-tracklist__row--dragging' : ''
-                  }`}
+            )}
+            {reorderError && <p className="studio-text-error studio-text-sm">{reorderError}</p>}
+
+            {items.length === 0 ? (
+              <div className="studio-empty-card collection-editor__empty">
+                <p className="studio-empty-card__text">No items yet</p>
+                <p className="studio-empty-card__hint">
+                  Add archive recordings or releases from your catalog tab.
+                </p>
+                <Link
+                  href="/dashboard/sounds"
+                  className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
                 >
-                  <span ref={sortable.handleRef} className="collection-tracklist__drag">
-                    ⠿
-                  </span>
-                  {renderTrackRowBody(item, idx)}
-                </li>
-              )}
-            />
-          ) : (
-            <ol className="collection-tracklist">
-              {displayItems.map((item, idx) => (
-                <li
-                  key={item.id}
-                  className="collection-tracklist__row collection-tracklist__row--static"
-                >
-                  <span
-                    className="collection-tracklist__drag"
-                    aria-hidden
-                    title="Set Track order to Manual to drag-reorder"
+                  <ButtonIcon name="link" />
+                  Open archive →
+                </Link>
+              </div>
+            ) : canManualReorder ? (
+              <SortableList
+                as="ol"
+                className="collection-tracklist"
+                items={items}
+                itemId={(item) => item.id}
+                onReorder={handleReorderItems}
+                renderItem={(item, idx, sortable) => (
+                  <li
+                    key={item.id}
+                    ref={sortable.ref}
+                    className={`collection-tracklist__row${
+                      sortable.isDragging ? ' collection-tracklist__row--dragging' : ''
+                    }`}
                   >
-                    ⠿
-                  </span>
-                  {renderTrackRowBody(item, idx)}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+                    <span ref={sortable.handleRef} className="collection-tracklist__drag">
+                      ⠿
+                    </span>
+                    {renderTrackRowBody(item, idx)}
+                  </li>
+                )}
+              />
+            ) : (
+              <ol className="collection-tracklist">
+                {displayItems.map((item, idx) => (
+                  <li
+                    key={item.id}
+                    className="collection-tracklist__row collection-tracklist__row--static"
+                  >
+                    <span
+                      className="collection-tracklist__drag"
+                      aria-hidden
+                      title="Set Track order to Manual to drag-reorder"
+                    >
+                      ⠿
+                    </span>
+                    {renderTrackRowBody(item, idx)}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </CollectionImportChrome>
       </div>
     </div>
   )

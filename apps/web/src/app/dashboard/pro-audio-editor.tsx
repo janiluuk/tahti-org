@@ -15,27 +15,12 @@ import {
   shouldRenderInBrowser,
   History,
   migrateV1toV2,
-  gainChainSummary,
-  eqChainSummary,
-  compChainSummary,
-  limiterChainSummary,
-  filterChainSummary,
-  DEFAULT_GAIN_PARAMS,
-  DEFAULT_EQ_PARAMS,
-  DEFAULT_COMP_PARAMS,
-  DEFAULT_LIMITER_PARAMS,
-  DEFAULT_FILTER_PARAMS,
 } from '@tahti/audio-edit'
 import type { GainParams } from '@tahti/audio-edit'
 import type { EqParams } from '@tahti/audio-edit'
 import type { CompParams } from '@tahti/audio-edit'
 import type { LimiterParams } from '@tahti/audio-edit'
 import type { FilterParams } from '@tahti/audio-edit'
-import { GainPanel } from '@/lib/audio-editor/panels/GainPanel'
-import { EqPanel } from '@/lib/audio-editor/panels/EqPanel'
-import { CompPanel } from '@/lib/audio-editor/panels/CompPanel'
-import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
-import { FilterPanel } from '@/lib/audio-editor/panels/FilterPanel'
 import { SOUND_CLIP_MAX_DURATION_SEC, type TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import { TracklistEditor } from './tracklist-editor'
@@ -61,8 +46,11 @@ import {
   useWaveformCanvas,
   WAVE_HEIGHT,
 } from '@/lib/audio-editor/use-waveform-canvas'
-import { ChainTile, Switch, cx } from './pro-audio-editor-controls'
+import { cx } from './pro-audio-editor-controls'
+import { ProAudioEditorChain } from './pro-audio-editor-chain'
+import { CreateClipDialog, ExportDialog } from './pro-audio-editor-dialogs'
 import { ProAudioEditorToolbar } from './pro-audio-editor-toolbar'
+import { ProAudioEditorTransport } from './pro-audio-editor-transport'
 
 type EditorTab = 'waveform' | 'tracklist'
 type ToolId = 'select' | 'cut' | 'fade' | 'marker'
@@ -548,8 +536,19 @@ export function ProAudioEditor({
         ? `${gainParams.normalize.targetTp} dBTP`
         : '—'
 
-  const pluginPosition = (instanceId: string) =>
-    editList.plugins.findIndex((p) => p.instanceId === instanceId) + 1
+  const handleTogglePlay = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (audio.paused) {
+      setPreviewingSelection(false)
+      void audio.play()
+    } else audio.pause()
+  }, [audioRef, setPreviewingSelection])
+
+  const handlePreviewModeChange = useCallback((mode: 'before' | 'after') => {
+    setPreviewBypassedPluginId(null)
+    setPreviewMode(mode)
+  }, [])
 
   return (
     <div className="pro-editor-shell">
@@ -813,274 +812,46 @@ export function ProAudioEditor({
             </div>
           </div>
 
-          {/* ---- Transport ---- */}
-          <div className="pro-editor-transport">
-            <button
-              type="button"
-              className="pro-editor-play-btn"
-              aria-label={playing ? 'Pause' : 'Play'}
-              onClick={() => {
-                const audio = audioRef.current
-                if (!audio) return
-                if (audio.paused) {
-                  setPreviewingSelection(false)
-                  void audio.play()
-                } else audio.pause()
-              }}
-            >
-              {playing ? '⏸' : '▶'}
-            </button>
-            {selection && selection.end - selection.start > 0 && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handlePreviewSelection}
-                disabled={previewingSelection && playing}
-              >
-                <ButtonIcon name="play" />
-                {previewingSelection && playing ? 'Previewing…' : 'Preview selection'}
-              </Button>
-            )}
-            <span className="pro-editor-time">{formatDuration(currentTime)}</span>
-            <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
-            <span className="pro-editor-preview-note">
-              {previewMode === 'before' ? 'original chain bypassed' : 'effects preview'} · render
-              for final result
-            </span>
-            <div
-              className="pro-editor-preview-compare"
-              role="group"
-              aria-label="Plugin chain preview"
-            >
-              <button
-                type="button"
-                className={cx(
-                  'pro-editor-preview-compare__btn',
-                  previewMode === 'before' && 'is-active',
-                )}
-                onClick={() => {
-                  setPreviewBypassedPluginId(null)
-                  setPreviewMode('before')
-                }}
-              >
-                Before
-              </button>
-              <button
-                type="button"
-                className={cx(
-                  'pro-editor-preview-compare__btn',
-                  previewMode === 'after' && 'is-active',
-                )}
-                onClick={() => {
-                  setPreviewBypassedPluginId(null)
-                  setPreviewMode('after')
-                }}
-              >
-                After
-              </button>
-              <Button onClick={() => setExportDialogOpen(true)} variant="primary" size="sm">
-                <ButtonIcon name="download" />
-                Export
-              </Button>
-            </div>
-            <div className="pro-editor-transport-right">
-              <div className="pro-editor-out-meter">
-                <div className="pro-editor-out-meter__tp" style={{ left: '85%' }} />
-                <div
-                  className="pro-editor-out-meter__fill"
-                  style={{ transform: `scaleX(${Math.max(0, 1 - meterPeak)})` }}
-                />
-              </div>
-              <span className="pro-editor-out-readout">
-                {meterPeak > 0 ? `${(20 * Math.log10(meterPeak)).toFixed(1)} dBFS` : '−∞'}
-              </span>
-            </div>
-          </div>
+          <ProAudioEditorTransport
+            playing={playing}
+            currentTime={currentTime}
+            postDuration={postDuration}
+            previewMode={previewMode}
+            meterPeak={meterPeak}
+            selection={selection}
+            previewingSelection={previewingSelection}
+            onTogglePlay={handleTogglePlay}
+            onPreviewSelection={handlePreviewSelection}
+            onPreviewModeChange={handlePreviewModeChange}
+            onOpenExport={() => setExportDialogOpen(true)}
+          />
 
-          {/* ---- Plugin chain strip ---- */}
-          <div className="pro-editor-chain">
-            <div className="pro-editor-chain__header">
-              <span>
-                PLUGIN CHAIN · {editList.plugins.filter((plugin) => plugin.enabled).length} ACTIVE
-              </span>
-              <button
-                type="button"
-                className="pro-editor-chain__collapse"
-                aria-expanded={pluginsExpanded}
-                onClick={() => setPluginsExpanded((expanded) => !expanded)}
-              >
-                {pluginsExpanded ? 'Collapse' : 'Open plugins'}
-              </button>
-            </div>
-            {pluginsExpanded ? (
-              <div className="pro-editor-chain__strip">
-                {editList.plugins.map((plugin, i) => {
-                  let summary = ''
-                  if (plugin.pluginId === 'gain')
-                    summary = gainChainSummary(plugin.params as GainParams, plugin.enabled)
-                  else if (plugin.pluginId === 'eq')
-                    summary = eqChainSummary(plugin.params as EqParams, plugin.enabled)
-                  else if (plugin.pluginId === 'comp')
-                    summary = compChainSummary(plugin.params as CompParams, plugin.enabled)
-                  else if (plugin.pluginId === 'limiter')
-                    summary = limiterChainSummary(plugin.params as LimiterParams, plugin.enabled)
-                  else if (plugin.pluginId === 'filter')
-                    summary = filterChainSummary(plugin.params as FilterParams, plugin.enabled)
-
-                  const pluginName =
-                    plugin.pluginId === 'gain'
-                      ? 'Gain'
-                      : plugin.pluginId === 'eq'
-                        ? 'EQ'
-                        : plugin.pluginId === 'comp'
-                          ? 'Comp'
-                          : plugin.pluginId === 'limiter'
-                            ? 'Limiter'
-                            : 'Filter'
-
-                  return (
-                    <div key={plugin.instanceId} className="pro-editor-chain__cell">
-                      {i > 0 && (
-                        <span className="pro-editor-chain__arrow" aria-hidden>
-                          →
-                        </span>
-                      )}
-                      <div className="pro-editor-chain__tile">
-                        <ChainTile
-                          position={i + 1}
-                          name={pluginName}
-                          summary={summary}
-                          enabled={plugin.enabled}
-                          focused={plugin.instanceId === focusedInstanceId}
-                          onFocus={() => setFocusedInstanceId(plugin.instanceId)}
-                          onToggle={(v) => togglePlugin(plugin.instanceId, v)}
-                        />
-                        <button
-                          type="button"
-                          className={cx(
-                            'pro-editor-plugin-preview',
-                            previewBypassedPluginId === plugin.instanceId && 'is-active',
-                          )}
-                          disabled={!plugin.enabled}
-                          onClick={() => {
-                            setPreviewMode('after')
-                            setPreviewBypassedPluginId((current) =>
-                              current === plugin.instanceId ? null : plugin.instanceId,
-                            )
-                          }}
-                        >
-                          {previewBypassedPluginId === plugin.instanceId
-                            ? 'Playing without this plugin'
-                            : 'Preview before / after'}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="pro-editor-chain__empty">
-                No active effects. Open plugins to build a chain.
-              </p>
-            )}
-          </div>
-
-          {/* ---- Focused plugin panel ---- */}
-          {pluginsExpanded ? (
-            <div className="pro-editor-panel-area">
-              <div
-                className={cx(
-                  'pro-editor-panel',
-                  !focusedPlugin.enabled && 'pro-editor-panel--disabled',
-                )}
-              >
-                <div className="pro-editor-panel__header">
-                  <div className="pro-editor-panel__heading">
-                    <h2 className="pro-editor-panel__title">
-                      {focusedPlugin.pluginId === 'gain'
-                        ? 'Gain & Normalize'
-                        : focusedPlugin.pluginId === 'eq'
-                          ? 'EQ — 3 band parametric'
-                          : focusedPlugin.pluginId === 'comp'
-                            ? 'Compressor'
-                            : focusedPlugin.pluginId === 'limiter'
-                              ? 'Limiter'
-                              : 'Filter'}
-                    </h2>
-                    <span className="pro-editor-panel__pill">
-                      POSITION {pluginPosition(focusedPlugin.instanceId)} ·{' '}
-                      {focusedPlugin.enabled ? 'ENABLED' : 'BYPASSED'}
-                    </span>
-                  </div>
-                  <div className="pro-editor-panel__actions">
-                    <Button
-                      onClick={() => {
-                        const defaults =
-                          focusedPlugin.pluginId === 'gain'
-                            ? { ...DEFAULT_GAIN_PARAMS }
-                            : focusedPlugin.pluginId === 'eq'
-                              ? { ...DEFAULT_EQ_PARAMS }
-                              : focusedPlugin.pluginId === 'comp'
-                                ? { ...DEFAULT_COMP_PARAMS }
-                                : focusedPlugin.pluginId === 'limiter'
-                                  ? { ...DEFAULT_LIMITER_PARAMS }
-                                  : { ...DEFAULT_FILTER_PARAMS }
-                        patchPlugin(focusedPlugin.instanceId, defaults)
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      Reset
-                    </Button>
-                    <Switch
-                      checked={focusedPlugin.enabled}
-                      onChange={(v) => togglePlugin(focusedPlugin.instanceId, v)}
-                      label={`${focusedPlugin.pluginId} enabled`}
-                    />
-                  </div>
-                </div>
-                <div onPointerDown={beginKnobDrag}>
-                  {focusedPlugin.pluginId === 'gain' && gainPlugin && gainParams && (
-                    <GainPanel
-                      params={gainParams}
-                      onChange={(p) => patchPlugin(gainPlugin.instanceId, p)}
-                      measured={gainParams.measured}
-                      onMeasure={() => void handleMeasure()}
-                      measuring={measuring}
-                    />
-                  )}
-                  {focusedPlugin.pluginId === 'eq' && eqPlugin && eqParams && (
-                    <EqPanel
-                      params={eqParams}
-                      onChange={(p) => patchPlugin(eqPlugin.instanceId, p)}
-                    />
-                  )}
-                  {focusedPlugin.pluginId === 'comp' && compPlugin && compParams && (
-                    <CompPanel
-                      params={compParams}
-                      onChange={(p) => patchPlugin(compPlugin.instanceId, p)}
-                    />
-                  )}
-                  {focusedPlugin.pluginId === 'limiter' && limiterPlugin && limiterParams && (
-                    <LimiterPanel
-                      params={limiterParams}
-                      onChange={(p) => patchPlugin(limiterPlugin.instanceId, p)}
-                    />
-                  )}
-                  {focusedPlugin.pluginId === 'filter' && filterPlugin && filterParams && (
-                    <FilterPanel
-                      params={filterParams}
-                      onChange={(p) => patchPlugin(filterPlugin.instanceId, p)}
-                    />
-                  )}
-                </div>
-                <p className="pro-editor-panel__hint">
-                  drag knob · double-click to type · ⌥drag = fine · scroll = step
-                </p>
-              </div>
-            </div>
-          ) : null}
+          <ProAudioEditorChain
+            plugins={editList.plugins}
+            pluginsExpanded={pluginsExpanded}
+            onPluginsExpandedChange={setPluginsExpanded}
+            focusedInstanceId={focusedInstanceId}
+            onFocusInstanceId={setFocusedInstanceId}
+            previewBypassedPluginId={previewBypassedPluginId}
+            onPreviewBypassedPluginIdChange={setPreviewBypassedPluginId}
+            onPreviewModeAfter={() => setPreviewMode('after')}
+            togglePlugin={togglePlugin}
+            patchPlugin={patchPlugin}
+            focusedPlugin={focusedPlugin}
+            gainPlugin={gainPlugin}
+            eqPlugin={eqPlugin}
+            compPlugin={compPlugin}
+            limiterPlugin={limiterPlugin}
+            filterPlugin={filterPlugin}
+            gainParams={gainParams}
+            eqParams={eqParams}
+            compParams={compParams}
+            limiterParams={limiterParams}
+            filterParams={filterParams}
+            measuring={measuring}
+            onMeasure={() => void handleMeasure()}
+            onKnobDragStart={beginKnobDrag}
+          />
 
           {/* ---- Render summary bar ---- */}
           <div className="pro-editor-render-bar">
@@ -1114,185 +885,38 @@ export function ProAudioEditor({
         </>
       )}
 
-      {/* ---- Create clip dialog ---- */}
-      {clipDialogOpen && (
-        <div
-          className="pro-editor-dialog-backdrop"
-          onClick={() => !clipBusy && setClipDialogOpen(false)}
-        >
-          <div
-            className="pro-editor-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-labelledby="create-clip-title"
-          >
-            <h2 id="create-clip-title" className="pro-editor-dialog__title">
-              Create clip
-            </h2>
-            <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
-              Cut up to {SOUND_CLIP_MAX_DURATION_SEC} seconds from this track for radio station IDs
-              / announcements. Drag a selection on the waveform first, or set begin and end below.
-            </p>
-            <label className="pro-editor-field">
-              <span className="pro-editor-field__label">Title</span>
-              <input
-                type="text"
-                className="pro-editor-field__input"
-                value={clipTitle}
-                maxLength={120}
-                onChange={(e) => setClipTitle(e.target.value)}
-                disabled={clipBusy || !!clipSuccess}
-              />
-            </label>
-            <div className="pro-editor-field-row">
-              <label className="pro-editor-field">
-                <span className="pro-editor-field__label">Beginning (sec)</span>
-                <input
-                  type="number"
-                  className="pro-editor-field__input"
-                  min={0}
-                  step={0.1}
-                  value={clipStartSec}
-                  onChange={(e) => setClipStartSec(Number(e.target.value))}
-                  disabled={clipBusy || !!clipSuccess}
-                />
-              </label>
-              <label className="pro-editor-field">
-                <span className="pro-editor-field__label">Ending (sec)</span>
-                <input
-                  type="number"
-                  className="pro-editor-field__input"
-                  min={0}
-                  step={0.1}
-                  value={clipEndSec}
-                  onChange={(e) => setClipEndSec(Number(e.target.value))}
-                  disabled={clipBusy || !!clipSuccess}
-                />
-              </label>
-            </div>
-            <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
-              Length:{' '}
-              <strong>{formatDurationDecimal(Math.max(0, clipEndSec - clipStartSec))}</strong>
-              {clipEndSec - clipStartSec > SOUND_CLIP_MAX_DURATION_SEC
-                ? ` — max ${SOUND_CLIP_MAX_DURATION_SEC}s`
-                : ''}
-            </p>
-            {clipError && <p className="studio-text-error">{clipError}</p>}
-            {clipSuccess && (
-              <p className="pro-editor-export-success">
-                Clip &ldquo;{clipSuccess.title}&rdquo; is rendering —{' '}
-                <Link href={`/dashboard/settings/announcements/editor/${clipSuccess.clipId}`}>
-                  open clip editor
-                </Link>
-                {' · '}
-                <Link href="/dashboard/settings/distribution">announcements</Link>
-              </p>
-            )}
-            <div className="pro-editor-dialog__actions">
-              <Button
-                onClick={() => setClipDialogOpen(false)}
-                variant="ghost"
-                size="sm"
-                disabled={clipBusy}
-              >
-                {clipSuccess ? 'Close' : 'Cancel'}
-              </Button>
-              {!clipSuccess && (
-                <Button
-                  onClick={() => void handleCreateClip()}
-                  variant="primary"
-                  disabled={
-                    clipBusy ||
-                    !(clipEndSec > clipStartSec) ||
-                    clipEndSec - clipStartSec > SOUND_CLIP_MAX_DURATION_SEC
-                  }
-                >
-                  {clipBusy ? 'Creating…' : 'Create clip'}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateClipDialog
+        open={clipDialogOpen}
+        clipBusy={clipBusy}
+        clipTitle={clipTitle}
+        setClipTitle={setClipTitle}
+        clipStartSec={clipStartSec}
+        setClipStartSec={setClipStartSec}
+        clipEndSec={clipEndSec}
+        setClipEndSec={setClipEndSec}
+        clipError={clipError}
+        clipSuccess={clipSuccess}
+        onClose={() => setClipDialogOpen(false)}
+        onCreateClip={() => void handleCreateClip()}
+      />
 
-      {/* ---- Export dialog ---- */}
-      {exportDialogOpen && (
-        <div className="pro-editor-dialog-backdrop" onClick={() => setExportDialogOpen(false)}>
-          <div className="pro-editor-dialog" onClick={(e) => e.stopPropagation()} role="dialog">
-            <h2 className="pro-editor-dialog__title">Export &amp; publish</h2>
-            <div className="pro-editor-export-card__pills">
-              <button
-                type="button"
-                className={cx(
-                  'pro-editor-format-pill',
-                  exportFormat === 'flac' && 'pro-editor-format-pill--active',
-                )}
-                onClick={() => setExportFormat('flac')}
-              >
-                FLAC 24/96
-              </button>
-              <button
-                type="button"
-                className={cx(
-                  'pro-editor-format-pill',
-                  exportFormat === 'mp3' && 'pro-editor-format-pill--active',
-                )}
-                onClick={() => setExportFormat('mp3')}
-              >
-                MP3 320
-              </button>
-            </div>
-            <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
-              {browserRender
-                ? `Renders on your CPU via ffmpeg.wasm${!isolated ? ' (single-thread)' : ''}. Original kept.`
-                : 'This export is large — it renders on the server worker. Original kept.'}
-            </p>
-            {exportProgress !== null && (
-              <div className="pro-editor-progress">
-                <div
-                  className="pro-editor-progress__bar"
-                  style={{ width: `${exportProgress * 100}%` }}
-                />
-              </div>
-            )}
-            {exportPhase && exportProgress !== null && (
-              <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
-                {exportPhase}
-                {exportPhase === 'segment' ? '…' : ''}
-              </p>
-            )}
-            {exportError && <p className="studio-text-error">{exportError}</p>}
-            {previewError && <p className="studio-text-error">{previewError}</p>}
-            <div className="pro-editor-dialog__actions">
-              <Button
-                disabled={
-                  previewLoading ||
-                  exportProgress !== null ||
-                  (browserRender && (!ffmpeg || ffmpegLoading))
-                }
-                onClick={() => void handlePreviewSample()}
-                variant="ghost"
-                size="sm"
-              >
-                {previewLoading ? 'Rendering preview…' : 'Preview 30s MP3'}
-              </Button>
-              <Button onClick={() => setExportDialogOpen(false)} variant="ghost" size="sm">
-                Cancel
-              </Button>
-              <Button
-                disabled={exportProgress !== null || (browserRender && (!ffmpeg || ffmpegLoading))}
-                onClick={() => void handleExport(exportFormat)}
-                variant="primary"
-              >
-                <ButtonIcon name="download" />
-                {browserRender
-                  ? `Export ${exportFormat.toUpperCase()}`
-                  : `Export ${exportFormat.toUpperCase()} (server)`}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExportDialog
+        open={exportDialogOpen}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        browserRender={browserRender}
+        isolated={isolated}
+        exportProgress={exportProgress}
+        exportPhase={exportPhase}
+        exportError={exportError}
+        previewError={previewError}
+        previewLoading={previewLoading}
+        ffmpeg={ffmpeg}
+        ffmpegLoading={ffmpegLoading}
+        onClose={() => setExportDialogOpen(false)}
+        onPreviewSample={() => void handlePreviewSample()}
+        onExport={(format) => void handleExport(format)}
+      />
     </div>
   )
 }

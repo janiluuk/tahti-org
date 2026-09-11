@@ -52,7 +52,13 @@ Break oversized modules into focused files without behavior changes.
 4. **T4** channel gallery/text/visual/overlay register in `studio.ts`; `sound.ts` is sound-only
 5. **T5** `pro-audio-editor-toolbar.tsx`
 
+### Slice 8–10 — transport, chain, import chrome + dialogs
+
+- `pro-audio-editor-transport.tsx`, `pro-audio-editor-chain.tsx`,
+  `pro-audio-editor-dialogs.tsx` → main **1298 → ~922**
+- `_collection-import-chrome.tsx` → collection editor **693 → 489**
+
 ## Leftovers
 
-- Further split `pro-audio-editor.tsx` (~1.3k) — transport / plugin-chain panels
-- `_collection-editor.tsx` (~696) — library picker / import modals could still move out
+- Optional: peel waveform panel JSX from `pro-audio-editor.tsx` (~922) to land under ~800
+- Collection editor (~489) is in good shape; further splits optional
