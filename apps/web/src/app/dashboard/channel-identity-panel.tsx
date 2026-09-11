@@ -4,16 +4,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 import { resolveClientApiUrl } from '@/lib/api-url'
 
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import {
   SOUND_GENRES,
-  AVATAR_THEME_PRESETS,
   avatarThemeCss,
   randomAvatarTheme,
   type AvatarTheme,
   type LogoPlacement,
-  LOGO_PLACEMENT_LABELS,
-  LOGO_PLACEMENTS,
 } from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
@@ -25,82 +22,17 @@ import {
   prepareAvatarUpload,
   prepareLogoUpload,
 } from './channel-identity-actions'
-import { ButtonIcon, brandTokens, FileDropzone, StudioCollapse } from '@tahti/ui'
+import { brandTokens, StudioCollapse } from '@tahti/ui'
+import { ChannelIdentityMediaSection } from './channel-identity-media-section'
+import { extractPosterFrame, uploadBlob, type ChannelIdentityDraft } from './channel-identity-utils'
+
+export type { ChannelIdentityDraft } from './channel-identity-utils'
 
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ALLOWED_LOGO_MIME = ['image/png', 'image/webp']
 const API_BASE = resolveClientApiUrl()
-const POSTER_SIZE = 512
 const DEFAULT_AVATAR_COLOR = brandTokens.color.accent.cyan
-
-export type ChannelIdentityDraft = {
-  displayName: string
-  avatarUrl: string | null
-  avatarPosterUrl: string | null
-  avatarTheme: AvatarTheme | null
-  logoUrl: string | null
-  logoPlacement: LogoPlacement | null
-  countryCode: string | null
-  pronouns: string | null
-  defaultLocation: string | null
-  genres: string[]
-}
-
-function initialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
-  return `${parts[0]![0] ?? ''}${parts[1]![0] ?? ''}`.toUpperCase()
-}
-
-/** Draws a GIF's first frame onto a canvas and exports it as a JPEG blob —
- * the static poster shown at rest, since cropping a GIF through the normal
- * pan/zoom tool would flatten its animation (same canvas limitation
- * AvatarCropModal already has for the non-GIF path). */
-function extractPosterFrame(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = POSTER_SIZE
-      canvas.height = POSTER_SIZE
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return reject(new Error('Could not create canvas context'))
-      const scale = Math.max(POSTER_SIZE / img.naturalWidth, POSTER_SIZE / img.naturalHeight)
-      const w = img.naturalWidth * scale
-      const h = img.naturalHeight * scale
-      ctx.drawImage(img, (POSTER_SIZE - w) / 2, (POSTER_SIZE - h) / 2, w, h)
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error('Could not export poster frame'))),
-        'image/jpeg',
-        0.92,
-      )
-    }
-    img.onerror = () => reject(new Error('Could not load that GIF'))
-    img.src = URL.createObjectURL(file)
-  })
-}
-
-async function uploadBlob(
-  blob: Blob,
-  filename: string,
-  contentType: string,
-): Promise<{ uploadKey?: string; error?: string }> {
-  const prep = await prepareAvatarUpload({ filename, contentType })
-  if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
-    return { error: prep.error ?? 'Prepare failed' }
-  }
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('PUT', prep.uploadUrl!)
-    xhr.setRequestHeader('Content-Type', contentType)
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject())
-    xhr.onerror = () => reject(new Error('Upload failed'))
-    xhr.send(blob)
-  })
-  return { uploadKey: prep.uploadKey }
-}
 
 interface Props {
   initial: ChannelIdentityDraft
@@ -348,7 +280,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
 
   const previewSrc = avatarPosterUrl || avatarUrl
   const themeCss = avatarTheme ? avatarThemeCss(avatarTheme) : undefined
-  const swatches = AVATAR_THEME_PRESETS.filter((p) => p.kind === 'gradient').slice(0, 8)
 
   return (
     <>
@@ -373,283 +304,34 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
         </div>
       </StudioCollapse>
 
-      <StudioCollapse title="Media" defaultOpen>
-        <div className="studio-field--block">
-          <span className="studio-label">Avatar</span>
-          <div className="studio-avatar-picker">
-            <FileDropzone
-              bare
-              label="Upload avatar — drop an image or click to browse"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              disabled={avatarBusy}
-              className={`studio-avatar-picker__drop${avatarBusy ? ' studio-avatar-picker__drop--busy' : ''}`}
-              style={
-                {
-                  ['--avatar-pick-color' as string]: avatarColor,
-                  ...(themeCss && !previewSrc ? { background: themeCss } : {}),
-                } as CSSProperties
-              }
-              onFiles={(files) => {
-                const f = files[0]
-                if (f) onFile(f)
-              }}
-            >
-              {previewSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={previewSrc} alt="" className="studio-avatar-picker__img" />
-              ) : (
-                <span className="studio-avatar-picker__initials" aria-hidden>
-                  {initialsFromName(displayName)}
-                </span>
-              )}
-              {logoUrl && (logoPlacement === 'AVATAR' || logoPlacement === 'BOTH') ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="" className="studio-avatar-picker__logo" />
-              ) : null}
-              <span className="studio-avatar-picker__hint">
-                {avatarBusy ? '…' : 'Drop / click'}
-              </span>
-            </FileDropzone>
-
-            <div className="studio-avatar-picker__tools">
-              {!previewSrc && (
-                <label
-                  className="studio-avatar-picker__color"
-                  title="Solid color avatar"
-                  aria-label="Solid color avatar"
-                >
-                  <input
-                    type="color"
-                    value={avatarColor}
-                    disabled={avatarBusy}
-                    onChange={(e) => onColorPick(e.target.value)}
-                  />
-                </label>
-              )}
-              {!previewSrc && (
-                <button
-                  type="button"
-                  className="studio-avatar-picker__url-btn"
-                  title="Shuffle gradient"
-                  aria-label="Shuffle gradient"
-                  disabled={avatarBusy}
-                  onClick={onShuffleTheme}
-                >
-                  <ButtonIcon name="refresh" />
-                </button>
-              )}
-              <button
-                type="button"
-                className={`studio-avatar-picker__url-btn${urlMode ? ' studio-avatar-picker__url-btn--active' : ''}`}
-                title="Use image URL"
-                aria-label="Use image URL"
-                aria-pressed={urlMode}
-                disabled={avatarBusy}
-                onClick={() => {
-                  setUrlMode((v) => !v)
-                  setAvatarError(null)
-                }}
-              >
-                <ButtonIcon name="link" />
-              </button>
-            </div>
-          </div>
-
-          {!previewSrc ? (
-            <div className="studio-avatar-theme-swatches" role="list" aria-label="Gradient presets">
-              {swatches.map((preset) => {
-                const css = avatarThemeCss(preset)
-                const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
-                return (
-                  <button
-                    key={css}
-                    type="button"
-                    className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
-                    style={{ background: css }}
-                    title="Apply gradient"
-                    aria-label="Apply gradient"
-                    aria-pressed={active}
-                    disabled={avatarBusy}
-                    onClick={() => applyTheme(preset)}
-                  />
-                )
-              })}
-            </div>
-          ) : (
-            <details className="studio-details-block studio-mt-sm">
-              <summary className="studio-details-block__summary">
-                Replace photo with a theme avatar
-              </summary>
-              <div className="studio-details-block__body">
-                <div className="studio-avatar-picker__tools studio-mb-sm">
-                  <label
-                    className="studio-avatar-picker__color"
-                    title="Solid color avatar"
-                    aria-label="Solid color avatar"
-                  >
-                    <input
-                      type="color"
-                      value={avatarColor}
-                      disabled={avatarBusy}
-                      onChange={(e) => onColorPick(e.target.value)}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="studio-avatar-picker__url-btn"
-                    title="Shuffle gradient"
-                    aria-label="Shuffle gradient"
-                    disabled={avatarBusy}
-                    onClick={onShuffleTheme}
-                  >
-                    <ButtonIcon name="refresh" />
-                  </button>
-                </div>
-                <div
-                  className="studio-avatar-theme-swatches"
-                  role="list"
-                  aria-label="Gradient presets"
-                >
-                  {swatches.map((preset) => {
-                    const css = avatarThemeCss(preset)
-                    const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
-                    return (
-                      <button
-                        key={css}
-                        type="button"
-                        className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
-                        style={{ background: css }}
-                        title="Apply gradient"
-                        aria-label="Apply gradient"
-                        aria-pressed={active}
-                        disabled={avatarBusy}
-                        onClick={() => applyTheme(preset)}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            </details>
-          )}
-
-          {urlMode && (
-            <div className="studio-avatar-picker__url-row">
-              <input
-                type="url"
-                placeholder="https://… image URL"
-                value={avatarUrlInput}
-                disabled={avatarBusy}
-                onChange={(e) => setAvatarUrlInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void onLoadUrl()
-                }}
-                className="studio-input studio-input--grow"
-              />
-              <button
-                type="button"
-                className="ui-btn ui-btn--sm ui-btn--primary"
-                disabled={avatarBusy || !avatarUrlInput.trim()}
-                onClick={() => void onLoadUrl()}
-              >
-                {avatarBusy ? '…' : 'Fetch'}
-              </button>
-            </div>
-          )}
-
-          <p className="studio-help studio-mt-xs">
-            Pick a solid color or gradient (defaults are harmonious pairs), or drop a photo / paste
-            a URL. PNG keeps transparency. GIFs animate on hover.
-          </p>
-        </div>
-
-        <div className="studio-field--block">
-          <span className="studio-label">Logo</span>
-          <div className="studio-logo-picker">
-            <FileDropzone
-              bare
-              label="Drop a transparent PNG or WebP logo, or click to browse"
-              accept="image/png,image/webp"
-              disabled={avatarBusy}
-              className="studio-logo-picker__drop"
-              onFiles={(files) => {
-                const file = files[0]
-                if (file) onLogoFile(file)
-              }}
-            >
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="" className="studio-logo-picker__img" />
-              ) : (
-                <span className="studio-logo-picker__placeholder">
-                  <ButtonIcon name="import" />
-                  <strong>Drop logo or click</strong>
-                  <small>Transparent PNG or WebP</small>
-                </span>
-              )}
-            </FileDropzone>
-            <div className="studio-logo-picker__meta">
-              <div
-                className="studio-logo-picker__placements"
-                role="radiogroup"
-                aria-label="Logo placement"
-              >
-                {LOGO_PLACEMENTS.map((placement) => (
-                  <label
-                    key={placement}
-                    className={`studio-logo-picker__place${logoPlacement === placement ? ' studio-logo-picker__place--active' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="logo-placement"
-                      value={placement}
-                      checked={logoPlacement === placement}
-                      disabled={avatarBusy || !logoUrl}
-                      onChange={() => setLogoPlacement(placement)}
-                    />
-                    {LOGO_PLACEMENT_LABELS[placement]}
-                  </label>
-                ))}
-              </div>
-              {logoUrl ? (
-                confirmRemoveLogo ? (
-                  <div className="studio-row studio-row--wrap">
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--sm ui-btn--danger"
-                      disabled={avatarBusy}
-                      onClick={clearLogo}
-                    >
-                      Confirm remove
-                    </button>
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--sm ui-btn--ghost"
-                      onClick={() => setConfirmRemoveLogo(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--sm ui-btn--ghost"
-                    disabled={avatarBusy}
-                    onClick={() => setConfirmRemoveLogo(true)}
-                  >
-                    Remove logo
-                  </button>
-                )
-              ) : null}
-            </div>
-          </div>
-          <p className="studio-help studio-mt-xs">
-            Transparent PNG/WebP sits on top of your avatar, profile cover, or both.
-          </p>
-          {avatarError && (
-            <p className="studio-notice studio-notice--error studio-mt-sm">{avatarError}</p>
-          )}
-        </div>
-      </StudioCollapse>
+      <ChannelIdentityMediaSection
+        displayName={displayName}
+        previewSrc={previewSrc}
+        themeCss={themeCss}
+        avatarColor={avatarColor}
+        avatarTheme={avatarTheme}
+        avatarBusy={avatarBusy}
+        avatarError={avatarError}
+        urlMode={urlMode}
+        avatarUrlInput={avatarUrlInput}
+        logoUrl={logoUrl}
+        logoPlacement={logoPlacement}
+        confirmRemoveLogo={confirmRemoveLogo}
+        onFile={onFile}
+        onLogoFile={onLogoFile}
+        onColorPick={onColorPick}
+        onShuffleTheme={onShuffleTheme}
+        onLoadUrl={onLoadUrl}
+        applyTheme={applyTheme}
+        clearLogo={clearLogo}
+        onToggleUrlMode={() => {
+          setUrlMode((v) => !v)
+          setAvatarError(null)
+        }}
+        setAvatarUrlInput={setAvatarUrlInput}
+        setLogoPlacement={setLogoPlacement}
+        setConfirmRemoveLogo={setConfirmRemoveLogo}
+      />
 
       {cropSrc && (
         <AvatarCropModal

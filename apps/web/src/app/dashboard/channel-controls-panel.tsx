@@ -4,110 +4,25 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
-import { Button, Panel, SortableList } from '@tahti/ui'
+import { Panel } from '@tahti/ui'
 import { channelPlaylistLabel } from './channel-controls-label'
+import { ChevronIcon } from './channel-controls-icons'
+import {
+  ChannelControlsPlaylistConfirm,
+  ChannelControlsPlaylistSection,
+} from './channel-controls-playlist-section'
+import { ChannelControlsTransportBar } from './channel-controls-transport-bar'
+import type {
+  CollectionDetail,
+  NowPlaying,
+  PlaylistOption,
+  Programme,
+  ProgrammeItem,
+} from './channel-controls-types'
+import { formatRemaining } from './channel-controls-utils'
 import { resolveClientApiUrl } from '@/lib/api-url'
 
 const API_URL = resolveClientApiUrl()
-type ProgrammeItem = {
-  id: string
-  title: string
-  isFallback: boolean
-  fallbackOrder: number | null
-}
-
-type Programme = {
-  fallbackMode: 'shuffle' | 'ordered' | 'time' | 'name'
-  fallbackEnabled: boolean
-  fallbackAutoEnroll: boolean
-  announcementsEnabled: boolean
-  items: ProgrammeItem[]
-}
-
-type PlaylistOption = {
-  id: string
-  slug: string
-  name: string
-  trackCount: number
-  active: boolean
-}
-
-type CollectionItem = {
-  id: string
-  position: number
-
-  sound: { id: string; title: string } | null
-  release: { title: string } | null
-}
-
-type CollectionDetail = {
-  slug: string
-  name: string
-  items: CollectionItem[]
-}
-
-function itemTitle(item: CollectionItem): string {
-  return item.sound?.title ?? item.release?.title ?? 'Untitled track'
-}
-
-function TransportIcon({ direction }: { direction: 'previous' | 'next' }) {
-  return direction === 'previous' ? (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M6 6h2v12H6zm3.5 6 9-6v12z" fill="currentColor" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M16 6h2v12h-2zM5.5 6l9 6-9 6z" fill="currentColor" />
-    </svg>
-  )
-}
-
-function StopResumeIcon({ playing }: { playing: boolean }) {
-  return playing ? (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path d="M8 5v14l11-7z" fill="currentColor" />
-    </svg>
-  )
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      aria-hidden="true"
-      className={`db-channel-controls__chevron${expanded ? ' db-channel-controls__chevron--open' : ''}`}
-    >
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-type NowPlaying = {
-  title: string
-  artistName: string
-  durationSec: number | null
-  startedAt: string
-}
-
-function formatRemaining(seconds: number): string {
-  const s = Math.max(0, Math.round(seconds))
-  const m = Math.floor(s / 60)
-  const rem = s % 60
-  return `${m}:${String(rem).padStart(2, '0')}`
-}
 
 export function ChannelControlsPanel({
   slug,
@@ -446,7 +361,7 @@ export function ChannelControlsPanel({
     }
   }
 
-  async function reorderCollection(next: CollectionItem[]) {
+  async function reorderCollection(next: CollectionDetail['items']) {
     if (!collection) return
     const previous = collection.items
     setCollection({ ...collection, items: next })
@@ -484,6 +399,15 @@ export function ChannelControlsPanel({
         ? 'Channel rotation on'
         : 'Channel stopped'
 
+  function handlePlaylistChange(nextId: string) {
+    if (!nextId) {
+      void replacePlaylist('')
+      return
+    }
+    const chosen = playlists.find((playlist) => playlist.id === nextId)
+    if (chosen) setPendingChoice({ id: chosen.id, name: chosen.name })
+  }
+
   if (!managerExpanded) {
     return (
       <div className="db-channel-controls db-channel-controls--collapsed">
@@ -494,38 +418,12 @@ export function ChannelControlsPanel({
         <span className="db-channel-controls__now-compact" title={statusText}>
           {statusText}
         </span>
-        <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">
-          <Button
-            type="button"
-            variant="secondary"
-            aria-label="Previous track"
-            title="Previous track"
-            disabled={pending !== null}
-            onClick={() => void transport('previous')}
-          >
-            <TransportIcon direction="previous" />
-          </Button>
-          <Button
-            type="button"
-            variant={programme?.fallbackEnabled ? 'danger' : 'primary'}
-            aria-label={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
-            title={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
-            disabled={!programme || pending !== null}
-            onClick={() => void toggleChannel()}
-          >
-            <StopResumeIcon playing={Boolean(programme?.fallbackEnabled)} />
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            aria-label="Next track"
-            title="Next track"
-            disabled={pending !== null}
-            onClick={() => void transport('skip')}
-          >
-            <TransportIcon direction="next" />
-          </Button>
-        </div>
+        <ChannelControlsTransportBar
+          programme={programme}
+          pending={pending}
+          onTransport={(action) => void transport(action)}
+          onToggleChannel={() => void toggleChannel()}
+        />
         <button
           type="button"
           className="db-channel-controls__expand-toggle"
@@ -559,38 +457,12 @@ export function ChannelControlsPanel({
         <span className="db-channel-controls__now-compact" title={statusText}>
           {statusText}
         </span>
-        <div className="db-channel-controls__transport" role="group" aria-label="Channel playback">
-          <Button
-            type="button"
-            variant="secondary"
-            aria-label="Previous track"
-            title="Previous track"
-            disabled={pending !== null}
-            onClick={() => void transport('previous')}
-          >
-            <TransportIcon direction="previous" />
-          </Button>
-          <Button
-            type="button"
-            variant={programme?.fallbackEnabled ? 'danger' : 'primary'}
-            aria-label={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
-            title={programme?.fallbackEnabled ? 'Stop channel' : 'Start channel'}
-            disabled={!programme || pending !== null}
-            onClick={() => void toggleChannel()}
-          >
-            <StopResumeIcon playing={Boolean(programme?.fallbackEnabled)} />
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            aria-label="Next track"
-            title="Next track"
-            disabled={pending !== null}
-            onClick={() => void transport('skip')}
-          >
-            <TransportIcon direction="next" />
-          </Button>
-        </div>
+        <ChannelControlsTransportBar
+          programme={programme}
+          pending={pending}
+          onTransport={(action) => void transport(action)}
+          onToggleChannel={() => void toggleChannel()}
+        />
         <button
           type="button"
           className="db-channel-controls__expand-toggle"
@@ -605,145 +477,34 @@ export function ChannelControlsPanel({
       </div>
 
       {expanded && (
-        <div id={playlistSectionId} className="db-channel-controls__body">
-          <label className="studio-label" htmlFor="dashboard-channel-playlist">
-            Channel playlist
-          </label>
-          <select
-            id="dashboard-channel-playlist"
-            className="studio-input db-channel-controls__select"
-            value={activePlaylist?.id ?? ''}
-            disabled={pending !== null}
-            onChange={(event) => {
-              const nextId = event.target.value
-              if (!nextId) {
-                void replacePlaylist('')
-                return
-              }
-              const chosen = playlists.find((playlist) => playlist.id === nextId)
-              if (chosen) setPendingChoice({ id: chosen.id, name: chosen.name })
-            }}
-          >
-            <option value="">Default rotation ({rotationItems.length})</option>
-            {playlists.map((playlist) => (
-              <option key={playlist.id} value={playlist.id}>
-                {playlist.name} ({playlist.trackCount})
-              </option>
-            ))}
-          </select>
-
-          <div className="db-channel-controls__playlist-head">
-            <strong>{activePlaylist?.name ?? 'Default rotation'}</strong>
-            <a href="/dashboard/channel/playlist" className="studio-link">
-              Edit full playlist
-            </a>
-          </div>
-          {editableItems.length === 0 ? (
-            <p className="studio-text-muted-sm studio-m-0">This playlist has no tracks yet.</p>
-          ) : activePlaylist ? (
-            <SortableList
-              as="ol"
-              className="db-channel-controls__playlist"
-              items={collection?.items ?? []}
-              itemId={(item) => item.id}
-              onReorder={(next) => void reorderCollection(next)}
-              renderItem={(item, index, sortable) => (
-                <li
-                  ref={sortable.ref}
-                  className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
-                >
-                  <button
-                    ref={sortable.handleRef}
-                    type="button"
-                    aria-label={`Reorder ${itemTitle(item)}`}
-                  >
-                    ⠿
-                  </button>
-                  <span>{index + 1}</span>
-                  <strong>{itemTitle(item)}</strong>
-                </li>
-              )}
-            />
-          ) : (
-            <SortableList
-              as="ol"
-              className="db-channel-controls__playlist"
-              items={rotationItems}
-              itemId={(item) => item.id}
-              onReorder={(next) => void reorderDefault(next)}
-              renderItem={(item, index, sortable) => (
-                <li
-                  ref={sortable.ref}
-                  className={`db-channel-controls__track${sortable.isDragging ? ' is-dragging' : ''}`}
-                >
-                  <button
-                    ref={sortable.handleRef}
-                    type="button"
-                    aria-label={`Reorder ${item.title}`}
-                  >
-                    ⠿
-                  </button>
-                  <span>{index + 1}</span>
-                  <strong>{item.title}</strong>
-                </li>
-              )}
-            />
-          )}
-          {pending === 'reorder' ? <p className="studio-text-muted-sm">Saving order…</p> : null}
-        </div>
+        <ChannelControlsPlaylistSection
+          playlistSectionId={playlistSectionId}
+          playlists={playlists}
+          activePlaylist={activePlaylist}
+          rotationItems={rotationItems}
+          collection={collection}
+          editableItems={editableItems}
+          pending={pending}
+          onPlaylistChange={handlePlaylistChange}
+          onReorderCollection={(next) => void reorderCollection(next)}
+          onReorderDefault={(next) => void reorderDefault(next)}
+        />
       )}
       {message ? <p className="studio-text-success studio-text-sm">{message}</p> : null}
       {error ? <p className="studio-text-error studio-text-sm">{error}</p> : null}
       {pendingChoice && (
-        <div
-          className="db-channel-controls__confirm-overlay"
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPendingChoice(null)
+        <ChannelControlsPlaylistConfirm
+          pendingChoice={pendingChoice}
+          onReplace={(id) => {
+            setPendingChoice(null)
+            void replacePlaylist(id)
           }}
-        >
-          <div
-            className="db-channel-controls__confirm-card"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Use ${pendingChoice.name}`}
-          >
-            <h3 className="db-channel-controls__confirm-title">
-              Use &ldquo;{pendingChoice.name}&rdquo;?
-            </h3>
-            <p className="studio-text-muted-sm">
-              Replace swaps the whole rotation for this playlist. Append adds its tracks to the end
-              of your current rotation instead.
-            </p>
-            <div className="db-channel-controls__confirm-actions">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  const id = pendingChoice.id
-                  setPendingChoice(null)
-                  void replacePlaylist(id)
-                }}
-              >
-                Replace
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  const id = pendingChoice.id
-                  setPendingChoice(null)
-                  void appendPlaylist(id)
-                }}
-              >
-                Append
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setPendingChoice(null)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
+          onAppend={(id) => {
+            setPendingChoice(null)
+            void appendPlaylist(id)
+          }}
+          onCancel={() => setPendingChoice(null)}
+        />
       )}
     </Panel>
   )

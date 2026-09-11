@@ -25,15 +25,7 @@ import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { SoundVideoBackdrop, resolveSoundBackground } from './sound-item-backdrop'
 import { SoundListSection } from './_sound-list-section'
 import type { PlayerTrack } from '@/contexts/player-context'
-import type {
-  ChannelGalleryMode,
-  ChannelTextLayerAlignment,
-  ChannelTextLayerMode,
-  PublicChannelBlock,
-  RssFeedItem,
-  TracklistEntry,
-} from '@tahti/shared'
-import { BRAND_ACCENT_PRESETS, DEFAULT_COLOR_SCHEME, parseColorScheme } from '@tahti/shared'
+import type { PublicChannelBlock, RssFeedItem } from '@tahti/shared'
 
 import {
   AvatarTile,
@@ -61,102 +53,23 @@ import { ChannelBlocksView } from '@/components/channel-blocks-view'
 import { ManagePanel, type ManageStats } from './_manage-panel'
 import { TracksTab, type TrackTabItem } from '@/app/u/[username]/_tracks-tab'
 import { cookies } from 'next/headers'
-import type { CSSProperties } from 'react'
+import type {
+  Announcement,
+  ChannelEmbed,
+  ChannelEvent,
+  ChannelPost,
+  ChannelResponse,
+  SoundItem,
+} from './_channel-page-types'
+import {
+  buildSocialLinkEntries,
+  buildStreamingLinkEntries,
+  formatJoinDateLabel,
+  resolveHeaderBannerStyle,
+  resolveProfileTags,
+} from './_channel-page-utils'
 
-function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
-  if (!joinDate) return null
-  const date = new Date(joinDate)
-  if (Number.isNaN(date.getTime())) return null
-  return `Joined ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
-}
-
-interface ChannelResponse {
-  slug: string
-  state: string
-  hlsUrl: string | null
-  /** Real Icecast ingest — false when only 24/7 archive fallback is playing */
-  signalConnected?: boolean
-  nextBroadcastAt: string | null
-  nextBroadcastNote: string | null
-  galleryMode: ChannelGalleryMode
-  slideshowImages: string[]
-  textLayerMode: ChannelTextLayerMode
-  textLayerText: string
-  textLayerAlign: ChannelTextLayerAlignment
-  videoBackgroundUrl?: string | null
-  headerStyle?: string
-  brandAccentPreset?: string | null
-  colorSchemeJson?: string | null
-  visualPreset?: string
-  visualSettingsJson?: string | null
-  slideshowPreset?: string
-  slideshowIntervalSeconds?: number
-  slideshowTransitionMs?: number
-  slideshowAutoplay?: boolean
-  user: {
-    username: string
-    displayName: string
-    bio: string | null
-    avatarUrl: string | null
-    countryCode?: string | null
-    pronouns?: string | null
-    socialLinks?: Record<string, string> | null
-    tier: string
-    isMember?: boolean
-    joinDate?: string | null
-    chatEnabled?: boolean
-  }
-  nowPlaying: {
-    title: string
-    artistName: string
-    artistUsername: string | null
-    artworkUrl: string | null
-  } | null
-  nowPlayingNext: { title: string; artistName: string; artistUsername: string } | null
-}
-
-function resolveHeaderBannerStyle(channel: ChannelResponse): CSSProperties | undefined {
-  if (channel.headerStyle === 'VIDEO_LOOP') return undefined
-  const preset = BRAND_ACCENT_PRESETS.find((item) => item.id === channel.brandAccentPreset)
-  if (channel.headerStyle === 'SOLID') {
-    const scheme = parseColorScheme(channel.colorSchemeJson)
-    return { background: preset?.accent ?? scheme?.accent ?? DEFAULT_COLOR_SCHEME.accent }
-  }
-  return { background: preset?.gradient ?? BRAND_ACCENT_PRESETS[0]?.gradient }
-}
-
-export interface SoundItem {
-  id: string
-  title: string
-  artistName?: string | null
-  credits?: Array<{ role: string; name: string; artistUsername?: string }> | null
-  description: string | null
-  commentary: string | null
-  durationSec: number | null
-  audioUrl: string | null
-  peaks?: number[] | null
-  createdAt: string
-  genre?: string | null
-  genreCustom?: string | null
-  tracklist?: TracklistEntry[] | null
-  visualPreset?: string | null
-  repostToDownload?: boolean
-  followToDownload?: boolean
-  bannerUrl?: string | null
-  backgroundUrl?: string | null
-  slideshowUrls?: string[]
-  galleryMode?: ChannelGalleryMode
-  galleryAudioReactive?: boolean
-  commentCount?: number
-  downloadCount?: number
-  accentColor?: string | null
-}
-
-interface Announcement {
-  id: string
-  body: string
-  createdAt: string
-}
+export type { SoundItem } from './_channel-page-types'
 
 export default async function ChannelPage({ params }: { params: { slug: string } }) {
   const { slug } = params
@@ -255,25 +168,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const announcements: Announcement[] = announcementsRes.ok
     ? ((await announcementsRes.json()) as Announcement[])
     : []
-  const events: Array<{
-    id: string
-    title: string
-    place: string
-    location: string
-    eventUrl: string | null
-    startAt: string
-  }> = eventsRes.ok ? await eventsRes.json() : []
-  const posts: Array<{
-    id: string
-    title: string | null
-    body: string
-    images: string[]
-    publishAt: string
-    createdAt: string
-  }> = postsRes.ok ? await postsRes.json() : []
-  const embeds: Array<{ id: string; url: string; title: string | null }> = embedsRes.ok
-    ? await embedsRes.json()
-    : []
+  const events: ChannelEvent[] = eventsRes.ok ? await eventsRes.json() : []
+  const posts: ChannelPost[] = postsRes.ok ? await postsRes.json() : []
+  const embeds: ChannelEmbed[] = embedsRes.ok ? await embedsRes.json() : []
   const channelBlocks: PublicChannelBlock[] = blocksRes.ok
     ? ((await blocksRes.json()) as { blocks: PublicChannelBlock[] }).blocks
     : []
@@ -312,35 +209,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const channelBackdrop = resolveSoundBackground(channel.videoBackgroundUrl ?? null)
   const headerBannerStyle = resolveHeaderBannerStyle(channel)
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
-  const profileGenres = socialLinks.genres
-    ? socialLinks.genres
-        .split(',')
-        .map((g) => g.trim())
-        .filter(Boolean)
-    : []
-  const STREAMING_LINK_LABELS: Record<string, string> = {
-    youtube: 'YouTube',
-    hearthisAt: 'hearthis.at',
-    twitch: 'Twitch',
-    soundcloud: 'SoundCloud',
-    kick: 'Kick',
-  }
-  const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
-    .map(([key, label]) => [label, socialLinks[key]] as const)
-    .filter(([, url]) => !!url)
+  const streamingLinkEntries = buildStreamingLinkEntries(socialLinks)
   const kickUsername = socialLinks.kick ? kickUsernameFromUrl(socialLinks.kick) : null
-  const socialLinkEntries = Object.entries(socialLinks).filter(
-    ([key, url]) => key !== 'genres' && !(key in STREAMING_LINK_LABELS) && url,
-  )
-  let tags = profileGenres
-  if (tags.length === 0) {
-    const tagSet = new Set<string>()
-    for (const item of items) {
-      if (item.genre?.trim()) tagSet.add(item.genre.trim())
-      if (item.genreCustom?.trim()) tagSet.add(item.genreCustom.trim())
-    }
-    tags = [...tagSet].slice(0, 8)
-  }
+  const socialLinkEntries = buildSocialLinkEntries(socialLinks)
+  const tags = resolveProfileTags(socialLinks, items)
 
   let listenerCount: number | null = null
   if (channel.state === 'LIVE') {
