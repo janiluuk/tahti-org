@@ -16,7 +16,7 @@ import { DEFAULT_LIVE_STREAM_QUALITY, qualityLabelForBitrate } from './player-ut
 
 const HISTORY_LIMIT = 50
 
-export function useTeardownHls(hlsRef: RefObject<HlsInstance | null>) {
+export function useTeardownHls(hlsRef: MutableRefObject<HlsInstance | null>) {
   return useCallback(() => {
     hlsRef.current?.destroy()
     hlsRef.current = null
@@ -25,7 +25,7 @@ export function useTeardownHls(hlsRef: RefObject<HlsInstance | null>) {
 
 export function usePlayerLoad(opts: {
   audioRef: RefObject<HTMLAudioElement | null>
-  hlsRef: RefObject<HlsInstance | null>
+  hlsRef: MutableRefObject<HlsInstance | null>
   currentTrackIdRef: MutableRefObject<string | null>
   currentTrackRef: MutableRefObject<PlayerTrack | null>
   queueRef: MutableRefObject<PlayerTrack[] | null>

@@ -70,7 +70,7 @@ export function CollectionEditorSettings({
   description: string
   onDescriptionChange: (value: string) => void
   coverUrl: string | null
-  onCoverUrlChange: (url: string) => void
+  onCoverUrlChange: (url: string | null) => void
   settingsError: string | null
   settingsDirty: boolean
   settingsSaving: boolean

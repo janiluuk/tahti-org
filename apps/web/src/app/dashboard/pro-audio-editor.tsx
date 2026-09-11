@@ -167,15 +167,16 @@ export function ProAudioEditor({
   const previewRef = useRef<ReturnType<typeof attachPreviewGraph> | null>(null)
   const previewSourceRef = useRef<ReturnType<typeof createPreviewSource> | null>(null)
 
-  const { autosaveLabel, saveError, draftConflict, flushDraftSave } = useDraftAutosave({
-    soundId,
-    editList,
-    editListRef,
-    draftUpdatedAt,
-    knobDragging,
-    setKnobDragging,
-    exportProgress,
-  })
+  const { autosaveLabel, saveError, setSaveError, draftConflict, flushDraftSave } =
+    useDraftAutosave({
+      soundId,
+      editList,
+      editListRef,
+      draftUpdatedAt,
+      knobDragging,
+      setKnobDragging,
+      exportProgress,
+    })
 
   useEffect(() => {
     setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)

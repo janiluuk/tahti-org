@@ -112,6 +112,7 @@ export function useDraftAutosave({
   return {
     autosaveLabel,
     saveError,
+    setSaveError,
     draftConflict,
     lastSavedAt,
     flushDraftSave,

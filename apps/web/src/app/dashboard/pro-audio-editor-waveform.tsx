@@ -41,11 +41,11 @@ export function ProAudioEditorWaveform({
   peaks: PeaksPyramid | null
   peaksLoading: boolean
   sourceDuration: number
-  wavePanelRef: RefObject<HTMLDivElement | null>
-  waveRef: RefObject<HTMLCanvasElement | null>
-  overlayRef: RefObject<HTMLCanvasElement | null>
-  minimapRef: RefObject<HTMLCanvasElement | null>
-  audioRef: RefObject<HTMLAudioElement | null>
+  wavePanelRef: RefObject<HTMLDivElement>
+  waveRef: RefObject<HTMLCanvasElement>
+  overlayRef: RefObject<HTMLCanvasElement>
+  minimapRef: RefObject<HTMLCanvasElement>
+  audioRef: RefObject<HTMLAudioElement>
   canvasWidth: number
   viewStart: number
   span: number
