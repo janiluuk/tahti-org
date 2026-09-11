@@ -8,11 +8,14 @@ final extraction approval remain open.
 implementation — `pluginRegistryHost.ts`, a façade composing
 `pluginBootstrap`/`pluginStore`/`pluginAutoUpdate` behind the interface
 without changing their behavior — plus a contract-test suite covering all
-8 host methods (§6; PR pending in `../tahti-player`, branch
-`feat/plugin-registry-host-contract-tests`). Store-layer §6 coverage from
-2026-09-07 still stands separately. Do **not** move files, change storage
-keys, alter discovery semantics, or change bootstrap order until the full
-contract-test set and rollback plan are accepted.
+8 host methods (§6; merged in `../tahti-player`). Store-layer §6 coverage from
+2026-09-07 still stands separately.
+**2026-09-11:** verified §6 line-by-line against the shipped test files — 20
+of 22 scenarios covered; the 2 gaps (enable/disable persistence across
+restart, and refusing delete outside the managed plugins dir) are `it.todo`
+or entirely untested. Do **not** move files, change storage keys, alter
+discovery semantics, or change bootstrap order until those 2 gaps are closed
+and a rollback plan is accepted.
 
 **Note (2026-09-08):** this doc previously said the player fork lived at
 `../tahti-nuclear`; the actual full monorepo (with `packages/player`) is
@@ -37,7 +40,7 @@ accordingly.
 - [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers.
 - [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [§5](#5-minimal-compatibility-interface-and-adapter-plan)
 - [x] Implement the §5.1/§5.2 contract module + adapter (additive, callers not yet migrated).
-- [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. Store-layer and host-layer suites in `../tahti-player` cover the registry contract, including install cleanup, enable/disable, dev reload, update checks, hydration ordering, warnings, and orphan removal. The exhaustive per-scenario matrix remains covered against the underlying functions directly because the host façade is a thin pass-through.
+- [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. Store-layer and host-layer suites in `../tahti-player` cover the registry contract, including install cleanup, enable/disable, dev reload, update checks, hydration ordering, warnings, and orphan removal. Verified line-by-line 2026-09-11: 20/22 §6 scenarios covered; 2 gaps remain open (see [§6](#6-contract-tests-to-add-later)).
 - [x] Migrate callers to the adapter (§5.4) — `pluginBootstrap.ts`, `pluginStore.tsx`, `pluginAutoUpdate.ts`, and `useInstallPlugin.ts` now use `pluginRegistryStore` (player PR #46).
 - [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
 - [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
@@ -465,54 +468,56 @@ Optional follow-up (not blocking interface sign-off): thin
 
 ## 6. Contract tests to add later
 
-Existing coverage is strong for store/hydration but not framed as a stable
-**registry contract**. Prefer adding an explicit suite (or tagging cases)
-against the adapter once it exists. Do not rewrite production code for tests
-yet.
+**2026-09-11:** verified against the actual suites in `../tahti-player` —
+`pluginRegistryHost.test.ts`, `pluginRegistryAdapter.test.ts`,
+`stores/pluginStore.test.ts`, `App.hydration.test.tsx`, and
+`services/plugins/pluginAutoUpdate.test.ts`. 20 of 22 scenarios below are
+covered; the two gaps are called out inline, not covered elsewhere.
 
 ### Install
 
-- [ ] Store install: catalog release → registry entry `installationMethod: 'store'`, managed path, then enabled.
-- [ ] Dev install from folder: `installationMethod: 'dev'`, `originalPath` set, enabled defaults false unless re-install of previously enabled.
-- [ ] Re-load same id while already loaded is no-op (store state unchanged).
-- [ ] Failed load does not leave a half-enabled UI plugin (or documents current error reporting).
+- [x] Store install: catalog release → registry entry `installationMethod: 'store'`, managed path, then enabled. → `pluginRegistryHost.test.ts` (`installFromMarketplace`).
+- [x] Dev install from folder: `installationMethod: 'dev'`, `originalPath` set, enabled defaults false unless re-install of previously enabled. → `pluginStore.test.ts` (`tracks dev installation metadata`); re-install-when-enabled case via `pluginRegistryHost.test.ts` (`reloadDev` restores enabled state).
+- [x] Re-load same id while already loaded is no-op (store state unchanged). → `pluginStore.test.ts` (`does not insert duplicate id and does not throw`).
+- [x] Failed load does not leave a half-enabled UI plugin (or documents current error reporting). → `pluginStore.test.ts` (`skips inserting on load failure`) + `App.hydration.test.tsx` (`logs and persists warnings for failed plugin load but keeps the registry entry`).
 
 ### Enable / disable
 
-- [ ] Enable calls `onEnable`, sets in-memory + registry `enabled: true`.
-- [ ] Disable calls `onDisable`, persists `enabled: false`.
+- [x] Enable calls `onEnable`, sets in-memory + registry `enabled: true`. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts`.
+- [x] Disable calls `onDisable`, persists `enabled: false`. → same suites.
 - [ ] **Across restart:** enabled flag in registry is respected on next
-      `hydratePluginsFromRegistry` (explicit `it.todo` already in
-      `App.hydration.test.tsx`).
-- [ ] Missing id / missing instance throws (current store behavior).
+      `hydratePluginsFromRegistry` — **still `it.todo`** in
+      `App.hydration.test.tsx` (`toggling enable/disable persists to registry
+    and is respected on next startup`). Not covered.
+- [x] Missing id / missing instance throws (current store behavior). → `pluginStore.test.ts` (`enablePlugin`/`disablePlugin throws if missing` and `throws when instance missing`).
 
 ### Warnings
 
-- [ ] Unknown permissions → `warnings` on upsert and `warning` flag in store.
-- [ ] Hydrate load failure → registry entry retained with merged warnings; not
-      listed in Installed UI.
-- [ ] Clearing warnings: empty array → field omitted (`undefined`).
+- [x] Unknown permissions → `warnings` on upsert and `warning` flag in store. → `pluginStore.test.ts` (`loads a plugin with warnings`, asserts `Unknown permissions: alpha, beta`).
+- [x] Hydrate load failure → registry entry retained with merged warnings; not
+      listed in Installed UI. → `App.hydration.test.tsx` (same test as above).
+- [x] Clearing warnings: empty array → field omitted (`undefined`). → `pluginRegistryAdapter.test.ts` (`setWarnings with an empty array omits the field entirely`).
 
 ### Update
 
-- [ ] Auto-update off → no download.
-- [ ] Dev entries never auto-updated.
-- [ ] Store entry with catalog newer version → unload/load/re-enable when was enabled.
-- [ ] Catalog missing `version`/`downloadUrl` → skip.
-- [ ] Failed update logs warn and leaves previous install (document actual recovery).
+- [x] Auto-update off → no download. → `pluginAutoUpdate.test.ts` (`skips entirely if plugins.autoUpdate is disabled`).
+- [x] Dev entries never auto-updated. → `pluginAutoUpdate.test.ts` (`skips dev plugins`).
+- [x] Store entry with catalog newer version → unload/load/re-enable when was enabled. → `pluginAutoUpdate.test.ts` (`preserves enabled state after updating a plugin`) + `pluginRegistryHost.test.ts` (`checkAndUpdateStorePlugins`).
+- [x] Catalog missing `version`/`downloadUrl` → skip. → `pluginAutoUpdate.test.ts` (`skips plugins missing version or downloadUrl in marketplace`).
+- [x] Failed update logs warn and leaves previous install (document actual recovery). → `pluginAutoUpdate.test.ts` (`keeps old version and logs warning when update fails`).
 
 ### Removal
 
-- [ ] Remove loaded plugin: unload + delete managed dir + registry key gone.
-- [ ] Remove orphan registry entry (no in-memory plugin) still deletes files + key.
-- [ ] Refuse delete outside managed plugins dir (`removeManagedPluginInstall`).
+- [x] Remove loaded plugin: unload + delete managed dir + registry key gone. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts` (`removes plugin files and the registry entry`).
+- [x] Remove orphan registry entry (no in-memory plugin) still deletes files + key. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts` (`removes … registry entry for plugin not currently loaded`).
+- [ ] Refuse delete outside managed plugins dir (`removeManagedPluginInstall`). No test file for `pluginDir.ts` exists (`removeManagedPluginInstall` has no test references anywhere in the suite). Not covered.
 
 ### Discovery / bootstrap (regression locks)
 
-- [ ] Load order = `installedAt` ascending.
-- [ ] Paths outside managed dir skipped.
-- [ ] `providersHost.resolveActiveOnBootstrap` runs after successful hydrate loop.
-- [ ] Startup timings recorded per plugin id.
+- [x] Load order = `installedAt` ascending. → `App.hydration.test.tsx` (`loads multiple plugins in installedAt ascending order`).
+- [x] Paths outside managed dir skipped. → `App.hydration.test.tsx` (`ignores plugins outside the managed directory`).
+- [x] `providersHost.resolveActiveOnBootstrap` runs after successful hydrate loop. → `pluginRegistryHost.test.ts` (`hydrateFromRegistry` … `resolves active providers afterward`).
+- [x] Startup timings recorded per plugin id. → `App.hydration.test.tsx` (`exposes status flags and timings`).
 
 ---
 
