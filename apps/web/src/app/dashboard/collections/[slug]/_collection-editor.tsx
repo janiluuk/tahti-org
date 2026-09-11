@@ -11,7 +11,7 @@ import type { SoundSource, SoundQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import { LibraryBrowser } from '@/components/library/library-browser'
-import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { usePlayer } from '@/contexts/player-context'
 import { useToast } from '@/contexts/toast-context'
 import {
   updateCollection,
@@ -24,8 +24,15 @@ import {
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { CollectionEmbedButton } from '../_collection-embed-button'
-import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
-import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
+import { SpotifyImportModal } from './_spotify-import-modal'
+import { MixcloudImportModal } from './_mixcloud-import-modal'
+import {
+  type CollectionItem,
+  formatDuration,
+  itemTitle,
+  itemThumb,
+  toPlayerTrack,
+} from './_collection-editor-utils'
 import { HearthisImportModal } from './_hearthis-import-modal'
 import { listMyIntegrations } from '../../integrations-actions'
 import { MixcloudEmbedRow } from '../../../u/[username]/c/[slug]/_mixcloud-embed-row'
@@ -49,31 +56,6 @@ const QUALITY_BADGE_CLASS: Record<SoundQualityBadge, string> = {
   LOSSLESS: '',
   TRANSCODED: 'collection-tracklist__badge--transcoded',
   EMBED_ONLY: 'collection-tracklist__badge--embed',
-}
-
-interface CollectionItem {
-  id: string
-  position: number
-  audioUrl?: string | null
-  sound: {
-    id: string
-    title: string
-    durationSec: number | null
-    bannerUrl: string | null
-    createdAt: string
-    source: SoundSource
-    qualityBadge: SoundQualityBadge
-    embedProvider?: string | null
-    embedUri?: string | null
-  } | null
-  release: {
-    id: string
-    title: string
-    type: string
-    smartLinkSlug: string
-    artworkUrl: string | null
-    releaseDate?: string | null
-  } | null
 }
 
 interface CollectionDetail {
@@ -100,29 +82,6 @@ const SORT_MODE_OPTIONS = [
 ]
 
 const STYLE_OPTIONS = ['PLAYLIST', 'ALBUM', 'EP', 'SINGLE', 'DJ_SET_SERIES', 'PODCAST']
-
-function formatDuration(sec: number): string {
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
-function itemTitle(item: CollectionItem): string {
-  return item.sound?.title ?? item.release?.title ?? '—'
-}
-
-function itemThumb(item: CollectionItem): string | null {
-  const bannerUrl = item.sound?.bannerUrl ?? null
-  if (bannerUrl && item.sound?.source === 'SPOTIFY_EMBED') {
-    return spotifyCoverProxySrc(bannerUrl)
-  }
-  if (bannerUrl && item.sound?.source === 'MIXCLOUD_EMBED') {
-    return mixcloudCoverProxySrc(bannerUrl)
-  }
-  return bannerUrl ?? item.release?.artworkUrl ?? null
-}
 
 export function CollectionEditor({
   collection: initial,
@@ -480,15 +439,7 @@ export function CollectionEditor({
         </>
       )
     },
-    [
-      playing,
-      reorderSaving,
-      track,
-      expandedEmbedItemId,
-      queueItem,
-      toggleItemPlayback,
-      playbackQueue,
-    ],
+    [playing, reorderSaving, track, expandedEmbedItemId, queueItem, toggleItemPlayback],
   )
 
   const handleDelete = useCallback(async () => {
@@ -1050,19 +1001,4 @@ export function CollectionEditor({
       </div>
     </div>
   )
-}
-
-function toPlayerTrack(item: CollectionItem): PlayerTrack {
-  const isHearthis = item.sound?.source === 'HEARTHIS_EMBED' && item.sound.embedUri
-  return {
-    id: item.sound?.id ?? `collection-release-${item.release?.id ?? item.id}`,
-    kind: 'sound',
-    url: item.audioUrl ?? '',
-    title: itemTitle(item),
-    artworkUrl: itemThumb(item),
-    durationSec: item.sound?.durationSec,
-    ...(isHearthis
-      ? { embed: { provider: 'HEARTHIS' as const, embedUri: item.sound!.embedUri! } }
-      : {}),
-  }
 }

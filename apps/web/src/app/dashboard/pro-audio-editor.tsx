@@ -6,13 +6,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
-import type {
-  EditList,
-  EditListV2,
-  HistoryState,
-  OutputFormat,
-  PeaksPyramid,
-} from '@tahti/audio-edit'
+import type { EditList, HistoryState, OutputFormat, PeaksPyramid } from '@tahti/audio-edit'
 import {
   postCutDuration,
   computeKeepSegments,
@@ -45,30 +39,15 @@ import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
 import { FilterPanel } from '@/lib/audio-editor/panels/FilterPanel'
 import { SOUND_CLIP_MAX_DURATION_SEC, type TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
-import {
-  completeSoundVersionUpload,
-  createSoundClip,
-  prepareSoundVersionUpload,
-  renderSoundEditList,
-  fetchSoundVersionDownloadUrl,
-  saveSoundEditListDraft,
-  updateSoundMetadata,
-} from './sound-actions'
 import { TracklistEditor } from './tracklist-editor'
 import {
   generatePeaksFromFfmpeg,
   loadFfmpeg,
-  measureLoudnorm,
   mountSourceFile,
-  renderEditToFile,
   unmountSource,
 } from '@/lib/audio-editor/ffmpeg-client'
 import { loadPeaksCache, savePeaksCache } from '@/lib/audio-editor/peaks-cache'
-import {
-  formatDuration,
-  formatDurationDecimal,
-  formatRelativeSave,
-} from '@/lib/audio-editor/format'
+import { formatDuration, formatDurationDecimal } from '@/lib/audio-editor/format'
 import { v2ToV1 } from '@/lib/audio-editor/edit-list-convert'
 import {
   attachPreviewGraph,
@@ -80,11 +59,11 @@ import {
   drawOverlayLayer,
   drawWaveformLayer,
 } from '@/lib/audio-editor/waveform-draw'
-import { waitForRenderViaProgress } from '@/lib/audio-editor/render-progress'
+import { useDraftAutosave } from '@/lib/audio-editor/use-draft-autosave'
+import { useEditHistory } from '@/lib/audio-editor/use-edit-history'
+import { useExportAndClip } from '@/lib/audio-editor/use-export-and-clip'
 import { ChainTile, Switch, cx } from './pro-audio-editor-controls'
 
-const AUTOSAVE_MS = 2000
-const AUTOSAVE_KNOB_MS = 6000
 const CANVAS_MIN_WIDTH = 320
 const CANVAS_DEFAULT_WIDTH = 1280
 const WAVE_HEIGHT = 340
@@ -124,6 +103,8 @@ export function ProAudioEditor({
   const editListRef = useRef(editList)
   editListRef.current = editList
 
+  const { pushEdit, undo, redo, patchPlugin, togglePlugin } = useEditHistory(setHistoryState)
+
   const [focusedInstanceId, setFocusedInstanceId] = useState<string>(
     () => initialV2Ref.current.plugins[0]!.instanceId,
   )
@@ -133,9 +114,6 @@ export function ProAudioEditor({
   const [previewMode, setPreviewMode] = useState<'before' | 'after'>('after')
   const [previewBypassedPluginId, setPreviewBypassedPluginId] = useState<string | null>(null)
 
-  const [autosaveLabel, setAutosaveLabel] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [draftConflict, setDraftConflict] = useState(false)
   const [knobDragging, setKnobDragging] = useState(false)
   const [isolated, setIsolated] = useState(false)
   const [peaks, setPeaks] = useState<PeaksPyramid | null>(null)
@@ -176,9 +154,6 @@ export function ProAudioEditor({
   const [exportPhase, setExportPhase] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(
-    draftUpdatedAt ? new Date(draftUpdatedAt).getTime() : null,
-  )
 
   const wavePanelRef = useRef<HTMLDivElement>(null)
   const waveRef = useRef<HTMLCanvasElement>(null)
@@ -188,119 +163,22 @@ export function ProAudioEditor({
   const inputPathRef = useRef<string | null>(null)
   const sourceFileRef = useRef<File | null>(null)
   const sourceBlobUrlRef = useRef<string | null>(null)
-  const autosavePendingRef = useRef(false)
-  const draftUpdatedAtRef = useRef<string | null>(draftUpdatedAt)
   const previewRef = useRef<ReturnType<typeof attachPreviewGraph> | null>(null)
   const previewSourceRef = useRef<ReturnType<typeof createPreviewSource> | null>(null)
 
-  // ---- Plugin helpers ----
-  const pushEdit = useCallback((next: EditListV2, label = 'Edit') => {
-    setHistoryState((s) => History.push(s, next, label))
-  }, [])
-
-  const undo = useCallback(() => {
-    setHistoryState((s) => (History.canUndo(s) ? History.undo(s) : s))
-  }, [])
-
-  const redo = useCallback(() => {
-    setHistoryState((s) => (History.canRedo(s) ? History.redo(s) : s))
-  }, [])
-
-  const patchPlugin = useCallback((instanceId: string, params: unknown) => {
-    setHistoryState((s) => {
-      const cur = History.current(s).editList
-      const next: EditListV2 = {
-        ...cur,
-        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, params } : p)),
-      }
-      return History.push(s, next, 'Plugin param')
-    })
-  }, [])
-
-  const togglePlugin = useCallback((instanceId: string, enabled: boolean) => {
-    setHistoryState((s) => {
-      const cur = History.current(s).editList
-      const next: EditListV2 = {
-        ...cur,
-        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, enabled } : p)),
-      }
-      return History.push(s, next, enabled ? 'Enable plugin' : 'Bypass plugin')
-    })
-  }, [])
-
-  const flushDraftSave = useCallback(async () => {
-    autosavePendingRef.current = true
-    const v1 = v2ToV1(editListRef.current)
-    const res = await saveSoundEditListDraft(soundId, v1, draftUpdatedAtRef.current)
-    autosavePendingRef.current = false
-    if (res.conflict) {
-      setDraftConflict(true)
-      setSaveError(res.error ?? 'Draft conflict')
-      if (res.updatedAt) draftUpdatedAtRef.current = res.updatedAt
-      return
-    }
-    if (res.error) {
-      setSaveError(res.error)
-      return
-    }
-    setDraftConflict(false)
-    setSaveError(null)
-    if (res.updatedAt) {
-      draftUpdatedAtRef.current = res.updatedAt
-      const ts = new Date(res.updatedAt).getTime()
-      setLastSavedAt(ts)
-      setAutosaveLabel(formatRelativeSave(ts))
-    } else {
-      const ts = Date.now()
-      setLastSavedAt(ts)
-      setAutosaveLabel('just now')
-    }
-  }, [soundId])
+  const { autosaveLabel, saveError, draftConflict, flushDraftSave } = useDraftAutosave({
+    soundId,
+    editList,
+    editListRef,
+    draftUpdatedAt,
+    knobDragging,
+    setKnobDragging,
+    exportProgress,
+  })
 
   useEffect(() => {
     setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)
   }, [])
-
-  useEffect(() => {
-    if (!lastSavedAt) return
-    setAutosaveLabel(formatRelativeSave(lastSavedAt))
-    const t = setInterval(() => setAutosaveLabel(formatRelativeSave(lastSavedAt)), 15000)
-    return () => clearInterval(t)
-  }, [lastSavedAt])
-
-  useEffect(() => {
-    draftUpdatedAtRef.current = draftUpdatedAt
-  }, [draftUpdatedAt])
-
-  useEffect(() => {
-    if (knobDragging) return
-    autosavePendingRef.current = true
-    const delay = knobDragging ? AUTOSAVE_KNOB_MS : AUTOSAVE_MS
-    const t = setTimeout(() => {
-      void flushDraftSave()
-    }, delay)
-    return () => clearTimeout(t)
-  }, [soundId, editList, knobDragging, flushDraftSave])
-
-  useEffect(() => {
-    if (!knobDragging) return
-    function onPointerUp() {
-      setKnobDragging(false)
-      void flushDraftSave()
-    }
-    window.addEventListener('pointerup', onPointerUp)
-    return () => window.removeEventListener('pointerup', onPointerUp)
-  }, [knobDragging, flushDraftSave])
-
-  useEffect(() => {
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (exportProgress !== null || saveError || autosavePendingRef.current) {
-        e.preventDefault()
-      }
-    }
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [exportProgress, saveError, editList])
 
   const snapSec = useCallback(
     (sec: number) => {
@@ -579,57 +457,45 @@ export function ProAudioEditor({
     return selection
   }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
 
-  function openClipDialog() {
-    const sel = snappedSelection()
-    const sourceDur = editList.sourceDuration || 0
-    let start = sel?.start ?? 0
-    let end = sel?.end ?? Math.min(SOUND_CLIP_MAX_DURATION_SEC, sourceDur || 30)
-    if (end - start > SOUND_CLIP_MAX_DURATION_SEC) {
-      end = start + SOUND_CLIP_MAX_DURATION_SEC
-    }
-    if (sourceDur > 0 && end > sourceDur) end = sourceDur
-    if (end <= start) {
-      start = 0
-      end = Math.min(SOUND_CLIP_MAX_DURATION_SEC, sourceDur || 30)
-    }
-    setClipStartSec(Math.round(start * 10) / 10)
-    setClipEndSec(Math.round(end * 10) / 10)
-    setClipTitle(`${title.slice(0, 100)}${title.length > 100 ? '…' : ''} (clip)`)
-    setClipError(null)
-    setClipSuccess(null)
-    setClipDialogOpen(true)
-  }
-
-  async function handleCreateClip() {
-    setClipError(null)
-    setClipSuccess(null)
-    const start = clipStartSec
-    const end = clipEndSec
-    if (!(end > start)) {
-      setClipError('End must be after start')
-      return
-    }
-    if (end - start > SOUND_CLIP_MAX_DURATION_SEC) {
-      setClipError(`Clip must be ${SOUND_CLIP_MAX_DURATION_SEC} seconds or less`)
-      return
-    }
-    setClipBusy(true)
-    try {
-      const result = await createSoundClip(soundId, {
-        startSec: start,
-        endSec: end,
-        title: clipTitle.trim() || undefined,
-      })
-      if (result.error || !result.clipId) {
-        setClipError(result.error ?? 'Failed to create clip')
-        return
-      }
-      setClipSuccess({ clipId: result.clipId, title: result.title ?? clipTitle })
-      setSelection({ start, end })
-    } finally {
-      setClipBusy(false)
-    }
-  }
+  const {
+    openClipDialog,
+    handleCreateClip,
+    saveTracklist,
+    handleMeasure,
+    handlePreviewSample,
+    handleExport,
+  } = useExportAndClip({
+    soundId,
+    title,
+    editList,
+    browserRender,
+    ffmpeg,
+    inputPathRef,
+    tracklist,
+    clipStartSec,
+    clipEndSec,
+    clipTitle,
+    snappedSelection,
+    pushEdit,
+    setClipStartSec,
+    setClipEndSec,
+    setClipTitle,
+    setClipError,
+    setClipSuccess,
+    setClipDialogOpen,
+    setClipBusy,
+    setSelection,
+    setTracklistSaving,
+    setTracklistError,
+    setMeasuring,
+    setPreviewError,
+    setPreviewLoading,
+    setExportProgress,
+    setExportPhase,
+    setExportError,
+    setExportSuccess,
+    setExportDialogOpen,
+  })
 
   const remappedTracklist = useMemo(
     () => (tracklist?.length ? remapTracklistTimestamps(tracklist, editListV1) : []),
@@ -680,14 +546,6 @@ export function ProAudioEditor({
 
   const beginKnobDrag = useCallback(() => setKnobDragging(true), [])
 
-  async function saveTracklist() {
-    setTracklistSaving(true)
-    setTracklistError(null)
-    const res = await updateSoundMetadata(soundId, { tracklist })
-    setTracklistSaving(false)
-    if (res.error) setTracklistError(res.error)
-  }
-
   const removeSelection = useCallback(() => {
     const final = snappedSelection()
     if (!final) return
@@ -730,179 +588,6 @@ export function ProAudioEditor({
     )
     setSelection(null)
   }, [editList, pushEdit, snappedSelection])
-
-  async function handleMeasure() {
-    if (!ffmpeg || !inputPathRef.current) return
-    setMeasuring(true)
-    try {
-      const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')
-      if (!gainPlugin) return
-      const gp = gainPlugin.params as GainParams
-      const enabledParams: GainParams = gp.normalize.enabled
-        ? gp
-        : { ...gp, normalize: { ...gp.normalize, enabled: true } }
-
-      const v1 = v2ToV1({
-        ...editList,
-        plugins: editList.plugins.map((p) =>
-          p.instanceId === gainPlugin.instanceId ? { ...p, params: enabledParams } : p,
-        ),
-      })
-      const measured = await measureLoudnorm(ffmpeg, v1, inputPathRef.current)
-      if (measured) {
-        pushEdit(
-          {
-            ...editList,
-            plugins: editList.plugins.map((p) =>
-              p.instanceId === gainPlugin.instanceId
-                ? { ...p, params: { ...enabledParams, measured } }
-                : p,
-            ),
-          },
-          'Measure loudness',
-        )
-      }
-    } finally {
-      setMeasuring(false)
-    }
-  }
-
-  async function handlePreviewSample() {
-    setPreviewError(null)
-    setPreviewLoading(true)
-    try {
-      const v1 = v2ToV1(editList)
-      if (browserRender && ffmpeg && inputPathRef.current) {
-        const out = await renderEditToFile(ffmpeg, v1, inputPathRef.current, 'mp3', undefined, {
-          maxDurationSec: 30,
-        })
-        const blob = new Blob([new Uint8Array(out)], { type: 'audio/mpeg' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${title.replace(/\s+/g, '-').slice(0, 40)}-preview-30s.mp3`
-        a.click()
-        URL.revokeObjectURL(url)
-        return
-      }
-
-      const res = await renderSoundEditList(soundId, {
-        editList: v1,
-        versionLabel: `Preview ${new Date().toISOString().slice(0, 16)}`,
-        activate: false,
-        format: 'mp3',
-        maxDurationSec: 30,
-        sampleOnly: true,
-      })
-      if (res.error || !res.versionId) throw new Error(res.error ?? 'Server preview failed')
-
-      await waitForRenderViaProgress(soundId, res.versionId, (event) => {
-        if (typeof event.pct === 'number') setExportProgress(event.pct)
-        if (event.phase) setExportPhase(event.phase)
-      })
-      setExportProgress(null)
-      setExportPhase(null)
-
-      const dl = await fetchSoundVersionDownloadUrl(soundId, res.versionId)
-      if (dl.error || !dl.url) throw new Error(dl.error ?? 'Preview download unavailable')
-
-      const a = document.createElement('a')
-      a.href = dl.url
-      a.download = `${title.replace(/\s+/g, '-').slice(0, 40)}-preview-30s.mp3`
-      a.rel = 'noopener'
-      a.click()
-    } catch (e) {
-      setPreviewError(e instanceof Error ? e.message : 'Preview render failed')
-    } finally {
-      setPreviewLoading(false)
-    }
-  }
-
-  async function handleExport(format: OutputFormat) {
-    setExportError(null)
-    setExportSuccess(null)
-    setExportProgress(0)
-    const label = `Pro edit ${new Date().toISOString().slice(0, 10)}`
-    const v1 = v2ToV1(editList)
-
-    try {
-      if (!browserRender) {
-        const res = await renderSoundEditList(soundId, {
-          editList: v1,
-          versionLabel: label,
-          activate: true,
-          format: format === 'wav' ? 'flac' : format,
-        })
-        if (res.error || !res.versionId) throw new Error(res.error ?? 'Server render failed')
-
-        const done = await waitForRenderViaProgress(soundId, res.versionId, (event) => {
-          if (typeof event.pct === 'number') setExportProgress(event.pct)
-          if (event.phase) setExportPhase(event.phase)
-        })
-        setExportProgress(null)
-        setExportPhase(null)
-        setExportSuccess({
-          versionNumber: done.versionNumber ?? res.versionNumber ?? 0,
-          versionLabel: done.versionLabel ?? label,
-        })
-        setExportDialogOpen(false)
-        return
-      }
-
-      if (!ffmpeg || !inputPathRef.current) return
-
-      let list = v1
-      if (list.loudnorm.enabled && !list.loudnorm.measured) {
-        const measured = await measureLoudnorm(ffmpeg, list, inputPathRef.current)
-        if (measured) {
-          // reflect measured back into v2 and re-derive v1
-          const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')!
-          const updated: EditListV2 = {
-            ...editList,
-            plugins: editList.plugins.map((p) =>
-              p.instanceId === gainPlugin.instanceId
-                ? { ...p, params: { ...(gainPlugin.params as GainParams), measured } }
-                : p,
-            ),
-          }
-          setHistoryState((s) => History.push(s, updated, 'Measure for export'))
-          list = v2ToV1(updated)
-        }
-      }
-
-      const out = await renderEditToFile(ffmpeg, list, inputPathRef.current, format)
-      const contentType =
-        format === 'mp3' ? 'audio/mpeg' : format === 'wav' ? 'audio/wav' : 'audio/flac'
-      const filename = `edit.${format}`
-      const bytes = new Uint8Array(out)
-      const blob = new Blob([bytes], { type: contentType })
-      const prep = await prepareSoundVersionUpload(soundId, { filename, contentType })
-      if (prep.error || !prep.uploadUrl || !prep.uploadId)
-        throw new Error(prep.error ?? 'Prepare failed')
-
-      await fetch(prep.uploadUrl, {
-        method: 'PUT',
-        body: blob,
-        headers: { 'Content-Type': contentType },
-      })
-      const done = await completeSoundVersionUpload(soundId, {
-        uploadId: prep.uploadId,
-        versionLabel: label,
-        fileSizeBytes: blob.size,
-      })
-      if (done.error) throw new Error(done.error)
-      setExportProgress(null)
-      setExportSuccess({
-        versionNumber: done.versionNumber ?? 0,
-        versionLabel: label,
-      })
-      setExportDialogOpen(false)
-    } catch (e) {
-      setExportError(e instanceof Error ? e.message : 'Export failed')
-      setExportProgress(null)
-      setExportPhase(null)
-    }
-  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

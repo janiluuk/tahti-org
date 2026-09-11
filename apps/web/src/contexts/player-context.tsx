@@ -2,8 +2,6 @@
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
-import { resolveClientApiUrl } from '@/lib/api-url'
-
 import {
   createContext,
   useCallback,
@@ -15,21 +13,20 @@ import {
   type ReactNode,
 } from 'react'
 import { usePathname } from 'next/navigation'
-import { isTypingTarget } from '../lib/is-typing-target'
 import { ensureHlsScriptLoading, type HlsInstance } from './player-hls'
 import type { PlayerContextValue, PlayerState, PlayerTrack } from './player-types'
 import {
   DEFAULT_LIVE_STREAM_QUALITY,
-  HEARTBEAT_INTERVAL_SEC,
   MUTED_STORAGE_KEY,
   VOLUME_STORAGE_KEY,
-  classifyListenSource,
   qualityLabelForBitrate,
   readStoredMuted,
   readStoredVolume,
 } from './player-utils'
-
-const API_URL = resolveClientApiUrl()
+import { useListenHeartbeat } from './use-listen-heartbeat'
+import { usePlayerAnalyser } from './use-player-analyser'
+import { usePlayerDocumentTitle } from './use-player-document-title'
+import { usePlayerKeyboard } from './use-player-keyboard'
 
 const HISTORY_LIMIT = 50
 
@@ -58,9 +55,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * on close(). */
   const radioResumeRef = useRef<PlayerTrack | null>(null)
   const embedTimerRef = useRef<number | null>(null)
-  /** Sound track ids a listen-event has already been recorded for this
-   * session, so the threshold check below only ever fires once per track. */
-  const recordedListenRef = useRef<Set<string>>(new Set())
   const pathname = usePathname()
   const [state, setState] = useState<PlayerState>({
     track: null,
@@ -96,52 +90,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<PlayerTrack[]>([])
   const [repeat, setRepeat] = useState(false)
   const [shuffle, setShuffle] = useState(false)
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
-  const [analyserL, setAnalyserL] = useState<AnalyserNode | null>(null)
-  const [analyserR, setAnalyserR] = useState<AnalyserNode | null>(null)
-
-  // Connect a single AnalyserNode to the shared <audio> element once, on first
-  // playback — createMediaElementSource can only be called once per element.
-  // Also split the source into per-channel analysers (before AnalyserNode's
-  // implicit downmix) so stereo level meters (broadcast test-signal step) can
-  // show true L/R levels rather than a single mixed reading.
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const init = () => {
-      try {
-        const ctx = new AudioContext()
-        const node = ctx.createAnalyser()
-        node.fftSize = 512
-        // 0.8 made the spectrum-analyzer visualizer look sluggish/laggy behind
-        // the actual audio; 0.3 keeps it visually reactive without being jittery.
-        node.smoothingTimeConstant = 0.3
-        const source = ctx.createMediaElementSource(audio)
-        source.connect(node)
-        node.connect(ctx.destination)
-        setAnalyser(node)
-
-        const splitter = ctx.createChannelSplitter(2)
-        const left = ctx.createAnalyser()
-        const right = ctx.createAnalyser()
-        left.fftSize = 1024
-        right.fftSize = 1024
-        left.smoothingTimeConstant = 0.4
-        right.smoothingTimeConstant = 0.4
-        source.connect(splitter)
-        splitter.connect(left, 0)
-        splitter.connect(right, 1)
-        setAnalyserL(left)
-        setAnalyserR(right)
-      } catch (e) {
-        console.warn('[player] analyser setup failed', e)
-      }
-    }
-
-    audio.addEventListener('play', init, { once: true })
-    return () => audio.removeEventListener('play', init)
-  }, [])
+  const { analyser, analyserL, analyserR } = usePlayerAnalyser(audioRef)
 
   const teardownHls = useCallback(() => {
     hlsRef.current?.destroy()
@@ -511,67 +460,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(MUTED_STORAGE_KEY, state.muted ? '1' : '0')
   }, [state.volume, state.muted])
 
-  // Tab title reflects what's actually playing, so radio.tahti.live is
-  // identifiable from a background tab — restored once nothing is loaded.
-  useEffect(() => {
-    const original = document.title
-    if (state.track && state.playing) {
-      document.title = state.track.subtitle
-        ? `${state.track.title} — ${state.track.subtitle}`
-        : state.track.title
-    }
-    return () => {
-      document.title = original
-    }
-  }, [state.track, state.playing])
+  usePlayerDocumentTitle({ track: state.track, playing: state.playing })
 
-  // Site-wide keyboard shortcuts for the player (space/arrows/M) — active from
-  // any page once a track is loaded. Yields to typing targets, modifier-key
-  // combos (Cmd/Ctrl/Alt stay reserved for the browser/OS), and any keydown a
-  // more specific widget already consumed (e.g. the mixer knob, a menu).
-  useEffect(() => {
-    if (!state.track) return
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return
-      if (isTypingTarget(e.target)) return
-
-      switch (e.key) {
-        case ' ':
-          e.preventDefault()
-          void togglePlay()
-          break
-        case 'ArrowRight':
-          e.preventDefault()
-          if (e.shiftKey) playNext()
-          else seekBy(10)
-          break
-        case 'ArrowLeft':
-          e.preventDefault()
-          if (e.shiftKey) playPrevious()
-          else seekBy(-10)
-          break
-        case 'ArrowUp':
-          e.preventDefault()
-          setVolume(state.volume + 0.05)
-          break
-        case 'ArrowDown':
-          e.preventDefault()
-          setVolume(state.volume - 0.05)
-          break
-        case 'm':
-        case 'M':
-          e.preventDefault()
-          toggleMute()
-          break
-        default:
-          break
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [state.track, state.volume, togglePlay, seekBy, playNext, playPrevious, setVolume, toggleMute])
+  usePlayerKeyboard({
+    track: state.track,
+    volume: state.volume,
+    togglePlay,
+    seekBy,
+    playNext,
+    playPrevious,
+    setVolume,
+    toggleMute,
+  })
 
   // Kept in sync so onEnded's listener closure (registered once, below) always reads
   // the current value rather than the one captured when the listener was attached.
@@ -583,53 +483,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     shuffleRef.current = shuffle
   }, [shuffle])
 
-  // Counts a "listen" toward top-lists once a track has played long enough
-  // to be a real listen (30s, or halfway through a shorter track) — fires
-  // at most once per track per session; the API dedupes per listener/day too.
-  useEffect(() => {
-    const track = state.track
-    if (!track || track.kind !== 'sound') return
-    if (recordedListenRef.current.has(track.id)) return
-    const threshold = state.duration > 0 ? Math.min(30, state.duration * 0.5) : 30
-    if (state.currentTime < threshold) return
-    recordedListenRef.current.add(track.id)
-    fetch(`${API_URL}/api/listen-events`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ soundId: track.id }),
-    }).catch(() => undefined)
-  }, [state.track, state.currentTime, state.duration])
-
-  // Listen-time tracking: while actively playing, pings "still listening"
-  // once a minute — no duration self-reported, the server tracks sessions
-  // (start/last-seen/end) and closes ones that stop pinging. "From where"
-  // is both `source` (current page, best-effort classified) and geography
-  // (resolved server-side from IP). Skips 'live' tracks with no
-  // channelSlug (artist-only preview surfaces like the broadcast studio or
-  // green room don't set it — not real listener minutes).
-  useEffect(() => {
-    const track = state.track
-    if (!track || !state.playing) return
-    if (track.kind === 'live' && !track.channelSlug) return
-
-    const source = classifyListenSource(pathname)
-    const ping = () => {
-      const body: Record<string, unknown> = { source }
-      if (track.kind === 'sound') body.soundId = track.id
-      else body.channelSlug = track.channelSlug
-      fetch(`${API_URL}/api/v1/listen/heartbeat`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }).catch(() => undefined)
-    }
-
-    ping()
-    const interval = window.setInterval(ping, HEARTBEAT_INTERVAL_SEC * 1000)
-    return () => window.clearInterval(interval)
-  }, [state.track, state.playing, pathname])
+  useListenHeartbeat({
+    track: state.track,
+    playing: state.playing,
+    currentTime: state.currentTime,
+    duration: state.duration,
+    pathname,
+  })
 
   /** Appends to the queue — starts one from the current track if none exists yet. */
   const addToQueue = useCallback(
