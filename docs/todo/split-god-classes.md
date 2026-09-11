@@ -58,7 +58,16 @@ Break oversized modules into focused files without behavior changes.
   `pro-audio-editor-dialogs.tsx` → main **1298 → ~922**
 - `_collection-import-chrome.tsx` → collection editor **693 → 489**
 
+### Slice 11–15 — waveform, metadata, channel page, admin files, studio panels
+
+1. **S11** `pro-audio-editor-waveform.tsx` → pro-audio **922 → 805**
+2. **S12** `_channel-page-types.ts` + `_channel-page-utils.ts` → channel page **887 → 759**
+3. **S13** `sound-metadata/` folder + thin re-export barrel
+4. **S14** admin files: filters / row / edit-modal / types → browser **860 → 488**
+5. **S15** channel-controls icons/transport/playlist; channel-identity utils/media
+   → controls **750 → 511**, identity **744 → 430**
+
 ## Leftovers
 
-- Optional: peel waveform panel JSX from `pro-audio-editor.tsx` (~922) to land under ~800
-- Collection editor (~489) is in good shape; further splits optional
+- Optional further peel of channel page (~759) or pro-audio (~805)
+- Seed scripts (`seed-local-dev-catalog`, `seed-e2e-screenshots`) still large but out of product UI scope
