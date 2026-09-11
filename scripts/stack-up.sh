@@ -12,6 +12,7 @@
 #   App:     http://localhost:${WEB_PORT:-17777}
 #   API:     http://localhost:${API_PORT:-15011}
 #   MailHog: http://localhost:${MAILHOG_UI_PORT:-18025}
+#   Dozzle:  http://localhost:${DOZZLE_PORT:-18090}  (see infra/stack/dozzle-users.yml)
 
 set -euo pipefail
 
@@ -68,7 +69,7 @@ STACK_IMAGES=(api web worker orchestrator db-push)
 "${COMPOSE[@]}" build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} "${STACK_IMAGES[@]}"
 
 echo "── Starting stack ──"
-"${COMPOSE[@]}" up -d postgres pgbouncer redis minio mailhog chat icecast rtmp-ingest
+"${COMPOSE[@]}" up -d postgres pgbouncer redis minio mailhog dozzle chat icecast rtmp-ingest
 "${COMPOSE[@]}" up -d minio-init db-push
 STACK_APPS=(api worker orchestrator web)
 [[ -n "$BOT_SRC" ]] && STACK_APPS+=(radio-discord-bot)
@@ -115,6 +116,7 @@ echo "   Web app:  http://localhost:${WEB_PORT:-17777}"
 echo "   API:      http://localhost:${API_PORT:-15011}/health"
 echo "   MailHog:  http://localhost:${MAILHOG_UI_PORT:-18025}"
 echo "   MinIO UI: http://localhost:${MINIO_CONSOLE_PORT:-19001}"
+echo "   Dozzle:   http://localhost:${DOZZLE_PORT:-18090}  (see infra/stack/dozzle-users.yml)"
 echo ""
 echo "   Screenshots (local): ./scripts/e2e-screenshots.sh"
 echo "   Stop:        ./scripts/stack-up.sh --down"

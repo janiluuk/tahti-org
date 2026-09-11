@@ -40,6 +40,7 @@ export const WORKER_JOB_LANES = {
     'channel-watchdog',
     'channel-fallback-reconciler',
     'radio-slot-switchover',
+    'sidecar-cleanup',
   ],
   dist: [
     'mixcloud-upload',
@@ -65,6 +66,9 @@ export const WORKER_JOB_LANES = {
     'mention-digest',
     'post-publish-notify',
     'annual-grant-calc',
+    'listen-session-close',
+    'live-show-recurrence-generate',
+    'missed-live-show-scan',
   ],
   'edge-log': ['hls-caddy-egress-sync'],
 } as const

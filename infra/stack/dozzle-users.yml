@@ -1,0 +1,13 @@
+users:
+  admin:
+    email: ''
+    name: Admin
+    # Dev-only default: admin / local-stack-dozzle-secret (same "local-stack-*"
+    # convention as MINIO_SECRET_KEY / DOCS_PASS / HCAPTCHA_SECRET in
+    # docker-compose.stack.yml). Before running deploy_prod.sh against a real
+    # host, regenerate this file with a real password and keep it out of git:
+    #   docker run --rm amir20/dozzle:v11.0.0 generate <user> --password '<real-password>' --name '<display name>' > infra/stack/dozzle-users.yml
+    password: $2a$11$d7skvi88jM2E93HNlXHKveIgjQ8KNEPUTpCK6vVrffchbkCDzuu7.
+    github: ''
+    filter: ''
+    roles: ''
