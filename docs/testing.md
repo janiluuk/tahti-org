@@ -24,6 +24,11 @@ For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`,
 | `pnpm smoke:all`             | Prod + e2e bash journeys (stack must be up; `--seed` fixtures)         |
 | `pnpm test:e2e:journeys:all` | Vital-flows + user-journeys + Vitest `persona-journeys.test.ts`        |
 
+For a concurrent public HLS smoke test, run `pnpm test:load:hls` (or pass a
+manifest URL, listener count, and requests per listener to
+`scripts/channel-load-test.sh`). The harness reports HTTP success rate and
+request latency; it does not require authentication.
+
 Other scripts: `pnpm tor-exit:check`, `./scripts/status-monitor.sh`, persona-specific `pnpm test:e2e:journeys:*`.
 
 **Journey map** (routes, APIs, scripts): [`user-flows.md`](user-flows.md).
