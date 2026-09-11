@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "bash tests/e2e/vital-flows.sh",
+    "test:load:hls": "bash scripts/channel-load-test.sh",
     "test:e2e:journeys": "bash tests/e2e/user-journeys.sh",
     "test:e2e:journeys:listener": "bash tests/e2e/journeys/listener.sh",
     "test:e2e:journeys:artist": "bash tests/e2e/journeys/artist.sh",

@@ -27,6 +27,17 @@ env:
   NGINX_BASE_IMAGE: mirror.gcr.io/library/nginx:1.27-alpine
 
 jobs:
+  script-syntax:
+    name: Validate shell scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Bash syntax check
+        run: bash -n scripts/*.sh tests/e2e/*.sh tests/e2e/journeys/*.sh
+
   website-docker:
     name: Validate website Docker build
     runs-on: ubuntu-24.04

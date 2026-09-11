@@ -4,13 +4,13 @@ This document captures every unresolved architectural, legal, and product decisi
 
 Each topic has a **Decision** field. Leave it blank until resolved. Once filled, link to the relevant spec update (PR, doc edit, or AGENT.md change).
 
-**Status key:**  `OPEN` · `DECIDED` · `DEFERRED` · `N/A`
+**Status key:** `OPEN` · `DECIDED` · `DEFERRED` · `N/A`
 
 ---
 
 ## Topic 1 — Liquidsoap → MinIO: how do HLS segments reach object storage?
 
-**Status:** `OPEN`  
+**Status:** `DECIDED`
 **Blocks:** M3 (live ingress), the entire streaming architecture  
 **Must decide before:** Phase 4 work begins
 
@@ -21,33 +21,37 @@ AGENT.md (M3) says Liquidsoap writes HLS segments to `hls_shared` — a Docker v
 ### Options
 
 **A — Sidecar copier (local volume + mc mirror)**  
-Liquidsoap writes to a local volume as today. A sidecar container (`mc mirror --watch`) syncs every new segment to MinIO continuously.  
-- Pro: Zero changes to Liquidsoap config  
-- Pro: Battle-tested pattern (used by many self-hosted radio stacks)  
-- Con: ~1–3s additional latency per segment (copy lag)  
-- Con: Adds a sidecar container per channel  
-- Con: Local volume still exists; partial scaling benefit  
+Liquidsoap writes to a local volume as today. A sidecar container (`mc mirror --watch`) syncs every new segment to MinIO continuously.
+
+- Pro: Zero changes to Liquidsoap config
+- Pro: Battle-tested pattern (used by many self-hosted radio stacks)
+- Con: ~1–3s additional latency per segment (copy lag)
+- Con: Adds a sidecar container per channel
+- Con: Local volume still exists; partial scaling benefit
 
 **B — SRS (Simple Realtime Server) for HLS packaging**  
-Liquidsoap handles audio mixing, fallback, and quality tee. SRS (or MediaMTX) receives the audio output via RTMP and packages HLS directly to S3/MinIO.  
-- Pro: Clean separation — Liquidsoap does audio, SRS does HLS  
-- Pro: SRS has native S3 HLS output  
-- Con: Adds SRS as a new technology in the stack  
-- Con: Liquidsoap→SRS audio path adds latency  
-- Con: SRS licensing and docs less mature than Liquidsoap  
+Liquidsoap handles audio mixing, fallback, and quality tee. SRS (or MediaMTX) receives the audio output via RTMP and packages HLS directly to S3/MinIO.
+
+- Pro: Clean separation — Liquidsoap does audio, SRS does HLS
+- Pro: SRS has native S3 HLS output
+- Con: Adds SRS as a new technology in the stack
+- Con: Liquidsoap→SRS audio path adds latency
+- Con: SRS licensing and docs less mature than Liquidsoap
 
 **C — NFS/shared storage mount across Swarm nodes**  
-Mount the HLS volume via NFS so all Caddy and worker nodes see the same filesystem.  
-- Pro: Simple — no code change  
-- Con: NFS is a single point of failure  
-- Con: NFS performance under high segment write rate is poor  
-- Con: Contradicts the "no shared state" principle  
+Mount the HLS volume via NFS so all Caddy and worker nodes see the same filesystem.
+
+- Pro: Simple — no code change
+- Con: NFS is a single point of failure
+- Con: NFS performance under high segment write rate is poor
+- Con: Contradicts the "no shared state" principle
 
 **D — Nginx + Lua: serve from local volume, replicate async**  
-Caddy routes HLS requests to the Liquidsoap node directly; MinIO is only for long-term archive. Horizontal Caddy scaling is deferred to Y3.  
-- Pro: Simplest for Y1 (200 artists, 1 node)  
-- Con: Does not scale; requires rework at Y3  
-- Con: Single Caddy node is a bottleneck and SPOF  
+Caddy routes HLS requests to the Liquidsoap node directly; MinIO is only for long-term archive. Horizontal Caddy scaling is deferred to Y3.
+
+- Pro: Simplest for Y1 (200 artists, 1 node)
+- Con: Does not scale; requires rework at Y3
+- Con: Single Caddy node is a bottleneck and SPOF
 
 ### Decision
 
@@ -74,33 +78,37 @@ The spec says "one perpetual Liquidsoap container per channel." At 200 artists �
 ### Options
 
 **A — Perpetual containers, larger nodes**  
-Stick with always-on. Upgrade nodes to 16–32GB RAM each. At 200 artists × 200MB = 40GB; 2 nodes × 24GB covers it with headroom.  
-- Pro: Simplest — no startup delay ever  
-- Pro: Consistent with "always on" brand promise  
-- Con: ~€200–400/month additional hardware/hosting cost  
-- Con: Wastes RAM on channels nobody is listening to  
+Stick with always-on. Upgrade nodes to 16–32GB RAM each. At 200 artists × 200MB = 40GB; 2 nodes × 24GB covers it with headroom.
+
+- Pro: Simplest — no startup delay ever
+- Pro: Consistent with "always on" brand promise
+- Con: ~€200–400/month additional hardware/hosting cost
+- Con: Wastes RAM on channels nobody is listening to
 
 **B — On-demand: spin up Liquidsoap when a listener arrives**  
-Liquidsoap starts on first request, returns to a pool or terminates after 30min of zero listeners.  
-- Pro: ~10× lower RAM footprint  
-- Pro: Scales to thousands of channels on the same hardware  
-- Con: First listener experiences 3–5s startup delay ("cold start")  
-- Con: If channel is in archive fallback, that delay is visible as silence  
-- Con: Complicates the orchestrator significantly  
+Liquidsoap starts on first request, returns to a pool or terminates after 30min of zero listeners.
+
+- Pro: ~10× lower RAM footprint
+- Pro: Scales to thousands of channels on the same hardware
+- Con: First listener experiences 3–5s startup delay ("cold start")
+- Con: If channel is in archive fallback, that delay is visible as silence
+- Con: Complicates the orchestrator significantly
 
 **C — Hybrid: perpetual for members, on-demand for free tier**  
-Members (€40/year) get a perpetual Liquidsoap. Free accounts spin up on demand.  
-- Pro: Aligns cost with revenue tier  
-- Pro: "Always on" is a paid feature differentiator  
-- Con: Creates two-tier "always on" experience, may feel unfair  
-- Con: Free tier gets silence on cold start — bad first impression for listeners  
+Members (€40/year) get a perpetual Liquidsoap. Free accounts spin up on demand.
+
+- Pro: Aligns cost with revenue tier
+- Pro: "Always on" is a paid feature differentiator
+- Con: Creates two-tier "always on" experience, may feel unfair
+- Con: Free tier gets silence on cold start — bad first impression for listeners
 
 **D — Single shared Liquidsoap instance, channel multiplexing**  
-One Liquidsoap process manages N channels via harbor inputs and multiple outputs.  
-- Pro: Single process, minimal RAM  
-- Con: One crash kills all channels  
-- Con: Liquidsoap multiplexing at scale is complex and untested at this size  
-- Con: Breaks the isolation principle  
+One Liquidsoap process manages N channels via harbor inputs and multiple outputs.
+
+- Pro: Single process, minimal RAM
+- Con: One crash kills all channels
+- Con: Liquidsoap multiplexing at scale is complex and untested at this size
+- Con: Breaks the isolation principle
 
 ### Decision
 
@@ -128,41 +136,45 @@ The current Gantt (overview.md) shows Phase 4 (M0–M5) running April 1 – June
 
 ### Milestone content recap
 
-| Milestone | Content | Est. weeks |
-|-----------|---------|-----------|
-| M0 | Monorepo skeleton, CI, Prisma schema, /health, /source | 1w |
-| M1 | Artist signup, email verify, membership payment | 1.5w |
-| M2 | Channel + archive upload, transcode pipeline | 2w |
-| M3 | Live RTMP/Icecast ingress, Liquidsoap orchestrator, HLS output | 3–4w |
-| M4 | Auto-archive of live sets | 1w |
-| M5 | Live chat (Centrifugo), pinned announcements, reactions | 1w |
+| Milestone | Content                                                        | Est. weeks |
+| --------- | -------------------------------------------------------------- | ---------- |
+| M0        | Monorepo skeleton, CI, Prisma schema, /health, /source         | 1w         |
+| M1        | Artist signup, email verify, membership payment                | 1.5w       |
+| M2        | Channel + archive upload, transcode pipeline                   | 2w         |
+| M3        | Live RTMP/Icecast ingress, Liquidsoap orchestrator, HLS output | 3–4w       |
+| M4        | Auto-archive of live sets                                      | 1w         |
+| M5        | Live chat (Centrifugo), pinned announcements, reactions        | 1w         |
 
 Total: ~10–11 weeks from a cold start.
 
 ### Options
 
 **A — June 15: M0 + M1 only (registration beta)**  
-Artists can sign up, verify email, see an empty dashboard. No broadcasting, no audio yet. Useful for collecting member data and testing email flows.  
-- Pro: Achievable by June 15  
-- Con: Not a broadcasting product — artists can't do anything meaningful  
-- Con: Hard to test the core value proposition  
+Artists can sign up, verify email, see an empty dashboard. No broadcasting, no audio yet. Useful for collecting member data and testing email flows.
+
+- Pro: Achievable by June 15
+- Con: Not a broadcasting product — artists can't do anything meaningful
+- Con: Hard to test the core value proposition
 
 **B — August 1: M0–M4 (broadcasting beta, no chat)**  
-Artists can broadcast via OBS or Mixxx, archive auto-saves, listeners can tune in. No live chat. Sufficient for testing the core loop.  
-- Pro: Core value proposition is testable  
-- Pro: Chat absence is understandable in a beta context  
-- Con: Pushes public beta to September+  
+Artists can broadcast via OBS or Mixxx, archive auto-saves, listeners can tune in. No live chat. Sufficient for testing the core loop.
+
+- Pro: Core value proposition is testable
+- Pro: Chat absence is understandable in a beta context
+- Con: Pushes public beta to September+
 
 **C — September 1: M0–M5 (full MVP beta)**  
-Everything including chat. Matches the original public beta target.  
-- Pro: Full experience from day one  
-- Con: No beta artists until September  
+Everything including chat. Matches the original public beta target.
+
+- Pro: Full experience from day one
+- Con: No beta artists until September
 
 **D — Rolling beta: invite 5 artists at M0+M1, expand as milestones ship**  
-Start technical alpha at M0+M1 with hand-picked artists who understand they're seeing early work. Expand at each milestone.  
-- Pro: Real-world feedback from day 1  
-- Pro: No artificial deadline pressure  
-- Con: Risk of disappointing early invitees with an incomplete product  
+Start technical alpha at M0+M1 with hand-picked artists who understand they're seeing early work. Expand at each milestone.
+
+- Pro: Real-world feedback from day 1
+- Pro: No artificial deadline pressure
+- Con: Risk of disappointing early invitees with an incomplete product
 
 ### Decision
 
@@ -191,30 +203,34 @@ AGENT.md specifies `Lucia + argon2` for authentication. Lucia's author (pilcrowo
 ### Options
 
 **A — better-auth**  
-Direct successor to Lucia. TypeScript-first, Prisma adapter available, supports email/password + OAuth (Google, Apple), session management, email verification built in.  
-- Pro: Actively developed (the recommended successor)  
-- Pro: Prisma adapter works out of the box  
-- Pro: Built-in: email verification, password reset, 2FA  
-- Con: Newer — less StackOverflow answers than next-auth  
+Direct successor to Lucia. TypeScript-first, Prisma adapter available, supports email/password + OAuth (Google, Apple), session management, email verification built in.
+
+- Pro: Actively developed (the recommended successor)
+- Pro: Prisma adapter works out of the box
+- Pro: Built-in: email verification, password reset, 2FA
+- Con: Newer — less StackOverflow answers than next-auth
 
 **B — next-auth v5 (Auth.js)**  
-Battle-tested, huge community, first-class Next.js integration.  
-- Pro: Extremely well documented  
-- Pro: First-class App Router support  
-- Con: Prisma adapter has historically been laggy to update  
-- Con: More configuration for custom flows (email verify, rate limiting)  
+Battle-tested, huge community, first-class Next.js integration.
+
+- Pro: Extremely well documented
+- Pro: First-class App Router support
+- Con: Prisma adapter has historically been laggy to update
+- Con: More configuration for custom flows (email verify, rate limiting)
 
 **C — Custom JWT + argon2 (no framework)**  
-Roll sessions manually: argon2 for password hashing, JWT or opaque tokens for sessions, all custom endpoints.  
-- Pro: Full control, no framework churn risk  
-- Con: Must implement: email verify, password reset, rate limiting, session invalidation — all from scratch  
-- Con: Security surface is larger  
+Roll sessions manually: argon2 for password hashing, JWT or opaque tokens for sessions, all custom endpoints.
+
+- Pro: Full control, no framework churn risk
+- Con: Must implement: email verify, password reset, rate limiting, session invalidation — all from scratch
+- Con: Security surface is larger
 
 **D — Keep Lucia (maintenance mode)**  
-Lucia is stable enough for a Y1 product. It will continue to work.  
-- Pro: Spec doesn't change  
-- Con: No active security patches  
-- Con: Will need migration anyway in Y2  
+Lucia is stable enough for a Y1 product. It will continue to work.
+
+- Pro: Spec doesn't change
+- Con: No active security patches
+- Con: Will need migration anyway in Y2
 
 ### Decision
 
@@ -241,25 +257,28 @@ AGENT.md M2 says "resumable upload (tus)" for archive material. However, MinIO d
 ### Options
 
 **A — S3 multipart upload (recommended)**  
-Browser uses AWS SDK or `@aws-sdk/client-s3` to upload directly to MinIO in 5MB parts via presigned part URLs. Upload state tracked server-side in Postgres.  
-- Pro: No extra service (no tusd)  
-- Pro: MinIO natively supports this  
-- Pro: Works with any S3-compatible storage (portable)  
-- Con: Client-side code is more complex than tus  
-- Con: Browser SDK adds ~80KB to bundle (can tree-shake)  
+Browser uses AWS SDK or `@aws-sdk/client-s3` to upload directly to MinIO in 5MB parts via presigned part URLs. Upload state tracked server-side in Postgres.
+
+- Pro: No extra service (no tusd)
+- Pro: MinIO natively supports this
+- Pro: Works with any S3-compatible storage (portable)
+- Con: Client-side code is more complex than tus
+- Con: Browser SDK adds ~80KB to bundle (can tree-shake)
 
 **B — tus via tusd**  
-Run `tusd` as a sidecar service. It accepts tus protocol from the browser and writes to MinIO via S3.  
-- Pro: Simple client library (tus-js-client is well maintained)  
-- Pro: Automatic resume, chunk size auto-negotiation  
-- Con: Extra service to run, configure, and monitor  
-- Con: Another point of failure in the upload path  
+Run `tusd` as a sidecar service. It accepts tus protocol from the browser and writes to MinIO via S3.
+
+- Pro: Simple client library (tus-js-client is well maintained)
+- Pro: Automatic resume, chunk size auto-negotiation
+- Con: Extra service to run, configure, and monitor
+- Con: Another point of failure in the upload path
 
 **C — Simple single presigned PUT (no resumability)**  
-For files ≤ 500MB (95% of cases), a single presigned PUT is fine. If it fails, the user re-uploads.  
-- Pro: Simplest implementation  
-- Con: A 500MB upload on a 10Mbps connection takes ~7 minutes — a failure means starting over  
-- Con: Poor UX for DJ sets (often 300–500MB)  
+For files ≤ 500MB (95% of cases), a single presigned PUT is fine. If it fails, the user re-uploads.
+
+- Pro: Simplest implementation
+- Con: A 500MB upload on a 10Mbps connection takes ~7 minutes — a failure means starting over
+- Con: Poor UX for DJ sets (often 300–500MB)
 
 ### Decision
 
@@ -289,30 +308,34 @@ OBS covers ~70% of DJ/artist workflows. Mixxx + Icecast covers another 20%. Brow
 ### Options
 
 **A — Skip for MVP, add post-beta (recommended for timeline)**  
-Remove browser live from M3. OBS + Mixxx + butt cover the beta cohort. Add it in M3b using WHIP once Liquidsoap 2.3 is stable.  
-- Pro: Removes the most complex component from MVP  
-- Pro: WHIP in Liquidsoap 2.3 is the cleanest long-term solution  
-- Con: Artists without OBS cannot broadcast in beta  
-- Con: Delays the "no install needed" story  
+Remove browser live from M3. OBS + Mixxx + butt cover the beta cohort. Add it in M3b using WHIP once Liquidsoap 2.3 is stable.
+
+- Pro: Removes the most complex component from MVP
+- Pro: WHIP in Liquidsoap 2.3 is the cleanest long-term solution
+- Con: Artists without OBS cannot broadcast in beta
+- Con: Delays the "no install needed" story
 
 **B — WHIP (WebRTC HTTP Ingestion Protocol)**  
-Liquidsoap 2.3+ supports WHIP natively. The browser's `RTCPeerConnection` sends directly to a Liquidsoap WHIP endpoint — no bridge service needed.  
-- Pro: Native Liquidsoap support — no extra service  
-- Pro: Standard protocol (RFC draft), supported by OBS 31+, browsers  
-- Con: Liquidsoap 2.3 is not yet stable (as of May 2026 — check current status)  
-- Con: May need to run Liquidsoap from a nightly build  
+Liquidsoap 2.3+ supports WHIP natively. The browser's `RTCPeerConnection` sends directly to a Liquidsoap WHIP endpoint — no bridge service needed.
+
+- Pro: Native Liquidsoap support — no extra service
+- Pro: Standard protocol (RFC draft), supported by OBS 31+, browsers
+- Con: Liquidsoap 2.3 is not yet stable (as of May 2026 — check current status)
+- Con: May need to run Liquidsoap from a nightly build
 
 **C — Janus Gateway**  
-Janus handles WebRTC signaling and media, forwards via RTP/RTSP to Liquidsoap.  
-- Pro: Battle-tested WebRTC server  
-- Con: Large C service, complex deployment and config  
-- Con: Adds a new technology with a steep learning curve  
+Janus handles WebRTC signaling and media, forwards via RTP/RTSP to Liquidsoap.
+
+- Pro: Battle-tested WebRTC server
+- Con: Large C service, complex deployment and config
+- Con: Adds a new technology with a steep learning curve
 
 **D — MediaMTX (formerly rtsp-simple-server)**  
-Lightweight Go service that accepts WebRTC (WHIP) and forwards to RTMP. More modern than Janus.  
-- Pro: Small single binary, easy Docker deployment  
-- Pro: Supports WHIP input → RTMP output → existing nginx-rtmp path  
-- Con: Less widely tested than Janus for large-scale WebRTC  
+Lightweight Go service that accepts WebRTC (WHIP) and forwards to RTMP. More modern than Janus.
+
+- Pro: Small single binary, easy Docker deployment
+- Pro: Supports WHIP input → RTMP output → existing nginx-rtmp path
+- Con: Less widely tested than Janus for large-scale WebRTC
 
 ### Decision
 
@@ -344,28 +367,32 @@ The artist-side legality is separate: the artist bears responsibility for their 
 ### Options
 
 **A — Mixcloud only (same as Tahti Radio — legally clean)**  
-Mixcloud has blanket DJ mix licenses. Only offer Mixcloud Live as a multistream destination. Remove YouTube/Twitch/Facebook entirely from M6.  
-- Pro: Consistent with Tahti Radio policy  
-- Pro: No copyright strike risk  
-- Con: Artists who want to reach YouTube/Twitch audiences must use OBS multistream separately  
+Mixcloud has blanket DJ mix licenses. Only offer Mixcloud Live as a multistream destination. Remove YouTube/Twitch/Facebook entirely from M6.
+
+- Pro: Consistent with Tahti Radio policy
+- Pro: No copyright strike risk
+- Con: Artists who want to reach YouTube/Twitch audiences must use OBS multistream separately
 
 **B — Provide multistream credentials to artist, artist runs their own relay**  
-Tahti provides the source audio stream credentials. The artist configures their own restream.io/OBS multistream to their personal YouTube/Twitch. Tahti's IP is never the origin of the multistream.  
-- Pro: Zero liability for Tahti  
-- Pro: Artist has full control  
-- Con: Added complexity for the artist  
-- Con: Not the "set-it-once, forget it" UX the spec promises  
+Tahti provides the source audio stream credentials. The artist configures their own restream.io/OBS multistream to their personal YouTube/Twitch. Tahti's IP is never the origin of the multistream.
+
+- Pro: Zero liability for Tahti
+- Pro: Artist has full control
+- Con: Added complexity for the artist
+- Con: Not the "set-it-once, forget it" UX the spec promises
 
 **C — Allow YouTube/Twitch, require artist acknowledgment**  
-Show a clear warning ("You are responsible for all copyright compliance on your destination platforms") and require explicit per-destination acknowledgment. Log the acknowledgment.  
-- Pro: Maintains the feature  
-- Con: Acknowledgment does not protect Tahti's infrastructure from strike consequences  
-- Con: Legal opinion needed before proceeding  
+Show a clear warning ("You are responsible for all copyright compliance on your destination platforms") and require explicit per-destination acknowledgment. Log the acknowledgment.
+
+- Pro: Maintains the feature
+- Con: Acknowledgment does not protect Tahti's infrastructure from strike consequences
+- Con: Legal opinion needed before proceeding
 
 **D — Legal opinion first, defer decision**  
-Before building M6, get a written legal opinion on whether Tahti acting as an RTMP relay to YouTube/Twitch creates liability for the org under Finnish and EU copyright law.  
-- Pro: Makes the decision on solid legal ground  
-- Con: Delays M6  
+Before building M6, get a written legal opinion on whether Tahti acting as an RTMP relay to YouTube/Twitch creates liability for the org under Finnish and EU copyright law.
+
+- Pro: Makes the decision on solid legal ground
+- Con: Delays M6
 
 ### Decision
 
@@ -391,11 +418,13 @@ Date decided:
 There are two incompatible grant formulas in the codebase:
 
 **AGENT.md M9** (original):
+
 ```
 grant = (channel_listener_hours / total_eligible_listener_hours) × grant_pool
 ```
 
 **docs/archive/phase-11.md** (updated per backlog item):
+
 ```
 engagement_units = SUM(downloads.weight) + SUM(fan_sub_euros × 10)
 grant = (artist_engagement_units / total_eligible_units) × grant_pool
@@ -429,6 +458,7 @@ Date decided: 2026-06-03
 ```
 
 **Implementation note (2026-06-03):** M9 implemented in `packages/ledger`.
+
 - `allocateGrants()` is a pure, deterministic largest-remainder (Hamilton)
   allocator — sums to the pool exactly (zero rounding drift), 10% reserve, 5-unit
   eligibility threshold. Unit-tested incl. the spec's worked example.
@@ -440,7 +470,7 @@ Date decided: 2026-06-03
   sums `FanSubPayout.grossCents` per artist for the year (1 unit per euro) in
   addition to download weight. Listener-hours are **not** used.
 - Surfaced via `POST /api/admin/grants/run/:year` (board), `GET
-  /api/v1/transparency/grants/:year` (public, anonymized), `GET /api/me/grants`.
+/api/v1/transparency/grants/:year` (public, anonymized), `GET /api/me/grants`.
 - Worker cron `annual-grant-calc` runs 03:00 on March 1 for the prior year.
 
 ---
@@ -460,23 +490,26 @@ Additionally: channel slugs as subdomains require wildcard TLS (`*.tahti.live`).
 ### Options
 
 **A — middleware.ts rewrites + wildcard TLS via Caddy DNS challenge**  
-`middleware.ts` reads `X-Tahti-Channel-Slug` and rewrites to `/c/[slug]`. Caddy uses DNS-01 challenge via the registrar's API.  
-- Need to verify: does the domain registrar support Caddy DNS plugins (Cloudflare DNS API, Route 53, or generic ACME DNS)?  
-- Pro: Clean URL (`slug.tahti.live`)  
-- Con: DNS challenge adds complexity and a dependency on the registrar's API  
+`middleware.ts` reads `X-Tahti-Channel-Slug` and rewrites to `/c/[slug]`. Caddy uses DNS-01 challenge via the registrar's API.
+
+- Need to verify: does the domain registrar support Caddy DNS plugins (Cloudflare DNS API, Route 53, or generic ACME DNS)?
+- Pro: Clean URL (`slug.tahti.live`)
+- Con: DNS challenge adds complexity and a dependency on the registrar's API
 
 **B — Path-based routing: `tahti.live/c/slug`**  
-No subdomains. Channels live at `tahti.live/c/djname`. Simpler TLS (single cert), no DNS challenge needed.  
-- Pro: Simplest implementation  
-- Pro: Standard ACME HTTP challenge works  
-- Con: Less memorable URL  
-- Con: Doesn't match the spec's `slug.tahti.live` promise  
+No subdomains. Channels live at `tahti.live/c/djname`. Simpler TLS (single cert), no DNS challenge needed.
+
+- Pro: Simplest implementation
+- Pro: Standard ACME HTTP challenge works
+- Con: Less memorable URL
+- Con: Doesn't match the spec's `slug.tahti.live` promise
 
 **C — Hybrid: `tahti.live/c/slug` in MVP, add subdomains post-beta**  
-Ship with path-based routing. Add subdomain support as a later enhancement once the registrar DNS situation is confirmed.  
-- Pro: Unblocks development  
-- Pro: DNS challenge complexity deferred  
-- Con: Beta artists get path-based URL, then URL changes after beta  
+Ship with path-based routing. Add subdomain support as a later enhancement once the registrar DNS situation is confirmed.
+
+- Pro: Unblocks development
+- Pro: DNS challenge complexity deferred
+- Con: Beta artists get path-based URL, then URL changes after beta
 
 ### Decision
 
@@ -510,20 +543,23 @@ M19 requires artists to complete Stripe Connect Express KYC (identity verificati
 ### Options
 
 **A — Block Checkout until KYC approved**  
-"Support" button on channel is grayed out / shows "Coming soon" until Stripe confirms `charges_enabled = true`.  
-- Pro: Simplest — no partial state to manage  
-- Con: An artist may share their subscribe link before KYC completes, then listeners hit a dead end  
+"Support" button on channel is grayed out / shows "Coming soon" until Stripe confirms `charges_enabled = true`.
+
+- Pro: Simplest — no partial state to manage
+- Con: An artist may share their subscribe link before KYC completes, then listeners hit a dead end
 
 **B — Queue subscriptions, charge when KYC completes**  
-Collect subscriber email + intent (no card yet). When KYC clears, email subscribers to complete payment.  
-- Pro: No lost subscribers  
-- Con: Complex state management; re-engagement email required  
+Collect subscriber email + intent (no card yet). When KYC clears, email subscribers to complete payment.
+
+- Pro: No lost subscribers
+- Con: Complex state management; re-engagement email required
 
 **C — Email capture only during KYC window**  
-"Support this artist — get notified when subscriptions open" — email capture, no payment. Stripe Checkout not offered until KYC clear.  
-- Pro: Simple, honest  
-- Pro: Builds the artist's newsletter list as a side effect  
-- Con: Not an actual subscription — subscriber may not return  
+"Support this artist — get notified when subscriptions open" — email capture, no payment. Stripe Checkout not offered until KYC clear.
+
+- Pro: Simple, honest
+- Pro: Builds the artist's newsletter list as a side effect
+- Con: Not an actual subscription — subscriber may not return
 
 ### Decision
 
@@ -568,21 +604,24 @@ If the bylaws filed with PRH don't explicitly authorize electronic asynchronous 
 ### Options
 
 **A — Add explicit electronic voting authorization to bylaws**  
-Add a clause: "The board may convene an annual general meeting electronically and permit asynchronous voting via the platform for a period not exceeding 14 days."  
-- Pro: Makes M10 fully legally valid  
-- Pro: Forward-looking  
-- Con: Requires lawyer review of the clause  
+Add a clause: "The board may convene an annual general meeting electronically and permit asynchronous voting via the platform for a period not exceeding 14 days."
+
+- Pro: Makes M10 fully legally valid
+- Pro: Forward-looking
+- Con: Requires lawyer review of the clause
 
 **B — M10 is advisory only; binding votes happen at live AGM**  
-The dashboard voting UI is used for pre-AGM sentiment surveys and informal motions. Binding votes happen at a live AGM (video call). Results recorded manually.  
-- Pro: No legal risk  
-- Con: Requires organizing a live AGM — harder to get quorum  
-- Con: Reduces the utility of M10 significantly  
+The dashboard voting UI is used for pre-AGM sentiment surveys and informal motions. Binding votes happen at a live AGM (video call). Results recorded manually.
+
+- Pro: No legal risk
+- Con: Requires organizing a live AGM — harder to get quorum
+- Con: Reduces the utility of M10 significantly
 
 **C — Defer the legal question, build M10 as advisory, upgrade later**  
-Ship M10 as advisory voting. After bylaws are filed and year 1 is running, propose a bylaws amendment at the first AGM to authorize electronic voting.  
-- Pro: Unblocks M10 development  
-- Con: Members using M10 in Y1 must understand it's advisory only  
+Ship M10 as advisory voting. After bylaws are filed and year 1 is running, propose a bylaws amendment at the first AGM to authorize electronic voting.
+
+- Pro: Unblocks M10 development
+- Con: Members using M10 in Y1 must understand it's advisory only
 
 ### Decision
 
@@ -620,16 +659,18 @@ Revelator, however, automatically allocates ISRCs as part of the submission flow
 ### Options
 
 **A — Use Revelator's ISRC allocation (remove IFPI requirement)**  
-Revelator handles ISRC allocation automatically. Remove IFPI Finland membership from the spec entirely.  
-- Pro: No external dependency  
-- Pro: Revelator is already in the stack  
-- Con: ISRCs are tied to Revelator's account — if Tahti leaves Revelator, ISRCs must be transferred  
+Revelator handles ISRC allocation automatically. Remove IFPI Finland membership from the spec entirely.
+
+- Pro: No external dependency
+- Pro: Revelator is already in the stack
+- Con: ISRCs are tied to Revelator's account — if Tahti leaves Revelator, ISRCs must be transferred
 
 **B — Apply for IFPI Finland in Y2 when publishing history exists**  
-Revelator for Y1. Apply for IFPI Finland membership in Y2 to get direct ISRC authority. Update the spec to reflect the two-phase approach.  
-- Pro: Best long-term outcome  
-- Pro: Doesn't block M7  
-- Con: Minor complexity (two different ISRC sources in Y1 vs Y2)  
+Revelator for Y1. Apply for IFPI Finland membership in Y2 to get direct ISRC authority. Update the spec to reflect the two-phase approach.
+
+- Pro: Best long-term outcome
+- Pro: Doesn't block M7
+- Con: Minor complexity (two different ISRC sources in Y1 vs Y2)
 
 ### Decision
 
@@ -662,12 +703,12 @@ Prisma doesn't support declarative table partitioning — it must be done via ra
 
 ### Proposed partition plan
 
-| Table | Partition key | Partition by |
-|-------|--------------|-------------|
-| `analytics.ListenerHour` | `bucket` (hour-truncated timestamp) | Month |
-| `engagement.Download` | `countedAt` | Month |
-| `analytics.SmartLinkClick` | `clickedAt` | Month |
-| `analytics.EmbedPlay` | `playedAt` | Month |
+| Table                      | Partition key                       | Partition by |
+| -------------------------- | ----------------------------------- | ------------ |
+| `analytics.ListenerHour`   | `bucket` (hour-truncated timestamp) | Month        |
+| `engagement.Download`      | `countedAt`                         | Month        |
+| `analytics.SmartLinkClick` | `clickedAt`                         | Month        |
+| `analytics.EmbedPlay`      | `playedAt`                          | Month        |
 
 ### Decision
 
@@ -705,14 +746,15 @@ Date decided:
 ### Options
 
 **A — Hetzner HEL1 until Y2 grant covers colo capex**  
-Save ~€5,600/year in Y1. Accept the weaker grant narrative. Migrate to Finnish colo in Y2.  
+Save ~€5,600/year in Y1. Accept the weaker grant narrative. Migrate to Finnish colo in Y2.
 
 **B — Finnish colo from day 1 (bootstrap or grant-funded)**  
-Accept €6,000 upfront capex + €8,460/year opex. Apply for grants with a clean "all-Finnish infrastructure" story.  
-- Requires: founder can front the €6,000 capex, or grant covers it  
+Accept €6,000 upfront capex + €8,460/year opex. Apply for grants with a clean "all-Finnish infrastructure" story.
+
+- Requires: founder can front the €6,000 capex, or grant covers it
 
 **C — Hetzner HEL1 + Finnish colo for one key service**  
-Run the marketing site and a Postgres node on Finnish colo to make the statement. Worker nodes on Hetzner. Hybrid.  
+Run the marketing site and a Postgres node on Finnish colo to make the statement. Worker nodes on Hetzner. Hybrid.
 
 ### Decision
 
@@ -741,20 +783,20 @@ Date decided:
 ### Options
 
 **A — Add existence guards to Makefile**  
-Each build target checks if the directory exists before running `docker build`. If not, prints "not yet implemented" and exits gracefully.  
+Each build target checks if the directory exists before running `docker build`. If not, prints "not yet implemented" and exits gracefully.
 
 **B — Phased Makefile (Makefile.phase1, Makefile)**  
-Keep separate Makefile per phase. `main` Makefile only includes targets that are currently buildable.  
+Keep separate Makefile per phase. `main` Makefile only includes targets that are currently buildable.
 
 **C — Accept it until M0 creates the directories**  
-The problem self-resolves at M0. Document it in `README.md` as "some Make targets are future targets."  
+The problem self-resolves at M0. Document it in `README.md` as "some Make targets are future targets."
 
 ### Decision
 
 ```
-Chosen option:
-Owner:
-Date decided:
+Chosen option: A — guard unavailable Make targets with an explicit error.
+Owner: Dev
+Date decided: 2026-09-11
 ```
 
 ---
@@ -763,14 +805,14 @@ Date decided:
 
 Record decisions here as they are made, in date order.
 
-| # | Topic | Decision summary | Date | Owner |
-|---|-------|-----------------|------|-------|
-| 4 | Auth library | Custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`. | 2026-06-03 | Dev |
-| 5 | Upload resumability | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`. | 2026-06-03 | Dev |
-| 9 | Subdomain routing | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred. | 2026-06-03 | Dev |
-| 11 | AGM voting legality | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment. | 2026-06-03 | Dev / Board |
-| 8 | Grant formula | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev |
-| 10 | Stripe Connect KYC gap | **A** — block Checkout until `charges_enabled`; tiers editable during KYC with a banner. (Live Stripe wiring still pending.) | 2026-06-03 | Dev |
+| #   | Topic                  | Decision summary                                                                                                                           | Date       | Owner       |
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------- |
+| 4   | Auth library           | Custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`.                                 | 2026-06-03 | Dev         |
+| 5   | Upload resumability    | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`.                                                 | 2026-06-03 | Dev         |
+| 9   | Subdomain routing      | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred.                                                                             | 2026-06-03 | Dev         |
+| 11  | AGM voting legality    | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment.                                         | 2026-06-03 | Dev / Board |
+| 8   | Grant formula          | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev         |
+| 10  | Stripe Connect KYC gap | **A** — block Checkout until `charges_enabled`; tiers editable during KYC with a banner. (Live Stripe wiring still pending.)               | 2026-06-03 | Dev         |
 
 > Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
 > were decided implicitly by implementation and are recorded here for the audit

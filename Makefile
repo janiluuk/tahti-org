@@ -63,6 +63,7 @@ stack-down:
 	./scripts/stack-up.sh --down
 
 stack-deploy:
+	@test -x ./scripts/remote-stack-deploy.sh || (echo "ERROR: scripts/remote-stack-deploy.sh is not present; use ./scripts/deploy_prod.sh for the current production deploy flow" >&2; exit 1)
 	./scripts/remote-stack-deploy.sh
 
 db-migrate-deploy:

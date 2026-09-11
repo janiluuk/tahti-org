@@ -1,5 +1,8 @@
 # ffmpeg.wasm bundles (copied on postinstall — SEC-05)
 apps/web/public/static/ffmpeg/
+
+# Local Codex/Claude worktrees are not project source and may contain generated bundles.
+.claude/worktrees/
 infra/stack.env
 .env
 .env.*

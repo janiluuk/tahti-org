@@ -255,16 +255,16 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 
 **MVP test matrix (must pass before inviting beta artists):**
 
-| Done | Test                                                        | Method                                               |
-| :--: | ----------------------------------------------------------- | ---------------------------------------------------- |
-| [ ]  | Register → verify email → pay €40 → appear in member export | manual + automated                                   |
-| [x]  | OBS guide: copy-paste RTMP → LIVE within 5s                 | `/help/broadcast` + `obs-and-broadcasting-guides.md` |
-| [ ]  | Mixxx / Icecast path works                                  | manual                                               |
-| [ ]  | Stop broadcast → archive within 10s, no silence             | manual                                               |
-| [ ]  | Chat: anonymous join, 24h expiry, artist ban                | manual                                               |
-| [x]  | Free user hits weekly hour cap gracefully                   | M20                                                  |
-| [x]  | Paid channel streams FLAC; free channel MP3                 | M20                                                  |
-| [ ]  | Load test: N concurrent listeners on one channel            | script                                               |
+| Done | Test                                                                                       | Method                                               |
+| :--: | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| [ ]  | Register → verify email → pay €40 → appear in member export                                | manual + automated                                   |
+| [x]  | OBS guide: copy-paste RTMP → LIVE within 5s                                                | `/help/broadcast` + `obs-and-broadcasting-guides.md` |
+| [ ]  | Mixxx / Icecast path works                                                                 | manual                                               |
+| [ ]  | Stop broadcast → archive within 10s, no silence                                            | manual                                               |
+| [ ]  | Chat: anonymous join, 24h expiry, artist ban                                               | manual                                               |
+| [x]  | Free user hits weekly hour cap gracefully                                                  | M20                                                  |
+| [x]  | Paid channel streams FLAC; free channel MP3                                                | M20                                                  |
+| [~]  | Load test harness added (`pnpm test:load:hls`); run against a deployed channel before beta | `scripts/channel-load-test.sh`                       |
 
 **Exit criteria:** 5 internal dogfood channels running 48h without intervention.
 
