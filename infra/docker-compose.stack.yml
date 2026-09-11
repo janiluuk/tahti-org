@@ -7,6 +7,7 @@
 # API:        http://localhost:15011  (override API_PORT)
 # MailHog:    http://localhost:18025
 # MinIO:      http://localhost:19001  (tahti / local-stack-minio-secret)
+# Dozzle:     http://localhost:18090  (admin / local-stack-dozzle-secret — see infra/stack/dozzle-users.yml)
 
 name: tahti-stack
 
@@ -263,6 +264,32 @@ services:
       - '${MAILHOG_SMTP_PORT:-15025}:1025'
       - '${MAILHOG_UI_PORT:-18025}:8025'
 
+  # Docker log viewer for this stack's containers. Read-only docker.sock mount
+  # (orchestrator above already has a read-write mount, so this adds no new
+  # capability class to the host) + DOZZLE_FILTER scope it to just
+  # `tahti-stack` containers on a shared host. Auth is always on (local and
+  # prod both use the same DOZZLE_AUTH_PROVIDER=simple) — see
+  # infra/stack/dozzle-users.yml for the dev-only default credential and how
+  # to replace it before a real deploy.
+  dozzle:
+    logging: *loki-logging
+    image: amir20/dozzle:v11.0.0
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+      DOZZLE_FILTER: label=com.docker.compose.project=tahti-stack
+      DOZZLE_NO_ANALYTICS: '1'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./stack/dozzle-users.yml:/data/users.yml:ro
+    ports:
+      - '${DOZZLE_PORT:-18090}:8080'
+    healthcheck:
+      test: ['CMD', '/dozzle', 'healthcheck']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   icecast:
     logging: *loki-logging
     image: moul/icecast:latest
@@ -426,7 +453,11 @@ services:
       # Identifies this process on the /admin/workers status page.
       WORKER_NAME: vimage-main
     volumes:
-      - stack_hls:/hls:ro
+      # rw: hls-minio-sync's ensureMasterPlaylist() writes master.m3u8 /
+      # master-free.m3u8 locally before uploading (added in the HLS AAC
+      # masters change; this mount was never updated off :ro, which broke
+      # all live playback — every hls-minio-sync tick failed with EROFS).
+      - stack_hls:/hls
       - stack_recordings:/recordings:ro
       - stack_archive_cache:/archive-cache
     depends_on:
