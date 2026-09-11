@@ -15,7 +15,6 @@ One file per in-progress task. When a task ships, fold it into
 
 | Status  | File                                                                                         | One-line                                                                                                                                                                                                           |
 | ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| open    | [admin-mail-stats-dashboard.md](admin-mail-stats-dashboard.md)                               | Contact-inbox (hello@/support@) unread-mail KPI tile on `/admin/dashboard`, sourced from Prometheus on vimage6 — ready to merge                                                                                    |
 | open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                                               |
 | partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | §5.1/§5.2 store adapter + §5 `PluginRegistryHost` façade both shipped in `../tahti-player` (additive, non-breaking), §6 contract tests cover both; caller migration (§5.4) and ownership-split sign-off still open |
 
@@ -54,8 +53,9 @@ Also folded into `HISTORY.md` this pass: three `docs/todo/*.md` files whose
 branches had already merged to `main` weeks ago but were never deleted
 (`stream-overlay-scrim-toggle.md`, `stream-overlay-show-title-toggle.md`,
 `recurrence-duration-overlap.md`), plus one confirmed done on both sides of
-the cross-repo split (`pwyw-track-purchase-frontend.md`) — see `HISTORY.md`
-for what shipped in each.
+the cross-repo split (`pwyw-track-purchase-frontend.md`), and the mail-stats
+and migration-squash tasks folded on 2026-09-11 — see `HISTORY.md` for what
+shipped in each.
 
 ## Fold rule (copy into CLAUDE / chat)
 

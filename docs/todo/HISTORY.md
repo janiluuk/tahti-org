@@ -6,6 +6,18 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-11 — admin-mail-stats-dashboard.md
+
+Folded the contact-inbox metrics task after its Prometheus exporter, board-only
+API endpoint, dashboard KPI tile, Grafana row, deployment wiring, and tests
+landed.
+
+## 2026-09-11 — squash-db-migrations.md
+
+Folded the migration squash after the single baseline migration was verified
+against throwaway Postgres and the deploy path was checked for compatibility.
+No production migration action is required because the stack uses `prisma db push`.
+
 ## 2026-09-08 — stale-todo sweep: 3 already-merged files never folded
 
 Building `docs/todo/INDEX.md` surfaced three todo files whose branches
