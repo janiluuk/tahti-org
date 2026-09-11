@@ -7,8 +7,7 @@ import { Readable } from 'node:stream'
 import { prisma } from '@tahti/db'
 import {
   extensionFromDriveFile,
-  fetchGoogleDriveFileMetadata,
-  fetchGoogleDriveFileStream,
+  googleDriveCloudImportProvider,
   isAllowedDriveAudioMime,
   refreshGoogleDriveToken,
   titleFromDriveFileName,
@@ -59,15 +58,15 @@ async function driveDownloadWithRetry(
     googleDriveRefreshTokenEnc: string | null
   },
   fileId: string,
-): Promise<Response> {
+): ReturnType<typeof googleDriveCloudImportProvider.getDownloadStream> {
   let accessToken = await getAccessTokenForUser(user)
   try {
-    return await fetchGoogleDriveFileStream(accessToken, fileId)
+    return await googleDriveCloudImportProvider.getDownloadStream(accessToken, fileId)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     if (!message.includes('401') || !user.googleDriveRefreshTokenEnc) throw err
     accessToken = await getAccessTokenForUser(user)
-    return fetchGoogleDriveFileStream(accessToken, fileId)
+    return googleDriveCloudImportProvider.getDownloadStream(accessToken, fileId)
   }
 }
 
@@ -108,30 +107,18 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
   })
 
   try {
-    const accessToken = await getAccessTokenForUser(importJob.user)
-    let metadata
-    try {
-      metadata = await fetchGoogleDriveFileMetadata(accessToken, importJob.externalFileId)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (message.includes('401') && importJob.user.googleDriveRefreshTokenEnc) {
-        const refreshed = await getAccessTokenForUser(importJob.user)
-        metadata = await fetchGoogleDriveFileMetadata(refreshed, importJob.externalFileId)
-      } else {
-        throw err
-      }
-    }
+    const download = await driveDownloadWithRetry(importJob.user, importJob.externalFileId)
+    const metadata = download.file
 
     const fileName = metadata.name || importJob.fileName || 'import'
     if (!isAllowedDriveAudioMime(metadata.mimeType, fileName)) {
       throw new Error('Selected file is not a supported audio format')
     }
 
-    const driveRes = await driveDownloadWithRetry(importJob.user, importJob.externalFileId)
     const ext = extensionFromDriveFile(fileName, metadata.mimeType)
     const rawKey = `raw/${channel.slug}/${randomBytes(8).toString('hex')}.${ext}`
     const contentLength = metadata.size ? Number(metadata.size) : undefined
-    const nodeStream = Readable.fromWeb(driveRes.body as ReadableStream<Uint8Array>)
+    const nodeStream = Readable.fromWeb(download.body)
 
     await uploadStream(
       rawKey,

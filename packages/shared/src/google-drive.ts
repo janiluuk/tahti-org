@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import type {
+  CloudImportFilePage,
+  CloudImportListOptions,
+  CloudImportProvider,
+} from './cloud-import-provider.js'
+
 /** Least-privilege scope: files the user picks via Google Picker only. */
 export const GOOGLE_DRIVE_OAUTH_SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files'
+const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
 
 const AUDIO_MIME_PREFIX = 'audio/'
 const AUDIO_EXTENSIONS = new Set([
@@ -38,6 +45,11 @@ export interface GoogleDriveFileMetadata {
   name: string
   mimeType: string
   size?: string
+}
+
+interface GoogleDriveFileListResponse {
+  files?: GoogleDriveFileMetadata[]
+  nextPageToken?: string
 }
 
 export function isAllowedDriveAudioMime(mimeType: string | undefined, fileName: string): boolean {
@@ -152,4 +164,46 @@ export async function fetchGoogleDriveFileStream(
   }
   if (!res.body) throw new Error('Google Drive download returned empty body')
   return res
+}
+
+export async function listGoogleDriveFiles(
+  accessToken: string,
+  options: CloudImportListOptions = {},
+): Promise<CloudImportFilePage> {
+  const url = new URL(GOOGLE_DRIVE_FILES_URL)
+  url.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,size)')
+  url.searchParams.set('pageSize', String(Math.min(Math.max(options.pageSize ?? 100, 1), 1000)))
+  url.searchParams.set('q', options.query ?? 'trashed = false')
+  url.searchParams.set('supportsAllDrives', 'true')
+  url.searchParams.set('includeItemsFromAllDrives', 'true')
+  if (options.pageToken) url.searchParams.set('pageToken', options.pageToken)
+
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+  if (!res.ok) throw new Error(`Google Drive file listing failed (${res.status})`)
+  const data = (await res.json()) as GoogleDriveFileListResponse
+  return {
+    files: data.files ?? [],
+    ...(data.nextPageToken ? { nextPageToken: data.nextPageToken } : {}),
+  }
+}
+
+export async function revokeGoogleDriveToken(token: string): Promise<void> {
+  const res = await fetch(GOOGLE_REVOKE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token }),
+  })
+  if (!res.ok) throw new Error(`Google token revocation failed (${res.status})`)
+}
+
+/** PLAT-081 provider implementation; OAuth token storage remains host-owned. */
+export const googleDriveCloudImportProvider: CloudImportProvider = {
+  id: 'google-drive',
+  listFiles: listGoogleDriveFiles,
+  async getDownloadStream(accessToken, fileId) {
+    const file = await fetchGoogleDriveFileMetadata(accessToken, fileId)
+    const response = await fetchGoogleDriveFileStream(accessToken, fileId)
+    return { file, body: response.body as ReadableStream<Uint8Array> }
+  },
+  revokeToken: revokeGoogleDriveToken,
 }

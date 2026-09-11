@@ -33,7 +33,7 @@ export default function TierLimitsHelpPage() {
           current track
         </li>
         <li>
-          Listeners hear <strong>MP3 192 kbps</strong> HLS (<code>stream-mp3-192</code>)
+          Listeners receive adaptive HLS at <strong>192 kbps MP3 to 320 kbps AAC</strong>
         </li>
         <li>Sound fallback plays when you are offline</li>
       </ul>
@@ -53,7 +53,7 @@ export default function TierLimitsHelpPage() {
 
       <Heading level={2}>What listeners see</Heading>
       <Text>
-        Every channel streams live at <strong>MP3 192 kbps</strong> — the highest quality HLS
+        Every channel streams live with adaptive <strong>MP3/AAC HLS</strong> — from 192 to 320 kbps
         reliably supports in mainstream browsers today. Members&apos; archives can still store and
         be downloaded in lossless FLAC.
       </Text>

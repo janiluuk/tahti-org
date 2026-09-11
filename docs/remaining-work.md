@@ -29,17 +29,20 @@ listed for completeness but are not coding tasks.
 
 ## P0–P1 engineering (ship / beta blockers)
 
-| ID / item                                                                                                              | Status | Owner       | Source                           |
-| ---------------------------------------------------------------------------------------------------------------------- | :----: | ----------- | -------------------------------- |
-| **STREAM-011 B** — live/24-7 multi-bitrate HLS (lossless or high-bitrate ABR); spike Liquidsoap fMP4 + master playlist | `[ ]`  | Dev         | `project-roadmap.md` §STREAM-011 |
-| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection (removed 2026-09-08, author's request)            | `[ ]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`   |
-| **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                         | `[~]`  | Dev         | roadmap PLAT-053                 |
-| **M11** — live Upptime fork deploy                                                                                     | `[~]`  | Ops         | roadmap M11                      |
-| **M29** — pgBackRest PITR (interim `backup.sh` exists)                                                                 | `[~]`  | Dev / Ops   | roadmap M29                      |
-| MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test        | `[ ]`  | Dev         | roadmap Phase 3 test matrix      |
-| **PLAT-010** — Turbo remote cache secrets in CI                                                                        | `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`  |
-| **PLAT-012** — Vitest Testcontainers + parallel workers                                                                | `[~]`  | Dev         | future-improvements              |
-| `user-journeys-e2e` required in branch protection (moot — branch protection removed 2026-09-08)                        | `[ ]`  | Dev         | Still runs in CI, not enforced   |
+STREAM-011 B's high-bitrate AAC ABR and generated master playlist are now
+shipped; the row below retains `[~]` for the remaining true-lossless fMP4 work.
+
+| ID / item                                                                                                                                                                                          | Status | Owner       | Source                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | ----------- | ------------------------------------------------------------------------------------ |
+| **STREAM-011 B** — live/24-7 multi-bitrate HLS; tier-aware MP3/AAC masters are shipped, while true lossless fMP4 remains deferred pending a newer pinned Liquidsoap release and browser validation | `[~]`  | Dev         | `project-roadmap.md` §STREAM-011; `docs/worklogs/2026-09-11-stream-011-hls-spike.md` |
+| **PLAT-002** — require all `ci.yml` jobs in GitHub branch protection (removed 2026-09-08, author's request)                                                                                        | `[ ]`  | Dev / admin | `.github/BRANCH_PROTECTION.md`                                                       |
+| **PLAT-053** — Tahti Radio → Mixcloud Live (blocked: radio `.liq` not in-repo)                                                                                                                     | `[~]`  | Dev         | roadmap PLAT-053                                                                     |
+| **M11** — live Upptime fork deploy                                                                                                                                                                 | `[~]`  | Ops         | roadmap M11                                                                          |
+| **M29** — pgBackRest PITR (interim `backup.sh` exists)                                                                                                                                             | `[~]`  | Dev / Ops   | roadmap M29                                                                          |
+| MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test                                                                                    | `[ ]`  | Dev         | roadmap Phase 3 test matrix                                                          |
+| **PLAT-010** — Turbo remote cache secrets in CI                                                                                                                                                    | `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`                                                      |
+| **PLAT-012** — Vitest Testcontainers + parallel workers                                                                                                                                            | `[~]`  | Dev         | future-improvements                                                                  |
+| `user-journeys-e2e` required in branch protection (moot — branch protection removed 2026-09-08)                                                                                                    | `[ ]`  | Dev         | Still runs in CI, not enforced                                                       |
 
 ---
 
@@ -98,11 +101,9 @@ as part of this preparation.
 
 ## Platform backlog still open
 
-| ID           | Item                                               | Status | P   |
-| ------------ | -------------------------------------------------- | :----: | --- |
-| **PLAT-081** | Cloud import abstraction (Dropbox/OneDrive/WebDAV) | `[ ]`  | P3  |
-| **PLAT-084** | Tauri desktop app CORS origins                     | `[ ]`  | P2  |
-| **PLAT-053** | Radio Mixcloud Live (see above)                    | `[~]`  | P2  |
+| ID           | Item                            | Status | P   |
+| ------------ | ------------------------------- | :----: | --- |
+| **PLAT-053** | Radio Mixcloud Live (see above) | `[~]`  | P2  |
 
 Most PLAT-001–080 / SEC / UX / PERF items are **done** — see roadmap tables.
 
@@ -171,7 +172,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | hearthis.at real-audio import                | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                                                                                                          |
 | Member badge on public artist profiles       | Done — PR #456 (`MemberBadge` on `/u` + `/c`)                                                                                                                                                            |
 | Fallback cover for releases without artwork  | Gradient placeholder exists; no approved fallback asset                                                                                                                                                  |
-| Recurrence duration unused                   | Done — PR #476 (`endAt` + overlap skip/409); public channel schedule cards still show start-only                                                                                                        |
+| Recurrence duration unused                   | Done — PR #476 (`endAt` + overlap skip/409); public channel schedule cards still show start-only                                                                                                         |
 | Orphan public routes                         | Done — `/transparency/grants/[year]`; `/venues/[slug]` → `/v/[slug]`; `/status` via `PublicFooter`                                                                                                       |
 | Jam SSE multi-instance                       | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                                                                                                       |
 | Discord bot → Tahti Radio                    | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                                                                                                          |

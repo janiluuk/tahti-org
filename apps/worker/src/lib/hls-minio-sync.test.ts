@@ -25,6 +25,8 @@ describe('syncChannelHlsToMinio', () => {
   beforeAll(async () => {
     await mkdir(join(root, channelId, 'stream-mp3-192'), { recursive: true })
     await writeFile(join(root, channelId, 'stream-mp3-192', 'seg.ts'), Buffer.alloc(8))
+    await writeFile(join(root, channelId, 'stream-mp3-192.m3u8'), '#EXTM3U\n')
+    await writeFile(join(root, channelId, 'stream-aac-320.m3u8'), '#EXTM3U\n')
     await writeFile(join(root, channelId, 'stream.m3u8'), '#EXTM3U\n')
   })
 
@@ -66,6 +68,22 @@ describe('syncChannelHlsToMinio', () => {
       .pop()
     const firstPl = putKeys.map((k, i) => ({ k, i })).find((x) => x.k.endsWith('.m3u8'))
     expect(lastSeg && firstPl && lastSeg.i < firstPl.i).toBe(true)
+  })
+
+  it('generates a browser-compatible ABR master playlist', async () => {
+    await syncChannelHlsToMinio(root, channelId, slug)
+    const master = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(root, channelId, 'master.m3u8'), 'utf8'),
+    )
+    expect(master).toContain('#EXT-X-STREAM-INF:BANDWIDTH=192000,CODECS="mp3"')
+    expect(master).toContain(
+      '#EXT-X-STREAM-INF:BANDWIDTH=320000,AVERAGE-BANDWIDTH=320000,CODECS="mp4a.40.2"',
+    )
+    expect(master).toContain('stream-aac-320.m3u8')
+    const freeMaster = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(root, channelId, 'master-free.m3u8'), 'utf8'),
+    )
+    expect(freeMaster).not.toContain('stream-aac-320.m3u8')
   })
 })
 

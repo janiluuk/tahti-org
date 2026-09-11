@@ -19,21 +19,15 @@ export const MUTED_STORAGE_KEY = 'tahti-player-muted'
  * this. */
 export const HEARTBEAT_INTERVAL_SEC = 180
 
-/** The dual-bitrate HLS output (infra/liquidsoap-channel.liq.template) only ever
- * offers two renditions — 192kbps MP3 or lossless FLAC — so a bitrate well above
- * the MP3 rendition reliably means the FLAC one is playing. */
+/** The live HLS master offers 192kbps MP3 and 320kbps AAC. The lossless FLAC
+ * rendition is retained for diagnostics but is not advertised to browsers. */
 export function qualityLabelForBitrate(bitrateBps: number): string {
   return bitrateBps >= 400_000 ? 'FLAC' : `${Math.round(bitrateBps / 1000)} kbps`
 }
 
-/** liveHlsManifestPath() always points hls.js straight at a single-rendition
- * MEDIA playlist (stream-mp3-192.m3u8) — there's no master playlist with
- * per-variant #EXT-X-STREAM-INF/BANDWIDTH tags for hls.js to read a real
- * bitrate from, so hls.levels[].bitrate is hls.js's own unmeasured guess and
- * reads as 0 right after a level switch. The manifest is always the 192kbps
- * MP3 rendition, so that's the honest default the instant playback starts;
- * a later LEVEL_SWITCHED with a genuinely-measured positive bitrate (e.g. if
- * a real multi-bitrate master playlist is ever introduced) can still refine it. */
+/** The API now points hls.js at a generated master playlist. hls.levels[].bitrate
+ * therefore reflects the selected MP3/AAC rendition once the first level loads;
+ * the initial display remains the conservative 192 kbps default until then. */
 export const DEFAULT_LIVE_STREAM_QUALITY = '192 kbps'
 
 /** Classifies which surface a heartbeat tick came from, best-effort from

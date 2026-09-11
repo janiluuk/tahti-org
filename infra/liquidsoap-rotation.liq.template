@@ -161,6 +161,7 @@ output.file.hls(
   "/hls/{{CHANNEL_ID}}",
   [
     ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
+    ("stream-aac-320", %ffmpeg(format="mpegts", %audio(codec="aac", b="320k", ar=44100, ac=2))),
     ("stream-flac", %ffmpeg(format="mpegts", %audio(codec="flac", samplerate=44100, channels=2)))
   ],
   radio_out

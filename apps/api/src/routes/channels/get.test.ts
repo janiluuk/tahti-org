@@ -116,7 +116,7 @@ describe('GET /api/channels/:slug', () => {
     })
   })
 
-  it('includes the MP3 HLS URL when LIVE, regardless of tier', async () => {
+  it('includes the ABR master HLS URL when LIVE, regardless of tier', async () => {
     // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream browsers —
     // see apps/api/src/lib/stream-quality.ts. Every tier gets the working MP3 variant.
     await prisma.user.update({
@@ -133,7 +133,7 @@ describe('GET /api/channels/:slug', () => {
       url: '/api/channels/channel-get-testuser',
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json().hlsUrl).toContain('stream-mp3-192')
+    expect(res.json().hlsUrl).toContain('master.m3u8')
     // state: 'LIVE' alone doesn't mean a human is broadcasting -- the 24/7
     // fallback rotation sets it too (channel-fallback-reconciler.ts).
     // signalConnected reflects the real Icecast mount status; no mount is

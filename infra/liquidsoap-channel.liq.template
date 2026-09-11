@@ -254,7 +254,7 @@ if not file.exists("/hls/{{CHANNEL_ID}}") then
   file.mkdir("/hls/{{CHANNEL_ID}}")
 end
 
-# --- HLS output for listeners (M20: dual-bitrate — free MP3, paid FLAC manifest paths) ---
+# --- HLS output for listeners (M20/STREAM-011: MP3 + high-bitrate AAC ABR) ---
 output.file.hls(
   playlist="stream.m3u8",
   segments=4,
@@ -266,6 +266,7 @@ output.file.hls(
   "/hls/{{CHANNEL_ID}}",
   [
     ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
+    ("stream-aac-320", %ffmpeg(format="mpegts", %audio(codec="aac", b="320k", ar=44100, ac=2))),
     ("stream-flac", %ffmpeg(format="mpegts", %audio(codec="flac", samplerate=44100, channels=2)))
   ],
   radio_out

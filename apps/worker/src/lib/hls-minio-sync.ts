@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { readdir, stat } from 'node:fs/promises'
+import { readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { createReadStream } from 'node:fs'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
@@ -9,6 +9,8 @@ import { s3 } from './minio.js'
 
 const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
 const SEGMENT_RE = /\.(ts|m4s|m3u8|aac|opus|mp4)$/i
+const MASTER_PLAYLIST = 'master.m3u8'
+const FREE_MASTER_PLAYLIST = 'master-free.m3u8'
 
 /** In-process mirror of what we've successfully PUT this process lifetime.
  * Avoids a HeadObject round-trip for every file on every 4s tick — that was
@@ -47,6 +49,41 @@ export function resetHlsUploadCache(): void {
   uploadedFingerprint.clear()
 }
 
+async function ensureMasterPlaylist(channelDir: string, files: string[]): Promise<void> {
+  if (!files.includes('stream-mp3-192.m3u8')) return
+  const freeMasterBody = [
+    '#EXTM3U',
+    '#EXT-X-VERSION:3',
+    '#EXT-X-STREAM-INF:BANDWIDTH=192000,CODECS="mp3"',
+    'stream-mp3-192.m3u8',
+    '',
+  ].join('\n')
+  const masterBody = [
+    freeMasterBody.trimEnd(),
+    ...(files.includes('stream-aac-320.m3u8')
+      ? [
+          '#EXT-X-STREAM-INF:BANDWIDTH=320000,AVERAGE-BANDWIDTH=320000,CODECS="mp4a.40.2"',
+          'stream-aac-320.m3u8',
+        ]
+      : []),
+    '',
+  ].join('\n')
+  for (const [name, body] of [
+    [MASTER_PLAYLIST, masterBody],
+    [FREE_MASTER_PLAYLIST, freeMasterBody],
+  ] as const) {
+    const path = join(channelDir, name)
+    let current: string | null = null
+    try {
+      current = await readFile(path, 'utf8')
+    } catch {
+      // The master is generated on the first sync after a channel starts.
+    }
+    if (current !== body) await writeFile(path, body)
+    if (!files.includes(name)) files.push(name)
+  }
+}
+
 async function collectFiles(dir: string, base: string, out: string[]): Promise<void> {
   let entries
   try {
@@ -74,6 +111,7 @@ export async function syncChannelHlsToMinio(
   const channelDir = join(root, channelId)
   const files: string[] = []
   await collectFiles(channelDir, channelDir, files)
+  await ensureMasterPlaylist(channelDir, files)
 
   let uploaded = 0
   let skipped = 0

@@ -1,6 +1,7 @@
 # Streaming architecture — distributed, measurable, scalable
 
 Every container in the streaming path must be:
+
 1. **Independently scalable** — add capacity to one tier without touching others
 2. **Individually measured** — CPU, memory, segment write rate, bandwidth per channel
 3. **Independently recoverable** — one container crash must not silence other channels
@@ -79,26 +80,32 @@ graph TB
 ## Why segments go to MinIO, not a shared volume
 
 The current `hls_shared` Docker volume is pinned to one Swarm node. This means:
+
 - Caddy must run on the same node as Liquidsoap
 - Adding a second Caddy node doesn't help — it can't read the volume
 - Adding a second worker node doesn't help — Liquidsoap segments can't be read from there
 
 By writing HLS segments to MinIO:
+
 - Any Caddy node can serve segments (MinIO is network-accessible)
 - Liquidsoap containers can run on any worker node
 - Caddy nodes can be added or removed without data migration
 - Segment TTL is enforced by MinIO lifecycle rules, not cron jobs
 
 **MinIO bucket policy for live segments:**
+
 ```json
 {
-  "Rules": [{
-    "ID": "expire-live-hls",
-    "Filter": { "Prefix": "hls-live/" },
-    "Expiration": { "Days": 1 }
-  }]
+  "Rules": [
+    {
+      "ID": "expire-live-hls",
+      "Filter": { "Prefix": "hls-live/" },
+      "Expiration": { "Days": 1 }
+    }
+  ]
 }
 ```
+
 Individual segments expire via object headers (`x-amz-expiration`), not batch cron.
 
 ---
@@ -164,16 +171,16 @@ Ingest DNS TTL and verification: **`ops/ingest-dns.md`**.
 
 Every Liquidsoap container and every edge encoder must expose a Prometheus metrics endpoint. These are the minimum measurements required:
 
-| Metric | Source | Why |
-|--------|--------|-----|
-| `tahti_channel_segment_write_rate` | Liquidsoap | Detects silent/frozen channels |
-| `tahti_channel_listeners_connected` | Caddy + Centrifugo | Listener count per channel |
-| `tahti_channel_input_bitrate_kbps` | Edge encoder | Source quality monitoring |
-| `tahti_channel_cpu_seconds_total` | Docker stats exporter | Cost attribution per channel |
-| `tahti_channel_memory_bytes` | Docker stats exporter | Container sizing |
-| `tahti_channel_hls_segment_age_seconds` | MinIO + watchdog | Alert if newest segment > 15s old |
-| `tahti_channel_bandwidth_bytes_out` | Caddy | Per-channel egress billing |
-| `tahti_recording_bytes_written` | ffmpeg recorder | Recording progress |
+| Metric                                  | Source                | Why                               |
+| --------------------------------------- | --------------------- | --------------------------------- |
+| `tahti_channel_segment_write_rate`      | Liquidsoap            | Detects silent/frozen channels    |
+| `tahti_channel_listeners_connected`     | Caddy + Centrifugo    | Listener count per channel        |
+| `tahti_channel_input_bitrate_kbps`      | Edge encoder          | Source quality monitoring         |
+| `tahti_channel_cpu_seconds_total`       | Docker stats exporter | Cost attribution per channel      |
+| `tahti_channel_memory_bytes`            | Docker stats exporter | Container sizing                  |
+| `tahti_channel_hls_segment_age_seconds` | MinIO + watchdog      | Alert if newest segment > 15s old |
+| `tahti_channel_bandwidth_bytes_out`     | Caddy                 | Per-channel egress billing        |
+| `tahti_recording_bytes_written`         | ffmpeg recorder       | Recording progress                |
 
 Grafana dashboard: one row per channel, showing segment freshness, listener count, and input bitrate. Red if `hls_segment_age_seconds > 15`.
 
@@ -280,16 +287,17 @@ MinIO tiering: hot buckets on NVMe, cold buckets on spinning disk (Y2 storage ex
 
 At Y1 beta (200 artists, max 20 live simultaneously):
 
-| Container | Min | Max | Trigger to add more |
-|-----------|-----|-----|---------------------|
-| Edge encoder (per channel) | 0.5 CPU / 256 MB | 1 CPU / 512 MB | Always 1 per live channel |
-| Liquidsoap (per channel) | 0.25 CPU / 128 MB | 0.5 CPU / 256 MB | Always 1 per active channel |
-| ffmpeg-recorder (per broadcast) | 0.5 CPU / 256 MB | 1 CPU / 512 MB | Always 1 per live broadcast |
-| worker-media | 2 CPU / 2 GB | 4 CPU / 4 GB | Queue depth > 10 jobs |
-| Caddy | 0.5 CPU / 256 MB | 2 CPU / 1 GB | P95 latency > 200ms |
-| nginx-RTMP | 0.5 CPU / 256 MB | 1 CPU / 512 MB | Input bitrate > 600 Mbps total |
+| Container                       | Min               | Max              | Trigger to add more            |
+| ------------------------------- | ----------------- | ---------------- | ------------------------------ |
+| Edge encoder (per channel)      | 0.5 CPU / 256 MB  | 1 CPU / 512 MB   | Always 1 per live channel      |
+| Liquidsoap (per channel)        | 0.25 CPU / 128 MB | 0.5 CPU / 256 MB | Always 1 per active channel    |
+| ffmpeg-recorder (per broadcast) | 0.5 CPU / 256 MB  | 1 CPU / 512 MB   | Always 1 per live broadcast    |
+| worker-media                    | 2 CPU / 2 GB      | 4 CPU / 4 GB     | Queue depth > 10 jobs          |
+| Caddy                           | 0.5 CPU / 256 MB  | 2 CPU / 1 GB     | P95 latency > 200ms            |
+| nginx-RTMP                      | 0.5 CPU / 256 MB  | 1 CPU / 512 MB   | Input bitrate > 600 Mbps total |
 
 At 20 simultaneous live channels:
+
 - 20 edge encoders: ~10 CPU, ~5 GB RAM
 - 20 Liquidsoap: ~5 CPU, ~2.5 GB RAM
 - 20 recorders: ~10 CPU, ~5 GB RAM
@@ -303,16 +311,16 @@ This requires 2 worker nodes of 4 vCPU / 8 GB minimum for comfortable headroom. 
 
 See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 
-| ID | Issue | Severity |
-|----|-------|----------|
-| STREAM-001 | ~~HLS segments on shared Docker volume~~ — `hls-minio-sync` cron | done |
-| STREAM-002 | Per-channel ffmpeg edge encoder + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`) | done |
-| STREAM-003 | Health-ranked fallbacks + prod replicas; DNS TTL 5–30s (`ops/ingest-dns.md`) | done |
-| STREAM-004 | ffmpeg recorder sidecar (STREAM-004) | done |
-| STREAM-005 | `channel-watchdog` worker cron + orchestrator restart | done |
-| STREAM-006 | Per-channel egress from Caddy access logs + dashboard chart | done |
-| STREAM-007 | Icecast `/status-json.xsl` + prod **`icecast-b`** + Caddy failover | done |
-| STREAM-008 | fpcalc sidecar, live tracklist, **ACRCloud** + AcoustID fallback | done |
-| STREAM-009 | Archive fallback local cache volume + cron | done |
-| STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | done |
-| ARTIST-002 | Hot RTMP/Icecast credential rotation while live (24h grace) | done |
+| ID         | Issue                                                                                                               | Severity |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- | -------- |
+| STREAM-001 | ~~HLS segments on shared Docker volume~~ — `hls-minio-sync` cron                                                    | done     |
+| STREAM-002 | Per-channel ffmpeg edge encoder + multi-bitrate HLS (`stream-mp3-192` / `stream-aac-320`; diagnostic `stream-flac`) | done     |
+| STREAM-003 | Health-ranked fallbacks + prod replicas; DNS TTL 5–30s (`ops/ingest-dns.md`)                                        | done     |
+| STREAM-004 | ffmpeg recorder sidecar (STREAM-004)                                                                                | done     |
+| STREAM-005 | `channel-watchdog` worker cron + orchestrator restart                                                               | done     |
+| STREAM-006 | Per-channel egress from Caddy access logs + dashboard chart                                                         | done     |
+| STREAM-007 | Icecast `/status-json.xsl` + prod **`icecast-b`** + Caddy failover                                                  | done     |
+| STREAM-008 | fpcalc sidecar, live tracklist, **ACRCloud** + AcoustID fallback                                                    | done     |
+| STREAM-009 | Archive fallback local cache volume + cron                                                                          | done     |
+| STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop                                | done     |
+| ARTIST-002 | Hot RTMP/Icecast credential rotation while live (24h grace)                                                         | done     |

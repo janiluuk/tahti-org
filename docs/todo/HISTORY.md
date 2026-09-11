@@ -371,6 +371,26 @@ sessions may have hit without realizing why.
 Full `apps/api` admin/governance/webhooks/transparency suite (40 files,
 187 tests) green after the migration fix.
 
+### 2026-09-11 — cloud-import-abstraction.md
+
+PLAT-081 added the shared `CloudImportProvider` contract and a Google Drive
+implementation for paged listing, streamed downloads, and token revocation.
+The existing Google Drive worker now downloads through that boundary without
+changing import persistence or transcoding. Added provider contract tests and
+documented the WebDAV/Open Cloud Mesh extension decision. Also reconciled
+PLAT-084, whose Tauri CORS allowlist and tests had already shipped on 2026-09-08.
+While running the full gate, fixed `/transparency` exporting a custom `studio`
+page prop rejected by Next.js: both public and Studio routes now render a shared
+non-route content component.
+
+### 2026-09-11 — STREAM-011 HLS spike
+
+Reviewed the pinned Liquidsoap 2.2.5 HLS behavior and official format guidance.
+The follow-up implementation added a browser-compatible 320 kbps AAC rendition
+and generated `master.m3u8` plus `master-free.m3u8` with AAC/MP3
+`#EXT-X-STREAM-INF` entries. True lossless HLS remains open pending a
+version-pinned Liquidsoap upgrade and hls.js/Safari playback checks.
+
 ### 2026-09-08 — governance meeting-minutes upload
 
 Board admins had no way to actually upload a minutes file — the meeting

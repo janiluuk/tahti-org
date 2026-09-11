@@ -981,12 +981,12 @@ Two gates implemented gracefully so free-tier artists never feel "broken":
 
 **Audio quality differentiation:**
 
-- Liquidsoap channel template renders two outputs per live broadcast:
-  - **`stream-mp3-192/`** — MP3 192 kbps, HLS segmented
-  - **`stream-flac/`** — FLAC 16/44 over HLS-FLAC manifest
-- API routes player to the right manifest based on the artist's tier:
-  - Free artist's channel → all listeners get MP3 192 manifest
-  - Member artist's channel → all listeners get FLAC manifest
+- Liquidsoap channel template renders MP3 192 kbps, AAC 320 kbps, and a
+  diagnostic FLAC output per live broadcast; the worker publishes tier-aware
+  HLS master playlists beside the flat media playlists.
+- API routes player to the right master manifest based on the artist's tier:
+  - Free artist's channel → all listeners get the MP3-only master
+  - Member artist's channel → all listeners get the MP3/AAC adaptive master
 - Listener doesn't choose. The artist's tier sets the quality.
 - Archive playback: same logic. Free artists' archives transcode to MP3 derivatives; member artists' archives keep FLAC.
 
