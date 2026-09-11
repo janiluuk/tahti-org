@@ -37,13 +37,13 @@ cd /srv/tahti && TAG=<git-sha> ./scripts/stack-up.sh
 
 All backup operations use **`scripts/backup.sh`**:
 
-| Command | Purpose |
-|---|---|
-| `./scripts/backup.sh` or `all` | Postgres dump + MinIO DR mirror (daily cron) |
-| `postgres` | `pg_dump` → `mc pipe tahti/backups/pg/YYYYMMDD-HHMMSS.sql.gz` |
-| `minio` | Mirror `audio`, `covers`, `backups` to DR alias |
-| `restore-test` | Weekly restore to throwaway Postgres (Sunday cron) |
-| `status` | Print backup age; exit 1 if >26h, 2 if >48h (monitoring) |
+| Command                        | Purpose                                                       |
+| ------------------------------ | ------------------------------------------------------------- |
+| `./scripts/backup.sh` or `all` | Postgres dump + MinIO DR mirror (daily cron)                  |
+| `postgres`                     | `pg_dump` → `mc pipe tahti/backups/pg/YYYYMMDD-HHMMSS.sql.gz` |
+| `minio`                        | Mirror `audio`, `covers`, `backups` to DR alias               |
+| `restore-test`                 | Weekly restore to throwaway Postgres (Sunday cron)            |
+| `status`                       | Print backup age; exit 1 if >26h, 2 if >48h (monitoring)      |
 
 **Operator drill** (quarterly timed exercise):
 
@@ -156,6 +156,28 @@ Use when the primary VPS or MinIO volume is unavailable but UpCloud DR mirror is
 
 See also `docs/technical/journey-ops.md` (Journey 4 — backup drill).
 
+## Docker disk cleanup (local stack host)
+
+Docker Desktop's build cache and dangling images grow unbounded from repeated
+local `docker compose build` runs and are never automatically reclaimed —
+confirmed live 2026-09-11: build cache alone was 17.9GB with 0 active entries,
+leaving only 6.7GB free on a 926GB disk. This is a Docker engine disk problem,
+**not** app data — `stack_hls`/`stack_recordings`/`stack_archive_cache`/
+`stack_minio` were all under 300MB combined at the same time.
+
+- **Manual run:** `./scripts/docker-disk-cleanup.sh` — safe to run anytime;
+  only prunes build cache and dangling images, never running containers,
+  named volumes, or tagged images still in use.
+- **Scheduled:** a `launchd` user agent
+  (`~/Library/LaunchAgents/live.tahti.docker-disk-cleanup.plist`) runs it
+  daily at 04:15 local time; log at `/tmp/tahti-docker-disk-cleanup.log`.
+  Check status: `launchctl list | grep tahti`. This plist is host-local
+  config, not tracked in the repo — recreate it from the script if this
+  moves to a new host (`launchctl bootstrap gui/$(id -u) <plist>`).
+- If disk pressure returns despite this running, check `docker system df -v`
+  for which category grew (images/volumes/build cache) before assuming it's
+  the same build-cache cause.
+
 ## Monitoring
 
 - **Upptime** (public status page): [`ops/upptime/README.md`](upptime/README.md) — monitors `/api/v1/status` and `/health`.
@@ -171,21 +193,21 @@ See also `docs/technical/journey-ops.md` (Journey 4 — backup drill).
 
 ## Operator drills (quarterly)
 
-| Drill | Command / check | Pass criteria |
-|-------|-----------------|---------------|
-| Backup freshness | `./scripts/backup.sh status` | exit 0; age &lt; 26h |
-| Restore integrity | `./scripts/backup.sh restore-test` | log ends with `PASSED`; tables &gt; 0 |
-| DR mirror | `./scripts/backup.sh minio` | DR object counts within 1% of primary |
-| Metrics | `curl -s localhost:3001/metrics \| grep tahti_postgres_backup` | gauge ≥ 0, not `-1` |
+| Drill             | Command / check                                                | Pass criteria                         |
+| ----------------- | -------------------------------------------------------------- | ------------------------------------- |
+| Backup freshness  | `./scripts/backup.sh status`                                   | exit 0; age &lt; 26h                  |
+| Restore integrity | `./scripts/backup.sh restore-test`                             | log ends with `PASSED`; tables &gt; 0 |
+| DR mirror         | `./scripts/backup.sh minio`                                    | DR object counts within 1% of primary |
+| Metrics           | `curl -s localhost:3001/metrics \| grep tahti_postgres_backup` | gauge ≥ 0, not `-1`                   |
 
 ## Ingest failover env (STREAM-003 / STREAM-007)
 
 Health-ranked ingest URLs on `GET /api/me/stream-settings` require comma-separated public host lists:
 
-| Variable | Service | Health probe |
-|----------|---------|--------------|
-| `RTMP_INGEST_HOSTS` | api | `RTMP_INGEST_HEALTH_SCHEME` + port + `RTMP_INGEST_HEALTH_PATH` (default `/health`) |
-| `ICECAST_INGEST_HOSTS` | api | `{host}/status-json.xsl` |
+| Variable               | Service | Health probe                                                                       |
+| ---------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `RTMP_INGEST_HOSTS`    | api     | `RTMP_INGEST_HEALTH_SCHEME` + port + `RTMP_INGEST_HEALTH_PATH` (default `/health`) |
+| `ICECAST_INGEST_HOSTS` | api     | `{host}/status-json.xsl`                                                           |
 
 Set on **api** only. Example production:
 
