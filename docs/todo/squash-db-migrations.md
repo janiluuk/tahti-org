@@ -1,6 +1,6 @@
 # Squash Prisma migrations into one baseline
 
-Status: ready to merge, prod reconciliation step still open
+Status: ready to merge, no prod action required
 
 ## What this is
 
@@ -23,22 +23,24 @@ phase and doesn't need per-change migration history.
   fixes this: a fresh `pnpm --filter @tahti/db db:migrate` now succeeds
   from empty without the fallback.
 
-## Open follow-up: production reconciliation
+## Production reconciliation: not needed
 
-Production's `_prisma_migrations` table already has all 149 old migrations
-recorded. Before the next `prisma migrate deploy` runs there (i.e. before/at
-the next production deploy), someone with prod DB access must run, once:
+Checked directly on vimage (`docker compose -f infra/docker-compose.stack.yml
+exec postgres psql ...`): `_prisma_migrations` does have 132 old rows there
+(last one from 2026-09-04), but the stack's actual deploy mechanism — the
+`db-push` service in `infra/docker-compose.stack.yml` — runs `prisma db push
+--accept-data-loss` on every `docker compose up`, which diffs the live DB
+directly against `schema.prisma` and never reads `_prisma_migrations` at all.
+That's why the table stopped tracking new migrations after 2026-09-04 even
+though 17 more were added after that date — `db push` doesn't write to it
+either.
 
-```
-DATABASE_URL='<production DATABASE_URL>' \
-  pnpm --filter @tahti/db exec prisma migrate resolve --applied 20260911000000_init
-```
+So squashing has zero effect on this deploy path: after this PR ships,
+`db-push` re-runs, finds the DB already matches `schema.prisma` (verified
+above), and no-ops. The stale `_prisma_migrations` rows are harmless and
+don't need cleanup.
 
-This only records the migration as applied — it does not run any SQL — so
-it's safe given production's schema already matches `schema.prisma` (same
-thing the squashed migration produces). Skipping this step would make the
-next `prisma migrate deploy` try to actually run the baseline SQL against a
-database that already has those tables/schemas, and fail.
-
-The old 149 rows already in production's `_prisma_migrations` table are
-harmless leftover history and don't need cleanup.
+(`ops/DEPLOY.md` describes a separate Swarm-based flow that does use `prisma
+migrate deploy` / `db:migrate` — if that pipeline is ever pointed at this
+same database, it — not this squash — would be the thing to check for
+`_prisma_migrations` compatibility first.)
