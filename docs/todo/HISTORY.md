@@ -24,6 +24,12 @@ Synchronized the Tahti checklist with the additive adapter and host contract
 test suites already shipped in `../tahti-player`. Caller migration and the
 ownership split remain intentionally open under the non-breaking guardrail.
 
+The shipped contract-test row was removed from `docs/remaining-work.md` so the
+open-work index contains only incomplete items.
+
+Core player callers were then migrated to `pluginRegistryStore` in player PR
+#46; the Tahti-side checklist now records that milestone as complete.
+
 ## 2026-09-08 — stale-todo sweep: 3 already-merged files never folded
 
 Building `docs/todo/INDEX.md` surfaced three todo files whose branches
