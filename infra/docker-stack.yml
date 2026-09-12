@@ -475,6 +475,25 @@ services:
       resources:
         limits: { cpus: "0.25", memory: 256M }
 
+  # One explicit owner for the repeatable-job manifest. Worker replicas only
+  # execute jobs; they no longer race to delete and recreate schedules.
+  cron-runner:
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
+    logging: *loki-logging
+    command: ["node", "dist/cron-runner.js"]
+    networks: [internal]
+    environment:
+      REDIS_URL: redis://redis:6379
+      # Registers the edge-log cron; the edge worker itself owns the log mount.
+      CADDY_HLS_ACCESS_LOG: /var/log/caddy/hls-access.log
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == worker]
+      restart_policy: { condition: any, delay: 5s }
+      resources:
+        limits: { cpus: "0.1", memory: 128M }
+
   # ───────────────────────────────────────────────────────────────────────────
   # Orchestrator — spawns per-channel Liquidsoap containers
   # ───────────────────────────────────────────────────────────────────────────

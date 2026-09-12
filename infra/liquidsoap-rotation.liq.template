@@ -66,7 +66,10 @@ protocol.add(
 # --- Curated playlist (the entire program — no live() fallback needed) ---
 archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
 archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"
-archive = if file.exists(archive_local_path) then
+archive_local_available = file.exists(archive_local_path)
+archive_source_context =
+  if archive_local_available then "local_cache_warm" else "local_cache_missing_remote_playlist" end
+archive = if archive_local_available then
   playlist(
     # The API already orders the M3U entries per the channel's fallbackMode
     # (shuffle/ordered/time/name — an app-level vocabulary, not Liquidsoap's).
@@ -94,7 +97,16 @@ end
 # STREAM-012: rotation now-playing — see liquidsoap-channel.liq.template for the
 # full rationale. Read via the "now_playing" telnet command below.
 archive_meta = ref([])
-archive = source.on_metadata(archive, fun (m) -> archive_meta := m)
+def on_archive_metadata(m) =
+  archive_meta := m
+  title = m["title"] ?? "unknown"
+  log(
+    label="tahti.sound_fallback",
+    level=3,
+    "channel_id={{CHANNEL_ID}} reason=rotation_template_no_live_input playlist_context=#{archive_source_context} title=#{title}"
+  )
+end
+archive = source.on_metadata(archive, on_archive_metadata)
 
 archive = crossfade(duration=3., archive)
 archive = normalize(target=-14., archive)

@@ -77,6 +77,8 @@ export const AdminCronRunEntrySchema = z.object({
   finishedAt: z.coerce.date().nullable(),
   outcome: z.string().nullable(),
   errorMessage: z.string().nullable(),
+  resultJson: z.string().nullable(),
+  durationMs: z.number().int().nonnegative().nullable(),
 })
 
 export const AdminCronJobStatusSchema = z.object({
@@ -87,6 +89,18 @@ export const AdminCronJobStatusSchema = z.object({
 })
 
 export const AdminCronRunListSchema = z.array(AdminCronJobStatusSchema)
+
+export const AdminCronRunHistoryItemSchema = AdminCronRunEntrySchema.extend({
+  jobName: z.string(),
+})
+
+export const AdminCronRunHistoryResponseSchema = z.object({
+  items: z.array(AdminCronRunHistoryItemSchema),
+  // .min(1) rather than .positive() — see the note above on AdminAuditRecentListSchema.
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1),
+  total: z.number().int().nonnegative(),
+})
 
 export const AdminAuditRecentItemSchema = z.object({
   id: z.string(),

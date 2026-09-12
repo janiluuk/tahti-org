@@ -28,6 +28,14 @@ describe('liquidsoap channel template', () => {
     expect(template).toContain('delay(3., rotation)')
   })
 
+  it('logs why and how sound fallback is used without exposing its signed URL', async () => {
+    const template = await readFile(templatePath, 'utf8')
+    expect(template).toContain('label="tahti.sound_fallback"')
+    expect(template).toContain('reason=live_input_unavailable')
+    expect(template).toContain('playlist_context=#{archive_source_context}')
+    expect(template).not.toContain('title=#{archive_remote_url}')
+  })
+
   it('registers telnet graceful shutdown fade (STREAM-010)', async () => {
     const template = await readFile(templatePath, 'utf8')
     expect(template).toContain('graceful_shutdown')
@@ -104,5 +112,12 @@ describe('liquidsoap rotation template', () => {
     // ready source and Icecast saw no output at all.
     expect(template).not.toContain('{{FALLBACK_MODE}}')
     expect(template).toContain('mode="normal"')
+  })
+
+  it('logs the intentional rotation-only fallback context', async () => {
+    const template = await readFile(rotationTemplatePath, 'utf8')
+    expect(template).toContain('label="tahti.sound_fallback"')
+    expect(template).toContain('reason=rotation_template_no_live_input')
+    expect(template).toContain('playlist_context=#{archive_source_context}')
   })
 })
