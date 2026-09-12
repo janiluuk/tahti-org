@@ -219,7 +219,8 @@ services:
   # MinIO — object storage for archive audio, covers, waveforms
   # ───────────────────────────────────────────────────────────────────────────
   minio:
-    image: minio/minio:latest
+    # docker.io/minio/minio denies anonymous pulls as of 2026-09; quay.io mirror still works.
+    image: quay.io/minio/minio:latest
     logging: *loki-logging
     command: server /data --console-address ":9001"
     networks: [internal, edge]
