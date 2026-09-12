@@ -432,6 +432,27 @@
   min-width: 0;
 }
 
+/* Stream credentials (Server / Stream Key / Mount / Password) are a fixed
+   label + mono value + reveal/copy/rotate buttons in one row. On a narrow
+   phone that row squeezes the value to near-zero and pushes the buttons off
+   screen, making the credentials unreadable. Stack label and value on their
+   own lines and let the action buttons wrap below instead. */
+@media (max-width: 640px) {
+  .ui-copy-row {
+    flex-wrap: wrap;
+    row-gap: var(--tahti-space-1);
+  }
+
+  .ui-copy-row__label {
+    min-width: 100%;
+  }
+
+  .ui-copy-row__value {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
 /* ---- Brand wordmark ---- */
 .brand-logo {
   display: inline-flex;
