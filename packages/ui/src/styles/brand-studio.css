@@ -3,6 +3,7 @@
 
 [data-tahti-ui='studio'].tahti-studio {
   min-height: 100vh;
+  min-height: 100svh;
   font-family: var(--font-body);
   color: var(--text);
   background: transparent;
@@ -591,6 +592,7 @@
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   max-width: var(--shell-max);
   margin: 0 auto;
   position: relative;
@@ -600,6 +602,7 @@
 /* Admin pages stack .admin-view-strip above .studio-top-nav — subtract both. */
 [data-tahti-ui='studio'].admin-shell .shell-app {
   min-height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
+  min-height: calc(100svh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 /* Full-screen editor surfaces (Channel Designer, Audio editor) collapse the sidebar to an
@@ -629,6 +632,7 @@
   top: var(--topnav-h);
   z-index: 2;
   height: calc(100vh - var(--topnav-h));
+  height: calc(100svh - var(--topnav-h));
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -638,6 +642,7 @@
 [data-tahti-ui='studio'].admin-shell .db-sidebar {
   top: calc(var(--topnav-h) + var(--admin-strip-h));
   height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
+  height: calc(100svh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 [data-tahti-ui='studio'] .db-sidebar::-webkit-scrollbar {
@@ -5349,6 +5354,7 @@
   flex-direction: column;
   gap: var(--space-4);
   height: calc(100vh - var(--topnav-h) - var(--space-6));
+  height: calc(100svh - var(--topnav-h) - var(--space-6));
   min-height: 0;
 }
 
@@ -7955,6 +7961,7 @@
 .pro-editor-fullpage {
   position: relative;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-8)) calc(-1 * var(--space-16));
   overflow: hidden;
   background: var(--bg);
@@ -7972,6 +7979,7 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   color: var(--text);
   font-family: var(--font-body);
 }
