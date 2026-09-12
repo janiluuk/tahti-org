@@ -179,7 +179,11 @@ services:
 
   minio:
     logging: *loki-logging
-    image: minio/minio:latest
+    # docker.io/minio/minio denies anonymous pulls as of 2026-09 ("repository
+    # does not exist or may require 'docker login'", even for old pinned
+    # release tags) — quay.io/minio/minio is MinIO's other registry and still
+    # pulls anonymously. Swap both back if docker.io access is ever restored.
+    image: quay.io/minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: tahti
@@ -207,7 +211,7 @@ services:
 
   minio-init:
     logging: *loki-logging
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     environment:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
     depends_on:
