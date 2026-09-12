@@ -1,0 +1,76 @@
+# docker-compose.stack.yml ships every service's logs to a specific Loki
+# host over the Loki Docker logging driver (see the x-loki-logging anchor at
+# the top of that file) — that driver plugin is normally only installed on
+# vimage. Without it, every service below fails to start with an unknown-
+# logging-driver error. Copy this file to
+# docker-compose.stack.override.local.yml (gitignored) on any other host to
+# fall back to json-file; stack-up.sh picks it up automatically when present.
+# The minio/minio-init image overrides route around Docker Hub pull limits
+# by pulling from quay.io instead — drop them if that's not an issue for you.
+services:
+  minio:
+    image: quay.io/minio/minio:latest
+    logging:
+      driver: json-file
+  minio-init:
+    image: quay.io/minio/mc:latest
+    logging:
+      driver: json-file
+  postgres:
+    logging:
+      driver: json-file
+  pgbouncer:
+    logging:
+      driver: json-file
+  redis:
+    logging:
+      driver: json-file
+    # Stack redis has no host port by design (isolated, internal-network only).
+    # Exposed here so host-side scripts (e.g. api-client's schema generate,
+    # which runs outside Docker) can reach it. 16379, not 6379, to stay above
+    # 15000 per stack-up.sh's "avoid clashing with any host dev service"
+    # convention — pgbouncer already does the same for postgres at 16432.
+    ports:
+      - '${REDIS_PORT:-16379}:6379'
+  mailhog:
+    logging:
+      driver: json-file
+  api:
+    logging:
+      driver: json-file
+  db-push:
+    logging:
+      driver: json-file
+  chat:
+    logging:
+      driver: json-file
+  dozzle:
+    logging:
+      driver: json-file
+  icecast:
+    logging:
+      driver: json-file
+  icecast-b:
+    logging:
+      driver: json-file
+  rtmp-ingest:
+    logging:
+      driver: json-file
+  rtmp-ingest-b:
+    logging:
+      driver: json-file
+  radio-discord-bot:
+    logging:
+      driver: json-file
+  web:
+    logging:
+      driver: json-file
+  worker:
+    logging:
+      driver: json-file
+  orchestrator:
+    logging:
+      driver: json-file
+  website:
+    logging:
+      driver: json-file

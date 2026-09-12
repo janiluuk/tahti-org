@@ -19,6 +19,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE_FILE="$ROOT/infra/docker-compose.stack.yml"
 COMPOSE=(docker compose -f "$COMPOSE_FILE")
+LOCAL_OVERRIDE="$ROOT/infra/docker-compose.stack.override.local.yml"
+if [[ -f "$LOCAL_OVERRIDE" ]]; then
+  echo "── Using local override: infra/docker-compose.stack.override.local.yml ──"
+  COMPOSE+=(-f "$LOCAL_OVERRIDE")
+fi
 
 # All stack ports live above 15 000 to avoid clashing with any host dev service.
 export WEB_PORT="${WEB_PORT:-17777}"

@@ -4,6 +4,7 @@ apps/web/public/static/ffmpeg/
 # Local Codex/Claude worktrees are not project source and may contain generated bundles.
 .claude/worktrees/
 infra/stack.env
+infra/docker-compose.stack.override.local.yml
 .env
 .env.*
 !.env.*.example
