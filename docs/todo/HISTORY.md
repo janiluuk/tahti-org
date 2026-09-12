@@ -429,3 +429,19 @@ attachment`) instead of leaking the raw storage key. Frontend wiring
 member-facing meeting detail page) already shipped in the sibling
 `tahti-player` repo. No separate todo file was tracked for this task.
 PR [#489](https://github.com/janiluuk/tahti-org/pull/489).
+
+### 2026-09-12 — Configure sound fallback cache root
+
+Worker's `sound-fallback-cache.ts` jobs (`warm-sound-fallback-cache`,
+`sound-fallback-cache-sync`) read `SOUND_CACHE_ROOT`, but only the legacy
+`ARCHIVE_CACHE_ROOT` was ever set in the Compose and Swarm worker manifests —
+the jobs silently no-op every run (empty `cacheRoot` short-circuits before
+touching Prisma) despite the `/archive-cache` volume being mounted, and the
+summary log only fires when `downloaded>0`/`pruned>0`, so the gap never
+surfaced as an error. Confirmed live: every channel's Liquidsoap stayed
+permanently on the buggy `archive_remote_url` fallback branch (`file.exists()`
+is only checked once, at channel spawn) because `/archive-cache` never got
+warmed — this is what silenced tahti-radio. Set `SOUND_CACHE_ROOT` alongside
+`ARCHIVE_CACHE_ROOT` in both `infra/docker-compose.stack.yml` and
+`infra/docker-stack.yml`, keeping the legacy variable for older images during
+rolling deploys.
