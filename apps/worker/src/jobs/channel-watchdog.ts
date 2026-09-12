@@ -15,7 +15,7 @@ const RESTART_WINDOW_MS = 10 * 60 * 1000
 const MAX_RESTARTS = 2
 
 function redisUrl(): string {
-  return process.env.REDIS_URL ?? 'redis://localhost:6379'
+  return process.env.REDIS_URL ?? 'redis://localhost:16379'
 }
 
 async function recordRestart(channelId: string): Promise<number> {

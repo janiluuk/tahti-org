@@ -66,7 +66,7 @@ import {
   resolveWorkerName,
 } from './lib/worker-registry.js'
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:16379'
 
 const connection = {
   host: new URL(REDIS_URL).hostname,

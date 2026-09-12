@@ -5,7 +5,7 @@ import type { Job } from 'bullmq'
 import { Queue } from 'bullmq'
 import { prisma, Prisma } from '@tahti/db'
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:16379'
 const BATCH_SIZE = 24
 
 const connection = {

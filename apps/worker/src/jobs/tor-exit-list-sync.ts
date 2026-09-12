@@ -5,7 +5,7 @@ import type { Job } from 'bullmq'
 import { createClient } from 'redis'
 import { TOR_EXIT_LIST_URL, TOR_EXIT_REDIS_KEY, parseTorBulkExitList } from '@tahti/shared'
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:16379'
 
 export async function processTorExitListSyncJob(_job: Job): Promise<void> {
   const res = await fetch(TOR_EXIT_LIST_URL, {

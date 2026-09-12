@@ -15,7 +15,7 @@ import { hashHlsListenerId } from '../lib/hls-listener-hash.js'
 import { countryFromIp } from '../lib/geoip.js'
 
 function redisUrl(): string {
-  return process.env.REDIS_URL ?? 'redis://localhost:6379'
+  return process.env.REDIS_URL ?? 'redis://localhost:16379'
 }
 
 export async function processHlsCaddyEgressSyncJob(_job: Job): Promise<{

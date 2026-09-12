@@ -5,7 +5,7 @@ import { createClient } from 'redis'
 import { broadcastFingerprintRedisKey, type LiveFingerprintSegment } from '@tahti/shared'
 
 function redisUrl(): string {
-  return process.env.REDIS_URL ?? 'redis://localhost:6379'
+  return process.env.REDIS_URL ?? 'redis://localhost:16379'
 }
 
 export async function fetchBroadcastFingerprintSegments(

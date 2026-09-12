@@ -80,7 +80,7 @@ export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
   port: parseInt(process.env.PORT ?? '3001', 10),
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://tahti:tahti_dev@localhost:5432/tahti',
-  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:16379',
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days
@@ -129,7 +129,7 @@ export const config = {
     endpoint: process.env.R2_ENDPOINT ?? '',
     accessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
     secretAccessKey: r2SecretAccessKey,
-    bucket: process.env.R2_BUCKET ?? 'tahti-user-storage',
+    bucket: process.env.R2_BUCKET ?? 'tahti',
     get enabled() {
       return Boolean(this.endpoint && this.accessKeyId && this.secretAccessKey)
     },
