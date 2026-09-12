@@ -1041,6 +1041,15 @@
   align-items: center;
 }
 
+.admin-dashboard-row-title {
+  color: var(--text);
+}
+
+.admin-dashboard-row-meta {
+  font-size: 11px;
+  color: var(--muted2);
+}
+
 .admin-action--amber {
   color: var(--amber);
   border-color: rgba(255, 184, 64, 0.4);

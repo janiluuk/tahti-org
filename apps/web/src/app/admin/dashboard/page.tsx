@@ -10,7 +10,9 @@ import {
   DataRowListRow,
   KpiCard,
   KpiCardRow,
+  Panel,
   StatusPill,
+  StudioCollapse,
 } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { DiscordBotRestartButton } from './discord-bot-restart-button'
@@ -260,7 +262,7 @@ export default async function AdminDashboardPage() {
       </KpiCardRow>
 
       {unreadMail > 0 && (
-        <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
+        <p className="admin-stat-sub studio-mb-lg">
           New mail: hello@tahti.live {mail.hello.unseen} unread · support@tahti.live{' '}
           {mail.support.unseen} unread ·{' '}
           <a href="https://webmail.tahti.live/" target="_blank" rel="noreferrer">
@@ -281,9 +283,9 @@ export default async function AdminDashboardPage() {
               {visibleActionRows.map((row) => (
                 <DataRowListRow key={row.key} columns={NEEDS_ACTION_COLUMNS}>
                   <span>
-                    <span style={{ color: 'var(--text)' }}>{row.title}</span>
+                    <span className="admin-dashboard-row-title">{row.title}</span>
                     <br />
-                    <span style={{ fontSize: '11px', color: 'var(--muted2)' }}>{row.meta}</span>
+                    <span className="admin-dashboard-row-meta">{row.meta}</span>
                   </span>
                   <span className="admin-dashboard-actions">
                     <Link
@@ -358,40 +360,35 @@ export default async function AdminDashboardPage() {
       </div>
 
       {failedPayoutCount > 0 && (
-        <p className="admin-warn" style={{ marginBottom: '1rem' }}>
+        <p className="admin-warn studio-mb-lg">
           {failedPayoutCount} failed fan-sub payout{failedPayoutCount === 1 ? '' : 's'} ·{' '}
           <Link href="/admin/financial/fansubs">View queue →</Link>
         </p>
       )}
 
-      <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
-        <h2>Finance YTD</h2>
+      <Panel title="Finance YTD" flushTop style={{ marginBottom: '1.5rem' }}>
         <p className="admin-stat">{formatEur(ytd.runningSurplus)}</p>
         <p className="admin-stat-sub">
           Revenue {formatEur(revenue)} · Costs {formatEur(costs)}
         </p>
-      </section>
+      </Panel>
 
       {streams.streams.length > 0 && (
-        <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
-          <summary>Live now ({streams.streams.length})</summary>
-          <div style={{ marginTop: '0.75rem' }}>
-            {streams.streams.slice(0, 3).map((s) => (
-              <p key={s.slug} className="admin-stat-sub">
-                <Link href={resolveChannelUrl(s.slug)}>{s.artistName}</Link> ·{' '}
-                {formatDuration(s.elapsedSec)}
-              </p>
-            ))}
-            <p className="admin-stat-sub">
-              <Link href="/admin/streams">View stream manager →</Link>
+        <StudioCollapse title={`Live now (${streams.streams.length})`}>
+          {streams.streams.slice(0, 3).map((s) => (
+            <p key={s.slug} className="admin-stat-sub">
+              <Link href={resolveChannelUrl(s.slug)}>{s.artistName}</Link> ·{' '}
+              {formatDuration(s.elapsedSec)}
             </p>
-          </div>
-        </details>
+          ))}
+          <p className="admin-stat-sub">
+            <Link href="/admin/streams">View stream manager →</Link>
+          </p>
+        </StudioCollapse>
       )}
 
-      <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
-        <summary>Queue health</summary>
-        <div className="admin-table-wrap" style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="Queue health">
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
@@ -413,11 +410,10 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
-      </details>
+      </StudioCollapse>
 
-      <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
-        <summary>Cron jobs</summary>
-        <div className="admin-table-wrap" style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="Cron jobs">
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
@@ -454,38 +450,35 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
-      </details>
+      </StudioCollapse>
 
-      <details className="admin-card studio-details-block">
-        <summary>Recent audit events</summary>
-        <div style={{ marginTop: '0.75rem' }}>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Action</th>
-                  <th>Actor</th>
+      <StudioCollapse title="Recent audit events">
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Actor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {audit.slice(0, 5).map((row) => (
+                <tr key={row.id}>
+                  <td>{new Date(row.createdAt).toLocaleString()}</td>
+                  <td>{row.action}</td>
+                  <td>{row.actorId.slice(0, 8)}…</td>
                 </tr>
-              </thead>
-              <tbody>
-                {audit.slice(0, 5).map((row) => (
-                  <tr key={row.id}>
-                    <td>{new Date(row.createdAt).toLocaleString()}</td>
-                    <td>{row.action}</td>
-                    <td>{row.actorId.slice(0, 8)}…</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="admin-stat-sub">
-            <Link href="/admin/governance/audit">Full audit log →</Link>
-            {' · '}
-            <a href="/api/admin/audit/export.csv">Export CSV</a>
-          </p>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </details>
+        <p className="admin-stat-sub">
+          <Link href="/admin/governance/audit">Full audit log →</Link>
+          {' · '}
+          <a href="/api/admin/audit/export.csv">Export CSV</a>
+        </p>
+      </StudioCollapse>
     </>
   )
 }

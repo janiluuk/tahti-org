@@ -7004,30 +7004,6 @@
   border-color: color-mix(in srgb, var(--border) 85%, transparent);
 }
 
-[data-tahti-ui='studio'] .studio-details-block {
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card2);
-}
-
-[data-tahti-ui='studio'] .studio-details-block > summary {
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text);
-  list-style: none;
-}
-
-[data-tahti-ui='studio'] .studio-details-block > summary::-webkit-details-marker {
-  display: none;
-}
-
-[data-tahti-ui='studio'] .studio-details-block[open] > summary {
-  margin-bottom: 0.5rem;
-}
-
 [data-tahti-ui='studio'] .studio-color-input-row {
   display: flex;
   align-items: center;

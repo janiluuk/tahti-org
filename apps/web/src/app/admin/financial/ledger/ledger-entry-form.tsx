@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { StudioCollapse } from '@tahti/ui'
 import { createLedgerEntry } from '../../actions'
 
 const CATEGORIES = [
@@ -54,9 +55,8 @@ export function LedgerEntryForm() {
   }
 
   return (
-    <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
-      <summary>New manual entry</summary>
-      <form onSubmit={onSubmit} style={{ marginTop: '0.75rem' }}>
+    <StudioCollapse title="New manual entry" className="studio-mb-lg">
+      <form onSubmit={onSubmit}>
         <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '36rem' }}>
           <label>
             Category
@@ -94,6 +94,6 @@ export function LedgerEntryForm() {
           {msg ? <p className={msg === 'Entry created' ? 'admin-ok' : 'admin-err'}>{msg}</p> : null}
         </div>
       </form>
-    </details>
+    </StudioCollapse>
   )
 }

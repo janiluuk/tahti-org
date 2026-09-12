@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 import { resolveClientApiUrl } from '@/lib/api-url'
+import { StudioCollapse } from '@tahti/ui'
 
 import { Fragment, type FormEvent, useState } from 'react'
 
@@ -302,9 +303,8 @@ export function GovernanceRecordsPanel({
       </div>
       {error && <p className="admin-err">{error}</p>}
 
-      <details className="admin-card studio-details-block" style={{ marginBottom: '1rem' }}>
-        <summary>New meeting</summary>
-        <form onSubmit={createMeeting} style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="New meeting">
+        <form onSubmit={createMeeting}>
           <div className="admin-governance-records__grid">
             <label>
               Title
@@ -370,11 +370,10 @@ export function GovernanceRecordsPanel({
             Save meeting
           </button>
         </form>
-      </details>
+      </StudioCollapse>
 
-      <details className="admin-card studio-details-block" style={{ marginBottom: '1rem' }}>
-        <summary>New document record</summary>
-        <form onSubmit={createDocument} style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="New document record" className="studio-mb-lg">
+        <form onSubmit={createDocument}>
           <div className="admin-governance-records__grid">
             <label>
               Title
@@ -434,7 +433,7 @@ export function GovernanceRecordsPanel({
             Save document record
           </button>
         </form>
-      </details>
+      </StudioCollapse>
 
       <div className="admin-governance-records__lists">
         <div>

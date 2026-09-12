@@ -3,6 +3,7 @@
 
 'use client'
 
+import { StudioCollapse } from '@tahti/ui'
 import { shouldShowTracklist } from '../sound-editor-visibility'
 import { SoundBasicsFields } from './basics-fields'
 import { SoundVisualsFields } from './visuals-fields'
@@ -33,47 +34,25 @@ export function SoundMetadataFields({
     <div className="studio-grid studio-mt-md">
       <SoundBasicsFields state={state} onChange={onChange} disabled={disabled} itemId={itemId} />
       {shouldShowTracklist(state.contentType) && (
-        <details className="studio-details-block" open>
-          <summary className="studio-details-block__summary">Tracklist</summary>
-          <div className="studio-details-block__body">
-            <SoundTracklistField state={state} onChange={onChange} disabled={disabled} />
-          </div>
-        </details>
+        <StudioCollapse title="Tracklist" defaultOpen>
+          <SoundTracklistField state={state} onChange={onChange} disabled={disabled} />
+        </StudioCollapse>
       )}
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Cover &amp; visuals</summary>
-        <div className="studio-details-block__body">
-          <SoundVisualsFields
-            state={state}
-            onChange={onChange}
-            disabled={disabled}
-            itemId={itemId}
-          />
-        </div>
-      </details>
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Visibility &amp; discovery</summary>
-        <div className="studio-details-block__body">
-          <SoundSharingFields
-            state={state}
-            onChange={onChange}
-            disabled={disabled}
-            itemId={itemId}
-          />
-        </div>
-      </details>
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Advanced</summary>
-        <div className="studio-details-block__body">
-          <SoundAdvancedFields
-            state={state}
-            onChange={onChange}
-            disabled={disabled}
-            detectedBpm={detectedBpm}
-            detectedKey={detectedKey}
-          />
-        </div>
-      </details>
+      <StudioCollapse title="Cover & visuals">
+        <SoundVisualsFields state={state} onChange={onChange} disabled={disabled} itemId={itemId} />
+      </StudioCollapse>
+      <StudioCollapse title="Visibility & discovery">
+        <SoundSharingFields state={state} onChange={onChange} disabled={disabled} itemId={itemId} />
+      </StudioCollapse>
+      <StudioCollapse title="Advanced">
+        <SoundAdvancedFields
+          state={state}
+          onChange={onChange}
+          disabled={disabled}
+          detectedBpm={detectedBpm}
+          detectedKey={detectedKey}
+        />
+      </StudioCollapse>
     </div>
   )
 }

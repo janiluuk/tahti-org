@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { StudioCollapse } from '@tahti/ui'
 import { createResolution } from '../../actions'
 
 export function ResolutionCreateForm({
@@ -40,9 +41,8 @@ export function ResolutionCreateForm({
   }
 
   return (
-    <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
-      <summary>New resolution</summary>
-      <form onSubmit={onSubmit} style={{ marginTop: '0.75rem' }}>
+    <StudioCollapse title="New resolution" className="studio-mb-lg">
+      <form onSubmit={onSubmit}>
         <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '40rem' }}>
           <label>
             Title
@@ -99,6 +99,6 @@ export function ResolutionCreateForm({
           {msg ? <p className="admin-err">{msg}</p> : null}
         </div>
       </form>
-    </details>
+    </StudioCollapse>
   )
 }

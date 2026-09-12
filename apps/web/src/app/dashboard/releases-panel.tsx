@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { ButtonIcon, Panel, Button } from '@tahti/ui'
+import { ButtonIcon, Panel, Button, StudioCollapse } from '@tahti/ui'
 import {
   createRelease,
   importReleasesFromCsv,
@@ -205,18 +205,16 @@ export default function ReleasesPanel({
         </Button>
       </div>
 
-      <details className="studio-details-block">
-        <summary>Create an album by dragging in your tracks</summary>
-        <p className="studio-help studio-mt-sm">
+      <StudioCollapse title="Create an album by dragging in your tracks">
+        <p className="studio-help">
           Drop a folder of WAV/FLAC/MP3 files (or select several at once) — track order and titles
           come from the filenames, so name them like &quot;01 - Intro.wav&quot;.
         </p>
         <ReleaseBulkDrop />
-      </details>
+      </StudioCollapse>
 
-      <details className="studio-details-block">
-        <summary>Bulk import from CSV</summary>
-        <p className="studio-help studio-mt-sm">
+      <StudioCollapse title="Bulk import from CSV">
+        <p className="studio-help">
           One row per track. Columns: releaseTitle, type, releaseDate (YYYY-MM-DD), trackTitle,
           isrc, upc, description.
         </p>
@@ -224,7 +222,7 @@ export default function ReleasesPanel({
           value={importCsv}
           onChange={(e) => setImportCsv(e.target.value)}
           rows={5}
-          className="studio-input studio-mt-sm"
+          className="studio-input"
           placeholder={`releaseTitle,type,releaseDate,trackTitle\nMy EP,EP,2026-06-01,Track 1`}
         />
         <Button
@@ -238,7 +236,7 @@ export default function ReleasesPanel({
         {importMsg ? (
           <p className="studio-notice studio-notice--success studio-mt-sm">{importMsg}</p>
         ) : null}
-      </details>
+      </StudioCollapse>
 
       {error ? <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p> : null}
     </Panel>

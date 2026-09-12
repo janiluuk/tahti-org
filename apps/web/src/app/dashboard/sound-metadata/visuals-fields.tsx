@@ -10,6 +10,7 @@ import {
   CHANNEL_GALLERY_MODE_LABELS,
   isWebGLGalleryMode,
 } from '@tahti/shared'
+import { StudioCollapse } from '@tahti/ui'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import {
   prepareSoundBannerUpload,
@@ -64,59 +65,56 @@ export function SoundVisualsFields({
         </label>
       </div>
 
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Slideshow (optional)</summary>
-        <div className="studio-details-block__body">
-          <label className="studio-field">
-            <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
-            <textarea
-              rows={2}
-              placeholder="https://cdn.example/slide1.jpg"
-              value={state.slideshowUrls}
-              disabled={disabled}
-              onChange={(e) => set({ slideshowUrls: e.target.value })}
-              className="studio-textarea"
-            />
-          </label>
+      <StudioCollapse title="Slideshow (optional)">
+        <label className="studio-field">
+          <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
+          <textarea
+            rows={2}
+            placeholder="https://cdn.example/slide1.jpg"
+            value={state.slideshowUrls}
+            disabled={disabled}
+            onChange={(e) => set({ slideshowUrls: e.target.value })}
+            className="studio-textarea"
+          />
+        </label>
 
-          {state.slideshowUrls.trim() && (
-            <>
-              <label className="studio-field">
-                <span className="studio-label">Slideshow transition</span>
-                <select
-                  value={state.galleryMode}
-                  disabled={disabled}
-                  onChange={(e) => set({ galleryMode: e.target.value as ChannelGalleryMode })}
-                  className="studio-input"
-                >
-                  {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
-                    <option key={mode} value={mode}>
-                      {CHANNEL_GALLERY_MODE_LABELS[mode]}
-                    </option>
-                  ))}
-                </select>
-                {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode] && (
-                  <span className="studio-text-muted-sm">
-                    {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode]}
-                  </span>
-                )}
-              </label>
-
-              {isWebGLGalleryMode(state.galleryMode) && (
-                <label className="studio-label-row studio-text-sm studio-mb-sm">
-                  <input
-                    type="checkbox"
-                    checked={state.galleryAudioReactive}
-                    disabled={disabled}
-                    onChange={(e) => set({ galleryAudioReactive: e.target.checked })}
-                  />
-                  Audio-reactive — images pulse with this track&apos;s playback
-                </label>
+        {state.slideshowUrls.trim() && (
+          <>
+            <label className="studio-field">
+              <span className="studio-label">Slideshow transition</span>
+              <select
+                value={state.galleryMode}
+                disabled={disabled}
+                onChange={(e) => set({ galleryMode: e.target.value as ChannelGalleryMode })}
+                className="studio-input"
+              >
+                {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
+                  <option key={mode} value={mode}>
+                    {CHANNEL_GALLERY_MODE_LABELS[mode]}
+                  </option>
+                ))}
+              </select>
+              {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode] && (
+                <span className="studio-text-muted-sm">
+                  {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode]}
+                </span>
               )}
-            </>
-          )}
-        </div>
-      </details>
+            </label>
+
+            {isWebGLGalleryMode(state.galleryMode) && (
+              <label className="studio-label-row studio-text-sm studio-mb-sm">
+                <input
+                  type="checkbox"
+                  checked={state.galleryAudioReactive}
+                  disabled={disabled}
+                  onChange={(e) => set({ galleryAudioReactive: e.target.checked })}
+                />
+                Audio-reactive — images pulse with this track&apos;s playback
+              </label>
+            )}
+          </>
+        )}
+      </StudioCollapse>
     </div>
   )
 }

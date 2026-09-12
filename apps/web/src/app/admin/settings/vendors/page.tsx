@@ -6,6 +6,7 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { Badge, StudioCollapse } from '@tahti/ui'
 
 const CRITICAL_VENDORS = [
   {
@@ -249,40 +250,37 @@ export default async function AdminVendorsPage() {
         </section>
       )}
 
-      <details className="studio-details-block" style={{ marginBottom: '2rem' }}>
-        <summary className="admin-subsection-title">GDPR / DPA checklist</summary>
-        <div className="admin-card" style={{ padding: '1rem', marginTop: '0.75rem' }}>
-          {DPA_CHECKLIST.map((c) => (
-            <div
-              key={c.item}
+      <StudioCollapse title="GDPR / DPA checklist" className="studio-mb-lg">
+        {DPA_CHECKLIST.map((c) => (
+          <div
+            key={c.item}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              padding: '0.5rem 0',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <span
               style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '0.5rem 0',
-                borderBottom: '1px solid var(--border)',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                color: c.done ? 'var(--green)' : 'var(--coral)',
+                flexShrink: 0,
+                marginTop: 1,
               }}
             >
-              <span
-                style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  color: c.done ? 'var(--green)' : 'var(--coral)',
-                  flexShrink: 0,
-                  marginTop: 1,
-                }}
-              >
-                {c.done ? '✓' : '✗'}
-              </span>
-              <span style={{ fontSize: '0.875rem' }}>{c.item}</span>
-            </div>
-          ))}
-          <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
-            Tick these off in <code>ops/VENDORS.md</code> and update this page after each DPA is
-            accepted.
-          </p>
-        </div>
-      </details>
+              {c.done ? '✓' : '✗'}
+            </span>
+            <span style={{ fontSize: '0.875rem' }}>{c.item}</span>
+          </div>
+        ))}
+        <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
+          Tick these off in <code>ops/VENDORS.md</code> and update this page after each DPA is
+          accepted.
+        </p>
+      </StudioCollapse>
 
       <section style={{ marginBottom: '2rem' }}>
         <h2 className="admin-subsection-title">Critical path (SEV-1)</h2>
@@ -297,19 +295,7 @@ export default async function AdminVendorsPage() {
               <div
                 style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}
               >
-                {v.dpaRequired && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      background: 'rgba(255,120,50,0.15)',
-                      color: 'var(--coral)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                    }}
-                  >
-                    DPA required
-                  </span>
-                )}
+                {v.dpaRequired && <Badge variant="error">DPA required</Badge>}
                 {v.portalUrl && (
                   <a
                     href={v.portalUrl}
@@ -325,9 +311,8 @@ export default async function AdminVendorsPage() {
         </div>
       </section>
 
-      <details className="studio-details-block" style={{ marginBottom: '2rem' }}>
-        <summary className="admin-subsection-title">Platform integrations</summary>
-        <div className="admin-panel-grid" style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="Platform integrations" className="studio-mb-lg">
+        <div className="admin-panel-grid">
           {INTEGRATION_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
               <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
@@ -353,38 +338,13 @@ export default async function AdminVendorsPage() {
                 style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}
               >
                 {integrationStatus.get(v.name) && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      background:
-                        integrationStatus.get(v.name)?.mode === 'live'
-                          ? 'rgba(80,200,120,0.15)'
-                          : 'rgba(255,120,50,0.15)',
-                      color:
-                        integrationStatus.get(v.name)?.mode === 'live'
-                          ? 'var(--green)'
-                          : 'var(--coral)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                    }}
+                  <Badge
+                    variant={integrationStatus.get(v.name)?.mode === 'live' ? 'success' : 'warning'}
                   >
                     {integrationStatus.get(v.name)?.mode === 'live' ? 'Live' : 'Stub mode'}
-                  </span>
+                  </Badge>
                 )}
-                {v.dpaRequired && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      background: 'rgba(255,120,50,0.15)',
-                      color: 'var(--coral)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                    }}
-                  >
-                    DPA required
-                  </span>
-                )}
+                {v.dpaRequired && <Badge variant="error">DPA required</Badge>}
                 {v.portalUrl && (
                   <a
                     href={v.portalUrl}
@@ -403,11 +363,10 @@ export default async function AdminVendorsPage() {
             </div>
           ))}
         </div>
-      </details>
+      </StudioCollapse>
 
-      <details className="studio-details-block">
-        <summary className="admin-subsection-title">Infrastructure &amp; tooling</summary>
-        <div className="admin-panel-grid" style={{ marginTop: '0.75rem' }}>
+      <StudioCollapse title="Infrastructure & tooling">
+        <div className="admin-panel-grid">
           {INFRA_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
               <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
@@ -434,7 +393,7 @@ export default async function AdminVendorsPage() {
             </div>
           ))}
         </div>
-      </details>
+      </StudioCollapse>
     </>
   )
 }
