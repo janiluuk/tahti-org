@@ -454,6 +454,9 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
+        <p className="admin-stat-sub">
+          <Link href="/admin/crons">Full cron run log →</Link>
+        </p>
       </details>
 
       <details className="admin-card studio-details-block">

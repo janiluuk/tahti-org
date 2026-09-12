@@ -445,6 +445,11 @@ export const ADMIN_NAV = [
     label: 'Workers',
     icon: <GovernanceNavIcon mark="W" />,
   },
+  {
+    href: '/admin/crons',
+    label: 'Cron runs',
+    icon: <GovernanceNavIcon mark="C" />,
+  },
 ] as const
 
 export const ADMIN_MENU_GROUPS = [
@@ -503,6 +508,7 @@ export const ADMIN_MENU_GROUPS = [
       '/admin/settings/vendors',
       '/admin/logs',
       '/admin/workers',
+      '/admin/crons',
     ],
   },
 ] as const
