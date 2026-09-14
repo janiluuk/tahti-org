@@ -466,6 +466,20 @@ services:
       redis:
         condition: service_healthy
 
+  # Single owner for BullMQ repeatable-job registration. Keeping scheduling
+  # separate prevents worker replicas from racing to reset the manifest.
+  cron-runner:
+    logging: *loki-logging
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    command: ['tsx', 'apps/worker/src/cron-runner.ts']
+    environment:
+      <<: *app-env
+    depends_on:
+      redis:
+        condition: service_healthy
+
   # stem-separator moved to vimage7 (GPU) — see
   # infra/docker-compose.worker-remote.yml. Nothing runs on this host for it
   # anymore; STEM_SEPARATOR_URL above points there instead.

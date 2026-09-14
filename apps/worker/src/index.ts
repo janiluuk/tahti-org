@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Worker, Queue } from 'bullmq'
+import { Worker } from 'bullmq'
 import { prisma } from '@tahti/db'
 import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
@@ -56,7 +56,6 @@ import {
   processSoundFallbackCacheSyncJob,
   processWarmSoundFallbackCacheJob,
 } from './jobs/sound-fallback-cache.js'
-import { WORKER_CRON_JOBS } from './cron-manifest.js'
 import { runWithCronLog } from './lib/cron-run.js'
 import { jobNamesForLanes } from '@tahti/shared'
 import {
@@ -72,10 +71,6 @@ const connection = {
   host: new URL(REDIS_URL).hostname,
   port: parseInt(new URL(REDIS_URL).port || '6379', 10),
 }
-
-// Retries give a lane-filtered worker a chance to land on the right worker
-// instead of losing the job on first mismatch (see below).
-const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
 
 // --queues=media,dist — restricts this process to job names in those lanes
 // (see packages/shared/src/worker-job-lanes.ts). Every container in
@@ -105,7 +100,7 @@ const worker = new Worker(
   'media',
   async (job) => {
     if (allowedJobNames.size > 0 && !allowedJobNames.has(job.name)) {
-      // Not our lane — throw so BullMQ retries (per defaultJobOptions) until a
+      // Not our lane — throw so BullMQ retries (per the enqueuer's job options) until a
       // worker whose --queues covers this job name picks it up instead.
       throw new Error(`lane-mismatch: ${job.name} is not handled by this worker's --queues`)
     }
@@ -129,6 +124,7 @@ const worker = new Worker(
         if (summary.deleted > 0) {
           console.log('[worker] sweep-expired-stems:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'backfill-editor-peaks') {
         await processBackfillEditorPeaksJob(job)
       } else if (job.name === 'sweep-editor-peaks-backfill') {
@@ -136,6 +132,7 @@ const worker = new Worker(
         if (summary.enqueued > 0) {
           console.log('[worker] sweep-editor-peaks-backfill:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'transcode-release-track') {
         await processTranscodeReleaseTrackJob(job)
       } else if (job.name === 'transcode-release-track-version') {
@@ -159,79 +156,91 @@ const worker = new Worker(
       } else if (job.name === 'sound-broadcast') {
         await processSoundBroadcastJob(job)
       } else if (job.name === 'monthly-ledger-rollup') {
-        await processMonthlyLedgerRollup(job)
+        return await processMonthlyLedgerRollup(job)
       } else if (job.name === 'channel-watchdog') {
         const summary = await processChannelWatchdogJob(prisma, job)
         console.log('[worker] channel-watchdog:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'radio-slot-switchover') {
         const summary = await processRadioSlotSwitchoverJob(prisma, job)
         if (summary.switched) {
           console.log('[worker] radio-slot-switchover:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'channel-fallback-reconciler') {
         const summary = await processChannelFallbackReconcilerJob(prisma, job)
         if (summary.started > 0) {
           console.log('[worker] channel-fallback-reconciler:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'sidecar-cleanup') {
         const summary = await processSidecarCleanupJob(job)
         if (summary.removed.length > 0) {
           console.log('[worker] sidecar-cleanup:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)
         if (summary.uploaded > 0) {
           console.log('[worker] hls-minio-sync:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'hls-caddy-egress-sync') {
         const summary = await processHlsCaddyEgressSyncJob(job)
         if (summary.lines > 0) {
           console.log('[worker] hls-caddy-egress-sync:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'warm-sound-fallback-cache') {
         const summary = await processWarmSoundFallbackCacheJob(prisma, job)
         if (summary.downloaded > 0) {
           console.log('[worker] warm-sound-fallback-cache:', JSON.stringify(summary))
         }
       } else if (job.name === 'sound-fallback-cache-sync') {
-        await processSoundFallbackCacheSyncJob(prisma, job)
+        return await processSoundFallbackCacheSyncJob(prisma, job)
       } else if (job.name === 'broadcast-cap-tick') {
         const summary = await processBroadcastCapTick(prisma)
         console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'weekly-broadcast-reset') {
         const summary = await processWeeklyBroadcastReset(prisma)
         console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'tahti-selects-weekly-draw') {
         const summary = await processTahtiSelectsDrawJob(prisma)
         console.log('[worker] tahti-selects-weekly-draw:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'fan-sub-payout') {
         const summary = await processFanSubPayoutsJob(prisma)
         console.log('[worker] fan-sub-payout:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'fan-sub-expire') {
         const summary = await processFanSubExpire(prisma)
         console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'fan-subscriber-purge') {
         const summary = await processFanSubscriberPurgeJob(prisma)
         if (summary.canceled > 0) {
           console.log('[worker] fan-subscriber-purge:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'social-post-dispatch') {
         const { postId } = job.data as { postId: string }
         await processSocialPostDispatchJob(prisma, postId)
       } else if (job.name === 'tor-exit-list-sync') {
-        await processTorExitListSyncJob(job)
+        return await processTorExitListSyncJob(job)
       } else if (job.name === 'download-fraud-scan') {
-        await processDownloadFraudScanJob(job)
+        return await processDownloadFraudScanJob(job)
       } else if (job.name === 'membership-renewal-reminder') {
-        await processMembershipRenewalJob(job)
+        return await processMembershipRenewalJob(job)
       } else if (job.name === 'membership-lapse') {
-        await processMembershipLapseJob(job)
+        return await processMembershipLapseJob(job)
       } else if (job.name === 'mention-digest') {
-        await processMentionDigestJob(job)
+        return await processMentionDigestJob(job)
       } else if (job.name === 'post-publish-notify') {
-        await processPostPublishNotifyJob(job)
+        return await processPostPublishNotifyJob(job)
       } else if (job.name === 'listen-session-close') {
-        await processListenSessionCloseJob(job)
+        return await processListenSessionCloseJob(job)
       } else if (job.name === 'revelator-deliver') {
         await processRevelatorDeliverJob(job)
       } else if (job.name === 'hearthis-export') {
@@ -239,22 +248,26 @@ const worker = new Worker(
       } else if (job.name === 'revelator-royalty-sync') {
         const summary = await processRevelatorRoyaltySyncJob(prisma, job)
         console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'live-show-recurrence-generate') {
         const summary = await processLiveShowRecurrenceJob(job)
         if (summary.episodesCreated > 0) {
           console.log('[worker] live-show-recurrence-generate:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)
         if (summary.flagged > 0 || summary.autoResolved > 0) {
           console.log('[worker] missed-live-show-scan:', JSON.stringify(summary))
         }
+        return summary
       } else if (job.name === 'annual-grant-calc') {
         // Default to the prior calendar year (matches Finnish fiscal year).
         const { year } = job.data as { year?: number }
         const forYear = year ?? new Date().getUTCFullYear() - 1
         const summary = await runAnnualGrantCalc(prisma, forYear)
         console.log(`[worker] annual-grant-calc ${forYear}:`, JSON.stringify(summary))
+        return summary
       } else {
         console.log(`[worker] unknown job ${job.name}, skipping`)
       }
@@ -306,35 +319,6 @@ process.on('unhandledRejection', (reason) => {
 })
 process.on('uncaughtException', (err) => {
   console.error('[worker] uncaughtException:', err)
-})
-
-// Register repeatable cron jobs. Wipe existing repeatables first so a changed
-// `every`/`pattern` (or an old jobId) can't leave a second scheduler firing
-// forever. Confirmed live: two hls-minio-sync repeat hashes were both
-// enqueueing, doubling MinIO load and causing ~40s sync gaps that emptied the
-// public ~16s HLS window.
-async function registerCrons() {
-  const queue = new Queue('media', { connection, defaultJobOptions })
-  const hasCaddyLog = Boolean(process.env.CADDY_HLS_ACCESS_LOG)
-
-  for (const prev of await queue.getRepeatableJobs()) {
-    await queue.removeRepeatableByKey(prev.key)
-  }
-
-  let registered = 0
-  for (const job of WORKER_CRON_JOBS) {
-    if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
-    const repeat = job.everyMs != null ? { every: job.everyMs } : { pattern: job.pattern! }
-    await queue.add(job.name, {}, { repeat, jobId: job.jobId })
-    registered++
-  }
-
-  await queue.close()
-  console.log(`[worker] ${registered} cron jobs registered (repeatables reset)`)
-}
-
-registerCrons().catch((err: unknown) => {
-  console.error('[worker] failed to register crons:', err)
 })
 
 registerWorker(WORKER_NAME, WORKER_LANES).catch((err: unknown) => {

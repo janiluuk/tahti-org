@@ -3404,6 +3404,9 @@ model CronRun {
   finishedAt   DateTime?
   outcome      CronOutcome?
   errorMessage String?
+  /// Bounded JSON text returned by the handler; text keeps arbitrary job
+  /// summaries inspectable without coupling persistence to their shapes.
+  resultJson   String?
 
   @@index([jobName, startedAt(sort: Desc)])
   @@schema("admin")

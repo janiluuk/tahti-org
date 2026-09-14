@@ -6,6 +6,7 @@ import {
   AdminAuditRecentListSchema,
   AdminChatStatsSchema,
   AdminChatTimeseriesSchema,
+  AdminCronRunHistoryResponseSchema,
   AdminCronRunListSchema,
   AdminMailStatsSchema,
   AdminMemberStatsSchema,
@@ -19,6 +20,10 @@ import { getQueueStatsByJobName } from '../../lib/queue-stats.js'
 import { WORKER_CRON_JOBS } from '@tahti/shared'
 import { runDependencyChecks } from '../../lib/health-checks.js'
 import { collectBackupMetrics } from '../../lib/backup-metrics.js'
+
+function durationMs(startedAt: Date, finishedAt: Date | null): number | null {
+  return finishedAt ? Math.max(0, finishedAt.getTime() - startedAt.getTime()) : null
+}
 
 const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -97,11 +102,57 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
                 finishedAt: run.finishedAt,
                 outcome: run.outcome,
                 errorMessage: run.errorMessage,
+                resultJson: run.resultJson,
+                durationMs: durationMs(run.startedAt, run.finishedAt),
               }
             : null,
         }
       })
       return reply.send(latest)
+    },
+  )
+
+  fastify.get(
+    '/api/admin/stats/cron-runs/history',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Chronological cron execution log with result and duration',
+        response: openApiResponse(AdminCronRunHistoryResponseSchema, 'AdminCronRunHistoryResponse'),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as { page?: string; limit?: string; jobName?: string }
+      const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1)
+      const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '50', 10) || 50))
+      const jobName = query.jobName?.trim()
+      const where = jobName ? { jobName } : undefined
+      const [runs, total] = await Promise.all([
+        fastify.prisma.cronRun.findMany({
+          where,
+          orderBy: { startedAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        fastify.prisma.cronRun.count({ where }),
+      ])
+
+      return reply.send({
+        page,
+        limit,
+        total,
+        items: runs.map((run) => ({
+          id: run.id.toString(),
+          jobName: run.jobName,
+          startedAt: run.startedAt,
+          finishedAt: run.finishedAt,
+          outcome: run.outcome,
+          errorMessage: run.errorMessage,
+          resultJson: run.resultJson,
+          durationMs: durationMs(run.startedAt, run.finishedAt),
+        })),
+      })
     },
   )
 
