@@ -366,6 +366,9 @@ services:
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
       ARCHIVE_CACHE_ROOT: /archive-cache
+      # Current sound-fallback cache jobs read SOUND_CACHE_ROOT; retain the
+      # legacy variable above so older images remain safe during a rollout.
+      SOUND_CACHE_ROOT: /archive-cache
       RECORDINGS_ROOT: /recordings
       ORCHESTRATOR_URL: http://orchestrator:3003
       WORKER_CONCURRENCY: "4"
