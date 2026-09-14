@@ -63,6 +63,7 @@ import {
   heartbeat,
   recordJobEvent,
   resolveWorkerName,
+  pruneStaleWorkers,
 } from './lib/worker-registry.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -95,6 +96,7 @@ if (requestedLanes.length > 0) {
 const WORKER_NAME = resolveWorkerName()
 const WORKER_LANES = requestedLanes.length > 0 ? requestedLanes : ['all']
 const HEARTBEAT_MS = 20_000
+const PRUNE_STALE_WORKERS_MS = 6 * 60 * 60 * 1000
 
 const worker = new Worker(
   'media',
@@ -327,9 +329,15 @@ registerWorker(WORKER_NAME, WORKER_LANES).catch((err: unknown) => {
 const heartbeatInterval = setInterval(() => {
   void heartbeat(WORKER_NAME)
 }, HEARTBEAT_MS)
+const pruneStaleWorkersInterval = setInterval(() => {
+  void pruneStaleWorkers().catch((err: unknown) => {
+    console.error('[worker] failed to prune stale worker-registry entries:', err)
+  })
+}, PRUNE_STALE_WORKERS_MS)
 
 process.on('SIGTERM', async () => {
   clearInterval(heartbeatInterval)
+  clearInterval(pruneStaleWorkersInterval)
   await worker.close()
   await prisma.$disconnect()
   process.exit(0)

@@ -171,7 +171,18 @@ services:
   redis:
     logging: *loki-logging
     image: redis:7-alpine
-    command: ['redis-server', '--appendonly', 'yes', '--loglevel', 'warning']
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--loglevel',
+        'warning',
+        '--maxmemory',
+        '2gb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+      ]
     volumes:
       - stack_redis:/data
     healthcheck:

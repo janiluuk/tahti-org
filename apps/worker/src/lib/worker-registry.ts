@@ -8,14 +8,19 @@
 // of drifting from whatever the deploy topology looked like when someone
 // last hand-maintained a list.
 //
-// A worker that stops heartbeating is NOT removed from `workers:known` —
-// it keeps showing up as offline, which is the point of a status page.
+// A worker that stops heartbeating is NOT removed from `workers:known`
+// immediately — it keeps showing up as offline, which is the point of a
+// status page. But a worker identity that never comes back (renamed lane,
+// decommissioned host, ephemeral hostname-fallback name from a run without
+// WORKER_NAME set) would otherwise accumulate in Redis forever, so entries
+// stale past STALE_PRUNE_MS are reaped — see pruneStaleWorkers().
 
 import { createClient, type RedisClientType } from 'redis'
 import os from 'node:os'
 
 const KNOWN_SET_KEY = 'workers:known'
 const HISTORY_LIMIT = 20
+const STALE_PRUNE_MS = 90 * 24 * 60 * 60 * 1000
 
 export type WorkerJobStatus = 'active' | 'completed' | 'failed'
 
@@ -102,4 +107,30 @@ export async function recordJobEvent(name: string, event: WorkerJobEvent): Promi
   })
   await c.lPush(historyKey(name), JSON.stringify(event))
   await c.lTrim(historyKey(name), 0, HISTORY_LIMIT - 1)
+}
+
+/**
+ * Reap worker identities that haven't heartbeated in STALE_PRUNE_MS, or
+ * whose hash has already gone missing. Called on an interval from
+ * apps/worker/src/index.ts — safe to call from any/every worker process,
+ * since it only removes entries that are well past the "still useful as an
+ * offline status" window.
+ */
+export async function pruneStaleWorkers(): Promise<string[]> {
+  const c = await getClient()
+  if (!c) return []
+  const names = await c.sMembers(KNOWN_SET_KEY)
+  const pruned: string[] = []
+  for (const name of names) {
+    const hash = await c.hGetAll(workerKey(name))
+    const updatedAt = hash.updatedAt ? Number(hash.updatedAt) : null
+    const isStale =
+      Object.keys(hash).length === 0 || updatedAt == null || Date.now() - updatedAt > STALE_PRUNE_MS
+    if (!isStale) continue
+    await c.sRem(KNOWN_SET_KEY, name)
+    await c.del(workerKey(name))
+    await c.del(historyKey(name))
+    pruned.push(name)
+  }
+  return pruned
 }
