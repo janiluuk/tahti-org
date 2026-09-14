@@ -14,8 +14,14 @@ const connection = {
 }
 
 // See apps/api/src/lib/queue.ts — gives lane-filtered workers a chance to land
-// on the right worker instead of losing the job on first mismatch.
-const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+// on the right worker instead of losing the job on first mismatch, and bounds
+// Redis growth for any job added here that doesn't set its own retention.
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 5000 },
+  removeOnComplete: { count: 500 },
+  removeOnFail: { count: 1000 },
+}
 
 /** PERF-04: enqueue editorPeaks backfill for READY sounds missing the column. */
 export async function processSweepEditorPeaksBackfillJob(_job: Job): Promise<{ enqueued: number }> {

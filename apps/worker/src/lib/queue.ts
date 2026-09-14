@@ -12,7 +12,13 @@ const connection = {
 
 // See apps/api/src/lib/queue.ts — same reasoning: gives lane-filtered workers a
 // chance to land on the right worker instead of losing the job on first mismatch.
-const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+// removeOnComplete/removeOnFail bound Redis growth the same way as that file.
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 5000 },
+  removeOnComplete: { count: 500 },
+  removeOnFail: { count: 1000 },
+}
 
 export async function enqueueSoundBroadcast(broadcastId: string): Promise<void> {
   const queue = new Queue('media', { connection, defaultJobOptions })

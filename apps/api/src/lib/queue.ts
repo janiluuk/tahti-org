@@ -14,7 +14,16 @@ const connection = {
 // handling) a chance to land on a worker that actually handles this job name —
 // without a default, a job with no explicit `attempts` gets exactly 1 try and is
 // lost for good if the worker that first dequeues it isn't in the right lane.
-const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+//
+// removeOnComplete/removeOnFail bound Redis growth — BullMQ otherwise keeps
+// every finished job (including its payload, e.g. EditList/sourceKey) forever.
+// Per-job options below (e.g. enqueueBackfillEditorPeaks) still override these.
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 5000 },
+  removeOnComplete: { count: 500 },
+  removeOnFail: { count: 1000 },
+}
 
 export const mediaQueue = new Queue('media', { connection, defaultJobOptions })
 

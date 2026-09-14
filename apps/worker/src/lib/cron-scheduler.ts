@@ -12,7 +12,15 @@ function redisConnection() {
   }
 }
 
-const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+// removeOnComplete/removeOnFail bound Redis growth — otherwise every tick of
+// every repeatable cron job (see WORKER_CRON_JOBS) keeps its finished job
+// record in Redis forever.
+const defaultJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 5000 },
+  removeOnComplete: { count: 500 },
+  removeOnFail: { count: 1000 },
+}
 
 /** Make the manifest in Redis exactly match WORKER_CRON_JOBS. This is owned by
  * the single cron-runner stack service so worker replicas never race while
