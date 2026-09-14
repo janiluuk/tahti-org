@@ -1,0 +1,41 @@
+# Local-only: serves the tahti-player repo's tahti-web (Nuclear UI) build
+# from THIS branch alongside the full stack (api + Next.js web + worker …).
+#
+# Usage (from tahti-org/):
+#   ./scripts/stack-up.sh                                    # base stack first
+#   docker compose -f infra/docker-compose.stack.yml \
+#                  -f infra/docker-compose.tahti-web.yml \
+#                  up -d --build tahti-web
+#   open http://localhost:${TAHTI_WEB_PORT:-17778}           # this branch's client
+#   open http://localhost:${WEB_PORT:-17777}                 # stock Next.js web
+#
+# The image reuses packages/tahti-web/deploy/Dockerfile (dist/ must be built
+# first: `pnpm --filter @tahti-player/tahti-web build` on the branch you want
+# to preview). The beta nginx.conf baked into that image is overridden at
+# runtime with stack/tahti-web.nginx.conf, which proxies /tahti-api/ to the
+# stack-local api service instead of https://api.tahti.live.
+# Not used by production deploys. Do not commit stack.env secrets here.
+
+name: tahti-stack
+
+services:
+  tahti-web:
+    build:
+      context: ../../tahti-player/packages/tahti-web
+      dockerfile: deploy/Dockerfile
+    image: tahti-stack-web:local
+    container_name: tahti-stack-web
+    restart: unless-stopped
+    ports:
+      - '${TAHTI_WEB_PORT:-17778}:80'
+    volumes:
+      - ./stack/tahti-web.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/health']
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
