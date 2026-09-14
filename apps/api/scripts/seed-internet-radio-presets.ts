@@ -16,8 +16,7 @@ const PRESETS = [
     name: 'YleX',
     genre: 'Pop / Hits',
     description: 'Finnish youth-focused pop and hits station.',
-    iconUrl:
-      'https://images.cdn.yle.fi/f_auto,w_512,h_512,c_fit/v1496664710/yle-areena-app.png',
+    iconUrl: 'https://images.cdn.yle.fi/f_auto,w_512,h_512,c_fit/v1496664710/yle-areena-app.png',
     programmingUrl: 'https://areena.yle.fi/audio/ohjelmat/yle-x',
     streamUrl: 'https://icecast.live.yle.fi/radio/YleX/icecast.audio',
     enabled: true,
@@ -38,8 +37,7 @@ const PRESETS = [
     iconUrl:
       'https://static.novelist.nelonenmedia.fi/files/styles/1_360x360/s3/promo-items/square/2024/RadioRock_2560x2560.jpg?itok=-t2L8AEt',
     programmingUrl: 'https://www.radiorock.fi/',
-    streamUrl:
-      'https://aud-stream-radiorock.nm-elemental.nelonenmedia.fi/playlist.m3u8',
+    streamUrl: 'https://aud-stream-radiorock.nm-elemental.nelonenmedia.fi/playlist.m3u8',
     enabled: true,
   },
   {
@@ -49,8 +47,7 @@ const PRESETS = [
     iconUrl:
       'https://static.novelist.nelonenmedia.fi/files/styles/1_360x360/s3/promo-items/square/2024/Suomipop_2560x2560.jpg?itok=PbwAfqXn',
     programmingUrl: 'https://www.supla.fi/suomipop',
-    streamUrl:
-      'https://aud-stream-suomipop.nm-elemental.nelonenmedia.fi/playlist.m3u8',
+    streamUrl: 'https://aud-stream-suomipop.nm-elemental.nelonenmedia.fi/playlist.m3u8',
     enabled: true,
   },
   {
