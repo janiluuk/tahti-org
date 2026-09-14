@@ -6,6 +6,15 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-12 — split-god-classes.md
+
+Shipped in [#503](https://github.com/janiluuk/tahti-org/pull/503): split oversized
+collections/sound/sound-editor routes, mini-player folder, player-context hooks,
+pro-audio editor panels, collection editor chrome, admin files browser parts,
+channel controls/identity, profile/about helpers, visual-preset thumbs, and
+schedule add-show UI. Optional further peels (channel page ~759, pro-audio ~805,
+tour-steps/seed scripts) left for later if needed.
+
 ## 2026-09-11 — admin-mail-stats-dashboard.md
 
 Folded the contact-inbox metrics task after its Prometheus exporter, board-only
