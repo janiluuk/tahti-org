@@ -13,10 +13,12 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see the Fold rule below.
 
-| Status  | File                                                           | One-line                                                                                                                                                                              |
-| ------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md) | Store adapter, `PluginRegistryHost`, contract tests, caller migration, and §6 test matrix all shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
-| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)          | New box tahti.local (192.168.2.107): plan to move MinIO there (LAN remote-service pattern, no GPU needed) + checklist to add it to all vimage6 monitoring dashboards                 |
+| Status  | File                                                                           | One-line                                                                                                                                                                              |
+| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                 | Store adapter, `PluginRegistryHost`, contract tests, caller migration, and §6 test matrix all shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
+| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                         | New box tahti.local (192.168.2.107): plan to move MinIO there (LAN remote-service pattern, no GPU needed) + checklist to add it to all vimage6 monitoring dashboards                  |
+| open    | [listen-your-feed-redesign.md](listen-your-feed-redesign.md)                   | `/listen`'s "Your feed" section: inconsistent card boxes, cropped images, unreadable teaser text — redesign with unified card styling + a reveal component for items                  |
+| open    | [internet-radio-now-playing-scraper.md](internet-radio-now-playing-scraper.md) | Crawl+cache the current program title for the 6 Finnish internet-radio presets, only once a user has added the station; click-through target still undecided                          |
 
 ## Roadmap & planning (broader than a single task)
 
