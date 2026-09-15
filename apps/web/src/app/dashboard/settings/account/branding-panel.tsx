@@ -5,17 +5,21 @@
 
 import { useRef, useState } from 'react'
 import { AvatarTile, Button, StudioCollapse, brandTokens } from '@tahti/ui'
+import { LOGO_PLACEMENTS, LOGO_PLACEMENT_LABELS, type LogoPlacement } from '@tahti/shared'
 import { ImageCropModal } from '@/components/image-crop-modal'
 import {
   completeAvatarUpload,
   completeBackdropUpload,
+  completeLogoUpload,
   prepareAvatarUpload,
   prepareBackdropUpload,
+  prepareLogoUpload,
   updateChannelProfile,
 } from '../../channel-identity-actions'
 import { uploadBlob } from '../../channel-identity-utils'
 
 const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp']
+const ALLOWED_LOGO_MIME = ['image/png', 'image/webp']
 const DEFAULT_NAMEPLATE_COLOR = brandTokens.color.accent.purple
 
 interface Props {
@@ -26,11 +30,14 @@ interface Props {
   initialBackdropUrl: string | null
   initialNameplateText: string | null
   initialNameplateColor: string | null
+  initialLogoUrl: string | null
+  initialLogoPlacement: LogoPlacement | null
 }
 
 /** Settings → Account → Branding: avatar + backdrop (both cropped with the
- * shared ImageCropModal) and the nameplate pill shown next to the display
- * name, mirroring the reference "Nameplate / Avatar / Banner" layout. */
+ * shared ImageCropModal), the nameplate pill shown next to the display name,
+ * and the transparent-background artist logo overlaid on the avatar/cover —
+ * mirroring the reference "Nameplate / Avatar / Banner" layout. */
 export function BrandingPanel({
   displayName,
   username,
@@ -39,6 +46,8 @@ export function BrandingPanel({
   initialBackdropUrl,
   initialNameplateText,
   initialNameplateColor,
+  initialLogoUrl,
+  initialLogoPlacement,
 }: Props) {
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? '')
   const [avatarPosterUrl, setAvatarPosterUrl] = useState(initialAvatarPosterUrl ?? '')
@@ -51,9 +60,13 @@ export function BrandingPanel({
     text: initialNameplateText ?? '',
     color: initialNameplateColor ?? DEFAULT_NAMEPLATE_COLOR,
   })
+  const [logoUrl, setLogoUrl] = useState(initialLogoUrl ?? '')
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement | null>(initialLogoPlacement)
+  const [confirmRemoveLogo, setConfirmRemoveLogo] = useState(false)
+  const [logoSaving, setLogoSaving] = useState(false)
 
   const [cropSrc, setCropSrc] = useState<string | null>(null)
-  const [cropKind, setCropKind] = useState<'avatar' | 'backdrop'>('avatar')
+  const [cropKind, setCropKind] = useState<'avatar' | 'backdrop' | 'logo'>('avatar')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [nameplateSaving, setNameplateSaving] = useState(false)
@@ -61,10 +74,16 @@ export function BrandingPanel({
 
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const backdropInputRef = useRef<HTMLInputElement>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
-  function pickFile(kind: 'avatar' | 'backdrop', file: File | undefined) {
+  function pickFile(kind: 'avatar' | 'backdrop' | 'logo', file: File | undefined) {
     if (!file) return
-    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+    if (kind === 'logo') {
+      if (!ALLOWED_LOGO_MIME.includes(file.type)) {
+        setError('Logo must be PNG or WebP (with transparency)')
+        return
+      }
+    } else if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
       setError('Image must be JPEG, PNG, or WebP')
       return
     }
@@ -91,7 +110,7 @@ export function BrandingPanel({
         }
         setAvatarUrl(done.avatarUrl ?? '')
         setAvatarPosterUrl(done.avatarPosterUrl ?? '')
-      } else {
+      } else if (cropKind === 'backdrop') {
         const up = await uploadBlob(blob, 'backdrop.jpg', 'image/jpeg', prepareBackdropUpload)
         if (up.error || !up.uploadKey) {
           setError(up.error ?? 'Upload failed')
@@ -103,9 +122,56 @@ export function BrandingPanel({
           return
         }
         setBackdropUrl(done.backdropUrl ?? '')
+      } else {
+        const up = await uploadBlob(blob, 'logo.png', 'image/png', prepareLogoUpload)
+        if (up.error || !up.uploadKey) {
+          setError(up.error ?? 'Upload failed')
+          return
+        }
+        const done = await completeLogoUpload(up.uploadKey)
+        if (done.error) {
+          setError(done.error)
+          return
+        }
+        setLogoUrl(done.logoUrl ?? '')
+        setConfirmRemoveLogo(false)
+        if (!logoPlacement) setLogoPlacement('AVATAR')
       }
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function changeLogoPlacement(placement: LogoPlacement) {
+    const previous = logoPlacement
+    setLogoPlacement(placement)
+    setLogoSaving(true)
+    setError(null)
+    try {
+      const { error: err } = await updateChannelProfile({ logoPlacement: placement })
+      if (err) {
+        setError(err)
+        setLogoPlacement(previous)
+      }
+    } finally {
+      setLogoSaving(false)
+    }
+  }
+
+  async function clearLogo() {
+    setLogoSaving(true)
+    setError(null)
+    try {
+      const { error: err } = await updateChannelProfile({ logoUrl: null, logoPlacement: null })
+      if (err) {
+        setError(err)
+        return
+      }
+      setLogoUrl('')
+      setLogoPlacement(null)
+      setConfirmRemoveLogo(false)
+    } finally {
+      setLogoSaving(false)
     }
   }
 
@@ -141,11 +207,23 @@ export function BrandingPanel({
         {cropSrc && (
           <ImageCropModal
             imageSrc={cropSrc}
-            outputMime="image/jpeg"
+            outputMime={cropKind === 'logo' ? 'image/png' : 'image/jpeg'}
             aspectRatio={cropKind === 'backdrop' ? 3 : 1}
             shape={cropKind === 'backdrop' ? 'rect' : 'circle'}
-            title={cropKind === 'backdrop' ? 'Position your backdrop' : 'Position your avatar'}
-            confirmLabel={cropKind === 'backdrop' ? 'Use this backdrop' : 'Use this avatar'}
+            title={
+              cropKind === 'backdrop'
+                ? 'Position your backdrop'
+                : cropKind === 'logo'
+                  ? 'Position your logo'
+                  : 'Position your avatar'
+            }
+            confirmLabel={
+              cropKind === 'backdrop'
+                ? 'Use this backdrop'
+                : cropKind === 'logo'
+                  ? 'Use this logo'
+                  : 'Use this avatar'
+            }
             onCancel={() => setCropSrc(null)}
             onCropped={(blob) => void onCropped(blob)}
           />
@@ -216,6 +294,88 @@ export function BrandingPanel({
               {backdropUrl ? 'Change backdrop' : 'Upload backdrop'}
             </Button>
           </div>
+        </div>
+
+        <div className="studio-field--block">
+          <span className="studio-label">Artist logo</span>
+          <div className="branding-panel__logo-row">
+            <div className="branding-panel__logo-thumb">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="" className="branding-panel__logo-thumb-img" />
+              ) : (
+                <span className="branding-panel__logo-thumb-placeholder">No logo</span>
+              )}
+            </div>
+            <div className="branding-panel__logo-controls">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept={ALLOWED_LOGO_MIME.join(',')}
+                hidden
+                onChange={(e) => pickFile('logo', e.target.files?.[0])}
+              />
+              <div className="branding-panel__row">
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  {logoUrl ? 'Change logo' : 'Upload logo'}
+                </Button>
+                {logoUrl &&
+                  (confirmRemoveLogo ? (
+                    <>
+                      <Button
+                        variant="danger"
+                        disabled={logoSaving}
+                        onClick={() => void clearLogo()}
+                      >
+                        Confirm remove
+                      </Button>
+                      <Button variant="ghost" onClick={() => setConfirmRemoveLogo(false)}>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      disabled={logoSaving}
+                      onClick={() => setConfirmRemoveLogo(true)}
+                    >
+                      Remove logo
+                    </Button>
+                  ))}
+              </div>
+              {logoUrl && (
+                <div
+                  className="branding-panel__logo-placements"
+                  role="radiogroup"
+                  aria-label="Logo placement"
+                >
+                  {LOGO_PLACEMENTS.map((placement) => (
+                    <label
+                      key={placement}
+                      className={`branding-panel__logo-place${logoPlacement === placement ? ' branding-panel__logo-place--active' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="branding-logo-placement"
+                        value={placement}
+                        checked={logoPlacement === placement}
+                        disabled={logoSaving}
+                        onChange={() => void changeLogoPlacement(placement)}
+                      />
+                      {LOGO_PLACEMENT_LABELS[placement]}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="studio-help studio-mt-xs">
+            Transparent PNG or WebP — sits on top of your avatar, profile cover, or both.
+          </p>
         </div>
 
         <div className="studio-field--block">
