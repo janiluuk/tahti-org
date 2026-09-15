@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
+import type { LogoPlacement } from '@tahti/shared'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
@@ -33,6 +34,8 @@ interface ProfileFields {
   backdropUrl: string | null
   nameplateText: string | null
   nameplateColor: string | null
+  logoUrl: string | null
+  logoPlacement: LogoPlacement | null
 }
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -99,6 +102,8 @@ export default async function AccountSettingsPage() {
           initialBackdropUrl={profileFields?.backdropUrl ?? null}
           initialNameplateText={profileFields?.nameplateText ?? null}
           initialNameplateColor={profileFields?.nameplateColor ?? null}
+          initialLogoUrl={profileFields?.logoUrl ?? null}
+          initialLogoPlacement={profileFields?.logoPlacement ?? null}
         />
       )}
 

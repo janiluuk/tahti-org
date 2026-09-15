@@ -6331,6 +6331,77 @@
   gap: var(--space-4);
 }
 
+[data-tahti-ui='studio'] .branding-panel__logo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background-image:
+    linear-gradient(45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--card2) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--card2) 75%);
+  background-size: 12px 12px;
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb-placeholder {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-placements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-place--active {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
 [data-tahti-ui='studio'] .branding-panel__nameplate-row {
   display: flex;
   align-items: center;
