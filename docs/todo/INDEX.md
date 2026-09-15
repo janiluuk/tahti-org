@@ -13,10 +13,9 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see the Fold rule below.
 
-| Status  | File                                                                                         | One-line                                                                                                                                                                                   |
-| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                       |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, contract tests, and caller migration shipped in `../tahti-player` (additive, non-breaking); ownership-split sign-off and final extraction remain open |
+| Status  | File                                                           | One-line                                                                                                                                                                              |
+| ------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md) | Store adapter, `PluginRegistryHost`, contract tests, caller migration, and §6 test matrix all shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
 
 ## Roadmap & planning (broader than a single task)
 
@@ -36,8 +35,8 @@ the "is it actually fresh" read before you trust one blindly.
 
 ## Cross-repo pointers
 
-- [`mobile-player-nav-and-tahti-theme-visuals.md`](mobile-player-nav-and-tahti-theme-visuals.md) and [`../../ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md) both just point at `../tahti-player` — no real plan content lives on this side.
-- `plugin-registry-extraction.md`'s counterpart status lives in `../tahti-player`'s `packages/tahti-web/WORKPLAN.md` under "Plugin registry extraction (partial)".
+- [`../../ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md) points at `../tahti-player` — no real plan content lives on this side.
+- `plugin-registry-extraction.md`'s remaining open item (ownership-split sign-off) is tracked solely here — `../tahti-player`'s `HISTORY.md` (2026-09-11) explicitly says so; its own `WORKPLAN.md` no longer carries a "Plugin registry extraction" section.
 
 ## Archived (historical, superseded — do not treat as current status)
 
@@ -61,7 +60,10 @@ Folded again on 2026-09-15: `redis-memory-cleanup.md` (#520),
 `cron-runner-service.md` (#515), and `branding-nameplate.md` (#522) were all
 still marked "open ... not yet pushed/PR'd" but had already merged to `main`
 — their worktrees (`.claude/worktrees/branding-nameplate`,
-`.claude/worktrees/channel-now-playing-endpoints`) were removed too.
+`.claude/worktrees/channel-now-playing-endpoints`) were removed too. Also
+`profile-branding-followups.md` (#523, own task this same pass) and
+`mobile-player-nav-and-tahti-theme-visuals.md` (pointer-only — shipped in
+`../tahti-player` on 2026-09-10, never deleted here after).
 
 ## Fold rule (copy into CLAUDE / chat)
 

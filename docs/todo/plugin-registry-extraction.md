@@ -17,6 +17,14 @@ or entirely untested. Do **not** move files, change storage keys, alter
 discovery semantics, or change bootstrap order until those 2 gaps are closed
 and a rollback plan is accepted.
 
+**2026-09-15:** both remaining §6 gaps closed in
+[tahti-player#85](https://github.com/janiluuk/tahti-player/pull/85) — 22 of
+22 scenarios now covered (see §6 below). `removeManagedPluginInstall`'s
+safety check was also tightened while adding its test (previously scoped to
+the whole appData dir, not the plugins dir specifically). **A rollback plan
+is still not written**, and ownership/final extraction approval remain the
+open items — see §7.
+
 **Note (2026-09-08):** this doc previously said the player fork lived at
 `../tahti-nuclear`; the actual full monorepo (with `packages/player`) is
 checked out at `../tahti-player` on this machine — `../tahti-nuclear` here
@@ -485,10 +493,7 @@ covered; the two gaps are called out inline, not covered elsewhere.
 
 - [x] Enable calls `onEnable`, sets in-memory + registry `enabled: true`. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts`.
 - [x] Disable calls `onDisable`, persists `enabled: false`. → same suites.
-- [ ] **Across restart:** enabled flag in registry is respected on next
-      `hydratePluginsFromRegistry` — **still `it.todo`** in
-      `App.hydration.test.tsx` (`toggling enable/disable persists to registry
-    and is respected on next startup`). Not covered.
+- [x] **Across restart:** enabled flag in registry is respected on next `hydratePluginsFromRegistry`. → `App.hydration.test.tsx` (`toggling enable/disable persists to registry and is respected on next startup`), shipped in [tahti-player#85](https://github.com/janiluuk/tahti-player/pull/85).
 - [x] Missing id / missing instance throws (current store behavior). → `pluginStore.test.ts` (`enablePlugin`/`disablePlugin throws if missing` and `throws when instance missing`).
 
 ### Warnings
@@ -510,7 +515,7 @@ covered; the two gaps are called out inline, not covered elsewhere.
 
 - [x] Remove loaded plugin: unload + delete managed dir + registry key gone. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts` (`removes plugin files and the registry entry`).
 - [x] Remove orphan registry entry (no in-memory plugin) still deletes files + key. → `pluginRegistryHost.test.ts` + `pluginStore.test.ts` (`removes … registry entry for plugin not currently loaded`).
-- [ ] Refuse delete outside managed plugins dir (`removeManagedPluginInstall`). No test file for `pluginDir.ts` exists (`removeManagedPluginInstall` has no test references anywhere in the suite). Not covered.
+- [x] Refuse delete outside managed plugins dir (`removeManagedPluginInstall`). → `pluginDir.test.ts` (new file), shipped in [tahti-player#85](https://github.com/janiluuk/tahti-player/pull/85) — also tightened the guard itself, which previously only scoped to the whole appData dir rather than the plugins dir its own error message claims.
 
 ### Discovery / bootstrap (regression locks)
 

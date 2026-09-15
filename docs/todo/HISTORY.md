@@ -6,6 +6,28 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-15 — mobile-player-nav-and-tahti-theme-visuals.md
+
+Pointer-only file — the real work always lived in `../tahti-player`'s own
+`docs/todo/` under the same filename. That side shipped it 2026-09-10
+(workplan cycle 0.0.109): thumbnail glow via grid-level avatar wash + wider
+`CardGrid` gap (per-card bleed abandoned), alongside a `tahti-theme-refactor`
+Button call-site audit and the `tahti-dark` primary/secondary token pair
+verification. This repo's pointer was never deleted after that shipped —
+folding it now. No code changes on this side (this repo was always the
+visual reference only, never the implementation target).
+
+## 2026-09-15 — plugin-registry-extraction.md §6 test gaps
+
+Closed the two remaining open rows in §6's test matrix, shipped in
+`../tahti-player`'s [#85](https://github.com/janiluuk/tahti-player/pull/85):
+`removeManagedPluginInstall` test coverage (plus a safety tightening found
+while writing it — the guard only scoped to the whole appData dir, not the
+plugins dir its own error message claims), and the `it.todo` for enable/
+disable state surviving a simulated restart. The file itself stays open —
+ownership-split sign-off and final extraction remain the real blocker, and
+that's a product/architecture decision, not a code gap.
+
 ## 2026-09-15 — profile-branding-followups.md
 
 Shipped in [#523](https://github.com/janiluuk/tahti-org/pull/523): five small
