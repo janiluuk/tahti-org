@@ -25,6 +25,9 @@ export async function updateChannelProfile(patch: {
   } | null
   logoUrl?: string | null
   logoPlacement?: 'AVATAR' | 'COVER' | 'BOTH' | null
+  backdropUrl?: string | null
+  nameplateText?: string | null
+  nameplateColor?: string | null
   countryCode?: string | null
   pronouns?: string | null
   defaultLocation?: string | null
@@ -96,6 +99,39 @@ export async function avatarFromUrl(
   if (!res.ok) {
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { error: data.error ?? 'Could not fetch that URL' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function prepareBackdropUpload(body: {
+  filename: string
+  contentType: string
+}): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/backdrop/prepare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeBackdropUpload(
+  uploadKey: string,
+): Promise<{ backdropUrl?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/backdrop/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ uploadKey }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Upload failed' }
   }
   return { ...(await res.json()), error: null }
 }
