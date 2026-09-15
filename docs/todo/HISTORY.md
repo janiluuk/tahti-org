@@ -6,6 +6,22 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-15 — channel-radio-show-now-playing-endpoints.md
+
+Added `GET /api/v1/radio/show/:channelSlug/now-playing` and `GET
+/api/v1/radio/show/:channelSlug/upcoming`, unblocking `tahti-player`'s
+`listen-bugs-batch-2026-09-14.md` item #3 (RadioShowView.tsx now-playing/
+upcoming). Reused the existing per-channel `nowPlayingTitle`/`...UpdatedAt`
+columns (same 2-minute staleness window as `channels/get.ts`) and
+`curatedRotationItem` queue-ordering logic already used by `/rotation` and
+`nowPlayingNext`, rather than inventing a parallel data model. Both new
+routes are scoped by `channelSlug` (any channel with a curated rotation),
+not hardcoded to Tahti Radio. `upcoming` rotates the queue to start right
+after the current track and drops the wrap-around duplicate of the current
+track for short rotations (caught by a test, fixed before merge). 12/12
+Vitest cases green against a real Postgres, plus `eslint`/`prettier`/
+`tsc --noEmit` clean.
+
 ## 2026-09-12 — split-god-classes.md
 
 Shipped in [#503](https://github.com/janiluuk/tahti-org/pull/503): split oversized
