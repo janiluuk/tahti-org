@@ -16,6 +16,7 @@ One file per in-progress task. When a task ships, fold it into
 | Status  | File                                                           | One-line                                                                                                                                                                              |
 | ------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | partial | [plugin-registry-extraction.md](plugin-registry-extraction.md) | Store adapter, `PluginRegistryHost`, contract tests, caller migration, and §6 test matrix all shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
+| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)          | New box tahti.local (192.168.2.107): plan to move MinIO there (LAN remote-service pattern, no GPU needed) + checklist to add it to all vimage6 monitoring dashboards                 |
 
 ## Roadmap & planning (broader than a single task)
 
