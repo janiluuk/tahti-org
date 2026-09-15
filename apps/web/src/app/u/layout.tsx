@@ -6,6 +6,10 @@ import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-channel.css'
 import '@tahti/ui/src/styles/shells.css'
+// The Tracks tab (and the mixed-collection embed rows) wrap their LibraryBrowser
+// toolbar/filter-pill UI in a `data-tahti-ui="studio"` div to reuse those styles —
+// they only exist in brand-studio.css, which this layout must load too.
+import '@tahti/ui/src/styles/brand-studio.css'
 
 export default function ArtistProfileLayout({ children }: { children: ReactNode }) {
   return (
