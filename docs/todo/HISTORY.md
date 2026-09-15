@@ -17,7 +17,8 @@ now applies it under the same DRAFT-only gate as title/description, with
 `openAt` stays fixed (not patchable — a draft hasn't opened, nothing to
 reschedule the start of). 4 new cases in `motions.test.ts` (draft patch
 OK, invalid `closeAt` 400s, blocked once OPEN with 409) — 11/11 green
-against real Postgres. `eslint`/`tsc --noEmit` clean.
+against real Postgres. `eslint`/`tsc --noEmit` clean. PR
+[#527](https://github.com/janiluuk/tahti-org/pull/527).
 
 ## 2026-09-15 — mobile-player-nav-and-tahti-theme-visuals.md
 
