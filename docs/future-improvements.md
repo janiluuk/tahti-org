@@ -138,14 +138,14 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ## Hardening backlog (cross-cutting)
 
-| P      | Item                                                                                         | Tracks as                                                                             |
-| ------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [ ]    | Branch protection: all `ci.yml` jobs required on merge                                       | PLAT-002 — removed 2026-09-08 at author's request; see `.github/BRANCH_PROTECTION.md` |
-| [~]    | Automate DB migrate in deploy (no manual `db push` after release)                            | OPS-002 — `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`                             |
-| P1     | PgBouncer before API horizontal scale                                                        | `scaling-node-distribution.md`                                                        |
-| P2     | Swagger `/docs` auth from secrets, rotate default password                                   | PLAT-005                                                                              |
-| P2     | Redis-down policy for rate limit + sessions documented and tested                            | PLAT-006                                                                              |
-| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done) | PLAT-004                                                                              |
+| P      | Item                                                                                                                                | Tracks as                                                                             |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [ ]    | Branch protection: all `ci.yml` jobs required on merge                                                                              | PLAT-002 — removed 2026-09-08 at author's request; see `.github/BRANCH_PROTECTION.md` |
+| [~]    | Automate DB migrate in deploy (no manual `db push` after release)                                                                   | OPS-002 — `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`                             |
+| ~~P1~~ | ~~PgBouncer before API horizontal scale~~ — lab + Swarm stack wired (`infra/pgbouncer/`); prod cutover is an ops step, not code     | PLAT-003                                                                              |
+| ~~P2~~ | ~~Swagger `/docs` auth from secrets, rotate default password~~ — `DOCS_*_FILE` + `readSecret` + prod-boot refusal on default (done) | PLAT-005                                                                              |
+| ~~P2~~ | ~~Redis-down policy for rate limit + sessions documented and tested~~ (done)                                                        | PLAT-006                                                                              |
+| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done)                                        | PLAT-004                                                                              |
 
 ---
 
