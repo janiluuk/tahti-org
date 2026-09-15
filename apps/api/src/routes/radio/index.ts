@@ -9,6 +9,8 @@ import {
   RadioRecentlyPlayedSchema,
   RadioRotationSchema,
   RadioShowDetailSchema,
+  RadioShowNowPlayingSchema,
+  RadioShowUpcomingSchema,
   RadioSlotBookingListQuerySchema,
   TAHTI_RADIO_SLUG,
   openApiResponse,
@@ -19,6 +21,12 @@ import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
+const UPCOMING_LIMIT = 10
+
+// Same staleness window as apps/api/src/routes/channels/get.ts — stale
+// poller data (orchestrator down, channel not actually running) is worse
+// than none.
+const NOW_PLAYING_STALE_MS = 2 * 60 * 1000
 
 function slotColorScheme(
   colorSchemeJson: string | null | undefined,
@@ -388,6 +396,116 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         nextShowAt: upcomingRows[0]?.startAt.toISOString() ?? null,
         lastShowAt: pastRows[0]?.startAt.toISOString() ?? null,
       })
+    },
+  )
+
+  // Lightweight, independently-pollable now-playing for a channel's Tahti
+  // Radio show page — same Channel.nowPlaying* columns as the main public
+  // channel payload (apps/api/src/routes/channels/get.ts), resolved here
+  // too so RadioShowView doesn't need to re-fetch the whole show payload
+  // (past/upcoming episodes) on every poll.
+  fastify.get<{ Params: { channelSlug: string } }>(
+    '/api/v1/radio/show/:channelSlug/now-playing',
+    {
+      schema: {
+        tags: ['radio'],
+        description: "A channel's current now-playing track, for its Tahti Radio show page",
+        response: openApiResponse(RadioShowNowPlayingSchema, 'RadioShowNowPlaying'),
+      },
+    },
+    async (request, reply) => {
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: request.params.channelSlug },
+        select: {
+          nowPlayingTitle: true,
+          nowPlayingArtistName: true,
+          nowPlayingArtistUsername: true,
+          nowPlayingArtworkUrl: true,
+          nowPlayingDurationSec: true,
+          nowPlayingUpdatedAt: true,
+        },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Show not found' })
+
+      const fresh =
+        channel.nowPlayingUpdatedAt != null &&
+        Date.now() - channel.nowPlayingUpdatedAt.getTime() < NOW_PLAYING_STALE_MS
+      const track =
+        fresh && channel.nowPlayingTitle && channel.nowPlayingArtistName
+          ? {
+              title: channel.nowPlayingTitle,
+              artistName: channel.nowPlayingArtistName,
+              artistUsername: channel.nowPlayingArtistUsername,
+              artworkUrl: channel.nowPlayingArtworkUrl,
+              durationSec: channel.nowPlayingDurationSec,
+              startedAt: channel.nowPlayingUpdatedAt!.toISOString(),
+            }
+          : null
+
+      return reply.send({ track })
+    },
+  )
+
+  // Upcoming tracks in a channel's curated rotation queue, starting right
+  // after the currently-playing track — same CuratedRotationItem source as
+  // /api/v1/radio/rotation (Tahti Radio's own queue) and nowPlayingNext
+  // (apps/api/src/routes/channels/get.ts), but the full upcoming list for
+  // an arbitrary channel rather than just Tahti Radio or just the one next
+  // track. Empty for a channel with no curated rotation configured.
+  fastify.get<{ Params: { channelSlug: string } }>(
+    '/api/v1/radio/show/:channelSlug/upcoming',
+    {
+      schema: {
+        tags: ['radio'],
+        description: "Upcoming tracks in a channel's curated rotation queue",
+        response: openApiResponse(RadioShowUpcomingSchema, 'RadioShowUpcoming'),
+      },
+    },
+    async (request, reply) => {
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: request.params.channelSlug },
+        select: { id: true, nowPlayingTitle: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Show not found' })
+
+      const items = await fastify.prisma.curatedRotationItem.findMany({
+        where: { channelId: channel.id },
+        orderBy: { position: 'asc' },
+        select: {
+          id: true,
+          sound: {
+            select: {
+              title: true,
+              artistName: true,
+              bannerUrl: true,
+              channel: { select: { user: { select: { displayName: true, username: true } } } },
+            },
+          },
+        },
+      })
+      if (items.length === 0) return reply.send([])
+
+      const currentIdx = channel.nowPlayingTitle
+        ? items.findIndex((item) => item.sound.title === channel.nowPlayingTitle)
+        : -1
+      const startIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % items.length
+      const rotated = [...items.slice(startIdx), ...items.slice(0, startIdx)]
+      // A full rotation wraps back around to the current track itself
+      // (last in `rotated` once reordered to start right after it) — drop
+      // it so a short rotation's "upcoming" queue never re-lists what's
+      // already playing.
+      const withoutCurrent = currentIdx === -1 ? rotated : rotated.slice(0, -1)
+      const ordered = withoutCurrent.slice(0, UPCOMING_LIMIT)
+
+      return reply.send(
+        ordered.map((item) => ({
+          id: item.id,
+          title: item.sound.title,
+          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
+          artworkUrl: item.sound.bannerUrl,
+        })),
+      )
     },
   )
 }

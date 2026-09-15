@@ -114,6 +114,37 @@ export const RadioShowDetailSchema = z.object({
 
 export type RadioShowDetail = z.infer<typeof RadioShowDetailSchema>
 
+/** A channel's current now-playing track for its Tahti Radio show page —
+ * same underlying data as PublicChannelViewSchema.nowPlaying (the
+ * orchestrator's Liquidsoap telnet poller), exposed as its own lightweight,
+ * independently-pollable endpoint so RadioShowView doesn't have to
+ * re-fetch the full show payload (past/upcoming episodes) on every poll. */
+export const RadioShowNowPlayingTrackSchema = z.object({
+  title: z.string(),
+  artistName: z.string(),
+  artistUsername: z.string().nullable(),
+  artworkUrl: z.string().nullable(),
+  durationSec: z.number().nullable(),
+  startedAt: z.string(),
+})
+
+export const RadioShowNowPlayingSchema = z.object({
+  track: RadioShowNowPlayingTrackSchema.nullable(),
+})
+
+/** Upcoming tracks in a channel's curated rotation queue, starting right
+ * after the currently-playing track (wraps to the top of the rotation).
+ * Empty for a channel with no curated rotation configured. */
+export const RadioShowUpcomingItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+  artistUsername: z.string().nullable(),
+  artworkUrl: z.string().nullable(),
+})
+
+export const RadioShowUpcomingSchema = z.array(RadioShowUpcomingItemSchema)
+
 export const ChannelProgrammeItemViewSchema = z.object({
   id: z.string(),
   title: z.string(),
