@@ -6797,33 +6797,47 @@
   background: var(--card2);
 }
 
-/* Chroma variant — accent/bg/highlight are set inline per-row from the
-   collection cover's extracted palette (see palette-extract.ts), so each
-   row's tint follows its own cover art instead of one fixed brand color. */
+/* Chroma variant — accent/highlight are set inline per-row, either from a
+   collection cover's server-extracted palette (see palette-extract.ts) or,
+   for individual tracks, a client-side canvas sample of the track's own
+   cover art (see cover-accent.ts) — so each row glows with its own art by
+   default, not just one fixed brand color or only on hover. */
 [data-tahti-ui='brand'] .prof-collection-row--chroma {
-  border-bottom-color: color-mix(in srgb, var(--collection-accent) 30%, var(--border));
+  border-bottom-color: color-mix(in srgb, var(--collection-accent) 35%, var(--border));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--collection-accent) 16%, transparent),
+    transparent 65%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--collection-accent) 22%, transparent),
+    0 0 18px -6px color-mix(in srgb, var(--collection-accent) 65%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-collection-row--chroma:hover {
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--collection-accent) 18%, var(--card2)),
+    color-mix(in srgb, var(--collection-accent) 20%, var(--card2)),
     var(--card2) 75%
   );
-  box-shadow: inset 3px 0 0 var(--collection-accent);
+  box-shadow:
+    inset 3px 0 0 var(--collection-accent),
+    0 10px 28px -16px color-mix(in srgb, var(--collection-accent) 85%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-collection-row--chroma .prof-collection-title {
   color: color-mix(in srgb, var(--collection-highlight) 60%, var(--text));
 }
 
-/* The clickable cover+title area of a track row (opens TrackDetailModal) —
+/* The clickable title/meta area of a track row (opens the player/embed) —
    a <button> instead of the row itself so the owner reorder controls beside
-   it (also buttons) don't fight it for clicks. */
+   it (also buttons) don't fight it for clicks. The cover art sits outside
+   this button (see .prof-collection-cover) since it carries its own
+   hover-play button and nesting <button> inside <button> is invalid. */
 [data-tahti-ui='brand'] .prof-collection-row__clickarea {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  justify-content: center;
   flex: 1;
   min-width: 0;
   border: none;
@@ -6867,8 +6881,9 @@
 }
 
 [data-tahti-ui='brand'] .prof-collection-cover {
-  width: 76px;
-  height: 76px;
+  position: relative;
+  width: 92px;
+  height: 92px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
@@ -6885,6 +6900,48 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+/* Play/close trigger overlaid on the cover art itself. Hidden until the row
+   is hovered or the button gets keyboard focus on pointer-hover devices;
+   on touch devices (no hover) it stays visible at reduced opacity since
+   there's no hover state to reveal it. Always full-opacity while its row
+   is expanded, so the "close" affordance stays visible without hovering. */
+[data-tahti-ui='brand'] .prof-collection-cover-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: inherit;
+  background: rgba(6, 8, 16, 0.5);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+@media (hover: hover) {
+  [data-tahti-ui='brand'] .prof-collection-row:hover .prof-collection-cover-play,
+  [data-tahti-ui='brand'] .prof-collection-cover-play:focus-visible {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  [data-tahti-ui='brand'] .prof-collection-cover-play {
+    opacity: 0.85;
+  }
+}
+
+/* Same specificity as the base rule above and the `hover: none` override —
+   wins on source order alone, so no !important needed. */
+[data-tahti-ui='brand'] .prof-collection-cover-play--expanded {
+  opacity: 1;
 }
 
 [data-tahti-ui='brand'] button.prof-collection-cover--zoomable,
