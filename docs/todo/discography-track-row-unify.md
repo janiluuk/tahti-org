@@ -25,7 +25,7 @@ and sizing correctly, matching the existing `/dev/components` playground
 pattern that already pairs the two files.
 
 Also found (not part of the original report but same row): each row had
-*two* overlapping play buttons — a standalone round `.prof-collection-play`
+_two_ overlapping play buttons — a standalone round `.prof-collection-play`
 button plus the cover+title `<button>`, both bound to the same toggle and
 same aria-label.
 
@@ -37,7 +37,7 @@ same aria-label.
   markup into a `TrackRow` component (needed its own hook call — see below).
   Removed the redundant standalone play button; the play/close trigger now
   lives as a hover-reveal overlay on the cover art itself (`.prof-collection-
-  cover-play`), visible on hover/focus on pointer devices and always-visible
+cover-play`), visible on hover/focus on pointer devices and always-visible
   at reduced opacity on touch devices (`@media (hover: none)`), full opacity
   while expanded. Same structure for local and embed-sourced tracks.
 - `apps/web/src/lib/use-cover-accent.ts` (new): client-side canvas sampling
@@ -54,9 +54,13 @@ same aria-label.
 
 ## Not done / follow-up
 
-- Not manually verified against a real seeded profile (no local Postgres
-  in this session) — only the throwaway harness above. Worth a real
-  browser click-through once there's a DB to point at.
+- Manually verified in a real browser against a locally seeded profile
+  (`/u/e2e-social-main`, 4 throwaway Sound rows with distinct SVG cover
+  art, deleted after): toolbar/sort/search now render styled and wrap
+  correctly at 390px, each row shows exactly one play affordance
+  (hover-reveal on desktop, always-visible on the resized/touch-width
+  viewport), and each row's title text + ambient border glow correctly
+  picks up that track's own cover-art accent color.
 - The cover-play button and the title clickarea button still share one
   aria-label each ("Play X" / "Close X") — pre-existing duplication, not
   introduced here, but a screen-reader user still tabs through two buttons
