@@ -6,6 +6,25 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-15 — profile-branding-followups.md
+
+Shipped in [#523](https://github.com/janiluuk/tahti-org/pull/523): five small
+slices closing leftovers from three earlier merged PRs plus one direct
+request. Wired `backdropUrl`/`nameplateText`/`nameplateColor` (exposed on the
+public API by #522 but never rendered) into `ProfileHero`/`ProfileCover` and
+the public `/u/[username]` page. Added an **Artist logo** section to Settings
+→ Account → Branding — the underlying alpha-PNG `User.logoUrl`/`logoPlacement`
+feature already existed end-to-end but its only upload UI lived in Settings →
+Artist Info; added a second entry point reusing the same actions and the
+existing AVATAR/COVER/BOTH placement enum. Added the crop step #522 left out
+of the Channel Designer's own backdrop image upload. Backfilled two test
+gaps: `pruneStaleWorkers()`'s 90-day cutoff (#520) and `GET
+/api/admin/stats/cron-runs/history` (#515). All typecheck/eslint/prettier
+clean; 22 tests passing (12 worker-registry, 10 admin-stats) against a real
+Postgres. Not manually verified in a browser (no dev server in that session)
+— worth a follow-up click-through of the Branding logo controls and the
+Channel Designer backdrop crop.
+
 ## 2026-09-15 — channel-radio-show-now-playing-endpoints.md
 
 Added `GET /api/v1/radio/show/:channelSlug/now-playing` and `GET

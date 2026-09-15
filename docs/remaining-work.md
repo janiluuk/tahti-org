@@ -46,17 +46,6 @@ shipped; the row below retains `[~]` for the remaining true-lossless fMP4 work.
 
 ---
 
-## Small leftovers from recent PRs
-
-| Item                                                                                                                                                                                 | Status | Owner | Source                                            |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----: | ----- | -------------------------------------------------- |
-| Wire `User.backdropUrl`/`nameplateText`/`nameplateColor` into the public `/u/[username]` hero (data is exposed on the API but not rendered; `PageHero` component looks purpose-built) | `[ ]`  | Dev   | `docs/todo/HISTORY.md` 2026-09-15 branding-nameplate |
-| Crop step for the Channel Designer's own backdrop upload (`channel-header-panel.tsx` image-mode path) — reuse the new `ImageCropModal`                                              | `[ ]`  | Dev   | `docs/todo/HISTORY.md` 2026-09-15 branding-nameplate |
-| Unit test for `pruneStaleWorkers()`'s 90-day cutoff logic (`apps/worker/src/lib/worker-registry.ts`)                                                                                | `[ ]`  | Dev   | `docs/todo/HISTORY.md` 2026-09-15 redis-memory-cleanup |
-| Test for `GET /api/admin/stats/cron-runs/history` in `apps/api/src/routes/admin/stats.test.ts` (needs a live Postgres; existing file coverage is already partial)                   | `[ ]`  | Dev   | `docs/todo/HISTORY.md` 2026-09-12 cron-runner-service |
-
----
-
 ## Partial milestones (code mostly shipped)
 
 | Milestone | Remaining                                               | Status |
