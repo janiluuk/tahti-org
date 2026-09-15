@@ -19,6 +19,7 @@ One file per in-progress task. When a task ships, fold it into
 | open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                         | New box tahti.local (192.168.2.107): plan to move MinIO there (LAN remote-service pattern, no GPU needed) + checklist to add it to all vimage6 monitoring dashboards                  |
 | open    | [listen-your-feed-redesign.md](listen-your-feed-redesign.md)                   | `/listen`'s "Your feed" section: inconsistent card boxes, cropped images, unreadable teaser text — redesign with unified card styling + a reveal component for items                  |
 | open    | [internet-radio-now-playing-scraper.md](internet-radio-now-playing-scraper.md) | Crawl+cache the current program title for the 6 Finnish internet-radio presets, only once a user has added the station; click-through target still undecided                          |
+| open    | [loading-indicators-playables.md](loading-indicators-playables.md)             | Queue items + other playable entities have no loading indicator while audio starts; no shared spinner component or real Storybook exists yet — nearest thing is `/dev/components`     |
 
 ## Roadmap & planning (broader than a single task)
 
