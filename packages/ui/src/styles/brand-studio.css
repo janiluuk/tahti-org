@@ -3330,7 +3330,7 @@
   font-size: var(--text-xs);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-overlay {
+[data-tahti-ui='studio'] .image-crop-overlay {
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -3434,7 +3434,7 @@
   display: block;
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal {
+[data-tahti-ui='studio'] .image-crop-modal {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3443,30 +3443,37 @@
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  max-width: 360px;
+  max-width: min(90vw, 640px);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__title {
+[data-tahti-ui='studio'] .image-crop-modal__title {
   margin: 0;
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__viewport {
-  width: 280px;
-  height: 280px;
-  border-radius: 999px;
+[data-tahti-ui='studio'] .image-crop-modal__viewport {
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--bg);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__canvas {
+/* Avatar crop: round mask matching the circular avatar it produces. */
+[data-tahti-ui='studio'] .image-crop-modal__viewport--circle {
+  border-radius: 999px;
+}
+
+/* Backdrop crop: square corners matching the rectangular banner it produces. */
+[data-tahti-ui='studio'] .image-crop-modal__viewport--rect {
+  border-radius: var(--radius-md);
+}
+
+[data-tahti-ui='studio'] .image-crop-modal__canvas {
   cursor: grab;
   touch-action: none;
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__zoom {
+[data-tahti-ui='studio'] .image-crop-modal__zoom {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -6257,6 +6264,87 @@
   font-size: var(--text-sm);
   color: var(--muted);
   font-family: ui-monospace, monospace;
+}
+
+/* Settings → Account → Branding */
+
+[data-tahti-ui='studio'] .branding-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-height: 140px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card2);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-avatar {
+  border-width: 3px;
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-1);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-handle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-tahti-ui='studio'] .branding-panel__nameplate {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: #fff;
+  text-shadow: none;
+}
+
+[data-tahti-ui='studio'] .branding-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .branding-panel__nameplate-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .branding-panel__color-input {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
 }
 
 /* /dashboard/settings/notifications — ground-rules.md instrument-pattern worked example */

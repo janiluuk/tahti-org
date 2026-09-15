@@ -29,7 +29,7 @@ export function initialsFromName(name: string): string {
 /** Draws a GIF's first frame onto a canvas and exports it as a JPEG blob —
  * the static poster shown at rest, since cropping a GIF through the normal
  * pan/zoom tool would flatten its animation (same canvas limitation
- * AvatarCropModal already has for the non-GIF path). */
+ * ImageCropModal already has for the non-GIF path). */
 export function extractPosterFrame(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -58,8 +58,13 @@ export async function uploadBlob(
   blob: Blob,
   filename: string,
   contentType: string,
+  prepare: (body: { filename: string; contentType: string }) => Promise<{
+    uploadKey?: string
+    uploadUrl?: string
+    error: string | null
+  }> = prepareAvatarUpload,
 ): Promise<{ uploadKey?: string; error?: string }> {
-  const prep = await prepareAvatarUpload({ filename, contentType })
+  const prep = await prepare({ filename, contentType })
   if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
     return { error: prep.error ?? 'Prepare failed' }
   }

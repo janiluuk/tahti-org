@@ -19,6 +19,7 @@ One file per in-progress task. When a task ships, fold it into
 | partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, contract tests, and caller migration shipped in `../tahti-player` (additive, non-breaking); ownership-split sign-off and final extraction remain open |
 | open    | [cron-runner-service.md](cron-runner-service.md)                                              | Dedicated `cron-runner` stack service + `/admin/crons` run log; implemented and tests green, not yet pushed/PR'd                                                                           |
 | open    | [redis-memory-cleanup.md](redis-memory-cleanup.md)                                            | Prod Redis `maxmemory`/eviction, BullMQ job retention caps, stale worker-registry pruning; implemented and checks pass, not yet pushed/PR'd                                                |
+| open    | [branding-nameplate.md](branding-nameplate.md)                                                | Settings → Account → Branding panel (avatar/backdrop crop + nameplate pill); generalized crop tool to `ImageCropModal`; implemented and tests green, not yet pushed/PR'd                   |
 
 ## Roadmap & planning (broader than a single task)
 

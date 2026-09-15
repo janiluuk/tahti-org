@@ -10,6 +10,9 @@ import {
   AvatarUploadCompleteSchema,
   AvatarUploadPrepareResponseSchema,
   AvatarUploadPrepareSchema,
+  BackdropUploadCompleteResponseSchema,
+  BackdropUploadCompleteSchema,
+  BackdropUploadPrepareSchema,
   ImageFromUrlSchema,
   ImageUploadPrepareResponseSchema,
   LogoUploadCompleteResponseSchema,
@@ -194,6 +197,67 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       refreshAvatarPalette(fastify.prisma, user.id, avatarUrl, fastify.log)
 
       return reply.send({ avatarUrl, avatarPosterUrl: null })
+    },
+  )
+
+  // Backdrop (profile banner) upload — static image only, wide-aspect crop
+  // applied client-side (ImageCropModal) before this pair is called.
+  fastify.post(
+    '/api/me/profile/backdrop/prepare',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ImageUploadPrepareResponseSchema, 'BackdropUploadPrepare'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = BackdropUploadPrepareSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+
+      const ext = parsed.data.filename.includes('.') ? parsed.data.filename.split('.').pop() : 'jpg'
+      const uploadKey = `avatars/${user.username}/backdrop-${nanoid(8)}.${ext}`
+      const uploadUrl = await presignedPutUrl(uploadKey, parsed.data.contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+
+      return reply.send({ uploadKey, uploadUrl, expiresAt })
+    },
+  )
+
+  fastify.post(
+    '/api/me/profile/backdrop/complete',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(BackdropUploadCompleteResponseSchema, 'BackdropUploadComplete'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = BackdropUploadCompleteSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+
+      const prefix = `avatars/${user.username}/`
+      if (!parsed.data.uploadKey.startsWith(prefix)) {
+        return reply.status(403).send({ error: 'Upload does not belong to this account' })
+      }
+
+      const backdropUrl = publicMediaUrl(parsed.data.uploadKey)
+      if (!backdropUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve backdrop URL' })
+      }
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: { backdropUrl },
+      })
+
+      return reply.send({ backdropUrl })
     },
   )
 

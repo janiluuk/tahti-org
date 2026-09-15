@@ -36,6 +36,9 @@ const profileSelect = {
   avatarThemeJson: true,
   logoUrl: true,
   logoPlacement: true,
+  backdropUrl: true,
+  nameplateText: true,
+  nameplateColor: true,
   tipJarUrl: true,
   newsFeedUrl: true,
   countryCode: true,
@@ -65,6 +68,9 @@ function serializeProfile(
     avatarThemeJson: string | null
     logoUrl: string | null
     logoPlacement: string | null
+    backdropUrl: string | null
+    nameplateText: string | null
+    nameplateColor: string | null
     tipJarUrl: string | null
     newsFeedUrl: string | null
     countryCode: string | null
@@ -94,6 +100,9 @@ function serializeProfile(
     avatarTheme: parseAvatarTheme(profile.avatarThemeJson),
     logoUrl: profile.logoUrl,
     logoPlacement: parseLogoPlacement(profile.logoPlacement),
+    backdropUrl: profile.backdropUrl,
+    nameplateText: profile.nameplateText,
+    nameplateColor: profile.nameplateColor,
     tipJarUrl: profile.tipJarUrl,
     newsFeedUrl: profile.newsFeedUrl,
     countryCode: profile.countryCode,
@@ -169,6 +178,9 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.logoUrl !== undefined) data.logoUrl = body.logoUrl?.trim() || null
       if (body.logoPlacement !== undefined) data.logoPlacement = body.logoPlacement
+      if (body.backdropUrl !== undefined) data.backdropUrl = body.backdropUrl?.trim() || null
+      if (body.nameplateText !== undefined) data.nameplateText = body.nameplateText?.trim() || null
+      if (body.nameplateColor !== undefined) data.nameplateColor = body.nameplateColor ?? null
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null

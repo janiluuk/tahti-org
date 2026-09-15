@@ -19,6 +19,11 @@ export const PublicProfileArtistSchema = z.object({
   /** Alpha logo URL — placement controls where it prints. */
   logoUrl: z.string().nullable().optional(),
   logoPlacement: LogoPlacementSchema.nullable().optional(),
+  /** Wide banner photo behind the avatar on the account hero. */
+  backdropUrl: z.string().nullable().optional(),
+  /** Short label rendered as a colored pill next to the display name. */
+  nameplateText: z.string().nullable().optional(),
+  nameplateColor: z.string().nullable().optional(),
   socialLinks: z.unknown(),
   tipJarUrl: z.string().nullable(),
   tier: z.string(),
@@ -136,6 +141,9 @@ export const ProfileFieldsSchema = z.object({
   avatarTheme: AvatarThemeSchema.nullable(),
   logoUrl: z.string().nullable(),
   logoPlacement: LogoPlacementSchema.nullable(),
+  backdropUrl: z.string().nullable(),
+  nameplateText: z.string().nullable(),
+  nameplateColor: z.string().nullable(),
   tipJarUrl: z.string().nullable(),
   newsFeedUrl: z.string().nullable(),
   countryCode: z.string().nullable(),

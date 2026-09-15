@@ -30,6 +30,9 @@ describe('GET /api/v1/u/:username/profile', () => {
         countryCode: 'FI',
         pronouns: 'she/her',
         fullBio: 'A much longer history of how this project got started.',
+        backdropUrl: 'https://media.tahti.live/avatars/public-profile-artist/backdrop-1.jpg',
+        nameplateText: 'DJ · Producer',
+        nameplateColor: '#5865f2',
       },
     })
   })
@@ -51,12 +54,18 @@ describe('GET /api/v1/u/:username/profile', () => {
         pronouns?: string | null
         fullBio?: string | null
         isMember?: boolean
+        backdropUrl?: string | null
+        nameplateText?: string | null
+        nameplateColor?: string | null
       }
     }
     expect(body.artist.countryCode).toBe('FI')
     expect(body.artist.pronouns).toBe('she/her')
     expect(body.artist.fullBio).toBe('A much longer history of how this project got started.')
     expect(body.artist.isMember).toBe(false)
+    expect(body.artist.backdropUrl).toContain('backdrop-1.jpg')
+    expect(body.artist.nameplateText).toBe('DJ · Producer')
+    expect(body.artist.nameplateColor).toBe('#5865f2')
   })
 
   it('sets isMember true when the artist is a Tahti ry member', async () => {

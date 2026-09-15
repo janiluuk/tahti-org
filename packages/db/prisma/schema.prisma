@@ -780,6 +780,16 @@ model User {
   logoUrl                        String?
   // AVATAR | COVER | BOTH — where logoUrl is printed. Null when no logo.
   logoPlacement                  String?
+  // Wide banner photo shown behind the avatar on the account hero (Settings
+  // → Account → Branding). Cropped client-side to a fixed wide aspect before
+  // upload — separate from Channel.videoBackgroundUrl, which drives the
+  // public channel page's video/image header instead.
+  backdropUrl                    String?
+  // Short decorative label rendered as a colored pill next to the display
+  // name (Settings → Account → Branding "Nameplate"). Null hides the pill.
+  nameplateText                  String?
+  // Hex accent for the nameplate pill. Null falls back to the theme accent.
+  nameplateColor                 String?
   socialLinks                    Json?
   tipJarUrl                      String?
   // Artist-configured RSS/Atom feed URL — server-fetched (SSRF-guarded) and
