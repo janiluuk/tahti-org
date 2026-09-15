@@ -17,9 +17,6 @@ One file per in-progress task. When a task ships, fold it into
 | ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                       |
 | partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, contract tests, and caller migration shipped in `../tahti-player` (additive, non-breaking); ownership-split sign-off and final extraction remain open |
-| open    | [cron-runner-service.md](cron-runner-service.md)                                              | Dedicated `cron-runner` stack service + `/admin/crons` run log; implemented and tests green, not yet pushed/PR'd                                                                           |
-| open    | [redis-memory-cleanup.md](redis-memory-cleanup.md)                                            | Prod Redis `maxmemory`/eviction, BullMQ job retention caps, stale worker-registry pruning; implemented and checks pass, not yet pushed/PR'd                                                |
-| open    | [branding-nameplate.md](branding-nameplate.md)                                                | Settings → Account → Branding panel (avatar/backdrop crop + nameplate pill); generalized crop tool to `ImageCropModal`; implemented and tests green, not yet pushed/PR'd                   |
 
 ## Roadmap & planning (broader than a single task)
 
@@ -59,6 +56,12 @@ branches had already merged to `main` weeks ago but were never deleted
 the cross-repo split (`pwyw-track-purchase-frontend.md`), and the mail-stats
 and migration-squash tasks folded on 2026-09-11 — see `HISTORY.md` for what
 shipped in each.
+
+Folded again on 2026-09-15: `redis-memory-cleanup.md` (#520),
+`cron-runner-service.md` (#515), and `branding-nameplate.md` (#522) were all
+still marked "open ... not yet pushed/PR'd" but had already merged to `main`
+— their worktrees (`.claude/worktrees/branding-nameplate`,
+`.claude/worktrees/channel-now-playing-endpoints`) were removed too.
 
 ## Fold rule (copy into CLAUDE / chat)
 

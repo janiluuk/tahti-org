@@ -22,6 +22,41 @@ track for short rotations (caught by a test, fixed before merge). 12/12
 Vitest cases green against a real Postgres, plus `eslint`/`prettier`/
 `tsc --noEmit` clean.
 
+## 2026-09-15 — branding-nameplate.md
+
+Shipped in [#522](https://github.com/janiluuk/tahti-org/pull/522): Settings →
+Account → Branding panel (avatar/backdrop crop + nameplate pill). Generalized
+the avatar-only crop modal into a reusable `ImageCropModal` (`aspectRatio` +
+`shape` props) shared by the existing channel-identity avatar/logo crop and
+the new backdrop crop. New `User.backdropUrl`/`nameplateText`/
+`nameplateColor` columns, presign/upload/complete routes for the backdrop,
+and `PATCH /api/me/profile` extended for the nameplate fields. 32 API tests
+green. Follow-ups not in this PR, moved to `docs/remaining-work.md`: wiring
+the new fields into the public `/u/[username]` hero, and a crop step for the
+Channel Designer's own backdrop upload.
+
+## 2026-09-15 — redis-memory-cleanup.md
+
+Shipped in [#520](https://github.com/janiluuk/tahti-org/pull/520): prod
+Redis `maxmemory 2gb` + `allkeys-lru` (previously unset — unbounded growth,
+no eviction), bounded BullMQ `removeOnComplete`/`removeOnFail` retention
+across `apps/api`/`apps/worker` queues, and `pruneStaleWorkers()` reaping
+`workers:known` entries stale past 90 days. Left open: no unit test for the
+90-day cutoff logic, moved to `docs/remaining-work.md`.
+
+## 2026-09-12 — cron-runner-service.md
+
+Shipped in [#515](https://github.com/janiluuk/tahti-org/pull/515): dedicated
+`cron-runner` stack service owns BullMQ repeatable-cron registration so
+worker replicas stop racing to delete/recreate the manifest — root cause of
+a confirmed incident (duplicate `hls-minio-sync` registrations doubling
+MinIO load, ~40s sync gaps). Adds bounded `CronRun.resultJson` plus a new
+`GET /api/admin/stats/cron-runs/history` endpoint and `/admin/crons` admin
+page. Fixed a zod `.int().positive()` schema that would have crashed
+Fastify's ajv compiler at boot (same class of bug already worked around
+elsewhere in the same file). Left open: no test for the new history route
+(needs a live Postgres), moved to `docs/remaining-work.md`.
+
 ## 2026-09-12 — split-god-classes.md
 
 Shipped in [#503](https://github.com/janiluuk/tahti-org/pull/503): split oversized
