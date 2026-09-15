@@ -9,6 +9,10 @@ const mockSAdd = vi.fn()
 const mockHSet = vi.fn()
 const mockLPush = vi.fn()
 const mockLTrim = vi.fn()
+const mockSMembers = vi.fn()
+const mockHGetAll = vi.fn()
+const mockSRem = vi.fn()
+const mockDel = vi.fn()
 
 vi.mock('redis', () => ({
   createClient: vi.fn(() => ({
@@ -20,10 +24,20 @@ vi.mock('redis', () => ({
     hSet: mockHSet,
     lPush: mockLPush,
     lTrim: mockLTrim,
+    sMembers: mockSMembers,
+    hGetAll: mockHGetAll,
+    sRem: mockSRem,
+    del: mockDel,
   })),
 }))
 
-import { registerWorker, heartbeat, recordJobEvent, resolveWorkerName } from './worker-registry.js'
+import {
+  registerWorker,
+  heartbeat,
+  recordJobEvent,
+  resolveWorkerName,
+  pruneStaleWorkers,
+} from './worker-registry.js'
 
 describe('resolveWorkerName', () => {
   it('uses WORKER_NAME when set', () => {
@@ -45,6 +59,10 @@ describe('worker-registry', () => {
     mockHSet.mockResolvedValue(1)
     mockLPush.mockResolvedValue(1)
     mockLTrim.mockResolvedValue('OK')
+    mockSMembers.mockResolvedValue([])
+    mockHGetAll.mockResolvedValue({})
+    mockSRem.mockResolvedValue(1)
+    mockDel.mockResolvedValue(1)
   })
 
   it('registerWorker adds the name to the known set and writes lane/host info', async () => {
@@ -98,5 +116,82 @@ describe('worker-registry', () => {
       'worker:vimage-main',
       expect.objectContaining({ status: 'processing' }),
     )
+  })
+})
+
+describe('pruneStaleWorkers', () => {
+  const DAY_MS = 24 * 60 * 60 * 1000
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockSRem.mockResolvedValue(1)
+    mockDel.mockResolvedValue(1)
+  })
+
+  it('keeps a worker updated within the last 90 days', async () => {
+    mockSMembers.mockResolvedValue(['fresh-worker'])
+    mockHGetAll.mockResolvedValue({ updatedAt: String(Date.now() - 1 * DAY_MS) })
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual([])
+    expect(mockSRem).not.toHaveBeenCalled()
+    expect(mockDel).not.toHaveBeenCalled()
+  })
+
+  it('reaps a worker whose updatedAt is past the 90-day cutoff', async () => {
+    mockSMembers.mockResolvedValue(['stale-worker'])
+    mockHGetAll.mockResolvedValue({ updatedAt: String(Date.now() - 91 * DAY_MS) })
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual(['stale-worker'])
+    expect(mockSRem).toHaveBeenCalledWith('workers:known', 'stale-worker')
+    expect(mockDel).toHaveBeenCalledWith('worker:stale-worker')
+    expect(mockDel).toHaveBeenCalledWith('worker:stale-worker:history')
+  })
+
+  it('keeps a worker exactly at the 90-day boundary (not yet past cutoff)', async () => {
+    mockSMembers.mockResolvedValue(['boundary-worker'])
+    mockHGetAll.mockResolvedValue({ updatedAt: String(Date.now() - 90 * DAY_MS) })
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual([])
+    expect(mockSRem).not.toHaveBeenCalled()
+  })
+
+  it('reaps an orphaned registry entry with no hash data at all', async () => {
+    mockSMembers.mockResolvedValue(['orphan-worker'])
+    mockHGetAll.mockResolvedValue({})
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual(['orphan-worker'])
+    expect(mockSRem).toHaveBeenCalledWith('workers:known', 'orphan-worker')
+  })
+
+  it('reaps an entry with a missing/unparseable updatedAt', async () => {
+    mockSMembers.mockResolvedValue(['bad-worker'])
+    mockHGetAll.mockResolvedValue({ lanes: 'media' })
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual(['bad-worker'])
+  })
+
+  it('prunes only the stale entries out of a mixed set', async () => {
+    mockSMembers.mockResolvedValue(['fresh-worker', 'stale-worker'])
+    mockHGetAll.mockImplementation(async (key: string) =>
+      key === 'worker:fresh-worker'
+        ? { updatedAt: String(Date.now() - 1 * DAY_MS) }
+        : { updatedAt: String(Date.now() - 91 * DAY_MS) },
+    )
+
+    const pruned = await pruneStaleWorkers()
+
+    expect(pruned).toEqual(['stale-worker'])
+    expect(mockSRem).toHaveBeenCalledTimes(1)
+    expect(mockSRem).toHaveBeenCalledWith('workers:known', 'stale-worker')
   })
 })
