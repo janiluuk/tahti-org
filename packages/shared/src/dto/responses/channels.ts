@@ -64,6 +64,10 @@ export const PublicChannelUserSchema = z.object({
 export const PublicChannelViewSchema = z.object({
   slug: z.string(),
   state: z.string(),
+  /** ARTIST (default) or RADIO — a radio-station page hides bio/links/
+   * subscribe CTA and shows programming instead. Only ever RADIO on
+   * system-owned rows like tahti-radio today. */
+  channelKind: z.enum(['ARTIST', 'RADIO']),
   /** True only when there's a real ingest signal on the live mount right
    * now — `state === 'LIVE'` alone doesn't distinguish an actual human
    * broadcast from the always-on 24/7 fallback rotation, which also sets

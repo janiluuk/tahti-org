@@ -57,6 +57,16 @@ enum ArtistKind {
   @@schema("channel")
 }
 
+// Artist broadcast channel vs radio-station page (no bio/links/subscribe CTA;
+// shows programming instead). Distinct from ArtistKind (solo vs collective),
+// which only applies within ARTIST channels.
+enum ChannelKind {
+  ARTIST
+  RADIO
+
+  @@schema("channel")
+}
+
 enum TrackAccessMode {
   FREE
   SUBSCRIBERS_ONLY
@@ -1263,6 +1273,9 @@ model Channel {
   customDomainVerified            Boolean      @default(false)
   // Solo DJ/artist vs collective/band — drives Members UI + public profile label.
   artistKind                      ArtistKind   @default(SINGLE)
+  // Artist channel (default) vs radio-station page. Only ever RADIO on
+  // system-owned rows like tahti-radio today — see ChannelKind doc comment.
+  channelKind                     ChannelKind  @default(ARTIST)
   state                           ChannelState @default(OFFLINE)
   containerId                     String?
   liveSourceMount                 String
