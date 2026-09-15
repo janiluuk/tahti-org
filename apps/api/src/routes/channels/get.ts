@@ -52,6 +52,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       id: true,
       slug: true,
       state: true,
+      channelKind: true,
       liveSourceMount: true,
       nextBroadcastAt: true,
       nextBroadcastNote: true,
