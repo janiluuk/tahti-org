@@ -6,6 +6,19 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-15 — Motion PATCH: closeAt (voting-window adjustment)
+
+Driven by `../tahti-player`'s `docs/todo/governance-gap-list.md` #15, not
+a local todo file here. `PatchMotionSchema` (`packages/shared/src/dto/governance.ts`)
+never accepted `closeAt` at all — added it, and `PATCH
+/api/v1/governance/motions/:id` (`apps/api/src/routes/governance/index.ts`)
+now applies it under the same DRAFT-only gate as title/description, with
+`closeAt > openAt` validated the same way motion creation already does.
+`openAt` stays fixed (not patchable — a draft hasn't opened, nothing to
+reschedule the start of). 4 new cases in `motions.test.ts` (draft patch
+OK, invalid `closeAt` 400s, blocked once OPEN with 409) — 11/11 green
+against real Postgres. `eslint`/`tsc --noEmit` clean.
+
 ## 2026-09-15 — mobile-player-nav-and-tahti-theme-visuals.md
 
 Pointer-only file — the real work always lived in `../tahti-player`'s own

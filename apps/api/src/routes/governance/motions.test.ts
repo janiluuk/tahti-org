@@ -417,6 +417,62 @@ describe('M10 — member governance', () => {
     expect(res.statusCode).toBe(409)
   })
 
+  it('lets the board adjust closeAt on a draft, but not once it is open', async () => {
+    const openAt = new Date()
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Adjustable voting window',
+        description: 'x',
+        openAt: openAt.toISOString(),
+        closeAt: new Date(openAt.getTime() + 86400000).toISOString(),
+      },
+    })
+    const motionId = createRes.json().id as string
+    const extendedCloseAt = new Date(openAt.getTime() + 7 * 86400000)
+
+    const draftPatch = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+      payload: { closeAt: extendedCloseAt.toISOString() },
+    })
+    expect(draftPatch.statusCode).toBe(200)
+
+    const draftDetail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(new Date(draftDetail.json().closeAt).getTime()).toBe(extendedCloseAt.getTime())
+
+    const badCloseAt = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+      payload: { closeAt: new Date(openAt.getTime() - 1000).toISOString() },
+    })
+    expect(badCloseAt.statusCode).toBe(400)
+
+    const openRes = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+      payload: { state: 'OPEN' },
+    })
+    expect(openRes.statusCode).toBe(200)
+
+    const patchAfterOpen = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/governance/motions/${motionId}`,
+      headers: { cookie: boardCookie },
+      payload: { closeAt: new Date(openAt.getTime() + 14 * 86400000).toISOString() },
+    })
+    expect(patchAfterOpen.statusCode).toBe(409)
+  })
+
   it('paginates the motion list with a cursor and state filter', async () => {
     const listed = await app.inject({
       method: 'GET',

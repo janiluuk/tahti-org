@@ -318,14 +318,22 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       const motion = await fastify.prisma.motion.findUnique({ where: { id } })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
 
-      // Title/description edits allowed only while still in DRAFT.
+      // Title/description/closeAt edits allowed only while still in DRAFT —
+      // openAt isn't patchable here (fixed at creation; a draft hasn't
+      // opened yet, so there's nothing to reschedule the start of).
       const data: Record<string, unknown> = {}
-      if (body.title || body.description) {
+      if (body.title || body.description || body.closeAt) {
         if (motion.state !== 'DRAFT') {
           return reply.status(409).send({ error: 'Can only edit a motion while it is a draft' })
         }
         if (body.title) data.title = body.title
         if (body.description) data.description = body.description
+        if (body.closeAt) {
+          if (body.closeAt <= motion.openAt) {
+            return reply.status(400).send({ error: 'closeAt must be after openAt' })
+          }
+          data.closeAt = body.closeAt
+        }
       }
 
       let eligibleMemberCount: number | undefined
