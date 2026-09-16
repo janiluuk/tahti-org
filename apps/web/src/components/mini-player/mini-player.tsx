@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import { AvatarTile } from '@tahti/ui'
+import { AvatarTile, Spinner } from '@tahti/ui'
 import { usePlayer } from '@/contexts/player-context'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 import { fetchMyCollections, type MyCollectionSummary } from '@/app/dashboard/collection-actions'
@@ -206,16 +206,27 @@ export function MiniPlayer() {
               <div className="mini-player-queue__column mini-player-queue__column--current">
                 <span className="mini-player-queue__column-label">Now playing</span>
                 <div className="mini-player-queue__current" title={track.title}>
-                  {track.artworkUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={track.artworkUrl} alt="" className="mini-player-queue__current-art" />
-                  ) : (
-                    <AvatarTile
-                      size="md"
-                      name={track.title}
-                      className="mini-player-queue__current-art"
-                    />
-                  )}
+                  <div className="mini-player-queue__current-art-wrap">
+                    {track.artworkUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={track.artworkUrl}
+                        alt=""
+                        className="mini-player-queue__current-art"
+                      />
+                    ) : (
+                      <AvatarTile
+                        size="md"
+                        name={track.title}
+                        className="mini-player-queue__current-art"
+                      />
+                    )}
+                    {buffering && (
+                      <span className="mini-player-queue__current-loading">
+                        <Spinner size="sm" />
+                      </span>
+                    )}
+                  </div>
                   <span className="mini-player-queue__current-title">{track.title}</span>
                   {track.subtitle && (
                     <span className="mini-player-queue__current-subtitle">{track.subtitle}</span>
@@ -235,6 +246,7 @@ export function MiniPlayer() {
                       <QueueThumb
                         key={item.id}
                         item={item}
+                        loading={buffering && item.id === track.id}
                         onPlay={() => load(item, { autoplay: true })}
                         onRemove={() => removeFromQueue(item.id)}
                         draggable
@@ -369,7 +381,7 @@ export function MiniPlayer() {
               disabled={buffering}
             >
               {buffering ? (
-                <span className="mini-player__spinner" aria-hidden />
+                <Spinner size="sm" />
               ) : track.embed ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                   <path

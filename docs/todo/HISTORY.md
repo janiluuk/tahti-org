@@ -20,6 +20,27 @@ everywhere. New `Sound.embedSourceUrl` column persists the original
 hearthis.at track URL for the re-fetch (`embedUri` only holds the bare
 numeric id used for the embed iframe). No leftovers — `SPOTIFY_EMBED`/
 `MIXCLOUD_EMBED` genuinely have no download path to extend this to.
+## 2026-09-16 — loading-indicators-playables.md
+
+Shipped in [#529](https://github.com/janiluuk/tahti-org/pull/529): a single
+shared `Spinner` component (`packages/ui`, `.ui-spinner--sm`/
+`--md`) replacing three near-duplicate ad-hoc spinner CSS blocks
+(`WaveformPlayer`'s `.waveform-player__spinner`, the mini-player's
+`.mini-player__spinner`, and reusing the existing `waveform-player-spin`
+keyframe under a generic name — `.studio-spinner`'s background-job spinner
+left untouched, out of scope). Fixed a real gap in `use-player-load.ts`:
+`buffering` was reset to `false` at the start of every `load()` call, so the
+spinner only ever appeared after the browser's own `waiting` event fired —
+often well after the click, with a dead-looking gap in between; now it's
+`true` immediately (embeds excluded, they have no `<audio>` element to
+derive it from). Wired the new spinner into: the mini-player collapsed bar
+and full-player sheet's play buttons (already had ad-hoc spinners, now
+sharing the same component), the queue panel's "Now playing" thumbnail
+(previously had no loading state at all), `QueueThumb` for the rare
+repeated-track-in-queue case, and the profile Tracks tab's cover-play
+button. Added a `/dev/components` demo section. Not attempted: an
+exhaustive audit of every other playable surface in the app (collection
+rows, release rows, etc.) — flagged as follow-up if more turn up.
 
 ## 2026-09-15 — Motion PATCH: closeAt (voting-window adjustment)
 

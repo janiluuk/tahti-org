@@ -68,6 +68,7 @@ export { PageHero, type PageHeroProps, type PageHeroStat } from './PageHero'
 export { RankBadge } from './RankBadge'
 export { MemberBadge } from './MemberBadge'
 export { PinnedAnnouncement, type PinnedAnnouncementProps } from './PinnedAnnouncement'
+export { Spinner, type SpinnerProps } from './Spinner'
 export {
   WaveformPlayer,
   WAVEFORM_TRACK_IN_MS,

@@ -1979,16 +1979,35 @@
   cursor: not-allowed;
 }
 
-.waveform-player__spinner {
+/* Shared loading spinner (Spinner component) for any playable surface
+ * waiting on audio to start — track rows, queue items, player transport
+ * buttons. `--md` matches the size/color this replaced from WaveformPlayer;
+ * `--sm` matches the size/color the mini-player's own spinner used, sized
+ * for inline use inside a small button. */
+.ui-spinner {
+  display: inline-block;
+  border-radius: var(--radius-full);
+  animation: ui-spinner-spin 0.7s linear infinite;
+}
+
+.ui-spinner--md {
   width: 22px;
   height: 22px;
   border: 3px solid color-mix(in srgb, var(--white) 30%, transparent);
   border-top-color: var(--cyan);
-  border-radius: var(--radius-full);
-  animation: waveform-player-spin 0.7s linear infinite;
 }
 
-@keyframes waveform-player-spin {
+/* currentColor, not a fixed token — --sm is meant for inline use inside
+ * buttons/overlays with their own color context (mini-player transport,
+ * a cover-art play button on brand pages), unlike --md's fixed brand accent. */
+.ui-spinner--sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+}
+
+@keyframes ui-spinner-spin {
   to {
     transform: rotate(360deg);
   }
@@ -2003,7 +2022,7 @@
   border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
-  animation: waveform-player-spin 0.7s linear infinite;
+  animation: ui-spinner-spin 0.7s linear infinite;
   vertical-align: middle;
 }
 
