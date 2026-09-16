@@ -8,7 +8,8 @@ session transcripts. Leftover open items go to `docs/remaining-work.md` or a new
 
 ## 2026-09-16 — loading-indicators-playables.md
 
-Shipped: a single shared `Spinner` component (`packages/ui`, `.ui-spinner--sm`/
+Shipped in [#529](https://github.com/janiluuk/tahti-org/pull/529): a single
+shared `Spinner` component (`packages/ui`, `.ui-spinner--sm`/
 `--md`) replacing three near-duplicate ad-hoc spinner CSS blocks
 (`WaveformPlayer`'s `.waveform-player__spinner`, the mini-player's
 `.mini-player__spinner`, and reusing the existing `waveform-player-spin`
