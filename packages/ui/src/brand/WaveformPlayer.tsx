@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { cn } from '../lib/cn'
 import { formatPlayerTime, WAVEFORM_BAR_HEIGHTS } from '../lib/waveform-player'
 import { AvatarTile } from './AvatarTile'
+import { Spinner } from './Spinner'
 
 export interface WaveformPlayerProps {
   playing?: boolean
@@ -301,7 +302,7 @@ export function WaveformPlayer({
                 aria-label={playing ? 'Pause' : 'Play'}
               >
                 {buffering ? (
-                  <span className="waveform-player__spinner" aria-hidden />
+                  <Spinner />
                 ) : playing ? (
                   <svg width="32" height="32" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
                     <rect x="3" y="2" width="4" height="14" rx="1" />
@@ -395,7 +396,7 @@ export function WaveformPlayer({
           aria-label={playing ? 'Pause' : 'Play'}
         >
           {buffering ? (
-            <span className="waveform-player__spinner" aria-hidden />
+            <Spinner />
           ) : playing ? (
             <svg width="24" height="24" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
               <rect x="3" y="2" width="4" height="14" rx="1" />
