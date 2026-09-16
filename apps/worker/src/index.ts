@@ -36,6 +36,7 @@ import { processFanSubscriberPurgeJob } from './jobs/fan-subscriber-purge.js'
 import { processSocialPostDispatchJob } from './jobs/social-post-dispatch.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
 import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
+import { processInternetRadioNowPlayingSyncJob } from './jobs/internet-radio-now-playing-sync.js'
 import {
   processMembershipLapseJob,
   processMembershipRenewalJob,
@@ -231,6 +232,8 @@ const worker = new Worker(
         await processSocialPostDispatchJob(prisma, postId)
       } else if (job.name === 'tor-exit-list-sync') {
         return await processTorExitListSyncJob(job)
+      } else if (job.name === 'internet-radio-now-playing-sync') {
+        return await processInternetRadioNowPlayingSyncJob(job)
       } else if (job.name === 'download-fraud-scan') {
         return await processDownloadFraudScanJob(job)
       } else if (job.name === 'membership-renewal-reminder') {
