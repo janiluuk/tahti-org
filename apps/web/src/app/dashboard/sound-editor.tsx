@@ -32,6 +32,7 @@ import { SoundDownloadPanel } from './sound-download-panel'
 import { SoundGateStats } from './sound-gate-stats'
 import { SoundMixcloudUpload } from './sound-mixcloud'
 import { SoundHearthisExportPanel } from './sound-hearthis-export-panel'
+import { SoundEmbedImportPanel } from './sound-embed-import-panel'
 import SoundVisualPanel from './sound-visual-panel'
 import ArchiveAccessPanel from './archive-access-panel'
 import { shouldShowTracklist, shouldShowVenueLocation } from './sound-editor-visibility'
@@ -442,6 +443,9 @@ export default function SoundEditor({
             )}
             {tab === 'audio' && (
               <>
+                {item.source === 'HEARTHIS_EMBED' && item.embedSourceUrl && (
+                  <SoundEmbedImportPanel itemId={item.id} />
+                )}
                 <SoundVersionPanel
                   itemId={item.id}
                   itemStatus={item.status}

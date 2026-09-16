@@ -31,14 +31,14 @@ export async function processHearthisEmbedLocalizationJob(job: Job): Promise<voi
     throw new Error(`hearthis.at download failed (${response.status})`)
   }
 
-  const contentType = response.headers.get('content-type') ?? 'application/octet-stream'
+  const mimeType = response.headers.get('content-type') ?? 'application/octet-stream'
   const contentLengthHeader = response.headers.get('content-length')
   const contentLength = contentLengthHeader ? Number(contentLengthHeader) : undefined
-  const extension = extensionFromDriveFile(track.download_filename ?? track.title, contentType)
+  const extension = extensionFromDriveFile(track.download_filename ?? track.title, mimeType)
   const rawKey = `raw/${sound.channel.slug}/${randomBytes(8).toString('hex')}.${extension}`
   const stream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>)
 
-  await uploadStream(rawKey, stream, contentType, contentLength)
+  await uploadStream(rawKey, stream, mimeType, contentLength)
   await prisma.sound.update({
     where: { id: sound.id },
     data: {
@@ -46,6 +46,11 @@ export async function processHearthisEmbedLocalizationJob(job: Job): Promise<voi
       fileSizeBytes: BigInt(contentLength ?? 0),
       source: 'HEARTHIS',
       status: 'PENDING',
+      // Real audio now backs this track — it's no longer an embed.
+      contentType: 'TRACK',
+      embedUri: null,
+      embedProvider: null,
+      embedSourceUrl: null,
     },
   })
   await enqueueTranscodeSound(sound.id)
