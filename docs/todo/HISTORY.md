@@ -6,6 +6,21 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-16 — embed-track-manual-import.md
+
+Shipped in [#528](https://github.com/janiluuk/tahti-org/pull/528): a manual
+"Import" action in the track editor's Audio tab for `HEARTHIS_EMBED` tracks
+(`POST /api/me/sound/:id/import-embed`), re-checking downloadability via the
+hearthis.at API and re-enqueueing the existing localize-to-real-audio job on
+demand. Also fixed a real bug found while investigating: the existing
+automatic localize job never cleared `embedUri`/`embedProvider` or reset
+`contentType` off `EMBED` once real audio landed, so even tracks localized
+through the already-shipped automatic path kept rendering as embeds
+everywhere. New `Sound.embedSourceUrl` column persists the original
+hearthis.at track URL for the re-fetch (`embedUri` only holds the bare
+numeric id used for the embed iframe). No leftovers — `SPOTIFY_EMBED`/
+`MIXCLOUD_EMBED` genuinely have no download path to extend this to.
+
 ## 2026-09-15 — Motion PATCH: closeAt (voting-window adjustment)
 
 Driven by `../tahti-player`'s `docs/todo/governance-gap-list.md` #15, not
