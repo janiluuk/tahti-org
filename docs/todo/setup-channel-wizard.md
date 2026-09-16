@@ -58,3 +58,43 @@ description, ... — screenshot shows 5 steps total, only step 1 shown)
   something else) before the full flow can be built — building only
   step 1 and dropping the user straight into the existing editor after
   is a reasonable smaller first slice if the rest isn't decided yet.
+
+## Step 2, from a second reference screenshot
+
+A second screenshot (same reference product, but labeled "STEP 2 OF
+**3**" — inconsistent with the first screenshot's "STEP 1 OF **5**",
+flag this discrepancy back to the user before locking a step count)
+shows: a genre search-and-select field (autocomplete dropdown, e.g.
+"Blues, Country Blues, Dubstep, etc."), selected genres as removable
+chips capped at 5 ("2 genre(s) selected"), and a segmented toggle
+"Your station is an... Online Station / Online and AM/FM station".
+
+User's instruction: **drop the Online/AM-FM broadcast-type toggle** —
+not relevant to Tahti — **and ask instead whether the user wants to
+list the channel in public listings/directories.**
+
+Grounding for this step, in this codebase:
+
+- **No channel-level genre field exists.** `Channel`
+  (`packages/db/prisma/schema.prisma` ~line 1267) has no `genre`/
+  `genres` column at all — only `Sound.genre`/`Sound.subGenres`
+  (per-track, ~line 1861) exist. A multi-select "up to 5 genres" on the
+  channel itself is new schema, not just new UI.
+- **No genre-picker UI component exists either** — checked
+  `packages/shared/src`, `apps/web/src/components`: genre handling
+  today is limited to file-tag parsing
+  (`packages/shared/src/sound-file-tags.ts`,
+  `packages/shared/src/dto/sound-metadata.ts`) and the plain per-track
+  genre field in the sound editor, not a searchable multi-select with
+  chips. This step needs a new component, though the per-track genre
+  editor may have a fixed genre list worth reusing as the search source
+  instead of inventing a second genre taxonomy.
+- **"List in public listings" has no existing flag to bind to either.**
+  Checked for `isPublic`/`isListed`/directory-style booleans on
+  `Channel` — none exist. The closest existing thing is
+  `apps/web/src/app/dashboard/discovery-settings-panel.tsx` /
+  `/dashboard/settings/discovery` (`topListsOptOut`, an opt-_out_ of
+  top-lists ranking specifically) — related territory, but not the
+  same as a general "show this channel in public directory listings"
+  toggle. Needs a decision: is this a new field, or should it reuse/
+  extend the existing discovery opt-out semantics (inverted)?

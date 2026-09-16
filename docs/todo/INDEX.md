@@ -22,7 +22,7 @@ One file per in-progress task. When a task ships, fold it into
 | open    | [loading-indicators-playables.md](loading-indicators-playables.md)             | Queue items + other playable entities have no loading indicator while audio starts; no shared spinner component or real Storybook exists yet — nearest thing is `/dev/components`                        |
 | open    | [bloom-visualizer-preset.md](bloom-visualizer-preset.md)                       | Selective-bloom preset for `Channel.backgroundVisualPreset` — but that surface has zero frontend UI today, so this is really "build the backdrop-preset picker + config dialog + settings storage first" |
 | open    | [embed-track-manual-import.md](embed-track-manual-import.md)                   | Manual "Import" button to download+attach real audio for a downloadable embed track; found the existing automatic hearthis path never actually clears embed status (real bug)                            |
-| open    | [setup-channel-wizard.md](setup-channel-wizard.md)                             | Existing "Setup" CTA is fine; `/dashboard/setup-channel` itself is a blind one-click provision, not the multi-step name/logo/description wizard the user wants — steps 2-5 content still undecided       |
+| open    | [setup-channel-wizard.md](setup-channel-wizard.md)                             | Blind one-click provision needs to become a wizard (name/logo/description, then genres + a "list in public directories" toggle); no channel-level genre field or public-listing flag exists yet          |
 
 ## Roadmap & planning (broader than a single task)
 
