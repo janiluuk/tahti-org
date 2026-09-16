@@ -3,7 +3,8 @@
 
 'use client'
 
-import type { CSSProperties, KeyboardEvent } from 'react'
+import { useRef, type CSSProperties, type KeyboardEvent } from 'react'
+import dynamic from 'next/dynamic'
 import { AvatarTile, Heading, Row, Text } from '@tahti/ui'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
@@ -11,6 +12,12 @@ import { flagEmoji } from '@/lib/flag-emoji'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
+import { resolveColorScheme } from '@tahti/shared'
+
+const Bloom = dynamic(
+  () => import('@/components/visuals/bloom-preset').then((m) => ({ default: m.BloomPreset })),
+  { ssr: false },
+)
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { ChannelBlocksView } from '@/components/channel-blocks-view'
@@ -22,6 +29,7 @@ import {
   parseColorScheme,
   parseVisualSettingsMap,
   resolveVisualPresetSettings,
+  type BackgroundVisualPreset,
   type ChannelGalleryMode,
   type ChannelHeaderStyle,
   type ChannelTextLayerAlignment,
@@ -61,6 +69,10 @@ export type ChannelPreviewDraft = {
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
+    useBackgroundGradient: boolean
+    backgroundColorSchemeJson: string | null
+    backgroundVisualPreset: BackgroundVisualPreset | null
+    backgroundVisualSettingsJson: string | null
   }
 }
 
@@ -106,6 +118,15 @@ export function ChannelLivePreview({
     parseVisualSettingsMap(draft.visual.visualSettingsJson),
     draft.visual.visualPreset,
   )
+  const showBackdrop =
+    draft.visual.useBackgroundGradient && draft.visual.backgroundVisualPreset === 'BLOOM'
+  const backdropSettingsRef = useRef(visualSettings)
+  if (showBackdrop) {
+    backdropSettingsRef.current = resolveVisualPresetSettings(
+      parseVisualSettingsMap(draft.visual.backgroundVisualSettingsJson),
+      'BLOOM',
+    )
+  }
   const showMedia = mode === 'full'
 
   function regionProps(id: DesignerSectionId, label: string) {
@@ -150,6 +171,27 @@ export function ChannelLivePreview({
             settings={visualSettings}
             className="ch-page-visualizer"
           />
+        )}
+
+        {showBackdrop && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+            aria-hidden
+          >
+            <Bloom
+              colorScheme={
+                resolveColorScheme(draft.visual.backgroundColorSchemeJson, null) ??
+                DEFAULT_COLOR_SCHEME
+              }
+              settingsRef={backdropSettingsRef}
+            />
+          </div>
         )}
 
         <div className="ch-page-foreground">

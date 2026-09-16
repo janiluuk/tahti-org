@@ -76,6 +76,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       useBackgroundGradient: true,
       backgroundColorSchemeJson: true,
       backgroundVisualPreset: true,
+      backgroundVisualSettingsJson: true,
       nowPlayingOverlayStyle: true,
       nowPlayingOverlaySettingsJson: true,
       playerOverlayMode: true,

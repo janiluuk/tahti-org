@@ -20,6 +20,30 @@ everywhere. New `Sound.embedSourceUrl` column persists the original
 hearthis.at track URL for the re-fetch (`embedUri` only holds the bare
 numeric id used for the embed iframe). No leftovers — `SPOTIFY_EMBED`/
 `MIXCLOUD_EMBED` genuinely have no download path to extend this to.
+## 2026-09-16 — bloom-visualizer-preset.md
+
+Shipped in [#530](https://github.com/janiluuk/tahti-org/pull/530): the
+Backdrop preset system (`Channel.backgroundVisualPreset` /
+`useBackgroundGradient` / `backgroundColorSchemeJson`) had been fully wired
+through the API for a while but had zero frontend consumer — no picker, no
+renderer, no per-preset settings storage. Built all three, shipping a
+selective-bloom preset (Three.js `UnrealBloomPass`) as the first
+implemented option: `BloomPreset` (glowing orbs, colored from the
+channel's palette, speed/intensity/audio-reactive knobs reusing the
+existing `{speed, intensity, scale, audioReactive}` settings shape via a
+new `backgroundVisualSettingsJson` column), `ChannelBackdropVisualizer`
+mounted on the public channel page (active only while nothing is
+playing — the header preset already covers "what's on"), and
+`BackdropPresetPanel` — a compact "Backdrop" section in the existing
+Visual style dashboard panel, plus the live channel-editor preview. The
+other three `BACKGROUND_VISUAL_PRESETS` ids (`INTERACTIVE_POINTS`,
+`FAT_LINES`, `VIDEO_KINECT`, `BACKDROP_AREA`) remain reserved/
+unimplemented — the picker only offers Bloom. Not manually verified in a
+live browser (Chrome extension was disconnected this session) — verified
+instead via a full curl-based round trip (login → PATCH → public GET)
+confirming the settings persist and reach the public channel payload, plus
+`pnpm ci:check` and new API test coverage (`channel-visual.test.ts`).
+
 ## 2026-09-16 — loading-indicators-playables.md
 
 Shipped in [#529](https://github.com/janiluuk/tahti-org/pull/529): a single
