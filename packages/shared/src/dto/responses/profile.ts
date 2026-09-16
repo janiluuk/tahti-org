@@ -64,6 +64,7 @@ export const PublicProfileViewSchema = z.object({
       useBackgroundGradient: z.boolean().optional(),
       backgroundColorSchemeJson: z.string().nullable().optional(),
       backgroundVisualPreset: z.string().nullable().optional(),
+      backgroundVisualSettingsJson: z.string().nullable().optional(),
       nowPlayingOverlayStyle: z.string().nullable().optional(),
       nowPlayingOverlaySettingsJson: z.string().nullable().optional(),
       playerOverlayMode: z.string().optional(),

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type {
+  BackgroundVisualPreset,
   ChannelGalleryMode,
   ChannelHeaderStyle,
   ChannelTextLayerAlignment,
@@ -34,6 +35,10 @@ export type ChannelEditorFetchResult = {
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
+    useBackgroundGradient: boolean
+    backgroundColorSchemeJson: string | null
+    backgroundVisualPreset: BackgroundVisualPreset | null
+    backgroundVisualSettingsJson: string | null
   }
   avatarUrl: string | null
   avatarPosterUrl: string | null
@@ -191,6 +196,10 @@ export async function fetchChannelEditorData(
       slideshowIntervalSeconds: 8,
       slideshowTransitionMs: 600,
       slideshowAutoplay: true,
+      useBackgroundGradient: false,
+      backgroundColorSchemeJson: null,
+      backgroundVisualPreset: null,
+      backgroundVisualSettingsJson: null,
     },
     avatarUrl,
     avatarPosterUrl,

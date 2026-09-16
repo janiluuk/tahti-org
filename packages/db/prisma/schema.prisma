@@ -1360,6 +1360,8 @@ model Channel {
   useBackgroundGradient         Boolean               @default(false)
   backgroundColorSchemeJson     String?
   backgroundVisualPreset        String?
+  // Per-background-preset knobs: JSON map { [BackgroundVisualPreset]: { speed, intensity, scale, audioReactive } } — same shape as visualSettingsJson.
+  backgroundVisualSettingsJson  String?
   // Now-playing title/artist overlay layout + optional settings blob.
   nowPlayingOverlayStyle        String?
   nowPlayingOverlaySettingsJson String?
