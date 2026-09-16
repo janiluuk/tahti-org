@@ -73,22 +73,36 @@ User's instruction: **drop the Online/AM-FM broadcast-type toggle** —
 not relevant to Tahti — **and ask instead whether the user wants to
 list the channel in public listings/directories.**
 
-Grounding for this step, in this codebase:
+**Correction to an earlier pass of this doc:** it previously said no
+channel-level genre field/picker exists — that was wrong, found on a
+second look:
 
-- **No channel-level genre field exists.** `Channel`
-  (`packages/db/prisma/schema.prisma` ~line 1267) has no `genre`/
-  `genres` column at all — only `Sound.genre`/`Sound.subGenres`
-  (per-track, ~line 1861) exist. A multi-select "up to 5 genres" on the
-  channel itself is new schema, not just new UI.
-- **No genre-picker UI component exists either** — checked
-  `packages/shared/src`, `apps/web/src/components`: genre handling
-  today is limited to file-tag parsing
-  (`packages/shared/src/sound-file-tags.ts`,
-  `packages/shared/src/dto/sound-metadata.ts`) and the plain per-track
-  genre field in the sound editor, not a searchable multi-select with
-  chips. This step needs a new component, though the per-track genre
-  editor may have a fixed genre list worth reusing as the search source
-  instead of inventing a second genre taxonomy.
+- **A channel-level genre picker already exists and should be reused
+  as-is** ("use the same picker as we have in profile page" — user
+  confirmed this is the one meant): `apps/web/src/app/dashboard/channel-identity-panel.tsx`
+  (~line 407) renders a "Genres" `StudioCollapse` section — a checkbox
+  grid over the shared `SOUND_GENRES` list
+  (`packages/shared/src/dto/sound-metadata.ts`, the same fixed genre
+  taxonomy used for per-track genre tagging — one taxonomy, not two),
+  capped at `MAX_GENRES = 6` (screenshot showed a cap of 5 — confirm
+  with the user which number is right, or whether 6 stays since it's
+  already shipped), CSS classes `signup-genre-grid`/`signup-genre-chip`.
+  Channel genres are persisted inside `socialLinksJson` under a
+  `genres` key (`_channel-editor-data.ts` / `updateChannelProfile`,
+  `parseSocialLinksGenres`) — not a real column, but already wired
+  end-to-end and working.
+- **This exact component is already used in an onboarding wizard once
+  before**: `apps/web/src/app/signup/profile/profile-form.tsx` uses the
+  same `SOUND_GENRES` grid during account signup — direct precedent for
+  reusing it in the setup-channel wizard too, so step 2 is largely
+  "reuse `ChannelIdentityPanel`'s genre section (or extract it if it's
+  too coupled to the rest of that panel to drop in standalone)," not
+  new UI.
+- On "use storybook components for these": there is no real Storybook
+  in this repo (checked before, see [[loading-indicators-playables]])
+  — read as "use the existing shared `@tahti/ui` components/patterns"
+  (`Panel`, `StudioCollapse`, etc., the same primitives
+  `channel-identity-panel.tsx` already uses), not literally Storybook.
 - **"List in public listings" has no existing flag to bind to either.**
   Checked for `isPublic`/`isListed`/directory-style booleans on
   `Channel` — none exist. The closest existing thing is
@@ -98,3 +112,58 @@ Grounding for this step, in this codebase:
   same as a general "show this channel in public directory listings"
   toggle. Needs a decision: is this a new field, or should it reuse/
   extend the existing discovery opt-out semantics (inverted)?
+
+## Step 3: the existing channel editor — no new build needed
+
+User attached a Discord profile-customization screenshot (sidebar of
+grouped setting sections — Nameplate, Avatar & Decoration, Banner
+Color, Profile Effect & Frame — beside a live preview pane) as the
+layout reference for this step, and said step 3 should be "the channel
+editor."
+
+This already exists and already matches that layout:
+`apps/web/src/app/dashboard/channel/edit/page.tsx` →
+`ChannelEditorSections` (`apps/web/src/app/dashboard/channel/_channel-editor-sections.tsx`,
+own comment: "Full-page channel customization studio — one focused
+section at a time, live preview beside it") + `ChannelLivePreview`
+(`_channel-live-preview.tsx`). Step 3 of the wizard is just routing
+into this existing page/flow, not building a new one.
+
+## Step 4: 24/7 rotation — enable, with a no-tracks guard, or the playlist editor
+
+User's ask: enabling 24/7 rotation should check whether the user has
+any tracks uploaded first. If not, show a notice instead of enabling.
+If they do, show the channel playlist editor so they can build the
+rotation.
+
+Both halves already exist, just not wired together:
+
+- **24/7 rotation is the existing "fallback" toggle**:
+  `apps/web/src/app/dashboard/channel-controls-panel.tsx`'s
+  `toggleChannel()` (~line 188) flips `programme.fallbackEnabled` via
+  `PATCH /api/me/channel/programme`
+  (`apps/api/src/routes/me/programme.ts`). **No guard exists today,
+  client or server** — checked `programme.ts` for any track-count
+  validation before allowing `fallbackEnabled: true`; none found. This
+  is a real, current gap independent of the wizard — worth fixing at
+  the source (the API route) rather than only in the new wizard step,
+  so the existing `channel-controls-panel.tsx` toggle also gets
+  protected.
+- **The "channel playlist editor" is `/dashboard/channel/playlist`**
+  (`apps/web/src/app/dashboard/channel/playlist/page.tsx`, built on
+  `RotationEditor` from `apps/web/src/app/dashboard/schedule/_rotation-editor.tsx`)
+  — step 4 routes here once there's at least one track, same reuse
+  pattern as step 3.
+- Needs: a track-count check (count of the channel's `READY` `Sound`
+  rows) surfaced both as the wizard's gate and as a proper guard on the
+  API route itself.
+
+## Open: what's step 5?
+
+Only 4 steps have content now (identity, genres + listing, channel
+editor, rotation/playlist) against a claimed 5-step reference. Asked
+the user directly — no answer yet in this pass. A natural candidate
+given Tahti's own positioning (`setup-channel/page.tsx`'s existing
+"Broadcast studio" blurb: "RTMP and Icecast credentials, live preview,
+and a weekly hour to go live on the free tier") would be a broadcast-
+setup / "go live" step — but this is a suggestion, not confirmed.
