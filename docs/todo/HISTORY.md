@@ -8,7 +8,8 @@ session transcripts. Leftover open items go to `docs/remaining-work.md` or a new
 
 ## 2026-09-16 — bloom-visualizer-preset.md
 
-Shipped: the Backdrop preset system (`Channel.backgroundVisualPreset` /
+Shipped in [#530](https://github.com/janiluuk/tahti-org/pull/530): the
+Backdrop preset system (`Channel.backgroundVisualPreset` /
 `useBackgroundGradient` / `backgroundColorSchemeJson`) had been fully wired
 through the API for a while but had zero frontend consumer — no picker, no
 renderer, no per-preset settings storage. Built all three, shipping a
