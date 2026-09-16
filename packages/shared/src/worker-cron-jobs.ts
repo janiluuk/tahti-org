@@ -187,4 +187,11 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description:
       'Flag ScheduledLiveShows whose start time passed with no Broadcast, notify the board (5 min past the hour)',
   },
+  {
+    name: 'internet-radio-now-playing-sync',
+    pattern: '*/10 * * * *',
+    jobId: 'internet-radio-now-playing-sync-cron',
+    description:
+      "Refresh cached now-playing title for users' added internet radio stations whose host has a scraper (every 10 min)",
+  },
 ]

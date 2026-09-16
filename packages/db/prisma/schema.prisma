@@ -3821,19 +3821,26 @@ model InternetRadioPreset {
 // A user's own personal library entry — either copied from a preset (presetId
 // set, further edits are theirs alone) or fully custom.
 model InternetRadioStation {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  presetId       String?
-  name           String
-  genre          String?
-  description    String?
-  iconUrl        String?
-  programmingUrl String?
-  streamUrl      String?
-  position       Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                      String    @id @default(cuid())
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  presetId                String?
+  name                    String
+  genre                   String?
+  description             String?
+  iconUrl                 String?
+  programmingUrl          String?
+  streamUrl               String?
+  position                Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  // Cached "now playing" scrape, refreshed on a cron — only populated once a
+  // parser exists for the station's programmingUrl host (see
+  // apps/api/src/lib/internet-radio-now-playing.ts). Null for
+  // unsupported hosts or before the first successful fetch.
+  currentProgramTitle     String?
+  currentProgramArtist    String?
+  currentProgramFetchedAt DateTime?
 
   @@index([userId, position])
   @@schema("core")

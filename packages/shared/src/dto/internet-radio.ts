@@ -45,6 +45,12 @@ export const InternetRadioStationSchema = z.object({
   programmingUrl: z.string().nullable(),
   streamUrl: z.string().nullable(),
   position: z.number().int(),
+  /** Cached scrape of programmingUrl, refreshed on a cron — see
+   * apps/api/src/lib/internet-radio-now-playing.ts. Null when the host has
+   * no parser yet, or before the first successful fetch. */
+  currentProgramTitle: z.string().nullable(),
+  currentProgramArtist: z.string().nullable(),
+  currentProgramFetchedAt: z.string().nullable(),
 })
 export type InternetRadioStation = z.infer<typeof InternetRadioStationSchema>
 

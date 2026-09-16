@@ -6,6 +6,31 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-16 — internet-radio-now-playing-scraper.md
+
+Shipped (partial) in [#531](https://github.com/janiluuk/tahti-org/pull/531):
+a 10-minute cron
+(`apps/worker/src/jobs/internet-radio-now-playing-sync.ts`) that refreshes
+`InternetRadioStation.currentProgramTitle`/`currentProgramArtist` for
+stations a user has actually added — never the raw preset catalog — and
+only for hosts with a working parser, so unsupported stations are skipped
+without a wasted fetch on every tick. Two of the six Finnish presets are
+implemented and verified against the live sites: **radiohelsinki.fi**
+(server-renders the current show + song directly, no client fetch
+needed) and **radioplay.fi** — Bauer Media, covers both **NRJ** and
+**Radio Nova** (embeds a hydration state blob; takes the last non-empty
+`stationNowPlaying` object, since earlier ones can be empty sibling-
+station placeholders). Not implemented: **YleX** (Yle Areena is a fully
+client-rendered SPA with nothing in the initial HTML; Yle's real
+program-guide API needs a registered app key not available in this
+session) and **Radio Rock**/**Suomipop** (Nelonen Media — no now-playing
+data found in the static HTML or any obvious embedded state). Frontend:
+`internet-radio-panel.tsx` shows the cached title/artist under each
+station and links the station name to its `programmingUrl` (external)
+for click-through. Remaining work (Yle app-key registration, a Nelonen
+Media parser) moved to a fresh slim todo,
+`internet-radio-now-playing-yle-nelonen.md`.
+
 ## 2026-09-16 — embed-track-manual-import.md
 
 Shipped in [#528](https://github.com/janiluuk/tahti-org/pull/528): a manual
@@ -20,6 +45,7 @@ everywhere. New `Sound.embedSourceUrl` column persists the original
 hearthis.at track URL for the re-fetch (`embedUri` only holds the bare
 numeric id used for the embed iframe). No leftovers — `SPOTIFY_EMBED`/
 `MIXCLOUD_EMBED` genuinely have no download path to extend this to.
+
 ## 2026-09-16 — bloom-visualizer-preset.md
 
 Shipped in [#530](https://github.com/janiluuk/tahti-org/pull/530): the

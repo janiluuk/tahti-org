@@ -27,6 +27,9 @@ const STATION_SELECT = {
   programmingUrl: true,
   streamUrl: true,
   position: true,
+  currentProgramTitle: true,
+  currentProgramArtist: true,
+  currentProgramFetchedAt: true,
 } as const
 
 function zodError(

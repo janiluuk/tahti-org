@@ -49,6 +49,7 @@ export const WORKER_JOB_LANES = {
     'social-post-dispatch',
     'open-theme-pull-request',
     'hearthis-export',
+    'internet-radio-now-playing-sync',
   ],
   light: [
     'newsletter-dispatch',
