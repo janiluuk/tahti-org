@@ -8,7 +8,8 @@ session transcripts. Leftover open items go to `docs/remaining-work.md` or a new
 
 ## 2026-09-16 — internet-radio-now-playing-scraper.md
 
-Shipped (partial): a 10-minute cron
+Shipped (partial) in [#531](https://github.com/janiluuk/tahti-org/pull/531):
+a 10-minute cron
 (`apps/worker/src/jobs/internet-radio-now-playing-sync.ts`) that refreshes
 `InternetRadioStation.currentProgramTitle`/`currentProgramArtist` for
 stations a user has actually added — never the raw preset catalog — and
