@@ -8,6 +8,7 @@ import {
   TAHTI_SELECTS_SLUG,
   parseVisualSettingsMap,
   resolveVisualPresetSettings,
+  type BackgroundVisualPreset,
   type VisualPreset,
 } from '@tahti/shared'
 import { GalleryPhotosButton } from './_gallery-photos-button'
@@ -19,6 +20,7 @@ import { LiveTabContent } from './_live-tab-content'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { ChannelPageVisualizer } from './_channel-page-visualizer'
+import { ChannelBackdropVisualizer } from './_channel-backdrop-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
@@ -256,6 +258,13 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 parseVisualSettingsMap(channel.visualSettingsJson),
                 (channel.visualPreset ?? 'MINIMAL') as VisualPreset,
               )}
+            />
+
+            <ChannelBackdropVisualizer
+              enabled={Boolean(channel.useBackgroundGradient)}
+              preset={(channel.backgroundVisualPreset ?? null) as BackgroundVisualPreset | null}
+              colorSchemeJson={channel.backgroundColorSchemeJson}
+              settingsJson={channel.backgroundVisualSettingsJson}
             />
 
             <div className="ch-page-foreground">

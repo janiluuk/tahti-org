@@ -227,7 +227,7 @@ export function parseVisualSettingsMap(json: string | null | undefined): VisualS
 
 export function resolveVisualPresetSettings(
   map: VisualSettingsMap | null | undefined,
-  preset: VisualPreset,
+  preset: VisualPreset | BackgroundVisualPreset,
 ): VisualPresetSettings {
   const partial = map?.[preset]
   return {
@@ -255,9 +255,34 @@ export const BACKGROUND_VISUAL_PRESETS = [
   'FAT_LINES',
   'VIDEO_KINECT',
   'BACKDROP_AREA',
+  'BLOOM',
 ] as const
 
 export type BackgroundVisualPreset = (typeof BACKGROUND_VISUAL_PRESETS)[number]
+
+/** Background presets with a real renderer behind them — the picker UI only
+ * offers these. The other `BACKGROUND_VISUAL_PRESETS` members are reserved
+ * ids with no implementation yet. */
+export const IMPLEMENTED_BACKGROUND_VISUAL_PRESETS = ['BLOOM'] as const
+
+export const BACKGROUND_VISUAL_PRESET_LABELS: Record<
+  (typeof IMPLEMENTED_BACKGROUND_VISUAL_PRESETS)[number],
+  string
+> = {
+  BLOOM: 'Bloom',
+}
+
+export const BACKGROUND_VISUAL_PRESET_DESCRIPTIONS: Record<
+  (typeof IMPLEMENTED_BACKGROUND_VISUAL_PRESETS)[number],
+  string
+> = {
+  BLOOM:
+    'Glowing orbs drifting slowly behind your page, in your accent colors — reacts to the music when something is playing.',
+}
+
+/** Reuses the same {speed, intensity, scale, audioReactive} shape as the
+ * header VisualPreset settings map — same knobs, different storage column. */
+export const BackgroundVisualSettingsMapSchema = VisualSettingsMapSchema
 
 export const ChannelLinkSchema = z.object({
   label: z.string().trim().min(1).max(60),
@@ -320,6 +345,9 @@ export const ChannelVisualPatchSchema = z
     useBackgroundGradient: z.boolean().optional(),
     backgroundColorSchemeJson: colorSchemeJsonField(),
     backgroundVisualPreset: z.enum(BACKGROUND_VISUAL_PRESETS).nullable().optional(),
+    /** Map of background preset → {speed, intensity, scale, audioReactive}.
+     * Null clears all overrides. */
+    backgroundVisualSettings: BackgroundVisualSettingsMapSchema.nullable().optional(),
     nowPlayingOverlayStyle: z.string().trim().max(64).nullable().optional(),
     nowPlayingOverlaySettingsJson: z.string().max(8192).nullable().optional(),
     /** Player-stage text overlay — distinct from channel-page `textLayer*`. */
@@ -365,6 +393,7 @@ export const CHANNEL_VISUAL_SELECT = {
   useBackgroundGradient: true,
   backgroundColorSchemeJson: true,
   backgroundVisualPreset: true,
+  backgroundVisualSettingsJson: true,
   nowPlayingOverlayStyle: true,
   nowPlayingOverlaySettingsJson: true,
   playerOverlayMode: true,

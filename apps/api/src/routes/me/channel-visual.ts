@@ -40,6 +40,7 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
       useBackgroundGradient,
       backgroundColorSchemeJson,
       backgroundVisualPreset,
+      backgroundVisualSettings,
       nowPlayingOverlayStyle,
       nowPlayingOverlaySettingsJson,
       playerOverlayMode,
@@ -113,6 +114,14 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
           : {}),
         ...(backgroundVisualPreset !== undefined
           ? { backgroundVisualPreset: backgroundVisualPreset || null }
+          : {}),
+        ...(backgroundVisualSettings !== undefined
+          ? {
+              backgroundVisualSettingsJson:
+                backgroundVisualSettings && Object.keys(backgroundVisualSettings).length > 0
+                  ? JSON.stringify(backgroundVisualSettings)
+                  : null,
+            }
           : {}),
         ...(nowPlayingOverlayStyle !== undefined
           ? { nowPlayingOverlayStyle: nowPlayingOverlayStyle || null }
