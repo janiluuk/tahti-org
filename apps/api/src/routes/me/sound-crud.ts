@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { Prisma } from '@tahti/db'
+import { createHearthisClient } from '@tahti/hearthis'
 import {
   SoundListSchema,
   SoundListQuerySchema,
@@ -15,6 +16,7 @@ import {
 } from '@tahti/shared'
 import { notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 import {
   soundMetadataSelect,
   metadataPatchFromBody,
@@ -28,6 +30,8 @@ import {
 } from '../../lib/fallback-rotation.js'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
+
+const hearthis = createHearthisClient()
 
 const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -255,6 +259,55 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.status(204).send()
+    },
+  )
+
+  // POST /api/me/sound/:id/import-embed — download a HEARTHIS_EMBED track's
+  // real audio (when the artist enabled downloads on hearthis.at) and attach
+  // it as this item's actual recording, replacing the embed.
+  fastify.post(
+    '/api/me/sound/:id/import-embed',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          "Re-fetch a HEARTHIS_EMBED track's audio (if the source allows downloads) and localize it, clearing the item's embed status",
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await fastify.prisma.sound.findFirst({
+        where: { id, channel: { userId: user.id } },
+        select: { id: true, source: true, rawKey: true, embedSourceUrl: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+      if (item.source !== 'HEARTHIS_EMBED' || !item.embedSourceUrl) {
+        return reply.status(400).send({ error: 'This item is not a hearthis.at embed' })
+      }
+      if (item.rawKey) {
+        return reply.status(409).send({ error: 'This item already has real audio attached' })
+      }
+
+      let track
+      try {
+        track = await hearthis.getTrackByUrl(item.embedSourceUrl)
+      } catch {
+        return reply.status(502).send({ error: 'Could not reach hearthis.at' })
+      }
+      if (track.downloadable !== '1' || !track.download_url) {
+        return reply
+          .status(409)
+          .send({ error: 'The artist has not enabled downloads for this track on hearthis.at' })
+      }
+
+      await enqueueHearthisEmbedLocalization({ soundId: item.id, trackUrl: item.embedSourceUrl })
+
+      return reply.status(202).send({ status: 'importing' })
     },
   )
 
