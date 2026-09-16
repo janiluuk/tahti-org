@@ -12,6 +12,7 @@ import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
 import { SoundWaveform } from '@/components/sound-waveform'
 import { useCoverAccent } from '@/lib/use-cover-accent'
+import { Spinner } from '@tahti/ui'
 
 export interface TrackTabItem {
   id: string
@@ -144,6 +145,7 @@ function TrackRow({
   track,
   isExpanded,
   isCurrent,
+  isLoading,
   canEdit,
   channelSlug,
   onToggle,
@@ -156,6 +158,8 @@ function TrackRow({
   /** Whether this is the track currently loaded in the player (drives the
    * live progress-seeking waveform vs. the static play-trigger waveform). */
   isCurrent: boolean
+  /** isCurrent, and the player hasn't started audio for it yet. */
+  isLoading: boolean
   canEdit: boolean
   channelSlug: string | null
   onToggle: () => void
@@ -189,11 +193,12 @@ function TrackRow({
           )}
           <button
             type="button"
-            className={`prof-collection-cover-play${isExpanded ? ' prof-collection-cover-play--expanded' : ''}`}
+            className={`prof-collection-cover-play${isExpanded ? ' prof-collection-cover-play--expanded' : ''}${isLoading ? ' prof-collection-cover-play--loading' : ''}`}
             onClick={onToggle}
-            aria-label={toggleLabel}
+            aria-label={isLoading ? `Loading ${track.title}` : toggleLabel}
+            disabled={isLoading}
           >
-            {isExpanded ? '×' : '▶'}
+            {isLoading ? <Spinner size="sm" /> : isExpanded ? '×' : '▶'}
           </button>
         </div>
         <button
@@ -291,7 +296,7 @@ export function TracksTab({
   const canEdit = isOwner || isAdmin
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
-  const { track: playerTrack, load, currentTime, duration, seek } = usePlayer()
+  const { track: playerTrack, buffering, load, currentTime, duration, seek } = usePlayer()
 
   const sourceCounts = useMemo(() => {
     const counts: Record<SourceFilter, number> = {
@@ -422,6 +427,7 @@ export function TracksTab({
                     track={t}
                     isExpanded={expandedTrackId === t.id}
                     isCurrent={playerTrack?.id === t.id}
+                    isLoading={buffering && playerTrack?.id === t.id}
                     canEdit={canEdit}
                     channelSlug={channelSlug}
                     onToggle={() => toggleRow(t, queue)}

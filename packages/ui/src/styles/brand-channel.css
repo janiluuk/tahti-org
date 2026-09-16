@@ -6940,7 +6940,8 @@
 
 /* Same specificity as the base rule above and the `hover: none` override —
    wins on source order alone, so no !important needed. */
-[data-tahti-ui='brand'] .prof-collection-cover-play--expanded {
+[data-tahti-ui='brand'] .prof-collection-cover-play--expanded,
+[data-tahti-ui='brand'] .prof-collection-cover-play--loading {
   opacity: 1;
 }
 

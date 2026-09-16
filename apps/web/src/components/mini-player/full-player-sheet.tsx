@@ -6,7 +6,7 @@ import { resolveClientApiUrl } from '@/lib/api-url'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import { AvatarTile } from '@tahti/ui'
+import { AvatarTile, Spinner } from '@tahti/ui'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { SoundWaveform, type WaveformMarker } from '@/components/sound-waveform'
@@ -388,7 +388,7 @@ export function FullPlayerSheet({
           disabled={buffering || Boolean(track.embed)}
         >
           {buffering ? (
-            <span className="mini-player__spinner" aria-hidden />
+            <Spinner size="sm" />
           ) : playing ? (
             <svg width="30" height="30" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
               <rect x="3" y="2" width="4" height="14" rx="1" />

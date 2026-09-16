@@ -4,15 +4,21 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { type DragEvent } from 'react'
-import { AvatarTile } from '@tahti/ui'
+import { AvatarTile, Spinner } from '@tahti/ui'
 import type { PlayerTrack } from '@/contexts/player-context'
 
 /** Thumbnail-only queue/history row — the redesigned queue panel shows
  * artwork alone (title is available via the native `title` tooltip) so
- * three columns (history / now playing / up next) fit side by side. */
+ * three columns (history / now playing / up next) fit side by side.
+ * `loading` covers the rare case where the currently-loading track also
+ * appears again later in the queue (e.g. a repeated track) — the common
+ * case (the "Now playing" slot) is a separate, non-QueueThumb block in
+ * mini-player.tsx, since `history`/`upNext` both exclude the current
+ * track by construction otherwise. */
 export function QueueThumb({
   item,
   active,
+  loading,
   onPlay,
   onRemove,
   draggable,
@@ -25,6 +31,7 @@ export function QueueThumb({
 }: {
   item: PlayerTrack
   active?: boolean
+  loading?: boolean
   onPlay: () => void
   onRemove?: () => void
   draggable?: boolean
@@ -57,6 +64,11 @@ export function QueueThumb({
           <img src={item.artworkUrl} alt="" className="mini-player-queue__thumb-art" />
         ) : (
           <AvatarTile size="sm" name={item.title} className="mini-player-queue__thumb-art" />
+        )}
+        {loading && (
+          <span className="mini-player-queue__thumb-loading">
+            <Spinner size="sm" />
+          </span>
         )}
       </button>
       {onRemove && (

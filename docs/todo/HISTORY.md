@@ -6,6 +6,27 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-16 — loading-indicators-playables.md
+
+Shipped: a single shared `Spinner` component (`packages/ui`, `.ui-spinner--sm`/
+`--md`) replacing three near-duplicate ad-hoc spinner CSS blocks
+(`WaveformPlayer`'s `.waveform-player__spinner`, the mini-player's
+`.mini-player__spinner`, and reusing the existing `waveform-player-spin`
+keyframe under a generic name — `.studio-spinner`'s background-job spinner
+left untouched, out of scope). Fixed a real gap in `use-player-load.ts`:
+`buffering` was reset to `false` at the start of every `load()` call, so the
+spinner only ever appeared after the browser's own `waiting` event fired —
+often well after the click, with a dead-looking gap in between; now it's
+`true` immediately (embeds excluded, they have no `<audio>` element to
+derive it from). Wired the new spinner into: the mini-player collapsed bar
+and full-player sheet's play buttons (already had ad-hoc spinners, now
+sharing the same component), the queue panel's "Now playing" thumbnail
+(previously had no loading state at all), `QueueThumb` for the rare
+repeated-track-in-queue case, and the profile Tracks tab's cover-play
+button. Added a `/dev/components` demo section. Not attempted: an
+exhaustive audit of every other playable surface in the app (collection
+rows, release rows, etc.) — flagged as follow-up if more turn up.
+
 ## 2026-09-15 — Motion PATCH: closeAt (voting-window adjustment)
 
 Driven by `../tahti-player`'s `docs/todo/governance-gap-list.md` #15, not

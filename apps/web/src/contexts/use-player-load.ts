@@ -101,7 +101,13 @@ export function usePlayerLoad(opts: {
         ...prev,
         track,
         playing: false,
-        buffering: false,
+        // Embeds have no <audio> element to derive real buffering from (see
+        // the branch below, which never flips this back off) — every other
+        // track starts "buffering" the instant load() is called rather than
+        // only once the browser fires its own 'waiting' event, which can lag
+        // well behind the click and leave a dead-looking gap with no
+        // feedback at all.
+        buffering: !track.embed,
         error: false,
         currentTime: 0,
         duration: 0,
