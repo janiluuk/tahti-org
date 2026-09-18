@@ -358,7 +358,7 @@ export function GovernanceRecordsPanel({
               <input name="secretaryName" maxLength={200} placeholder="Meeting secretary" />
             </label>
           </div>
-          <label style={{ marginTop: '0.65rem', display: 'block' }}>
+          <label className="admin-governance-records__field--full">
             Agenda (one item per line)
             <textarea
               name="agenda"
@@ -366,7 +366,7 @@ export function GovernanceRecordsPanel({
               placeholder={'Call to order\nQuorum check\nBoard report\n…'}
             />
           </label>
-          <button type="submit" className="admin-btn" style={{ marginTop: '0.65rem' }}>
+          <button type="submit" className="admin-btn admin-governance-records__submit">
             Save meeting
           </button>
         </form>
@@ -413,23 +413,15 @@ export function GovernanceRecordsPanel({
               </select>
             </label>
           </div>
-          <label style={{ marginTop: '0.65rem', display: 'block' }}>
+          <label className="admin-governance-records__field--full">
             Description
             <textarea name="description" rows={2} />
           </label>
-          <label
-            style={{
-              marginTop: '0.65rem',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            <input name="publishNow" type="checkbox" style={{ width: 'auto' }} />
+          <label className="admin-governance-records__checkbox-field">
+            <input name="publishNow" type="checkbox" />
             Publish immediately (visible to members)
           </label>
-          <button type="submit" className="admin-btn" style={{ marginTop: '0.65rem' }}>
+          <button type="submit" className="admin-btn admin-governance-records__submit">
             Save document record
           </button>
         </form>
@@ -503,7 +495,7 @@ export function GovernanceRecordsPanel({
                             <div className="admin-governance-records__attendance">
                               {meeting.agenda && meeting.agenda.length > 0 && (
                                 <div>
-                                  <p className="admin-stat-sub" style={{ marginBottom: '0.35rem' }}>
+                                  <p className="admin-stat-sub admin-governance-records__section-label">
                                     Agenda
                                   </p>
                                   <ol
@@ -583,13 +575,13 @@ export function GovernanceRecordsPanel({
                                 </button>
                               </form>
                               <div>
-                                <p className="admin-stat-sub" style={{ marginBottom: '0.35rem' }}>
+                                <p className="admin-stat-sub admin-governance-records__section-label">
                                   Attendance ({attendance[meeting.id]?.length ?? 0})
                                 </p>
                                 {(attendance[meeting.id] ?? []).map((record) => (
                                   <p
                                     key={record.id}
-                                    style={{ fontSize: '0.8125rem', margin: '0.2rem 0' }}
+                                    className="admin-governance-records__record-row"
                                   >
                                     {record.displayName} · {record.status.toLowerCase()}
                                   </p>
@@ -629,13 +621,13 @@ export function GovernanceRecordsPanel({
                               </div>
                               {meeting.noticeAt && (
                                 <div>
-                                  <p className="admin-stat-sub" style={{ marginBottom: '0.35rem' }}>
+                                  <p className="admin-stat-sub admin-governance-records__section-label">
                                     Notice deliveries ({noticeDeliveries[meeting.id]?.length ?? 0})
                                   </p>
                                   {(noticeDeliveries[meeting.id] ?? []).map((delivery) => (
                                     <p
                                       key={delivery.id}
-                                      style={{ fontSize: '0.8125rem', margin: '0.2rem 0' }}
+                                      className="admin-governance-records__record-row"
                                     >
                                       {delivery.displayName ?? delivery.email} ·{' '}
                                       {delivery.bouncedAt ? (

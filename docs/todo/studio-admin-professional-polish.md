@@ -116,11 +116,43 @@ call was right for each:
 - `two-factor-panel.tsx`'s bare `<details>`: a one-line "show more text" hint,
   too small for `StudioCollapse`'s card-sized affordance.
 
+### Slice 6 — admin nav / governance records panel review
+
+Reviewed both files named in the previous Leftovers entry:
+
+- `admin-nav.tsx` (558 lines): almost entirely a data table of 30 unique
+  inline SVG icons plus already-factored nav/lookup logic
+  (`db-nav-item`/`db-nav-primary` classes, a `menuItem` lookup helper, a
+  `GovernanceNavIcon` helper already deduping the plain letter-mark icons).
+  No inline `style={{}}` clutter, no repeated card markup — its size is
+  inherent to 30 distinct icons, not an anti-pattern this pass targets.
+  Left alone; nothing to extract.
+- `agm/governance-records-panel.tsx` (684 lines, 20 `style={{}}` occurrences):
+  found two real dedup targets and fixed both. The "New meeting" and "New
+  document record" forms each ended their grid with the same
+  full-width-label / checkbox-label / submit-button trio
+  (`marginTop: '0.65rem'`, repeated 5 times across the two forms) — moved to
+  `.admin-governance-records__field--full`, `__checkbox-field`, and
+  `__submit` in `admin-shell.css`. The per-meeting agenda/attendance/notice
+  sub-sections each opened with `<p className="admin-stat-sub" style={{
+marginBottom: '0.35rem' }}>` (3x) and rendered their record rows with
+  `style={{ fontSize: '0.8125rem', margin: '0.2rem 0' }}` (2x) — moved to new
+  scoped `__section-label` / `__record-row` classes (kept `admin-stat-sub` on
+  the label rather than folding its rule in, since that shared class has 117
+  other callers across the app).
+
+  Left the remaining ~10 `style={{}}` occurrences in the meetings table
+  (per-column formatting: muted type-label cell, state `<select>` width,
+  scheduled/quorum cell font-size) alone — each appears exactly once in the
+  JSX (the table row template), so there's no source-level duplication to
+  remove; a CSS-class version would be more fragile (`nth-child` column
+  targeting) than the inline styles it'd replace.
+
 ## Verified
 
 - `pnpm --filter @tahti/ui typecheck` — clean
 - `pnpm --filter @tahti/ui lint` — clean
-- `eslint` scoped to all touched `apps/web` files (Slices 1, 4, 5) — clean
+- `eslint` scoped to all touched `apps/web` files (Slices 1, 4, 5, 6) — clean
 - `prettier --write` run on every changed file (all now formatted)
 - Full `apps/web` `tsc --noEmit` could not be run in this worktree: generating
   `packages/api-client/src/schema.d.ts` requires `apps/api`'s openapi export,
@@ -130,9 +162,10 @@ call was right for each:
   required here — flagging so the next session doesn't assume it was skipped
   by accident.
 - No dev server / browser check in this worktree (sandboxed, no live
-  Postgres) — the Slice 5 visual claims above (no nested-card risk for the two
-  converted files; nested-card risk for the three deferred ones) are from
-  reading the CSS and the parent markup, not a rendered screenshot.
+  Postgres) — the Slice 5 visual claims (no nested-card risk for the two
+  converted files; nested-card risk for the three deferred ones) and the
+  Slice 6 CSS-class swaps are from reading the CSS and parent markup, not a
+  rendered screenshot.
 
 ## Leftovers (next slices)
 
@@ -146,6 +179,3 @@ call was right for each:
   `sound-editor.tsx` (573) — mostly already sliced by
   `split-god-classes.md`; further work there is size/structure, not
   component-reuse.
-- **Admin nav** (`admin-nav.tsx`, 558 lines) and the largest admin panel
-  (`agm/governance-records-panel.tsx`, 684 lines) not reviewed for
-  component-reuse opportunities yet.
