@@ -11,6 +11,7 @@ import {
 } from '../../test/helpers.js'
 
 const PREFIX = 'admin-stats-'
+const CRON_JOB_PREFIX = 'admin-stats-cron-history-test'
 
 describe('M21-A — admin stats API', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -38,6 +39,7 @@ describe('M21-A — admin stats API', () => {
 
   afterAll(async () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await prisma.cronRun.deleteMany({ where: { jobName: { startsWith: CRON_JOB_PREFIX } } })
     await app.close()
   })
 
@@ -107,5 +109,106 @@ describe('M21-A — admin stats API', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(Array.isArray(res.json())).toBe(true)
+  })
+
+  describe('GET /api/admin/stats/cron-runs/history', () => {
+    const jobNameA = `${CRON_JOB_PREFIX}-a`
+    const jobNameB = `${CRON_JOB_PREFIX}-b`
+
+    beforeAll(async () => {
+      await prisma.cronRun.createMany({
+        data: [
+          {
+            jobName: jobNameA,
+            startedAt: new Date('2026-01-01T00:00:00Z'),
+            finishedAt: new Date('2026-01-01T00:00:05Z'),
+            outcome: 'SUCCESS',
+            resultJson: '{"ok":true}',
+          },
+          {
+            jobName: jobNameA,
+            startedAt: new Date('2026-01-02T00:00:00Z'),
+            finishedAt: null,
+            outcome: null,
+            errorMessage: null,
+          },
+          {
+            jobName: jobNameB,
+            startedAt: new Date('2026-01-03T00:00:00Z'),
+            finishedAt: new Date('2026-01-03T00:00:02Z'),
+            outcome: 'ERROR',
+            errorMessage: 'boom',
+          },
+        ],
+      })
+    })
+
+    it('rejects non-board users', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/admin/stats/cron-runs/history',
+        headers: { cookie: userCookie },
+      })
+      expect(res.statusCode).toBe(403)
+    })
+
+    it('returns entries newest-first with computed durationMs', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/stats/cron-runs/history?jobName=${jobNameA}`,
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as {
+        page: number
+        limit: number
+        total: number
+        items: Array<{
+          jobName: string
+          outcome: string | null
+          durationMs: number | null
+          finishedAt: string | null
+        }>
+      }
+      expect(body.total).toBe(2)
+      expect(body.items).toHaveLength(2)
+      // Newest startedAt (the still-running row) comes first.
+      expect(body.items[0]?.finishedAt).toBeNull()
+      expect(body.items[0]?.durationMs).toBeNull()
+      expect(body.items[1]?.outcome).toBe('SUCCESS')
+      expect(body.items[1]?.durationMs).toBe(5000)
+    })
+
+    it('filters by jobName', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/stats/cron-runs/history?jobName=${jobNameB}`,
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as { total: number; items: Array<{ jobName: string }> }
+      expect(body.total).toBe(1)
+      expect(body.items[0]?.jobName).toBe(jobNameB)
+    })
+
+    it('paginates with page/limit', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/stats/cron-runs/history?jobName=${jobNameA}&page=2&limit=1`,
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as {
+        page: number
+        limit: number
+        total: number
+        items: Array<{ outcome: string | null }>
+      }
+      expect(body.page).toBe(2)
+      expect(body.limit).toBe(1)
+      expect(body.total).toBe(2)
+      expect(body.items).toHaveLength(1)
+      expect(body.items[0]?.outcome).toBe('SUCCESS')
+    })
   })
 })

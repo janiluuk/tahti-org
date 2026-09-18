@@ -11,6 +11,7 @@ import {
   ColorSchemeSchema,
   DEFAULT_COLOR_SCHEME,
   parseVisualSettingsMap,
+  type BackgroundVisualPreset,
   type ChannelHeaderStyle,
   type VisualPreset,
   type SlideshowPreset,
@@ -19,6 +20,7 @@ import {
 } from '@tahti/shared'
 import { Panel, StudioSwitch } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
+import { BackdropPresetPanel } from '@/components/visuals/backdrop-preset-panel'
 
 interface Props {
   channelSlug: string
@@ -36,6 +38,10 @@ interface Props {
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
+    useBackgroundGradient?: boolean
+    backgroundColorSchemeJson?: string | null
+    backgroundVisualPreset?: string | null
+    backgroundVisualSettingsJson?: string | null
   }
 }
 
@@ -59,6 +65,10 @@ export type ChannelVisualDraft = {
   slideshowIntervalSeconds: number
   slideshowTransitionMs: number
   slideshowAutoplay: boolean
+  useBackgroundGradient: boolean
+  backgroundColorSchemeJson: string | null
+  backgroundVisualPreset: BackgroundVisualPreset | null
+  backgroundVisualSettingsJson: string | null
 }
 
 export default function ChannelVisualPresetPanel({
@@ -82,6 +92,16 @@ export default function ChannelVisualPresetPanel({
   const [settingsMap, setSettingsMap] = useState<VisualSettingsMap>(() =>
     parseVisualSettingsMap(initial.visualSettingsJson),
   )
+  const [backdropEnabled, setBackdropEnabled] = useState(initial.useBackgroundGradient ?? false)
+  const [backdropPreset, setBackdropPreset] = useState<'BLOOM' | null>(
+    initial.backgroundVisualPreset === 'BLOOM' ? 'BLOOM' : null,
+  )
+  const [backdropScheme, setBackdropScheme] = useState<ColorScheme>(
+    parseOrNull(initial.backgroundColorSchemeJson ?? null) ?? DEFAULT_COLOR_SCHEME,
+  )
+  const [backdropSettingsMap, setBackdropSettingsMap] = useState<VisualSettingsMap>(() =>
+    parseVisualSettingsMap(initial.backgroundVisualSettingsJson),
+  )
 
   // Always persist a full color scheme so page backgrounds are never stuck on
   // the platform purple default when the artist only touched brand swatches.
@@ -96,9 +116,25 @@ export default function ChannelVisualPresetPanel({
       slideshowIntervalSeconds: initial.slideshowIntervalSeconds,
       slideshowTransitionMs: initial.slideshowTransitionMs,
       slideshowAutoplay: initial.slideshowAutoplay,
+      useBackgroundGradient: backdropEnabled,
+      backgroundColorSchemeJson: backdropEnabled ? JSON.stringify(backdropScheme) : null,
+      backgroundVisualPreset: backdropEnabled ? backdropPreset : null,
+      backgroundVisualSettingsJson:
+        backdropEnabled && Object.keys(backdropSettingsMap).length > 0
+          ? JSON.stringify(backdropSettingsMap)
+          : null,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, scheme, brandAccentPreset, settingsMap])
+  }, [
+    preset,
+    scheme,
+    brandAccentPreset,
+    settingsMap,
+    backdropEnabled,
+    backdropPreset,
+    backdropScheme,
+    backdropSettingsMap,
+  ])
 
   function updateColor(key: keyof ColorScheme, value: string) {
     setScheme((s) => ({ ...s, [key]: value }))
@@ -193,6 +229,36 @@ export default function ChannelVisualPresetPanel({
               settingsMap={settingsMap}
               onSettingsChange={setSettingsMap}
               showPreview
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="studio-field--block">
+        <div className="channel-visualizer-toggle-row">
+          <span className="studio-label">Backdrop</span>
+          <StudioSwitch
+            checked={backdropEnabled}
+            onChange={(enabled) => {
+              setBackdropEnabled(enabled)
+              if (enabled && !backdropPreset) setBackdropPreset('BLOOM')
+            }}
+            label={backdropEnabled ? 'Disable backdrop' : 'Enable backdrop'}
+          />
+        </div>
+        <p className="studio-text-muted-sm studio-mt-xs">
+          A separate ambient look for your channel page while nothing is playing — distinct from the
+          background visualizer above, which reacts to what&apos;s currently on.
+        </p>
+        {backdropEnabled ? (
+          <div className="channel-visualizer-selection studio-mt-sm">
+            <BackdropPresetPanel
+              value={backdropPreset}
+              onChange={setBackdropPreset}
+              colorScheme={backdropScheme}
+              onColorSchemeChange={setBackdropScheme}
+              settingsMap={backdropSettingsMap}
+              onSettingsChange={setBackdropSettingsMap}
             />
           </div>
         ) : null}

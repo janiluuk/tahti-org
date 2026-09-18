@@ -14,7 +14,7 @@ import {
 } from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
-import { AvatarCropModal } from '@/components/avatar-crop-modal'
+import { ImageCropModal } from '@/components/image-crop-modal'
 import {
   avatarFromUrl,
   completeAvatarUpload,
@@ -334,7 +334,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange, artistKin
       />
 
       {cropSrc && (
-        <AvatarCropModal
+        <ImageCropModal
           imageSrc={cropSrc}
           outputMime={cropMime}
           onCancel={() => setCropSrc(null)}

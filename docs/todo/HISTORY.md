@@ -6,6 +6,207 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-16 — internet-radio-now-playing-scraper.md
+
+Shipped (partial) in [#531](https://github.com/janiluuk/tahti-org/pull/531):
+a 10-minute cron
+(`apps/worker/src/jobs/internet-radio-now-playing-sync.ts`) that refreshes
+`InternetRadioStation.currentProgramTitle`/`currentProgramArtist` for
+stations a user has actually added — never the raw preset catalog — and
+only for hosts with a working parser, so unsupported stations are skipped
+without a wasted fetch on every tick. Two of the six Finnish presets are
+implemented and verified against the live sites: **radiohelsinki.fi**
+(server-renders the current show + song directly, no client fetch
+needed) and **radioplay.fi** — Bauer Media, covers both **NRJ** and
+**Radio Nova** (embeds a hydration state blob; takes the last non-empty
+`stationNowPlaying` object, since earlier ones can be empty sibling-
+station placeholders). Not implemented: **YleX** (Yle Areena is a fully
+client-rendered SPA with nothing in the initial HTML; Yle's real
+program-guide API needs a registered app key not available in this
+session) and **Radio Rock**/**Suomipop** (Nelonen Media — no now-playing
+data found in the static HTML or any obvious embedded state). Frontend:
+`internet-radio-panel.tsx` shows the cached title/artist under each
+station and links the station name to its `programmingUrl` (external)
+for click-through. Remaining work (Yle app-key registration, a Nelonen
+Media parser) moved to a fresh slim todo,
+`internet-radio-now-playing-yle-nelonen.md`.
+
+## 2026-09-16 — embed-track-manual-import.md
+
+Shipped in [#528](https://github.com/janiluuk/tahti-org/pull/528): a manual
+"Import" action in the track editor's Audio tab for `HEARTHIS_EMBED` tracks
+(`POST /api/me/sound/:id/import-embed`), re-checking downloadability via the
+hearthis.at API and re-enqueueing the existing localize-to-real-audio job on
+demand. Also fixed a real bug found while investigating: the existing
+automatic localize job never cleared `embedUri`/`embedProvider` or reset
+`contentType` off `EMBED` once real audio landed, so even tracks localized
+through the already-shipped automatic path kept rendering as embeds
+everywhere. New `Sound.embedSourceUrl` column persists the original
+hearthis.at track URL for the re-fetch (`embedUri` only holds the bare
+numeric id used for the embed iframe). No leftovers — `SPOTIFY_EMBED`/
+`MIXCLOUD_EMBED` genuinely have no download path to extend this to.
+
+## 2026-09-16 — bloom-visualizer-preset.md
+
+Shipped in [#530](https://github.com/janiluuk/tahti-org/pull/530): the
+Backdrop preset system (`Channel.backgroundVisualPreset` /
+`useBackgroundGradient` / `backgroundColorSchemeJson`) had been fully wired
+through the API for a while but had zero frontend consumer — no picker, no
+renderer, no per-preset settings storage. Built all three, shipping a
+selective-bloom preset (Three.js `UnrealBloomPass`) as the first
+implemented option: `BloomPreset` (glowing orbs, colored from the
+channel's palette, speed/intensity/audio-reactive knobs reusing the
+existing `{speed, intensity, scale, audioReactive}` settings shape via a
+new `backgroundVisualSettingsJson` column), `ChannelBackdropVisualizer`
+mounted on the public channel page (active only while nothing is
+playing — the header preset already covers "what's on"), and
+`BackdropPresetPanel` — a compact "Backdrop" section in the existing
+Visual style dashboard panel, plus the live channel-editor preview. The
+other three `BACKGROUND_VISUAL_PRESETS` ids (`INTERACTIVE_POINTS`,
+`FAT_LINES`, `VIDEO_KINECT`, `BACKDROP_AREA`) remain reserved/
+unimplemented — the picker only offers Bloom. Not manually verified in a
+live browser (Chrome extension was disconnected this session) — verified
+instead via a full curl-based round trip (login → PATCH → public GET)
+confirming the settings persist and reach the public channel payload, plus
+`pnpm ci:check` and new API test coverage (`channel-visual.test.ts`).
+
+## 2026-09-16 — loading-indicators-playables.md
+
+Shipped in [#529](https://github.com/janiluuk/tahti-org/pull/529): a single
+shared `Spinner` component (`packages/ui`, `.ui-spinner--sm`/
+`--md`) replacing three near-duplicate ad-hoc spinner CSS blocks
+(`WaveformPlayer`'s `.waveform-player__spinner`, the mini-player's
+`.mini-player__spinner`, and reusing the existing `waveform-player-spin`
+keyframe under a generic name — `.studio-spinner`'s background-job spinner
+left untouched, out of scope). Fixed a real gap in `use-player-load.ts`:
+`buffering` was reset to `false` at the start of every `load()` call, so the
+spinner only ever appeared after the browser's own `waiting` event fired —
+often well after the click, with a dead-looking gap in between; now it's
+`true` immediately (embeds excluded, they have no `<audio>` element to
+derive it from). Wired the new spinner into: the mini-player collapsed bar
+and full-player sheet's play buttons (already had ad-hoc spinners, now
+sharing the same component), the queue panel's "Now playing" thumbnail
+(previously had no loading state at all), `QueueThumb` for the rare
+repeated-track-in-queue case, and the profile Tracks tab's cover-play
+button. Added a `/dev/components` demo section. Not attempted: an
+exhaustive audit of every other playable surface in the app (collection
+rows, release rows, etc.) — flagged as follow-up if more turn up.
+
+## 2026-09-15 — Motion PATCH: closeAt (voting-window adjustment)
+
+Driven by `../tahti-player`'s `docs/todo/governance-gap-list.md` #15, not
+a local todo file here. `PatchMotionSchema` (`packages/shared/src/dto/governance.ts`)
+never accepted `closeAt` at all — added it, and `PATCH
+/api/v1/governance/motions/:id` (`apps/api/src/routes/governance/index.ts`)
+now applies it under the same DRAFT-only gate as title/description, with
+`closeAt > openAt` validated the same way motion creation already does.
+`openAt` stays fixed (not patchable — a draft hasn't opened, nothing to
+reschedule the start of). 4 new cases in `motions.test.ts` (draft patch
+OK, invalid `closeAt` 400s, blocked once OPEN with 409) — 11/11 green
+against real Postgres. `eslint`/`tsc --noEmit` clean. Shipped in
+[#525](https://github.com/janiluuk/tahti-org/pull/525).
+
+## 2026-09-15 — mobile-player-nav-and-tahti-theme-visuals.md
+
+Pointer-only file — the real work always lived in `../tahti-player`'s own
+`docs/todo/` under the same filename. That side shipped it 2026-09-10
+(workplan cycle 0.0.109): thumbnail glow via grid-level avatar wash + wider
+`CardGrid` gap (per-card bleed abandoned), alongside a `tahti-theme-refactor`
+Button call-site audit and the `tahti-dark` primary/secondary token pair
+verification. This repo's pointer was never deleted after that shipped —
+folding it now. No code changes on this side (this repo was always the
+visual reference only, never the implementation target).
+
+## 2026-09-15 — plugin-registry-extraction.md §6 test gaps
+
+Closed the two remaining open rows in §6's test matrix, shipped in
+`../tahti-player`'s [#85](https://github.com/janiluuk/tahti-player/pull/85):
+`removeManagedPluginInstall` test coverage (plus a safety tightening found
+while writing it — the guard only scoped to the whole appData dir, not the
+plugins dir its own error message claims), and the `it.todo` for enable/
+disable state surviving a simulated restart. The file itself stays open —
+ownership-split sign-off and final extraction remain the real blocker, and
+that's a product/architecture decision, not a code gap.
+
+## 2026-09-15 — profile-branding-followups.md
+
+Shipped in [#523](https://github.com/janiluuk/tahti-org/pull/523): five small
+slices closing leftovers from three earlier merged PRs plus one direct
+request. Wired `backdropUrl`/`nameplateText`/`nameplateColor` (exposed on the
+public API by #522 but never rendered) into `ProfileHero`/`ProfileCover` and
+the public `/u/[username]` page. Added an **Artist logo** section to Settings
+→ Account → Branding — the underlying alpha-PNG `User.logoUrl`/`logoPlacement`
+feature already existed end-to-end but its only upload UI lived in Settings →
+Artist Info; added a second entry point reusing the same actions and the
+existing AVATAR/COVER/BOTH placement enum. Added the crop step #522 left out
+of the Channel Designer's own backdrop image upload. Backfilled two test
+gaps: `pruneStaleWorkers()`'s 90-day cutoff (#520) and `GET
+/api/admin/stats/cron-runs/history` (#515). All typecheck/eslint/prettier
+clean; 22 tests passing (12 worker-registry, 10 admin-stats) against a real
+Postgres. Not manually verified in a browser (no dev server in that session)
+— worth a follow-up click-through of the Branding logo controls and the
+Channel Designer backdrop crop.
+
+## 2026-09-15 — channel-radio-show-now-playing-endpoints.md
+
+Added `GET /api/v1/radio/show/:channelSlug/now-playing` and `GET
+/api/v1/radio/show/:channelSlug/upcoming`, unblocking `tahti-player`'s
+`listen-bugs-batch-2026-09-14.md` item #3 (RadioShowView.tsx now-playing/
+upcoming). Reused the existing per-channel `nowPlayingTitle`/`...UpdatedAt`
+columns (same 2-minute staleness window as `channels/get.ts`) and
+`curatedRotationItem` queue-ordering logic already used by `/rotation` and
+`nowPlayingNext`, rather than inventing a parallel data model. Both new
+routes are scoped by `channelSlug` (any channel with a curated rotation),
+not hardcoded to Tahti Radio. `upcoming` rotates the queue to start right
+after the current track and drops the wrap-around duplicate of the current
+track for short rotations (caught by a test, fixed before merge). 12/12
+Vitest cases green against a real Postgres, plus `eslint`/`prettier`/
+`tsc --noEmit` clean.
+
+## 2026-09-15 — branding-nameplate.md
+
+Shipped in [#522](https://github.com/janiluuk/tahti-org/pull/522): Settings →
+Account → Branding panel (avatar/backdrop crop + nameplate pill). Generalized
+the avatar-only crop modal into a reusable `ImageCropModal` (`aspectRatio` +
+`shape` props) shared by the existing channel-identity avatar/logo crop and
+the new backdrop crop. New `User.backdropUrl`/`nameplateText`/
+`nameplateColor` columns, presign/upload/complete routes for the backdrop,
+and `PATCH /api/me/profile` extended for the nameplate fields. 32 API tests
+green. Follow-ups not in this PR, moved to `docs/remaining-work.md`: wiring
+the new fields into the public `/u/[username]` hero, and a crop step for the
+Channel Designer's own backdrop upload.
+
+## 2026-09-15 — redis-memory-cleanup.md
+
+Shipped in [#520](https://github.com/janiluuk/tahti-org/pull/520): prod
+Redis `maxmemory 2gb` + `allkeys-lru` (previously unset — unbounded growth,
+no eviction), bounded BullMQ `removeOnComplete`/`removeOnFail` retention
+across `apps/api`/`apps/worker` queues, and `pruneStaleWorkers()` reaping
+`workers:known` entries stale past 90 days. Left open: no unit test for the
+90-day cutoff logic, moved to `docs/remaining-work.md`.
+
+## 2026-09-12 — cron-runner-service.md
+
+Shipped in [#515](https://github.com/janiluuk/tahti-org/pull/515): dedicated
+`cron-runner` stack service owns BullMQ repeatable-cron registration so
+worker replicas stop racing to delete/recreate the manifest — root cause of
+a confirmed incident (duplicate `hls-minio-sync` registrations doubling
+MinIO load, ~40s sync gaps). Adds bounded `CronRun.resultJson` plus a new
+`GET /api/admin/stats/cron-runs/history` endpoint and `/admin/crons` admin
+page. Fixed a zod `.int().positive()` schema that would have crashed
+Fastify's ajv compiler at boot (same class of bug already worked around
+elsewhere in the same file). Left open: no test for the new history route
+(needs a live Postgres), moved to `docs/remaining-work.md`.
+
+## 2026-09-12 — split-god-classes.md
+
+Shipped in [#503](https://github.com/janiluuk/tahti-org/pull/503): split oversized
+collections/sound/sound-editor routes, mini-player folder, player-context hooks,
+pro-audio editor panels, collection editor chrome, admin files browser parts,
+channel controls/identity, profile/about helpers, visual-preset thumbs, and
+schedule add-show UI. Optional further peels (channel page ~759, pro-audio ~805,
+tour-steps/seed scripts) left for later if needed.
+
 ## 2026-09-11 — admin-mail-stats-dashboard.md
 
 Folded the contact-inbox metrics task after its Prometheus exporter, board-only
@@ -429,3 +630,19 @@ attachment`) instead of leaking the raw storage key. Frontend wiring
 member-facing meeting detail page) already shipped in the sibling
 `tahti-player` repo. No separate todo file was tracked for this task.
 PR [#489](https://github.com/janiluuk/tahti-org/pull/489).
+
+### 2026-09-12 — Configure sound fallback cache root
+
+Worker's `sound-fallback-cache.ts` jobs (`warm-sound-fallback-cache`,
+`sound-fallback-cache-sync`) read `SOUND_CACHE_ROOT`, but only the legacy
+`ARCHIVE_CACHE_ROOT` was ever set in the Compose and Swarm worker manifests —
+the jobs silently no-op every run (empty `cacheRoot` short-circuits before
+touching Prisma) despite the `/archive-cache` volume being mounted, and the
+summary log only fires when `downloaded>0`/`pruned>0`, so the gap never
+surfaced as an error. Confirmed live: every channel's Liquidsoap stayed
+permanently on the buggy `archive_remote_url` fallback branch (`file.exists()`
+is only checked once, at channel spawn) because `/archive-cache` never got
+warmed — this is what silenced tahti-radio. Set `SOUND_CACHE_ROOT` alongside
+`ARCHIVE_CACHE_ROOT` in both `infra/docker-compose.stack.yml` and
+`infra/docker-stack.yml`, keeping the legacy variable for older images during
+rolling deploys.

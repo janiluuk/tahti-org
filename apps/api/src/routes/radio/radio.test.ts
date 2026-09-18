@@ -316,3 +316,139 @@ describe('radio show detail — past episode recording linkage', () => {
     expect(body.pastEpisodes[0]?.recording).toBeNull()
   })
 })
+
+describe('radio show now-playing and upcoming', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  const PREFIX4 = 'radio-show-live-test-'
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX4)
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX4)
+    await app.close()
+  })
+
+  it('404s both endpoints for an unknown channel slug', async () => {
+    const nowPlayingRes = await app.inject({
+      method: 'GET',
+      url: '/api/v1/radio/show/no-such-channel/now-playing',
+    })
+    expect(nowPlayingRes.statusCode).toBe(404)
+
+    const upcomingRes = await app.inject({
+      method: 'GET',
+      url: '/api/v1/radio/show/no-such-channel/upcoming',
+    })
+    expect(upcomingRes.statusCode).toBe(404)
+  })
+
+  it('reports no track and an empty queue for a channel with no rotation data yet', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX4}quiet@example.com`,
+      username: `${PREFIX4}quiet`,
+      displayName: 'Quiet Channel',
+    })
+
+    const nowPlayingRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}/now-playing`,
+    })
+    expect(nowPlayingRes.statusCode).toBe(200)
+    expect(nowPlayingRes.json()).toEqual({ track: null })
+
+    const upcomingRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}/upcoming`,
+    })
+    expect(upcomingRes.statusCode).toBe(200)
+    expect(upcomingRes.json()).toEqual([])
+  })
+
+  it('returns the fresh now-playing track, and null once it goes stale', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX4}live@example.com`,
+      username: `${PREFIX4}live`,
+      displayName: 'Live Channel',
+    })
+    await prisma.channel.update({
+      where: { id: artist.channel!.id },
+      data: {
+        nowPlayingTitle: 'Currently Spinning',
+        nowPlayingArtistName: 'Live Channel',
+        nowPlayingArtistUsername: null,
+        nowPlayingArtworkUrl: null,
+        nowPlayingDurationSec: 180,
+        nowPlayingUpdatedAt: new Date(),
+      },
+    })
+
+    const freshRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}/now-playing`,
+    })
+    expect(freshRes.statusCode).toBe(200)
+    expect(freshRes.json()).toEqual({
+      track: {
+        title: 'Currently Spinning',
+        artistName: 'Live Channel',
+        artistUsername: null,
+        artworkUrl: null,
+        durationSec: 180,
+        startedAt: expect.any(String),
+      },
+    })
+
+    // Older than the 2-minute staleness window used by the main channel
+    // payload (apps/api/src/routes/channels/get.ts) — same convention here.
+    await prisma.channel.update({
+      where: { id: artist.channel!.id },
+      data: { nowPlayingUpdatedAt: new Date(Date.now() - 5 * 60 * 1000) },
+    })
+
+    const staleRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}/now-playing`,
+    })
+    expect(staleRes.statusCode).toBe(200)
+    expect(staleRes.json()).toEqual({ track: null })
+  })
+
+  it('returns the upcoming queue starting after the current track, wrapping around', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX4}queue@example.com`,
+      username: `${PREFIX4}queue`,
+      displayName: 'Queue Channel',
+    })
+    const channelId = artist.channel!.id
+
+    const first = await createReadySound(prisma, channelId, 'Queue Track One')
+    const second = await createReadySound(prisma, channelId, 'Queue Track Two')
+    const third = await createReadySound(prisma, channelId, 'Queue Track Three')
+
+    await prisma.curatedRotationItem.create({
+      data: { channelId, soundId: first.id, position: 0, addedById: artist.id },
+    })
+    await prisma.curatedRotationItem.create({
+      data: { channelId, soundId: second.id, position: 1, addedById: artist.id },
+    })
+    await prisma.curatedRotationItem.create({
+      data: { channelId, soundId: third.id, position: 2, addedById: artist.id },
+    })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { nowPlayingTitle: 'Queue Track Two', nowPlayingUpdatedAt: new Date() },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}/upcoming`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as Array<{ title: string }>
+    expect(body.map((b) => b.title)).toEqual(['Queue Track Three', 'Queue Track One'])
+  })
+})

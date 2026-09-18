@@ -11,6 +11,8 @@ import { ReportButton } from '@/components/report-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { LibraryBrowser } from '@/components/library/library-browser'
 import { SoundWaveform } from '@/components/sound-waveform'
+import { useCoverAccent } from '@/lib/use-cover-accent'
+import { Spinner } from '@tahti/ui'
 
 export interface TrackTabItem {
   id: string
@@ -135,6 +137,148 @@ function EmbedFrame({ track }: { track: TrackTabItem }) {
   }
 }
 
+/** One track row — local or embed-sourced alike, so the same structure and
+ * hover-play/glow treatment applies regardless of where the audio lives.
+ * A standalone component (not inlined in the list's .map) because it needs
+ * its own useCoverAccent() hook call per track. */
+function TrackRow({
+  track,
+  isExpanded,
+  isCurrent,
+  isLoading,
+  canEdit,
+  channelSlug,
+  onToggle,
+  currentTime,
+  duration,
+  seek,
+}: {
+  track: TrackTabItem
+  isExpanded: boolean
+  /** Whether this is the track currently loaded in the player (drives the
+   * live progress-seeking waveform vs. the static play-trigger waveform). */
+  isCurrent: boolean
+  /** isCurrent, and the player hasn't started audio for it yet. */
+  isLoading: boolean
+  canEdit: boolean
+  channelSlug: string | null
+  onToggle: () => void
+  currentTime: number
+  duration: number
+  seek: (ratio: number) => void
+}) {
+  const accent = useCoverAccent(track.bannerUrl)
+  const label = sourceLabel(track.embedProvider)
+  const toggleLabel = isExpanded ? `Close ${track.title}` : `Play ${track.title}`
+
+  return (
+    <li>
+      <div
+        className={`prof-collection-row${accent ? ' prof-collection-row--chroma' : ''}`}
+        style={
+          accent
+            ? {
+                ['--collection-accent' as string]: accent.accent,
+                ['--collection-highlight' as string]: accent.highlight,
+              }
+            : undefined
+        }
+      >
+        <div className="prof-collection-cover">
+          {track.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={track.bannerUrl} alt="" width={92} height={92} />
+          ) : (
+            <span className="prof-collection-cover-ph" aria-hidden />
+          )}
+          <button
+            type="button"
+            className={`prof-collection-cover-play${isExpanded ? ' prof-collection-cover-play--expanded' : ''}${isLoading ? ' prof-collection-cover-play--loading' : ''}`}
+            onClick={onToggle}
+            aria-label={isLoading ? `Loading ${track.title}` : toggleLabel}
+            disabled={isLoading}
+          >
+            {isLoading ? <Spinner size="sm" /> : isExpanded ? '×' : '▶'}
+          </button>
+        </div>
+        <button
+          type="button"
+          className="prof-collection-row__clickarea"
+          onClick={onToggle}
+          aria-label={toggleLabel}
+        >
+          <div className="prof-collection-title">{track.title}</div>
+          <div className="prof-list-meta prof-list-meta--strong">
+            {track.artistName ? `${track.artistName} · ` : null}
+            {formatDuration(track.durationSec)}
+            {track.pinned && ' · Pinned'}
+            {label && <EmbedSourceIcon label={label} />}
+          </div>
+        </button>
+        {canEdit && (
+          <Link
+            href={`/dashboard/sounds/${track.id}/editor`}
+            className="prof-row-edit-btn"
+            aria-label={`Edit ${track.title}`}
+            title="Edit"
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M11.4 1.6a1.5 1.5 0 0 1 2.1 0l.9.9a1.5 1.5 0 0 1 0 2.1l-7.8 7.8-3.4.9.9-3.4 7.3-7.3z"
+              />
+            </svg>
+          </Link>
+        )}
+      </div>
+      {track.playUrl &&
+        track.peaks &&
+        track.peaks.length > 0 &&
+        (isCurrent ? (
+          <SoundWaveform
+            peaks={track.peaks}
+            progress={duration > 0 ? currentTime / duration : 0}
+            onSeek={seek}
+            size="large"
+          />
+        ) : (
+          <button
+            type="button"
+            className="ch-sound-playback__wf-btn"
+            onClick={onToggle}
+            aria-label={`Play ${track.title}`}
+          >
+            <SoundWaveform peaks={track.peaks} size="large" />
+          </button>
+        ))}
+      {isExpanded && (
+        <div className="prof-collection-expand">
+          <EmbedFrame track={track} />
+          <div className="prof-track-modal__actions prof-collection-expand__actions">
+            {channelSlug && (
+              <div className="prof-track-modal__love">
+                <LoveButton channelSlug={channelSlug} itemId={track.id} />
+              </div>
+            )}
+            <ReportButton targetType="SOUND_ITEM" targetId={track.id} variant="icon" />
+            {track.releaseSlug ? (
+              <Link href={`/r/${track.releaseSlug}`} className="prof-track-modal__primary">
+                View release
+              </Link>
+            ) : (
+              track.channelItemUrl && (
+                <Link href={track.channelItemUrl} className="prof-track-modal__primary">
+                  View on channel
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      )}
+    </li>
+  )
+}
+
 export function TracksTab({
   tracks,
   isOwner,
@@ -152,7 +296,7 @@ export function TracksTab({
   const canEdit = isOwner || isAdmin
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
-  const { track: playerTrack, load, currentTime, duration, seek } = usePlayer()
+  const { track: playerTrack, buffering, load, currentTime, duration, seek } = usePlayer()
 
   const sourceCounts = useMemo(() => {
     const counts: Record<SourceFilter, number> = {
@@ -277,110 +421,21 @@ export function TracksTab({
               }))
             return (
               <ul className="prof-list prof-collection-list">
-                {visible.map((t) => {
-                  const isExpanded = expandedTrackId === t.id
-                  const label = sourceLabel(t.embedProvider)
-                  return (
-                    <li key={t.id}>
-                      <div className="prof-collection-row">
-                        <button
-                          type="button"
-                          className="prof-collection-play"
-                          onClick={() => toggleRow(t, queue)}
-                          aria-label={isExpanded ? `Close ${t.title}` : `Play ${t.title}`}
-                        >
-                          {isExpanded ? '×' : '▶'}
-                        </button>
-                        <button
-                          type="button"
-                          className="prof-collection-row__clickarea"
-                          onClick={() => toggleRow(t, queue)}
-                          aria-label={isExpanded ? `Close ${t.title}` : `Play ${t.title}`}
-                        >
-                          <div className="prof-collection-cover">
-                            {t.bannerUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={t.bannerUrl} alt="" width={76} height={76} />
-                            ) : (
-                              <span className="prof-collection-cover-ph" aria-hidden />
-                            )}
-                          </div>
-                          <div>
-                            <div className="prof-collection-title">{t.title}</div>
-                            <div className="prof-list-meta prof-list-meta--strong">
-                              {t.artistName ? `${t.artistName} · ` : null}
-                              {formatDuration(t.durationSec)}
-                              {t.pinned && ' · Pinned'}
-                              {label && <EmbedSourceIcon label={label} />}
-                            </div>
-                          </div>
-                        </button>
-                        {canEdit && (
-                          <Link
-                            href={`/dashboard/sounds/${t.id}/editor`}
-                            className="prof-row-edit-btn"
-                            aria-label={`Edit ${t.title}`}
-                            title="Edit"
-                          >
-                            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-                              <path
-                                fill="currentColor"
-                                d="M11.4 1.6a1.5 1.5 0 0 1 2.1 0l.9.9a1.5 1.5 0 0 1 0 2.1l-7.8 7.8-3.4.9.9-3.4 7.3-7.3z"
-                              />
-                            </svg>
-                          </Link>
-                        )}
-                      </div>
-                      {t.playUrl &&
-                        t.peaks &&
-                        t.peaks.length > 0 &&
-                        (playerTrack?.id === t.id ? (
-                          <SoundWaveform
-                            peaks={t.peaks}
-                            progress={duration > 0 ? currentTime / duration : 0}
-                            onSeek={seek}
-                            size="large"
-                          />
-                        ) : (
-                          <button
-                            type="button"
-                            className="ch-sound-playback__wf-btn"
-                            onClick={() => toggleRow(t, queue)}
-                            aria-label={`Play ${t.title}`}
-                          >
-                            <SoundWaveform peaks={t.peaks} size="large" />
-                          </button>
-                        ))}
-                      {isExpanded && (
-                        <div className="prof-collection-expand">
-                          <EmbedFrame track={t} />
-                          <div className="prof-track-modal__actions prof-collection-expand__actions">
-                            {channelSlug && (
-                              <div className="prof-track-modal__love">
-                                <LoveButton channelSlug={channelSlug} itemId={t.id} />
-                              </div>
-                            )}
-                            <ReportButton targetType="SOUND_ITEM" targetId={t.id} variant="icon" />
-                            {t.releaseSlug ? (
-                              <Link
-                                href={`/r/${t.releaseSlug}`}
-                                className="prof-track-modal__primary"
-                              >
-                                View release
-                              </Link>
-                            ) : (
-                              t.channelItemUrl && (
-                                <Link href={t.channelItemUrl} className="prof-track-modal__primary">
-                                  View on channel
-                                </Link>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  )
-                })}
+                {visible.map((t) => (
+                  <TrackRow
+                    key={t.id}
+                    track={t}
+                    isExpanded={expandedTrackId === t.id}
+                    isCurrent={playerTrack?.id === t.id}
+                    isLoading={buffering && playerTrack?.id === t.id}
+                    canEdit={canEdit}
+                    channelSlug={channelSlug}
+                    onToggle={() => toggleRow(t, queue)}
+                    currentTime={currentTime}
+                    duration={duration}
+                    seek={seek}
+                  />
+                ))}
               </ul>
             )
           }}

@@ -116,6 +116,9 @@ interface ProfileResponse {
     avatarTheme?: AvatarTheme | null
     logoUrl?: string | null
     logoPlacement?: LogoPlacement | null
+    backdropUrl?: string | null
+    nameplateText?: string | null
+    nameplateColor?: string | null
     tipJarUrl: string | null
     countryCode?: string | null
     pronouns?: string | null
@@ -415,6 +418,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
               avatarUrl={artist.avatarUrl}
               avatarPosterUrl={artist.avatarPosterUrl}
               themeBackground={themeBackground}
+              backdropUrl={artist.backdropUrl ?? null}
               logoUrl={logoUrl}
               logoOnCover={logoShowsOnCover(logoPlacement)}
               logoOnAvatar={logoShowsOnAvatar(logoPlacement)}
@@ -433,6 +437,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
             pronouns={artist.pronouns}
             isLive={isLive}
             isMember={Boolean(artist.isMember)}
+            nameplateText={artist.nameplateText ?? null}
+            nameplateColor={artist.nameplateColor ?? null}
             channelHref={links.channel}
             subscribeHref={links.subscribe}
             showSupport={showSupport}

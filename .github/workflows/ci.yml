@@ -72,13 +72,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build website image
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do
             echo "Build attempt ${attempt}/3"
-            if docker build \
+            if docker buildx build \
               --build-arg "NGINX_IMAGE=${NGINX_BASE_IMAGE}" \
+              --cache-from type=gha \
+              --cache-to type=gha,mode=max \
+              --load \
               -t tahti/website:ci ./website; then
               exit 0
             fi
@@ -117,7 +123,9 @@ jobs:
 
   typecheck:
     name: Typecheck
-    needs: lint
+    # No `needs: lint` — typecheck doesn't consume lint's output, and
+    # all-checks already requires both to pass, so run them in parallel
+    # instead of serializing typecheck behind lint's install+eslint time.
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -186,7 +194,7 @@ jobs:
 
   test:
     name: Unit + integration tests
-    needs: lint
+    # No `needs: lint` — same reasoning as typecheck above.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 

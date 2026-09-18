@@ -27,6 +27,10 @@ export interface ChannelResponse {
   colorSchemeJson?: string | null
   visualPreset?: string
   visualSettingsJson?: string | null
+  useBackgroundGradient?: boolean
+  backgroundColorSchemeJson?: string | null
+  backgroundVisualPreset?: string | null
+  backgroundVisualSettingsJson?: string | null
   slideshowPreset?: string
   slideshowIntervalSeconds?: number
   slideshowTransitionMs?: number

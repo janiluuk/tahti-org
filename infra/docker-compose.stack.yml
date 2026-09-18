@@ -107,6 +107,9 @@ x-app-env: &app-env
   HLS_MINIO_PREFIX: hls-live
   HLS_STALE_SECONDS: '20'
   ARCHIVE_CACHE_ROOT: /archive-cache
+  # Worker sound-fallback cache jobs read this name. Keep ARCHIVE_CACHE_ROOT
+  # above for compatibility with older images during rolling deployments.
+  SOUND_CACHE_ROOT: /archive-cache
   APP_URL: ${APP_URL:-http://localhost:${WEB_PORT:-17777}}
   # Self-serve /signup — closed in production unless SIGNUP_OPEN=true in stack.env
   SIGNUP_OPEN: ${SIGNUP_OPEN:-false}
@@ -128,6 +131,7 @@ x-app-env: &app-env
 
 services:
   postgres:
+    restart: unless-stopped
     logging: *loki-logging
     image: postgres:16-alpine
     environment:
@@ -145,6 +149,7 @@ services:
       start_period: 10s
 
   pgbouncer:
+    restart: unless-stopped
     logging: *loki-logging
     image: edoburu/pgbouncer:1.22.1-p0
     environment:
@@ -166,9 +171,21 @@ services:
       start_period: 5s
 
   redis:
+    restart: unless-stopped
     logging: *loki-logging
     image: redis:7-alpine
-    command: ['redis-server', '--appendonly', 'yes', '--loglevel', 'warning']
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--loglevel',
+        'warning',
+        '--maxmemory',
+        '2gb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+      ]
     volumes:
       - stack_redis:/data
     healthcheck:
@@ -178,8 +195,13 @@ services:
       retries: 5
 
   minio:
+    restart: unless-stopped
     logging: *loki-logging
-    image: minio/minio:latest
+    # docker.io/minio/minio denies anonymous pulls as of 2026-09 ("repository
+    # does not exist or may require 'docker login'", even for old pinned
+    # release tags) — quay.io/minio/minio is MinIO's other registry and still
+    # pulls anonymously. Swap both back if docker.io access is ever restored.
+    image: quay.io/minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: tahti
@@ -207,7 +229,7 @@ services:
 
   minio-init:
     logging: *loki-logging
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     environment:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
     depends_on:
@@ -236,6 +258,7 @@ services:
     restart: 'no'
 
   chat:
+    restart: unless-stopped
     logging: *loki-logging
     image: centrifugo/centrifugo:v5
     command: centrifugo --config /centrifugo/config.json --port=8000 --health
@@ -258,6 +281,7 @@ services:
       retries: 5
 
   mailhog:
+    restart: unless-stopped
     logging: *loki-logging
     image: mailhog/mailhog:latest
     ports:
@@ -272,6 +296,7 @@ services:
   # infra/stack/dozzle-users.yml for the dev-only default credential and how
   # to replace it before a real deploy.
   dozzle:
+    restart: unless-stopped
     logging: *loki-logging
     image: amir20/dozzle:v11.0.0
     environment:
@@ -291,6 +316,7 @@ services:
       start_period: 5s
 
   icecast:
+    restart: unless-stopped
     logging: *loki-logging
     image: moul/icecast:latest
     user: '101:102'
@@ -303,6 +329,7 @@ services:
 
   # STREAM-007: optional second Icecast for local failover testing (`docker compose --profile icecast-failover up`)
   icecast-b:
+    restart: unless-stopped
     logging: *loki-logging
     profiles: ['icecast-failover']
     image: moul/icecast:latest
@@ -315,6 +342,7 @@ services:
       - '${ICECAST_B_PORT:-18101}:8000'
 
   rtmp-ingest:
+    restart: unless-stopped
     logging: *loki-logging
     image: tiangolo/nginx-rtmp:latest
     volumes:
@@ -327,6 +355,7 @@ services:
 
   # STREAM-003: optional second RTMP ingest for local failover testing
   rtmp-ingest-b:
+    restart: unless-stopped
     logging: *loki-logging
     profiles: ['rtmp-failover']
     image: tiangolo/nginx-rtmp:latest
@@ -351,10 +380,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ['sh', '-c', 'pnpm --filter @tahti/db exec prisma db push --accept-data-loss']
+    # Service kept its historical `db-push` name (see infra/pgbouncer/README.md,
+    # scripts/stack-up.sh, scripts/deploy_prod.sh for other references) even
+    # though it now runs `migrate deploy`, not `db push` — renaming would touch
+    # 5 files for no functional benefit. `migrate deploy` replays the actual
+    # migration SQL files (including hand-written data statements) instead of
+    # only diffing schema shape — `db push` silently skipped e.g. the
+    # channelKind backfill in 20260915150000_channel_kind. Requires a one-time
+    # baseline before first use — see ops/RUNBOOK.md#database-migrations.
+    command: ['sh', '-c', 'pnpm --filter @tahti/db db:migrate']
     restart: 'no'
 
   api:
+    restart: unless-stopped
     logging: *loki-logging
     build:
       context: ..
@@ -402,6 +440,7 @@ services:
         condition: service_healthy
 
   web:
+    restart: unless-stopped
     logging: *loki-logging
     build:
       context: ..
@@ -435,6 +474,7 @@ services:
       start_period: 45s
 
   worker:
+    restart: unless-stopped
     logging: *loki-logging
     build:
       context: ..
@@ -466,11 +506,27 @@ services:
       redis:
         condition: service_healthy
 
+  # Single owner for BullMQ repeatable-job registration. Keeping scheduling
+  # separate prevents worker replicas from racing to reset the manifest.
+  cron-runner:
+    restart: unless-stopped
+    logging: *loki-logging
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    command: ['tsx', 'apps/worker/src/cron-runner.ts']
+    environment:
+      <<: *app-env
+    depends_on:
+      redis:
+        condition: service_healthy
+
   # stem-separator moved to vimage7 (GPU) — see
   # infra/docker-compose.worker-remote.yml. Nothing runs on this host for it
   # anymore; STEM_SEPARATOR_URL above points there instead.
 
   orchestrator:
+    restart: unless-stopped
     logging: *loki-logging
     build:
       context: ..
@@ -506,6 +562,7 @@ services:
         condition: service_healthy
 
   website:
+    restart: unless-stopped
     logging: *loki-logging
     build:
       context: ../website

@@ -90,6 +90,8 @@ type ProfileCoverProps = {
   avatarPosterUrl?: string | null
   /** CSS background for the cover banner (and avatar fill when no photo). */
   themeBackground?: string | null
+  /** Wide banner photo — takes priority over themeBackground when present. */
+  backdropUrl?: string | null
   /** Alpha logo URL. */
   logoUrl?: string | null
   /** Print logo on the cover banner. */
@@ -104,16 +106,22 @@ export function ProfileCover({
   avatarUrl,
   avatarPosterUrl,
   themeBackground,
+  backdropUrl,
   logoUrl,
   logoOnCover = false,
   logoOnAvatar = false,
 }: ProfileCoverProps) {
-  const coverStyle = themeBackground
-    ? ({ ['--prof-cover-theme' as string]: themeBackground } as React.CSSProperties)
-    : undefined
+  const coverStyle = backdropUrl
+    ? ({ backgroundImage: `url(${backdropUrl})` } as React.CSSProperties)
+    : themeBackground
+      ? ({ ['--prof-cover-theme' as string]: themeBackground } as React.CSSProperties)
+      : undefined
 
   return (
-    <div className={cn('prof-cover', themeBackground && 'prof-cover--themed')} style={coverStyle}>
+    <div
+      className={cn('prof-cover', !backdropUrl && themeBackground && 'prof-cover--themed')}
+      style={coverStyle}
+    >
       <div className="prof-cover-overlay" aria-hidden />
       {logoOnCover && logoUrl ? (
         <img src={logoUrl} alt="" className="prof-cover-logo" loading="lazy" decoding="async" />
@@ -145,6 +153,9 @@ type ProfileHeroProps = {
   isLive?: boolean
   /** Association member of Tahti ry — shows a modest badge next to the name. */
   isMember?: boolean
+  /** Short label rendered as a colored pill next to the display name. */
+  nameplateText?: string | null
+  nameplateColor?: string | null
   channelHref?: string | null
   subscribeHref: string
   /** When false, hide the Support CTA (no tiers / payments). Defaults to true. */
@@ -195,6 +206,8 @@ export function ProfileHero({
   pronouns,
   isLive,
   isMember = false,
+  nameplateText,
+  nameplateColor,
   channelHref,
   subscribeHref,
   showSupport = true,
@@ -218,6 +231,14 @@ export function ProfileHero({
             {displayName}
             {pronouns && <span className="prof-pronouns">{pronouns}</span>}
             {isMember ? <MemberBadge /> : null}
+            {nameplateText && (
+              <span
+                className="prof-nameplate"
+                style={{ backgroundColor: nameplateColor ?? undefined }}
+              >
+                {nameplateText}
+              </span>
+            )}
           </div>
           <div className="prof-meta-line">
             <span>@{username}</span>

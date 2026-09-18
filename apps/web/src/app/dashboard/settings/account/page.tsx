@@ -5,10 +5,12 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
+import type { LogoPlacement } from '@tahti/shared'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
 import StoragePanel from '../../storage-panel'
+import { BrandingPanel } from './branding-panel'
 
 interface MembershipInfo {
   status: string
@@ -25,6 +27,15 @@ interface StorageInfo {
   quotaBytes: number | null
   usedBytes: number
   unlimited?: boolean
+}
+
+interface ProfileFields {
+  avatarPosterUrl: string | null
+  backdropUrl: string | null
+  nameplateText: string | null
+  nameplateColor: string | null
+  logoUrl: string | null
+  logoPlacement: LogoPlacement | null
 }
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -48,10 +59,11 @@ export default async function AccountSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [user, membershipInfo, storageInfo] = await Promise.all([
+  const [user, membershipInfo, storageInfo, profileFields] = await Promise.all([
     getDashboardUser(),
     apiFetch<MembershipInfo>(apiUrl, cookie, '/api/me/membership'),
     apiFetch<StorageInfo>(apiUrl, cookie, '/api/me/storage'),
+    apiFetch<ProfileFields>(apiUrl, cookie, '/api/me/profile'),
   ])
   if (!user) redirect('/login')
 
@@ -80,6 +92,20 @@ export default async function AccountSettingsPage() {
           </Link>
         )}
       </div>
+
+      {user.channel && (
+        <BrandingPanel
+          displayName={user.displayName}
+          username={user.username}
+          initialAvatarUrl={user.avatarUrl}
+          initialAvatarPosterUrl={profileFields?.avatarPosterUrl ?? null}
+          initialBackdropUrl={profileFields?.backdropUrl ?? null}
+          initialNameplateText={profileFields?.nameplateText ?? null}
+          initialNameplateColor={profileFields?.nameplateColor ?? null}
+          initialLogoUrl={profileFields?.logoUrl ?? null}
+          initialLogoPlacement={profileFields?.logoPlacement ?? null}
+        />
+      )}
 
       {membershipInfo && (
         <MembershipPanel

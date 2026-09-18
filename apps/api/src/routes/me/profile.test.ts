@@ -117,6 +117,46 @@ describe('M12 — artist profile API', () => {
     expect(res.json().newsFeedUrl).toBeNull()
   })
 
+  it('PATCH /api/me/profile sets and clears backdropUrl and nameplate fields', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: {
+        backdropUrl: 'https://media.tahti.live/avatars/profile-test-artist/backdrop-1.jpg',
+        nameplateText: 'DJ · Producer',
+        nameplateColor: '#5865f2',
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().backdropUrl).toBe(
+      'https://media.tahti.live/avatars/profile-test-artist/backdrop-1.jpg',
+    )
+    expect(res.json().nameplateText).toBe('DJ · Producer')
+    expect(res.json().nameplateColor).toBe('#5865f2')
+
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { backdropUrl: null, nameplateText: null, nameplateColor: null },
+    })
+    expect(cleared.statusCode).toBe(200)
+    expect(cleared.json().backdropUrl).toBeNull()
+    expect(cleared.json().nameplateText).toBeNull()
+    expect(cleared.json().nameplateColor).toBeNull()
+  })
+
+  it('PATCH /api/me/profile rejects a non-hex nameplateColor', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { nameplateColor: 'blue' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('PATCH /api/me/profile regenerates a stale generated placeholder avatar on rename', async () => {
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}placeholder@example.com`,

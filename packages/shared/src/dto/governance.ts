@@ -25,6 +25,10 @@ export const PatchMotionSchema = z.object({
   state: z.enum(['OPEN', 'CLOSED']).optional(),
   title: z.string().trim().min(1).max(200).optional(),
   description: z.string().trim().min(1).max(10_000).optional(),
+  /** Voting window adjustment — DRAFT-only, same gate as title/description
+   * (see PATCH /api/v1/governance/motions/:id). openAt isn't patchable
+   * here: it's fixed at creation, and a draft hasn't opened yet. */
+  closeAt: z.coerce.date().optional(),
 })
 
 export type PatchMotionInput = z.infer<typeof PatchMotionSchema>

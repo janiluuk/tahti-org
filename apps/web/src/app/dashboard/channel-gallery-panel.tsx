@@ -16,6 +16,7 @@ import {
 import { ButtonIcon, Panel, Button, FileDropzone } from '@tahti/ui'
 import { updateChannelGallery } from './channel-gallery-actions'
 import { ZoomableLightbox } from '@/components/zoomable-lightbox'
+import { ImageCropModal } from '@/components/image-crop-modal'
 import {
   isImageFile,
   isVideoFile,
@@ -63,6 +64,8 @@ export default function ChannelGalleryPanel({
   const [isPending, startTransition] = useTransition()
   const [uploading, setUploading] = useState(false)
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const [backdropCropSrc, setBackdropCropSrc] = useState<string | null>(null)
+  const [backdropCropMime, setBackdropCropMime] = useState<'image/jpeg' | 'image/png'>('image/jpeg')
   const previewImages = parseGalleryImageLines(imageLines)
 
   useEffect(() => {
@@ -136,9 +139,7 @@ export default function ChannelGalleryPanel({
     }
   }
 
-  async function handleBackdropFiles(files: File[]) {
-    const file = files[0]
-    if (!file) return
+  async function uploadBackdrop(file: File) {
     setError(null)
     setUploading(true)
     try {
@@ -150,6 +151,28 @@ export default function ChannelGalleryPanel({
     } finally {
       setUploading(false)
     }
+  }
+
+  async function handleBackdropFiles(files: File[]) {
+    const file = files[0]
+    if (!file) return
+    setError(null)
+    // Static images get a pan/zoom crop step first; videos (and GIFs, since
+    // canvas cropping would flatten the animation) upload straight through.
+    if (isImageFile(file)) {
+      setBackdropCropMime(
+        file.type === 'image/png' || file.type === 'image/webp' ? 'image/png' : 'image/jpeg',
+      )
+      setBackdropCropSrc(URL.createObjectURL(file))
+      return
+    }
+    await uploadBackdrop(file)
+  }
+
+  async function onBackdropCropped(blob: Blob) {
+    setBackdropCropSrc(null)
+    const filename = backdropCropMime === 'image/png' ? 'backdrop.png' : 'backdrop.jpg'
+    await uploadBackdrop(new File([blob], filename, { type: backdropCropMime }))
   }
 
   function removeGalleryImage(url: string) {
@@ -228,6 +251,18 @@ export default function ChannelGalleryPanel({
       {showVideoBackground && (
         <div className="studio-field--block">
           <span className="studio-label">Header backdrop (video or image)</span>
+          {backdropCropSrc && (
+            <ImageCropModal
+              imageSrc={backdropCropSrc}
+              outputMime={backdropCropMime}
+              aspectRatio={3}
+              shape="rect"
+              title="Position your backdrop"
+              confirmLabel="Use this backdrop"
+              onCancel={() => setBackdropCropSrc(null)}
+              onCropped={(blob) => void onBackdropCropped(blob)}
+            />
+          )}
           <FileDropzone
             label={uploading ? 'Uploading…' : 'Drop a video or image backdrop'}
             hint="MP4, WebM, JPEG, PNG, WebP, or GIF — max 10 MB. Videos switch header style to video loop."

@@ -553,3 +553,19 @@ export async function exportSoundToHearthis(
   const data = (await res.json()) as { hearthisExportStatus: string }
   return { status: data.hearthisExportStatus, error: null }
 }
+
+export async function importEmbedTrackAudio(
+  itemId: string,
+): Promise<{ status?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/sound/${itemId}/import-embed`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Import failed' }
+  }
+  const data = (await res.json()) as { status: string }
+  return { status: data.status, error: null }
+}

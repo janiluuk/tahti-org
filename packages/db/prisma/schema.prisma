@@ -57,6 +57,16 @@ enum ArtistKind {
   @@schema("channel")
 }
 
+// Artist broadcast channel vs radio-station page (no bio/links/subscribe CTA;
+// shows programming instead). Distinct from ArtistKind (solo vs collective),
+// which only applies within ARTIST channels.
+enum ChannelKind {
+  ARTIST
+  RADIO
+
+  @@schema("channel")
+}
+
 enum TrackAccessMode {
   FREE
   SUBSCRIBERS_ONLY
@@ -780,6 +790,16 @@ model User {
   logoUrl                        String?
   // AVATAR | COVER | BOTH — where logoUrl is printed. Null when no logo.
   logoPlacement                  String?
+  // Wide banner photo shown behind the avatar on the account hero (Settings
+  // → Account → Branding). Cropped client-side to a fixed wide aspect before
+  // upload — separate from Channel.videoBackgroundUrl, which drives the
+  // public channel page's video/image header instead.
+  backdropUrl                    String?
+  // Short decorative label rendered as a colored pill next to the display
+  // name (Settings → Account → Branding "Nameplate"). Null hides the pill.
+  nameplateText                  String?
+  // Hex accent for the nameplate pill. Null falls back to the theme accent.
+  nameplateColor                 String?
   socialLinks                    Json?
   tipJarUrl                      String?
   // Artist-configured RSS/Atom feed URL — server-fetched (SSRF-guarded) and
@@ -1253,6 +1273,9 @@ model Channel {
   customDomainVerified            Boolean      @default(false)
   // Solo DJ/artist vs collective/band — drives Members UI + public profile label.
   artistKind                      ArtistKind   @default(SINGLE)
+  // Artist channel (default) vs radio-station page. Only ever RADIO on
+  // system-owned rows like tahti-radio today — see ChannelKind doc comment.
+  channelKind                     ChannelKind  @default(ARTIST)
   state                           ChannelState @default(OFFLINE)
   containerId                     String?
   liveSourceMount                 String
@@ -1337,6 +1360,8 @@ model Channel {
   useBackgroundGradient         Boolean               @default(false)
   backgroundColorSchemeJson     String?
   backgroundVisualPreset        String?
+  // Per-background-preset knobs: JSON map { [BackgroundVisualPreset]: { speed, intensity, scale, audioReactive } } — same shape as visualSettingsJson.
+  backgroundVisualSettingsJson  String?
   // Now-playing title/artist overlay layout + optional settings blob.
   nowPlayingOverlayStyle        String?
   nowPlayingOverlaySettingsJson String?
@@ -1908,6 +1933,11 @@ model Sound {
   qualityBadge         SoundQualityBadge   @default(LOSSLESS)
   embedUri             String? // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
   embedProvider        SoundEmbedProvider?
+  // The original hearthis.at track page URL, kept only for HEARTHIS_EMBED so a
+  // manual "Import" can re-fetch download info later — embedUri stores the
+  // bare numeric id (for hearthisEmbedSrc), which the hearthis.at API can't
+  // look tracks up by. Cleared once the track is localized to real audio.
+  embedSourceUrl       String?
   status               SoundStatus         @default(PENDING)
   // Set to PENDING (not NOT_NEEDED) by the transcode job itself once it
   // knows the source was lossless — see apps/worker/src/jobs/transcode.ts.
@@ -3404,6 +3434,9 @@ model CronRun {
   finishedAt   DateTime?
   outcome      CronOutcome?
   errorMessage String?
+  /// Bounded JSON text returned by the handler; text keeps arbitrary job
+  /// summaries inspectable without coupling persistence to their shapes.
+  resultJson   String?
 
   @@index([jobName, startedAt(sort: Desc)])
   @@schema("admin")
@@ -3788,19 +3821,26 @@ model InternetRadioPreset {
 // A user's own personal library entry — either copied from a preset (presetId
 // set, further edits are theirs alone) or fully custom.
 model InternetRadioStation {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  presetId       String?
-  name           String
-  genre          String?
-  description    String?
-  iconUrl        String?
-  programmingUrl String?
-  streamUrl      String?
-  position       Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                      String    @id @default(cuid())
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  presetId                String?
+  name                    String
+  genre                   String?
+  description             String?
+  iconUrl                 String?
+  programmingUrl          String?
+  streamUrl               String?
+  position                Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  // Cached "now playing" scrape, refreshed on a cron — only populated once a
+  // parser exists for the station's programmingUrl host (see
+  // apps/api/src/lib/internet-radio-now-playing.ts). Null for
+  // unsupported hosts or before the first successful fetch.
+  currentProgramTitle     String?
+  currentProgramArtist    String?
+  currentProgramFetchedAt DateTime?
 
   @@index([userId, position])
   @@schema("core")

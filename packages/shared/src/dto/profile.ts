@@ -20,6 +20,17 @@ export const ProfilePatchSchema = z
     /** Alpha PNG/WebP logo URL. Null clears the logo. */
     logoUrl: z.string().trim().max(2000).nullable().optional(),
     logoPlacement: LogoPlacementSchema.nullable().optional(),
+    /** Wide banner photo behind the avatar on the account hero. Null clears it. */
+    backdropUrl: z.string().trim().max(2000).nullable().optional(),
+    /** Short label rendered as a colored pill next to the display name. Null hides it. */
+    nameplateText: z.string().trim().max(40).nullable().optional(),
+    /** Hex accent for the nameplate pill, e.g. "#5865F2". Null falls back to the theme accent. */
+    nameplateColor: z
+      .string()
+      .trim()
+      .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a 6-digit hex color')
+      .nullable()
+      .optional(),
     tipJarUrl: z.string().trim().max(2000).optional(),
     /** Artist-configured RSS/Atom feed URL for the public "Latest news" section. */
     newsFeedUrl: z.string().trim().max(2000).optional(),

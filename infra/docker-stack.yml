@@ -219,7 +219,8 @@ services:
   # MinIO — object storage for archive audio, covers, waveforms
   # ───────────────────────────────────────────────────────────────────────────
   minio:
-    image: minio/minio:latest
+    # docker.io/minio/minio denies anonymous pulls as of 2026-09; quay.io mirror still works.
+    image: quay.io/minio/minio:latest
     logging: *loki-logging
     command: server /data --console-address ":9001"
     networks: [internal, edge]
@@ -366,6 +367,9 @@ services:
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
       ARCHIVE_CACHE_ROOT: /archive-cache
+      # Current sound-fallback cache jobs read SOUND_CACHE_ROOT; retain the
+      # legacy variable above so older images remain safe during a rollout.
+      SOUND_CACHE_ROOT: /archive-cache
       RECORDINGS_ROOT: /recordings
       ORCHESTRATOR_URL: http://orchestrator:3003
       WORKER_CONCURRENCY: "4"
@@ -474,6 +478,25 @@ services:
         constraints: [node.labels.role == edge]
       resources:
         limits: { cpus: "0.25", memory: 256M }
+
+  # One explicit owner for the repeatable-job manifest. Worker replicas only
+  # execute jobs; they no longer race to delete and recreate schedules.
+  cron-runner:
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
+    logging: *loki-logging
+    command: ["node", "dist/cron-runner.js"]
+    networks: [internal]
+    environment:
+      REDIS_URL: redis://redis:6379
+      # Registers the edge-log cron; the edge worker itself owns the log mount.
+      CADDY_HLS_ACCESS_LOG: /var/log/caddy/hls-access.log
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == worker]
+      restart_policy: { condition: any, delay: 5s }
+      resources:
+        limits: { cpus: "0.1", memory: 128M }
 
   # ───────────────────────────────────────────────────────────────────────────
   # Orchestrator — spawns per-channel Liquidsoap containers

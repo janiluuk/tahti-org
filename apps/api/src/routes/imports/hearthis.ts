@@ -178,6 +178,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
           contentType: 'EMBED',
           embedUri: result.id,
           embedProvider: 'HEARTHIS',
+          embedSourceUrl: track.permalink_url,
           status: 'READY',
           isPublic: true,
           bannerUrl: result.coverUrl,

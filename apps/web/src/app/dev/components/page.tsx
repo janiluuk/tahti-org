@@ -17,6 +17,7 @@ import {
   PinnedAnnouncement,
   SidebarNav,
   SidebarNavItem,
+  Spinner,
   StatCard,
   StatCardGrid,
 } from '@tahti/ui'
@@ -134,6 +135,13 @@ export default function ComponentsPlaygroundPage() {
 
       <PlaygroundSection title="WaveformPlayer" id="waveform-player">
         <PlaygroundWaveformDemo />
+      </PlaygroundSection>
+
+      <PlaygroundSection title="Spinner" id="spinner">
+        <div className="playground-row">
+          <Spinner />
+          <Spinner size="sm" />
+        </div>
       </PlaygroundSection>
 
       <PlaygroundSection title="BroadcastStatusBar" id="broadcast-status-bar">

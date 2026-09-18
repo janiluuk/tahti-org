@@ -31,6 +31,21 @@ export const AvatarProxyQuerySchema = z.object({
   url: z.string().url(),
 })
 
+/** Backdrop (profile banner) upload — static image only, wide-aspect crop
+ * applied client-side before upload (see ImageCropModal). */
+export const BackdropUploadPrepareSchema = z.object({
+  filename: z.string().min(1).max(255),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+})
+
+export const BackdropUploadCompleteSchema = z.object({
+  uploadKey: z.string().min(1).max(512),
+})
+
+export const BackdropUploadCompleteResponseSchema = z.object({
+  backdropUrl: z.string().nullable(),
+})
+
 /** Logo upload — PNG/WebP preferred so alpha is preserved for overlays. */
 export const LogoUploadPrepareSchema = z.object({
   filename: z.string().min(1).max(255),

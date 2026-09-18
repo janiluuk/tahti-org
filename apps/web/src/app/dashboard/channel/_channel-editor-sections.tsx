@@ -33,6 +33,7 @@ import {
 } from './_designer-sections'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
 import type {
+  BackgroundVisualPreset,
   ChannelGalleryMode,
   ChannelHeaderStyle,
   ChannelTextLayerAlignment,
@@ -88,6 +89,10 @@ export type ChannelEditorData = {
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
+    useBackgroundGradient: boolean
+    backgroundColorSchemeJson: string | null
+    backgroundVisualPreset: BackgroundVisualPreset | null
+    backgroundVisualSettingsJson: string | null
   }
   isLive: boolean
   showJoinDate: boolean
@@ -169,6 +174,12 @@ export function ChannelEditorSections({
         slideshowIntervalSeconds: draft.visual.slideshowIntervalSeconds,
         slideshowTransitionMs: draft.visual.slideshowTransitionMs,
         slideshowAutoplay: draft.visual.slideshowAutoplay,
+        useBackgroundGradient: draft.visual.useBackgroundGradient,
+        backgroundColorSchemeJson: draft.visual.backgroundColorSchemeJson,
+        backgroundVisualPreset: draft.visual.backgroundVisualPreset,
+        backgroundVisualSettings: draft.visual.backgroundVisualSettingsJson
+          ? JSON.parse(draft.visual.backgroundVisualSettingsJson)
+          : null,
       })
       if (visualRes.error) {
         setError(visualRes.error)

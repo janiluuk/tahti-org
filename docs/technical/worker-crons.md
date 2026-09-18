@@ -1,6 +1,6 @@
 # Worker repeatable cron jobs
 
-BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.ts`** (`WORKER_CRON_JOBS` — single manifest for worker, API admin, and runbooks), re-exported from `apps/worker/src/cron-manifest.ts`, and registered at worker startup from `apps/worker/src/index.ts`.
+BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.ts`** (`WORKER_CRON_JOBS` — single manifest for workers, API admin, and runbooks). The stack's single `cron-runner` service registers that manifest; worker replicas only execute the resulting jobs. Every execution is persisted in `CronRun` with outcome, returned JSON summary, error, and duration, visible at `/admin/crons`.
 
 | Job | Schedule (UTC) | Note |
 |---|---|---|
@@ -13,7 +13,7 @@ BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.t
 | `sidecar-cleanup` | every 10 min | Remove orphaned recorder/fingerprint sidecar containers left behind when a broadcast ends |
 | `hls-minio-sync` | every 4s (`everyMs`, not cron) | STREAM-001 — mirror live HLS segments from volume to MinIO `hls-live` bucket; matches the Liquidsoap segment cadence so the manifest never runs dry |
 | `hls-caddy-egress-sync` | every minute | STREAM-006 — aggregate Caddy HLS access log bytes into Redis (edge worker only) |
-| `archive-fallback-cache-sync` | every 10 min | STREAM-009 — refresh local archive fallback cache for Liquidsoap |
+| `sound-fallback-cache-sync` | every 10 min | STREAM-009 — refresh local sound fallback cache for Liquidsoap |
 | `weekly-broadcast-reset` | Monday 00:00 | M20 — reset weekly broadcast counters |
 | `tahti-selects-weekly-draw` | Monday 01:00 | Re-draw the Tahti Selects rotation from opted-in tracks (max 3/artist, 50 total) |
 | `fan-sub-payout` | daily 04:00 | M19 |
@@ -32,6 +32,6 @@ BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.t
 | `live-show-recurrence-generate` | daily 03:15 | Roll recurring `LiveShowSeries` forward: generate missing `ScheduledLiveShow` occurrences up to each series' horizon |
 | `missed-live-show-scan` | 5 min past every hour | Flag `ScheduledLiveShow`s whose start time passed with no `Broadcast`, notify the board |
 
-To add a cron: extend `WORKER_CRON_JOBS` in `packages/shared/src/worker-cron-jobs.ts`, implement the handler in `apps/worker/src/jobs/`, and wire the job name in the worker `switch` in `index.ts`.
+To add a cron: extend `WORKER_CRON_JOBS` in `packages/shared/src/worker-cron-jobs.ts`, implement the handler in `apps/worker/src/jobs/`, wire the job name in the worker dispatch in `index.ts`, and return a compact summary object so the Admin cron log records a useful result.
 
 Host-level backups (Postgres, MinIO) are **not** in BullMQ — use `scripts/backup.sh` and `/etc/cron.d/tahti-backup` (see `ops/RUNBOOK.md`).

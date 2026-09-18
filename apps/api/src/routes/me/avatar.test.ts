@@ -195,3 +195,86 @@ describe('avatar upload routes', () => {
     expect(proxy.statusCode).toBe(401)
   })
 })
+
+describe('backdrop upload routes', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let cookie: string
+  let username: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}backdrop@example.com`,
+      username: 'avatar-route-backdrop-user',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98544,
+    })
+    username = artist.username
+    cookie = await sessionCookieFor(prisma, artist.id)
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it('POST prepare returns a presigned upload URL scoped to the artist', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/backdrop/prepare',
+      headers: { cookie },
+      payload: { filename: 'banner.jpg', contentType: 'image/jpeg' },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { uploadKey: string; uploadUrl: string }
+    expect(body.uploadKey).toContain(`avatars/${username}/backdrop-`)
+    expect(body.uploadUrl).toMatch(/^https?:\/\//)
+  })
+
+  it('POST complete rejects an upload key belonging to a different account', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/backdrop/complete',
+      headers: { cookie },
+      payload: { uploadKey: 'avatars/someone-else/backdrop-x.jpg' },
+    })
+    expect(res.statusCode).toBe(403)
+  })
+
+  it('POST complete persists backdropUrl for an owned upload key', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/backdrop/complete',
+      headers: { cookie },
+      payload: { uploadKey: `avatars/${username}/backdrop-abc12345.jpg` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().backdropUrl).toContain(`avatars/${username}/backdrop-abc12345.jpg`)
+
+    const stored = await prisma.user.findUnique({
+      where: { username },
+      select: { backdropUrl: true },
+    })
+    expect(stored?.backdropUrl).toContain(`avatars/${username}/backdrop-abc12345.jpg`)
+  })
+
+  it('requires auth on both routes', async () => {
+    const prepare = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/backdrop/prepare',
+      payload: { filename: 'a.jpg', contentType: 'image/jpeg' },
+    })
+    expect(prepare.statusCode).toBe(401)
+
+    const complete = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/backdrop/complete',
+      payload: { uploadKey: 'avatars/x/backdrop-a.jpg' },
+    })
+    expect(complete.statusCode).toBe(401)
+  })
+})

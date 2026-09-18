@@ -5,7 +5,9 @@
 // apps/worker/src/lib/worker-registry.ts) — there is no hardcoded list of
 // worker hosts anywhere; whatever has heartbeated in is what shows here. A
 // worker that has stopped heartbeating still shows up, just as "offline",
-// rather than silently disappearing.
+// rather than silently disappearing — until it's been offline long enough
+// that apps/worker/src/lib/worker-registry.ts's pruneStaleWorkers() reaps it
+// (run on an interval inside the worker process itself, not here).
 
 import type { FastifyPluginAsync } from 'fastify'
 import {

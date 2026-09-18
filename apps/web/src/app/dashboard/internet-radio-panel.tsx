@@ -69,9 +69,26 @@ function StationRow({
     <div className="ui-panel">
       <div className="studio-row" style={{ justifyContent: 'space-between' }}>
         <div>
-          <strong>{station.name}</strong>{' '}
+          {station.programmingUrl ? (
+            <a
+              href={station.programmingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open station page"
+            >
+              <strong>{station.name}</strong>
+            </a>
+          ) : (
+            <strong>{station.name}</strong>
+          )}{' '}
           {station.genre && <Badge variant="neutral">{station.genre}</Badge>}
           {station.description && <p className="studio-text-muted-sm">{station.description}</p>}
+          {station.currentProgramTitle && (
+            <p className="studio-text-muted-sm">
+              Now playing: {station.currentProgramTitle}
+              {station.currentProgramArtist ? ` — ${station.currentProgramArtist}` : ''}
+            </p>
+          )}
         </div>
         <Button
           type="button"

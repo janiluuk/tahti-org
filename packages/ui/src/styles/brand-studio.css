@@ -3,6 +3,7 @@
 
 [data-tahti-ui='studio'].tahti-studio {
   min-height: 100vh;
+  min-height: 100svh;
   font-family: var(--font-body);
   color: var(--text);
   background: transparent;
@@ -591,6 +592,7 @@
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   max-width: var(--shell-max);
   margin: 0 auto;
   position: relative;
@@ -600,6 +602,7 @@
 /* Admin pages stack .admin-view-strip above .studio-top-nav — subtract both. */
 [data-tahti-ui='studio'].admin-shell .shell-app {
   min-height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
+  min-height: calc(100svh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 /* Full-screen editor surfaces (Channel Designer, Audio editor) collapse the sidebar to an
@@ -629,6 +632,7 @@
   top: var(--topnav-h);
   z-index: 2;
   height: calc(100vh - var(--topnav-h));
+  height: calc(100svh - var(--topnav-h));
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -638,6 +642,7 @@
 [data-tahti-ui='studio'].admin-shell .db-sidebar {
   top: calc(var(--topnav-h) + var(--admin-strip-h));
   height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
+  height: calc(100svh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 [data-tahti-ui='studio'] .db-sidebar::-webkit-scrollbar {
@@ -3320,7 +3325,7 @@
   font-size: var(--text-xs);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-overlay {
+[data-tahti-ui='studio'] .image-crop-overlay {
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -3424,7 +3429,7 @@
   display: block;
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal {
+[data-tahti-ui='studio'] .image-crop-modal {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3433,30 +3438,37 @@
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  max-width: 360px;
+  max-width: min(90vw, 640px);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__title {
+[data-tahti-ui='studio'] .image-crop-modal__title {
   margin: 0;
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__viewport {
-  width: 280px;
-  height: 280px;
-  border-radius: 999px;
+[data-tahti-ui='studio'] .image-crop-modal__viewport {
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--bg);
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__canvas {
+/* Avatar crop: round mask matching the circular avatar it produces. */
+[data-tahti-ui='studio'] .image-crop-modal__viewport--circle {
+  border-radius: 999px;
+}
+
+/* Backdrop crop: square corners matching the rectangular banner it produces. */
+[data-tahti-ui='studio'] .image-crop-modal__viewport--rect {
+  border-radius: var(--radius-md);
+}
+
+[data-tahti-ui='studio'] .image-crop-modal__canvas {
   cursor: grab;
   touch-action: none;
 }
 
-[data-tahti-ui='studio'] .avatar-crop-modal__zoom {
+[data-tahti-ui='studio'] .image-crop-modal__zoom {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -5344,6 +5356,7 @@
   flex-direction: column;
   gap: var(--space-4);
   height: calc(100vh - var(--topnav-h) - var(--space-6));
+  height: calc(100svh - var(--topnav-h) - var(--space-6));
   min-height: 0;
 }
 
@@ -6246,6 +6259,158 @@
   font-size: var(--text-sm);
   color: var(--muted);
   font-family: ui-monospace, monospace;
+}
+
+/* Settings → Account → Branding */
+
+[data-tahti-ui='studio'] .branding-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-height: 140px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card2);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-avatar {
+  border-width: 3px;
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-1);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-tahti-ui='studio'] .branding-panel__preview-handle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-tahti-ui='studio'] .branding-panel__nameplate {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: #fff;
+  text-shadow: none;
+}
+
+[data-tahti-ui='studio'] .branding-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background-image:
+    linear-gradient(45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--card2) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--card2) 75%);
+  background-size: 12px 12px;
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-thumb-placeholder {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-placements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .branding-panel__logo-place--active {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .branding-panel__nameplate-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .branding-panel__color-input {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
 }
 
 /* /dashboard/settings/notifications — ground-rules.md instrument-pattern worked example */
@@ -7926,6 +8091,7 @@
 .pro-editor-fullpage {
   position: relative;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-8)) calc(-1 * var(--space-16));
   overflow: hidden;
   background: var(--bg);
@@ -7943,6 +8109,7 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--topnav-h));
+  min-height: calc(100svh - var(--topnav-h));
   color: var(--text);
   font-family: var(--font-body);
 }

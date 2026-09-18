@@ -33,6 +33,54 @@ docker service rollback tahti_web
 cd /srv/tahti && TAG=<git-sha> ./scripts/stack-up.sh
 ```
 
+## Database migrations
+
+The stack's `db-push` service (despite its historical name) runs
+`prisma migrate deploy` on every deploy/stack-up as of
+`infra/docker-compose.stack.yml`'s migration fix — it replays the actual
+migration SQL files in `packages/db/prisma/migrations/`, including any
+hand-written data statements, instead of only diffing schema shape the way
+`prisma db push` does. `db push` was used from the 2026-09-11 migration
+squash onward specifically to avoid a one-time baseline step (see
+`docs/todo/HISTORY.md`'s "2026-09-11 — squash-db-migrations.md" entry) — but
+it silently skips any data-only statement in a migration file (e.g. the
+`UPDATE ... WHERE slug = 'tahti-radio'` backfill in
+`20260915150000_channel_kind`, which never ran in production even though the
+column it added did land, since the schema _shape_ still matched).
+
+**One-time baseline required before this reaches a database that was ever
+built via `db push`** — production, and any local/lab dev database created
+before this fix. Skipping this makes the next deploy/stack-up fail loudly at
+the migration step (safe — it blocks `api` from starting rather than silently
+losing data), not silently.
+
+1. Apply any data-only migration statements that `db push` skipped, by hand.
+   As of this fix, just the channelKind backfill:
+   ```sql
+   UPDATE "channel"."Channel" SET "channelKind" = 'RADIO' WHERE "slug" = 'tahti-radio';
+   ```
+   Check `git log -p -- packages/db/prisma/migrations` for `UPDATE`/`INSERT`
+   statements in any migration merged after 2026-09-11 to confirm this is
+   still the only one before you run this.
+2. Mark every existing migration folder as already applied (metadata only —
+   does not touch data or schema), in order:
+   ```bash
+   for m in $(ls packages/db/prisma/migrations | grep -v migration_lock.toml); do
+     pnpm --filter @tahti/db exec prisma migrate resolve --applied "$m"
+   done
+   ```
+3. Verify: `pnpm --filter @tahti/db db:migrate` (same `prisma migrate deploy`
+   the `db-push` compose service and `scripts/db-migrate-deploy.sh` both run)
+   should print `No pending migrations to apply.` If it tries to apply
+   something, stop — the baseline didn't take and applying now could
+   double-run DDL.
+
+Verified against a throwaway Postgres before this fix shipped: all 7
+migrations apply cleanly to an empty database via `migrate deploy` with zero
+schema drift from `schema.prisma` (`prisma migrate diff` confirms), and the
+baseline sequence above (`db push` → resolve each → `migrate deploy`)
+correctly reports no pending migrations.
+
 ## Backup (unified script)
 
 All backup operations use **`scripts/backup.sh`**:
