@@ -78,14 +78,27 @@ the existing `.studio-mb-lg` utility.
   required here — flagging so the next session doesn't assume it was skipped
   by accident.
 
+### Slice 4 — vendor cards dedup
+
+`admin/settings/vendors/page.tsx`: `CRITICAL_VENDORS` / `INTEGRATION_VENDORS`
+/ `INFRA_VENDORS` each rendered a near-identical `<div className="admin-card">`
+card with 5-8 inline `style={{}}` props, duplicated three times with slightly
+different field shapes (envVars/dpaNote/statusBadge aren't on all three).
+Extracted a local `VendorCard` component
+(`admin/settings/vendors/vendor-card.tsx`) taking all fields as optional props
+and used it for all three lists, removing ~150 lines of duplicated inline
+styling. The integration-status badge (previously computed inline via
+`integrationStatus.get(v.name)` three times per row) is now resolved once per
+row into a `statusBadge` prop.
+
+Minor normalization as a side effect (in the direction of more consistency,
+not a regression): infra vendor cards now render their badges/portal-link row
+through the same always-present flex wrapper the critical/integration cards
+use, instead of the portal link being a standalone block link — matches this
+polish pass's goal of one shared shape instead of three near-identical ones.
+
 ## Leftovers (next slices)
 
-- **Vendor cards dedup** (`admin/settings/vendors/page.tsx`): `CRITICAL_VENDORS`
-  / `INTEGRATION_VENDORS` / `INFRA_VENDORS` each render a near-identical
-  `<div className="admin-card">` card with 5-8 inline `style={{}}` props. A
-  small local `VendorCard` component would remove ~150 lines of duplicated
-  inline styling. Deferred — needs care to reconcile the 3 slightly different
-  field shapes (envVars/dpaNote aren't on all three).
 - **Other `<details>` variants** not touched this pass: `studio-details`
   (`release-track-credits-panel.tsx`, `release-track-version-panel.tsx`),
   `broadcast-studio__preflight-more` (`_broadcast-studio.tsx`,

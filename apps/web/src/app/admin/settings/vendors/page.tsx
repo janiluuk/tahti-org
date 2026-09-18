@@ -6,7 +6,8 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Badge, StudioCollapse } from '@tahti/ui'
+import { StudioCollapse } from '@tahti/ui'
+import { VendorCard } from './vendor-card'
 
 const CRITICAL_VENDORS = [
   {
@@ -286,111 +287,55 @@ export default async function AdminVendorsPage() {
         <h2 className="admin-subsection-title">Critical path (SEV-1)</h2>
         <div className="admin-panel-grid">
           {CRITICAL_VENDORS.map((v) => (
-            <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>
-                {v.service}
-              </div>
-              <div style={{ fontSize: '0.8125rem', marginBottom: '0.5rem' }}>{v.notes}</div>
-              <div
-                style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}
-              >
-                {v.dpaRequired && <Badge variant="error">DPA required</Badge>}
-                {v.portalUrl && (
-                  <a
-                    href={v.portalUrl}
-                    rel="noopener noreferrer"
-                    style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}
-                  >
-                    Portal ↗
-                  </a>
-                )}
-              </div>
-            </div>
+            <VendorCard
+              key={v.name}
+              name={v.name}
+              service={v.service}
+              notes={v.notes}
+              dpaRequired={v.dpaRequired}
+              portalUrl={v.portalUrl}
+            />
           ))}
         </div>
       </section>
 
       <StudioCollapse title="Platform integrations" className="studio-mb-lg">
         <div className="admin-panel-grid">
-          {INTEGRATION_VENDORS.map((v) => (
-            <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
-              <div
-                style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.375rem' }}
-              >
-                {v.service}
-              </div>
-              <code
-                style={{
-                  fontSize: '0.75rem',
-                  background: 'rgba(255,255,255,0.06)',
-                  padding: '2px 5px',
-                  borderRadius: 4,
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  wordBreak: 'break-all',
-                }}
-              >
-                {v.envVars}
-              </code>
-              <div
-                style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}
-              >
-                {integrationStatus.get(v.name) && (
-                  <Badge
-                    variant={integrationStatus.get(v.name)?.mode === 'live' ? 'success' : 'warning'}
-                  >
-                    {integrationStatus.get(v.name)?.mode === 'live' ? 'Live' : 'Stub mode'}
-                  </Badge>
-                )}
-                {v.dpaRequired && <Badge variant="error">DPA required</Badge>}
-                {v.portalUrl && (
-                  <a
-                    href={v.portalUrl}
-                    rel="noopener noreferrer"
-                    style={{ fontSize: '0.8125rem', color: 'var(--accent)' }}
-                  >
-                    Portal ↗
-                  </a>
-                )}
-              </div>
-              {v.dpaNote && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.375rem' }}>
-                  {v.dpaNote}
-                </div>
-              )}
-            </div>
-          ))}
+          {INTEGRATION_VENDORS.map((v) => {
+            const status = integrationStatus.get(v.name)
+            return (
+              <VendorCard
+                key={v.name}
+                name={v.name}
+                service={v.service}
+                envVars={v.envVars}
+                dpaRequired={v.dpaRequired}
+                dpaNote={v.dpaNote}
+                portalUrl={v.portalUrl}
+                statusBadge={
+                  status
+                    ? {
+                        variant: status.mode === 'live' ? 'success' : 'warning',
+                        label: status.mode === 'live' ? 'Live' : 'Stub mode',
+                      }
+                    : null
+                }
+              />
+            )
+          })}
         </div>
       </StudioCollapse>
 
       <StudioCollapse title="Infrastructure & tooling">
         <div className="admin-panel-grid">
           {INFRA_VENDORS.map((v) => (
-            <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
-              <div
-                style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.375rem' }}
-              >
-                {v.service}
-              </div>
-              <div style={{ fontSize: '0.8125rem' }}>{v.notes}</div>
-              {v.portalUrl && (
-                <a
-                  href={v.portalUrl}
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: '0.8125rem',
-                    color: 'var(--accent)',
-                    display: 'block',
-                    marginTop: '0.375rem',
-                  }}
-                >
-                  Portal ↗
-                </a>
-              )}
-            </div>
+            <VendorCard
+              key={v.name}
+              name={v.name}
+              service={v.service}
+              notes={v.notes}
+              portalUrl={v.portalUrl}
+            />
           ))}
         </div>
       </StudioCollapse>
