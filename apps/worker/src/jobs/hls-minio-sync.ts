@@ -29,7 +29,9 @@ export async function processHlsMinioSyncJob(
   }
 
   if (uploaded > 0) {
-    console.log(`[hls-minio-sync] uploaded=${uploaded} skipped=${skipped} channels=${live.length}`)
+    console.debug(
+      `[hls-minio-sync] uploaded=${uploaded} skipped=${skipped} channels=${live.length}`,
+    )
   }
 
   return { channels: live.length, uploaded, skipped }

@@ -185,7 +185,7 @@ const worker = new Worker(
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)
         if (summary.uploaded > 0) {
-          console.log('[worker] hls-minio-sync:', JSON.stringify(summary))
+          console.debug('[worker] hls-minio-sync:', JSON.stringify(summary))
         }
         return summary
       } else if (job.name === 'hls-caddy-egress-sync') {
