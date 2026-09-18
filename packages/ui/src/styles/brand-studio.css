@@ -3222,11 +3222,6 @@
   margin-bottom: 0.5rem;
 }
 
-[data-tahti-ui='studio'] .studio-details summary {
-  cursor: pointer;
-  color: var(--cyan);
-}
-
 [data-tahti-ui='studio'] .studio-programme-row {
   display: flex;
   align-items: center;
@@ -7167,30 +7162,6 @@
   margin-top: 0.65rem;
   background: var(--card2);
   border-color: color-mix(in srgb, var(--border) 85%, transparent);
-}
-
-[data-tahti-ui='studio'] .studio-details-block {
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card2);
-}
-
-[data-tahti-ui='studio'] .studio-details-block > summary {
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text);
-  list-style: none;
-}
-
-[data-tahti-ui='studio'] .studio-details-block > summary::-webkit-details-marker {
-  display: none;
-}
-
-[data-tahti-ui='studio'] .studio-details-block[open] > summary {
-  margin-bottom: 0.5rem;
 }
 
 [data-tahti-ui='studio'] .studio-color-input-row {
@@ -12429,19 +12400,6 @@
   margin-top: var(--space-4);
 }
 
-[data-tahti-ui='studio'] .broadcast-studio__preflight-more {
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-3);
-}
-
-[data-tahti-ui='studio'] .broadcast-studio__preflight-more > summary {
-  width: fit-content;
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text-muted);
-}
-
 [data-tahti-ui='studio'] .studio-file-dropzone {
   display: grid;
   place-items: center;
@@ -12800,18 +12758,6 @@
   border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
   font-size: var(--text-sm);
   color: var(--text);
-}
-
-[data-tahti-ui='studio'] .studio-add-show__more {
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-3);
-}
-
-[data-tahti-ui='studio'] .studio-add-show__more summary {
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--muted);
 }
 
 [data-tahti-ui='studio'] .studio-add-show__submit-row {

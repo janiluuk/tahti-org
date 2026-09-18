@@ -370,6 +370,20 @@
   text-transform: none;
   letter-spacing: normal;
 }
+.ui-badge--warning {
+  background: var(--tahti-warning-bg);
+  color: var(--tahti-warning);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.ui-badge--error {
+  background: var(--tahti-error-bg);
+  color: var(--tahti-error);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
 
 /* ---- Alert ---- */
 .ui-alert {

@@ -8,7 +8,7 @@ import { RELEASE_CREDIT_ROLES } from '@tahti/shared'
 import { SOUND_LICENSES, SOUND_LICENSE_LABELS } from '../../../lib/sound-metadata-options'
 import { VenuePicker } from '../venue-picker'
 import { shouldShowVenueLocation } from '../sound-editor-visibility'
-import { Button, ButtonIcon } from '@tahti/ui'
+import { Button, ButtonIcon, StudioCollapse } from '@tahti/ui'
 import { EMPTY_CREDIT, type SectionProps, type SoundMetadataFormState } from './types'
 
 /** Everything else — venue, BPM/key, license, extra credits, liner notes.
@@ -49,86 +49,83 @@ export function SoundAdvancedFields({
           <a href="/dashboard/settings/artist-info#members">Edit Members</a>
         </p>
 
-        <details className="studio-details-block studio-mt-sm">
-          <summary className="studio-details-block__summary">Extra credits &amp; roles</summary>
-          <div className="studio-details-block__body">
-            {state.credits.length === 0 && (
-              <p className="studio-empty">
-                Optional — add writers, performers, producers when they differ from your Members
-                roster.
-              </p>
-            )}
-            <ul className="studio-list studio-mb-sm">
-              {state.credits.map((credit, index) => (
-                <li key={index} className="studio-grid studio-grid--credits">
-                  <select
-                    value={credit.role}
-                    disabled={disabled}
-                    onChange={(e) => {
-                      const next = [...state.credits]
-                      next[index] = { ...credit, role: e.target.value as ReleaseCredit['role'] }
-                      set({ credits: next })
-                    }}
-                    className="studio-input"
-                    aria-label="Credit role"
-                  >
-                    {RELEASE_CREDIT_ROLES.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={credit.name}
-                    placeholder="Name"
-                    disabled={disabled}
-                    maxLength={120}
-                    onChange={(e) => {
-                      const next = [...state.credits]
-                      next[index] = { ...credit, name: e.target.value }
-                      set({ credits: next })
-                    }}
-                    className="studio-input"
-                    aria-label="Credit name"
-                  />
-                  <input
-                    value={credit.artistUsername ? `@${credit.artistUsername}` : ''}
-                    placeholder="@username"
-                    disabled={disabled}
-                    maxLength={33}
-                    onChange={(e) => {
-                      const raw = e.target.value.trim().replace(/^@/, '').toLowerCase()
-                      const next = [...state.credits]
-                      next[index] = {
-                        ...credit,
-                        artistUsername: raw.length > 0 ? raw : undefined,
-                      }
-                      set({ credits: next })
-                    }}
-                    className="studio-input"
-                    aria-label="Tahti username"
-                  />
-                  <Button
-                    disabled={disabled}
-                    onClick={() => set({ credits: state.credits.filter((_, i) => i !== index) })}
-                    variant="ghost"
-                  >
-                    <ButtonIcon name="trash" />
-                    Remove
-                  </Button>
-                </li>
-              ))}
-            </ul>
-            <Button
-              disabled={disabled || state.credits.length >= 20}
-              onClick={() => set({ credits: [...state.credits, { ...EMPTY_CREDIT }] })}
-              variant="ghost"
-            >
-              <ButtonIcon name="plus" />
-              Add credit
-            </Button>
-          </div>
-        </details>
+        <StudioCollapse title="Extra credits & roles" className="studio-mt-sm">
+          {state.credits.length === 0 && (
+            <p className="studio-empty">
+              Optional — add writers, performers, producers when they differ from your Members
+              roster.
+            </p>
+          )}
+          <ul className="studio-list studio-mb-sm">
+            {state.credits.map((credit, index) => (
+              <li key={index} className="studio-grid studio-grid--credits">
+                <select
+                  value={credit.role}
+                  disabled={disabled}
+                  onChange={(e) => {
+                    const next = [...state.credits]
+                    next[index] = { ...credit, role: e.target.value as ReleaseCredit['role'] }
+                    set({ credits: next })
+                  }}
+                  className="studio-input"
+                  aria-label="Credit role"
+                >
+                  {RELEASE_CREDIT_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={credit.name}
+                  placeholder="Name"
+                  disabled={disabled}
+                  maxLength={120}
+                  onChange={(e) => {
+                    const next = [...state.credits]
+                    next[index] = { ...credit, name: e.target.value }
+                    set({ credits: next })
+                  }}
+                  className="studio-input"
+                  aria-label="Credit name"
+                />
+                <input
+                  value={credit.artistUsername ? `@${credit.artistUsername}` : ''}
+                  placeholder="@username"
+                  disabled={disabled}
+                  maxLength={33}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim().replace(/^@/, '').toLowerCase()
+                    const next = [...state.credits]
+                    next[index] = {
+                      ...credit,
+                      artistUsername: raw.length > 0 ? raw : undefined,
+                    }
+                    set({ credits: next })
+                  }}
+                  className="studio-input"
+                  aria-label="Tahti username"
+                />
+                <Button
+                  disabled={disabled}
+                  onClick={() => set({ credits: state.credits.filter((_, i) => i !== index) })}
+                  variant="ghost"
+                >
+                  <ButtonIcon name="trash" />
+                  Remove
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <Button
+            disabled={disabled || state.credits.length >= 20}
+            onClick={() => set({ credits: [...state.credits, { ...EMPTY_CREDIT }] })}
+            variant="ghost"
+          >
+            <ButtonIcon name="plus" />
+            Add credit
+          </Button>
+        </StudioCollapse>
       </div>
 
       {showVenueLocation && (
@@ -272,9 +269,8 @@ export function SoundAdvancedFields({
         Produced using AI technology
       </label>
 
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Notes &amp; tags</summary>
-        <div className="studio-details-block__body studio-grid">
+      <StudioCollapse title="Notes & tags">
+        <div className="studio-grid">
           <label className="studio-field">
             <span className="studio-label">Commentary (liner notes)</span>
             <textarea
@@ -298,7 +294,7 @@ export function SoundAdvancedFields({
             />
           </label>
         </div>
-      </details>
+      </StudioCollapse>
     </div>
   )
 }

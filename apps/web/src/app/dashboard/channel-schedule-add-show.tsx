@@ -3,7 +3,7 @@
 
 'use client'
 
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, StudioCollapse } from '@tahti/ui'
 import { WEEKDAY_LABELS, type LiveShowSeriesView, type ScheduledLiveShowView } from '@tahti/shared'
 import { Panel } from '@/components/ui'
 import { FREQUENCY_DAY_ORDER } from './channel-schedule-utils'
@@ -199,9 +199,8 @@ export function ChannelScheduleAddShow({
             </div>
           )}
 
-          <details className="studio-add-show__more">
-            <summary>More details (venue, location, artwork)</summary>
-            <div className="studio-schedule-row studio-row--wrap studio-mt-sm">
+          <StudioCollapse title="More details (venue, location, artwork)" className="studio-mt-sm">
+            <div className="studio-schedule-row studio-row--wrap">
               <label className="studio-schedule-row__field">
                 <span className="studio-label-sm">Venue</span>
                 <input
@@ -234,7 +233,7 @@ export function ChannelScheduleAddShow({
                 />
               </label>
             </div>
-          </details>
+          </StudioCollapse>
 
           <div className="studio-add-show__submit-row">
             <Button onClick={onAddShow} disabled={isPending || !episodeAt} variant="primary">

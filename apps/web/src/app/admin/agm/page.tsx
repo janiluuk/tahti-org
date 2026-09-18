@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
+import { StudioCollapse } from '@tahti/ui'
 import { AgmAgendaBuilder } from './agm-agenda-builder'
 import { GovernanceRecordsPanel } from './governance-records-panel'
 
@@ -158,60 +159,57 @@ export default async function AdminAgmPage() {
         </p>
       </section>
 
-      <details className="admin-card studio-details-block" style={{ marginTop: '1rem' }}>
-        <summary>Member notification requirements</summary>
-        <div style={{ marginTop: '0.75rem' }}>
-          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-            Finnish association law (yhdistyslaki 24 §) requires written notice to all members at
-            least seven days before the AGM. The notice must state the date, venue, and agenda.
-          </p>
+      <StudioCollapse title="Member notification requirements" className="studio-mt-md">
+        <p className="admin-stat-sub studio-mb-lg">
+          Finnish association law (yhdistyslaki 24 §) requires written notice to all members at
+          least seven days before the AGM. The notice must state the date, venue, and agenda.
+        </p>
 
-          <div
-            className="admin-card"
-            style={{ background: 'rgba(255,255,255,0.03)', marginBottom: '1rem' }}
+        <div
+          className="admin-card"
+          style={{ background: 'rgba(255,255,255,0.03)', marginBottom: '1rem' }}
+        >
+          <p style={{ fontSize: '0.8125rem', marginBottom: '0.25rem', fontWeight: 500 }}>
+            AGM notice checklist
+          </p>
+          <ul
+            style={{
+              fontSize: '0.8125rem',
+              color: 'var(--muted)',
+              paddingLeft: '1.25rem',
+              lineHeight: 2,
+            }}
           >
-            <p style={{ fontSize: '0.8125rem', marginBottom: '0.25rem', fontWeight: 500 }}>
-              AGM notice checklist
-            </p>
-            <ul
-              style={{
-                fontSize: '0.8125rem',
-                color: 'var(--muted)',
-                paddingLeft: '1.25rem',
-                lineHeight: 2,
-              }}
-            >
-              <li>Date, time, and venue (physical or remote link)</li>
-              <li>Agenda (use the builder above)</li>
-              <li>Any proposed bylaw changes in full</li>
-              <li>Deadline for member motions</li>
-              <li>Instructions for remote participation</li>
-            </ul>
-          </div>
-
-          <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-            Send the notice via the governance email broadcast (see the governance portal) or by
-            direct email from the board address. All current members are listed in the{' '}
-            <a href="/api/admin/members/export.csv" className="admin-inline-link">
-              member register export
-            </a>
-            .
-          </p>
-
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <Link href="/dashboard/governance" className="admin-btn">
-              Governance portal
-            </Link>
-            <a href="/api/admin/members/export.csv" className="admin-btn">
-              Export member register (CSV)
-            </a>
-          </div>
+            <li>Date, time, and venue (physical or remote link)</li>
+            <li>Agenda (use the builder above)</li>
+            <li>Any proposed bylaw changes in full</li>
+            <li>Deadline for member motions</li>
+            <li>Instructions for remote participation</li>
+          </ul>
         </div>
-      </details>
+
+        <p className="admin-stat-sub studio-mb-lg">
+          Send the notice via the governance email broadcast (see the governance portal) or by
+          direct email from the board address. All current members are listed in the{' '}
+          <a href="/api/admin/members/export.csv" className="admin-inline-link">
+            member register export
+          </a>
+          .
+        </p>
+
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <Link href="/dashboard/governance" className="admin-btn">
+            Governance portal
+          </Link>
+          <a href="/api/admin/members/export.csv" className="admin-btn">
+            Export member register (CSV)
+          </a>
+        </div>
+      </StudioCollapse>
 
       <section className="admin-card" style={{ marginTop: '1rem' }}>
         <h2>Minutes &amp; records</h2>
-        <p style={{ color: 'var(--muted)', fontSize: '0.8125rem', marginBottom: '0.75rem' }}>
+        <p className="admin-stat-sub" style={{ marginBottom: '0.75rem' }}>
           Minutes must be signed and archived. Resolutions passed at the AGM are recorded as board
           resolutions; the annual report is generated separately.
         </p>

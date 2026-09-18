@@ -1041,6 +1041,15 @@
   align-items: center;
 }
 
+.admin-dashboard-row-title {
+  color: var(--text);
+}
+
+.admin-dashboard-row-meta {
+  font-size: 11px;
+  color: var(--muted2);
+}
+
 .admin-action--amber {
   color: var(--amber);
   border-color: rgba(255, 184, 64, 0.4);
@@ -1546,6 +1555,36 @@
 .admin-governance-records__meetings-table th,
 .admin-governance-records__meetings-table td {
   padding: 0.45rem 0.5rem;
+}
+
+.admin-governance-records__field--full {
+  margin-top: 0.65rem;
+  display: block;
+}
+
+.admin-governance-records__checkbox-field {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-governance-records__checkbox-field input {
+  width: auto;
+}
+
+.admin-governance-records__submit {
+  margin-top: 0.65rem;
+}
+
+.admin-governance-records__section-label {
+  margin-bottom: 0.35rem;
+}
+
+.admin-governance-records__record-row {
+  font-size: 0.8125rem;
+  margin: 0.2rem 0;
 }
 
 @media (max-width: 700px) {
