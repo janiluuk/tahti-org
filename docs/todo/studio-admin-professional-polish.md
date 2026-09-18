@@ -165,15 +165,58 @@ marginBottom: '0.35rem' }}>` (3x) and rendered their record rows with
   Postgres) — the Slice 5 visual claims (no nested-card risk for the two
   converted files; nested-card risk for the three deferred ones) and the
   Slice 6 CSS-class swaps are from reading the CSS and parent markup, not a
-  rendered screenshot.
+  rendered screenshot. Slice 7 below closes that gap for the deferred ones.
+
+### Slice 7 — the 3 deferred `<details>` variants, verified against a live stack
+
+Brought up the full local docker stack in this worktree (Postgres/Redis/API/
+web all built from this branch's code — `./scripts/stack-up.sh`, with a
+locally-recreated `infra/docker-compose.stack.override.local.yml`, gitignored,
+since this worktree branched before that override existed on `main`) and
+logged in as the seeded screenshot-artist account to actually look at the
+3 details blocks Slice 1/5 deferred pending a visual check:
+`broadcast-studio__preflight-more` (`_step3-preflight.tsx`'s "More options",
+`_broadcast-studio.tsx`'s "Green room") and `studio-add-show__more`
+(`channel-schedule-add-show.tsx`'s "More details"). All three were flush
+border-top dividers inside an existing Panel/form.
+
+Found the concern the deferral was hedging against doesn't hold: an existing
+shipped page (`dashboard/settings/artist-info` → Identity tab) already nests
+4 `StudioCollapse` blocks (Essentials/Media/Profile/Genres) flush inside a
+plain `Panel`, and it reads fine — no double-border, no card-in-card, because
+`Panel` itself has no background/border box (just a header + divider), so a
+nested `StudioCollapse` is the only bordered element in view. Screenshotted
+that page to confirm before converting anything. Converted all 3 to
+`<StudioCollapse title="…">` and rebuilt+screenshotted each one collapsed and
+expanded to confirm — all read cleanly, consistent with the rest of the app.
+Removed the now-dead `.broadcast-studio__preflight-more` and
+`.studio-add-show__more` CSS rules from `brand-studio.css`.
+
+One thing this pass surfaced but didn't fix: `GreenRoomPanel`'s body has its
+own `<h4>Green room</h4>`, now redundant under the `StudioCollapse` title
+that also says "Green room" (previously redundant too, under the old
+`<summary>Green room</summary>`, just less visually obvious). Fixing it means
+relocating that heading's adjacent `StatusPill` ("Open") into
+`StudioCollapse`'s `hint` slot — a real small change, but to a component's
+internal layout rather than a markup-swap, so left as a follow-up rather than
+folded into this pass.
+
+`sound-list__tools` (icon dropdown menu) and `two-factor-panel.tsx`'s bare
+`<details>` (one-line hint) remain correctly out of scope — confirmed by
+inspection in Slice 5, not by screenshot, since neither is a candidate for
+`StudioCollapse`'s card affordance regardless of what a screenshot would show.
+
+Stack brought back down (`./scripts/stack-up.sh --down`) after verification;
+nothing from this stack run is part of the diff (the gitignored override
+file and scratch Playwright scripts used to log in and screenshot were not
+committed).
 
 ## Leftovers (next slices)
 
-- **Deferred `<details>` variants**: `broadcast-studio__preflight-more` (x2)
-  and `studio-add-show__more` — visually verify (screenshot or running app)
-  whether nesting `StudioCollapse` card chrome inside their existing
-  form/card actually looks wrong before converting; `sound-list__tools` and
-  `two-factor-panel.tsx` are out of scope regardless (menu / too-small hint).
+- **`GreenRoomPanel` heading redundancy**: fold its internal `<h4>Green
+room</h4>` + `StatusPill` into the wrapping `StudioCollapse`'s `title`/
+  `hint` props instead of duplicating "Green room" as both the collapse
+  title and an internal heading (see Slice 7).
 - **Largest remaining studio files** (still very large, not touched this
   pass): `pro-audio-editor.tsx` (806), `social-promo-panel.tsx` (576),
   `sound-editor.tsx` (573) — mostly already sliced by

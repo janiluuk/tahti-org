@@ -7,7 +7,15 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { VisualPreset } from '@tahti/shared'
-import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text, Button } from '@tahti/ui'
+import {
+  BroadcastStatusBar,
+  ButtonIcon,
+  Panel,
+  StatusPill,
+  StudioCollapse,
+  Text,
+  Button,
+} from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import { usePlayer } from '@/contexts/player-context'
 import { resolveChannelUrl } from '@/lib/app-url'
@@ -359,10 +367,9 @@ export function BroadcastStudio({
               <PublishToggle initialEnabled={autoPublishBroadcast} />
             </div>
           )}
-          <details className="broadcast-studio__preflight-more studio-mt-md">
-            <summary>Green room</summary>
+          <StudioCollapse title="Green room" className="studio-mt-md">
             <GreenRoomPanel artistUsername={artistUsername} />
-          </details>
+          </StudioCollapse>
           <div className="studio-actions">
             <Button onClick={() => setActiveStep(1)} variant="ghost">
               ← Back to setup

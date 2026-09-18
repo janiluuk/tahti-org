@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
-import { Button } from '@tahti/ui'
+import { Button, StudioCollapse } from '@tahti/ui'
 import type { BroadcastShowType } from '@tahti/shared'
 import { resolveClientApiUrl } from '@/lib/api-url'
 
@@ -286,9 +286,8 @@ export function Step3Preflight() {
         </div>
       ) : null}
 
-      <details className="broadcast-studio__preflight-more">
-        <summary>More options</summary>
-        <div className="studio-grid studio-grid--2 studio-mt-md">
+      <StudioCollapse title="More options" className="studio-mt-md">
+        <div className="studio-grid studio-grid--2">
           <div className="studio-field">
             <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-visibility">
               Visibility
@@ -362,7 +361,7 @@ export function Step3Preflight() {
             </Button>
           </div>
         </div>
-      </details>
+      </StudioCollapse>
     </div>
   )
 }
