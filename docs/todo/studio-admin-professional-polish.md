@@ -64,20 +64,6 @@ replaced two `style={{color/fontSize}}` row-title/meta spans with new
 `admin-shell.css`; replaced two `style={{marginBottom:'1rem'}}` one-offs with
 the existing `.studio-mb-lg` utility.
 
-## Verified
-
-- `pnpm --filter @tahti/ui typecheck` — clean
-- `pnpm --filter @tahti/ui lint` — clean
-- `eslint` scoped to all 11 touched `apps/web` files — clean
-- `prettier --write` run on every changed file (all now formatted)
-- Full `apps/web` `tsc --noEmit` could not be run in this worktree: generating
-  `packages/api-client/src/schema.d.ts` requires `apps/api`'s openapi export,
-  which hangs waiting on a live Postgres connection this sandboxed worktree
-  doesn't have. Neither `apps/api` nor `packages/api-client` changed in this
-  pass, so per the repo's own pre-push rule this regenerate step isn't
-  required here — flagging so the next session doesn't assume it was skipped
-  by accident.
-
 ### Slice 4 — vendor cards dedup
 
 `admin/settings/vendors/page.tsx`: `CRITICAL_VENDORS` / `INTEGRATION_VENDORS`
@@ -97,17 +83,64 @@ through the same always-present flex wrapper the critical/integration cards
 use, instead of the portal link being a standalone block link — matches this
 polish pass's goal of one shared shape instead of three near-identical ones.
 
+### Slice 5 — `studio-details` (credits/version panels) onto `StudioCollapse`
+
+Took the "dedicated look" Slice 1 deferred at the two `studio-details`
+users, `release-track-credits-panel.tsx` and `release-track-version-panel.tsx`.
+Both render as plain siblings inside an unstyled `<div key={t.id}>` per track
+(`releases/[id]/_release-detail.tsx`) — no existing card wrapper — so
+`StudioCollapse`'s own card chrome becomes the section boundary instead of
+double-nesting inside another card. Converted both to
+`<StudioCollapse title={...}>`, following the existing precedent of
+interpolated titles (`admin/dashboard/page.tsx`'s `` `Live now (${count})` ``).
+The version panel's `open={versions.length === 0}` (forced open/closed every
+render) became `defaultOpen={versions.length === 0}` (set once, from the
+initial fetch) — deliberate, not incidental: it means the panel no longer
+snaps shut the instant a track's first version finishes uploading, which reads
+as the intended behavior rather than the old one. Removed the now-dead
+`.studio-details summary` CSS rule from `brand-studio.css` (its only two
+callers were these two files).
+
+Left the other four `<details>` alone after inspection, confirming Slice 1's
+call was right for each:
+
+- `sound-list__tools` (`sound-editor-row-tools.tsx`): an icon-button dropdown
+  menu, not a content panel — `StudioCollapse`'s title/hint/chevron layout
+  doesn't apply.
+- `broadcast-studio__preflight-more` (`_broadcast-studio.tsx`,
+  `_step3-preflight.tsx`) and `studio-add-show__more`
+  (`channel-schedule-add-show.tsx`): styled as a flush `border-top` divider
+  _inside_ an existing form/card, not a standalone card — wrapping them in
+  `StudioCollapse`'s own bordered/backgrounded chrome would nest a card inside
+  a card. Needs a screenshot check before touching; deferred.
+- `two-factor-panel.tsx`'s bare `<details>`: a one-line "show more text" hint,
+  too small for `StudioCollapse`'s card-sized affordance.
+
+## Verified
+
+- `pnpm --filter @tahti/ui typecheck` — clean
+- `pnpm --filter @tahti/ui lint` — clean
+- `eslint` scoped to all touched `apps/web` files (Slices 1, 4, 5) — clean
+- `prettier --write` run on every changed file (all now formatted)
+- Full `apps/web` `tsc --noEmit` could not be run in this worktree: generating
+  `packages/api-client/src/schema.d.ts` requires `apps/api`'s openapi export,
+  which hangs waiting on a live Postgres connection this sandboxed worktree
+  doesn't have. Neither `apps/api` nor `packages/api-client` changed in this
+  pass, so per the repo's own pre-push rule this regenerate step isn't
+  required here — flagging so the next session doesn't assume it was skipped
+  by accident.
+- No dev server / browser check in this worktree (sandboxed, no live
+  Postgres) — the Slice 5 visual claims above (no nested-card risk for the two
+  converted files; nested-card risk for the three deferred ones) are from
+  reading the CSS and the parent markup, not a rendered screenshot.
+
 ## Leftovers (next slices)
 
-- **Other `<details>` variants** not touched this pass: `studio-details`
-  (`release-track-credits-panel.tsx`, `release-track-version-panel.tsx`),
-  `broadcast-studio__preflight-more` (`_broadcast-studio.tsx`,
-  `_step3-preflight.tsx`), `studio-add-show__more`
-  (`channel-schedule-add-show.tsx`), `sound-list__tools`
-  (`sound-editor-row-tools.tsx`), and a bare unstyled one in
-  `two-factor-panel.tsx`. Each has interactive content inside its `<summary>`
-  or different open/close semantics — worth a dedicated look rather than a
-  blind mechanical swap.
+- **Deferred `<details>` variants**: `broadcast-studio__preflight-more` (x2)
+  and `studio-add-show__more` — visually verify (screenshot or running app)
+  whether nesting `StudioCollapse` card chrome inside their existing
+  form/card actually looks wrong before converting; `sound-list__tools` and
+  `two-factor-panel.tsx` are out of scope regardless (menu / too-small hint).
 - **Largest remaining studio files** (still very large, not touched this
   pass): `pro-audio-editor.tsx` (806), `social-promo-panel.tsx` (576),
   `sound-editor.tsx` (573) — mostly already sliced by

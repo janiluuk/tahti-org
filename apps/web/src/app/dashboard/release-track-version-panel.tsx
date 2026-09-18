@@ -11,7 +11,7 @@ import {
   fetchReleaseTrackVersions,
   prepareReleaseTrackVersionUpload,
 } from './release-actions'
-import { Button, FileDropzone } from '@tahti/ui'
+import { Button, FileDropzone, StudioCollapse } from '@tahti/ui'
 
 export function ReleaseTrackVersionPanel({
   releaseId,
@@ -93,8 +93,11 @@ export function ReleaseTrackVersionPanel({
   if (loading) return null
 
   return (
-    <details className="studio-details studio-mt-sm studio-text-sm" open={versions.length === 0}>
-      <summary>Versions — {trackTitle}</summary>
+    <StudioCollapse
+      title={`Versions — ${trackTitle}`}
+      defaultOpen={versions.length === 0}
+      className="studio-mt-sm studio-text-sm"
+    >
       {versions.length > 0 ? (
         <ul className="studio-list-indented">
           {versions.map((v) => (
@@ -138,6 +141,6 @@ export function ReleaseTrackVersionPanel({
         />
       </div>
       {error && <p className="studio-text-error">{error}</p>}
-    </details>
+    </StudioCollapse>
   )
 }

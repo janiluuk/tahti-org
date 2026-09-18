@@ -3217,11 +3217,6 @@
   margin-bottom: 0.5rem;
 }
 
-[data-tahti-ui='studio'] .studio-details summary {
-  cursor: pointer;
-  color: var(--cyan);
-}
-
 [data-tahti-ui='studio'] .studio-programme-row {
   display: flex;
   align-items: center;

@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import type { TrackCredit } from '@tahti/shared'
 import { TRACK_CREDIT_ROLE_PRESETS } from '@tahti/shared'
-import { Button, ButtonIcon } from '@tahti/ui'
+import { Button, ButtonIcon, StudioCollapse } from '@tahti/ui'
 import { updateReleaseTrackCredits } from './release-actions'
 
 const OTHER_ROLE = '__other__'
@@ -59,8 +59,7 @@ export function ReleaseTrackCreditsPanel({
   }
 
   return (
-    <details className="studio-details studio-mt-sm studio-text-sm">
-      <summary>Credits — {trackTitle}</summary>
+    <StudioCollapse title={`Credits — ${trackTitle}`} className="studio-mt-sm studio-text-sm">
       {credits.length === 0 && (
         <p className="studio-empty">
           Optional — add who played what on this track (vocals, guitars, ...).
@@ -158,6 +157,6 @@ export function ReleaseTrackCreditsPanel({
         {saved && <span className="studio-text-muted-sm">Saved.</span>}
       </div>
       {error && <p className="studio-text-error">{error}</p>}
-    </details>
+    </StudioCollapse>
   )
 }
