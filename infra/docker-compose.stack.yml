@@ -380,7 +380,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ['sh', '-c', 'pnpm --filter @tahti/db exec prisma db push --accept-data-loss']
+    # Service kept its historical `db-push` name (see infra/pgbouncer/README.md,
+    # scripts/stack-up.sh, scripts/deploy_prod.sh for other references) even
+    # though it now runs `migrate deploy`, not `db push` — renaming would touch
+    # 5 files for no functional benefit. `migrate deploy` replays the actual
+    # migration SQL files (including hand-written data statements) instead of
+    # only diffing schema shape — `db push` silently skipped e.g. the
+    # channelKind backfill in 20260915150000_channel_kind. Requires a one-time
+    # baseline before first use — see ops/RUNBOOK.md#database-migrations.
+    command: ['sh', '-c', 'pnpm --filter @tahti/db db:migrate']
     restart: 'no'
 
   api:
