@@ -3720,3 +3720,34 @@ html.gpu-limited .nav {
 .gallery-preview-thumb:hover img {
   transform: scale(1.05);
 }
+
+/* Reveal — progressive disclosure ("read more" that expands in place). */
+.ui-reveal__frame {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.ui-reveal__frame[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+.ui-reveal__clip {
+  overflow: hidden;
+}
+
+.ui-reveal__toggle {
+  display: inline-block;
+  margin-top: var(--space-1, 4px);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--cyan);
+  cursor: pointer;
+}
+
+.ui-reveal__toggle:hover {
+  text-decoration: underline;
+}

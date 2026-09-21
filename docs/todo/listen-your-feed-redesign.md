@@ -1,6 +1,6 @@
 # "Your feed" section redesign (`/listen`)
 
-Status: open, not started.
+Status: implemented in PR (unified `FeedCard` + new `Reveal` disclosure component); awaiting manual browser check.
 
 ## Reported problem
 

@@ -69,6 +69,7 @@ export { RankBadge } from './RankBadge'
 export { MemberBadge } from './MemberBadge'
 export { PinnedAnnouncement, type PinnedAnnouncementProps } from './PinnedAnnouncement'
 export { Spinner, type SpinnerProps } from './Spinner'
+export { Reveal, type RevealProps } from './Reveal'
 export {
   WaveformPlayer,
   WAVEFORM_TRACK_IN_MS,
