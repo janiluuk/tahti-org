@@ -4,6 +4,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { updateChannelProfile } from '../channel-identity-actions'
 
 export async function provisionChannel(): Promise<{ error?: string; slug?: string }> {
   const session = cookies().get('tahti_session')
@@ -20,4 +21,21 @@ export async function provisionChannel(): Promise<{ error?: string; slug?: strin
   }
   const body = (await res.json()) as { slug: string }
   return { slug: body.slug }
+}
+
+/** Wizard step 1: provision the channel if needed, then write name + description to the profile
+ * (channel name/bio live on the user profile, so no new API surface). */
+export async function saveChannelIdentity(input: {
+  displayName: string
+  bio: string
+  createChannel: boolean
+}): Promise<{ error: string | null }> {
+  if (input.createChannel) {
+    const provisioned = await provisionChannel()
+    // A retry after a failed profile write finds the channel already provisioned — that's fine.
+    if (provisioned.error && provisioned.error !== 'Channel already exists.') {
+      return { error: provisioned.error }
+    }
+  }
+  return updateChannelProfile({ displayName: input.displayName, bio: input.bio })
 }
