@@ -58,6 +58,7 @@ import {
   processWarmSoundFallbackCacheJob,
 } from './jobs/sound-fallback-cache.js'
 import { runWithCronLog } from './lib/cron-run.js'
+import { runCronTasks } from './lib/cron-tasks.js'
 import { jobNamesForLanes } from '@tahti/shared'
 import {
   registerWorker,
@@ -122,20 +123,13 @@ const worker = new Worker(
         await processOpenThemePullRequestJob(job)
       } else if (job.name === 'separate-stems') {
         await processSeparateStemsJob(job)
-      } else if (job.name === 'sweep-expired-stems') {
-        const summary = await processSweepExpiredStemsJob()
-        if (summary.deleted > 0) {
-          console.log('[worker] sweep-expired-stems:', JSON.stringify(summary))
-        }
-        return summary
       } else if (job.name === 'backfill-editor-peaks') {
         await processBackfillEditorPeaksJob(job)
-      } else if (job.name === 'sweep-editor-peaks-backfill') {
-        const summary = await processSweepEditorPeaksBackfillJob(job)
-        if (summary.enqueued > 0) {
-          console.log('[worker] sweep-editor-peaks-backfill:', JSON.stringify(summary))
-        }
-        return summary
+      } else if (job.name === 'media-daily-sweeps') {
+        return await runCronTasks({
+          'sweep-editor-peaks-backfill': () => processSweepEditorPeaksBackfillJob(job),
+          'sweep-expired-stems': () => processSweepExpiredStemsJob(),
+        })
       } else if (job.name === 'transcode-release-track') {
         await processTranscodeReleaseTrackJob(job)
       } else if (job.name === 'transcode-release-track-version') {
@@ -205,28 +199,17 @@ const worker = new Worker(
         const summary = await processBroadcastCapTick(prisma)
         console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))
         return summary
-      } else if (job.name === 'weekly-broadcast-reset') {
-        const summary = await processWeeklyBroadcastReset(prisma)
-        console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
-        return summary
-      } else if (job.name === 'tahti-selects-weekly-draw') {
-        const summary = await processTahtiSelectsDrawJob(prisma)
-        console.log('[worker] tahti-selects-weekly-draw:', JSON.stringify(summary))
-        return summary
-      } else if (job.name === 'fan-sub-payout') {
-        const summary = await processFanSubPayoutsJob(prisma)
-        console.log('[worker] fan-sub-payout:', JSON.stringify(summary))
-        return summary
-      } else if (job.name === 'fan-sub-expire') {
-        const summary = await processFanSubExpire(prisma)
-        console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
-        return summary
-      } else if (job.name === 'fan-subscriber-purge') {
-        const summary = await processFanSubscriberPurgeJob(prisma)
-        if (summary.canceled > 0) {
-          console.log('[worker] fan-subscriber-purge:', JSON.stringify(summary))
-        }
-        return summary
+      } else if (job.name === 'weekly-monday') {
+        return await runCronTasks({
+          'weekly-broadcast-reset': () => processWeeklyBroadcastReset(prisma),
+          'tahti-selects-weekly-draw': () => processTahtiSelectsDrawJob(prisma),
+        })
+      } else if (job.name === 'fan-sub-daily') {
+        return await runCronTasks({
+          'fan-sub-payout': () => processFanSubPayoutsJob(prisma),
+          'fan-sub-expire': () => processFanSubExpire(prisma),
+          'fan-subscriber-purge': () => processFanSubscriberPurgeJob(prisma),
+        })
       } else if (job.name === 'social-post-dispatch') {
         const { postId } = job.data as { postId: string }
         await processSocialPostDispatchJob(prisma, postId)
@@ -236,10 +219,11 @@ const worker = new Worker(
         return await processInternetRadioNowPlayingSyncJob(job)
       } else if (job.name === 'download-fraud-scan') {
         return await processDownloadFraudScanJob(job)
-      } else if (job.name === 'membership-renewal-reminder') {
-        return await processMembershipRenewalJob(job)
-      } else if (job.name === 'membership-lapse') {
-        return await processMembershipLapseJob(job)
+      } else if (job.name === 'membership-daily') {
+        return await runCronTasks({
+          'membership-renewal-reminder': () => processMembershipRenewalJob(job),
+          'membership-lapse': () => processMembershipLapseJob(job),
+        })
       } else if (job.name === 'mention-digest') {
         return await processMentionDigestJob(job)
       } else if (job.name === 'post-publish-notify') {

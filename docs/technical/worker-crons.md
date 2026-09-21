@@ -14,23 +14,20 @@ BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.t
 | `hls-minio-sync` | every 4s (`everyMs`, not cron) | STREAM-001 — mirror live HLS segments from volume to MinIO `hls-live` bucket; matches the Liquidsoap segment cadence so the manifest never runs dry |
 | `hls-caddy-egress-sync` | every minute | STREAM-006 — aggregate Caddy HLS access log bytes into Redis (edge worker only) |
 | `sound-fallback-cache-sync` | every 10 min | STREAM-009 — refresh local sound fallback cache for Liquidsoap |
-| `weekly-broadcast-reset` | Monday 00:00 | M20 — reset weekly broadcast counters |
-| `tahti-selects-weekly-draw` | Monday 01:00 | Re-draw the Tahti Selects rotation from opted-in tracks (max 3/artist, 50 total) |
-| `fan-sub-payout` | daily 04:00 | M19 |
-| `fan-sub-expire` | daily 05:00 | M19 |
-| `fan-subscriber-purge` | daily 05:00 | M19 — cancel stale fan-subs for deleted accounts |
+| `media-daily-sweeps` | daily 03:00 | Dispatcher — `sweep-editor-peaks-backfill` (PERF-04, backfill `editorPeaks` for READY archives), then `sweep-expired-stems` (delete stem output past its 7-day retention) |
+| `fan-sub-daily` | daily 04:00 | Dispatcher (M19) — `fan-sub-payout`, `fan-sub-expire`, `fan-subscriber-purge` |
+| `membership-daily` | daily 07:00 | Dispatcher (M1) — `membership-renewal-reminder`, then `membership-lapse` |
+| `weekly-monday` | Monday 00:00 | Dispatcher — `weekly-broadcast-reset` (M20), then `tahti-selects-weekly-draw` |
 | `tor-exit-list-sync` | daily 05:30 | M18 |
 | `download-fraud-scan` | daily 06:00 | M18 |
-| `membership-renewal-reminder` | daily 07:00 | M1 |
 | `mention-digest` | daily 18:00 | M15 — daily @-mention notification digest |
 | `post-publish-notify` | every minute | M34 — notify followers when a scheduled post crosses its `publishAt` |
 | `listen-session-close` | every 3 min | Close `ListenSession`s that stopped pinging (listen-time tracking) |
-| `membership-lapse` | daily 08:00 | M1 |
 | `revelator-royalty-sync` | 04:00 on day 5 each month | M7 — pull Revelator royalty reports for the prior month |
-| `sweep-editor-peaks-backfill` | daily 03:00 | PERF-04 — backfill `editorPeaks` for READY archives missing pyramid data |
-| `sweep-expired-stems` | daily 03:30 | Delete stem-separation output past its 7-day retention window |
 | `live-show-recurrence-generate` | daily 03:15 | Roll recurring `LiveShowSeries` forward: generate missing `ScheduledLiveShow` occurrences up to each series' horizon |
 | `missed-live-show-scan` | 5 min past every hour | Flag `ScheduledLiveShow`s whose start time passed with no `Broadcast`, notify the board |
+
+**Dispatcher jobs** (`subTasks` in the manifest) run several related tasks in one tick, in order. Each sub-task is logged to `CronRun` under its own name, so `/admin/crons` still shows per-task history. A failing task is recorded and does not stop the ones after it; the dispatcher does not rethrow, so BullMQ never re-runs tasks that already succeeded (e.g. payouts). Sub-tasks of one dispatcher must belong to the same worker lane.
 
 To add a cron: extend `WORKER_CRON_JOBS` in `packages/shared/src/worker-cron-jobs.ts`, implement the handler in `apps/worker/src/jobs/`, wire the job name in the worker dispatch in `index.ts`, and return a compact summary object so the Admin cron log records a useful result.
 

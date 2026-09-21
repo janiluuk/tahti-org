@@ -2,9 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { prisma } from '@tahti/db'
-import { WORKER_CRON_JOBS } from '@tahti/shared'
+import { WORKER_CRON_JOBS, cronTaskNames } from '@tahti/shared'
 
-const CRON_JOB_NAMES = new Set(WORKER_CRON_JOBS.map((j) => j.name))
+// Dispatcher crons (subTasks) log per task via runCronTasks, not as one row.
+const CRON_JOB_NAMES = new Set(WORKER_CRON_JOBS.flatMap(cronTaskNames))
 const MAX_RESULT_LENGTH = 16_000
 
 export function serializeCronResult(result: unknown): string {

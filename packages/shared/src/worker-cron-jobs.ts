@@ -11,6 +11,15 @@ export interface CronJobSpec {
   everyMs?: number
   jobId: string
   description: string
+  /** Dispatcher jobs run several independent tasks in one tick. Each task is
+   * logged to CronRun under its own name (so /admin/crons keeps per-task history)
+   * and one task failing never stops the others. */
+  subTasks?: string[]
+}
+
+/** Per-task view of the manifest: dispatchers expand into their sub-tasks. */
+export function cronTaskNames(spec: CronJobSpec): string[] {
+  return spec.subTasks ?? [spec.name]
 }
 
 export const WORKER_CRON_JOBS: CronJobSpec[] = [
@@ -83,35 +92,35 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-009: refresh local sound fallback cache for Liquidsoap',
   },
   {
-    name: 'weekly-broadcast-reset',
+    name: 'weekly-monday',
     pattern: '0 0 * * 1',
-    jobId: 'weekly-broadcast-reset-cron',
-    description: 'M20: reset weekly broadcast counters (Monday 00:00 UTC)',
+    jobId: 'weekly-monday-cron',
+    description: 'Monday 00:00 UTC: reset weekly broadcast counters, then re-draw Tahti Selects',
+    subTasks: ['weekly-broadcast-reset', 'tahti-selects-weekly-draw'],
   },
   {
-    name: 'tahti-selects-weekly-draw',
-    pattern: '0 1 * * 1',
-    jobId: 'tahti-selects-weekly-draw-cron',
-    description:
-      'Re-draw the Tahti Selects rotation from opted-in tracks (max 3/artist, 50 total; Monday 01:00 UTC)',
-  },
-  {
-    name: 'fan-sub-payout',
+    name: 'fan-sub-daily',
     pattern: '0 4 * * *',
-    jobId: 'fan-sub-payout-cron',
-    description: 'M19: fan-sub Stripe Connect payouts (04:00 UTC)',
+    jobId: 'fan-sub-daily-cron',
+    description:
+      'M19 daily 04:00 UTC: Stripe Connect payouts, expire lapsed subs, cancel subs of deleted accounts',
+    subTasks: ['fan-sub-payout', 'fan-sub-expire', 'fan-subscriber-purge'],
   },
   {
-    name: 'fan-sub-expire',
-    pattern: '0 5 * * *',
-    jobId: 'fan-sub-expire-cron',
-    description: 'M19: expire lapsed fan subscriptions (05:00 UTC)',
+    name: 'membership-daily',
+    pattern: '0 7 * * *',
+    jobId: 'membership-daily-cron',
+    description:
+      'M1 daily 07:00 UTC: renewal reminder emails, then lapse memberships past the window',
+    subTasks: ['membership-renewal-reminder', 'membership-lapse'],
   },
   {
-    name: 'fan-subscriber-purge',
-    pattern: '0 5 * * *',
-    jobId: 'fan-subscriber-purge-cron',
-    description: 'M19: cancel stale fan-subs for deleted accounts (05:00 UTC)',
+    name: 'media-daily-sweeps',
+    pattern: '0 3 * * *',
+    jobId: 'media-daily-sweeps-cron',
+    description:
+      'Daily 03:00 UTC: backfill missing editorPeaks (PERF-04), delete stem output past its 7-day retention',
+    subTasks: ['sweep-editor-peaks-backfill', 'sweep-expired-stems'],
   },
   {
     name: 'tor-exit-list-sync',
@@ -124,12 +133,6 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '0 6 * * *',
     jobId: 'download-fraud-scan-cron',
     description: 'M18: download velocity fraud scan (06:00 UTC)',
-  },
-  {
-    name: 'membership-renewal-reminder',
-    pattern: '0 7 * * *',
-    jobId: 'membership-renewal-reminder-cron',
-    description: 'M1: membership renewal reminder emails (07:00 UTC)',
   },
   {
     name: 'mention-digest',
@@ -150,28 +153,10 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'Close ListenSessions that stopped pinging (listen-time tracking)',
   },
   {
-    name: 'membership-lapse',
-    pattern: '0 8 * * *',
-    jobId: 'membership-lapse-cron',
-    description: 'M1: lapse memberships past renewal window (08:00 UTC)',
-  },
-  {
     name: 'revelator-royalty-sync',
     pattern: '0 4 5 * *',
     jobId: 'revelator-royalty-sync-cron',
     description: 'M7: pull Revelator royalty reports for prior month (5th, 04:00 UTC)',
-  },
-  {
-    name: 'sweep-editor-peaks-backfill',
-    pattern: '0 3 * * *',
-    jobId: 'sweep-editor-peaks-backfill-cron',
-    description: 'PERF-04: backfill editorPeaks for READY sounds missing pyramid data (03:00 UTC)',
-  },
-  {
-    name: 'sweep-expired-stems',
-    pattern: '30 3 * * *',
-    jobId: 'sweep-expired-stems-cron',
-    description: 'Delete stem-separation output past its 7-day retention window (03:30 UTC)',
   },
   {
     name: 'live-show-recurrence-generate',

@@ -7,8 +7,7 @@ const TRACKED_JOB_NAMES = [
   'newsletter-dispatch',
   'transcode-release-track',
   'mixcloud-upload',
-  'fan-sub-payout',
-  'fan-sub-expire',
+  'fan-sub-daily',
   'download-fraud-scan',
 ] as const
 
