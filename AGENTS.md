@@ -82,7 +82,7 @@ monorepo and not the player’s on-disk install list. The catalog is
 `https://raw.githubusercontent.com/janiluuk/tahti-registry/master`.
 
 Sibling checkouts (same parent as this repo): `../tahti-registry` (catalog),
-`../tahti-player` or `../tahti-nuclear` (player + beta web),
+`../tahti-player` (player + beta web),
 `../tahti-radio-discord-bot` (Tahti Radio Discord bot). `GET
 /api/me/import-plugins` is the **API** import-provider list; it does not
 replace the Store catalog.
@@ -186,7 +186,7 @@ Demo/e2e seed accounts (see `tests/e2e/journeys/fixtures.sh`): board account is
 (`./scripts/stack-up.sh --seed` or the individual `apps/api/scripts/seed-*.ts`
 scripts), password `screenshot-demo-pass`.
 
-**Naming:** `beta.tahti.live` is the Nuclear listen/studio SPA (production API).
+**Naming:** `beta.tahti.live` is the Tahti Player listen/studio SPA (production API).
 `[BETA]` / `*@beta.tahti.live` in seed scripts are **dev fixtures only**.
 
 ## Quality gates (before claiming done)

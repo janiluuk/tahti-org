@@ -4,14 +4,14 @@ Public [Tahti Player](https://github.com/janiluuk/tahti-player) × Tahti listen 
 
 ## Live routing
 
-| Layer | Target |
-|-------|--------|
-| DNS | `beta.tahti.live` → same public IP as `tahti.live` (`91.152.54.76`) |
-| Pi4 Nginx Proxy Manager | Proxy Host **#61** → `http://192.168.2.100:15180` (vimage) |
-| TLS | Existing wildcard cert `*.tahti.live` (npm-162) |
-| Upstream | Docker `tahti-beta-web` on **vimage** `/srv/tahti-beta` |
-| Browser API | Same-origin `/tahti-api/` → nginx proxies to **`https://api.tahti.live`** |
-| Chat WS | `wss://chat.tahti.live/connection/websocket` |
+| Layer                   | Target                                                                    |
+| ----------------------- | ------------------------------------------------------------------------- |
+| DNS                     | `beta.tahti.live` → same public IP as `tahti.live` (`91.152.54.76`)       |
+| Pi4 Nginx Proxy Manager | Proxy Host **#61** → `http://192.168.2.100:15180` (vimage)                |
+| TLS                     | Existing wildcard cert `*.tahti.live` (npm-162)                           |
+| Upstream                | Docker `tahti-beta-web` on **vimage** `/srv/tahti-beta`                   |
+| Browser API             | Same-origin `/tahti-api/` → nginx proxies to **`https://api.tahti.live`** |
+| Chat WS                 | `wss://chat.tahti.live/connection/websocket`                              |
 
 Wildcard channel host `#55` excludes `beta` so `beta.tahti.live` does not fall through to production web.
 
@@ -34,7 +34,7 @@ cd /home/jani/workspace/tahti-player
 pnpm deploy:tahti-beta
 ```
 
-Details: [`tahti-player/packages/tahti-web/deploy/README.md`](../../tahti-player/packages/tahti-web/deploy/README.md) and [`TAHTI-FORK.md`](../../tahti-player/TAHTI-FORK.md).
+Details: [`tahti-player/packages/tahti-web/deploy/README.md`](../../tahti-player/packages/tahti-web/deploy/README.md).
 
 ## Production cutover
 

@@ -191,7 +191,7 @@ More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are ca
 | [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)                 | **Start here for rules.** The three rules. Constitutional.                                 |
 | [`docs/business-evaluation.md`](docs/business-evaluation.md)   | Honest "is this worth doing" memo for founder, board, grant officers                       |
 | [`docs/strategy-and-product.md`](docs/strategy-and-product.md) | Positioning, competitive critique (SoundCloud/Mixcloud/Spotify/Bandcamp), retention thesis |
-| [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md)         | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36)        |
+| [`docs/project-roadmap.md`](docs/project-roadmap.md)           | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36)        |
 | [`docs/financial-model.md`](docs/financial-model.md)           | Headline 3-year model - revenue, cost, surplus, grant pool                                 |
 | [`docs/budget-detailed.md`](docs/budget-detailed.md)           | Line-item monthly budget + break-even sensitivity analysis                                 |
 

@@ -14,14 +14,14 @@ Import sources do not share one `start/status/import` shape:
 | `search`          | Search → select → add/import (no OAuth account)        | `/api/v1/imports/{provider}/search`, `/add`            |
 | `tool` / `upload` | Paste URL, local file, or stash locker                 | Studio upload / stash / releases deep links            |
 
-Tahti Player / Nuclear must keep separate adapter interfaces for these kinds.
+Tahti Player must keep separate adapter interfaces for these kinds.
 Do not force search or paste-a-link tools through an OAuth connect modal.
 
 ## Client boundary
 
 - **Tahti core** owns routes, OAuth, encrypted credentials, import jobs, and
   this metadata registry.
-- **Tahti Player / Nuclear** owns Configure UI, adapter interfaces, and
+- **Tahti Player** owns Configure UI, adapter interfaces, and
   provider-specific cards in Settings → Add-ons (Import).
 - Configuration stays in the player Configure action: enter settings, test,
   save, then enable. Do not add a parallel configuration surface in
@@ -39,7 +39,7 @@ status / webhook shapes.
 1. Add a row to `IMPORT_PLUGIN_PROVIDERS` with the correct `kind`.
 2. Point `oauthStartPath` / `statusPath` / `searchPath` / `listPath` /
    `importPath` at real routes (or `null` when not applicable).
-3. Extend the Nuclear adapter of the matching kind; do not widen OAuth cards
+3. Extend the Tahti Player adapter of the matching kind; do not widen OAuth cards
    to cover search/tool behavior.
 4. Cover registry parsing in `@tahti/shared` tests and the provider list in
    API tests when behavior is added.
