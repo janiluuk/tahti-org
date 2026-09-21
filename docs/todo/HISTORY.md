@@ -656,3 +656,13 @@ with tests) so items expand in place instead of the ad-hoc "Read more" toggle
 and the old `FeedPostModal` (now `_feed-post-edit-modal.tsx`, edit only). Feed
 CSS in `components.css` / `admin-ui.css` trimmed accordingly. Presentation
 only — `FeedItem` data shape and `/me/feed` API unchanged. PR #535.
+
+### 2026-09-21 — Cron consolidation (`cron-consolidation.md`)
+
+Cut registered BullMQ repeatables 28 → 17 without dropping behaviour. Added
+`CronJobSpec.subTasks` and `runCronTasks` (per-task CronRun rows, isolated
+failures, optional `parallel`), then merged jobs into dispatchers:
+`fan-sub-daily`, `membership-daily`, `weekly-monday`, `media-daily-sweeps`,
+`media-minute-tick`, `light-minute-tick`, `media-ten-minute-tick` and
+`light-daily`. Admin cron dashboard expands dispatchers into per-task rows.
+PRs #539, #541. Prod verification moved to `remaining-work.md`.
