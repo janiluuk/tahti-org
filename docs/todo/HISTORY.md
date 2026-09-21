@@ -656,3 +656,25 @@ with tests) so items expand in place instead of the ad-hoc "Read more" toggle
 and the old `FeedPostModal` (now `_feed-post-edit-modal.tsx`, edit only). Feed
 CSS in `components.css` / `admin-ui.css` trimmed accordingly. Presentation
 only — `FeedItem` data shape and `/me/feed` API unchanged. PR #535.
+
+### 2026-09-22 — Discography track rows (`discography-track-row-unify.md`)
+
+Public `/u` and `/c` layouts never imported `brand-studio.css`, so the Tracks
+tab toolbar/filter pills rendered unstyled and didn't wrap on mobile. Added the
+import to both layouts, unified track rows into a `TrackRow` component with a
+single hover-reveal play overlay on the cover (removed the duplicate play
+button), and added `use-cover-accent.ts` (client-side cover colour sampling)
+for the per-row glow. Open a11y nit: cover-play and title buttons still share
+an aria-label. PR #526.
+
+### 2026-09-22 — Studio + admin professional polish (`studio-admin-professional-polish.md`)
+
+Adopted the existing `StudioCollapse`/`Panel`/`Badge` components across studio
+and admin instead of hand-rolled `<details>` blocks and inline `style={{}}`:
+~20 `<details>` → `StudioCollapse` (incl. credits/version panels, preflight
+"More options", Green room, add-show "More details"), `Badge` gained
+`warning`/`error` variants, extracted a shared `VendorCard` on the vendors
+page, admin dashboard and governance-records inline styles moved to scoped
+classes, dead `.studio-details*` CSS removed. `admin-nav.tsx` reviewed and left
+alone (inherent icon table). Leftover: `GreenRoomPanel` heading redundancy
+(moved to `remaining-work.md`). PR #533.

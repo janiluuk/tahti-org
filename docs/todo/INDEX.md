@@ -11,19 +11,14 @@ Status values: `open` | `blocked` | `partial`.
 ## Active todos (`docs/todo/*.md`)
 
 One file per in-progress task. When a task ships, fold it into
-[`HISTORY.md`](HISTORY.md) and delete the file — see the Fold rule below.
+[`HISTORY.md`](HISTORY.md) and delete the file — see `CLAUDE.md`.
 
-| Status  | File                                                                                         | One-line                                                                                                                                                                                                      |
-| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| open    | [mobile-player-nav-and-tahti-theme-visuals.md](mobile-player-nav-and-tahti-theme-visuals.md) | Pointer only — real plan lives in `../tahti-player/docs/todo/` (same filename there)                                                                                                                          |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, contract tests, and caller migration shipped in `../tahti-player` (additive, non-breaking); ownership-split sign-off and final extraction remain open                    |
-| partial | [studio-admin-professional-polish.md](studio-admin-professional-polish.md)                   | Migrated 11 raw `<details>` blocks to the existing `StudioCollapse`/`Panel`/`Badge` components across admin+studio; vendor-card dedup and other details variants left open                                    |
-| Status  | File                                                                                         | One-line                                                                                                                                                                                                      |
-| ------- | --------------------------------------------------------------------------------------       | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                               | Store adapter, `PluginRegistryHost`, contract tests, caller migration, and §6 test matrix all shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open                         |
-| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                       | New box tahti.local (192.168.2.107): plan to move MinIO there (LAN remote-service pattern, no GPU needed) + checklist to add it to all vimage6 monitoring dashboards                                          |
-| open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md)       | 2 of 6 stations shipped (Radio Helsinki, radioplay.fi/NRJ+Radio Nova); Yle needs an app-key, Nelonen Media needs real browser network inspection to find its now-playing API                                  |
-| open    | [setup-channel-wizard.md](setup-channel-wizard.md)                                           | 4 of 5 wizard steps now scoped, reusing existing pieces (genre picker, channel editor, playlist editor) wherever possible; found a real no-tracks guard gap on the 24/7-rotation toggle; step 5 still unknown |
+| Status  | File                                                                                   | One-line                                                                                                                                                                         |
+| ------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                         | Store adapter, `PluginRegistryHost`, contract tests, caller migration and §6 test matrix shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
+| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                                 |
+| open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                                      |
+| open    | [setup-channel-wizard.md](setup-channel-wizard.md)                                     | Multi-step channel setup wizard: 4 of 5 steps scoped, step 5 unknown                                                                                                             |
 
 ## Roadmap & planning (broader than a single task)
 
@@ -39,11 +34,11 @@ the "is it actually fresh" read before you trust one blindly.
 | [`../future-improvements.md`](../future-improvements.md)   | Deferred-from-roadmap work + engineering efficiency backlog                                                                                                       | "Last reviewed: 2026-06-05" — 3 months stale as of this pass, re-verify before acting on any single line                                      |
 | [`../cloud-import-roadmap.md`](../cloud-import-roadmap.md) | Scoped: cloud-drive import beyond the shipped Google Drive phase 1                                                                                                | Small, self-contained, not part of the milestone matrix                                                                                       |
 | [`../governance-worklog.md`](../governance-worklog.md)     | Open-items-only governance checklist (member journey / board ops / technical integrity / plugin-registry boundary) — already follows the "open only" hygiene rule | Current                                                                                                                                       |
-| [`../worklogs/`](../worklogs/)                             | Session worklogs — kept only while a session still has open follow-ups                                                                                            | Empty right now (just its own `README.md`)                                                                                                    |
+| [`../worklogs/`](../worklogs/)                             | Session worklogs — kept only while a session still has open follow-ups                                                                                            | One open: STREAM-011 HLS spike (true-lossless fMP4)                                                                                           |
 
 ## Cross-repo pointers
 
-- [`../../ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md) points at `../tahti-player` — no real plan content lives on this side.
+- [`../../ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md) (Tahti Player web cutover) points at `../tahti-player` — no real plan content lives on this side.
 - `plugin-registry-extraction.md`'s remaining open item (ownership-split sign-off) is tracked solely here — `../tahti-player`'s `HISTORY.md` (2026-09-11) explicitly says so; its own `WORKPLAN.md` no longer carries a "Plugin registry extraction" section.
 
 ## Archived (historical, superseded — do not treat as current status)
@@ -55,23 +50,6 @@ matrix" — they were still sitting in `docs/` and `docs/technical/` (active
 doc territory) despite saying so. Kept for original implementation recipes,
 plus `delivery-phases.md`'s still-useful Scaling reference / Rollback
 procedure sections. See [`../archive/README.md`](../archive/README.md).
-
-Also folded into `HISTORY.md` this pass: three `docs/todo/*.md` files whose
-branches had already merged to `main` weeks ago but were never deleted
-(`stream-overlay-scrim-toggle.md`, `stream-overlay-show-title-toggle.md`,
-`recurrence-duration-overlap.md`), plus one confirmed done on both sides of
-the cross-repo split (`pwyw-track-purchase-frontend.md`), and the mail-stats
-and migration-squash tasks folded on 2026-09-11 — see `HISTORY.md` for what
-shipped in each.
-
-Folded again on 2026-09-15: `redis-memory-cleanup.md` (#520),
-`cron-runner-service.md` (#515), and `branding-nameplate.md` (#522) were all
-still marked "open ... not yet pushed/PR'd" but had already merged to `main`
-— their worktrees (`.claude/worktrees/branding-nameplate`,
-`.claude/worktrees/channel-now-playing-endpoints`) were removed too. Also
-`profile-branding-followups.md` (#523, own task this same pass) and
-`mobile-player-nav-and-tahti-theme-visuals.md` (pointer-only — shipped in
-`../tahti-player` on 2026-09-10, never deleted here after).
 
 ## Fold rule (copy into CLAUDE / chat)
 

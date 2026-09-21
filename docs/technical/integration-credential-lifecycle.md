@@ -2,7 +2,7 @@
 
 Marketplace credentials for import, export, fingerprinting, and scrobbling
 providers use the existing integrations API and encrypted storage in
-`@tahti/db`. Do not invent a second credential store for Nuclear
+`@tahti/db`. Do not invent a second credential store for Tahti Player
 ExportProvider / ImportPlugin Configure flows or ListenBrainz scrobble.
 
 ## Routes
@@ -38,7 +38,7 @@ Key material: `INTEGRATION_CREDENTIAL_ENC_KEY` (32-byte hex). Secrets never
 return to the client — list responses expose only `installed` /
 `connected` booleans.
 
-## Nuclear Configure order
+## Tahti Player Configure order
 
 For API-key style plugins (including export targets that need keys):
 
