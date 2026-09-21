@@ -7,8 +7,8 @@ import { resolveClientApiUrl } from '@/lib/api-url'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { FeedItem } from '@tahti/shared'
-import { FeedPostModal } from './_feed-post-modal'
-import { feedCover, feedHeadline, feedTeaser, formatFeedDate } from './_feed-format'
+import { FeedCard } from './_feed-card'
+import { FeedPostEditModal } from './_feed-post-edit-modal'
 
 const API_BASE = resolveClientApiUrl()
 interface FeedData {
@@ -20,47 +20,6 @@ function itemKey(item: FeedItem): string {
   return `${item.kind}-${item.id}`
 }
 
-function FeedBannerCard({ item, onOpen }: { item: FeedItem; onOpen: (item: FeedItem) => void }) {
-  const [expanded, setExpanded] = useState(false)
-  const cover = feedCover(item)
-  const headline = feedHeadline(item)
-  const teaser = feedTeaser(item)
-  const expandable = item.kind === 'post' && item.body.length > 200
-
-  return (
-    <article className="feed-banner">
-      <div
-        className="feed-banner__cover"
-        style={cover ? { backgroundImage: `url(${cover})` } : undefined}
-        aria-hidden={!cover}
-      />
-      <div className="feed-banner__text">
-        <button type="button" className="feed-banner__headline" onClick={() => onOpen(item)}>
-          {headline}
-        </button>
-        <p className={`feed-banner__body${expanded ? ' feed-banner__body--expanded' : ''}`}>
-          {teaser}
-        </p>
-        {expandable && (
-          <button
-            type="button"
-            className="feed-banner__toggle"
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? 'Show less' : 'Read more'}
-          </button>
-        )}
-        <div className="feed-banner__meta">
-          <Link href={`/u/${item.artist.username}`} className="feed-banner__artist">
-            {item.artist.displayName}
-          </Link>
-          <span className="feed-banner__date">{formatFeedDate(item.date)}</span>
-        </div>
-      </div>
-    </article>
-  )
-}
-
 /** Was embedded on the artist dashboard ("so artists don't need a separate
  * nav item just to see what artists they follow posted") — moved here since
  * following/being followed isn't an artist-only concept, and a listener with
@@ -69,7 +28,7 @@ export function YourFeedSection({ viewerUsername }: { viewerUsername: string | n
   const [data, setData] = useState<FeedData | null>(null)
   const [signedIn, setSignedIn] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [openItem, setOpenItem] = useState<FeedItem | null>(null)
+  const [editingItem, setEditingItem] = useState<Extract<FeedItem, { kind: 'post' }> | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -95,7 +54,7 @@ export function YourFeedSection({ viewerUsername }: { viewerUsername: string | n
 
   function removeItem(id: string) {
     setData((prev) => (prev ? { ...prev, items: prev.items.filter((i) => i.id !== id) } : prev))
-    setOpenItem(null)
+    setEditingItem(null)
   }
 
   function updateItem(updated: FeedItem) {
@@ -109,7 +68,6 @@ export function YourFeedSection({ viewerUsername }: { viewerUsername: string | n
           }
         : prev,
     )
-    setOpenItem(updated)
   }
 
   if (loading) {
@@ -138,9 +96,6 @@ export function YourFeedSection({ viewerUsername }: { viewerUsername: string | n
   }
 
   const items = data?.items ?? []
-  const bannerItems = items.filter((i) => i.kind === 'post' || i.kind === 'release').slice(0, 3)
-  const bannerKeys = new Set(bannerItems.map(itemKey))
-  const updateItems = items.filter((i) => !bannerKeys.has(itemKey(i))).slice(0, 10)
 
   return (
     <section className="listen-your-feed">
@@ -157,40 +112,22 @@ export function YourFeedSection({ viewerUsername }: { viewerUsername: string | n
           )}
         </p>
       ) : (
-        <div className="feed-hero">
-          <div className="feed-hero__main">
-            {bannerItems.map((item) => (
-              <FeedBannerCard key={itemKey(item)} item={item} onOpen={setOpenItem} />
-            ))}
-          </div>
-          {updateItems.length > 0 && (
-            <div className="feed-hero__aside">
-              <h3 className="feed-updates__title">Updates</h3>
-              <ul className="feed-updates-list">
-                {updateItems.map((item) => (
-                  <li key={itemKey(item)}>
-                    <button
-                      type="button"
-                      className="feed-updates-row"
-                      onClick={() => setOpenItem(item)}
-                    >
-                      <span className="feed-updates-row__header">{feedHeadline(item)}</span>
-                      <span className="feed-updates-row__teaser">{feedTeaser(item)}</span>
-                      <span className="feed-updates-row__date">{formatFeedDate(item.date)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div className="feed-grid">
+          {items.slice(0, 12).map((item) => (
+            <FeedCard
+              key={itemKey(item)}
+              item={item}
+              isOwnerPost={item.kind === 'post' && viewerUsername === item.artist.username}
+              onEdit={(post) => setEditingItem(post as Extract<FeedItem, { kind: 'post' }>)}
+            />
+          ))}
         </div>
       )}
 
-      {openItem && (
-        <FeedPostModal
-          item={openItem}
-          viewerUsername={viewerUsername}
-          onClose={() => setOpenItem(null)}
+      {editingItem && (
+        <FeedPostEditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
           onDeleted={removeItem}
           onUpdated={updateItem}
         />

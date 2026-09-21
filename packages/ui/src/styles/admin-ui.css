@@ -1815,125 +1815,147 @@
   color: var(--tahti-primary, var(--cyan));
 }
 
-/* ---- Feed hero: wide banner cards (left) + compact updates list (right) --- */
-.feed-hero {
+/* ---- Feed grid: one consistent card shape for every item kind ----
+ * Previously a two-column "hero" split — wide banner cards (post/release)
+ * on the left, a plain text list (everything else) on the right — two
+ * unrelated layouts for what's conceptually the same kind of item. Also
+ * fixed here: the cover was a variable-height `background-image` div, so a
+ * wide source image got aggressively center-cropped whenever a card's text
+ * side happened to be tall (image "gets cut off"); and the text panel sat
+ * on a background blended down to 40% opacity of `--card` near the cover
+ * edge, undermining the contrast `--muted` assumes against a *solid*
+ * `--card` (teaser text unreadable). Both fixed below: a fixed-aspect real
+ * `<img>` and a fully solid card background throughout. */
+.feed-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
-  gap: var(--tahti-space-6);
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--tahti-space-4);
 }
 
-@media (max-width: 860px) {
-  .feed-hero {
-    grid-template-columns: 1fr;
-  }
-}
-
-.feed-hero__main {
+.feed-card {
   display: flex;
   flex-direction: column;
-  gap: var(--tahti-space-4);
-  min-width: 0;
-}
-
-.feed-banner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 180px;
   border-radius: var(--tahti-radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--card);
-  position: relative;
-  /* Matches the hover feedback every other thumbnail widget on this page
-     (.selects-gallery__tile) already gives — a card with cover art reads as
-     interactive, so it should react on hover the same way theirs does. */
   transition: border-color 0.15s;
 }
 
-.feed-banner:hover {
+.feed-card:hover {
   border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
 }
 
-@media (max-width: 560px) {
-  .feed-banner {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-}
-
-.feed-banner__cover {
-  background-color: color-mix(in srgb, var(--card) 60%, black);
-  background-size: cover;
-  background-position: center;
-  min-height: 140px;
-  transition: transform 0.2s ease;
-}
-
-.feed-banner:hover .feed-banner__cover {
-  transform: scale(1.03);
-}
-
-.feed-banner__text {
-  position: relative;
-  padding: var(--tahti-space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--tahti-space-2);
-  /* Gradient bleeds from the cover (grid column 1) into this text half,
-   * so the two halves read as one continuous banner rather than a hard split. */
-  background: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--card) 40%, transparent) 0%,
-    var(--card) 35%
-  );
-}
-
-.feed-banner__headline {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  text-align: left;
-  font-family: var(--tahti-font-display);
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.25;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.feed-banner__headline:hover {
-  color: var(--tahti-primary, var(--cyan));
-}
-
-.feed-banner__body {
-  margin: 0;
-  font-size: var(--tahti-text-sm);
-  color: var(--muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+.feed-card__cover {
+  aspect-ratio: 16 / 9;
+  background: color-mix(in srgb, var(--card) 60%, black);
   overflow: hidden;
 }
 
-.feed-banner__body--expanded {
-  -webkit-line-clamp: unset;
-  overflow: visible;
+.feed-card__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
 }
 
-.feed-banner__toggle {
+.feed-card:hover .feed-card__cover-img {
+  transform: scale(1.03);
+}
+
+.feed-card__cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cyan) 25%, var(--card)),
+    color-mix(in srgb, var(--card) 60%, black)
+  );
+}
+
+.feed-card__body {
+  padding: var(--tahti-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-2);
+  flex: 1;
+}
+
+.feed-card__headline {
+  margin: 0;
+  font-family: var(--tahti-font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.feed-card__headline--link {
+  text-decoration: none;
+}
+
+.feed-card__headline--link:hover {
+  color: var(--tahti-primary, var(--cyan));
+}
+
+.feed-card__teaser {
+  margin: 0;
+  font-size: var(--tahti-text-sm);
+  color: var(--muted);
+}
+
+.feed-card__cta {
   align-self: flex-start;
+  font-size: var(--tahti-text-xs);
+  font-weight: 600;
+  color: var(--tahti-primary, var(--cyan));
+  text-decoration: none;
+}
+
+.feed-card__cta:hover {
+  text-decoration: underline;
+}
+
+.feed-card__full-body {
+  margin: 0 0 var(--tahti-space-2);
+  font-size: var(--tahti-text-sm);
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.feed-card__extra-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: var(--tahti-space-2);
+  margin: var(--tahti-space-2) 0;
+}
+
+.feed-card__extra-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--tahti-radius-sm, 6px);
+}
+
+.feed-card__edit-trigger {
+  align-self: flex-start;
+  margin-top: var(--tahti-space-2);
   background: none;
   border: none;
   padding: 0;
   font-size: var(--tahti-text-xs);
   font-weight: 500;
-  color: var(--tahti-primary, var(--cyan));
+  color: var(--muted);
   cursor: pointer;
 }
 
-.feed-banner__meta {
+.feed-card__edit-trigger:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.feed-card__meta {
   margin-top: auto;
   padding-top: var(--tahti-space-2);
   display: flex;
@@ -1943,73 +1965,14 @@
   color: var(--muted);
 }
 
-.feed-banner__artist {
+.feed-card__artist {
   color: var(--text);
   font-weight: 500;
   text-decoration: none;
 }
 
-.feed-banner__artist:hover {
+.feed-card__artist:hover {
   text-decoration: underline;
-}
-
-.feed-hero__aside {
-  min-width: 0;
-}
-
-.feed-updates__title {
-  font-family: var(--tahti-font-display);
-  font-size: var(--tahti-text-base);
-  font-weight: 500;
-  color: var(--text);
-  margin: 0 0 var(--tahti-space-3);
-}
-
-.feed-updates-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--tahti-space-1);
-}
-
-.feed-updates-row {
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  padding: var(--tahti-space-3) 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  cursor: pointer;
-}
-
-.feed-updates-row:hover .feed-updates-row__header {
-  color: var(--tahti-primary, var(--cyan));
-}
-
-.feed-updates-row__header {
-  font-size: var(--tahti-text-sm);
-  font-weight: 500;
-  color: var(--text);
-}
-
-.feed-updates-row__teaser {
-  font-size: var(--tahti-text-xs);
-  color: var(--muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.feed-updates-row__date {
-  font-size: var(--tahti-text-xs);
-  color: var(--muted);
-  opacity: 0.7;
 }
 
 /* ---- Feed post modal ---- */
