@@ -4,7 +4,7 @@ Single index of items still marked **open** (`[ ]`) or **partial** (`[~]`) acros
 the docs package. Status detail and owners live in the linked sources; update
 those sources when closing work, then refresh this file.
 
-**Last compiled:** 2026-09-11 (from `project-roadmap.md`, `future-improvements.md`, archived session leftovers).
+**Last compiled:** 2026-09-22 (from `project-roadmap.md`, `future-improvements.md`, archived session leftovers).
 
 ---
 
@@ -42,7 +42,6 @@ shipped; the row below retains `[~]` for the remaining true-lossless fMP4 work.
 | MVP manual matrix: Mixxx/Icecast path, stop→archive, chat ban expiry, membership register→pay→export, load test                                                                                    | `[ ]`  | Dev         | roadmap Phase 3 test matrix                                                          |
 | **PLAT-010** — Turbo remote cache secrets in CI                                                                                                                                                    | `[~]`  | Dev         | `.github/TURBO_REMOTE_CACHE.md`                                                      |
 | **PLAT-012** — Vitest Testcontainers + parallel workers                                                                                                                                            | `[~]`  | Dev         | future-improvements                                                                  |
-| `user-journeys-e2e` required in branch protection (moot — branch protection removed 2026-09-08)                                                                                                    | `[ ]`  | Dev         | Still runs in CI, not enforced                                                       |
 
 ---
 
@@ -160,28 +159,23 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
 | Item                                         | Notes                                                                                                                                                                                                    |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mobile UX audit (MOB-01–MOB-10)              | Done: PRs #446 (01/03/07/08), #451 (04/05), this branch (02/06), #453 (09/10)                                                                                                                            |
-| Stream manager on artist studio page         | Playlist name in collapsed rotation block; remove manager from Go live. Worklist: `docs/todo/stream-manager-artist-page.md`                                                                              |
-| Channel Designer block system                | Logo + addon blocks: `docs/todo/channel-designer-blocks.md`                                                                                                                                              |
+| Stream manager on artist studio page         | Playlist name in collapsed rotation block; remove manager from Go live                                                                                                                                   |
+| Channel Designer block system                | Logo + addon blocks                                                                                                                                                                                      |
 | Public list/play `audioUrl` still ungated    | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                                                                                                |
 | Unify remaining uploaders on `FileDropzone`  | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover)                                                                                                                  |
-| Client `NEXT_PUBLIC_API_*` env unification   | Done — client modules use `resolveClientApiUrl()` (`apps/web/src/lib/api-url.ts`)                                                                                                                        |
 | Deduplicate chat panel logic                 | `chat-panel.tsx` / `fan-chat-panel.tsx`                                                                                                                                                                  |
 | Collapse overlapping e2e seed scripts        | Four `apps/api/scripts/seed-e2e-*` scripts                                                                                                                                                               |
 | Verify cron consolidation in prod            | After deploy: per-task CronRun rows for the dispatcher/tick jobs keep ticking at old cadence; old repeatables gone (cron-runner resets on boot)                                                          |
 | hearthis.at real-audio import                | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                                                                                                          |
-| Member badge on public artist profiles       | Done — PR #456 (`MemberBadge` on `/u` + `/c`)                                                                                                                                                            |
 | Fallback cover for releases without artwork  | Gradient placeholder exists; no approved fallback asset                                                                                                                                                  |
-| Recurrence duration unused                   | Done — PR #476 (`endAt` + overlap skip/409); public channel schedule cards still show start-only                                                                                                         |
-| Orphan public routes                         | Done — `/transparency/grants/[year]`; `/venues/[slug]` → `/v/[slug]`; `/status` via `PublicFooter`                                                                                                       |
 | Jam SSE multi-instance                       | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                                                                                                       |
 | Discord bot → Tahti Radio                    | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                                                                                                          |
 | Revelator export webhook sync                | Webhook accepts + logs; body → release status not wired                                                                                                                                                  |
 | Per-DSP export submit                        | hearthis-export and storefront stubs; product API TBD                                                                                                                                                    |
 | `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                                                                                                         |
 | Sounds player: verify in live app            | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport |
-| Channel mobile chat / live player UX         | Shipped on `feat/channel-mobile-chat-live-player-ux` — fullscreen mobile chat sheet, desktop dock, Live→Replay via `signalConnected`, now-playing titles, Profile corner link removed                    |
 | Your feed redesign: verify in live app       | PR #535 shipped verified by unit tests/tsc only; confirm `FeedCard` cover images no longer crop, teaser text is readable, and `Reveal` expands correctly on a seeded dev stack (desktop + mobile)        |
+| `GreenRoomPanel` heading redundancy          | Its internal `<h4>Green room</h4>` + `StatusPill` duplicate the wrapping `StudioCollapse` title; move the pill into the `hint` slot                                                                      |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 

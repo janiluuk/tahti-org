@@ -25,12 +25,6 @@ the whole appData dir, not the plugins dir specifically). **A rollback plan
 is still not written**, and ownership/final extraction approval remain the
 open items — see §7.
 
-**Note (2026-09-08):** this doc previously said the player fork lived at
-`../tahti-nuclear`; the actual full monorepo (with `packages/player`) is
-checked out at `../tahti-player` on this machine — `../tahti-nuclear` here
-only has `packages/tahti-web`. Updated all fork references below
-accordingly.
-
 **Repos:**
 
 | Repo                                  | Path                                                      |

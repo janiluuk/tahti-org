@@ -1,4 +1,4 @@
-# Local-only: serves the tahti-player repo's tahti-web (Nuclear UI) build
+# Local-only: serves the tahti-player repo's tahti-web (Tahti Player UI) build
 # from THIS branch alongside the full stack (api + Next.js web + worker …).
 #
 # Usage (from tahti-org/):

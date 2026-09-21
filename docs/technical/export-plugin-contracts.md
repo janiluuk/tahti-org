@@ -40,14 +40,14 @@ and logs the payload; full Revelator status sync is a follow-up.
 
 Storefront IDs (`spotify`, `apple`, `deezer`, `youtube`) and
 `hearthis-export` appear in the catalog with all capabilities `false` and
-null paths. Nuclear may still deep-link into Studio distribution / Add-ons;
+null paths. Tahti Player may still deep-link into Studio distribution / Add-ons;
 do not invent per-DSP submit routes until product wires them.
 
 ## Client boundary
 
 - **Tahti core** owns delivery jobs, billing gates, encrypted credentials,
   and this metadata registry.
-- **Tahti Player / Nuclear** owns Configure UI and the `ExportProvider`
+- **Tahti Player** owns Configure UI and the `ExportProvider`
   adapter that calls submit/status and registers webhook URLs.
 - Configure → test → save → enable for credentialed export plugins uses
   `/api/me/integrations` — do not add a parallel credential store.

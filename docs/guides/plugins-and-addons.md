@@ -121,5 +121,5 @@ Security, permissions, and public/private boundaries are part of the design,
 not an afterthought. An extension should declare what it needs, work when
 optional context is missing, and fail without hiding the rest of the app.
 
-For implementation details, start with the [widget SDK README](../../packages/widget-sdk/README.md)
+For implementation details, start with the [add-on SDK README](../../packages/addon-sdk/README.md)
 or the [audio editor plugin registry](../../packages/audio-edit/src/plugins/registry.ts).

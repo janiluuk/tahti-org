@@ -49,10 +49,10 @@ gantt
 
 ## Closed beta: original target 15.6–1.8.2026 (not yet reached — see note above)
 
-| Milestone | Target date | Criteria |
-|-----------|------|----------|
-| Beta opens (invite-only) | 15 June 2026 | Phase 4 exit criteria met; 5 anchor artists onboarded |
-| Mid-beta review | 15 July 2026 | P0 bugs < 3 open; OBS guide success rate ≥ 80% |
+| Milestone                       | Target date   | Criteria                                                              |
+| ------------------------------- | ------------- | --------------------------------------------------------------------- |
+| Beta opens (invite-only)        | 15 June 2026  | Phase 4 exit criteria met; 5 anchor artists onboarded                 |
+| Mid-beta review                 | 15 July 2026  | P0 bugs < 3 open; OBS guide success rate ≥ 80%                        |
 | Beta closes / public beta opens | 1 August 2026 | Load test passed; 20+ active beta artists; Phase 7 hardening complete |
 
 Engineering readiness (M0–M11) is done; the gate on actually opening beta is the
@@ -68,6 +68,7 @@ hours, P0 SLA), which is still open.
 **Hetzner Helsinki (under evaluation):** Hetzner operates a Helsinki data center with significantly lower per-GB pricing than UpCloud (see `docs/hosting-budget.md`). May be introduced as a secondary or DR tier in Y2. Does not affect the GDPR posture (EU-jurisdiction throughout).
 
 **What this means for services:**
+
 - `stream.tahti.fi` → Caddy on owned hardware (no CDN hop)
 - `cdn.tahti.fi` → MinIO on owned hardware; UpCloud mirror for DR
 - Embed assets (~25 KB) → served by the `embed` service on owned hardware; UpCloud cache for high-traffic periods
@@ -164,55 +165,55 @@ graph TB
 
 ## Service inventory
 
-| Service | Image | Network | Phase | Role |
-|---------|-------|---------|-------|------|
-| `website` | `registry.tahti.live/tahti/website` | edge | 1 | Marketing site at tahti.live |
-| `web` | `registry.tahti.live/tahti/web` | internal + edge | 4 | Artist app at app.tahti.live + channel subdomains |
-| `api` | `registry.tahti.live/tahti/api` | internal + edge | 4 | Fastify REST + webhook target |
-| `chat` | `centrifugo/centrifugo:v5` | internal + edge | 4 | WebSocket hub for live chat |
-| `worker-media` | `registry.tahti.live/tahti/worker` | internal | 4 | Transcode, archive, fingerprint |
-| `worker-dist` | `registry.tahti.live/tahti/worker` | internal | 6 | Revelator DSP + Mixcloud upload |
-| `worker-light` | `registry.tahti.live/tahti/worker` | internal | 4 | Stats rollup, chat cleanup, picker |
-| `worker-newsletter` | `registry.tahti.live/tahti/worker` | internal | 9 | SES newsletter dispatch + bounces |
-| `orchestrator` | `registry.tahti.live/tahti/orchestrator` | internal | 4 | Spawns Liquidsoap per channel |
-| `tahti-radio` | `registry.tahti.live/tahti/liquidsoap-image` | internal | 10 | 24/7 meta-stream → Mixcloud Live |
-| `embed` | `registry.tahti.live/tahti/embed` | internal + edge | 9 | Lightweight iframe player |
-| `icecast` | `moul/icecast` | ingest + internal | 4 | Icecast source ingress |
-| `rtmp-ingest` | `tiangolo/nginx-rtmp` | ingest + internal | 4 | OBS/RTMP ingress |
-| `postgres` | `postgres:16-alpine` | internal | 3 | Primary database |
-| `redis` | `redis:7-alpine` | internal | 3 | Sessions, queues, presence |
-| `minio` | `minio/minio` | internal + edge | 3 | Object storage |
-| `caddy` | `caddy:2-alpine` | edge | 1 | TLS proxy, HLS file server |
-| `prometheus` | `prom/prometheus` | internal | 3 | Metrics scrape |
-| `grafana` | `grafana/grafana` | internal + edge | 3 | Dashboards (ops-only) |
+| Service             | Image                                        | Network           | Phase | Role                                              |
+| ------------------- | -------------------------------------------- | ----------------- | ----- | ------------------------------------------------- |
+| `website`           | `registry.tahti.live/tahti/website`          | edge              | 1     | Marketing site at tahti.live                      |
+| `web`               | `registry.tahti.live/tahti/web`              | internal + edge   | 4     | Artist app at app.tahti.live + channel subdomains |
+| `api`               | `registry.tahti.live/tahti/api`              | internal + edge   | 4     | Fastify REST + webhook target                     |
+| `chat`              | `centrifugo/centrifugo:v5`                   | internal + edge   | 4     | WebSocket hub for live chat                       |
+| `worker-media`      | `registry.tahti.live/tahti/worker`           | internal          | 4     | Transcode, archive, fingerprint                   |
+| `worker-dist`       | `registry.tahti.live/tahti/worker`           | internal          | 6     | Revelator DSP + Mixcloud upload                   |
+| `worker-light`      | `registry.tahti.live/tahti/worker`           | internal          | 4     | Stats rollup, chat cleanup, picker                |
+| `worker-newsletter` | `registry.tahti.live/tahti/worker`           | internal          | 9     | SES newsletter dispatch + bounces                 |
+| `orchestrator`      | `registry.tahti.live/tahti/orchestrator`     | internal          | 4     | Spawns Liquidsoap per channel                     |
+| `tahti-radio`       | `registry.tahti.live/tahti/liquidsoap-image` | internal          | 10    | 24/7 meta-stream → Mixcloud Live                  |
+| `embed`             | `registry.tahti.live/tahti/embed`            | internal + edge   | 9     | Lightweight iframe player                         |
+| `icecast`           | `moul/icecast`                               | ingest + internal | 4     | Icecast source ingress                            |
+| `rtmp-ingest`       | `tiangolo/nginx-rtmp`                        | ingest + internal | 4     | OBS/RTMP ingress                                  |
+| `postgres`          | `postgres:16-alpine`                         | internal          | 3     | Primary database                                  |
+| `redis`             | `redis:7-alpine`                             | internal          | 3     | Sessions, queues, presence                        |
+| `minio`             | `minio/minio`                                | internal + edge   | 3     | Object storage                                    |
+| `caddy`             | `caddy:2-alpine`                             | edge              | 1     | TLS proxy, HLS file server                        |
+| `prometheus`        | `prom/prometheus`                            | internal          | 3     | Metrics scrape                                    |
+| `grafana`           | `grafana/grafana`                            | internal + edge   | 3     | Dashboards (ops-only)                             |
 
 ## Key port map
 
 ### Production (Swarm / colocation)
 
-| External port | Protocol | Service |
-|---------------|----------|---------|
-| 80 / 443 | HTTPS | Caddy (all web traffic) |
-| 1935 | RTMP | nginx-RTMP (OBS ingest) |
-| 8000 | HTTP+Icecast | Icecast (Mixxx ingest) |
+| External port | Protocol     | Service                 |
+| ------------- | ------------ | ----------------------- |
+| 80 / 443      | HTTPS        | Caddy (all web traffic) |
+| 1935          | RTMP         | nginx-RTMP (OBS ingest) |
+| 8000          | HTTP+Icecast | Icecast (Mixxx ingest)  |
 
 ### Local dev stack (`docker-compose.stack.yml`)
 
 All host-side ports sit above 15 000 to avoid collisions with other local services. Override any via env var before running `./scripts/stack-up.sh`.
 
-| Service | Env var | Host port | URL |
-|---------|---------|-----------|-----|
-| web (Next.js) | `WEB_PORT` | 17777 | http://localhost:17777 |
-| api (Fastify) | `API_PORT` | 15011 | http://localhost:15011 |
-| orchestrator | `ORCHESTRATOR_PORT` | 15003 | http://localhost:15003 |
-| chat (Centrifugo) | `CHAT_PORT` | 18000 | http://localhost:18000 |
-| mailhog SMTP | `MAILHOG_SMTP_PORT` | 15025 | — |
-| mailhog UI | `MAILHOG_UI_PORT` | 18025 | http://localhost:18025 |
-| minio API | `MINIO_PORT` | 19000 | http://localhost:19000 |
-| minio console | `MINIO_CONSOLE_PORT` | 19001 | http://localhost:19001 |
-| icecast | `ICECAST_PORT` | 18100 | http://localhost:18100 |
-| website (marketing) | `WEBSITE_PORT` | 18080 | http://localhost:18080 |
-| rtmp-ingest | `RTMP_PORT` | 1935 | rtmp://localhost:1935 |
+| Service             | Env var              | Host port | URL                    |
+| ------------------- | -------------------- | --------- | ---------------------- |
+| web (Next.js)       | `WEB_PORT`           | 17777     | http://localhost:17777 |
+| api (Fastify)       | `API_PORT`           | 15011     | http://localhost:15011 |
+| orchestrator        | `ORCHESTRATOR_PORT`  | 15003     | http://localhost:15003 |
+| chat (Centrifugo)   | `CHAT_PORT`          | 18000     | http://localhost:18000 |
+| mailhog SMTP        | `MAILHOG_SMTP_PORT`  | 15025     | —                      |
+| mailhog UI          | `MAILHOG_UI_PORT`    | 18025     | http://localhost:18025 |
+| minio API           | `MINIO_PORT`         | 19000     | http://localhost:19000 |
+| minio console       | `MINIO_CONSOLE_PORT` | 19001     | http://localhost:19001 |
+| icecast             | `ICECAST_PORT`       | 18100     | http://localhost:18100 |
+| website (marketing) | `WEBSITE_PORT`       | 18080     | http://localhost:18080 |
+| rtmp-ingest         | `RTMP_PORT`          | 1935      | rtmp://localhost:1935  |
 
 ### Local dev stack — build notes
 
@@ -240,20 +241,20 @@ graph LR
 
 ## Phase documents
 
-| Phase | Doc | Milestones | Goal |
-|-------|-----|------------|------|
-| 1 | [phase-1.md](phase-1.md) | — | tahti.live live over HTTPS |
-| 2 | [phase-2.md](phase-2.md) | — | `make dev` works; CI + registry |
-| 3 | [phase-3.md](phase-3.md) | — | Postgres / Redis / MinIO in prod with backups |
-| 4 | [phase-4.md](phase-4.md) | M0–M5 | Artist app alpha — accounts, broadcast, archive, chat |
-| 5 | [phase-5.md](phase-5.md) | — | 3-node staging Swarm; auto-deploy pipeline |
-| 6 | [phase-6.md](phase-6.md) | M6–M10 | Distribution, transparency ledger, grants |
-| 7 | [phase-7.md](phase-7.md) | M11 | Hardening, load test, public launch |
-| 8 | [phase-8.md](phase-8.md) | M12 | Artist profiles, releases, smart links |
-| 9 | [phase-9.md](phase-9.md) | M13–M14 | Newsletter, promo toolkit, embed, social auto-post |
-| 10 | [phase-10.md](phase-10.md) | M15–M17 | Artist tagging, Tahti Radio, venue calendar |
-| 11 | [phase-11.md](phase-11.md) | M18–M20 | Downloads, fan-subscriptions, tier gating |
-| 12 | [phase-12.md](phase-12.md) | M21 | Admin panel: users, streams, finance, health, support, governance |
+| Phase | Doc                                   | Milestones | Goal                                                              |
+| ----- | ------------------------------------- | ---------- | ----------------------------------------------------------------- |
+| 1     | [phase-1.md](../archive/phase-1.md)   | —          | tahti.live live over HTTPS                                        |
+| 2     | [phase-2.md](../archive/phase-2.md)   | —          | `make dev` works; CI + registry                                   |
+| 3     | [phase-3.md](../archive/phase-3.md)   | —          | Postgres / Redis / MinIO in prod with backups                     |
+| 4     | [phase-4.md](../archive/phase-4.md)   | M0–M5      | Artist app alpha — accounts, broadcast, archive, chat             |
+| 5     | [phase-5.md](../archive/phase-5.md)   | —          | 3-node staging Swarm; auto-deploy pipeline                        |
+| 6     | [phase-6.md](../archive/phase-6.md)   | M6–M10     | Distribution, transparency ledger, grants                         |
+| 7     | [phase-7.md](../archive/phase-7.md)   | M11        | Hardening, load test, public launch                               |
+| 8     | [phase-8.md](../archive/phase-8.md)   | M12        | Artist profiles, releases, smart links                            |
+| 9     | [phase-9.md](../archive/phase-9.md)   | M13–M14    | Newsletter, promo toolkit, embed, social auto-post                |
+| 10    | [phase-10.md](../archive/phase-10.md) | M15–M17    | Artist tagging, Tahti Radio, venue calendar                       |
+| 11    | [phase-11.md](../archive/phase-11.md) | M18–M20    | Downloads, fan-subscriptions, tier gating                         |
+| 12    | [phase-12.md](../archive/phase-12.md) | M21        | Admin panel: users, streams, finance, health, support, governance |
 
 **Node placement & bottlenecks:** [scaling-node-distribution.md](../scaling-node-distribution.md) — Swarm labels, replica map, and what to scale when API, chat, transcode, DB, or egress saturates.
 
@@ -261,9 +262,9 @@ graph LR
 
 ## User journey documents
 
-| Perspective | Doc | Phases covered |
-|-------------|-----|---------------|
-| Artist | [journey-artist.md](journey-artist.md) | 1 → 11 |
-| Listener | [journey-listener.md](journey-listener.md) | 4 → 11 |
-| Ops engineer | [journey-ops.md](journey-ops.md) | 1 → 7 |
-| Director / Board | [journey-director.md](journey-director.md) | 3 → 11 |
+| Perspective      | Doc                                        | Phases covered |
+| ---------------- | ------------------------------------------ | -------------- |
+| Artist           | [journey-artist.md](journey-artist.md)     | 1 → 11         |
+| Listener         | [journey-listener.md](journey-listener.md) | 4 → 11         |
+| Ops engineer     | [journey-ops.md](journey-ops.md)           | 1 → 7          |
+| Director / Board | [journey-director.md](journey-director.md) | 3 → 11         |
