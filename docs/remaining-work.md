@@ -180,6 +180,7 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                                                                                                         |
 | Sounds player: verify in live app            | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport |
 | Channel mobile chat / live player UX         | Shipped on `feat/channel-mobile-chat-live-player-ux` — fullscreen mobile chat sheet, desktop dock, Live→Replay via `signalConnected`, now-playing titles, Profile corner link removed                    |
+| Your feed redesign: verify in live app       | PR #535 shipped verified by unit tests/tsc only; confirm `FeedCard` cover images no longer crop, teaser text is readable, and `Reveal` expands correctly on a seeded dev stack (desktop + mobile)        |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 
