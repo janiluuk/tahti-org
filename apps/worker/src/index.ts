@@ -210,12 +210,8 @@ const worker = new Worker(
       } else if (job.name === 'social-post-dispatch') {
         const { postId } = job.data as { postId: string }
         await processSocialPostDispatchJob(prisma, postId)
-      } else if (job.name === 'tor-exit-list-sync') {
-        return await processTorExitListSyncJob(job)
       } else if (job.name === 'internet-radio-now-playing-sync') {
         return await processInternetRadioNowPlayingSyncJob(job)
-      } else if (job.name === 'download-fraud-scan') {
-        return await processDownloadFraudScanJob(job)
       } else if (job.name === 'membership-daily') {
         return await runCronTasks({
           'membership-renewal-reminder': () => processMembershipRenewalJob(job),
@@ -233,12 +229,12 @@ const worker = new Worker(
         const summary = await processRevelatorRoyaltySyncJob(prisma, job)
         console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))
         return summary
-      } else if (job.name === 'live-show-recurrence-generate') {
-        const summary = await processLiveShowRecurrenceJob(job)
-        if (summary.episodesCreated > 0) {
-          console.log('[worker] live-show-recurrence-generate:', JSON.stringify(summary))
-        }
-        return summary
+      } else if (job.name === 'light-daily') {
+        return await runCronTasks({
+          'tor-exit-list-sync': () => processTorExitListSyncJob(job),
+          'download-fraud-scan': () => processDownloadFraudScanJob(job),
+          'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
+        })
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)
         if (summary.flagged > 0 || summary.autoResolved > 0) {

@@ -110,16 +110,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     subTasks: ['sweep-editor-peaks-backfill', 'sweep-expired-stems'],
   },
   {
-    name: 'tor-exit-list-sync',
+    name: 'light-daily',
     pattern: '30 5 * * *',
-    jobId: 'tor-exit-list-sync-cron',
-    description: 'M18: sync Tor exit CIDRs to Redis (05:30 UTC)',
-  },
-  {
-    name: 'download-fraud-scan',
-    pattern: '0 6 * * *',
-    jobId: 'download-fraud-scan-cron',
-    description: 'M18: download velocity fraud scan (06:00 UTC)',
+    jobId: 'light-daily-cron',
+    description:
+      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon)',
+    subTasks: ['tor-exit-list-sync', 'download-fraud-scan', 'live-show-recurrence-generate'],
   },
   {
     name: 'mention-digest',
@@ -138,13 +134,6 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '0 4 5 * *',
     jobId: 'revelator-royalty-sync-cron',
     description: 'M7: pull Revelator royalty reports for prior month (5th, 04:00 UTC)',
-  },
-  {
-    name: 'live-show-recurrence-generate',
-    pattern: '15 3 * * *',
-    jobId: 'live-show-recurrence-generate-cron',
-    description:
-      'Roll recurring LiveShowSeries forward: generate missing ScheduledLiveShow occurrences up to each series’ horizon (03:15 UTC)',
   },
   {
     name: 'missed-live-show-scan',

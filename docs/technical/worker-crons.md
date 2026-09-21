@@ -15,12 +15,10 @@ BullMQ repeatable jobs are declared in **`packages/shared/src/worker-cron-jobs.t
 | `fan-sub-daily` | daily 04:00 | Dispatcher (M19) — `fan-sub-payout`, `fan-sub-expire`, `fan-subscriber-purge` |
 | `membership-daily` | daily 07:00 | Dispatcher (M1) — `membership-renewal-reminder`, then `membership-lapse` |
 | `weekly-monday` | Monday 00:00 | Dispatcher — `weekly-broadcast-reset` (M20), then `tahti-selects-weekly-draw` |
-| `tor-exit-list-sync` | daily 05:30 | M18 |
-| `download-fraud-scan` | daily 06:00 | M18 |
+| `light-daily` | daily 05:30 | Dispatcher (light lane) — `tor-exit-list-sync` (M18), then `download-fraud-scan` (M18), then `live-show-recurrence-generate` (roll recurring `LiveShowSeries` forward: generate missing `ScheduledLiveShow` occurrences up to each series' horizon) |
 | `mention-digest` | daily 18:00 | M15 — daily @-mention notification digest |
 | `listen-session-close` | every 3 min | Close `ListenSession`s that stopped pinging (listen-time tracking) |
 | `revelator-royalty-sync` | 04:00 on day 5 each month | M7 — pull Revelator royalty reports for the prior month |
-| `live-show-recurrence-generate` | daily 03:15 | Roll recurring `LiveShowSeries` forward: generate missing `ScheduledLiveShow` occurrences up to each series' horizon |
 | `missed-live-show-scan` | 5 min past every hour | Flag `ScheduledLiveShow`s whose start time passed with no `Broadcast`, notify the board |
 
 **Dispatcher jobs** (`subTasks` in the manifest) run several related tasks in one tick, in order. Each sub-task is logged to `CronRun` under its own name, so `/admin/crons` still shows per-task history. A failing task is recorded and does not stop the ones after it; the dispatcher does not rethrow, so BullMQ never re-runs tasks that already succeeded (e.g. payouts). Sub-tasks of one dispatcher must belong to the same worker lane. Ordered dispatchers (daily/weekly) run tasks sequentially; the per-minute and per-10-minute ticks run them in parallel (`runCronTasks(..., { parallel: true })`) so one slow task, e.g. `channel-watchdog` waiting on the orchestrator, cannot delay `radio-slot-switchover`.

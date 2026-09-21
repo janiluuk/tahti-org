@@ -15,7 +15,7 @@ describe('WORKER_CRON_JOBS', () => {
   it('includes core M1/M18/M19/M20 schedules', () => {
     const names = new Set(WORKER_CRON_JOBS.map((j) => j.name))
     expect(names).toContain('fan-sub-daily')
-    expect(names).toContain('download-fraud-scan')
+    expect(names).toContain('light-daily')
     expect(names).toContain('light-minute-tick')
     expect(names).toContain('membership-daily')
     expect(names).toContain('revelator-royalty-sync')
@@ -68,6 +68,15 @@ describe('WORKER_CRON_JOBS', () => {
     expect(byName.get('media-ten-minute-tick')?.subTasks).toEqual([
       'sidecar-cleanup',
       'sound-fallback-cache-sync',
+    ])
+  })
+
+  it('lists sub-tasks for the light-lane daily dispatcher', () => {
+    const light = WORKER_CRON_JOBS.find((j) => j.name === 'light-daily')
+    expect(light?.subTasks).toEqual([
+      'tor-exit-list-sync',
+      'download-fraud-scan',
+      'live-show-recurrence-generate',
     ])
   })
 })
