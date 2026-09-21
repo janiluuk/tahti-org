@@ -5,6 +5,7 @@
 
 import { cookies } from 'next/headers'
 import { updateChannelProfile } from '../channel-identity-actions'
+import { updateTopListsOptOut } from '../discovery-settings-actions'
 
 export async function provisionChannel(): Promise<{ error?: string; slug?: string }> {
   const session = cookies().get('tahti_session')
@@ -38,4 +39,29 @@ export async function saveChannelIdentity(input: {
     }
   }
   return updateChannelProfile({ displayName: input.displayName, bio: input.bio })
+}
+
+/** Wizard step 2: genres live inside the profile's `socialLinks` bag, which PATCH replaces
+ * wholesale — so read it first and merge, or returning to this step would wipe the user's links. */
+export async function saveChannelGenresAndListing(input: {
+  genres: string[]
+  listed: boolean
+}): Promise<{ error: string | null }> {
+  const session = cookies().get('tahti_session')
+  if (!session) return { error: 'Not signed in' }
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+
+  const current = await fetch(`${apiUrl}/api/me/profile`, {
+    headers: { Cookie: `tahti_session=${session.value}` },
+    cache: 'no-store',
+  })
+  if (!current.ok) return { error: 'Could not load your profile' }
+  const { socialLinks } = (await current.json()) as { socialLinks: Record<string, string> | null }
+
+  const profile = await updateChannelProfile({
+    socialLinks: { ...(socialLinks ?? {}), genres: input.genres.join(', ') },
+  })
+  if (profile.error) return profile
+  // "List my channel" is the inverse of the existing top-lists opt-out — no new flag.
+  return updateTopListsOptOut(!input.listed)
 }
