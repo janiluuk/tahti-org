@@ -2,13 +2,18 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
+import NextLink from 'next/link'
 import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../../_studio-header-actions'
 import { fetchChannelProgramme } from '../../programme-actions'
 import { RotationEditor } from '../../schedule/_rotation-editor'
 
-export default async function ChannelPlaylistPage() {
+export default async function ChannelPlaylistPage({
+  searchParams,
+}: {
+  searchParams: { from?: string }
+}) {
   if (!dashboardSessionCookie()) redirect('/login?next=/dashboard/channel/playlist')
 
   const [user, { data }] = await Promise.all([getDashboardUser(), fetchChannelProgramme()])
@@ -26,6 +31,11 @@ export default async function ChannelPlaylistPage() {
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">
+      {searchParams.from === 'setup' && (
+        <NextLink href="/dashboard/setup-channel?step=5" className="setup-channel-page__back">
+          ← Back to setup (step 5)
+        </NextLink>
+      )}
       <header className="studio-page-header studio-channel-editor-page__header">
         <div>
           <h1 className="studio-page-title">24/7 channel playlist</h1>
