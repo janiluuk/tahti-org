@@ -183,7 +183,7 @@ services:
         export DB_PASSWORD="$$(cat /run/secrets/pg_password)"
         exec /entrypoint.sh
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "tahti", "-d", "tahti"]
       interval: 10s
       retries: 5
     deploy:
