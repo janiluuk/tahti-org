@@ -1,6 +1,31 @@
 # Turn channel setup into a multi-step wizard
 
-Status: open, not started.
+Status: implemented on branch `feat/setup-channel-wizard` (PR pending review) — all 5 steps.
+
+## Shipped (5 slices)
+
+`/dashboard/setup-channel?step=1..5`, stepper in `_wizard-shell.tsx`; a user with a channel and no
+`?step=` still redirects to the editor.
+
+1. Shell + identity: name, logo (PNG/JPG ≤2 MB via the avatar upload flow), description (10–300).
+   Provisions the channel on Continue, then writes name/bio through `PATCH /api/me/profile` — no
+   new API surface.
+2. Genres (existing `SOUND_GENRES` grid, cap 6) + listing opt-in. **Decision taken:** "list in
+   directories" is the inverse of the existing `topListsOptOut`, no new column. Genres merge into
+   `socialLinks` (PATCH replaces it wholesale).
+3. Look: links into the existing channel editor (`?from=setup` shows a way back).
+4. Rotation: no-tracks notice + upload link, else 24/7 toggle + link to the playlist editor.
+   `applyProgrammePatch` now rejects off→on `fallbackEnabled` with zero READY sounds (covers the
+   dashboard toggle and admin route too; test in `programme.test.ts`).
+5. Go live: **step 5 content was never specified** — built as broadcast studio / view channel /
+   finish. Confirm or replace.
+
+Open: step-count discrepancy (5 vs 3 in the screenshots) — went with 5; genre cap kept at 6 not 5.
+`programme.test.ts` could not run locally (no Postgres) — relies on CI.
+
+---
+
+Original analysis below.
 
 ## Request
 

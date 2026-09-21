@@ -6,6 +6,7 @@ import NextLink from 'next/link'
 import { PageShell } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { StepGenres } from './_step-genres'
+import { StepGoLive } from './_step-go-live'
 import { StepIdentity } from './_step-identity'
 import { StepLook } from './_step-look'
 import { StepRotation } from './_step-rotation'
@@ -25,8 +26,6 @@ export default async function SetupChannelPage({
 
   const hasChannel = Boolean(user.channel)
   const step = resolveWizardStep(searchParams.step, hasChannel)
-  // Step 5 lands in a follow-up commit; until then continue in the full editor.
-  if (step > 4) redirect('/dashboard/channel/edit')
   const profile = await loadWizardProfile()
   const reachable = hasChannel ? 5 : 1
   const rotation = step === 4 ? await loadRotationState() : { trackCount: 0, fallbackEnabled: true }
@@ -81,6 +80,16 @@ export default async function SetupChannelPage({
             trackCount={rotation.trackCount}
             initialEnabled={rotation.fallbackEnabled}
           />
+        </WizardShell>
+      )}
+      {step === 5 && (
+        <WizardShell
+          current={5}
+          reachable={reachable}
+          title="You are all set"
+          lede="Your station is ready. Go live whenever you like."
+        >
+          <StepGoLive channelHost={`${user.username}.tahti.live`} />
         </WizardShell>
       )}
     </PageShell>
