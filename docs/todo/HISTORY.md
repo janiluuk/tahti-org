@@ -688,3 +688,14 @@ page, admin dashboard and governance-records inline styles moved to scoped
 classes, dead `.studio-details*` CSS removed. `admin-nav.tsx` reviewed and left
 alone (inherent icon table). Leftover: `GreenRoomPanel` heading redundancy
 (moved to `remaining-work.md`). PR #533.
+
+### 2026-09-22 — Setup-channel wizard (`setup-channel-wizard.md`)
+
+`/dashboard/setup-channel?step=1..5` is now a 5-step wizard instead of a
+one-click blind provision: identity (name, logo, description), genres +
+directory-listing opt-in (inverse of `topListsOptOut`, no new column), look
+(links into the channel editor), rotation (no-tracks notice, else 24/7 toggle +
+playlist editor link), go live (studio / view channel / finish).
+`applyProgrammePatch` now rejects off→on `fallbackEnabled` with zero READY
+sounds, protecting the dashboard toggle and admin route too. PR #543.
+Leftovers (step 5 content, genre cap, local test gap) moved to `remaining-work.md`.

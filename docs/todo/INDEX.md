@@ -18,7 +18,6 @@ One file per in-progress task. When a task ships, fold it into
 | partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                         | Store adapter, `PluginRegistryHost`, contract tests, caller migration and §6 test matrix shipped in `../tahti-player`; ownership-split sign-off and final extraction remain open |
 | open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                                 |
 | open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                                      |
-| partial | [setup-channel-wizard.md](setup-channel-wizard.md)                                     | All 5 wizard steps built (PR pending); step 5 content (go live) is my guess and needs confirmation; genre cap 6 vs 5 open                                                             |
 
 ## Roadmap & planning (broader than a single task)
 
