@@ -17,7 +17,7 @@ import {
 import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getQueueStatsByJobName } from '../../lib/queue-stats.js'
-import { WORKER_CRON_JOBS } from '@tahti/shared'
+import { WORKER_CRON_JOBS, cronTaskNames } from '@tahti/shared'
 import { runDependencyChecks } from '../../lib/health-checks.js'
 import { collectBackupMetrics } from '../../lib/backup-metrics.js'
 
@@ -83,16 +83,18 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (_request, reply) => {
       const latestRuns = await fastify.prisma.cronRun.findMany({
-        where: { jobName: { in: WORKER_CRON_JOBS.map((spec) => spec.name) } },
+        where: { jobName: { in: WORKER_CRON_JOBS.flatMap(cronTaskNames) } },
         orderBy: [{ jobName: 'asc' }, { startedAt: 'desc' }],
         distinct: ['jobName'],
       })
       const latestByJobName = new Map(latestRuns.map((run) => [run.jobName, run]))
 
-      const latest = WORKER_CRON_JOBS.map((spec) => {
-        const run = latestByJobName.get(spec.name)
+      const latest = WORKER_CRON_JOBS.flatMap((spec) =>
+        cronTaskNames(spec).map((taskName) => ({ spec, taskName })),
+      ).map(({ spec, taskName }) => {
+        const run = latestByJobName.get(taskName)
         return {
-          jobName: spec.name,
+          jobName: taskName,
           description: spec.description,
           pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
           lastRun: run
