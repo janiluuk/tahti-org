@@ -646,3 +646,13 @@ warmed — this is what silenced tahti-radio. Set `SOUND_CACHE_ROOT` alongside
 `ARCHIVE_CACHE_ROOT` in both `infra/docker-compose.stack.yml` and
 `infra/docker-stack.yml`, keeping the legacy variable for older images during
 rolling deploys.
+
+### 2026-09-21 — `/listen` "Your feed" redesign (`listen-your-feed-redesign.md`)
+
+Replaced the banner-vs-updates-list split in `_your-feed-section.tsx` with one
+unified `FeedCard` for every item kind (post/release/track), and added a
+`Reveal` progressive-disclosure component to `@tahti/ui` (`brand/Reveal.tsx`,
+with tests) so items expand in place instead of the ad-hoc "Read more" toggle
+and the old `FeedPostModal` (now `_feed-post-edit-modal.tsx`, edit only). Feed
+CSS in `components.css` / `admin-ui.css` trimmed accordingly. Presentation
+only — `FeedItem` data shape and `/me/feed` API unchanged. PR #535.
