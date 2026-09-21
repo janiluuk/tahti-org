@@ -29,4 +29,30 @@ describe('runCronTasks', () => {
     expect(order).toEqual(['a', 'b', 'c'])
     expect(results).toEqual({ a: { ok: 1 }, b: { error: true }, c: { ok: 3 } })
   })
+
+  it('parallel mode starts every task before any finishes and isolates failures', async () => {
+    const started: string[] = []
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const pending = runCronTasks(
+      {
+        slow: async () => {
+          started.push('slow')
+          await gate
+          return 1
+        },
+        fast: async () => {
+          started.push('fast')
+          throw new Error('boom')
+        },
+      },
+      { parallel: true },
+    )
+    await new Promise((r) => setTimeout(r, 0))
+    expect(started).toEqual(['slow', 'fast'])
+    release()
+    expect(await pending).toEqual({ slow: 1, fast: { error: true } })
+  })
 })

@@ -1,6 +1,6 @@
 # Cron consolidation
 
-Goal: fewer registered BullMQ repeatables (28 → 23 in PR 1, → ~16 in PR 2) without dropping behaviour.
+Goal: fewer registered BullMQ repeatables (28 → 23 in PR 1, → 17 in PR 2) without dropping behaviour.
 
 ## PR 1 — daily/weekly dispatchers (this branch)
 
@@ -9,9 +9,11 @@ Goal: fewer registered BullMQ repeatables (28 → 23 in PR 1, → ~16 in PR 2) w
 - [x] Admin cron dashboard expands dispatchers into per-task rows
 - [ ] Verify in prod after deploy: 4 new CronRun names appear per task, old repeatables gone (cron-runner resets them on boot)
 
-## PR 2 — stacked on PR 1
+## PR 2 — minute / 10-minute ticks (stacked on PR 1)
 
-- `minute-tick`: broadcast-cap-tick, channel-watchdog, radio-slot-switchover, channel-fallback-reconciler, post-publish-notify — lanes differ (light vs media), so split by lane or move lanes first
-- `ten-minute-tick`: sidecar-cleanup, sound-fallback-cache-sync (media), internet-radio-now-playing-sync (dist)
+- [x] `media-minute-tick` (watchdog, slot-switchover, fallback-reconciler), `light-minute-tick` (cap-tick, post-publish-notify), `media-ten-minute-tick` (sidecar-cleanup, sound-fallback-cache-sync) → 23 → 19 entries
+- [x] `runCronTasks({ parallel: true })` so a slow watchdog (~40s seen live) cannot delay slot switchover
+- [ ] Verify in prod after deploy: per-task CronRun rows keep ticking at the old cadence
+- Left alone: `internet-radio-now-playing-sync` (dist lane, no same-lane 10-min sibling), `listen-session-close` (*/3), `missed-live-show-scan` (hourly), hls-minio-sync (4s), hls-caddy-egress-sync (edge-only), monthly/annual money jobs
 
-Kept separate on purpose: hls-minio-sync (4s), hls-caddy-egress-sync (edge-only), monthly/annual money jobs.
+- [x] `light-daily` (05:30): tor-exit-list-sync → download-fraud-scan → live-show-recurrence-generate → 19 → 17. `mention-digest` stays separate (user-facing 18:00 timing); `membership-daily` stays at 07:00 (emails).

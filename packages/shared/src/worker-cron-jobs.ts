@@ -24,6 +24,30 @@ export function cronTaskNames(spec: CronJobSpec): string[] {
 
 export const WORKER_CRON_JOBS: CronJobSpec[] = [
   {
+    name: 'media-minute-tick',
+    pattern: '* * * * *',
+    jobId: 'media-minute-tick-cron',
+    description:
+      'Every minute (media lane): STREAM-005 restart Liquidsoap when HLS segments are stale, switch Tahti Radio to a booked artist live source at slot boundaries, bootstrap fallback-enabled artist channels into a running 24/7 container',
+    subTasks: ['channel-watchdog', 'radio-slot-switchover', 'channel-fallback-reconciler'],
+  },
+  {
+    name: 'light-minute-tick',
+    pattern: '* * * * *',
+    jobId: 'light-minute-tick-cron',
+    description:
+      'Every minute (light lane): M20 free-tier live cap tick, M34 notify followers when a scheduled post crosses its publishAt',
+    subTasks: ['broadcast-cap-tick', 'post-publish-notify'],
+  },
+  {
+    name: 'media-ten-minute-tick',
+    pattern: '*/10 * * * *',
+    jobId: 'media-ten-minute-tick-cron',
+    description:
+      'Every 10 min (media lane): remove orphaned recorder/fingerprint sidecar containers (see services/orchestrator/src/sidecar-cleanup.ts), refresh the local sound fallback cache for Liquidsoap (STREAM-009)',
+    subTasks: ['sidecar-cleanup', 'sound-fallback-cache-sync'],
+  },
+  {
     name: 'monthly-ledger-rollup',
     pattern: '0 2 2 * *',
     jobId: 'monthly-ledger-rollup-cron',
@@ -34,37 +58,6 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '0 3 1 3 *',
     jobId: 'annual-grant-calc-cron',
     description: 'Annual grant calculation (1 March, 03:00 UTC)',
-  },
-  {
-    name: 'broadcast-cap-tick',
-    pattern: '* * * * *',
-    jobId: 'broadcast-cap-tick-cron',
-    description: 'M20: free-tier live cap tick every minute',
-  },
-  {
-    name: 'channel-watchdog',
-    pattern: '* * * * *',
-    jobId: 'channel-watchdog-cron',
-    description: 'STREAM-005: restart Liquidsoap when HLS segments are stale',
-  },
-  {
-    name: 'radio-slot-switchover',
-    pattern: '* * * * *',
-    jobId: 'radio-slot-switchover-cron',
-    description: 'Switch Tahti Radio to a booked artist live source at slot boundaries',
-  },
-  {
-    name: 'channel-fallback-reconciler',
-    pattern: '* * * * *',
-    jobId: 'channel-fallback-reconciler-cron',
-    description: 'Bootstrap fallback-enabled artist channels into a running 24/7 container',
-  },
-  {
-    name: 'sidecar-cleanup',
-    pattern: '*/10 * * * *',
-    jobId: 'sidecar-cleanup-cron',
-    description:
-      'Remove orphaned recorder/fingerprint sidecar containers left behind when a broadcast ends (no --rm, no broadcast-end hook — see services/orchestrator/src/sidecar-cleanup.ts)',
   },
   {
     name: 'hls-minio-sync',
@@ -84,12 +77,6 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '* * * * *',
     jobId: 'hls-caddy-egress-sync-cron',
     description: 'STREAM-006: aggregate Caddy HLS access log bytes into Redis (edge worker only)',
-  },
-  {
-    name: 'sound-fallback-cache-sync',
-    pattern: '*/10 * * * *',
-    jobId: 'sound-fallback-cache-sync-cron',
-    description: 'STREAM-009: refresh local sound fallback cache for Liquidsoap',
   },
   {
     name: 'weekly-monday',
@@ -123,28 +110,18 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     subTasks: ['sweep-editor-peaks-backfill', 'sweep-expired-stems'],
   },
   {
-    name: 'tor-exit-list-sync',
+    name: 'light-daily',
     pattern: '30 5 * * *',
-    jobId: 'tor-exit-list-sync-cron',
-    description: 'M18: sync Tor exit CIDRs to Redis (05:30 UTC)',
-  },
-  {
-    name: 'download-fraud-scan',
-    pattern: '0 6 * * *',
-    jobId: 'download-fraud-scan-cron',
-    description: 'M18: download velocity fraud scan (06:00 UTC)',
+    jobId: 'light-daily-cron',
+    description:
+      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon)',
+    subTasks: ['tor-exit-list-sync', 'download-fraud-scan', 'live-show-recurrence-generate'],
   },
   {
     name: 'mention-digest',
     pattern: '0 18 * * *',
     jobId: 'mention-digest-cron',
     description: 'M15: daily @-mention notification digest (18:00 UTC)',
-  },
-  {
-    name: 'post-publish-notify',
-    pattern: '* * * * *',
-    jobId: 'post-publish-notify-cron',
-    description: 'M34: notify followers when a scheduled post crosses its publishAt',
   },
   {
     name: 'listen-session-close',
@@ -157,13 +134,6 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '0 4 5 * *',
     jobId: 'revelator-royalty-sync-cron',
     description: 'M7: pull Revelator royalty reports for prior month (5th, 04:00 UTC)',
-  },
-  {
-    name: 'live-show-recurrence-generate',
-    pattern: '15 3 * * *',
-    jobId: 'live-show-recurrence-generate-cron',
-    description:
-      'Roll recurring LiveShowSeries forward: generate missing ScheduledLiveShow occurrences up to each series’ horizon (03:15 UTC)',
   },
   {
     name: 'missed-live-show-scan',
