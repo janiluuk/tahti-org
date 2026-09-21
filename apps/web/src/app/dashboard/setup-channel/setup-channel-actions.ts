@@ -41,6 +41,24 @@ export async function saveChannelIdentity(input: {
   return updateChannelProfile({ displayName: input.displayName, bio: input.bio })
 }
 
+/** Wizard step 4: flips 24/7 rotation. The API refuses to enable it without tracks and says why. */
+export async function setRotationEnabled(enabled: boolean): Promise<{ error: string | null }> {
+  const session = cookies().get('tahti_session')
+  if (!session) return { error: 'Not signed in' }
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: `tahti_session=${session.value}` },
+    body: JSON.stringify({ fallbackEnabled: enabled }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: body.error ?? 'Failed to save' }
+  }
+  return { error: null }
+}
+
 /** Wizard step 2: genres live inside the profile's `socialLinks` bag, which PATCH replaces
  * wholesale — so read it first and merge, or returning to this step would wipe the user's links. */
 export async function saveChannelGenresAndListing(input: {

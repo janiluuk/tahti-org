@@ -36,3 +36,26 @@ export async function loadWizardProfile(): Promise<WizardProfile> {
     return empty
   }
 }
+
+export interface RotationState {
+  trackCount: number
+  fallbackEnabled: boolean
+}
+
+/** What step 4 needs: how many tracks are in the channel's library and whether 24/7 is on. */
+export async function loadRotationState(): Promise<RotationState> {
+  const session = dashboardSessionCookie()
+  const empty: RotationState = { trackCount: 0, fallbackEnabled: true }
+  if (!session) return empty
+  try {
+    const res = await fetch(`${resolveServerApiUrl()}/api/me/channel/programme`, {
+      headers: { Cookie: `tahti_session=${session}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return empty
+    const view = (await res.json()) as { items: unknown[]; fallbackEnabled: boolean }
+    return { trackCount: view.items.length, fallbackEnabled: view.fallbackEnabled }
+  } catch {
+    return empty
+  }
+}

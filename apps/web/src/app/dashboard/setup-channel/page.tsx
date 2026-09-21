@@ -8,7 +8,8 @@ import { getDashboardUser } from '@/lib/dashboard-session'
 import { StepGenres } from './_step-genres'
 import { StepIdentity } from './_step-identity'
 import { StepLook } from './_step-look'
-import { loadWizardProfile } from './_wizard-data'
+import { StepRotation } from './_step-rotation'
+import { loadRotationState, loadWizardProfile } from './_wizard-data'
 import { WizardShell } from './_wizard-shell'
 import { resolveWizardStep } from './_wizard-steps'
 
@@ -24,10 +25,11 @@ export default async function SetupChannelPage({
 
   const hasChannel = Boolean(user.channel)
   const step = resolveWizardStep(searchParams.step, hasChannel)
-  // Steps 4–5 land in follow-up commits; until then continue in the full editor.
-  if (step > 3) redirect('/dashboard/channel/edit')
+  // Step 5 lands in a follow-up commit; until then continue in the full editor.
+  if (step > 4) redirect('/dashboard/channel/edit')
   const profile = await loadWizardProfile()
   const reachable = hasChannel ? 5 : 1
+  const rotation = step === 4 ? await loadRotationState() : { trackCount: 0, fallbackEnabled: true }
 
   return (
     <PageShell size="lg" className="setup-channel-page">
@@ -66,6 +68,19 @@ export default async function SetupChannelPage({
           lede="Your channel page, styled the way you want it."
         >
           <StepLook />
+        </WizardShell>
+      )}
+      {step === 4 && (
+        <WizardShell
+          current={4}
+          reachable={reachable}
+          title="Keep the music going"
+          lede="24/7 rotation plays your tracks whenever you are not broadcasting live."
+        >
+          <StepRotation
+            trackCount={rotation.trackCount}
+            initialEnabled={rotation.fallbackEnabled}
+          />
         </WizardShell>
       )}
     </PageShell>
