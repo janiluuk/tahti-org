@@ -154,28 +154,23 @@ const worker = new Worker(
         await processSoundBroadcastJob(job)
       } else if (job.name === 'monthly-ledger-rollup') {
         return await processMonthlyLedgerRollup(job)
-      } else if (job.name === 'channel-watchdog') {
-        const summary = await processChannelWatchdogJob(prisma, job)
-        console.log('[worker] channel-watchdog:', JSON.stringify(summary))
-        return summary
-      } else if (job.name === 'radio-slot-switchover') {
-        const summary = await processRadioSlotSwitchoverJob(prisma, job)
-        if (summary.switched) {
-          console.log('[worker] radio-slot-switchover:', JSON.stringify(summary))
-        }
-        return summary
-      } else if (job.name === 'channel-fallback-reconciler') {
-        const summary = await processChannelFallbackReconcilerJob(prisma, job)
-        if (summary.started > 0) {
-          console.log('[worker] channel-fallback-reconciler:', JSON.stringify(summary))
-        }
-        return summary
-      } else if (job.name === 'sidecar-cleanup') {
-        const summary = await processSidecarCleanupJob(job)
-        if (summary.removed.length > 0) {
-          console.log('[worker] sidecar-cleanup:', JSON.stringify(summary))
-        }
-        return summary
+      } else if (job.name === 'media-minute-tick') {
+        return await runCronTasks(
+          {
+            'channel-watchdog': () => processChannelWatchdogJob(prisma, job),
+            'radio-slot-switchover': () => processRadioSlotSwitchoverJob(prisma, job),
+            'channel-fallback-reconciler': () => processChannelFallbackReconcilerJob(prisma, job),
+          },
+          { parallel: true },
+        )
+      } else if (job.name === 'media-ten-minute-tick') {
+        return await runCronTasks(
+          {
+            'sidecar-cleanup': () => processSidecarCleanupJob(job),
+            'sound-fallback-cache-sync': () => processSoundFallbackCacheSyncJob(prisma, job),
+          },
+          { parallel: true },
+        )
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)
         if (summary.uploaded > 0) {
@@ -193,12 +188,14 @@ const worker = new Worker(
         if (summary.downloaded > 0) {
           console.log('[worker] warm-sound-fallback-cache:', JSON.stringify(summary))
         }
-      } else if (job.name === 'sound-fallback-cache-sync') {
-        return await processSoundFallbackCacheSyncJob(prisma, job)
-      } else if (job.name === 'broadcast-cap-tick') {
-        const summary = await processBroadcastCapTick(prisma)
-        console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))
-        return summary
+      } else if (job.name === 'light-minute-tick') {
+        return await runCronTasks(
+          {
+            'broadcast-cap-tick': () => processBroadcastCapTick(prisma),
+            'post-publish-notify': () => processPostPublishNotifyJob(job),
+          },
+          { parallel: true },
+        )
       } else if (job.name === 'weekly-monday') {
         return await runCronTasks({
           'weekly-broadcast-reset': () => processWeeklyBroadcastReset(prisma),
@@ -213,12 +210,8 @@ const worker = new Worker(
       } else if (job.name === 'social-post-dispatch') {
         const { postId } = job.data as { postId: string }
         await processSocialPostDispatchJob(prisma, postId)
-      } else if (job.name === 'tor-exit-list-sync') {
-        return await processTorExitListSyncJob(job)
       } else if (job.name === 'internet-radio-now-playing-sync') {
         return await processInternetRadioNowPlayingSyncJob(job)
-      } else if (job.name === 'download-fraud-scan') {
-        return await processDownloadFraudScanJob(job)
       } else if (job.name === 'membership-daily') {
         return await runCronTasks({
           'membership-renewal-reminder': () => processMembershipRenewalJob(job),
@@ -226,8 +219,6 @@ const worker = new Worker(
         })
       } else if (job.name === 'mention-digest') {
         return await processMentionDigestJob(job)
-      } else if (job.name === 'post-publish-notify') {
-        return await processPostPublishNotifyJob(job)
       } else if (job.name === 'listen-session-close') {
         return await processListenSessionCloseJob(job)
       } else if (job.name === 'revelator-deliver') {
@@ -238,12 +229,12 @@ const worker = new Worker(
         const summary = await processRevelatorRoyaltySyncJob(prisma, job)
         console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))
         return summary
-      } else if (job.name === 'live-show-recurrence-generate') {
-        const summary = await processLiveShowRecurrenceJob(job)
-        if (summary.episodesCreated > 0) {
-          console.log('[worker] live-show-recurrence-generate:', JSON.stringify(summary))
-        }
-        return summary
+      } else if (job.name === 'light-daily') {
+        return await runCronTasks({
+          'tor-exit-list-sync': () => processTorExitListSyncJob(job),
+          'download-fraud-scan': () => processDownloadFraudScanJob(job),
+          'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
+        })
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)
         if (summary.flagged > 0 || summary.autoResolved > 0) {

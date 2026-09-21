@@ -8,7 +8,7 @@ const TRACKED_JOB_NAMES = [
   'transcode-release-track',
   'mixcloud-upload',
   'fan-sub-daily',
-  'download-fraud-scan',
+  'light-daily',
 ] as const
 
 export interface QueueJobStats {
