@@ -16,7 +16,7 @@ describe('WORKER_CRON_JOBS', () => {
     const names = new Set(WORKER_CRON_JOBS.map((j) => j.name))
     expect(names).toContain('fan-sub-daily')
     expect(names).toContain('download-fraud-scan')
-    expect(names).toContain('broadcast-cap-tick')
+    expect(names).toContain('light-minute-tick')
     expect(names).toContain('membership-daily')
     expect(names).toContain('revelator-royalty-sync')
   })
@@ -24,8 +24,8 @@ describe('WORKER_CRON_JOBS', () => {
   it('includes streaming infrastructure crons', () => {
     const names = new Set(WORKER_CRON_JOBS.map((j) => j.name))
     expect(names).toContain('hls-minio-sync')
-    expect(names).toContain('channel-watchdog')
-    expect(names).toContain('sound-fallback-cache-sync')
+    expect(names).toContain('media-minute-tick')
+    expect(names).toContain('media-ten-minute-tick')
   })
 
   it('has unique task names across dispatchers and plain jobs', () => {
@@ -51,6 +51,23 @@ describe('WORKER_CRON_JOBS', () => {
     expect(byName.get('media-daily-sweeps')?.subTasks).toEqual([
       'sweep-editor-peaks-backfill',
       'sweep-expired-stems',
+    ])
+  })
+
+  it('lists sub-tasks for the per-minute and per-10-minute ticks', () => {
+    const byName = new Map(WORKER_CRON_JOBS.map((j) => [j.name, j]))
+    expect(byName.get('media-minute-tick')?.subTasks).toEqual([
+      'channel-watchdog',
+      'radio-slot-switchover',
+      'channel-fallback-reconciler',
+    ])
+    expect(byName.get('light-minute-tick')?.subTasks).toEqual([
+      'broadcast-cap-tick',
+      'post-publish-notify',
+    ])
+    expect(byName.get('media-ten-minute-tick')?.subTasks).toEqual([
+      'sidecar-cleanup',
+      'sound-fallback-cache-sync',
     ])
   })
 })
