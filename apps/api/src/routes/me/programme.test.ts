@@ -209,4 +209,33 @@ describe('M27 — channel fallback programme', () => {
     expect(capPatch.statusCode).toBe(400)
     expect(capPatch.json().error).toMatch(/limited to 5 tracks/)
   })
+
+  it('refuses to turn 24/7 rotation on while the channel has no ready tracks', async () => {
+    const empty = await createTestArtist(prisma, {
+      email: `${PREFIX}empty@example.com`,
+      username: 'programme-empty',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98611,
+    })
+    const emptyCookie = await sessionCookieFor(prisma, empty.id)
+    const patch = (payload: object) =>
+      app.inject({
+        method: 'PATCH',
+        url: '/api/me/channel/programme',
+        headers: { cookie: emptyCookie },
+        payload,
+      })
+
+    // Re-sending `true` while already on is not a transition, so it is allowed.
+    expect((await patch({ fallbackEnabled: true })).statusCode).toBe(200)
+    expect((await patch({ fallbackEnabled: false })).statusCode).toBe(200)
+
+    const blocked = await patch({ fallbackEnabled: true })
+    expect(blocked.statusCode).toBe(400)
+    expect(blocked.json().error).toMatch(/Upload at least one track/)
+
+    await createReadySound(prisma, empty.channel!.id, 'First track')
+    expect((await patch({ fallbackEnabled: true })).statusCode).toBe(200)
+  })
 })

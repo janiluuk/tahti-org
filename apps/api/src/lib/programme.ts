@@ -37,6 +37,9 @@ const PROGRAMME_PREVIEW_URL_TTL_SEC = 60 * 60
 // unbounded findManys this had before.
 const PROGRAMME_ITEM_CAP = 500
 
+export const NO_TRACKS_FOR_ROTATION_ERROR =
+  'Upload at least one track before turning on 24/7 rotation.'
+
 export async function fetchProgrammeView(prisma: PrismaClient, channelId: string, userId: string) {
   const [channel, items, tracks] = await Promise.all([
     prisma.channel.findUnique({
@@ -112,6 +115,16 @@ export async function applyProgrammePatch(
     patch.fallbackAutoEnroll !== undefined ||
     patch.announcementsEnabled !== undefined
   ) {
+    if (patch.fallbackEnabled === true) {
+      // Guard only the off → on transition, so re-sending `true` never trips on an empty library.
+      const [channel, readySounds] = await Promise.all([
+        prisma.channel.findUnique({ where: { id: channelId }, select: { fallbackEnabled: true } }),
+        prisma.sound.count({ where: { channelId, status: 'READY' } }),
+      ])
+      if (channel && !channel.fallbackEnabled && readySounds === 0) {
+        return { error: NO_TRACKS_FOR_ROTATION_ERROR }
+      }
+    }
     await prisma.channel.update({
       where: { id: channelId },
       data: {

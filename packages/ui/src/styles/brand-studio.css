@@ -5350,6 +5350,59 @@
   line-height: 1.5;
 }
 
+/* ── Setup-channel wizard ───────────────────────────────────────────────── */
+[data-tahti-ui='studio'] .setup-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+[data-tahti-ui='studio'] .setup-wizard__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .setup-wizard__step a {
+  color: inherit;
+}
+
+[data-tahti-ui='studio'] .setup-wizard__step[data-done] {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .setup-wizard__step[data-active] {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+[data-tahti-ui='studio'] .setup-wizard__eyebrow {
+  margin: 0;
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .setup-wizard__title {
+  margin: 0;
+}
+
+[data-tahti-ui='studio'] .setup-wizard__body {
+  margin-top: var(--space-3);
+  padding: var(--space-6);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
 /* ── Channel design editor (full page, focused-section view) ───────────── */
 [data-tahti-ui='studio'] .studio-channel-editor {
   display: flex;

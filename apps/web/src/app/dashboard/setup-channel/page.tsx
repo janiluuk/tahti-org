@@ -3,70 +3,95 @@
 
 import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
-import { PageShell, SidebarNavIconSvg, Text } from '@tahti/ui'
+import { PageShell } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
-import { SetupChannelClient } from './_setup-channel-client'
+import { StepGenres } from './_step-genres'
+import { StepGoLive } from './_step-go-live'
+import { StepIdentity } from './_step-identity'
+import { StepLook } from './_step-look'
+import { StepRotation } from './_step-rotation'
+import { loadRotationState, loadWizardProfile } from './_wizard-data'
+import { WizardShell } from './_wizard-shell'
+import { resolveWizardStep } from './_wizard-steps'
 
-const FEATURES = [
-  {
-    icon: 'distribution' as const,
-    title: 'Broadcast studio',
-    body: 'RTMP and Icecast credentials, live preview, and a weekly hour to go live on the free tier.',
-  },
-  {
-    icon: 'upload' as const,
-    title: 'Sounds & releases',
-    body: 'Upload sets, publish smart links, and keep your channel playing when you are offline.',
-  },
-  {
-    icon: 'newsletter' as const,
-    title: 'Audience tools',
-    body: 'Fan subscriptions, newsletter, and a public page you can share anywhere.',
-  },
-] as const
-
-export default async function SetupChannelPage() {
+export default async function SetupChannelPage({
+  searchParams,
+}: {
+  searchParams: { step?: string }
+}) {
   const user = await getDashboardUser()
   if (!user) redirect('/login?next=/dashboard/setup-channel')
-  if (user.channel) redirect('/dashboard/channel/edit')
+  // A finished channel with no explicit step goes straight to the editor, as before.
+  if (user.channel && !searchParams.step) redirect('/dashboard/channel/edit')
 
-  const channelHost = `${user.username}.tahti.live`
+  const hasChannel = Boolean(user.channel)
+  const step = resolveWizardStep(searchParams.step, hasChannel)
+  const profile = await loadWizardProfile()
+  const reachable = hasChannel ? 5 : 1
+  const rotation = step === 4 ? await loadRotationState() : { trackCount: 0, fallbackEnabled: true }
 
   return (
     <PageShell size="lg" className="setup-channel-page">
-      <header className="setup-channel-page__hero">
-        <NextLink href="/dashboard" className="setup-channel-page__back">
-          ← Dashboard
-        </NextLink>
-        <div className="setup-channel-page__hero-icon" aria-hidden>
-          <SidebarNavIconSvg name="channel" />
-        </div>
-        <h1 className="setup-channel-page__title">Create your artist channel</h1>
-        <Text tone="muted" className="setup-channel-page__lede">
-          Your 24/7 home at <strong>{channelHost}</strong>. One click provisions stream credentials
-          and your public page — then customize the look in the channel editor.
-        </Text>
-      </header>
-
-      <div className="setup-channel-page__features" role="list">
-        {FEATURES.map((feature) => (
-          <article key={feature.title} className="setup-channel-page__feature" role="listitem">
-            <span className="setup-channel-page__feature-icon" aria-hidden>
-              <SidebarNavIconSvg name={feature.icon} />
-            </span>
-            <h2 className="setup-channel-page__feature-title">{feature.title}</h2>
-            <p className="setup-channel-page__feature-body">{feature.body}</p>
-          </article>
-        ))}
-      </div>
-
-      <div className="setup-channel-page__cta-block">
-        <SetupChannelClient slug={user.username} />
-        <Text tone="muted" size="sm" className="setup-channel-page__cta-note">
-          Free-tier artists get 1 hour of live time per week. Become a Tahti ry member anytime for
-          unlimited live and lossless streaming.
-        </Text>
-      </div>
+      <NextLink href="/dashboard" className="setup-channel-page__back">
+        ← Dashboard
+      </NextLink>
+      {step === 1 && (
+        <WizardShell
+          current={1}
+          reachable={reachable}
+          title="Time to set up your station"
+          lede={`Your 24/7 home at ${user.username}.tahti.live. Start with a name, a logo and a short description.`}
+        >
+          <StepIdentity
+            hasChannel={hasChannel}
+            initialName={user.displayName}
+            initialDescription={profile.bio}
+          />
+        </WizardShell>
+      )}
+      {step === 2 && (
+        <WizardShell
+          current={2}
+          reachable={reachable}
+          title="What do you play?"
+          lede="Pick the genres that describe your station and choose whether it appears in public listings."
+        >
+          <StepGenres initialGenres={profile.genres} initialListed={!profile.topListsOptOut} />
+        </WizardShell>
+      )}
+      {step === 3 && (
+        <WizardShell
+          current={3}
+          reachable={reachable}
+          title="Make it yours"
+          lede="Your channel page, styled the way you want it."
+        >
+          <StepLook />
+        </WizardShell>
+      )}
+      {step === 4 && (
+        <WizardShell
+          current={4}
+          reachable={reachable}
+          title="Keep the music going"
+          lede="24/7 rotation plays your tracks whenever you are not broadcasting live."
+        >
+          <StepRotation
+            trackCount={rotation.trackCount}
+            initialEnabled={rotation.fallbackEnabled}
+          />
+        </WizardShell>
+      )}
+      {step === 5 && (
+        <WizardShell
+          current={5}
+          reachable={reachable}
+          title="You are all set"
+          lede="Your station is ready. Go live whenever you like."
+        >
+          <StepGoLive channelHost={`${user.username}.tahti.live`} />
+        </WizardShell>
+      )}
     </PageShell>
   )
 }

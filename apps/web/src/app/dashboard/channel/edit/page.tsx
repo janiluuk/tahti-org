@@ -2,12 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
+import NextLink from 'next/link'
 import { PageShell } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { ChannelEditorSections } from '../_channel-editor-sections'
 import { fetchChannelEditorData } from '../_channel-editor-data'
 
-export default async function ChannelDesignPage() {
+export default async function ChannelDesignPage({
+  searchParams,
+}: {
+  searchParams: { from?: string }
+}) {
   const sessionValue = dashboardSessionCookie()
   if (!sessionValue) redirect('/login?next=/dashboard/channel/edit')
 
@@ -36,6 +41,11 @@ export default async function ChannelDesignPage() {
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">
+      {searchParams.from === 'setup' && (
+        <NextLink href="/dashboard/setup-channel?step=4" className="setup-channel-page__back">
+          ← Back to setup (step 4)
+        </NextLink>
+      )}
       <ChannelEditorSections
         channelSlug={user.channel.slug}
         tier={user.tier}
