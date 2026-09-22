@@ -6,6 +6,21 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-23 — stats custom-range windows (tahti-player god-module-restructure follow-up)
+
+Shipped in [#552](https://github.com/janiluuk/tahti-org/pull/552), the
+remaining item from the god-module-restructure API-gaps pass above:
+`GET /api/me/stats/top-tracks` and `/top-countries` gained an optional
+`{from, to}` window on `buildTopTracksStats`/`buildTopCountriesStats`,
+mirroring the pattern `buildArtistPlaysStats` already used for
+`GET /api/me/stats/plays`. Previously both routes only accepted the
+`'1'|'7'|'30'|'all'` range enum, so tahti-web's Stats page silently fell
+back to a 30-day window whenever "Custom" was picked. `top-lists`
+(period-bucketed: week/month/half_year/all_time, cached) is a separate,
+coarser system with no day-level or arbitrary-range concept — left out,
+would need the cache-key scheme extended to a since/until pair. Backend-only;
+the tahti-web side (wiring `range=custom&from=&to=` through) is a follow-up.
+
 ## 2026-09-23 — god-module-restructure API gaps (tahti-player)
 
 Shipped in [#551](https://github.com/janiluuk/tahti-org/pull/551): three

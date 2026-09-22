@@ -98,11 +98,13 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const raw = (request.query as { range?: string }).range
-      const parsed = StatsRangeQuerySchema.safeParse(raw ?? 'all')
+      const query = request.query as { range?: string; from?: string; to?: string }
+      const parsed = StatsRangeQuerySchema.safeParse(query.range ?? 'all')
       const range = parsed.success ? parsed.data : 'all'
+      const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? '') ? query.from : undefined
+      const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? '') ? query.to : undefined
       const user = request.sessionUser!
-      return reply.send(await buildTopTracksStats(fastify.prisma, user.id, range))
+      return reply.send(await buildTopTracksStats(fastify.prisma, user.id, range, 10, { from, to }))
     },
   )
 
@@ -152,11 +154,15 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const raw = (request.query as { range?: string }).range
-      const parsed = StatsRangeQuerySchema.safeParse(raw ?? 'all')
+      const query = request.query as { range?: string; from?: string; to?: string }
+      const parsed = StatsRangeQuerySchema.safeParse(query.range ?? 'all')
       const range = parsed.success ? parsed.data : 'all'
+      const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? '') ? query.from : undefined
+      const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? '') ? query.to : undefined
       const user = request.sessionUser!
-      return reply.send(await buildTopCountriesStats(fastify.prisma, user.id, range))
+      return reply.send(
+        await buildTopCountriesStats(fastify.prisma, user.id, range, 10, { from, to }),
+      )
     },
   )
 }
