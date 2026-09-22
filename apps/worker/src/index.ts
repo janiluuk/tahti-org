@@ -51,6 +51,7 @@ import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processRadioSlotSwitchoverJob } from './jobs/radio-slot-switchover.js'
 import { processChannelFallbackReconcilerJob } from './jobs/channel-fallback-reconciler.js'
 import { processSidecarCleanupJob } from './jobs/sidecar-cleanup.js'
+import { processHlsLivePruneJob } from './jobs/hls-live-prune.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
@@ -168,6 +169,7 @@ const worker = new Worker(
           {
             'sidecar-cleanup': () => processSidecarCleanupJob(job),
             'sound-fallback-cache-sync': () => processSoundFallbackCacheSyncJob(prisma, job),
+            'hls-live-prune': () => processHlsLivePruneJob(job),
           },
           { parallel: true },
         )

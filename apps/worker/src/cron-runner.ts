@@ -2,9 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { registerCrons } from './lib/cron-scheduler.js'
+import { ensureBucketLifecycles } from './lib/minio-lifecycle.js'
 
 const registered = await registerCrons()
 console.log(`[cron-runner] ${registered} cron jobs registered (repeatables reset)`)
+
+await ensureBucketLifecycles()
 
 // Registration is persisted in Redis. Keep this explicit stack component alive
 // so its deployment status makes scheduler ownership visible to operators.

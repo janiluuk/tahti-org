@@ -68,6 +68,7 @@ describe('WORKER_CRON_JOBS', () => {
     expect(byName.get('media-ten-minute-tick')?.subTasks).toEqual([
       'sidecar-cleanup',
       'sound-fallback-cache-sync',
+      'hls-live-prune',
     ])
   })
 
