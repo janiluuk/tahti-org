@@ -74,7 +74,7 @@ async function main() {
       await assertAuthenticated(page, 'listener dashboard')
       await shot(page, outDir, '02-listener-dashboard.png', 'listener dashboard')
 
-      await page.goto(`${APP}/governance`, { waitUntil: 'load', timeout: 45_000 })
+      await page.goto(`${APP}/dashboard/governance`, { waitUntil: 'load', timeout: 45_000 })
       await assertAuthenticated(page, 'governance')
       await page.waitForTimeout(600)
       await shot(page, outDir, '03-governance.png', 'governance')
