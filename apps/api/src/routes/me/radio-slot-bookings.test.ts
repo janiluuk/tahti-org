@@ -263,6 +263,71 @@ describe('radio slot bookings', () => {
     expect(body.find((b) => b.id === bookingId)).toBeUndefined()
   })
 
+  it('includes show info on a booking claimed by a LiveShowEpisode', async () => {
+    const startAt = nextHour(60)
+    const endAt = nextHour(61)
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/radio-slot-bookings',
+      cookies: { tahti_session: cookieA },
+      payload: { startAt: startAt.toISOString(), endAt: endAt.toISOString() },
+    })
+    expect(create.statusCode).toBe(201)
+    const claimedBookingId = create.json().id as string
+
+    const channel = await prisma.channel.findFirstOrThrow({ where: { slug: USERNAME_A } })
+    const series = await prisma.liveShowSeries.create({
+      data: { channelId: channel.id, name: 'Friday Night Set', description: 'Weekly live mix' },
+    })
+    await prisma.liveShowEpisode.create({
+      data: {
+        channelId: channel.id,
+        seriesId: series.id,
+        radioSlotBookingId: claimedBookingId,
+        episodeNumber: 3,
+        title: 'Friday Night Set — Episode 3',
+        source: 'BROADCAST',
+      },
+    })
+
+    const from = startAt.toISOString()
+    const to = endAt.toISOString()
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/radio-slot-bookings?from=${from}&to=${to}`,
+      cookies: { tahti_session: cookieA },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as Array<{
+      id: string
+      showId?: string | null
+      showTitle?: string | null
+      episodeNumber?: number | null
+    }>
+    const claimed = body.find((b) => b.id === claimedBookingId)
+    expect(claimed?.showId).toBe(series.id)
+    expect(claimed?.showTitle).toBe('Friday Night Set')
+    expect(claimed?.episodeNumber).toBe(3)
+
+    await prisma.liveShowEpisode.deleteMany({ where: { seriesId: series.id } })
+    await prisma.liveShowSeries.delete({ where: { id: series.id } })
+    await prisma.radioSlotBooking.delete({ where: { id: claimedBookingId } })
+  })
+
+  it('leaves show fields null on a booking with no linked episode', async () => {
+    const from = nextHour(0).toISOString()
+    const to = nextHour(9).toISOString()
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/radio-slot-bookings?from=${from}&to=${to}`,
+      cookies: { tahti_session: cookieB },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as Array<{ id: string; showId?: string | null }>
+    expect(body.length).toBeGreaterThan(0)
+    expect(body.every((b) => b.showId == null)).toBe(true)
+  })
+
   it('enforces the per-channel upcoming-bookings cap', async () => {
     let lastStatus = 0
     for (let i = 0; i < 6; i++) {

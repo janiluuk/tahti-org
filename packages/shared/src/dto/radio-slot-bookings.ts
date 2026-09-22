@@ -44,6 +44,15 @@ export const RadioSlotBookingItemSchema = z.object({
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   isMine: z.boolean(),
+  /** Populated when a LiveShowEpisode already links this booking to a show
+   * series (most recently created one, if more than one somehow does) —
+   * lets the UI show/link the show instead of matching upcoming items to
+   * shows by title. Absent when no episode has claimed this booking yet. */
+  showId: z.string().nullable().optional(),
+  showTitle: z.string().nullable().optional(),
+  showDescription: z.string().nullable().optional(),
+  coverUrl: z.string().nullable().optional(),
+  episodeNumber: z.number().int().nullable().optional(),
 })
 export type RadioSlotBookingItem = z.infer<typeof RadioSlotBookingItemSchema>
 

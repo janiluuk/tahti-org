@@ -71,22 +71,42 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
               user: { select: { username: true, displayName: true, avatarUrl: true } },
             },
           },
+          // A booking is claimed by at most one episode in practice (the
+          // recording flow creates one episode per booked slot) but the
+          // relation itself has no unique constraint — take the newest if
+          // more than one somehow exists.
+          episodes: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              episodeNumber: true,
+              series: { select: { id: true, name: true, description: true, artworkUrl: true } },
+            },
+          },
         },
       })
 
       return reply.send(
-        rows.map((r) => ({
-          id: r.id,
-          startAt: r.startAt.toISOString(),
-          endAt: r.endAt.toISOString(),
-          note: r.note,
-          showType: r.showType,
-          channelSlug: r.channel.slug,
-          username: r.channel.user.username,
-          displayName: r.channel.user.displayName,
-          avatarUrl: r.channel.user.avatarUrl,
-          isMine: r.channelId === channel?.id,
-        })),
+        rows.map((r) => {
+          const episode = r.episodes[0]
+          return {
+            id: r.id,
+            startAt: r.startAt.toISOString(),
+            endAt: r.endAt.toISOString(),
+            note: r.note,
+            showType: r.showType,
+            channelSlug: r.channel.slug,
+            username: r.channel.user.username,
+            displayName: r.channel.user.displayName,
+            avatarUrl: r.channel.user.avatarUrl,
+            isMine: r.channelId === channel?.id,
+            showId: episode?.series.id ?? null,
+            showTitle: episode?.series.name ?? null,
+            showDescription: episode?.series.description ?? null,
+            coverUrl: episode?.series.artworkUrl ?? null,
+            episodeNumber: episode?.episodeNumber ?? null,
+          }
+        }),
       )
     },
   )
