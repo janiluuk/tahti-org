@@ -94,6 +94,21 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(row.genre).toBe('Techno')
   })
 
+  it('returns the total sound count on GET /api/me/sound/count', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound',
+      headers: { cookie },
+    })
+    const count = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound/count',
+      headers: { cookie },
+    })
+    expect(count.statusCode).toBe(200)
+    expect(count.json()).toEqual({ count: list.json().length })
+  })
+
   it('rejects empty title updates', async () => {
     const patch = await app.inject({
       method: 'PATCH',

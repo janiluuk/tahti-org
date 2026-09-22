@@ -21,6 +21,11 @@ export const SoundViewSchema = z
 
 export const SoundListSchema = z.array(SoundViewSchema)
 
+/** Cheap total-count response, used by dashboard tiles that only need a
+ * number rather than the full list (PERF: avoids GET /api/me/sound's
+ * full-metadata payload just to read `.length`). */
+export const CountSchema = z.object({ count: z.number().int() })
+
 // PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to
 // pull the full 100-item, full-metadata payload GET /api/me/sound returns.
 export const SoundRecentSchema = z.array(

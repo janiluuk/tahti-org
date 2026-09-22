@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { Prisma } from '@tahti/db'
 import { createHearthisClient } from '@tahti/hearthis'
 import {
+  CountSchema,
   SoundListSchema,
   SoundListQuerySchema,
   SoundRecentSchema,
@@ -95,6 +96,31 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, title: true, durationSec: true, createdAt: true },
       })
       return reply.send(items.map((i) => ({ ...i, createdAt: i.createdAt.toISOString() })))
+    },
+  )
+
+  // Dashboard tiles only need the total — avoids pulling every sound's full
+  // metadata (GET /api/me/sound) just to read `.length`.
+  fastify.get(
+    '/api/me/sound/count',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Total sound count for the dashboard overview',
+        response: openApiResponse(CountSchema, 'SoundCount'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send({ count: 0 })
+
+      const count = await fastify.prisma.sound.count({ where: { channelId: channel.id } })
+      return reply.send({ count })
     },
   )
 
