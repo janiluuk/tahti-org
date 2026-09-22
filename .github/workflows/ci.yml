@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Bash syntax check
-        run: bash -n scripts/*.sh tests/e2e/*.sh tests/e2e/journeys/*.sh
+        run: bash -n scripts/*.sh tests/e2e/*.sh tests/e2e/anonymous/*.sh tests/e2e/listener/*.sh tests/e2e/artist/*.sh tests/e2e/admin/*.sh
 
   website-docker:
     name: Validate website Docker build
@@ -367,7 +367,7 @@ jobs:
           fi
 
   user-journeys-e2e:
-    name: User journey e2e (all personas)
+    name: User journey e2e (API checks, all 4 categories)
     needs: [lint, changes]
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-24.04
@@ -457,6 +457,554 @@ jobs:
         run: |
           if [[ -f /tmp/tahti-api-journey.pid ]]; then
             kill "$(cat /tmp/tahti-api-journey.pid)" 2>/dev/null || true
+          fi
+
+  anonymous-journey-e2e:
+    name: 'Anonymous visitor journey e2e (screenshots: light + dark)'
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: '3001'
+      API_URL: http://localhost:3001
+      APP_URL: http://localhost:3010
+      NEXT_PUBLIC_API_BASE: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3010
+      SIGNUP_OPEN: 'true'
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
+      SEED_JOURNEY_FIXTURES: '1'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Generate api-client schema (apps/web build dependency)
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Seed journey fixtures
+        run: cd apps/api && pnpm exec tsx scripts/seed-e2e-screenshots.ts
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api-anonymous-journey-e2e.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Start web (next dev)
+        working-directory: apps/web
+        run: |
+          pnpm exec next dev -p 3010 &
+          echo $! > /tmp/tahti-web-anonymous-journey-e2e.pid
+
+      - name: Wait for web ready
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3010/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::web did not become ready"
+          exit 1
+
+      - name: Run anonymous visitor journey e2e
+        run: node tests/e2e/anonymous/anonymous-journey.mjs
+
+      - name: Upload anonymous journey screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots-anonymous
+          path: docs/e2e-screenshots/anonymous/journey/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Stop web server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-web-anonymous-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-web-anonymous-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api-anonymous-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-api-anonymous-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+  listener-journey-e2e:
+    name: 'Listener journey e2e (screenshots: light + dark)'
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: '3001'
+      API_URL: http://localhost:3001
+      APP_URL: http://localhost:3010
+      NEXT_PUBLIC_API_BASE: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3010
+      SIGNUP_OPEN: 'true'
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
+      SEED_JOURNEY_FIXTURES: '1'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Generate api-client schema (apps/web build dependency)
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Seed journey fixtures
+        run: cd apps/api && pnpm exec tsx scripts/seed-e2e-screenshots.ts
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api-listener-journey-e2e.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Start web (next dev)
+        working-directory: apps/web
+        run: |
+          pnpm exec next dev -p 3010 &
+          echo $! > /tmp/tahti-web-listener-journey-e2e.pid
+
+      - name: Wait for web ready
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3010/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::web did not become ready"
+          exit 1
+
+      - name: Run listener journey e2e
+        run: node tests/e2e/listener/listener-journey.mjs
+
+      - name: Upload listener journey screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots-listener
+          path: docs/e2e-screenshots/listener/journey/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Stop web server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-web-listener-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-web-listener-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api-listener-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-api-listener-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+  artist-journey-e2e:
+    name: 'Artist journey e2e (screenshots: light + dark)'
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: '3001'
+      API_URL: http://localhost:3001
+      APP_URL: http://localhost:3010
+      NEXT_PUBLIC_API_BASE: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3010
+      SIGNUP_OPEN: 'true'
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
+      SEED_JOURNEY_FIXTURES: '1'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Generate api-client schema (apps/web build dependency)
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Seed journey fixtures
+        run: cd apps/api && pnpm exec tsx scripts/seed-e2e-screenshots.ts
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api-artist-journey-e2e.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Start web (next dev)
+        working-directory: apps/web
+        run: |
+          pnpm exec next dev -p 3010 &
+          echo $! > /tmp/tahti-web-artist-journey-e2e.pid
+
+      - name: Wait for web ready
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3010/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::web did not become ready"
+          exit 1
+
+      - name: Run artist journey e2e
+        run: node tests/e2e/artist/fresh-artist-journey.mjs
+
+      - name: Upload artist journey screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots-artist
+          path: docs/e2e-screenshots/artist/journey/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Stop web server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-web-artist-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-web-artist-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api-artist-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-api-artist-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+  admin-journey-e2e:
+    name: 'Admin journey e2e (screenshots: light + dark)'
+    needs: [lint, changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: '3001'
+      API_URL: http://localhost:3001
+      APP_URL: http://localhost:3010
+      NEXT_PUBLIC_API_BASE: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3010
+      SIGNUP_OPEN: 'true'
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
+      SEED_JOURNEY_FIXTURES: '1'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Generate api-client schema (apps/web build dependency)
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Seed journey fixtures
+        run: cd apps/api && pnpm exec tsx scripts/seed-e2e-screenshots.ts
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api-admin-journey-e2e.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Start web (next dev)
+        working-directory: apps/web
+        run: |
+          pnpm exec next dev -p 3010 &
+          echo $! > /tmp/tahti-web-admin-journey-e2e.pid
+
+      - name: Wait for web ready
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3010/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::web did not become ready"
+          exit 1
+
+      - name: Run admin journey e2e
+        run: node tests/e2e/admin/admin-journey.mjs
+
+      - name: Upload admin journey screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots-admin
+          path: docs/e2e-screenshots/admin/journey/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Stop web server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-web-admin-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-web-admin-journey-e2e.pid)" 2>/dev/null || true
+          fi
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api-admin-journey-e2e.pid ]]; then
+            kill "$(cat /tmp/tahti-api-admin-journey-e2e.pid)" 2>/dev/null || true
           fi
 
   agpl-check:
@@ -570,6 +1118,10 @@ jobs:
       - test
       - vital-flows-e2e
       - user-journeys-e2e
+      - anonymous-journey-e2e
+      - listener-journey-e2e
+      - artist-journey-e2e
+      - admin-journey-e2e
       - agpl-check
     runs-on: ubuntu-24.04
     steps:
@@ -582,6 +1134,10 @@ jobs:
           ok "${{ needs.test.result }}" || { echo "test failed"; exit 1; }
           ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
           ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
+          ok "${{ needs.anonymous-journey-e2e.result }}" || { echo "anonymous-journey-e2e failed"; exit 1; }
+          ok "${{ needs.listener-journey-e2e.result }}" || { echo "listener-journey-e2e failed"; exit 1; }
+          ok "${{ needs.artist-journey-e2e.result }}" || { echo "artist-journey-e2e failed"; exit 1; }
+          ok "${{ needs.admin-journey-e2e.result }}" || { echo "admin-journey-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
           echo "All checks passed ✓"
 

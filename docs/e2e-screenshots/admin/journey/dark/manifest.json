@@ -1,0 +1,30 @@
+[
+  {
+    "file": "01-login-filled.png",
+    "label": "Login form (board credentials)"
+  },
+  {
+    "file": "02-admin-dashboard.png",
+    "label": "Admin dashboard"
+  },
+  {
+    "file": "03-admin-users.png",
+    "label": "User directory"
+  },
+  {
+    "file": "04-admin-content-reports.png",
+    "label": "Content reports"
+  },
+  {
+    "file": "05-admin-financial.png",
+    "label": "Financial hub"
+  },
+  {
+    "file": "06-admin-governance.png",
+    "label": "Governance hub"
+  },
+  {
+    "file": "07-admin-grants.png",
+    "label": "Grants overview"
+  }
+]

@@ -42,6 +42,12 @@ export API_PORT="${API_PORT:-15011}"
 docker compose -f "$ROOT/infra/docker-compose.stack.yml" exec -T redis redis-cli FLUSHDB >/dev/null 2>&1 || true
 "$ROOT/scripts/stack-screenshots.sh"
 echo ""
-echo "── Fresh artist journey screenshots ──"
+echo "── Category journeys (anonymous / listener / artist / admin) ──"
 APP_URL="http://localhost:${WEB_PORT}" API_URL="http://localhost:${API_PORT}" \
-  node "$ROOT/tests/e2e/fresh-artist-journey.mjs"
+  node "$ROOT/tests/e2e/anonymous/anonymous-journey.mjs"
+APP_URL="http://localhost:${WEB_PORT}" API_URL="http://localhost:${API_PORT}" \
+  node "$ROOT/tests/e2e/listener/listener-journey.mjs"
+APP_URL="http://localhost:${WEB_PORT}" API_URL="http://localhost:${API_PORT}" \
+  node "$ROOT/tests/e2e/artist/fresh-artist-journey.mjs"
+APP_URL="http://localhost:${WEB_PORT}" API_URL="http://localhost:${API_PORT}" \
+  node "$ROOT/tests/e2e/admin/admin-journey.mjs"

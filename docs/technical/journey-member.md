@@ -2,11 +2,11 @@
 
 A **member** is a verified Tahti ry cooperative member (€40/year). Members can vote on governance motions, see the member directory, and use the full studio if they are also an **artist** (channel + releases). This is separate from **fan subscriptions** (paying an individual artist).
 
-| Persona | Account | Typical routes |
-|---------|---------|----------------|
-| **Listener** | Optional | `/c/:slug`, `/u/:username`, `/r/:slug` |
-| **Member** | Required, `isMember` | `/governance`, `/dashboard` (membership block) |
-| **Artist** | Member + channel | `/dashboard`, `/c/:slug`, fan tiers, stream settings |
+| Persona      | Account              | Typical routes                                       |
+| ------------ | -------------------- | ---------------------------------------------------- |
+| **Listener** | Optional             | `/c/:slug`, `/u/:username`, `/r/:slug`               |
+| **Member**   | Required, `isMember` | `/governance`, `/dashboard` (membership block)       |
+| **Artist**   | Member + channel     | `/dashboard`, `/c/:slug`, fan tiers, stream settings |
 
 See [for-members.md](../guides/for-members.md) for step-by-step guidance.
 
@@ -55,7 +55,7 @@ sequenceDiagram
 
 ## Journey 2 — Governance (members only)
 
-**Covered by bash e2e:** `tests/e2e/journeys/member.sh` and Vitest `persona-journeys.test.ts`.
+**Covered by bash e2e:** `tests/e2e/listener/member-governance.sh` and Vitest `persona-journeys.test.ts`.
 
 ```mermaid
 sequenceDiagram
@@ -85,10 +85,10 @@ Many members only listen and vote. They use the **listener** paths for audio and
 
 ## Automated coverage
 
-| Layer | Script / test |
-|-------|----------------|
-| CI bash | `tests/e2e/user-journeys.sh` → `journeys/listener.sh`, `artist.sh`, `member.sh` |
-| Playwright (local) | `tests/e2e/user-journeys.mjs` |
-| Vitest | `apps/api/src/routes/journeys/persona-journeys.test.ts` |
-| Fixtures | `apps/api/scripts/seed-e2e-screenshots.ts` (demo motion + fan sub) |
-| Index | [user-flows.md](../user-flows.md) |
+| Layer              | Script / test                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| CI bash            | `tests/e2e/user-journeys.sh` → `anonymous/public-discovery.sh`, `artist/artist.sh`, `listener/member-governance.sh` |
+| Playwright (local) | `tests/e2e/user-journeys.mjs`                                                                                       |
+| Vitest             | `apps/api/src/routes/journeys/persona-journeys.test.ts`                                                             |
+| Fixtures           | `apps/api/scripts/seed-e2e-screenshots.ts` (demo motion + fan sub)                                                  |
+| Index              | [user-flows.md](../user-flows.md)                                                                                   |

@@ -10,13 +10,13 @@ For **how to distribute Swarm nodes by bottleneck** (API, chat, transcode, inges
 
 ## Personas
 
-| Persona              | Who                                                  | Flow pack | Guide                                   | Technical journey                                    |
-| -------------------- | ---------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------- |
-| **Anonymous listener** | Anyone tuning in; no account                       | [Part 1](flows/anonymous-listener.md) | [for-viewers.md](guides/for-viewers.md) | [journey-listener.md](technical/journey-listener.md) |
-| **Logged-in listener / member** | Free account, fan-sub, or €40 coop member | [Part 2](flows/logged-in-listener.md) | [for-viewers.md](guides/for-viewers.md), [for-members.md](guides/for-members.md) | [journey-member.md](technical/journey-member.md) |
-| **Artist**           | Channel owner — studio, releases, fan tiers          | [Part 3](flows/artist.md) | [for-artists.md](guides/for-artists.md) | [journey-artist.md](technical/journey-artist.md)     |
-| **Board member**     | `isBoard` — grants, ledger, governance admin         | [Part 4](flows/board-member.md) | —                                       | [journey-director.md](technical/journey-director.md) |
-| **Ops**              | Deploy, monitor, recover the platform                | — | [RUNBOOK.md](../ops/RUNBOOK.md)         | [journey-ops.md](technical/journey-ops.md)           |
+| Persona                         | Who                                          | Flow pack                             | Guide                                                                            | Technical journey                                    |
+| ------------------------------- | -------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Anonymous listener**          | Anyone tuning in; no account                 | [Part 1](flows/anonymous-listener.md) | [for-viewers.md](guides/for-viewers.md)                                          | [journey-listener.md](technical/journey-listener.md) |
+| **Logged-in listener / member** | Free account, fan-sub, or €40 coop member    | [Part 2](flows/logged-in-listener.md) | [for-viewers.md](guides/for-viewers.md), [for-members.md](guides/for-members.md) | [journey-member.md](technical/journey-member.md)     |
+| **Artist**                      | Channel owner — studio, releases, fan tiers  | [Part 3](flows/artist.md)             | [for-artists.md](guides/for-artists.md)                                          | [journey-artist.md](technical/journey-artist.md)     |
+| **Board member**                | `isBoard` — grants, ledger, governance admin | [Part 4](flows/board-member.md)       | —                                                                                | [journey-director.md](technical/journey-director.md) |
+| **Ops**                         | Deploy, monitor, recover the platform        | —                                     | [RUNBOOK.md](../ops/RUNBOOK.md)                                                  | [journey-ops.md](technical/journey-ops.md)           |
 
 **Streamer** is the live-broadcast slice of the artist path: [for-streamers.md](guides/for-streamers.md).
 
@@ -67,21 +67,21 @@ graph including every dashboard/admin sidebar item.
 | `tests/e2e/run-all-journeys.sh`                                      | **All** — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`          |
 | `tests/e2e/user-journeys.sh`                                         | Listener, artist, streamer, member, fan supporter, director, ops, dashboard/player |
 | `tests/e2e/vital-flows.sh`                                           | Transparency, auth guards, Stripe webhook smoke, Icecast cap                       |
-| `tests/e2e/journeys/listener.sh`                                     | Public browse only                                                                 |
-| `tests/e2e/journeys/artist.sh`                                       | Studio + ingest                                                                    |
-| `tests/e2e/journeys/member.sh`                                       | Governance + fan sub                                                               |
-| `tests/e2e/journeys/director.sh`                                     | Board admin grants preview, members CSV, public transparency                       |
-| `tests/e2e/journeys/ops.sh`                                          | `/health`, `/api/v1/status`, `/metrics`, `/docs`                                   |
-| `tests/e2e/journeys/dashboard-player.sh`                             | Dashboard studio APIs + channel/embed player data                                  |
+| `tests/e2e/anonymous/public-discovery.sh`                            | Public browse only                                                                 |
+| `tests/e2e/artist/artist.sh`                                         | Studio + ingest                                                                    |
+| `tests/e2e/listener/member-governance.sh`                            | Governance + fan sub                                                               |
+| `tests/e2e/admin/director.sh`                                        | Board admin grants preview, members CSV, public transparency                       |
+| `tests/e2e/anonymous/ops-health.sh`                                  | `/health`, `/api/v1/status`, `/metrics`, `/docs`                                   |
+| `tests/e2e/artist/artist.sh (run_artist_player_journey)`             | Dashboard studio APIs + channel/embed player data                                  |
 | `tests/e2e/user-journeys.mjs`                                        | Same personas in Playwright (needs `APP_URL` + seeded fixtures)                    |
-| `tests/e2e/dashboard-player.mjs`                                     | Playwright: dashboard navigation + archive/live players                            |
+| `tests/e2e/artist/dashboard-player.mjs`                              | Playwright: dashboard navigation + archive/live players                            |
 | `apps/api/src/routes/journeys/persona-journeys.test.ts`              | Listener / artist / member / director / ops API paths (Vitest)                     |
 | `apps/api/src/routes/journeys/vital-flows.test.ts`                   | Onboarding, fan subs, catalog gates, live broadcast (Vitest)                       |
 | `apps/api/src/routes/journeys/public-surfaces-journey.test.ts`       | Home, discover, radio, venues, status (Vitest)                                     |
 | `apps/api/src/routes/journeys/tahti-radio-journey.test.ts`           | Tahti Radio chat + announcements (Vitest)                                          |
 | `apps/api/src/routes/journeys/tahti-radio-live-show-journey.test.ts` | Rotation → go live → 1 min → announcement → continue (Vitest)                      |
-| `tests/e2e/radio-live-show.mjs`                                      | Same arc in Playwright (`pnpm test:e2e:radio-live-show`)                           |
-| `tests/e2e/live-chat.mjs`                                            | Playwright: two clients join chat and exchange messages                            |
+| `tests/e2e/artist/radio-live-show.mjs`                               | Same arc in Playwright (`pnpm test:e2e:radio-live-show`)                           |
+| `tests/e2e/artist/live-chat.mjs`                                     | Playwright: two clients join chat and exchange messages                            |
 | `pnpm smoke` / `scripts/unified-smoke.sh`                            | CI gate + stack health; `--prod`, `--e2e`, `--all`                                 |
 
 ```bash
@@ -125,15 +125,15 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 
 ### Member — cooperative governance
 
-| Step              | Web route         | API                                                                | E2e                              |
-| ----------------- | ----------------- | ------------------------------------------------------------------ | -------------------------------- |
-| Register          | `/signup` (`/join` redirects) | `POST /api/auth/register`                                          | `vital-flows.sh` (register only) |
-| Verify email      | `/verify?token=…` | `GET /api/auth/verify`                                             | Manual / seed token              |
-| Login             | `/login`          | `POST /api/auth/login`                                             | `member.sh`                      |
-| Governance hub    | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/members`, `GET /api/v1/governance/motions` | `member.sh`, Vitest              |
-| Meetings / documents (read) | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/meetings`, `GET /api/v1/governance/documents` | Vitest (`governance-records.test.ts`) |
-| AGM/board meeting admin (write) | `/admin/agm` | `POST`/`PATCH /api/admin/governance/meetings`, `.../attendance`, `POST /api/admin/governance/documents` | Vitest (`governance-records.test.ts`) |
-| Auth guard (anon) | —                 | governance routes → **401**                                        | `member.sh`, `vital-flows.sh`    |
+| Step                            | Web route                              | API                                                                                                     | E2e                                   |
+| ------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Register                        | `/signup` (`/join` redirects)          | `POST /api/auth/register`                                                                               | `vital-flows.sh` (register only)      |
+| Verify email                    | `/verify?token=…`                      | `GET /api/auth/verify`                                                                                  | Manual / seed token                   |
+| Login                           | `/login`                               | `POST /api/auth/login`                                                                                  | `member.sh`                           |
+| Governance hub                  | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/members`, `GET /api/v1/governance/motions`                                      | `member.sh`, Vitest                   |
+| Meetings / documents (read)     | `/governance`, `/dashboard/governance` | `GET /api/v1/governance/meetings`, `GET /api/v1/governance/documents`                                   | Vitest (`governance-records.test.ts`) |
+| AGM/board meeting admin (write) | `/admin/agm`                           | `POST`/`PATCH /api/admin/governance/meetings`, `.../attendance`, `POST /api/admin/governance/documents` | Vitest (`governance-records.test.ts`) |
+| Auth guard (anon)               | —                                      | governance routes → **401**                                                                             | `member.sh`, `vital-flows.sh`         |
 
 ### Fan supporter (listener with account)
 
@@ -159,13 +159,13 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 
 ### Director / board
 
-| Step                    | Web route                    | API                                                                     | E2e                                     |
-| ----------------------- | ---------------------------- | ----------------------------------------------------------------------- | --------------------------------------- |
-| Public transparency     | `/transparency`              | `GET /api/v1/transparency/ytd`, `GET /api/v1/transparency/grants/:year` | `director.sh`, `vital-flows.sh`         |
-| Grant preview (dry run) | `/admin/grants/:year`        | `GET /api/admin/grants/preview/:year`                                   | `director.sh`, Vitest                   |
-| Members export          | —                            | `GET /api/admin/members/export.csv`                                     | `director.sh`, Vitest                   |
-| Venue verification      | `/governance/venues`         | `GET/POST /api/admin/venues/*`                                          | `director.sh` (web), Vitest admin tests |
-| Auth guard (anon)       | —                            | admin routes → **401**                                                  | `director.sh`, Vitest                   |
+| Step                    | Web route             | API                                                                     | E2e                                     |
+| ----------------------- | --------------------- | ----------------------------------------------------------------------- | --------------------------------------- |
+| Public transparency     | `/transparency`       | `GET /api/v1/transparency/ytd`, `GET /api/v1/transparency/grants/:year` | `director.sh`, `vital-flows.sh`         |
+| Grant preview (dry run) | `/admin/grants/:year` | `GET /api/admin/grants/preview/:year`                                   | `director.sh`, Vitest                   |
+| Members export          | —                     | `GET /api/admin/members/export.csv`                                     | `director.sh`, Vitest                   |
+| Venue verification      | `/governance/venues`  | `GET/POST /api/admin/venues/*`                                          | `director.sh` (web), Vitest admin tests |
+| Auth guard (anon)       | —                     | admin routes → **401**                                                  | `director.sh`, Vitest                   |
 
 ### Ops — health & observability
 

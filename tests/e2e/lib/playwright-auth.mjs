@@ -38,7 +38,14 @@ export async function uiLogin(page, appBase, email, password, { next = '/dashboa
   await page.locator('#auth-panel-login input[name="email"]').fill(email)
   await page.locator('#auth-panel-login input[name="password"]').fill(password)
   await page.locator('#auth-panel-login button[type="submit"]').click()
-  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 45_000 })
+  try {
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30_000 })
+  } catch {
+    // One retry — occasional hydration race where the first submit click
+    // lands before the form's client-side handler has attached.
+    await page.locator('#auth-panel-login button[type="submit"]').click()
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30_000 })
+  }
 }
 
 /** Fail fast when SSR auth did not stick (would otherwise capture a login page). */
