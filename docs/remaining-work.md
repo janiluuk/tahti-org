@@ -86,8 +86,9 @@ Additional governance gaps from the audit:
 ## Plugin registry separation (non-breaking preparation)
 
 Registry extracted into `@tahti-player/plugin-registry` (tahti-player#121);
-storage keys, paths and bootstrap order are unchanged. Inventory and design
-notes are in `docs/todo/HISTORY.md` (2026-09-22).
+storage keys, paths and bootstrap order are unchanged. Reference doc:
+`../tahti-player/docs/PLUGIN-REGISTRY.md`; history in `docs/todo/HISTORY.md`
+(2026-09-22).
 
 - [ ] Decide whether `@tahti-player/plugin-registry` moves to its own repo/package registry (optional; `PluginRegistryHost` would stay in player).
 
