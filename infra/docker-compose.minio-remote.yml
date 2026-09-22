@@ -1,0 +1,48 @@
+# Remote MinIO storage node — connects back to the main stack over LAN.
+#
+# Lab: tahti.local (192.168.2.107, 5× ~1.1TiB SAS disks in /mnt/minio/disk{1..5},
+# no GPU) → vimage (192.168.2.100).
+#
+#   cp infra/stack.env.minio-remote.example infra/stack.env.minio-remote
+#   # MINIO_ROOT_PASSWORD must match vimage infra/stack.env's MINIO_SECRET_KEY
+#   # so this becomes a drop-in replacement, not a second identity.
+#   ./scripts/deploy_minio_remote.sh
+#
+# Single-node, multi-drive MinIO (5 whole-disk XFS mounts, no host RAID —
+# MinIO's own erasure coding provides redundancy). See
+# docs/todo/tahti-local-onboarding.md for the disk-prep steps and rationale.
+# Colocated here rather than staying on vimage because this box has the
+# disk/RAM headroom (`role=storage` in docs/scaling-node-distribution.md);
+# vimage keeps Postgres/Redis and the API/worker/web containers.
+
+name: tahti-minio-remote
+
+services:
+  minio:
+    restart: unless-stopped
+    image: quay.io/minio/minio:latest
+    command: server /data{1...5} --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-tahti}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      # Same rationale as the main stack's minio service
+      # (infra/docker-compose.stack.yml) — Go's GC default lets heap grow
+      # ~2x the live set before collecting; with a 5-drive pool serving the
+      # whole fleet's object storage that adds up over days of uptime.
+      GOMEMLIMIT: 2GiB
+      GOGC: '50'
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - /mnt/minio/disk1:/data1
+      - /mnt/minio/disk2:/data2
+      - /mnt/minio/disk3:/data3
+      - /mnt/minio/disk4:/data4
+      - /mnt/minio/disk5:/data5
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

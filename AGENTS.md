@@ -32,7 +32,8 @@ one-off view primitive in `apps/web`.
 
 Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
 Prettier command for the files changed) and then confirm with
-`pnpm format:check`.
+`pnpm format:check`. Always run Prettier format on the files you changed
+before pushing.
 
 ## What this monorepo is
 
