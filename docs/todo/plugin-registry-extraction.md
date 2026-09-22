@@ -44,8 +44,9 @@ open items — see §7.
 - [x] Implement the §5.1/§5.2 contract module + adapter (additive, callers not yet migrated).
 - [x] Add contract tests for install, enable/disable, warnings, update, and removal behavior. Store-layer and host-layer suites in `../tahti-player` cover the registry contract, including install cleanup, enable/disable, dev reload, update checks, hydration ordering, warnings, and orphan removal. Verified line-by-line 2026-09-11: 20/22 §6 scenarios covered; 2 gaps remain open (see [§6](#6-contract-tests-to-add-later)).
 - [x] Migrate callers to the adapter (§5.4) — `pluginBootstrap.ts`, `pluginStore.tsx`, `pluginAutoUpdate.ts`, and `useInstallPlugin.ts` now use `pluginRegistryStore` (player PR #46).
-- [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
-- [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
+- [x] Define ownership between player core, plugin SDK, and import-provider plugins. Accepted 2026-09-22 ([§7](#7-ownership-split-draft)).
+- [x] Extract only after adapter tests and a migration/rollback plan are accepted. §5.5 accepted 2026-09-22; step 1 done — contract, `LazyStore` registry and adapter now live in `@tahti-player/plugin-registry` (`../tahti-player` branch `refactor/plugin-registry-package`, commit a32738ec1, not pushed). Player `pluginRegistry*.ts` are re-export shims; Logger injected via `configurePluginRegistryLogger`. `PluginRegistryHost` stays in player (depends on `pluginStore`/downloader). Storage unchanged.
+- [ ] Open the player PR, then decide whether to move the package to its own repo (not started). `App.hydration.test.tsx` has 6 failures on clean `origin/master` too — unrelated.
 
 **Guardrail (do not violate during prep):** keep current registry as runtime
 source of truth; no key / path / bootstrap-order changes until adapter +
