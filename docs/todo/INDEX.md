@@ -13,11 +13,10 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see `CLAUDE.md`.
 
-| Status  | File                                                                                   | One-line                                                                                                                                                               |
-| ------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partial | [plugin-registry-extraction.md](plugin-registry-extraction.md)                         | Ownership + rollback accepted; registry extracted into `@tahti-player/plugin-registry` in `../tahti-player` (tahti-player PR 121 open); optional own-repo move remains |
-| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                       |
-| open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                            |
+| Status | File                                                                                   | One-line                                                                                                                         |
+| ------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| open   | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards |
+| open   | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection      |
 
 ## Roadmap & planning (broader than a single task)
 
@@ -38,7 +37,6 @@ the "is it actually fresh" read before you trust one blindly.
 ## Cross-repo pointers
 
 - [`../../ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md) (Tahti Player web cutover) points at `../tahti-player` — no real plan content lives on this side.
-- `plugin-registry-extraction.md`'s remaining open item (ownership-split sign-off) is tracked solely here — `../tahti-player`'s `HISTORY.md` (2026-09-11) explicitly says so; its own `WORKPLAN.md` no longer carries a "Plugin registry extraction" section.
 
 ## Archived (historical, superseded — do not treat as current status)
 

@@ -699,3 +699,15 @@ playlist editor link), go live (studio / view channel / finish).
 `applyProgrammePatch` now rejects off→on `fallbackEnabled` with zero READY
 sounds, protecting the dashboard toggle and admin route too. PR #543.
 Leftovers (step 5 content, genre cap, local test gap) moved to `remaining-work.md`.
+
+### 2026-09-22 — Plugin registry extraction (`plugin-registry-extraction.md`)
+
+Ownership split (§7) and rollback plan (§5.5) accepted. Contract, `LazyStore`
+registry and adapter moved into the `@tahti-player/plugin-registry` workspace
+package in `../tahti-player`; player `pluginRegistry*.ts` are re-export shims,
+Logger injected via `configurePluginRegistryLogger`, `PluginRegistryHost` stays
+in player. Storage (`plugins.json`, `plugins.*`), bootstrap order and discovery
+unchanged. Earlier steps: adapter + caller migration (player #46), host façade,
+§6 tests 22/22 (player #85). PR tahti-player#121. Leftover (own-repo move)
+moved to `remaining-work.md`; `App.hydration.test.tsx` fails on master
+independently of this work.

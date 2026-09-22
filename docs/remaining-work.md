@@ -85,15 +85,11 @@ Additional governance gaps from the audit:
 
 ## Plugin registry separation (non-breaking preparation)
 
-The plugin registry must become a separately owned product boundary, but the
-current implementation remains in place until the replacement contract is
-proven. Do not move files, change storage keys, or alter plugin bootstrap order
-as part of this preparation.
+Registry extracted into `@tahti-player/plugin-registry` (tahti-player#121);
+storage keys, paths and bootstrap order are unchanged. Inventory and design
+notes are in `docs/todo/HISTORY.md` (2026-09-22).
 
-- [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers. → [`docs/todo/plugin-registry-extraction.md`](todo/plugin-registry-extraction.md)
-- [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [`docs/todo/plugin-registry-extraction.md` §5](todo/plugin-registry-extraction.md#5-minimal-compatibility-interface-and-adapter-plan)
-- [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
-- [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
+- [ ] Decide whether `@tahti-player/plugin-registry` moves to its own repo/package registry (optional; `PluginRegistryHost` would stay in player).
 
 ---
 
