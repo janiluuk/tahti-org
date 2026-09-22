@@ -6,9 +6,12 @@ separate when adding or updating a plugin:
 - **Marketplace catalog:** `../tahti-registry/plugins.json` is the public Store
   catalog consumed by Tahti Player. It contains the plugin id, metadata,
   version, repository, and download URL.
-- **Runtime install registry:** `../tahti-player/packages/player` persists
-  installed entries in the user's `plugins.json`. It records the managed path,
-  installation method, enabled state, warnings, and timestamps.
+- **Runtime install registry:** `../tahti-player/packages/plugin-registry`
+  (`@tahti-player/plugin-registry`) persists installed entries in the user's
+  `plugins.json`. It records the managed path, installation method, enabled
+  state, warnings, and timestamps. Full reference (storage format, bootstrap
+  order, ownership boundaries, invariants, tests, rollback):
+  `../tahti-player/docs/PLUGIN-REGISTRY.md`.
 
 Tahti API provider catalogs (`GET /api/me/import-plugins` and
 `GET /api/me/export-plugins`) are separate server-side contracts. Adding an API
@@ -25,8 +28,9 @@ provider does not automatically add a desktop Store plugin.
 3. Validate the catalog in `../tahti-registry` with `pnpm validate` and
    `pnpm check-plugins`.
 4. Run the player registry contract tests covering install, enable/disable,
-   warnings, update, and removal. The existing runtime registry remains the
-   source of truth during this preparation phase.
+   warnings, update, and removal. The runtime registry (storage keys, paths and
+   bootstrap order) must stay unchanged; see the invariants in
+   `../tahti-player/docs/PLUGIN-REGISTRY.md`.
 5. Open the player and catalog changes together, and link the catalog change
    from the player PR so a Store listing cannot be forgotten.
 

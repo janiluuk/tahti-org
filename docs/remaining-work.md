@@ -85,15 +85,12 @@ Additional governance gaps from the audit:
 
 ## Plugin registry separation (non-breaking preparation)
 
-The plugin registry must become a separately owned product boundary, but the
-current implementation remains in place until the replacement contract is
-proven. Do not move files, change storage keys, or alter plugin bootstrap order
-as part of this preparation.
+Registry extracted into `@tahti-player/plugin-registry` (tahti-player#121);
+storage keys, paths and bootstrap order are unchanged. Reference doc:
+`../tahti-player/docs/PLUGIN-REGISTRY.md`; history in `docs/todo/HISTORY.md`
+(2026-09-22).
 
-- [x] Inventory current registry responsibilities, persisted `plugins.json` format, and callers. → [`docs/todo/plugin-registry-extraction.md`](todo/plugin-registry-extraction.md)
-- [x] Define a minimal registry interface and compatibility adapter around the current implementation. → [`docs/todo/plugin-registry-extraction.md` §5](todo/plugin-registry-extraction.md#5-minimal-compatibility-interface-and-adapter-plan)
-- [ ] Define ownership between player core, plugin SDK, and import-provider plugins.
-- [ ] Extract only after adapter tests and a migration/rollback plan are accepted.
+- [ ] Decide whether `@tahti-player/plugin-registry` moves to its own repo/package registry (optional; `PluginRegistryHost` would stay in player).
 
 ---
 
@@ -157,25 +154,26 @@ transfer, governance rhythms, post-handover cadences — see roadmap Phases 8–
 
 Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 
-| Item                                         | Notes                                                                                                                                                                                                    |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stream manager on artist studio page         | Playlist name in collapsed rotation block; remove manager from Go live                                                                                                                                   |
-| Channel Designer block system                | Logo + addon blocks                                                                                                                                                                                      |
-| Public list/play `audioUrl` still ungated    | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                                                                                                |
-| Unify remaining uploaders on `FileDropzone`  | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover)                                                                                                                  |
-| Deduplicate chat panel logic                 | `chat-panel.tsx` / `fan-chat-panel.tsx`                                                                                                                                                                  |
-| Collapse overlapping e2e seed scripts        | Four `apps/api/scripts/seed-e2e-*` scripts                                                                                                                                                               |
-| Verify cron consolidation in prod            | After deploy: per-task CronRun rows for the dispatcher/tick jobs keep ticking at old cadence; old repeatables gone (cron-runner resets on boot)                                                          |
-| hearthis.at real-audio import                | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                                                                                                          |
-| Fallback cover for releases without artwork  | Gradient placeholder exists; no approved fallback asset                                                                                                                                                  |
-| Jam SSE multi-instance                       | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                                                                                                       |
-| Discord bot → Tahti Radio                    | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                                                                                                          |
-| Revelator export webhook sync                | Webhook accepts + logs; body → release status not wired                                                                                                                                                  |
-| Per-DSP export submit                        | hearthis-export and storefront stubs; product API TBD                                                                                                                                                    |
-| `streaming-architecture.md` vs shipped infra | Confirm how much of the target edge-encoder/MinIO design is live                                                                                                                                         |
-| Sounds player: verify in live app            | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport |
-| Your feed redesign: verify in live app       | PR #535 shipped verified by unit tests/tsc only; confirm `FeedCard` cover images no longer crop, teaser text is readable, and `Reveal` expands correctly on a seeded dev stack (desktop + mobile)        |
-| `GreenRoomPanel` heading redundancy          | Its internal `<h4>Green room</h4>` + `StatusPill` duplicate the wrapping `StudioCollapse` title; move the pill into the `hint` slot                                                                      |
+| Item                                             | Notes                                                                                                                                                                                                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stream manager on artist studio page             | Playlist name in collapsed rotation block; remove manager from Go live                                                                                                                                                                               |
+| Channel Designer block system                    | Logo + addon blocks                                                                                                                                                                                                                                  |
+| Public list/play `audioUrl` still ungated        | Download gate restored; streaming bypasses remain on list/play `audioUrl`                                                                                                                                                                            |
+| Unify remaining uploaders on `FileDropzone`      | Channel identity image, album-folder, and multitrack still specialized (UX-05 leftover)                                                                                                                                                              |
+| Deduplicate chat panel logic                     | `chat-panel.tsx` / `fan-chat-panel.tsx`                                                                                                                                                                                                              |
+| Collapse overlapping e2e seed scripts            | Four `apps/api/scripts/seed-e2e-*` scripts                                                                                                                                                                                                           |
+| Verify cron consolidation in prod                | After deploy: per-task CronRun rows for the dispatcher/tick jobs keep ticking at old cadence; old repeatables gone (cron-runner resets on boot)                                                                                                      |
+| hearthis.at real-audio import                    | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                                                                                                                                                      |
+| Fallback cover for releases without artwork      | Gradient placeholder exists; no approved fallback asset                                                                                                                                                                                              |
+| Jam SSE multi-instance                           | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                                                                                                                                                   |
+| Discord bot → Tahti Radio                        | Bot still plays local `tracks.txt`; wire to `GET /api/v1/radio`                                                                                                                                                                                      |
+| Revelator export webhook sync                    | Webhook accepts + logs; body → release status not wired                                                                                                                                                                                              |
+| Per-DSP export submit                            | hearthis-export and storefront stubs; product API TBD                                                                                                                                                                                                |
+| `streaming-architecture.md` vs shipped infra     | Confirm how much of the target edge-encoder/MinIO design is live                                                                                                                                                                                     |
+| Sounds player: verify in live app                | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport                                             |
+| Your feed redesign: verify in live app           | PR #535 shipped verified by unit tests/tsc only; confirm `FeedCard` cover images no longer crop, teaser text is readable, and `Reveal` expands correctly on a seeded dev stack (desktop + mobile)                                                    |
+| Setup-channel wizard: confirm step 5 + genre cap | Step 5 (studio / view channel / finish) was a guess, and the reference screenshots disagreed on 5 vs 3 steps; genre cap kept at 6 (screenshot showed 5). `programme.test.ts` no-tracks guard test never ran locally (no Postgres) — confirm CI green |
+| `GreenRoomPanel` heading redundancy              | Its internal `<h4>Green room</h4>` + `StatusPill` duplicate the wrapping `StudioCollapse` title; move the pill into the `hint` slot                                                                                                                  |
 
 Marketing apex / `website/` cutover (R13–R14) stays off-limits unless explicitly requested.
 
