@@ -310,6 +310,7 @@ export async function buildTopTracksStats(
   userId: string,
   range: StatsRangeQuery = 'all',
   limit = 10,
+  window?: { from?: string; to?: string },
 ) {
   const channel = await prisma.channel.findUnique({
     where: { userId },
@@ -326,15 +327,24 @@ export async function buildTopTracksStats(
   const itemIds = items.map((i) => i.id)
   if (itemIds.length === 0) return { items: [] }
 
-  const days = rangeDays(range)
-  const since = days != null ? utcDayKeys(days).since : undefined
+  const customFrom = window?.from
+  const customTo = window?.to
+  const days = customFrom && customTo ? null : rangeDays(range)
+  const since =
+    customFrom != null
+      ? new Date(`${customFrom}T00:00:00.000Z`)
+      : days != null
+        ? utcDayKeys(days).since
+        : undefined
+  const until = customTo != null ? new Date(`${customTo}T23:59:59.999Z`) : undefined
+  const createdAtFilter = since ? (until ? { gte: since, lte: until } : { gte: since }) : undefined
 
   const counts = await prisma.download.groupBy({
     by: ['soundId'],
     where: {
       soundId: { in: itemIds },
       countedAt: { not: null },
-      ...(since ? { createdAt: { gte: since } } : {}),
+      ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
     },
     _count: { _all: true },
   })
@@ -361,6 +371,7 @@ export async function buildTopCountriesStats(
   userId: string,
   range: StatsRangeQuery = 'all',
   limit = 10,
+  window?: { from?: string; to?: string },
 ) {
   const releaseIds = (
     await prisma.release.findMany({
@@ -371,11 +382,23 @@ export async function buildTopCountriesStats(
 
   if (releaseIds.length === 0) return { items: [] as Array<{ country: string; count: number }> }
 
-  const days = rangeDays(range)
-  const since = days != null ? utcDayKeys(days).since : undefined
+  const customFrom = window?.from
+  const customTo = window?.to
+  const days = customFrom && customTo ? null : rangeDays(range)
+  const since =
+    customFrom != null
+      ? new Date(`${customFrom}T00:00:00.000Z`)
+      : days != null
+        ? utcDayKeys(days).since
+        : undefined
+  const until = customTo != null ? new Date(`${customTo}T23:59:59.999Z`) : undefined
+  const createdAtFilter = since ? (until ? { gte: since, lte: until } : { gte: since }) : undefined
 
   const clicks = await prisma.smartLinkClick.findMany({
-    where: { releaseId: { in: releaseIds }, ...(since ? { createdAt: { gte: since } } : {}) },
+    where: {
+      releaseId: { in: releaseIds },
+      ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
+    },
     select: { referer: true },
   })
 

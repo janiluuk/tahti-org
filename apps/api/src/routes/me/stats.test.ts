@@ -185,4 +185,48 @@ describe('PLAT-030 — artist stats API', () => {
     expect(body.items.length).toBeGreaterThanOrEqual(1)
     expect(body.items[0]?.count).toBeGreaterThanOrEqual(1)
   })
+
+  it('GET /api/me/stats/top-tracks honors a custom from/to window', async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const inWindow = await app.inject({
+      method: 'GET',
+      url: `/api/me/stats/top-tracks?from=${today}&to=${today}`,
+      headers: { cookie },
+    })
+    expect(inWindow.statusCode).toBe(200)
+    const inBody = inWindow.json() as { items: Array<{ soundId: string; plays: number }> }
+    expect(inBody.items.some((i) => i.soundId === soundId && i.plays >= 1)).toBe(true)
+
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+    const outOfWindow = await app.inject({
+      method: 'GET',
+      url: `/api/me/stats/top-tracks?from=1970-01-01&to=${yesterday}`,
+      headers: { cookie },
+    })
+    expect(outOfWindow.statusCode).toBe(200)
+    const outBody = outOfWindow.json() as { items: Array<{ soundId: string; plays: number }> }
+    expect(outBody.items.some((i) => i.soundId === soundId)).toBe(false)
+  })
+
+  it('GET /api/me/stats/top-countries honors a custom from/to window', async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const inWindow = await app.inject({
+      method: 'GET',
+      url: `/api/me/stats/top-countries?from=${today}&to=${today}`,
+      headers: { cookie },
+    })
+    expect(inWindow.statusCode).toBe(200)
+    const inBody = inWindow.json() as { items: Array<{ country: string; count: number }> }
+    expect(inBody.items.length).toBeGreaterThanOrEqual(1)
+
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+    const outOfWindow = await app.inject({
+      method: 'GET',
+      url: `/api/me/stats/top-countries?from=1970-01-01&to=${yesterday}`,
+      headers: { cookie },
+    })
+    expect(outOfWindow.statusCode).toBe(200)
+    const outBody = outOfWindow.json() as { items: Array<{ country: string; count: number }> }
+    expect(outBody.items.length).toBe(0)
+  })
 })
