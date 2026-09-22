@@ -37,6 +37,7 @@ export const WORKER_JOB_LANES = {
     'hls-minio-sync',
     'media-minute-tick',
     'media-ten-minute-tick',
+    'hls-live-prune',
   ],
   dist: [
     'mixcloud-upload',

@@ -38,7 +38,14 @@ export async function registerCrons(): Promise<number> {
     for (const job of WORKER_CRON_JOBS) {
       if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
       const repeat = job.everyMs != null ? { every: job.everyMs } : { pattern: job.pattern! }
-      await queue.add(job.name, {}, { repeat, jobId: job.jobId })
+      // BullMQ does not carry a Queue's defaultJobOptions into the repeat
+      // template used to spawn each subsequent tick — only the very first
+      // job gets them. Without repeating removeOnComplete/removeOnFail here
+      // explicitly, every future tick of every cron omits them and Redis's
+      // completed/failed zsets grow unbounded (confirmed live: >1M stale
+      // job records backing a Redis instance capped at 2G with
+      // allkeys-lru, risking silent eviction of real queue data).
+      await queue.add(job.name, {}, { repeat, jobId: job.jobId, ...defaultJobOptions })
       registered++
     }
     return registered

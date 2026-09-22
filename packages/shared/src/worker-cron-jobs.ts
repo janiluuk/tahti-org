@@ -44,8 +44,8 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '*/10 * * * *',
     jobId: 'media-ten-minute-tick-cron',
     description:
-      'Every 10 min (media lane): remove orphaned recorder/fingerprint sidecar containers (see services/orchestrator/src/sidecar-cleanup.ts), refresh the local sound fallback cache for Liquidsoap (STREAM-009)',
-    subTasks: ['sidecar-cleanup', 'sound-fallback-cache-sync'],
+      'Every 10 min (media lane): remove orphaned recorder/fingerprint sidecar containers (see services/orchestrator/src/sidecar-cleanup.ts), refresh the local sound fallback cache for Liquidsoap (STREAM-009), prune stale hls-live MinIO objects past the live window (backstop for the bucket ILM policy in minio-lifecycle.ts)',
+    subTasks: ['sidecar-cleanup', 'sound-fallback-cache-sync', 'hls-live-prune'],
   },
   {
     name: 'monthly-ledger-rollup',
