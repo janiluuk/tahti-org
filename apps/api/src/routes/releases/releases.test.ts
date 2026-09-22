@@ -243,4 +243,64 @@ describe('M12 — releases and public profile', () => {
     expect(exp.json().discogsPrefill).toContain('Discogs')
     expect(exp.json().discogsPrefill).toContain('Submission notes')
   })
+
+  it('fetches a single release by id with the same shape as the list', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie },
+      payload: {
+        title: 'By-id Fetch Test',
+        type: 'SINGLE',
+        releaseDate: '2026-02-01',
+        tracks: [{ title: 'Only Track', durationSec: 180 }],
+      },
+    })
+    expect(create.statusCode).toBe(201)
+    const id = create.json().id
+
+    const byId = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie },
+    })
+    expect(byId.statusCode).toBe(200)
+    expect(byId.json().id).toBe(id)
+    expect(byId.json().title).toBe('By-id Fetch Test')
+    expect(byId.json().tracks).toHaveLength(1)
+    expect(Array.isArray(byId.json().checklist)).toBe(true)
+  })
+
+  it('404s fetching a release id that does not belong to the caller', async () => {
+    const otherUsername = 'release-test-other-artist'
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: otherUsername,
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98401,
+    })
+    const otherCookie = await sessionCookieFor(prisma, other.id)
+
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie: otherCookie },
+      payload: {
+        title: 'Someone Else’s Release',
+        type: 'SINGLE',
+        releaseDate: '2026-02-01',
+        tracks: [{ title: 'Track', durationSec: 180 }],
+      },
+    })
+    expect(create.statusCode).toBe(201)
+    const id = create.json().id
+
+    const byId = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie },
+    })
+    expect(byId.statusCode).toBe(404)
+  })
 })

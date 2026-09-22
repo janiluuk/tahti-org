@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { Prisma } from '@tahti/db'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
@@ -50,6 +51,80 @@ function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+// Shared between the list and by-id routes so both return the identical
+// shape (artworkUrl resolved, track audioUrl presigned, checklist computed).
+const meReleaseSelect = {
+  id: true,
+  title: true,
+  type: true,
+  state: true,
+  releaseDate: true,
+  description: true,
+  artworkUrl: true,
+  artworkKey: true,
+  genre: true,
+  genreCustom: true,
+  smartLinkSlug: true,
+  smartLinkViewCount: true,
+  smartLinkTargets: true,
+  upc: true,
+  musicbrainzReleaseId: true,
+  musicbrainzArtistId: true,
+  discogsReleaseId: true,
+  pLine: true,
+  cLine: true,
+  labelImprint: true,
+  credits: true,
+  revelatorStatus: true,
+  revelatorId: true,
+  visualPreset: true,
+  colorSchemeJson: true,
+  paletteJson: true,
+  slideshowImages: true,
+  galleryMode: true,
+  galleryAudioReactive: true,
+  pinnedAt: true,
+  tracks: {
+    orderBy: { position: 'asc' as const },
+    select: {
+      id: true,
+      position: true,
+      title: true,
+      isrc: true,
+      status: true,
+      genre: true,
+      genreCustom: true,
+      durationSec: true,
+      streamKey: true,
+      sourceKey: true,
+      credits: true,
+      fingerprintMatch: true,
+    },
+  },
+  _count: { select: { tracks: true } },
+} satisfies Prisma.ReleaseSelect
+
+type MeReleaseRow = Prisma.ReleaseGetPayload<{ select: typeof meReleaseSelect }>
+
+async function serializeMeRelease(r: MeReleaseRow, artistName: string) {
+  const artworkUrl = await resolveReleaseArtworkUrl(r)
+  return {
+    ...r,
+    artistName,
+    artworkUrl,
+    tracks: await Promise.all(
+      r.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
+        const key = streamKey ?? sourceKey
+        return {
+          ...track,
+          audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+        }
+      }),
+    ),
+    checklist: computeReleaseChecklist(r),
+  }
+}
+
 const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/releases',
@@ -77,83 +152,40 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy: { releaseDate: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            state: true,
-            releaseDate: true,
-            description: true,
-            artworkUrl: true,
-            artworkKey: true,
-            genre: true,
-            genreCustom: true,
-            smartLinkSlug: true,
-            smartLinkViewCount: true,
-            smartLinkTargets: true,
-            upc: true,
-            musicbrainzReleaseId: true,
-            musicbrainzArtistId: true,
-            discogsReleaseId: true,
-            pLine: true,
-            cLine: true,
-            labelImprint: true,
-            credits: true,
-            revelatorStatus: true,
-            revelatorId: true,
-            visualPreset: true,
-            colorSchemeJson: true,
-            paletteJson: true,
-            slideshowImages: true,
-            galleryMode: true,
-            galleryAudioReactive: true,
-            pinnedAt: true,
-            tracks: {
-              orderBy: { position: 'asc' },
-              select: {
-                id: true,
-                position: true,
-                title: true,
-                isrc: true,
-                status: true,
-                genre: true,
-                genreCustom: true,
-                durationSec: true,
-                streamKey: true,
-                sourceKey: true,
-                credits: true,
-                fingerprintMatch: true,
-              },
-            },
-            _count: { select: { tracks: true } },
-          },
+          select: meReleaseSelect,
         }),
       ])
       return reply.send({
         page,
         limit,
         total,
-        releases: await Promise.all(
-          releases.map(async (r) => {
-            const artworkUrl = await resolveReleaseArtworkUrl(r)
-            return {
-              ...r,
-              artistName: user.displayName,
-              artworkUrl,
-              tracks: await Promise.all(
-                r.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
-                  const key = streamKey ?? sourceKey
-                  return {
-                    ...track,
-                    audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
-                  }
-                }),
-              ),
-              checklist: computeReleaseChecklist(r),
-            }
-          }),
-        ),
+        releases: await Promise.all(releases.map((r) => serializeMeRelease(r, user.displayName))),
       })
+    },
+  )
+
+  fastify.get(
+    '/api/me/releases/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(MeReleaseDetailSchema, 'MeReleaseDetail'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: meReleaseSelect,
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      return reply.send(await serializeMeRelease(release, user.displayName))
     },
   )
 

@@ -6,6 +6,29 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-23 — god-module-restructure API gaps (tahti-player)
+
+Shipped in [#551](https://github.com/janiluuk/tahti-org/pull/551): three
+small routes requested by tahti-player's `docs/todo/god-module-restructure.md`
+"Backend / API needed" list, picked up after the user authorized backend work
+in this repo. `GET /api/me/releases/:id` (release detail was fetching every
+release just to find one client-side — reuses a `meReleaseSelect`/
+`serializeMeRelease` extracted from the existing list route so both return
+the identical shape). `GET /api/me/sound/count` and
+`GET /api/me/collections/count` (cheap `prisma.count()` routes for dashboard
+tiles that only needed a total; added a shared `CountSchema` to
+`@tahti/shared`). The releases dashboard tile needed no new route —
+`GET /api/me/releases` already returns `total`, it was just unused by the
+frontend. Two items from that same list were investigated but not
+implemented here: `showId` on booking rows (no direct FK from
+`RadioSlotBooking` to `LiveShowSeries`, needs a design decision on join-
+through-episode vs. a new FK column) and custom date-range windows for the
+three top-list stats routes (enum-only ranges today; the plain plays/summary
+endpoint already has the pattern needed, extending it touches 3 routes + 2
+lib files). Both left as follow-up work, not tracked in a slim todo since
+neither is in-flight. Companion frontend PR:
+[tahti-player#132](https://github.com/janiluuk/tahti-player/pull/132).
+
 ## 2026-09-16 — internet-radio-now-playing-scraper.md
 
 Shipped (partial) in [#531](https://github.com/janiluuk/tahti-org/pull/531):

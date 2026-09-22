@@ -110,6 +110,21 @@ describe('M23 — collections and RSS', () => {
     expect(rss.body).toContain('http://localhost:9000/tahti/mp3/')
   })
 
+  it('returns the total collection count on GET /api/me/collections/count', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/collections',
+      headers: { cookie },
+    })
+    const count = await app.inject({
+      method: 'GET',
+      url: '/api/me/collections/count',
+      headers: { cookie },
+    })
+    expect(count.statusCode).toBe(200)
+    expect(count.json()).toEqual({ count: list.json().length })
+  })
+
   it('adds a published release to a collection', async () => {
     const createRel = await app.inject({
       method: 'POST',

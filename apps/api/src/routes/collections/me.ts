@@ -6,11 +6,13 @@ import {
   AddCollectionItemSchema,
   ChannelSoundParamsSchema,
   CollectionListQuerySchema,
+  CountSchema,
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
   ReorderCollectionProfileSchema,
   SlugParamSchema,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -48,6 +50,25 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         cols.map(async (col) => ({ ...col, coverUrl: await resolveCollectionCoverUrl(col) })),
       )
       return reply.send(withCovers)
+    },
+  )
+
+  // Dashboard tiles only need the total — avoids pulling every collection's
+  // full record (GET /api/me/collections) just to read `.length`.
+  fastify.get(
+    '/api/me/collections/count',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'Total collection count for the dashboard overview',
+        response: openApiResponse(CountSchema, 'CollectionCount'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const count = await fastify.prisma.collection.count({ where: { userId: user.id } })
+      return reply.send({ count })
     },
   )
 
