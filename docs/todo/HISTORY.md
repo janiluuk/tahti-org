@@ -6,6 +6,23 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-09-23 — booking→show series link (tahti-player god-module-restructure follow-up)
+
+Shipped in [#553](https://github.com/janiluuk/tahti-org/pull/553), the last
+remaining item from the god-module-restructure API-gaps pass: `RadioSlotBooking`
+has no direct FK to `LiveShowSeries`, only an indirect link through the
+optional `LiveShowEpisode.radioSlotBookingId`. `GET /api/me/radio-slot-bookings`
+now joins through that relation (`take: 1, orderBy: createdAt desc` as a
+defensive tiebreak, since the relation itself has no unique constraint even
+though the recording flow only ever creates one episode per booking) and
+returns `showId`/`showTitle`/`showDescription`/`coverUrl`/`episodeNumber`
+when an episode has claimed the booking. Chose this over adding a new FK
+column + migration — reversible, no schema change, and a real FK can still
+be added later if this indirect join ever becomes a real pain point. All
+four items from the original API-gaps list are now closed: this one,
+release-by-id and sound/collection counts (#551), and stats custom-range
+windows (#552).
+
 ## 2026-09-23 — stats custom-range windows (tahti-player god-module-restructure follow-up)
 
 Shipped in [#552](https://github.com/janiluuk/tahti-org/pull/552), the
