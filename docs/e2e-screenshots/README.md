@@ -6,24 +6,47 @@ Full-page captures of the Tahti **web app** (`apps/web`) against the **Docker st
 
 ## Layout
 
-Screenshots are grouped by role:
+The per-route captures (`manifest.json`-driven, `scripts/capture-e2e-screenshots.mjs`)
+are still grouped by the older 5-role model:
 
-| Folder     | Auth                 | Description                                             |
-| ---------- | -------------------- | ------------------------------------------------------- |
-| `public/`  | None                 | Marketing, channel, profile, help, transparency         |
-| `free/`    | Free listener        | Verified account, no €40 membership                     |
-| `member/`  | Member (supporter)   | Member dashboard + governance                           |
-| `artist/`  | Artist channel owner | Full studio dashboard, stats, stash, editor             |
-| `admin/`   | Board (`isBoard`)    | Admin console (all nav sections)                        |
-| `journey/` | Fresh artist + admin | Empty account → channel → releases (Playwright journey) |
+| Folder    | Auth                 | Description                                     |
+| --------- | -------------------- | ----------------------------------------------- |
+| `public/` | None                 | Marketing, channel, profile, help, transparency |
+| `free/`   | Free listener        | Verified account, no €40 membership             |
+| `member/` | Member (supporter)   | Member dashboard + governance                   |
+| `artist/` | Artist channel owner | Full studio dashboard, stats, stash, editor     |
+| `admin/`  | Board (`isBoard`)    | Admin console (all nav sections)                |
 
-See `manifest.json` for the full route → file mapping (public / free / member / artist /
-admin / journey). The 20 current board-admin captures are annotated with the role,
-route, admin navigation, main workspace, and page heading so they can be reviewed
-without opening the app. Known remaining gaps (routes needing seed data or dynamic-ID lookups
-the capture script doesn't do yet): `/dashboard/moderate/[slug]`, `/v/[slug]`,
-`/admin/users/[id]`, `/admin/support/[id]`, `/dashboard/upload/[uploadId]` and its
-import sub-flows.
+See `manifest.json` for the full route → file mapping. The 20 board-admin
+captures there are annotated with the role, route, admin navigation, main
+workspace, and page heading so they can be reviewed without opening the app.
+Known remaining gaps (routes needing seed data or dynamic-ID lookups the
+capture script doesn't do yet): `/dashboard/moderate/[slug]`, `/v/[slug]`,
+`/admin/users/[id]`, `/admin/support/[id]`, `/dashboard/upload/[uploadId]` and
+its import sub-flows.
+
+### Category journeys (4 categories, light + dark)
+
+`tests/e2e/` is organized into 4 categories matching the product's actual
+roles — **anonymous**, **listener**, **artist**, **admin**. Each has a
+Playwright screenshot journey walking a real user flow end to end, captured
+at 3440×1440 in both light and dark `prefers-color-scheme` (the browser's own
+media feature — **not** the product's per-artist channel theme picker under
+`/admin/themes` / `/dashboard/channel/edit`, which is unrelated branding):
+
+| Folder                            | Journey                                                                                                                                         |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anonymous/journey/{light,dark}/` | Home → listen hub → channel → profile → transparency → signup                                                                                   |
+| `listener/journey/{light,dark}/`  | Login → dashboard → governance → channel → fan-tier subscribe (buy side of paid content)                                                        |
+| `artist/journey/{light,dark}/`    | Login → dashboard → setup wizard → broadcast studio → catalog → fan-subs settings (sell side of paid content) → public channel → admin verifies |
+| `admin/journey/{light,dark}/`     | Login → admin dashboard → users → content reports → financial → governance → grants                                                             |
+
+Run all 4 with one command — see [`docs/testing.md`](../testing.md#e2e-journey-screenshots-4-categories)
+or:
+
+```bash
+./scripts/run-e2e-journeys.sh
+```
 
 ## When to update (agents)
 
@@ -91,17 +114,20 @@ Username: `screenshot-demo` · Collection: `demo-mixes` · Smart link: `northern
 
 ### Fresh artist journey (Playwright)
 
-Empty verified account → **UI login** → setup-channel wizard → broadcast studio →
-album + EP + single uploads. Captures screenshots under `journey/` (artist + admin
+Empty verified account → **UI login** → setup-channel wizard (5 steps) → broadcast
+studio → album + EP + single uploads → fan-subs settings → public channel → admin
+verifies. Captures screenshots under `artist/journey/{light,dark}/` (artist + admin
 login first, so wizard and broadcasting pages are authenticated — not a login wall):
 
 ```bash
 ./scripts/stack-up.sh --seed
-WEB_PORT=17777 API_PORT=15011 node tests/e2e/fresh-artist-journey.mjs
+WEB_PORT=17777 API_PORT=15011 node tests/e2e/artist/fresh-artist-journey.mjs
 ```
 
-Or after `./scripts/e2e-screenshots.sh`, run the journey script with the same ports.
-Key shots: `02-setup-channel.png` (wizard), `03-broadcast-studio.png` (go-live studio).
+Or run `./scripts/run-e2e-journeys.sh artist` for the fast local-dev path (no Docker
+web/api build required). Key shots: `02-setup-channel.png` (wizard step 1),
+`03-broadcast-studio.png` (go-live studio), `04b-fan-subs-settings.png` (sell side of
+paid content — pairs with `listener/journey/*/05-fan-tier-subscribe.png`, the buy side).
 
 Seeded channel includes a **next live broadcast** schedule (`2026-07-10T20:00:00Z`) so the
 Archive countdown and dashboard schedule preview appear in captures.

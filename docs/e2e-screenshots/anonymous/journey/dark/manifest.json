@@ -1,0 +1,26 @@
+[
+  {
+    "file": "01-home.png",
+    "label": "Home (logged out)"
+  },
+  {
+    "file": "02-listen-hub.png",
+    "label": "Listen hub"
+  },
+  {
+    "file": "03-channel.png",
+    "label": "Public channel page"
+  },
+  {
+    "file": "04-artist-profile.png",
+    "label": "Artist profile"
+  },
+  {
+    "file": "05-transparency.png",
+    "label": "Transparency dashboard"
+  },
+  {
+    "file": "06-signup.png",
+    "label": "Signup form"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "file": "01-login-filled.png",
+    "label": "Login form (member credentials)"
+  },
+  {
+    "file": "02-listener-dashboard.png",
+    "label": "Listener dashboard"
+  },
+  {
+    "file": "03-governance.png",
+    "label": "Member governance"
+  },
+  {
+    "file": "04-channel-as-listener.png",
+    "label": "Public channel, viewed while signed in"
+  },
+  {
+    "file": "05-fan-tier-subscribe.png",
+    "label": "Buy side: fan tier subscribe page (paid content)"
+  }
+]

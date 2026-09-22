@@ -33,6 +33,42 @@ Other scripts: `pnpm tor-exit:check`, `./scripts/status-monitor.sh`, persona-spe
 
 **Journey map** (routes, APIs, scripts): [`user-flows.md`](user-flows.md).
 
+### E2E journey screenshots (4 categories)
+
+`tests/e2e/` is organized into 4 category directories matching the product's
+actual roles — **anonymous** (no login), **listener** (verified/member,
+no channel), **artist** (channel owner), **admin** (board console). Each has
+persona API checks (bash) plus, for the Playwright ones, a screenshot journey
+capturing both light and dark `prefers-color-scheme` at 3440×1440.
+
+One-shot run (brings up Postgres/Redis in Docker, starts `apps/api` +
+`apps/web` as plain dev processes if not already running, seeds rich demo
+fixtures, runs all 4 journeys):
+
+```bash
+./scripts/run-e2e-journeys.sh                # all 4
+./scripts/run-e2e-journeys.sh artist admin   # only these
+./scripts/run-e2e-journeys.sh --keep-up      # leave API/web running after
+```
+
+Screenshots land under `docs/e2e-screenshots/<category>/journey/{light,dark}/`
+with a `manifest.json` per theme. See `docs/e2e-screenshots/README.md` for the
+full screenshot layout (including the older per-route capture tool) and the
+annotated review page.
+
+Individual journeys (stack/seed already up):
+
+```bash
+node tests/e2e/anonymous/anonymous-journey.mjs
+node tests/e2e/listener/listener-journey.mjs
+node tests/e2e/artist/fresh-artist-journey.mjs
+node tests/e2e/admin/admin-journey.mjs
+```
+
+Persona API-only checks (bash, no browser): `tests/e2e/{anonymous,listener,artist,admin}/*.sh`,
+run together via `bash tests/e2e/user-journeys.sh` or individually via
+`pnpm test:e2e:journeys:<category>`.
+
 ### Vitest journey suites
 
 Under `apps/api/src/routes/journeys/`:
