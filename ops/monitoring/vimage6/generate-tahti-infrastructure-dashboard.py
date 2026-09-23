@@ -8,7 +8,7 @@ from pathlib import Path
 
 DS = {"type": "prometheus", "uid": "P501B54A0D5548634"}
 LOKI_DS = {"type": "loki", "uid": "loki-main"}
-HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web"
+HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web"
 NET_DEV = 'device!~"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*"'
 # scripts/backup.sh (tahti) and /usr/local/sbin/backup-other-services.sh (sparkki, giggi)
 # on vimage both write tahti_ops_backup_* via node_exporter's textfile collector.
