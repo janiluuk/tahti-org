@@ -22,7 +22,12 @@ import { uploadFile } from '../lib/minio.js'
 import { enqueueEncodeStreamingCopy, enqueueWarmSoundFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
-import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
+import {
+  extractAndStoreFinePeaks,
+  extractEditorPeaksPyramid,
+  finePeaksKey,
+} from '../lib/editor-peaks.js'
+import { FINE_PEAKS_MIN_DURATION_SEC } from '@tahti/audio-edit'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode' }))
@@ -168,6 +173,14 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)
     const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
     const editorPeaks = (await extractEditorPeaksPyramid(rawPath, sourceMeta.duration)) ?? undefined
+    if (editorPeaks && sourceMeta.duration >= FINE_PEAKS_MIN_DURATION_SEC) {
+      const fine = await extractAndStoreFinePeaks(
+        rawPath,
+        sourceMeta.channels,
+        finePeaksKey(item.channel.slug, itemId),
+      )
+      if (fine) editorPeaks.fine = fine
+    }
     const sourceFormat = sourceFormatLabel(sourceMeta.codec)
 
     if (lossless) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { PEAK_PYRAMID_LEVELS, type PeaksPyramid } from './types.js'
+import { FINE_PEAKS_MIN_DURATION_SEC, PEAK_PYRAMID_LEVELS, type PeaksPyramid } from './types.js'
 
 const PEAK_DECODE_SAMPLE_RATE = 8000
 
@@ -134,3 +134,81 @@ export function peaksCacheKey(archiveId: string, sourceKey: string): string {
 }
 
 export { PEAK_DECODE_SAMPLE_RATE }
+
+/**
+ * Streams interleaved PCM16 (little-endian) into fine peaks: for each
+ * bucket of `sampleRate / bucketsPerSec` frames, the lowest and highest
+ * sample of every channel as int8 (sample / 256), laid out
+ * `[min c0, max c0, min c1, max c1, …]` per bucket. Chunks may split a
+ * sample or frame anywhere.
+ */
+export class FinePeaksEncoder {
+  private readonly framesPerBucket: number
+  private readonly out: number[] = []
+  private readonly min: number[]
+  private readonly max: number[]
+  private carry = new Uint8Array(0)
+  private frameInBucket = 0
+  private channel = 0
+
+  constructor(
+    private readonly channels: number,
+    sampleRate: number,
+    bucketsPerSec: number,
+  ) {
+    this.framesPerBucket = Math.max(1, Math.round(sampleRate / bucketsPerSec))
+    this.min = new Array(channels).fill(0)
+    this.max = new Array(channels).fill(0)
+    this.resetBucket()
+  }
+
+  private resetBucket() {
+    this.min.fill(127)
+    this.max.fill(-128)
+    this.frameInBucket = 0
+  }
+
+  private flushBucket() {
+    for (let c = 0; c < this.channels; c++) {
+      this.out.push(this.min[c]!, this.max[c]!)
+    }
+    this.resetBucket()
+  }
+
+  push(chunk: Uint8Array): void {
+    const bytes = new Uint8Array(this.carry.length + chunk.length)
+    bytes.set(this.carry, 0)
+    bytes.set(chunk, this.carry.length)
+    const usable = bytes.length - (bytes.length % 2)
+    const view = new DataView(bytes.buffer, bytes.byteOffset, usable)
+    for (let offset = 0; offset < usable; offset += 2) {
+      const value = view.getInt16(offset, true) >> 8
+      const c = this.channel
+      if (value < this.min[c]!) this.min[c] = value
+      if (value > this.max[c]!) this.max[c] = value
+      this.channel += 1
+      if (this.channel === this.channels) {
+        this.channel = 0
+        this.frameInBucket += 1
+        if (this.frameInBucket === this.framesPerBucket) this.flushBucket()
+      }
+    }
+    this.carry = bytes.slice(usable)
+  }
+
+  /** The encoded peaks, including a final partial bucket. */
+  finish(): { bytes: Int8Array; bucketCount: number } {
+    if (this.frameInBucket > 0) this.flushBucket()
+    return {
+      bytes: Int8Array.from(this.out),
+      bucketCount: this.out.length / (2 * this.channels),
+    }
+  }
+}
+
+/** True when a sound this long should have fine peaks and its stored
+ * pyramid doesn't reference any yet. */
+export function needsFinePeaks(durationSec: number | null | undefined, peaks: unknown): boolean {
+  if ((durationSec ?? 0) < FINE_PEAKS_MIN_DURATION_SEC) return false
+  return !(peaks && typeof peaks === 'object' && 'fine' in peaks && peaks.fine)
+}

@@ -11,6 +11,16 @@ const PeaksPyramidSchema = z.object({
   levels: z.array(z.array(z.number())),
   zeroCrossingsSec: z.array(z.number()).optional(),
   silenceRegionsSec: z.array(z.object({ start: z.number(), end: z.number() })).optional(),
+  /** Long sources: a signed URL to fine min/max peaks (int8 pairs per
+   * channel per bucket, `bucketsPerSec` buckets per second). */
+  fine: z
+    .object({
+      url: z.string(),
+      bucketsPerSec: z.number(),
+      channels: z.number(),
+      bucketCount: z.number(),
+    })
+    .optional(),
 })
 
 export { EditListSchema }

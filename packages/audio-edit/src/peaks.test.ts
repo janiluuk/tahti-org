@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildPeaksPyramid,
+  FinePeaksEncoder,
+  needsFinePeaks,
   detectSilenceRegions,
   extractZeroCrossings,
   snapToNearestZeroCrossing,
@@ -51,5 +53,44 @@ describe('detectSilenceRegions', () => {
     const regions = detectSilenceRegions(new Uint8Array(buf), sampleRate, 2)
     expect(regions.length).toBeGreaterThan(0)
     expect(regions[0]!.start).toBeLessThan(1.5)
+  })
+})
+
+describe('FinePeaksEncoder', () => {
+  function pcm16(samples: number[]): Uint8Array {
+    const bytes = new Uint8Array(samples.length * 2)
+    const view = new DataView(bytes.buffer)
+    samples.forEach((sample, i) => view.setInt16(i * 2, sample, true))
+    return bytes
+  }
+
+  it('keeps min and max per channel per bucket, as int8', () => {
+    const encoder = new FinePeaksEncoder(2, 4, 1)
+    encoder.push(pcm16([1000, -32768, -2560, 256, 32767, 0, 0, 0]))
+    const { bytes, bucketCount } = encoder.finish()
+    expect(bucketCount).toBe(1)
+    expect(Array.from(bytes)).toEqual([-10, 127, -128, 1])
+  })
+
+  it('gives the same result however the stream is chunked, and flushes a partial bucket', () => {
+    const samples = Array.from({ length: 50 }, (_, i) => ((i * 7919) % 65536) - 32768)
+    const whole = new FinePeaksEncoder(1, 10, 1)
+    whole.push(pcm16(samples))
+    const split = new FinePeaksEncoder(1, 10, 1)
+    const bytes = pcm16(samples)
+    for (let i = 0; i < bytes.length; i += 3) split.push(bytes.subarray(i, i + 3))
+    const a = whole.finish()
+    const b = split.finish()
+    expect(Array.from(b.bytes)).toEqual(Array.from(a.bytes))
+    expect(a.bucketCount).toBe(5)
+  })
+})
+
+describe('needsFinePeaks', () => {
+  it('only asks for fine peaks on long sources that lack them', () => {
+    expect(needsFinePeaks(600, null)).toBe(false)
+    expect(needsFinePeaks(3600, null)).toBe(true)
+    expect(needsFinePeaks(3600, { levels: [] })).toBe(true)
+    expect(needsFinePeaks(3600, { levels: [], fine: { key: 'k' } })).toBe(false)
   })
 })
