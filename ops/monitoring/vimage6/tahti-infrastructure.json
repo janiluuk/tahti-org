@@ -515,11 +515,76 @@
     {
       "id": 9,
       "type": "stat",
-      "title": "pi4",
+      "title": "tahti-local",
       "gridPos": {
         "h": 6,
         "w": 4,
         "x": 4,
+        "y": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "orientation": "horizontal",
+        "textMode": "value",
+        "text": {
+          "valueSize": 36
+        }
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"node\",instance=\"tahti-local\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "pi4",
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
         "y": 7
       },
       "datasource": {
@@ -578,13 +643,13 @@
       ]
     },
     {
-      "id": 10,
+      "id": 11,
       "type": "stat",
       "title": "pi5",
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 8,
+        "x": 12,
         "y": 7
       },
       "datasource": {
@@ -643,13 +708,13 @@
       ]
     },
     {
-      "id": 11,
+      "id": 12,
       "type": "stat",
       "title": "web",
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 12,
+        "x": 16,
         "y": 7
       },
       "datasource": {
@@ -708,7 +773,7 @@
       ]
     },
     {
-      "id": 12,
+      "id": 13,
       "type": "stat",
       "title": "Hosts \u2014 cAdvisor",
       "description": "Container metrics agent on each host.",
@@ -764,7 +829,7 @@
       },
       "targets": [
         {
-          "expr": "up{job=\"cadvisor\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}",
+          "expr": "up{job=\"cadvisor\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}",
           "legendFormat": "{{instance}}",
           "instant": true,
           "refId": "A"
@@ -772,7 +837,7 @@
       ]
     },
     {
-      "id": 13,
+      "id": 14,
       "type": "stat",
       "title": "Hosts \u2014 docker catalog",
       "description": "Lists running containers per host.",
@@ -828,7 +893,7 @@
       },
       "targets": [
         {
-          "expr": "up{job=\"docker-catalog\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}",
+          "expr": "up{job=\"docker-catalog\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}",
           "legendFormat": "{{instance}}",
           "instant": true,
           "refId": "A"
@@ -836,7 +901,7 @@
       ]
     },
     {
-      "id": 14,
+      "id": 15,
       "type": "row",
       "title": "Tahti lab stack (vimage)",
       "gridPos": {
@@ -848,7 +913,7 @@
       "collapsed": false
     },
     {
-      "id": 15,
+      "id": 16,
       "type": "stat",
       "title": "Lab HTTP probes",
       "description": "Direct LAN probes to stack ports on 192.168.2.100.",
@@ -912,7 +977,7 @@
       ]
     },
     {
-      "id": 16,
+      "id": 17,
       "type": "stat",
       "title": "API healthy",
       "description": "",
@@ -976,7 +1041,7 @@
       ]
     },
     {
-      "id": 17,
+      "id": 18,
       "type": "stat",
       "title": "API dependencies",
       "description": "",
@@ -1040,7 +1105,7 @@
       ]
     },
     {
-      "id": 18,
+      "id": 19,
       "type": "stat",
       "title": "API metrics scrape",
       "description": "",
@@ -1104,7 +1169,7 @@
       ]
     },
     {
-      "id": 19,
+      "id": 20,
       "type": "stat",
       "title": "Postgres backup age (h)",
       "gridPos": {
@@ -1156,7 +1221,7 @@
       ]
     },
     {
-      "id": 20,
+      "id": 21,
       "type": "row",
       "title": "Backups (tahti / sparkki / giggi)",
       "gridPos": {
@@ -1168,7 +1233,7 @@
       "collapsed": false
     },
     {
-      "id": 21,
+      "id": 22,
       "type": "stat",
       "title": "tahti \u2014 last backup",
       "description": "0 / 1970 means no successful backup has been recorded yet.",
@@ -1205,7 +1270,7 @@
       ]
     },
     {
-      "id": 22,
+      "id": 23,
       "type": "stat",
       "title": "sparkki \u2014 last backup",
       "description": "0 / 1970 means no successful backup has been recorded yet.",
@@ -1242,7 +1307,7 @@
       ]
     },
     {
-      "id": 23,
+      "id": 24,
       "type": "stat",
       "title": "giggi \u2014 last backup",
       "description": "0 / 1970 means no successful backup has been recorded yet.",
@@ -1279,7 +1344,7 @@
       ]
     },
     {
-      "id": 24,
+      "id": 25,
       "type": "stat",
       "title": "tahti \u2014 backup size",
       "description": "",
@@ -1316,7 +1381,7 @@
       ]
     },
     {
-      "id": 25,
+      "id": 26,
       "type": "stat",
       "title": "sparkki \u2014 backup size",
       "description": "",
@@ -1353,7 +1418,7 @@
       ]
     },
     {
-      "id": 26,
+      "id": 27,
       "type": "stat",
       "title": "giggi \u2014 backup size",
       "description": "",
@@ -1390,7 +1455,7 @@
       ]
     },
     {
-      "id": 27,
+      "id": 28,
       "type": "row",
       "title": "Public endpoints (via NPM / DNS)",
       "gridPos": {
@@ -1402,7 +1467,7 @@
       "collapsed": false
     },
     {
-      "id": 28,
+      "id": 29,
       "type": "stat",
       "title": "HTTPS probes",
       "description": "Blackbox checks from vimage6 to public tahti.live hostnames.",
@@ -1466,7 +1531,7 @@
       ]
     },
     {
-      "id": 29,
+      "id": 30,
       "type": "stat",
       "title": "SMTP submission (mail.tahti.live:587)",
       "description": "",
@@ -1530,7 +1595,7 @@
       ]
     },
     {
-      "id": 30,
+      "id": 31,
       "type": "row",
       "title": "Contact inbox (tahti.live)",
       "gridPos": {
@@ -1542,7 +1607,7 @@
       "collapsed": false
     },
     {
-      "id": 31,
+      "id": 32,
       "type": "stat",
       "title": "Unread: hello@tahti.live",
       "description": "Unread mails to hello@tahti.live (alias to jani@tahti.live). Source: doveadm via mail-metrics.sh on vimage6, scraped every 60s.",
@@ -1579,7 +1644,7 @@
       ]
     },
     {
-      "id": 32,
+      "id": 33,
       "type": "stat",
       "title": "Unread: support@tahti.live",
       "description": "Unread mails to support@tahti.live (alias to jani@tahti.live). Source: doveadm via mail-metrics.sh on vimage6, scraped every 60s.",
@@ -1616,7 +1681,7 @@
       ]
     },
     {
-      "id": 33,
+      "id": 34,
       "type": "stat",
       "title": "Inbox exporter",
       "description": "mail-exporter on vimage6 (:9275) serving doveadm counts.",
@@ -1680,7 +1745,7 @@
       ]
     },
     {
-      "id": 34,
+      "id": 35,
       "type": "row",
       "title": "CPU & load",
       "gridPos": {
@@ -1692,7 +1757,7 @@
       "collapsed": false
     },
     {
-      "id": 35,
+      "id": 36,
       "type": "timeseries",
       "title": "CPU usage %",
       "description": "",
@@ -1724,14 +1789,14 @@
       },
       "targets": [
         {
-          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m])) * 100)",
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}[5m])) * 100)",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 36,
+      "id": 37,
       "type": "timeseries",
       "title": "Load average (1m)",
       "description": "",
@@ -1763,14 +1828,14 @@
       },
       "targets": [
         {
-          "expr": "node_load1{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}",
+          "expr": "node_load1{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 37,
+      "id": 38,
       "type": "row",
       "title": "Memory",
       "gridPos": {
@@ -1782,7 +1847,7 @@
       "collapsed": false
     },
     {
-      "id": 38,
+      "id": 39,
       "type": "timeseries",
       "title": "Memory used %",
       "description": "",
@@ -1814,14 +1879,14 @@
       },
       "targets": [
         {
-          "expr": "(1 - node_memory_MemAvailable_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"} / node_memory_MemTotal_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}) * 100",
+          "expr": "(1 - node_memory_MemAvailable_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"} / node_memory_MemTotal_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}) * 100",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 39,
+      "id": 40,
       "type": "row",
       "title": "Disk space & I/O",
       "gridPos": {
@@ -1833,7 +1898,7 @@
       "collapsed": false
     },
     {
-      "id": 40,
+      "id": 41,
       "type": "bargauge",
       "title": "Root filesystem free %",
       "gridPos": {
@@ -1883,7 +1948,7 @@
       },
       "targets": [
         {
-          "expr": "(node_filesystem_avail_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"}) * 100",
+          "expr": "(node_filesystem_avail_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"}) * 100",
           "legendFormat": "{{instance}}",
           "instant": true,
           "refId": "A"
@@ -1891,7 +1956,7 @@
       ]
     },
     {
-      "id": 41,
+      "id": 42,
       "type": "timeseries",
       "title": "Root disk used %",
       "description": "",
@@ -1923,14 +1988,14 @@
       },
       "targets": [
         {
-          "expr": "(1 - node_filesystem_avail_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"}) * 100",
+          "expr": "(1 - node_filesystem_avail_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"}) * 100",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 42,
+      "id": 43,
       "type": "timeseries",
       "title": "Disk read throughput",
       "description": "",
@@ -1962,14 +2027,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_disk_read_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_disk_read_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 43,
+      "id": 44,
       "type": "timeseries",
       "title": "Disk write throughput",
       "description": "",
@@ -2001,14 +2066,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_disk_written_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_disk_written_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 44,
+      "id": 45,
       "type": "timeseries",
       "title": "Disk read IOPS",
       "description": "",
@@ -2040,14 +2105,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_disk_reads_completed_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_disk_reads_completed_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 45,
+      "id": 46,
       "type": "timeseries",
       "title": "Disk write IOPS",
       "description": "",
@@ -2079,14 +2144,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_disk_writes_completed_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_disk_writes_completed_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 46,
+      "id": 47,
       "type": "row",
       "title": "Network",
       "gridPos": {
@@ -2098,7 +2163,7 @@
       "collapsed": false
     },
     {
-      "id": 47,
+      "id": 48,
       "type": "timeseries",
       "title": "Network receive",
       "description": "",
@@ -2130,14 +2195,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 48,
+      "id": 49,
       "type": "timeseries",
       "title": "Network transmit",
       "description": "",
@@ -2169,14 +2234,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 49,
+      "id": 50,
       "type": "timeseries",
       "title": "Network receive errors",
       "description": "",
@@ -2208,14 +2273,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_network_receive_errs_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_network_receive_errs_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 50,
+      "id": 51,
       "type": "timeseries",
       "title": "Network transmit errors",
       "description": "",
@@ -2247,14 +2312,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (rate(node_network_transmit_errs_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
+          "expr": "sum by (instance) (rate(node_network_transmit_errs_total{instance=~\"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|tahti-local|pi4|pi5|web\",device!~\"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*\"}[5m]))",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 51,
+      "id": 52,
       "type": "row",
       "title": "Tahti containers on vimage",
       "gridPos": {
@@ -2266,7 +2331,7 @@
       "collapsed": false
     },
     {
-      "id": 52,
+      "id": 53,
       "type": "timeseries",
       "title": "Container CPU (cores)",
       "description": "",
@@ -2305,7 +2370,7 @@
       ]
     },
     {
-      "id": 53,
+      "id": 54,
       "type": "timeseries",
       "title": "Container memory",
       "description": "",
@@ -2344,7 +2409,7 @@
       ]
     },
     {
-      "id": 54,
+      "id": 55,
       "type": "timeseries",
       "title": "Blackbox probe duration (lab)",
       "description": "",
@@ -2383,7 +2448,7 @@
       ]
     },
     {
-      "id": 55,
+      "id": 56,
       "type": "timeseries",
       "title": "Dependency check latency",
       "description": "",
@@ -2422,7 +2487,7 @@
       ]
     },
     {
-      "id": 56,
+      "id": 57,
       "type": "row",
       "title": "Worker nodes (vimage / vimage4 / vimage7) & job queue",
       "gridPos": {
@@ -2434,7 +2499,7 @@
       "collapsed": false
     },
     {
-      "id": 57,
+      "id": 58,
       "type": "timeseries",
       "title": "Worker node CPU (cores)",
       "description": "",
@@ -2473,7 +2538,7 @@
       ]
     },
     {
-      "id": 58,
+      "id": 59,
       "type": "timeseries",
       "title": "Worker node memory",
       "description": "",
@@ -2512,7 +2577,7 @@
       ]
     },
     {
-      "id": 59,
+      "id": 60,
       "type": "timeseries",
       "title": "Job queue length (waiting + active)",
       "description": "",
@@ -2551,7 +2616,7 @@
       ]
     },
     {
-      "id": 60,
+      "id": 61,
       "type": "timeseries",
       "title": "Encoding (transcode lane) queue length",
       "description": "ffmpeg-heavy jobs \u2014 separate-stems, transcode-archive, etc. (see packages/shared/src/worker-job-lanes.ts). These are the jobs vimage7's GPU worker picks up.",
@@ -2590,7 +2655,7 @@
       ]
     },
     {
-      "id": 61,
+      "id": 62,
       "type": "row",
       "title": "Logs (Loki)",
       "gridPos": {
@@ -2602,7 +2667,7 @@
       "collapsed": false
     },
     {
-      "id": 62,
+      "id": 63,
       "type": "logs",
       "title": "Container logs \u2014 all services",
       "description": "Every container in the prod stack ships here via the docker loki logging driver. Filter by service in the query editor, e.g. {job=\"tahti\", service=\"tahti-stack-api-1\"}.",
@@ -2638,7 +2703,7 @@
       ]
     },
     {
-      "id": 63,
+      "id": 64,
       "type": "logs",
       "title": "API errors",
       "description": "API container log lines containing \"error\" (case-sensitive substring match).",

@@ -227,41 +227,49 @@ jobs that already exist directly in vimage6's own `prometheus.yml` — **not**
 managed by this repo's `prometheus-tahti.snippet.yml`, so some of this is a
 manual step on vimage6 itself, not a code change here.
 
-- [ ] Install/run `node_exporter` and `cAdvisor` on tahti.local (same as the
-      other `vimageN` boxes — check vimage's own install for the exact
-      compose/systemd setup to copy).
-- [ ] Install/run whatever the `docker-catalog` exporter is on tahti.local
-      too (it's not vendored in this repo — find its source/install method
-      on an existing host, likely vimage6 itself or vimage).
-- [ ] On vimage6: add `tahti.local` (or its chosen instance label, e.g.
-      `tahti-local`) as a scrape target under the existing `node`,
-      `cadvisor`, and `docker-catalog` jobs in vimage6's `prometheus.yml`
-      (manual edit on the host — outside this repo's managed snippet).
-- [ ] In this repo: add the new instance label to `HOSTS` in
+- [x] 2026-09-23: Installed `node_exporter`, `cAdvisor`, and the
+      `docker-catalog` exporter on tahti.local (same run config as vimage's:
+      host network + host PID for node-exporter; exporter script + empty
+      `url-overrides.json` copied to `~/monitoring/` since `/opt` needs root
+      and the sudoers scope doesn't cover arbitrary `mkdir`). Confirmed
+      `:9100`/`:8081`/`:9096` all serving metrics locally, `docker-catalog`
+      already discovering the `minio` container correctly.
+- [x] 2026-09-23: Added `192.168.2.107` (`tahti-local`) as a target + a
+      relabel block (`instance`/`host_ip`) to the `node`, `cadvisor`, and
+      `docker-catalog` jobs directly in vimage6's live `prometheus.yml`
+      (manual edit, outside the managed snippet — confirmed the diff
+      touched nothing else, validated with `promtool check config` before
+      `curl -X POST :9090/-/reload`).
+- [x] 2026-09-23: firewalld on tahti.local was blocking all of this from
+      LAN (targets showed `down` until opened) — added `9100/8081/9096`
+      (exporters) and `9000/9001` (MinIO S3/console) via
+      `firewall-cmd --permanent --add-port` + `--reload`. Not in the
+      original checklist; worth remembering for any future service added
+      on this host.
+- [x] 2026-09-23: Added `tahti-local` to `HOSTS` in
       `ops/monitoring/vimage6/generate-tahti-infrastructure-dashboard.py`
-      (currently `"vimage|vimage2|vimage3|vimage4|vimage5|vimage6|vimage7|
-pi4|pi5|web"`), then regenerate:
-      `python3 ops/monitoring/vimage6/generate-tahti-infrastructure-dashboard.py`
-      This alone puts the new host into every CPU/load/memory/disk/network
-      panel on the **Tahti — infrastructure & services** dashboard.
-- [ ] Once MinIO (or anything else) actually runs on tahti.local, add
-      matching blackbox probes to
-      `ops/monitoring/vimage6/prometheus-tahti.snippet.yml`'s
-      `tahti_blackbox` job — mirror the existing vimage MinIO probe
-      (`http://192.168.2.100:19000/minio/health/live` → add a
-      `http://192.168.2.107:9000/minio/health/live` entry with `host:
-tahti-local` label), same for any other exposed health endpoint.
-- [ ] If tahti.local hosts a worker (transcode/backup-verify/etc. — see
-      decision above), add it to the "Worker nodes" panel query in
-      `generate-tahti-infrastructure-dashboard.py`
-      (`instance=~"vimage|vimage4|vimage7"` around line ~755 — extend the
-      regex).
-- [ ] Redeploy: `./ops/monitoring/vimage6/deploy.sh` (regenerates +
-      scp's + patches vimage6's Prometheus config + reloads).
-- [ ] Verify in Grafana (`http://192.168.2.105:3000` or
-      `https://grafana.tahti.live`) → **Tahti — infrastructure & services**:
-      tahti.local shows up in every host-scoped panel, `up{instance="..."}
-== 1` for `node`/`cadvisor`/`docker-catalog`.
+      and regenerated `tahti-infrastructure.json`. Puts the host into every
+      CPU/load/memory/disk/network panel on the **Tahti — infrastructure &
+      services** dashboard.
+- [x] 2026-09-23: Added a blackbox probe for tahti.local's MinIO
+      (`http://192.168.2.107:9000/minio/health/live`, `host: tahti-local`
+      label, own `static_configs` entry alongside vimage's existing MinIO
+      probe in the same `tahti_blackbox` job) to
+      `ops/monitoring/vimage6/prometheus-tahti.snippet.yml`.
+- [ ] tahti.local doesn't host a worker (MinIO only) — the "Worker nodes"
+      panel regex (`instance=~"vimage|vimage4|vimage7"`,
+      `generate-tahti-infrastructure-dashboard.py` ~line 755) is correctly
+      left alone; revisit only if a worker is ever added here.
+- [x] 2026-09-23: Redeployed via `./ops/monitoring/vimage6/deploy.sh` —
+      `promtool check config` passed, Prometheus + Grafana both reloaded
+      without restart, no errors.
+- [x] 2026-09-23: Verified via Prometheus's own `/api/v1/targets` (not yet
+      visually confirmed in the Grafana UI): `node`/`cadvisor`/
+      `docker-catalog`/`tahti_blackbox` all report `health: up` for
+      `tahti-local`. **Still open:** eyeball the actual Grafana panels
+      (`http://192.168.2.105:3000` → Tahti — infrastructure & services) to
+      confirm the host renders correctly, not just that Prometheus scrapes
+      it.
 - [ ] Update `ops/monitoring/vimage6/README.md`'s host list line ("Existing
       Prometheus jobs on vimage6 already scrape... on: `vimage, vimage2–
 vimage5, vimage6, pi4, pi5, web`") to include tahti.local/vimage7 (that
