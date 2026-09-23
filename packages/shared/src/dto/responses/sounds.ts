@@ -26,6 +26,20 @@ export const SoundListSchema = z.array(SoundViewSchema)
  * full-metadata payload just to read `.length`). */
 export const CountSchema = z.object({ count: z.number().int() })
 
+/** The studio top bar's upload indicator: sounds still being processed, and
+ * the final status of the watched ids (uploads started in this browser)
+ * once they finish. */
+export const SoundProcessingStatusSchema = z.object({
+  processing: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      status: z.enum(['PENDING', 'PROCESSING']),
+    }),
+  ),
+  settled: z.array(z.object({ id: z.string(), status: z.enum(['READY', 'ERROR']) })),
+})
+
 // PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to
 // pull the full 100-item, full-metadata payload GET /api/me/sound returns.
 export const SoundRecentSchema = z.array(

@@ -210,6 +210,19 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         data.coverKey = null
       }
 
+      if (body.visibility !== undefined) {
+        data.visibility = body.visibility
+        if (body.isPublic === undefined) data.isPublic = body.visibility === 'PUBLIC'
+      }
+      // The gallery lives on the same row, so details and backdrop save in
+      // one update: either both are stored or neither is.
+      if (body.gallery) {
+        const { galleryMode, slideshowImages, videoBackgroundUrl } = body.gallery
+        if (galleryMode !== undefined) data.galleryMode = galleryMode
+        if (slideshowImages !== undefined) data.slideshowImages = slideshowImages
+        if (videoBackgroundUrl !== undefined) data.videoBackgroundUrl = videoBackgroundUrl
+      }
+
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
       if (body.coverUrl !== undefined && updated.coverUrl) {
         refreshCollectionCoverPalette(fastify.prisma, updated.id, updated.coverUrl)

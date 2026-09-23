@@ -109,6 +109,30 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(count.json()).toEqual({ count: list.json().length })
   })
 
+  it('reports processing sounds and the final status of watched ids', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/sound/processing?ids=${soundId},not-a-sound`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      processing: Array<{ id: string; status: string }>
+      settled: Array<{ id: string; status: string }>
+    }
+    expect(body.processing.every((s) => s.status === 'PENDING' || s.status === 'PROCESSING')).toBe(
+      true,
+    )
+    const watched = [...body.processing, ...body.settled].filter((s) => s.id === soundId)
+    expect(watched).toHaveLength(1)
+    expect(body.settled.some((s) => s.id === 'not-a-sound')).toBe(false)
+  })
+
+  it('requires auth for the processing status', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/me/sound/processing' })
+    expect(res.statusCode).toBe(401)
+  })
+
   it('rejects empty title updates', async () => {
     const patch = await app.inject({
       method: 'PATCH',
