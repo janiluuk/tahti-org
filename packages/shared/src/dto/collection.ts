@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { CollectionGalleryPatchSchema } from './collection-theme.js'
 
 export const COLLECTION_TYPES = ['MIX_SERIES', 'ALBUM', 'CUSTOM'] as const
 
@@ -40,6 +41,19 @@ export const PatchCollectionSchema = z
     isFeatured: z.boolean().optional(),
     collaborative: z.boolean().optional(),
     coverUrl: z.string().max(500).nullable().optional(),
+    /** Calendar date, `YYYY-MM-DD`; null clears it. */
+    releaseDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'releaseDate must be YYYY-MM-DD')
+      .nullable()
+      .optional(),
+    genres: z.array(z.string().trim().min(1).max(40)).max(5).optional(),
+    backdropUrl: z.string().url().max(2048).nullable().optional(),
+    /** Also sets `isPublic` (PUBLIC ⇒ true) unless that is sent too. */
+    visibility: z.enum(['PUBLIC', 'UNLISTED', 'DRAFT']).optional(),
+    /** Backdrop gallery, saved in the same update as the details (same
+     * fields as PATCH /api/me/collections/:slug/gallery). */
+    gallery: CollectionGalleryPatchSchema.optional(),
   })
   .refine((body) => Object.keys(body).length > 0, { message: 'No fields to update' })
 

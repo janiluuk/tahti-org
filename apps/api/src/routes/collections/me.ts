@@ -21,6 +21,17 @@ import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { addManagementPlayback, collectionItemInclude, zodError } from './helpers.js'
 
+/** `releaseDate` is a calendar date: send it as `YYYY-MM-DD`, not a
+ * midnight-UTC timestamp the editor's date input can't show. */
+function withDateOnly<T extends { releaseDate: Date | null }>(
+  col: T,
+): Omit<T, 'releaseDate'> & { releaseDate: string | null } {
+  return {
+    ...col,
+    releaseDate: col.releaseDate ? col.releaseDate.toISOString().slice(0, 10) : null,
+  }
+}
+
 const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── Artist-facing management ─────────────────────────────────────────────
 
@@ -91,7 +102,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send(
       await addManagementPlayback(
         fastify,
-        { ...col, coverUrl: await resolveCollectionCoverUrl(col) },
+        { ...withDateOnly(col), coverUrl: await resolveCollectionCoverUrl(col) },
         user.id,
       ),
     )
@@ -210,11 +221,29 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         data.coverKey = null
       }
 
+      if (body.releaseDate !== undefined) {
+        data.releaseDate = body.releaseDate ? new Date(`${body.releaseDate}T00:00:00Z`) : null
+      }
+      if (body.genres !== undefined) data.genres = body.genres
+      if (body.backdropUrl !== undefined) data.backdropUrl = body.backdropUrl
+      if (body.visibility !== undefined) {
+        data.visibility = body.visibility
+        if (body.isPublic === undefined) data.isPublic = body.visibility === 'PUBLIC'
+      }
+      // The gallery lives on the same row, so details and backdrop save in
+      // one update: either both are stored or neither is.
+      if (body.gallery) {
+        const { galleryMode, slideshowImages, videoBackgroundUrl } = body.gallery
+        if (galleryMode !== undefined) data.galleryMode = galleryMode
+        if (slideshowImages !== undefined) data.slideshowImages = slideshowImages
+        if (videoBackgroundUrl !== undefined) data.videoBackgroundUrl = videoBackgroundUrl
+      }
+
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
       if (body.coverUrl !== undefined && updated.coverUrl) {
         refreshCollectionCoverPalette(fastify.prisma, updated.id, updated.coverUrl)
       }
-      return reply.send(updated)
+      return reply.send(withDateOnly(updated))
     },
   )
 

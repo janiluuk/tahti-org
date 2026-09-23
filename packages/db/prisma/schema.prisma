@@ -3291,6 +3291,12 @@ model Collection {
   smartLinksJson     Json?
   trackSortMode      CollectionTrackSortMode @default(MANUAL)
 
+  // Collection editor details: album-style release date (a calendar date,
+  // no time), up to 5 genres, and the headline backdrop image.
+  releaseDate DateTime? @db.Date
+  genres      String[]
+  backdropUrl String?
+
   // M26: per-collection backdrop theme (independent of the channel-wide theme)
   galleryMode        CollectionGalleryMode    @default(NONE)
   slideshowImages    String[]

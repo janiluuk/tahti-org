@@ -6,6 +6,7 @@ import { Prisma } from '@tahti/db'
 import { createHearthisClient } from '@tahti/hearthis'
 import {
   CountSchema,
+  SoundProcessingStatusSchema,
   SoundListSchema,
   SoundListQuerySchema,
   SoundRecentSchema,
@@ -121,6 +122,57 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       const count = await fastify.prisma.sound.count({ where: { channelId: channel.id } })
       return reply.send({ count })
+    },
+  )
+
+  /** Most ids a caller can ask to watch in one request. */
+  const MAX_WATCHED_IDS = 50
+
+  // The top bar polls this while uploads process, instead of the full
+  // GET /api/me/sound list (every sound's metadata) every few seconds.
+  fastify.get(
+    '/api/me/sound/processing',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Sounds still processing, plus the final status of `ids` (comma-separated) once they are done',
+        response: openApiResponse(SoundProcessingStatusSchema, 'SoundProcessingStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const rawIds = (request.query as { ids?: unknown }).ids
+      const ids =
+        typeof rawIds === 'string'
+          ? rawIds
+              .split(',')
+              .map((id) => id.trim())
+              .filter(Boolean)
+              .slice(0, MAX_WATCHED_IDS)
+          : []
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send({ processing: [], settled: [] })
+
+      const [processing, settled] = await Promise.all([
+        fastify.prisma.sound.findMany({
+          where: { channelId: channel.id, status: { in: ['PENDING', 'PROCESSING'] } },
+          orderBy: { createdAt: 'desc' },
+          take: MAX_WATCHED_IDS,
+          select: { id: true, title: true, status: true },
+        }),
+        ids.length > 0
+          ? fastify.prisma.sound.findMany({
+              where: { channelId: channel.id, id: { in: ids }, status: { in: ['READY', 'ERROR'] } },
+              select: { id: true, status: true },
+            })
+          : Promise.resolve([]),
+      ])
+      return reply.send({ processing, settled })
     },
   )
 
