@@ -65,6 +65,14 @@ export const EditFilterSchema = z.object({
   slope: z.enum(FILTER_SLOPES),
 })
 
+/** Mastering plugins the v1 editor chains, in the user's order. */
+export const CHAIN_PLUGIN_IDS = ['eq', 'comp', 'limiter', 'filter'] as const
+
+export const EditMarkerSchema = z.object({
+  at: z.number().finite().min(0),
+  label: z.string().max(80).optional(),
+})
+
 export const EditListSchema = z.object({
   version: z.literal(1),
   sourceDuration: z.number().finite().min(0.000001),
@@ -84,6 +92,12 @@ export const EditListSchema = z.object({
   /** v0 trim HP/LP filters (Hz, 0 = off). */
   highPassHz: z.number().finite().min(0).max(2000).default(0),
   lowPassHz: z.number().finite().min(0).max(20000).default(0),
+  /** Plugins in the mastering chain, in processing order. When present the
+   * render applies exactly these (if enabled), in this order, after gain;
+   * absent on older drafts, which keep the fixed filter/eq/comp/limiter order. */
+  pluginChain: z.array(z.enum(CHAIN_PLUGIN_IDS)).max(CHAIN_PLUGIN_IDS.length).optional(),
+  /** Editor markers (navigation only; not rendered). */
+  markers: z.array(EditMarkerSchema).max(200).optional(),
 })
 
 export type EditCut = z.infer<typeof EditCutSchema>
@@ -98,6 +112,8 @@ export type EditFilter = z.infer<typeof EditFilterSchema>
 export type LoudnormMeasured = z.infer<typeof LoudnormMeasuredSchema>
 export type EditLoudnorm = z.infer<typeof EditLoudnormSchema>
 export type EditList = z.infer<typeof EditListSchema>
+export type EditMarker = z.infer<typeof EditMarkerSchema>
+export type ChainPluginId = (typeof CHAIN_PLUGIN_IDS)[number]
 
 export interface KeepSegment {
   start: number
@@ -232,4 +248,22 @@ export interface PeaksPyramid {
   zeroCrossingsSec?: number[]
   /** Quiet regions for quick navigation chips */
   silenceRegionsSec?: Array<{ start: number; end: number }>
+  /** Finer peaks for long sources, stored as a separate binary object (see
+   * `encodeFinePeaks`): the browser does not decode files this long itself. */
+  fine?: FinePeaksRef
 }
+
+/** Where a source's fine peaks live and how to read them. */
+export interface FinePeaksRef {
+  key: string
+  bucketsPerSec: number
+  channels: number
+  bucketCount: number
+}
+
+/** Fine peaks resolution: one min/max pair per channel every 10 ms. */
+export const FINE_PEAKS_BUCKETS_PER_SEC = 100
+
+/** Sources at least this long get fine peaks (shorter ones are decoded in
+ * the browser at full resolution). */
+export const FINE_PEAKS_MIN_DURATION_SEC = 20 * 60

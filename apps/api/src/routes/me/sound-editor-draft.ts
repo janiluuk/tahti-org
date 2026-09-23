@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { createDefaultEditList, validateEditList } from '@tahti/audio-edit'
+import {
+  createDefaultEditList,
+  needsFinePeaks,
+  validateEditList,
+  type PeaksPyramid,
+} from '@tahti/audio-edit'
 import {
   SoundEditListDraftPatchResponseSchema,
   SoundEditListDraftPatchSchema,
@@ -14,6 +19,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveSoundEditorSource } from '../../lib/sound-editor-source.js'
 import { enqueueBackfillEditorPeaks } from '../../lib/queue.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 import { ownedItem } from './sound-editor-helpers.js'
 
 const meSoundEditorDraftRoutes: FastifyPluginAsync = async (fastify) => {
@@ -49,15 +55,29 @@ const meSoundEditorDraftRoutes: FastifyPluginAsync = async (fastify) => {
           ? validation.edit
           : createDefaultEditList(Math.max(1, duration))
 
-      if (!item.editorPeaks) {
+      if (!item.editorPeaks || needsFinePeaks(duration, item.editorPeaks)) {
         void enqueueBackfillEditorPeaks(id).catch(() => {})
       }
+      const storedPeaks = item.editorPeaks as unknown as PeaksPyramid | null
+      const editorPeaks = storedPeaks
+        ? {
+            ...storedPeaks,
+            fine: storedPeaks.fine
+              ? {
+                  url: await presignedGetUrl(storedPeaks.fine.key),
+                  bucketsPerSec: storedPeaks.fine.bucketsPerSec,
+                  channels: storedPeaks.fine.channels,
+                  bucketCount: storedPeaks.fine.bucketCount,
+                }
+              : undefined,
+          }
+        : null
 
       return reply.send({
         editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
         updatedAt: item.updatedAt.toISOString(),
         tracklist: Array.isArray(item.tracklist) ? item.tracklist : null,
-        editorPeaks: item.editorPeaks ?? null,
+        editorPeaks,
       })
     },
   )

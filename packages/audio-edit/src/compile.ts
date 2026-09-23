@@ -4,6 +4,7 @@
 import { computeKeepSegments, mergeCuts, postCutDuration, sourceTimeToPostCut } from './segments.js'
 import type {
   CompileOptions,
+  ChainPluginId,
   CompiledGraph,
   EditFade,
   EditList,
@@ -158,6 +159,48 @@ function formatSec(n: number): string {
   return Number(n.toFixed(4)).toString()
 }
 
+const CHAIN_STAGES: Record<
+  ChainPluginId,
+  {
+    build: (inputLabel: string, edit: EditList) => string
+    output: string
+    enabled: (edit: EditList) => boolean
+  }
+> = {
+  filter: { build: buildFilterStage, output: '[filt]', enabled: (e) => e.filter.enabled },
+  eq: { build: buildEqStage, output: '[eq]', enabled: (e) => e.eq.enabled },
+  comp: { build: buildCompStage, output: '[cmp]', enabled: (e) => e.comp.enabled },
+  limiter: { build: buildLimiterStage, output: '[lim]', enabled: (e) => e.limiter.enabled },
+}
+
+/** Stages for a draft with a `pluginChain`: cuts, HP/LP, fades and gain as
+ * usual, then only the chained (and enabled) plugins in the user's order —
+ * the same order the editor's live preview plays them in. */
+function chainedStages(
+  cutFilter: string,
+  chainLabel: string,
+  edit: EditList,
+  segments: KeepSegment[],
+): string[] {
+  const stages = [
+    cutFilter,
+    buildHpLpStage(chainLabel, edit),
+    buildFadeStage('[fhp]', edit.fades, segments),
+    buildGainStage('[fad]', edit.gainDb),
+  ]
+  let label = '[g]'
+  const seen = new Set<ChainPluginId>()
+  for (const id of edit.pluginChain ?? []) {
+    const stage = CHAIN_STAGES[id]
+    if (seen.has(id) || !stage.enabled(edit)) continue
+    seen.add(id)
+    stages.push(stage.build(label, edit))
+    label = stage.output
+  }
+  stages.push(buildLoudnormStage(label, edit))
+  return stages
+}
+
 export function compileFiltergraph(edit: EditList, options: CompileOptions = {}): CompiledGraph {
   const inputLabel = options.inputLabel ?? '[0:a]'
   const segments = computeKeepSegments(edit.sourceDuration, mergeCuts(edit.cuts))
@@ -175,17 +218,19 @@ export function compileFiltergraph(edit: EditList, options: CompileOptions = {})
     chainLabel = `[${cutStage.label}]`
   }
 
-  const stages = [
-    cutStage.filter,
-    buildHpLpStage(chainLabel, edit),
-    buildFilterStage('[fhp]', edit),
-    buildFadeStage('[filt]', edit.fades, segments),
-    buildGainStage('[fad]', edit.gainDb),
-    buildEqStage('[g]', edit),
-    buildCompStage('[eq]', edit),
-    buildLimiterStage('[cmp]', edit),
-    buildLoudnormStage('[lim]', edit),
-  ]
+  const stages = edit.pluginChain
+    ? chainedStages(cutStage.filter, chainLabel, edit, segments)
+    : [
+        cutStage.filter,
+        buildHpLpStage(chainLabel, edit),
+        buildFilterStage('[fhp]', edit),
+        buildFadeStage('[filt]', edit.fades, segments),
+        buildGainStage('[fad]', edit.gainDb),
+        buildEqStage('[g]', edit),
+        buildCompStage('[eq]', edit),
+        buildLimiterStage('[cmp]', edit),
+        buildLoudnormStage('[lim]', edit),
+      ]
 
   return {
     filtergraph: stages.join(';'),
