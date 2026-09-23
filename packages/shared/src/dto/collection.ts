@@ -41,6 +41,14 @@ export const PatchCollectionSchema = z
     isFeatured: z.boolean().optional(),
     collaborative: z.boolean().optional(),
     coverUrl: z.string().max(500).nullable().optional(),
+    /** Calendar date, `YYYY-MM-DD`; null clears it. */
+    releaseDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'releaseDate must be YYYY-MM-DD')
+      .nullable()
+      .optional(),
+    genres: z.array(z.string().trim().min(1).max(40)).max(5).optional(),
+    backdropUrl: z.string().url().max(2048).nullable().optional(),
     /** Also sets `isPublic` (PUBLIC ⇒ true) unless that is sent too. */
     visibility: z.enum(['PUBLIC', 'UNLISTED', 'DRAFT']).optional(),
     /** Backdrop gallery, saved in the same update as the details (same

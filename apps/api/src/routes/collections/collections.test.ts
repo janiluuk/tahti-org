@@ -345,6 +345,56 @@ describe('M23 — collections and RSS', () => {
     expect(restore.json()).toMatchObject({ visibility: 'PUBLIC', isPublic: true })
   })
 
+  it('stores release date, genres and backdrop, returning the date as YYYY-MM-DD', async () => {
+    const backdrop = 'https://cdn.example.com/backdrop.jpg'
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+      payload: { releaseDate: '2026-10-02', genres: ['Techno', 'Ambient'], backdropUrl: backdrop },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json()).toMatchObject({
+      releaseDate: '2026-10-02',
+      genres: ['Techno', 'Ambient'],
+      backdropUrl: backdrop,
+    })
+
+    const mine = await app.inject({
+      method: 'GET',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+    })
+    expect(mine.json()).toMatchObject({
+      releaseDate: '2026-10-02',
+      genres: ['Techno', 'Ambient'],
+      backdropUrl: backdrop,
+    })
+
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+      payload: { releaseDate: null, genres: [], backdropUrl: null },
+    })
+    expect(cleared.json()).toMatchObject({ releaseDate: null, genres: [], backdropUrl: null })
+  })
+
+  it('rejects a malformed release date and more than 5 genres', async () => {
+    for (const payload of [
+      { releaseDate: '02.10.2026' },
+      { genres: ['a', 'b', 'c', 'd', 'e', 'f'] },
+    ]) {
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/me/collections/${collectionSlug}`,
+        headers: { cookie },
+        payload,
+      })
+      expect(res.statusCode).toBe(400)
+    }
+  })
+
   it('rejects the whole PATCH when the gallery is invalid, saving nothing', async () => {
     const patch = await app.inject({
       method: 'PATCH',
