@@ -81,6 +81,12 @@ export const config = {
   port: parseInt(process.env.PORT ?? '3001', 10),
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://tahti:tahti_dev@localhost:5432/tahti',
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  /** Per-command Redis timeout. Normal commands answer in well under 1ms; the
+   * node-redis default of 5s let a disk-stalled Redis hold requests for tens of
+   * seconds (several sequential commands per request). */
+  redisCommandTimeoutMs: parseInt(process.env.REDIS_COMMAND_TIMEOUT_MS ?? '500', 10),
+  /** After a Redis timeout, cache and rate-limit paths skip Redis for this long. */
+  redisSlowBypassMs: parseInt(process.env.REDIS_SLOW_BYPASS_MS ?? '5000', 10),
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days

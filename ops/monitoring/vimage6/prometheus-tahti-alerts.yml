@@ -57,3 +57,37 @@ groups:
             Ingest fingerprint enrichment is calling ACRCloud heavily ({{ $value | humanize }}
             requests in the last hour). Only applies when ACRCLOUD_ENABLED=true in production.
             Check live channel count and ACRCloud billing dashboard.
+
+  - name: tahti-api-latency
+    rules:
+      # Only sum/count are exported (no histogram), so this is mean latency.
+      # Healthy peaks are ~50ms; the 2026-09-22/23 disk-stall episodes ran 100ms-16s.
+      - alert: TahtiApiMeanLatencyHigh
+        expr: |
+          rate(tahti_http_request_duration_ms_sum{job="tahti_api_metrics"}[10m])
+          / rate(tahti_http_request_duration_ms_count{job="tahti_api_metrics"}[10m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: tahti
+        annotations:
+          summary: API mean response time above 100ms
+          description: >-
+            Mean API response time is {{ $value | humanize }}ms over 10m. Past cause: a
+            saturated disk on vimage stalling Redis (see TahtiVimageDiskSaturated). Check
+            Loki for `responseTimeMs` bursts and `[redis] command timed out` warnings.
+
+  - name: tahti-host-disk
+    rules:
+      - alert: TahtiVimageDiskSaturated
+        expr: rate(node_disk_io_time_seconds_total{instance="vimage"}[5m]) > 0.8
+        for: 15m
+        labels:
+          severity: warning
+          service: tahti
+        annotations:
+          summary: 'vimage disk {{ $labels.device }} busy >80% for 15m'
+          description: >-
+            Device {{ $labels.device }} on vimage is {{ $value | humanizePercentage }} busy.
+            Redis (AOF) and Postgres on a saturated disk stall API requests. Find the
+            writer with cAdvisor `container_fs_writes_total` and `mc admin trace` for MinIO.

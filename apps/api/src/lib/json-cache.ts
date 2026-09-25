@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { getRedisClient } from './redis.js'
+import { getOptionalRedisClient, getRedisClient, noteRedisFailure } from './redis.js'
 
 // Coalesce concurrent misses in this API process. Redis prevents repeated work
 // across requests after the first value is written, while this map prevents a
@@ -17,14 +17,14 @@ export async function getCachedJson<T>(
   ttlSec: number,
   compute: () => Promise<T>,
 ): Promise<T> {
-  const redis = await getRedisClient()
+  const redis = await getOptionalRedisClient()
   if (!redis) return compute()
 
   try {
     const cached = await redis.get(key)
     if (cached) return JSON.parse(cached) as T
-  } catch {
-    // fall through to compute on cache read errors
+  } catch (err) {
+    noteRedisFailure(err)
   }
 
   const current = inFlight.get(key) as Promise<T> | undefined
@@ -32,11 +32,8 @@ export async function getCachedJson<T>(
 
   const pending = (async () => {
     const value = await compute()
-    try {
-      await redis.set(key, JSON.stringify(value), { EX: ttlSec })
-    } catch {
-      // ignore cache write errors
-    }
+    // Not awaited: the response shouldn't wait on a cache write.
+    redis.set(key, JSON.stringify(value), { EX: ttlSec }).catch(noteRedisFailure)
     return value
   })()
   inFlight.set(key, pending)

@@ -13,10 +13,11 @@ Status values: `open` | `blocked` | `partial`.
 One file per in-progress task. When a task ships, fold it into
 [`HISTORY.md`](HISTORY.md) and delete the file — see `CLAUDE.md`.
 
-| Status | File                                                                                   | One-line                                                                                                                         |
-| ------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| open   | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards |
-| open   | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection      |
+| Status  | File                                                                                   | One-line                                                                                                                                                                |
+| ------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partial | [api-redis-stall-resilience.md](api-redis-stall-resilience.md)                         | Redis command timeout + short bypass after a timeout so a stalled Redis can't hold API requests; latency and disk alerts. Left: deploy, and move Redis off vimage's HDD |
+| open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                        |
+| open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                             |
 
 ## Roadmap & planning (broader than a single task)
 
