@@ -1,15 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, type Prisma } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+/** Queries at or above this duration are logged as `slow_query`; 0 disables. */
+const slowQueryMs = parseInt(process.env.PRISMA_SLOW_QUERY_MS ?? '200', 10)
+
+function createPrismaClient(): PrismaClient {
+  if (process.env.NODE_ENV === 'development') {
+    return new PrismaClient({ log: ['query', 'error', 'warn'] })
+  }
+  if (!(slowQueryMs > 0)) return new PrismaClient({ log: ['error'] })
+
+  const client = new PrismaClient({
+    log: [{ emit: 'event', level: 'query' }, 'error'],
   })
+  client.$on('query', (e: Prisma.QueryEvent) => {
+    if (e.duration < slowQueryMs) return
+    // Params are deliberately omitted: they can carry user data.
+    console.warn(
+      JSON.stringify({
+        event: 'slow_query',
+        durationMs: e.duration,
+        query: e.query.slice(0, 1000),
+      }),
+    )
+  })
+  return client as unknown as PrismaClient
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma

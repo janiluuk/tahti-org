@@ -87,6 +87,8 @@ export const config = {
   redisCommandTimeoutMs: parseInt(process.env.REDIS_COMMAND_TIMEOUT_MS ?? '500', 10),
   /** After a Redis timeout, cache and rate-limit paths skip Redis for this long. */
   redisSlowBypassMs: parseInt(process.env.REDIS_SLOW_BYPASS_MS ?? '5000', 10),
+  /** How long /health, /metrics and /api/v1/status reuse one dependency probe. */
+  healthCheckCacheMs: parseInt(process.env.HEALTH_CHECK_CACHE_MS ?? '5000', 10),
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days

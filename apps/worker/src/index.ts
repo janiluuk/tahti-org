@@ -68,6 +68,7 @@ import {
   resolveWorkerName,
   pruneStaleWorkers,
 } from './lib/worker-registry.js'
+import { JOB_RETENTION } from './lib/job-retention.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -258,7 +259,14 @@ const worker = new Worker(
   // Explicit and per-container-tunable rather than silently defaulting to
   // BullMQ's factory concurrency of 1 — set WORKER_CONCURRENCY to match each
   // container's actual CPU/memory allocation in infra/docker-stack.yml.
-  { connection, concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? '1', 10) },
+  {
+    connection,
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? '1', 10),
+    // Repeatable (cron) ticks don't carry removeOnComplete/removeOnFail in their
+    // stored job options even when registerCrons passes them; this Worker-level
+    // fallback is what bounds bull:media:completed/failed for them.
+    ...JOB_RETENTION,
+  },
 )
 
 worker.on('active', (job) => {

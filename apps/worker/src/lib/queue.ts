@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
+import { JOB_RETENTION } from './job-retention.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -12,12 +13,10 @@ const connection = {
 
 // See apps/api/src/lib/queue.ts — same reasoning: gives lane-filtered workers a
 // chance to land on the right worker instead of losing the job on first mismatch.
-// removeOnComplete/removeOnFail bound Redis growth the same way as that file.
 const defaultJobOptions = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
-  removeOnComplete: { count: 500 },
-  removeOnFail: { count: 1000 },
+  ...JOB_RETENTION,
 }
 
 export async function enqueueSoundBroadcast(broadcastId: string): Promise<void> {

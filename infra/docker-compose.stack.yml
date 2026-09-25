@@ -178,12 +178,21 @@ services:
     # Redis silently drops whichever queue/lock/repeatable keys look coldest
     # once maxmemory is hit, instead of erroring — jobs vanish with no trace
     # instead of backpressuring. Confirmed live: redis was already at
-    # ~1.55G/2G (mostly a stale-repeat-job leak fixed in cron-scheduler.ts),
+    # ~1.55G/2G (mostly a stale-repeat-job leak, bounded by the Worker-level
+    # JOB_RETENTION in apps/worker/src/lib/job-retention.ts),
     # one step from evicting real queue state under allkeys-lru.
+    # --save '': AOF is the only persistence needed (Redis isn't backed up, see
+    # ops/BACKUP.md); RDB snapshots rewrote the whole dataset every few minutes.
+    # --no-appendfsync-on-rewrite: fsync during AOF rewrites stalled commands on
+    # vimage's DRAM-less SATA SSD.
     command:
       [
         'redis-server',
         '--appendonly',
+        'yes',
+        '--save',
+        '',
+        '--no-appendfsync-on-rewrite',
         'yes',
         '--loglevel',
         'warning',
