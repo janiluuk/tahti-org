@@ -29,7 +29,7 @@ What production Redis looked like on 2026-09-26:
 
 BullMQ's count-based trim deletes everything over the limit in **one Lua call**. If the new worker deploys while ~1.1M old records exist, the first finished job tries to delete them all at once and blocks Redis. So:
 
-1. **Before deploying the worker**, trim the backlog in batches against production Redis. The current worker image doesn't contain the script, so run it from a checkout of this branch with `REDIS_URL` pointing at production Redis, or inline via `docker exec tahti-stack-worker-1 node -e ...` using the image's bullmq. Check `ZCARD bull:media:completed` drops to roughly the last hour's worth.
+1. **Before deploying the worker**, trim the backlog in batches: `./scripts/trim-bullmq-backlog.sh` (add `SSH_VIA_NC=1` if `ssh vimage` gets "No route to host"). It runs a 1000-record test batch, aborts if that blocks Redis for over 1s, asks for confirmation, then runs the full trim inside the current worker container and prints before/after counts.
 2. Deploy API + worker + cron-runner.
 3. Recreate Redis so the new `--save ''` / `--no-appendfsync-on-rewrite` flags apply (brief restart). Optionally `BGREWRITEAOF` afterwards to shrink the AOF.
 4. Deploy alert rules: `ops/monitoring/vimage6/deploy.sh`. Prometheus has no Alertmanager attached, so decide where alerts should go.
