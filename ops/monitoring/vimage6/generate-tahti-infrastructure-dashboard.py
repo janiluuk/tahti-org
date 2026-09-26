@@ -709,7 +709,7 @@ def main() -> None:
         timeseries_panel(
             pid,
             "Container memory",
-            'container_memory_usage_bytes{instance="vimage",name=~"tahti.*|/tahti.*"}',
+            'container_memory_working_set_bytes{instance="vimage",name=~"tahti.*|/tahti.*"}',
             y,
             x=12,
             unit="bytes",
@@ -762,7 +762,7 @@ def main() -> None:
         timeseries_panel(
             pid,
             "Worker node memory",
-            'container_memory_usage_bytes{instance=~"vimage|vimage4|vimage7",name=~"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*"}',
+            'container_memory_working_set_bytes{instance=~"vimage|vimage4|vimage7",name=~"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*"}',
             y,
             x=12,
             unit="bytes",

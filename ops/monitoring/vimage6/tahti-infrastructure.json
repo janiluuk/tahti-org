@@ -2337,7 +2337,7 @@
       },
       "targets": [
         {
-          "expr": "container_memory_usage_bytes{instance=\"vimage\",name=~\"tahti.*|/tahti.*\"}",
+          "expr": "container_memory_working_set_bytes{instance=\"vimage\",name=~\"tahti.*|/tahti.*\"}",
           "legendFormat": "{{name}}",
           "refId": "A"
         }
@@ -2505,7 +2505,7 @@
       },
       "targets": [
         {
-          "expr": "container_memory_usage_bytes{instance=~\"vimage|vimage4|vimage7\",name=~\"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*\"}",
+          "expr": "container_memory_working_set_bytes{instance=~\"vimage|vimage4|vimage7\",name=~\"tahti.*worker.*|tahti.*stem.*|/tahti.*worker.*\"}",
           "legendFormat": "{{instance}}: {{name}}",
           "refId": "A"
         }
