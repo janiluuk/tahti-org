@@ -3,6 +3,7 @@
 
 import type { Prisma, MembershipStatus } from '@tahti/db'
 import { nanoid } from 'nanoid'
+import { safeDisplayName } from '@tahti/shared'
 import { hashPassword } from './password.js'
 
 export async function createArtistAccount(
@@ -28,7 +29,7 @@ export async function createArtistAccount(
       email: opts.email,
       passwordHash: opts.passwordHash ?? null,
       username: opts.username,
-      displayName: opts.displayName,
+      displayName: safeDisplayName(opts.displayName, opts.username),
       emailVerifiedAt: opts.emailVerifiedAt ?? null,
       membership: {
         create: {

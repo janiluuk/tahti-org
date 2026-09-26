@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { containsEmailAddress, DISPLAY_NAME_EMAIL_MESSAGE } from '../display-name.js'
 import { PasswordSchema } from './auth.js'
 
 export const BetaApplicationStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED'])
@@ -43,7 +44,13 @@ export const AdminBetaApproveSchema = z.object({
     .min(2, 'Username must be at least 2 characters')
     .max(32, 'Username too long')
     .regex(/^[a-z0-9_-]+$/, 'Username may only contain lowercase letters, numbers, - and _'),
-  displayName: z.string().trim().min(1).max(64).optional(),
+  displayName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .refine((value) => !containsEmailAddress(value), DISPLAY_NAME_EMAIL_MESSAGE)
+    .optional(),
 })
 
 export const AdminBetaApproveResponseSchema = z.object({
