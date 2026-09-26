@@ -1,6 +1,7 @@
 # CI — lint, typecheck, tests, API vital-flows e2e, website Docker, AGPL headers.
 # On push to main (after all checks): creates GitHub release tag YYYY-MM-DD-buildnr (UTC).
 # Release job builds/pushes Docker images to registry.tahti.live with the same tag.
+# publish-api-client then publishes @tahti/api-client to npm as 0.<YYYYMMDD>.<N>.
 # Staging deploy runs after CI via workflow_run — see .github/workflows/deploy.yml
 # Screenshots are local-only: ./scripts/e2e-screenshots.sh (not run here).
 
@@ -1144,7 +1145,9 @@ jobs:
   release:
     name: Release images & changelog
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [all-checks]
+    # generate-openapi uploads the spec this job attaches to the release; without
+    # waiting for it the download below raced the upload and released no spec.
+    needs: [all-checks, generate-openapi]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -1332,3 +1335,163 @@ jobs:
             release-assets/openapi.json
             release-assets/openapi.public.json
           fail_on_unmatched_files: false
+
+  publish-api-client:
+    name: Publish @tahti/api-client to npm
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [release, generate-openapi]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: publish-api-client
+      cancel-in-progress: false
+
+    # Postgres + Redis back the package's own tests (real Fastify over HTTP) and
+    # the in-job spec export fallback below.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+          registry-url: https://registry.npmjs.org
+
+      - name: Check npm credentials
+        id: npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::warning::NPM_TOKEN secret is not set, building @tahti/api-client but skipping npm publish."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Release tags are YYYY-MM-DD-N (scripts/next-release-tag.sh); a bare
+      # YYYY-MM-DD counts as build 1. 0.<date>.<N> keeps npm's semver ordering
+      # identical to release order, so `@latest` is always the newest release.
+      - name: Compute package version
+        id: version
+        env:
+          RELEASE_TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          if [[ "$RELEASE_TAG" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})(-([0-9]+))?$ ]]; then
+            version="0.${BASH_REMATCH[1]}${BASH_REMATCH[2]}${BASH_REMATCH[3]}.${BASH_REMATCH[5]:-1}"
+          else
+            echo "::error::Unexpected release tag '${RELEASE_TAG}' (want YYYY-MM-DD or YYYY-MM-DD-N)"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Release ${RELEASE_TAG} -> @tahti/api-client@${version}"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema (test database)
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: openapi-${{ github.sha }}
+          path: ${{ runner.temp }}/openapi
+
+      - name: Generate SDK types
+        env:
+          SPEC: ${{ runner.temp }}/openapi/openapi.json
+        run: |
+          if [ -s "$SPEC" ]; then
+            pnpm --filter @tahti/api-client generate --spec "$SPEC"
+          else
+            echo "::warning::openapi-${GITHUB_SHA} artifact missing, exporting the spec from apps/api in this job."
+            pnpm --filter @tahti/api-client generate
+          fi
+
+      - name: Lint, typecheck and test
+        run: |
+          pnpm --filter @tahti/api-client lint
+          pnpm --filter @tahti/api-client typecheck
+          pnpm --filter @tahti/api-client test
+
+      - name: Build and pack
+        id: pack
+        working-directory: packages/api-client
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          npm pkg set version="$VERSION"
+          pnpm build:dist
+          pnpm pack --pack-destination "$RUNNER_TEMP"
+          echo "tarball=${RUNNER_TEMP}/tahti-api-client-${VERSION}.tgz" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-test the packed tarball
+        run: bash packages/api-client/scripts/smoke-tarball.sh "${{ steps.pack.outputs.tarball }}" "$RUNNER_TEMP/sdk-smoke"
+
+      - name: Publish to npm
+        id: publish
+        if: steps.npm.outputs.enabled == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: |
+          if npm view "@tahti/api-client@${VERSION}" version >/dev/null 2>&1; then
+            echo "::notice::@tahti/api-client@${VERSION} is already on npm, skipping publish."
+          else
+            npm publish "$TARBALL" --provenance --access public
+          fi
+
+      - name: Notify tahti-cli
+        if: steps.publish.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.TAHTI_CLI_DISPATCH_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::TAHTI_CLI_DISPATCH_TOKEN secret is not set, skipping repository_dispatch to janiluuk/tahti-cli."
+            exit 0
+          fi
+          gh api repos/janiluuk/tahti-cli/dispatches \
+            -f event_type=api-client-published \
+            -f "client_payload[version]=${VERSION}"
