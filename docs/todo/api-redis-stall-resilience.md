@@ -37,5 +37,6 @@ BullMQ's count-based trim deletes everything over the limit in **one Lua call**.
 ## Left
 
 - [x] Step 1: backlog trimmed in production 2026-09-26 (1.15M keys / 1.77G to 1,318 keys / 25M; Redis latency avg 3.4ms, max 68ms during the trim; no slow API requests).
+- [x] PR #558 CI failure ("Unit + integration tests", 1 of 1,889): `worker-registry.test.ts` "keeps a worker exactly at the 90-day boundary" is a timing flake unrelated to this PR. It set `updatedAt` to exactly `Date.now() - 90d`, and a millisecond elapsing before `pruneStaleWorkers()` put it past the cutoff. Fixed by freezing the clock in that test.
 - [ ] Steps 2-4 above: deploy after merge.
 - [ ] Longer term: move Docker's data root (or at least Redis/Postgres volumes) off the Kingston A400 `sdd`. vimage's NVMe LVM `/share/models` has 1.2T free. Moving MinIO to tahti.local ([`tahti-local-onboarding.md`](tahti-local-onboarding.md)) also takes MinIO's writes off this disk.
