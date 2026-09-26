@@ -2519,7 +2519,7 @@
             "type": "prometheus",
             "uid": "P501B54A0D5548634"
           },
-          "expr": "container_memory_usage_bytes{name!=\"\",instance=\"$node\"}",
+          "expr": "container_memory_working_set_bytes{name!=\"\",instance=\"$node\"}",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -2698,7 +2698,7 @@
             "uid": "P501B54A0D5548634"
           },
           "exemplar": false,
-          "expr": "max(container_memory_usage_bytes{name!=\"\",instance=\"$node\"}) by (name)",
+          "expr": "max(container_memory_working_set_bytes{name!=\"\",instance=\"$node\"}) by (name)",
           "format": "table",
           "hide": false,
           "instant": true,
