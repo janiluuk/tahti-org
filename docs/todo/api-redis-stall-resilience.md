@@ -36,5 +36,6 @@ BullMQ's count-based trim deletes everything over the limit in **one Lua call**.
 
 ## Left
 
-- [ ] Steps 1-4 above (user go-ahead needed: production data and deploy).
+- [x] Step 1: backlog trimmed in production 2026-09-26 (1.15M keys / 1.77G to 1,318 keys / 25M; Redis latency avg 3.4ms, max 68ms during the trim; no slow API requests).
+- [ ] Steps 2-4 above: deploy after merge.
 - [ ] Longer term: move Docker's data root (or at least Redis/Postgres volumes) off the Kingston A400 `sdd`. vimage's NVMe LVM `/share/models` has 1.2T free. Moving MinIO to tahti.local ([`tahti-local-onboarding.md`](tahti-local-onboarding.md)) also takes MinIO's writes off this disk.
