@@ -152,13 +152,20 @@ describe('pruneStaleWorkers', () => {
   })
 
   it('keeps a worker exactly at the 90-day boundary (not yet past cutoff)', async () => {
-    mockSMembers.mockResolvedValue(['boundary-worker'])
-    mockHGetAll.mockResolvedValue({ updatedAt: String(Date.now() - 90 * DAY_MS) })
+    // Frozen clock: otherwise a millisecond passing before pruneStaleWorkers
+    // reads Date.now() puts the worker past the cutoff.
+    vi.useFakeTimers({ now: new Date('2026-09-26T12:00:00Z') })
+    try {
+      mockSMembers.mockResolvedValue(['boundary-worker'])
+      mockHGetAll.mockResolvedValue({ updatedAt: String(Date.now() - 90 * DAY_MS) })
 
-    const pruned = await pruneStaleWorkers()
+      const pruned = await pruneStaleWorkers()
 
-    expect(pruned).toEqual([])
-    expect(mockSRem).not.toHaveBeenCalled()
+      expect(pruned).toEqual([])
+      expect(mockSRem).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('reaps an orphaned registry entry with no hash data at all', async () => {

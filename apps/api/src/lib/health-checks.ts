@@ -109,7 +109,49 @@ async function checkDiscordBot(): Promise<DependencyCheck> {
   return ok('discord-bot', false, latencyMs)
 }
 
-export async function runDependencyChecks(prisma: PrismaClient): Promise<DependencyCheck[]> {
+/**
+ * Wraps `run` so concurrent callers share one in-flight run and a result is
+ * reused for `ttlMs`. `ttlMs <= 0` disables reuse but still coalesces.
+ */
+export function cacheForMs<T>(
+  run: () => Promise<T>,
+  ttlMs: number,
+  now: () => number = Date.now,
+): () => Promise<T> {
+  let cached: { value: T; at: number } | null = null
+  let inFlight: Promise<T> | null = null
+  return () => {
+    if (cached && now() - cached.at < ttlMs) return Promise.resolve(cached.value)
+    if (!inFlight) {
+      inFlight = run()
+        .then((value) => {
+          cached = { value, at: now() }
+          return value
+        })
+        .finally(() => {
+          inFlight = null
+        })
+    }
+    return inFlight
+  }
+}
+
+let cachedChecks: (() => Promise<DependencyCheck[]>) | null = null
+
+/**
+ * Probes every dependency, shared across /health, /metrics, /api/v1/status and
+ * admin stats. Results are reused for a few seconds so monitors and scrapes
+ * don't each fan out to every dependency.
+ */
+export function runDependencyChecks(prisma: PrismaClient): Promise<DependencyCheck[]> {
+  cachedChecks ??= cacheForMs(
+    () => probeDependencies(prisma),
+    config.nodeEnv === 'test' ? 0 : config.healthCheckCacheMs,
+  )
+  return cachedChecks()
+}
+
+async function probeDependencies(prisma: PrismaClient): Promise<DependencyCheck[]> {
   const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
 
   const [postgres, redis, minio, centrifugo, orchestrator, icecast, discordBot] = await Promise.all(

@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect } from 'vitest'
-import { renderPrometheusMetrics, summarizeChecks, type DependencyCheck } from './health-checks.js'
+import { describe, it, expect, vi } from 'vitest'
+import {
+  cacheForMs,
+  renderPrometheusMetrics,
+  summarizeChecks,
+  type DependencyCheck,
+} from './health-checks.js'
 
 describe('health-checks helpers', () => {
   it('summarizeChecks marks outage when critical dependency is down', () => {
@@ -31,5 +36,39 @@ describe('health-checks helpers', () => {
     expect(text).toContain('tahti_dependency_up{dependency="redis"} 0')
     expect(text).toContain('tahti_api_uptime_seconds 120')
     expect(text).toContain('tahti_api_healthy 0')
+  })
+})
+
+describe('cacheForMs', () => {
+  it('reuses a result within the TTL and reruns after it', async () => {
+    let t = 0
+    const run = vi.fn().mockResolvedValueOnce('a').mockResolvedValueOnce('b')
+    const cached = cacheForMs(run, 5000, () => t)
+
+    expect(await cached()).toBe('a')
+    t = 4999
+    expect(await cached()).toBe('a')
+    t = 5000
+    expect(await cached()).toBe('b')
+    expect(run).toHaveBeenCalledTimes(2)
+  })
+
+  it('shares one in-flight run between concurrent callers', async () => {
+    let resolve!: (v: string) => void
+    const run = vi.fn(() => new Promise<string>((r) => (resolve = r)))
+    const cached = cacheForMs(run, 0)
+
+    const both = Promise.all([cached(), cached()])
+    resolve('x')
+    expect(await both).toEqual(['x', 'x'])
+    expect(run).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not cache a failed run', async () => {
+    const run = vi.fn().mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce('ok')
+    const cached = cacheForMs(run, 5000)
+
+    await expect(cached()).rejects.toThrow('down')
+    expect(await cached()).toBe('ok')
   })
 })

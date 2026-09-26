@@ -11,6 +11,8 @@ const { mockGet, mockSet, mockGetRedisClient } = vi.hoisted(() => ({
 
 vi.mock('./redis.js', () => ({
   getRedisClient: mockGetRedisClient,
+  getOptionalRedisClient: mockGetRedisClient,
+  noteRedisFailure: vi.fn(),
 }))
 
 import { getCachedJson } from './json-cache.js'
@@ -19,6 +21,7 @@ describe('getCachedJson', () => {
   beforeEach(() => {
     mockGet.mockReset()
     mockSet.mockReset()
+    mockSet.mockResolvedValue('OK')
     mockGetRedisClient.mockReset()
   })
 
@@ -88,5 +91,23 @@ describe('getCachedJson', () => {
     await expect(Promise.all([first, second])).resolves.toEqual([{ value: 42 }, { value: 42 }])
     expect(compute).toHaveBeenCalledTimes(1)
     expect(mockSet).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns the computed value without waiting for the cache write', async () => {
+    mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
+    mockGet.mockResolvedValue(null)
+    mockSet.mockReturnValue(new Promise(() => {}))
+    const compute = vi.fn().mockResolvedValue({ value: 3 })
+
+    await expect(getCachedJson('slow-write', 10, compute)).resolves.toEqual({ value: 3 })
+  })
+
+  it('ignores a rejected cache write', async () => {
+    mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
+    mockGet.mockResolvedValue(null)
+    mockSet.mockRejectedValue(new Error('write failed'))
+    const compute = vi.fn().mockResolvedValue({ value: 4 })
+
+    await expect(getCachedJson('bad-write', 10, compute)).resolves.toEqual({ value: 4 })
   })
 })

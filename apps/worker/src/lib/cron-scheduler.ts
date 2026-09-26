@@ -3,6 +3,7 @@
 
 import { Queue } from 'bullmq'
 import { WORKER_CRON_JOBS } from '@tahti/shared'
+import { JOB_RETENTION } from './job-retention.js'
 
 function redisConnection() {
   const redisUrl = new URL(process.env.REDIS_URL ?? 'redis://localhost:6379')
@@ -12,14 +13,10 @@ function redisConnection() {
   }
 }
 
-// removeOnComplete/removeOnFail bound Redis growth — otherwise every tick of
-// every repeatable cron job (see WORKER_CRON_JOBS) keeps its finished job
-// record in Redis forever.
 const defaultJobOptions = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
-  removeOnComplete: { count: 500 },
-  removeOnFail: { count: 1000 },
+  ...JOB_RETENTION,
 }
 
 /** Make the manifest in Redis exactly match WORKER_CRON_JOBS. This is owned by
@@ -38,13 +35,9 @@ export async function registerCrons(): Promise<number> {
     for (const job of WORKER_CRON_JOBS) {
       if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
       const repeat = job.everyMs != null ? { every: job.everyMs } : { pattern: job.pattern! }
-      // BullMQ does not carry a Queue's defaultJobOptions into the repeat
-      // template used to spawn each subsequent tick — only the very first
-      // job gets them. Without repeating removeOnComplete/removeOnFail here
-      // explicitly, every future tick of every cron omits them and Redis's
-      // completed/failed zsets grow unbounded (confirmed live: >1M stale
-      // job records backing a Redis instance capped at 2G with
-      // allkeys-lru, risking silent eviction of real queue data).
+      // Subsequent ticks still lose removeOnComplete/removeOnFail in their
+      // stored options; the Worker-level JOB_RETENTION fallback in index.ts is
+      // what actually bounds the completed/failed sets.
       await queue.add(job.name, {}, { repeat, jobId: job.jobId, ...defaultJobOptions })
       registered++
     }
