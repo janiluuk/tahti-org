@@ -62,18 +62,31 @@ losing data), not silently.
    Check `git log -p -- packages/db/prisma/migrations` for `UPDATE`/`INSERT`
    statements in any migration merged after 2026-09-11 to confirm this is
    still the only one before you run this.
-2. Mark every existing migration folder as already applied (metadata only —
-   does not touch data or schema), in order:
+2. Find out what is actually missing before marking anything applied:
    ```bash
-   for m in $(ls packages/db/prisma/migrations | grep -v migration_lock.toml); do
-     pnpm --filter @tahti/db exec prisma migrate resolve --applied "$m"
-   done
+   pnpm --filter @tahti/db exec prisma migrate diff \
+     --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma
    ```
-3. Verify: `pnpm --filter @tahti/db db:migrate` (same `prisma migrate deploy`
-   the `db-push` compose service and `scripts/db-migrate-deploy.sh` both run)
-   should print `No pending migrations to apply.` If it tries to apply
-   something, stop — the baseline didn't take and applying now could
-   double-run DDL.
+   Use a direct Postgres URL (`@postgres:5432`, no `?pgbouncer=true`), like
+   the `db-push` service. Every change the diff lists belongs to a migration
+   whose SQL has **not** run. Do not resolve those; `migrate deploy` must run
+   them in step 4.
+3. Mark only the migrations whose schema is already live as applied
+   (metadata only, it doesn't touch data or schema), in order. That includes a
+   squash/init migration recorded as failed (`type ... already exists`):
+   `resolve --applied` also clears a failed row.
+   ```bash
+   pnpm --filter @tahti/db exec prisma migrate resolve --applied <migration>
+   ```
+   Never loop over every folder blindly. On 2026-09-26 that would have
+   recorded `20260923170000_collection_details` as done while production
+   still lacked its columns (`GET /api/me/collections` returned 500).
+4. Run `pnpm --filter @tahti/db db:migrate` (the same `prisma migrate deploy`
+   that the `db-push` compose service and `scripts/db-migrate-deploy.sh` run).
+   It should apply exactly the migrations left out in step 3. Then re-run the
+   step 2 diff: it should print `No difference detected`. `migrate status`
+   also lists pre-squash rows as "applied to the database but missing
+   locally"; `migrate deploy` ignores those.
 
 Verified against a throwaway Postgres before this fix shipped: all 7
 migrations apply cleanly to an empty database via `migrate deploy` with zero
