@@ -13,6 +13,7 @@ import spotifyImportRoutes from '../routes/imports/spotify.js'
 import spotifyProfileRoute from '../routes/me/spotify-profile.js'
 import mixcloudEmbedImportRoutes from '../routes/imports/mixcloud-embed.js'
 import hearthisImportRoutes from '../routes/imports/hearthis.js'
+import soundcloudSetRoutes from '../routes/imports/soundcloud-sets.js'
 import revelatorRoutes from '../routes/me/revelator.js'
 
 export async function registerIntegrationRoutes(fastify: FastifyInstance): Promise<void> {
@@ -27,5 +28,6 @@ export async function registerIntegrationRoutes(fastify: FastifyInstance): Promi
   await fastify.register(spotifyProfileRoute)
   await fastify.register(mixcloudEmbedImportRoutes)
   await fastify.register(hearthisImportRoutes)
+  await fastify.register(soundcloudSetRoutes)
   await fastify.register(revelatorRoutes)
 }
