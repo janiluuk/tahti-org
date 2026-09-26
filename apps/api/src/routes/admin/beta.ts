@@ -12,6 +12,7 @@ import {
   BetaApplicationIdParamSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -144,7 +145,10 @@ const adminBetaRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: `${field} is already taken` })
       }
 
-      const displayName = body.data.displayName?.trim() || application.name
+      const displayName = safeDisplayName(
+        body.data.displayName ?? application.name,
+        body.data.username,
+      )
       const reviewerId = request.sessionUser!.id
 
       const result = await fastify.prisma.$transaction(async (tx) => {

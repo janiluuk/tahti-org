@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 export * from './dto/auth.js'
+export * from './display-name.js'
 export * from './dto/fan-tier-perks.js'
 export * from './dto/governance.js'
 export * from './dto/ledger.js'

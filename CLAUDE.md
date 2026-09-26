@@ -37,3 +37,11 @@
   the shared catalogs.
 
 See `.cursor/rules/todo-history.mdc` and `.cursor/rules/pr-stacking.mdc`.
+
+## Never show email addresses as names
+
+Email addresses must never appear as an artist, channel, user or credit name, in any UI, API response, email or embed.
+
+- Never fall back from a display name to an email. Fall back to the username instead (`safeDisplayName(candidate, username)` from `@tahti/shared`).
+- Input schemas that accept a display name must reject email addresses (`containsEmailAddress`). `RegisterSchema`, `ProfilePatchSchema` and `AdminBetaApproveSchema` already do.
+- New account-creation paths go through `createArtistAccount`, or apply `safeDisplayName` themselves.

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { containsEmailAddress, DISPLAY_NAME_EMAIL_MESSAGE } from '../display-name.js'
 
 // Applies to every flow that SETS a new password (register, reset, beta
 // setup-password) — never to LoginSchema/TotpDisableSchema, which check an
@@ -26,7 +27,8 @@ export const RegisterSchema = z.object({
     .string()
     .min(1, 'Display name is required')
     .max(64, 'Display name too long')
-    .trim(),
+    .trim()
+    .refine((value) => !containsEmailAddress(value), DISPLAY_NAME_EMAIL_MESSAGE),
   // Both optional and independently nullable — the signup form's single
   // "prefer not to say" toggle clears both together, but the API doesn't
   // require them to travel as a pair.

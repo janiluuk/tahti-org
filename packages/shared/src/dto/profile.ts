@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { containsEmailAddress, DISPLAY_NAME_EMAIL_MESSAGE } from '../display-name.js'
 import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
 
 export const ARTIST_KINDS = ['SINGLE', 'COLLECTIVE'] as const
@@ -9,7 +10,13 @@ export type ArtistKind = (typeof ARTIST_KINDS)[number]
 
 export const ProfilePatchSchema = z
   .object({
-    displayName: z.string().trim().min(1, 'displayName cannot be empty').max(100).optional(),
+    displayName: z
+      .string()
+      .trim()
+      .min(1, 'displayName cannot be empty')
+      .max(100)
+      .refine((value) => !containsEmailAddress(value), DISPLAY_NAME_EMAIL_MESSAGE)
+      .optional(),
     bio: z.string().max(5000).optional(),
     /** Optional longer-form history, shown expanded below the short bio. */
     fullBio: z.string().max(20000).nullable().optional(),
