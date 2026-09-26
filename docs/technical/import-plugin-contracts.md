@@ -27,6 +27,31 @@ Do not force search or paste-a-link tools through an OAuth connect modal.
   save, then enable. Do not add a parallel configuration surface in
   `apps/web`.
 
+## Desktop set download (SoundCloud)
+
+Tahti Player's desktop app can download a SoundCloud playlist/set into its
+local library. The tracks go to the user's own disk and are never stored by
+Tahti.
+
+| Route                                                                    | Auth              | Returns                                                                     |
+| ------------------------------------------------------------------------ | ----------------- | --------------------------------------------------------------------------- |
+| `GET /api/me/soundcloud/playlists`                                       | session           | The connected user's playlists, without their tracks                        |
+| `GET /api/me/soundcloud/resolve?url=`                                    | session           | A pasted `soundcloud.com` set link, resolved to a playlist                  |
+| `GET /api/me/soundcloud/playlists/:id/tracks`                            | session           | Tracks in set order. Downloadable ones carry `download: { url, expiresAt }` |
+| `GET` or `HEAD` `/api/v1/imports/soundcloud/tracks/:id/download?ticket=` | the signed ticket | `302` to SoundCloud's file                                                  |
+
+- The desktop downloader has no Tahti session, so each download link carries
+  a signed ticket for one user and one track. It expires after 12 hours;
+  reload the playlist to get fresh links.
+- On every use, the download route checks again that the track is still
+  downloadable, then redirects to SoundCloud's file URL. The OAuth token is
+  sent only to `api.soundcloud.com` and never reaches the client.
+- Only tracks SoundCloud marks as `downloadable` get a link. Stream-only
+  tracks are listed with `download: null` and are never offered.
+- Error codes: `410` means the link expired, `403` means the track is no
+  longer downloadable or SoundCloud is not connected, and `401` means the
+  SoundCloud token expired (it is cleared).
+
 ## Export / DSP delivery
 
 Behavioral `ExportProvider` contracts live in
