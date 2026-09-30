@@ -36,6 +36,7 @@ import socialInstagramRoutes from '../routes/me/social-instagram.js'
 import meChannelScheduleRoutes from '../routes/me/channel-schedule.js'
 import meChannelProvisionRoutes from '../routes/me/channel-provision.js'
 import meSoundVersionRoutes from '../routes/me/sound-versions.js'
+import meSoundShareRoutes from '../routes/me/sound-shares.js'
 import meSoundEditorRoutes from '../routes/me/sound-editor.js'
 import meEditorProjectRoutes from '../routes/me/editor-projects.js'
 import meDownloadGateStatsRoutes from '../routes/me/download-gate-stats.js'
@@ -89,6 +90,7 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meChannelProvisionRoutes)
   await fastify.register(meSoundVersionRoutes)
+  await fastify.register(meSoundShareRoutes)
   await fastify.register(meSoundEditorRoutes)
   await fastify.register(meEditorProjectRoutes)
   await fastify.register(meDownloadGateStatsRoutes)

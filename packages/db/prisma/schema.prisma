@@ -1222,6 +1222,23 @@ model StashFile {
   @@schema("core")
 }
 
+// Keyed access link for one sound (usually PRIVATE or STASH): a request that
+// presents the token as ?key= may read the sound despite its visibility.
+// granteeUsername, when set, limits the link to that signed-in member.
+model SoundShare {
+  id              String    @id @default(cuid())
+  soundId         String
+  sound           Sound     @relation(fields: [soundId], references: [id], onDelete: Cascade)
+  granteeUsername String?
+  token           String    @unique
+  permission      String    @default("READ") // READ | DOWNLOAD
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([soundId])
+  @@schema("channel")
+}
+
 model StashShare {
   id              String    @id @default(cuid())
   fileId          String
@@ -1969,6 +1986,7 @@ model Sound {
   radioPlayLogs        RadioPlayLog[]
   stemJobs             SoundStemJob[]
   liveShowEpisodes     LiveShowEpisode[]
+  shares               SoundShare[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
