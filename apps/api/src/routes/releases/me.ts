@@ -99,6 +99,7 @@ const meReleaseSelect = {
       sourceKey: true,
       credits: true,
       fingerprintMatch: true,
+      soundId: true,
     },
   },
   _count: { select: { tracks: true } },
