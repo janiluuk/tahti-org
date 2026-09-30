@@ -3,7 +3,8 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { Prisma } from '@tahti/db'
-import { ReleaseTrackParamsSchema, parseRouteParams } from '@tahti/shared'
+import { IdParamSchema, ReleaseTrackParamsSchema, parseRouteParams } from '@tahti/shared'
+import { z } from 'zod'
 import { requireAuth } from '../../plugins/auth.js'
 
 /** Writes positions 1..n in the given order. Positions are unique per release,
@@ -20,7 +21,60 @@ export async function writeTrackPositions(
   }
 }
 
+const ReorderReleaseTracksSchema = z.object({
+  trackIds: z.array(z.string().min(1)).min(1).max(200),
+})
+
 const releaseTrackOrderRoutes: FastifyPluginAsync = async (fastify) => {
+  // PUT /api/me/releases/:id/tracks/reorder — set the full track order
+  fastify.put(
+    '/api/me/releases/:id/tracks/reorder',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: "Set a release's track order; trackIds must list every track once",
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = ReorderReleaseTracksSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const { trackIds } = parsed.data
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: routeParams.id, userId: user.id },
+        select: { id: true, revelatorId: true, tracks: { select: { id: true } } },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+      if (release.revelatorId) {
+        return reply.status(409).send({
+          error:
+            'This release has been sent for distribution — its tracklist can no longer change.',
+        })
+      }
+
+      const current = new Set(release.tracks.map((track) => track.id))
+      const requested = new Set(trackIds)
+      if (
+        requested.size !== trackIds.length ||
+        requested.size !== current.size ||
+        trackIds.some((id) => !current.has(id))
+      ) {
+        return reply
+          .status(400)
+          .send({ error: 'trackIds must list every track on this release exactly once' })
+      }
+
+      await fastify.prisma.$transaction((tx) => writeTrackPositions(tx, trackIds))
+      return reply.send({ ok: true })
+    },
+  )
+
   // DELETE /api/me/releases/:id/tracks/:trackId — remove a track and close the gap
   fastify.delete(
     '/api/me/releases/:id/tracks/:trackId',
