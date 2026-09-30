@@ -39,7 +39,7 @@ const latestReleasesRoutes: FastifyPluginAsync = async (fastify) => {
           artworkUrl: true,
           artworkKey: true,
           smartLinkSlug: true,
-          user: { select: { displayName: true } },
+          user: { select: { displayName: true, username: true } },
         },
       })
 
@@ -52,6 +52,7 @@ const latestReleasesRoutes: FastifyPluginAsync = async (fastify) => {
           artworkUrl: await resolveReleaseArtworkUrl(r),
           smartLinkSlug: r.smartLinkSlug,
           artistDisplayName: r.user.displayName,
+          artistUsername: r.user.username,
         })),
       )
 
