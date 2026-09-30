@@ -12,6 +12,9 @@ describe('M15 — public mentions API', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let targetId: string
 
+  let mentionerId: string
+  let mentionerChannelId: string
+
   beforeAll(async () => {
     app = await buildApp({ logger: false })
     await app.ready()
@@ -26,6 +29,8 @@ describe('M15 — public mentions API', () => {
       username: 'pub-mention-target',
     })
     targetId = target.id
+    mentionerId = mentioner.id
+    mentionerChannelId = mentioner.channel!.id
 
     await prisma.mention.create({
       data: {
@@ -41,6 +46,7 @@ describe('M15 — public mentions API', () => {
         channelId: mentioner.channel!.id,
         title: 'Aurora Drift',
         status: 'READY',
+        isPublic: true,
       },
     })
     await prisma.mention.create({
@@ -115,5 +121,38 @@ describe('M15 — public mentions API', () => {
     expect(bySurface.TRACKLIST?.sourceTitle).toBe('Aurora Drift')
     expect(bySurface.ANNOUNCEMENT?.sourceUrl).toBe('/channel/pub-mentioner')
     expect(bySurface.CHAT?.sourceUrl).toBe('/chat/pub-mentioner')
+  })
+
+  it("does not name or link a private track's tracklist mention", async () => {
+    const hidden = await prisma.sound.create({
+      data: {
+        channelId: mentionerChannelId,
+        title: 'Unreleased Secret',
+        status: 'READY',
+        isPublic: false,
+      },
+    })
+    await prisma.mention.create({
+      data: {
+        mentionerUserId: mentionerId,
+        targetUserId: targetId,
+        surface: 'TRACKLIST',
+        sourceId: hidden.id,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/pub-mention-target/mentions',
+    })
+    const hiddenMention = (
+      res.json() as Array<{
+        sourceId: string
+        sourceTitle: string | null
+        sourceUrl: string | null
+      }>
+    ).find((m) => m.sourceId === hidden.id)
+    expect(hiddenMention).toMatchObject({ sourceTitle: null, sourceUrl: null })
+    expect(res.body).not.toContain('Unreleased Secret')
   })
 })

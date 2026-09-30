@@ -65,7 +65,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
       const [sounds, chatChannels] = await Promise.all([
         soundIds.length > 0
           ? fastify.prisma.sound.findMany({
-              where: { id: { in: soundIds } },
+              where: { id: { in: soundIds }, isPublic: true, status: 'READY' },
               select: { id: true, title: true },
             })
           : Promise.resolve([]),
