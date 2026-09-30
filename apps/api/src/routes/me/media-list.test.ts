@@ -11,7 +11,11 @@ import {
 } from '../../test/helpers.js'
 
 const { listUserMediaObjects } = vi.hoisted(() => ({ listUserMediaObjects: vi.fn() }))
-vi.mock('../../lib/user-media-store.js', () => ({ listUserMediaObjects }))
+vi.mock('../../lib/user-media-store.js', () => ({
+  listUserMediaObjects,
+  userMediaObjectExists: vi.fn(),
+  deleteUserMediaObject: vi.fn(),
+}))
 
 const PREFIX = 'me-media-list-'
 
