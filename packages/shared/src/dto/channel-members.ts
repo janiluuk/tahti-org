@@ -22,6 +22,9 @@ export const CreateChannelMemberSchema = z.object({
 export const UpdateChannelMemberSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   role: z.string().trim().min(1).max(100).optional(),
+  /** Only `null` (remove the picture) — a new picture goes through the
+   * picture/prepare + complete or picture/from-url routes. */
+  pictureUrl: z.null().optional(),
 })
 
 export const ReorderChannelMembersSchema = z.object({
