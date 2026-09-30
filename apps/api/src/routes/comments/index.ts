@@ -12,6 +12,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -58,7 +59,16 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         select: { commentsEnabled: true, isPublic: true },
       })
-      if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+      const visible =
+        item?.isPublic ||
+        (item &&
+          (await soundShareGrantsAccess(
+            fastify.prisma,
+            routeParams.id,
+            shareKeyFromQuery(request.query),
+            request.sessionUser?.username ?? null,
+          )))
+      if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
 
       const comments = await listComments(fastify.prisma, { soundId: routeParams.id })
       return reply.send({ comments, commentsEnabled: item.commentsEnabled })
@@ -76,7 +86,16 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id: routeParams.id },
       select: { commentsEnabled: true, isPublic: true },
     })
-    if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+    const visible =
+      item?.isPublic ||
+      (item &&
+        (await soundShareGrantsAccess(
+          fastify.prisma,
+          routeParams.id,
+          shareKeyFromQuery(request.query),
+          request.sessionUser!.username,
+        )))
+    if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
     if (!item.commentsEnabled) {
       return reply.status(403).send({ error: 'Comments are off for this track' })
     }
