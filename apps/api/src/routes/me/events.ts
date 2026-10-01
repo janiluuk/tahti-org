@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyFollowersOfNewEvent } from '@tahti/db'
 import {
   ArtistEventListSchema,
   ArtistEventSchema,
@@ -10,6 +11,7 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
@@ -79,6 +81,16 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           startAt: new Date(body.startAt),
         },
       })
+
+      await notifyFollowersOfNewEvent(
+        fastify.prisma,
+        {
+          id: user.id,
+          username: user.username,
+          displayName: safeDisplayName(user.displayName, user.username),
+        },
+        event,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'new-event notification failed'))
 
       return reply.status(201).send(serialize(event))
     },
