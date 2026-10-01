@@ -16,6 +16,7 @@ import {
 import { activateMembership, recordMembershipRenewal } from '../../lib/membership.js'
 import { recordDistributionPayment } from '../../lib/distribution-billing.js'
 import { recordPurchasePayment } from '../../lib/purchase-tiers.js'
+import { notifyFanOfFailedPayment } from '../../lib/fan-payment-failed.js'
 import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
 import {
@@ -175,6 +176,12 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
               periodStart,
               periodEnd,
             })
+            break
+          }
+
+          case 'invoice.payment_failed': {
+            const subId = obj.subscription != null ? String(obj.subscription) : ''
+            if (subId) await notifyFanOfFailedPayment(fastify.prisma, subId, request.log)
             break
           }
 
