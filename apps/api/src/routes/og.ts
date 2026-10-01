@@ -4,7 +4,7 @@
 // Minimal, cacheable HTML documents carrying just <title>/<meta> tags, for
 // non-JS-executing link-preview bots (Facebook, Twitter/X, Slack, Discord,
 // iMessage) that would otherwise see the SPA's single static index.html for
-// every /c, /u, /r, /t route. Real browsers and JS-executing crawlers never hit
+// every /c, /u, /r, /t, /v route. Real browsers and JS-executing crawlers never hit
 // these directly — the web edge only proxies known bot user agents here.
 // See tahti-player's packages/tahti-web/SEO-OG-NOTES.md for the plan
 // this implements.
@@ -195,6 +195,31 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
         title: `${track.title} by ${artist} on Tahti`,
         description: track.description || `Listen to ${track.title} by ${artist} on Tahti.`,
         image: track.bannerUrl ?? track.channel.user.avatarUrl,
+        url,
+      }),
+    )
+  })
+
+  // Verified venues only, matching GET /api/v1/venues/:slug.
+  fastify.get('/api/og/venue/:slug', async (request, reply) => {
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
+    const url = `${config.appUrl.replace(/\/$/, '')}/v/${encodeURIComponent(slug)}`
+
+    const venue = await fastify.prisma.venue.findFirst({
+      where: { slug, verifiedAt: { not: null } },
+      select: { name: true, city: true, description: true, photos: true },
+    })
+    if (!venue) return notFoundPage(reply, url)
+
+    reply.header('Cache-Control', CACHE_CONTROL)
+    return reply.type('text/html').send(
+      ogPage({
+        title: `${venue.name}, ${venue.city} on Tahti`,
+        description:
+          venue.description || `Live sets and upcoming broadcasts from ${venue.name} on Tahti.`,
+        image: venue.photos[0] ?? null,
         url,
       }),
     )
