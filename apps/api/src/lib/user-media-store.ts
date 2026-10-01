@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { ListObjectsV2Command } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { config } from '../config.js'
 import { s3 } from './minio.js'
 
@@ -32,4 +32,17 @@ export async function listUserMediaObjects(prefix: string): Promise<StoredMediaO
       sizeBytes: item.Size ?? 0,
       lastModified: item.LastModified ?? new Date(0),
     }))
+}
+
+export async function userMediaObjectExists(key: string): Promise<boolean> {
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: config.minio.bucket, Key: key }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function deleteUserMediaObject(key: string): Promise<void> {
+  await s3.send(new DeleteObjectCommand({ Bucket: config.minio.bucket, Key: key }))
 }

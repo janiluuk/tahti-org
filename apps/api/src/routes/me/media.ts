@@ -14,7 +14,11 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
-import { listUserMediaObjects } from '../../lib/user-media-store.js'
+import {
+  deleteUserMediaObject,
+  listUserMediaObjects,
+  userMediaObjectExists,
+} from '../../lib/user-media-store.js'
 
 const PRESIGN_TTL_SEC = 900
 
@@ -128,6 +132,29 @@ const meMediaRoutes: FastifyPluginAsync = async (fastify) => {
         url,
         createdAt: new Date().toISOString(),
       })
+    },
+  )
+
+  // DELETE /api/me/media/:id — `id` is the object key (URL-encoded, so it
+  // carries its slashes), and must sit under the caller's own prefix.
+  fastify.delete(
+    '/api/me/media/:id',
+    {
+      preHandler: requireAuth,
+      schema: { tags: ['channel'], description: 'Delete one of your generic media uploads' },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id?: string }
+      const key = id?.trim() ?? ''
+      if (!key.startsWith(`media/${user.username}/`) || key.includes('..')) {
+        return reply.status(403).send({ error: 'That file is not one of your uploads' })
+      }
+      if (!(await userMediaObjectExists(key))) {
+        return reply.status(404).send({ error: 'File not found' })
+      }
+      await deleteUserMediaObject(key)
+      return reply.send({ ok: true as const })
     },
   )
 }
