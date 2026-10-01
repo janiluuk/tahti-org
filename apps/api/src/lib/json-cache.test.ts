@@ -37,6 +37,29 @@ describe('getCachedJson', () => {
     expect(mockSet).toHaveBeenCalledWith('k', JSON.stringify({ value: 42 }), { EX: 10 })
   })
 
+  it('caches a value holding a BigInt instead of failing the request', async () => {
+    mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
+    mockGet.mockResolvedValue(null)
+    const value = { user: { storageUsedBytes: 1234n } }
+
+    const result = await getCachedJson('k', 10, async () => value)
+
+    expect(result).toBe(value)
+    expect(mockSet).toHaveBeenCalledWith('k', '{"user":{"storageUsedBytes":"1234"}}', { EX: 10 })
+  })
+
+  it('returns the value uncached when it cannot be serialized', async () => {
+    mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
+    mockGet.mockResolvedValue(null)
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+
+    const result = await getCachedJson('k', 10, async () => circular)
+
+    expect(result).toBe(circular)
+    expect(mockSet).not.toHaveBeenCalled()
+  })
+
   it('returns the cached value without recomputing on a hit', async () => {
     mockGetRedisClient.mockResolvedValue({ get: mockGet, set: mockSet })
     mockGet.mockResolvedValue(JSON.stringify({ value: 7 }))
