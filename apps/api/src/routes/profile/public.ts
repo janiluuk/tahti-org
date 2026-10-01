@@ -238,7 +238,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       },
       collections: {
         where: { isPublic: true },
-        orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ isFeatured: 'desc' }, { publicProfileOrder: 'asc' }, { createdAt: 'desc' }],
         take: 12,
         select: {
           slug: true,
