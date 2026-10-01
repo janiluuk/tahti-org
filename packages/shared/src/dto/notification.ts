@@ -23,6 +23,7 @@ export const NotificationTypeSchema = z.enum([
   'CHANNEL_LIVE',
   'NEW_EVENT',
   'NEW_FAN_SUBSCRIBER',
+  'NEW_PURCHASE',
 ])
 
 export const NotificationSchema = z.object({
