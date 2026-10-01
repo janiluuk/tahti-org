@@ -47,6 +47,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
           countryCode: true,
           capacity: true,
           description: true,
+          photos: true,
         },
         orderBy: { name: 'asc' },
       })
