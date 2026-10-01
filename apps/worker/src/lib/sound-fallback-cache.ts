@@ -74,7 +74,7 @@ async function curatedPlaybackRows(
   channelId: string,
 ): Promise<FallbackPlaybackRow[]> {
   const curated = await prisma.curatedRotationItem.findMany({
-    where: { channelId },
+    where: { channelId, sound: { isPublic: true, status: 'READY' } },
     orderBy: { position: 'asc' },
     select: {
       sound: {

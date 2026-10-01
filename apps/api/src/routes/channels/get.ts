@@ -156,7 +156,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
   } | null = null
   if (nowPlaying) {
     const curated = await fastify.prisma.curatedRotationItem.findMany({
-      where: { channelId: channel.id },
+      where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
       orderBy: { position: 'asc' },
       select: {
         sound: {

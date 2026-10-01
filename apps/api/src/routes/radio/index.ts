@@ -166,7 +166,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.send([])
 
       const items = await fastify.prisma.curatedRotationItem.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
         orderBy: { position: 'asc' },
         take: 20,
         select: {
@@ -469,7 +469,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Show not found' })
 
       const items = await fastify.prisma.curatedRotationItem.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
         orderBy: { position: 'asc' },
         select: {
           id: true,
