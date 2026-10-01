@@ -15,9 +15,11 @@ import {
   TAHTI_RADIO_SLUG,
   openApiResponse,
   resolveColorScheme,
+  soundPlaybackKey,
   type ColorScheme,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
@@ -118,7 +120,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(RadioRecentlyPlayedSchema, 'RadioRecentlyPlayed'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: TAHTI_RADIO_SLUG },
         select: { id: true },
@@ -136,10 +138,54 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           artistUsername: true,
           artworkUrl: true,
           playedAt: true,
+          sound: {
+            select: {
+              id: true,
+              isPublic: true,
+              status: true,
+              mp3Key: true,
+              flacKey: true,
+              accessMode: true,
+              purchaseTierId: true,
+              channel: {
+                select: {
+                  userId: true,
+                  user: { select: { deletedAt: true, suspendedAt: true } },
+                },
+              },
+            },
+          },
         },
       })
 
-      return reply.send(rows.map((r) => ({ ...r, playedAt: r.playedAt.toISOString() })))
+      const viewerUserId = request.sessionUser?.id ?? null
+      const items = await Promise.all(
+        rows.map(async ({ sound, ...row }) => {
+          const replayable =
+            sound &&
+            sound.isPublic &&
+            sound.status === 'READY' &&
+            !sound.channel.user.deletedAt &&
+            !sound.channel.user.suspendedAt
+          const { url } = replayable
+            ? await resolveGatedPlaybackUrl(fastify.prisma, {
+                playbackKey: soundPlaybackKey(sound),
+                artistUserId: sound.channel.userId,
+                accessMode: sound.accessMode,
+                purchaseTierId: sound.purchaseTierId,
+                viewerUserId,
+              })
+            : { url: null }
+          return {
+            ...row,
+            playedAt: row.playedAt.toISOString(),
+            soundId: replayable ? sound.id : null,
+            audioUrl: url,
+          }
+        }),
+      )
+
+      return reply.send(items)
     },
   )
 

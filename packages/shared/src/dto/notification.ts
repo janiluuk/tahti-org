@@ -45,6 +45,15 @@ export type NotificationView = z.infer<typeof NotificationSchema>
 export const NotificationListSchema = z.object({
   notifications: z.array(NotificationSchema),
   unreadCount: z.number().int(),
+  /** More notifications older than the last one returned; page with
+   * `?before=<last id>`. Always false for `?stickyOnly=true`. */
+  hasMore: z.boolean(),
+})
+
+export const NotificationListQuerySchema = z.object({
+  stickyOnly: z.enum(['true', 'false']).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  before: z.string().min(1).max(64).optional(),
 })
 
 // M40: /feed — recent activity from artists the current user follows.
