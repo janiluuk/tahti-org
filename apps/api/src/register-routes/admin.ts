@@ -4,6 +4,7 @@
 import type { FastifyInstance } from 'fastify'
 import adminMembersRoutes from '../routes/admin/members.js'
 import adminStatsRoutes from '../routes/admin/stats.js'
+import adminContentStatsRoutes from '../routes/admin/content-stats.js'
 import adminStreamsRoutes from '../routes/admin/streams.js'
 import adminRadioRoutes from '../routes/admin/radio.js'
 import adminRadioSubmissionRoutes from '../routes/admin/radio-submissions.js'
@@ -41,6 +42,7 @@ import betaApplyRoutes from '../routes/beta/apply.js'
 export async function registerAdminRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(adminMembersRoutes)
   await fastify.register(adminStatsRoutes)
+  await fastify.register(adminContentStatsRoutes)
   await fastify.register(adminStreamsRoutes)
   await fastify.register(adminRadioRoutes)
   await fastify.register(adminRadioSubmissionRoutes)
