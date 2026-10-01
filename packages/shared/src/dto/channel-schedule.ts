@@ -7,6 +7,12 @@ import { BroadcastShowTypeSchema, BroadcastVisibilitySchema } from './broadcast-
 export const ChannelSchedulePatchSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable().optional(),
   nextBroadcastNote: z.string().max(200).nullable().optional(),
+  /** One of the channel's own show series; null unlinks it. */
+  nextBroadcastShowId: z.string().min(1).nullable().optional(),
+  nextBroadcastDurationHours: z
+    .union([z.literal(1), z.literal(2)])
+    .nullable()
+    .optional(),
 })
 
 export type ChannelSchedulePatch = z.infer<typeof ChannelSchedulePatchSchema>
@@ -16,6 +22,17 @@ export const CreateLiveShowSeriesSchema = z.object({
   description: z.string().trim().max(2_000).nullable().optional(),
   tagline: z.string().trim().max(200).nullable().optional(),
   artworkUrl: z.string().url().max(2_000).nullable().optional(),
+  /** Blank clears it, like the other optional text fields. */
+  backdropUrl: z
+    .string()
+    .trim()
+    .max(2_000)
+    .nullable()
+    .optional()
+    .refine((v) => !v || /^https?:\/\//i.test(v), { message: 'backdropUrl must be an http(s) URL' })
+    .transform((v) => (v === undefined ? undefined : v || null)),
+  /** SINGLE: a one-off show; SERIES: a continuing series of episodes. */
+  mode: z.enum(['SINGLE', 'SERIES']).default('SERIES'),
   showType: BroadcastShowTypeSchema.default('LIVE_SET'),
   visibility: BroadcastVisibilitySchema.default('PUBLIC'),
   autoPublish: z.boolean().default(true),
@@ -53,6 +70,7 @@ export const LiveShowSeriesViewSchema = CreateLiveShowSeriesSchema.extend({
   description: z.string().nullable(),
   tagline: z.string().nullable(),
   artworkUrl: z.string().nullable(),
+  backdropUrl: z.string().nullable(),
   scheduleNote: z.string().nullable(),
   createdAt: z.string().datetime(),
 })

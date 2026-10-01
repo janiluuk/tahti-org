@@ -1394,6 +1394,10 @@ model Channel {
   channelLinksJson              String?
   nextBroadcastAt               DateTime? // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote             String? // e.g. "Weekly show — Thursdays 22:00 EET"
+  /// The show the next broadcast belongs to; its type, mode, description and artwork are read from it.
+  nextBroadcastShowId           String?
+  nextBroadcastShow             LiveShowSeries?       @relation("ChannelNextBroadcastShow", fields: [nextBroadcastShowId], references: [id], onDelete: SetNull)
+  nextBroadcastDurationHours    Int?
   lastFeaturedAt                DateTime? // M16: Tahti Radio fair rotation
   commentsEnabled               Boolean               @default(true) // initialized from User.defaultChannelCommentsEnabled
   pressKitGalleryPublic         Boolean               @default(false) // show press-kit images in a public gallery on the artist page
@@ -1650,6 +1654,10 @@ model LiveShowSeries {
   description           String?
   tagline               String?
   artworkUrl            String?
+  /// Wide header image on the show page, separate from the square artwork.
+  backdropUrl           String?
+  /// SINGLE: a one-off show; SERIES: a continuing series of episodes.
+  mode                  LiveShowMode        @default(SERIES)
   showType              BroadcastShowType   @default(LIVE_SET)
   visibility            BroadcastVisibility @default(PUBLIC)
   autoPublish           Boolean             @default(true)
@@ -1675,11 +1683,19 @@ model LiveShowSeries {
   recurrenceTimezone    String?
   recurrenceHorizonDays Int                 @default(28)
   scheduledShows        ScheduledLiveShow[]
+  nextBroadcastFor      Channel[]           @relation("ChannelNextBroadcastShow")
   episodes              LiveShowEpisode[]
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
   @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+enum LiveShowMode {
+  SINGLE
+  SERIES
+
   @@schema("channel")
 }
 

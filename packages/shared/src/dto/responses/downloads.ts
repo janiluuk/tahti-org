@@ -83,6 +83,13 @@ export const ChannelFunnelResponseSchema = z.object({
 export const ChannelScheduleViewSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
+  nextBroadcastShowId: z.string().nullable(),
+  nextBroadcastDurationHours: z.number().int().nullable(),
+  /** Read from the linked show; null when no show is linked. */
+  nextBroadcastShowType: z.enum(['LIVE_SET', 'TALK']).nullable(),
+  nextBroadcastMode: z.enum(['SINGLE', 'SERIES']).nullable(),
+  nextBroadcastDescription: z.string().nullable(),
+  nextBroadcastCoverUrl: z.string().nullable(),
 })
 
 export const DownloadUrlResponseSchema = z.object({

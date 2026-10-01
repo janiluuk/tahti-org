@@ -162,10 +162,18 @@ export async function syncNextBroadcast(prisma: PrismaClient, channelId: string)
   const next = await prisma.scheduledLiveShow.findFirst({
     where: { channelId, canceledAt: null, broadcast: null, startAt: { gt: new Date() } },
     orderBy: { startAt: 'asc' },
-    select: { startAt: true, title: true },
+    select: { startAt: true, endAt: true, title: true, seriesId: true },
   })
+  const hours = next?.endAt
+    ? Math.round((next.endAt.getTime() - next.startAt.getTime()) / 3_600_000)
+    : null
   await prisma.channel.update({
     where: { id: channelId },
-    data: { nextBroadcastAt: next?.startAt ?? null, nextBroadcastNote: next?.title ?? null },
+    data: {
+      nextBroadcastAt: next?.startAt ?? null,
+      nextBroadcastNote: next?.title ?? null,
+      nextBroadcastShowId: next?.seriesId ?? null,
+      nextBroadcastDurationHours: hours === 1 || hours === 2 ? hours : null,
+    },
   })
 }
