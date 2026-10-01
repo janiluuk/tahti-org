@@ -1393,6 +1393,10 @@ model Channel {
   channelLinksJson              String?
   nextBroadcastAt               DateTime? // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote             String? // e.g. "Weekly show — Thursdays 22:00 EET"
+  /// The show the next broadcast belongs to; its type, mode, description and artwork are read from it.
+  nextBroadcastShowId           String?
+  nextBroadcastShow             LiveShowSeries?       @relation("ChannelNextBroadcastShow", fields: [nextBroadcastShowId], references: [id], onDelete: SetNull)
+  nextBroadcastDurationHours    Int?
   lastFeaturedAt                DateTime? // M16: Tahti Radio fair rotation
   commentsEnabled               Boolean               @default(true) // initialized from User.defaultChannelCommentsEnabled
   pressKitGalleryPublic         Boolean               @default(false) // show press-kit images in a public gallery on the artist page
@@ -1678,6 +1682,7 @@ model LiveShowSeries {
   recurrenceTimezone    String?
   recurrenceHorizonDays Int                 @default(28)
   scheduledShows        ScheduledLiveShow[]
+  nextBroadcastFor      Channel[]           @relation("ChannelNextBroadcastShow")
   episodes              LiveShowEpisode[]
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt

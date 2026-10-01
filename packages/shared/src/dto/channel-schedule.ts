@@ -7,6 +7,12 @@ import { BroadcastShowTypeSchema, BroadcastVisibilitySchema } from './broadcast-
 export const ChannelSchedulePatchSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable().optional(),
   nextBroadcastNote: z.string().max(200).nullable().optional(),
+  /** One of the channel's own show series; null unlinks it. */
+  nextBroadcastShowId: z.string().min(1).nullable().optional(),
+  nextBroadcastDurationHours: z
+    .union([z.literal(1), z.literal(2)])
+    .nullable()
+    .optional(),
 })
 
 export type ChannelSchedulePatch = z.infer<typeof ChannelSchedulePatchSchema>
