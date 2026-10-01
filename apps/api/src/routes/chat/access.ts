@@ -8,7 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { artistOffersFanChat, subscriberHasFanChat } from '../../lib/fan-perks.js'
+import { artistOffersFanChat, canUseFanChat } from '../../lib/fan-perks.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 
 const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
@@ -34,7 +34,7 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
 
       if (user) {
         isSupporter = await isActiveFanSubscriber(fastify.prisma, channel.userId, user.id)
-        canJoinFanChat = await subscriberHasFanChat(fastify.prisma, channel.userId, user.id)
+        canJoinFanChat = await canUseFanChat(fastify.prisma, channel.userId, user.id)
       }
 
       return reply.send({
