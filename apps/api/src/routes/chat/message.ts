@@ -12,6 +12,7 @@ import { notifyUsersOfChatMention } from '@tahti/db'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 import { extractHandles, recordMentions } from '../../lib/mentions.js'
 import { auditLog } from '../../lib/audit.js'
+import { canUseFanChat } from '../../lib/fan-perks.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -42,10 +43,19 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, userId: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'channel not found' })
+
+      // Any client may subscribe in the `channel` namespace, so the fan room is
+      // only kept to fans by refusing posts from anyone else here.
+      if (
+        isFanChannel &&
+        !(mentionerUserId && (await canUseFanChat(fastify.prisma, channel.userId, mentionerUserId)))
+      ) {
+        return reply.status(403).send({ error: 'fan_chat_required' })
+      }
 
       if (fingerprint) {
         // Same reasoning as token.ts's join-time bypass: a signed-in session

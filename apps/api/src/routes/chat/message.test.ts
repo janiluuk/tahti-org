@@ -11,6 +11,8 @@ const PREFIX = 'chat-message-'
 describe('POST /api/chat/message — Centrifugo proxy', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let slug: string
+  let artistId: string
+  let fanId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -18,12 +20,36 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
 
     slug = 'chat-message-artist'
-    await createTestArtist(prisma, {
+    const artist = await createTestArtist(prisma, {
       email: `${PREFIX}artist@example.com`,
       username: slug,
       tier: 'ARTIST',
       isMember: true,
       memberNumber: 98395,
+    })
+    artistId = artist.id
+    await prisma.fanTier.create({
+      data: { artistUserId: artist.id, name: 'Supporter', amountCents: 500, perks: ['FAN_CHAT'] },
+    })
+    const fan = await prisma.user.create({
+      data: {
+        email: `${PREFIX}fan@example.com`,
+        passwordHash: 'x',
+        username: 'chat-message-fan',
+        displayName: 'Fan',
+      },
+    })
+    fanId = fan.id
+    await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artist.id,
+        subscriberUserId: fan.id,
+        tierName: 'Supporter',
+        amountCents: 500,
+        stripeSubscriptionId: `sub_${PREFIX}`,
+        state: 'ACTIVE',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      },
     })
   })
 
@@ -68,13 +94,58 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     await app.inject({
       method: 'POST',
       url: '/api/chat/message',
-      payload: { channel: `channel:${slug}:fans`, data: { text: 'fans-only note' } },
+      payload: {
+        channel: `channel:${slug}:fans`,
+        meta: { userId: fanId },
+        data: { text: 'fans-only note' },
+      },
     })
 
     const row = await prisma.chatMessage.findFirst({
       where: { channelId: channel.id, text: 'fans-only note' },
     })
     expect(row?.fanOnly).toBe(true)
+  })
+
+  it('lets the artist post in their own fan room', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}:fans`,
+        meta: { userId: artistId },
+        data: { text: 'thanks for subscribing' },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('refuses fan-room posts from anonymous and non-subscribed senders', async () => {
+    const stranger = await prisma.user.create({
+      data: {
+        email: `${PREFIX}stranger@example.com`,
+        passwordHash: 'x',
+        username: 'chat-message-stranger',
+        displayName: 'Stranger',
+      },
+    })
+    for (const meta of [undefined, { userId: stranger.id }]) {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/chat/message',
+        payload: {
+          channel: `channel:${slug}:fans`,
+          ...(meta ? { meta } : {}),
+          data: { text: 'sneaking into the fan room' },
+        },
+      })
+      expect(res.statusCode).toBe(403)
+      expect(res.json()).toEqual({ error: 'fan_chat_required' })
+    }
+    const leaked = await prisma.chatMessage.count({
+      where: { text: 'sneaking into the fan room' },
+    })
+    expect(leaked).toBe(0)
   })
 
   it('returns 404 for unknown channel', async () => {

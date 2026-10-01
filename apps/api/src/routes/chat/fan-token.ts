@@ -10,7 +10,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
-import { subscriberHasFanChat } from '../../lib/fan-perks.js'
+import { canUseFanChat } from '../../lib/fan-perks.js'
 
 const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/fan-token — fan-only chat (logged-in active subscribers)
@@ -32,7 +32,7 @@ const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const allowed = await subscriberHasFanChat(fastify.prisma, channel.userId, user.id)
+      const allowed = await canUseFanChat(fastify.prisma, channel.userId, user.id)
       if (!allowed) {
         return reply.status(403).send({
           error: 'Active fan subscription with FAN_CHAT perk required',
