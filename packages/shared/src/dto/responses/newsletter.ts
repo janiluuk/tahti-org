@@ -38,11 +38,19 @@ export const NewsletterDraftListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(100),
 })
 
+/** How a sent newsletter's emails ended up, one count per send state. */
+export const NewsletterDeliverySchema = z.object({
+  queued: z.number().int(),
+  sent: z.number().int(),
+  failed: z.number().int(),
+  bounced: z.number().int(),
+})
+
 export const NewsletterDraftPagedListSchema = z.object({
   page: z.number().int(),
   limit: z.number().int(),
   total: z.number().int(),
-  drafts: NewsletterDraftListSchema,
+  drafts: z.array(NewsletterDraftSummarySchema.extend({ delivery: NewsletterDeliverySchema })),
 })
 
 export const NewsletterDraftViewSchema = NewsletterDraftSummarySchema.extend({

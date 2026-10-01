@@ -117,6 +117,51 @@ describe('M13/M19 — newsletter drafts', () => {
     expect(fanDraft?.subscribersOnly).toBe(true)
   })
 
+  it('GET /api/me/newsletter/drafts reports how each send was delivered', async () => {
+    const draft = await prisma.newsletterDraft.create({
+      data: {
+        userId: artistId,
+        subject: 'Delivered issue',
+        bodyMd: 'Body',
+        state: 'SENT',
+        sentAt: new Date(),
+      },
+    })
+    const states = ['SENT', 'SENT', 'FAILED', 'BOUNCED', 'QUEUED'] as const
+    for (const [i, state] of states.entries()) {
+      const subscriber = await prisma.newsletterSubscriber.create({
+        data: {
+          artistUserId: artistId,
+          email: `${PREFIX}delivery-${i}@example.com`,
+          unsubToken: `${PREFIX}delivery-${i}-${Date.now()}`,
+        },
+      })
+      await prisma.newsletterSend.create({
+        data: { draftId: draft.id, subscriberId: subscriber.id, state },
+      })
+    }
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/newsletter/drafts',
+      headers: { cookie },
+    })
+    expect(list.statusCode).toBe(200)
+    const rows = list.json().drafts as Array<{ id: string; delivery: Record<string, number> }>
+    expect(rows.find((r) => r.id === draft.id)?.delivery).toEqual({
+      queued: 1,
+      sent: 2,
+      failed: 1,
+      bounced: 1,
+    })
+    expect(rows.find((r) => r.id !== draft.id)?.delivery).toEqual({
+      queued: 0,
+      sent: 0,
+      failed: 0,
+      bounced: 0,
+    })
+  })
+
   it('send on subscribersOnly draft targets fans without audience param', async () => {
     const passwordHash = await hashPassword('testpassword')
     const fanUser = await prisma.user.create({

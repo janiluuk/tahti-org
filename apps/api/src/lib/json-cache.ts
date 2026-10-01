@@ -8,6 +8,18 @@ import { getOptionalRedisClient, getRedisClient, noteRedisFailure } from './redi
 // hot key expiry from making every request perform the same database work.
 const inFlight = new Map<string, Promise<unknown>>()
 
+/** JSON for the cache, or null when the value can't be stored. BigInt (e.g.
+ * User storage byte counts) is written as a decimal string; callers that need
+ * it back as a bigint rehydrate it, as session.ts does. A value that still
+ * can't be serialized is simply not cached — it must never fail the request. */
+function serializeForCache(value: unknown): string | null {
+  try {
+    return JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? v.toString() : v))
+  } catch {
+    return null
+  }
+}
+
 /**
  * Short-TTL Redis cache for JSON-serializable responses on public hot paths.
  * Falls back to calling `compute` directly when Redis is unavailable.
@@ -32,8 +44,9 @@ export async function getCachedJson<T>(
 
   const pending = (async () => {
     const value = await compute()
+    const body = serializeForCache(value)
     // Not awaited: the response shouldn't wait on a cache write.
-    redis.set(key, JSON.stringify(value), { EX: ttlSec }).catch(noteRedisFailure)
+    if (body !== null) redis.set(key, body, { EX: ttlSec }).catch(noteRedisFailure)
     return value
   })()
   inFlight.set(key, pending)
