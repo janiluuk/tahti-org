@@ -18,6 +18,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { linkReachableCollectionWhere } from '../collections/helpers.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
@@ -224,7 +225,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
 
       const collection = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         select: {
           slug: true,
           name: true,
@@ -293,7 +294,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug, trackId } = routeParams
 
       const collection = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!collection) return reply.status(404).send({ error: 'Collection not found' })
