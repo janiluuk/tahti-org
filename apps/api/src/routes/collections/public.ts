@@ -22,6 +22,7 @@ import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import {
   collectionItemInclude,
+  linkReachableCollectionWhere,
   publicCollectionItemWhere,
   sortCollectionItems,
   zodError,
@@ -51,7 +52,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         include: {
           user: { select: { username: true, displayName: true } },
           items: {
@@ -191,7 +192,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true, _count: { select: { subscribers: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -218,7 +219,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -247,7 +248,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -325,7 +326,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = routeParams
 
     const col = await fastify.prisma.collection.findFirst({
-      where: { slug, isPublic: true },
+      where: { slug, ...linkReachableCollectionWhere },
       include: {
         user: { select: { username: true, displayName: true } },
         items: {
