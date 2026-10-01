@@ -15,6 +15,7 @@ import {
   ReorderSoundsSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -282,9 +283,11 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       // Fan out to followers exactly once, the moment a track first goes public —
       // not on every subsequent metadata edit.
       if (patch.data.isPublic === true && !item.isPublic) {
-        await notifyFollowersOfNewTrack(fastify.prisma, user, updated).catch((e) =>
-          fastify.log.warn(e, 'new-track notification failed'),
-        )
+        await notifyFollowersOfNewTrack(
+          fastify.prisma,
+          { ...user, displayName: safeDisplayName(user.displayName, user.username) },
+          updated,
+        ).catch((e) => fastify.log.warn(e, 'new-track notification failed'))
       }
 
       if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
