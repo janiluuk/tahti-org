@@ -58,6 +58,7 @@ export const WORKER_JOB_LANES = {
     'membership-daily',
     'mention-digest',
     'weekly-recap',
+    'listener-digest',
     'annual-grant-calc',
     'listen-session-close',
     'missed-live-show-scan',

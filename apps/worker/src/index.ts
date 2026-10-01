@@ -43,6 +43,7 @@ import {
 } from './jobs/membership-lifecycle.js'
 import { processMentionDigestJob } from './jobs/mention-digest.js'
 import { processWeeklyRecaps } from './lib/weekly-recap.js'
+import { processListenerDigests } from './lib/listener-digest.js'
 import { processPostPublishNotifyJob } from './jobs/post-publish-notify.js'
 import { processListenSessionCloseJob } from './jobs/listen-session-close.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
@@ -223,6 +224,10 @@ const worker = new Worker(
         })
       } else if (job.name === 'mention-digest') {
         return await processMentionDigestJob(job)
+      } else if (job.name === 'listener-digest') {
+        const summary = await processListenerDigests(prisma)
+        console.log('[worker] listener-digest:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'weekly-recap') {
         const summary = await processWeeklyRecaps(prisma)
         console.log('[worker] weekly-recap:', JSON.stringify(summary))
