@@ -58,6 +58,74 @@ export async function notifyFollowersOfNewTrack(
   })
 }
 
+const LIVE_NOTIFY_COOLDOWN_MS = 30 * 60_000
+
+/** Fan out a CHANNEL_LIVE notification to everyone following the artist when
+ * they go live. Skipped if this artist already sent one in the last 30
+ * minutes, so a dropped stream that comes straight back doesn't ping everyone
+ * twice. */
+export async function notifyFollowersOfLiveChannel(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  channel: { slug: string },
+  now: Date = new Date(),
+): Promise<void> {
+  const recent = await prisma.notification.findFirst({
+    where: {
+      actorUserId: artist.id,
+      type: 'CHANNEL_LIVE',
+      createdAt: { gte: new Date(now.getTime() - LIVE_NOTIFY_COOLDOWN_MS) },
+    },
+    select: { id: true },
+  })
+  if (recent) return
+
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'CHANNEL_LIVE' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} is live`,
+      body: null,
+      url: `/c/${channel.slug}`,
+      createdAt: now,
+    })),
+  })
+}
+
+/** Fan out a NEW_EVENT notification to everyone following the artist when
+ * they add an upcoming event (events already in the past tell nobody). */
+export async function notifyFollowersOfNewEvent(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  event: { title: string; place: string; location: string; startAt: Date },
+  now: Date = new Date(),
+): Promise<void> {
+  if (event.startAt <= now) return
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'NEW_EVENT' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} announced an event`,
+      body: `${event.title} · ${event.place}, ${event.location}`,
+      url: `/u/${artist.username}`,
+    })),
+  })
+}
+
 /** Fan out a NEW_RELEASE notification when a Tahti Radio–opted-in artist
  * publishes a release — callers must check `!channel.metaStreamOptOut` first. */
 export async function notifyFollowersOfNewRelease(
@@ -141,8 +209,9 @@ export async function notifyArtistOfNewRepost(
   })
 }
 
-/** Notify a playlist's owner and everyone who has previously contributed a
- * track to it ("participants") when someone adds a new one — never notifies
+/** Notify a playlist's owner, everyone who has previously contributed a
+ * track to it ("participants") and its subscribers (while it is public or
+ * unlisted) when someone adds a new one — never notifies
  * the person who just did the adding, and de-dupes owner/participants so
  * nobody gets pinged twice. */
 export async function notifyPlaylistOfNewTrack(
@@ -163,10 +232,22 @@ export async function notifyPlaylistOfNewTrack(
     distinct: ['addedByUserId'],
   })
 
+  // Subscribers only hear about collections they can still open.
+  const subscribers = await prisma.collectionSubscription.findMany({
+    where: {
+      collectionId: collection.id,
+      collection: { OR: [{ isPublic: true }, { visibility: 'UNLISTED' }] },
+    },
+    select: { userId: true },
+  })
+
   const recipients = new Set<string>()
   if (collection.ownerUserId !== adder.id) recipients.add(collection.ownerUserId)
   for (const c of priorContributors) {
     if (c.addedByUserId && c.addedByUserId !== adder.id) recipients.add(c.addedByUserId)
+  }
+  for (const s of subscribers) {
+    if (s.userId !== adder.id) recipients.add(s.userId)
   }
   if (recipients.size === 0) return
 

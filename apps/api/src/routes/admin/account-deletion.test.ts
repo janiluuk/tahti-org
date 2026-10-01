@@ -90,6 +90,19 @@ describe('M19 — account deletion execute', () => {
   })
 
   it('POST delete-account anonymizes user', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { userId: targetId } })
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: channel.id,
+        title: 'Left behind',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    const collection = await prisma.collection.create({
+      data: { userId: targetId, name: 'Left behind', slug: `acct-del-col-${Date.now()}` },
+    })
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/admin/users/${targetId}/delete-account`,
@@ -102,6 +115,14 @@ describe('M19 — account deletion execute', () => {
     expect(user?.deletedAt).not.toBeNull()
     expect(user?.email).not.toBe(targetEmail)
     expect(user?.displayName).toBe('Deleted user')
+
+    const hiddenSound = await prisma.sound.findUnique({ where: { id: sound.id } })
+    expect(hiddenSound?.isPublic).toBe(false)
+    const hiddenCollection = await prisma.collection.findUnique({ where: { id: collection.id } })
+    expect(hiddenCollection?.isPublic).toBe(false)
+    expect(hiddenCollection?.visibility).toBe('DRAFT')
+    const page = await app.inject({ method: 'GET', url: `/api/tracks/${sound.id}` })
+    expect(page.statusCode).toBe(404)
 
     const login = await app.inject({
       method: 'POST',

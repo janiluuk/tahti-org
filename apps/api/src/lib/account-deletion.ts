@@ -95,6 +95,17 @@ export async function executeAccountDeletion(
     data: { state: 'ARCHIVED' },
   })
 
+  if (user.channel) {
+    await prisma.sound.updateMany({
+      where: { channelId: user.channel.id, isPublic: true },
+      data: { isPublic: false },
+    })
+  }
+  await prisma.collection.updateMany({
+    where: { userId },
+    data: { isPublic: false, visibility: 'DRAFT' },
+  })
+
   await prisma.supportTicket.updateMany({
     where: { artistId: userId, status: { in: ['OPEN', 'IN_PROGRESS'] } },
     data: { status: 'RESOLVED' },
