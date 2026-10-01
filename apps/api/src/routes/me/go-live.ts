@@ -2,6 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyFollowersOfLiveChannel } from '@tahti/db'
+import { safeDisplayName } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { enqueueWarmSoundFallbackCache } from '../../lib/queue.js'
@@ -61,6 +63,18 @@ const meGoLiveRoutes: FastifyPluginAsync = async (fastify) => {
       queueChannelLiveSocialPost(fastify.prisma, user.id, channel.id, channel.slug).catch(
         (err: unknown) =>
           fastify.log.warn({ err, slug: channel.slug }, 'channel live social post failed'),
+      )
+
+      notifyFollowersOfLiveChannel(
+        fastify.prisma,
+        {
+          id: user.id,
+          username: user.username,
+          displayName: safeDisplayName(user.displayName, user.username),
+        },
+        { slug: channel.slug },
+      ).catch((err: unknown) =>
+        fastify.log.warn({ err, slug: channel.slug }, 'go-live follower notification failed'),
       )
 
       enqueueWarmSoundFallbackCache(channel.id).catch((err: unknown) =>

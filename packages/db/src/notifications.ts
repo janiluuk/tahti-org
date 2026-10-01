@@ -58,6 +58,47 @@ export async function notifyFollowersOfNewTrack(
   })
 }
 
+const LIVE_NOTIFY_COOLDOWN_MS = 30 * 60_000
+
+/** Fan out a CHANNEL_LIVE notification to everyone following the artist when
+ * they go live. Skipped if this artist already sent one in the last 30
+ * minutes, so a dropped stream that comes straight back doesn't ping everyone
+ * twice. */
+export async function notifyFollowersOfLiveChannel(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  channel: { slug: string },
+  now: Date = new Date(),
+): Promise<void> {
+  const recent = await prisma.notification.findFirst({
+    where: {
+      actorUserId: artist.id,
+      type: 'CHANNEL_LIVE',
+      createdAt: { gte: new Date(now.getTime() - LIVE_NOTIFY_COOLDOWN_MS) },
+    },
+    select: { id: true },
+  })
+  if (recent) return
+
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'CHANNEL_LIVE' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} is live`,
+      body: null,
+      url: `/c/${channel.slug}`,
+      createdAt: now,
+    })),
+  })
+}
+
 /** Fan out a NEW_RELEASE notification when a Tahti Radio–opted-in artist
  * publishes a release — callers must check `!channel.metaStreamOptOut` first. */
 export async function notifyFollowersOfNewRelease(
