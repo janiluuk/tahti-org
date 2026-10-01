@@ -16,6 +16,7 @@ import { requireAuth } from '../../plugins/auth.js'
 function serialize(event: {
   id: string
   title: string
+  description: string | null
   place: string
   location: string
   eventUrl: string | null
@@ -71,6 +72,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           userId: user.id,
           title: body.title,
+          description: body.description,
           place: body.place,
           location: body.location,
           eventUrl: body.eventUrl || null,

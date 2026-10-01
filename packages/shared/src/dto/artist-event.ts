@@ -5,6 +5,12 @@ import { z } from 'zod'
 
 export const CreateArtistEventSchema = z.object({
   title: z.string().trim().min(1, 'title is required').max(160),
+  description: z
+    .string()
+    .trim()
+    .max(2000)
+    .optional()
+    .transform((s) => s || null),
   place: z.string().trim().min(1, 'place is required').max(160),
   location: z.string().trim().min(1, 'location is required').max(160),
   eventUrl: z
@@ -21,6 +27,7 @@ export type CreateArtistEventInput = z.infer<typeof CreateArtistEventSchema>
 export const ArtistEventSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   place: z.string(),
   location: z.string(),
   eventUrl: z.string().nullable(),

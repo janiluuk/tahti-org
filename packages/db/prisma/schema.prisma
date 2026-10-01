@@ -968,12 +968,13 @@ model ArtistEvent {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  place     String
-  location  String
-  eventUrl  String?
-  startAt   DateTime
-  createdAt DateTime @default(now())
+  title       String
+  description String?
+  place       String
+  location    String
+  eventUrl    String?
+  startAt     DateTime
+  createdAt   DateTime @default(now())
 
   @@index([userId, startAt])
   @@schema("core")
