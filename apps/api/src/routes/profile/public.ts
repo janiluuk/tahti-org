@@ -266,6 +266,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
   const allSounds = user.channel
     ? await fastify.prisma.sound.findMany({
         where: { channelId: user.channel.id, status: 'READY', isPublic: true },
+        orderBy: [{ trackOrder: 'asc' }, { createdAt: 'desc' }],
         select: {
           id: true,
           title: true,
