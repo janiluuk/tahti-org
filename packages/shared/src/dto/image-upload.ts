@@ -51,6 +51,10 @@ export const UserMediaFileSchema = z.object({
   createdAt: z.string().datetime(),
 })
 
+export const UserMediaFileListSchema = z.object({
+  files: z.array(UserMediaFileSchema),
+})
+
 /** Channel header backdrop upload — the one upload surface where the same
  * slot accepts either a static image or a short video loop (matching the
  * client's HEADER_MEDIA_TYPES allowlist), unlike every other image-only
