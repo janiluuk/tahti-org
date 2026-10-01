@@ -4,13 +4,14 @@
 // Minimal, cacheable HTML documents carrying just <title>/<meta> tags, for
 // non-JS-executing link-preview bots (Facebook, Twitter/X, Slack, Discord,
 // iMessage) that would otherwise see the SPA's single static index.html for
-// every /c, /u, /r route. Real browsers and JS-executing crawlers never hit
+// every /c, /u, /r, /t route. Real browsers and JS-executing crawlers never hit
 // these directly — the web edge only proxies known bot user agents here.
 // See tahti-player's packages/tahti-web/SEO-OG-NOTES.md for the plan
 // this implements.
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  IdParamSchema,
   SlugParamSchema,
   SmartLinkSlugParamSchema,
   UsernameParamSchema,
@@ -157,6 +158,43 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
         description:
           release.description || `Listen to ${release.title} and find its official links on Tahti.`,
         image,
+        url,
+      }),
+    )
+  })
+
+  // Public, finished tracks only: a private track's share link (?key=) must
+  // not hand its title to whichever bot unfurls it.
+  fastify.get('/api/og/track/:id', async (request, reply) => {
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
+    const url = `${config.appUrl.replace(/\/$/, '')}/t/${encodeURIComponent(id)}`
+
+    const track = await fastify.prisma.sound.findFirst({
+      where: {
+        id,
+        isPublic: true,
+        status: 'READY',
+        channel: { user: { deletedAt: null, suspendedAt: null } },
+      },
+      select: {
+        title: true,
+        artistName: true,
+        description: true,
+        bannerUrl: true,
+        channel: { select: { user: { select: { displayName: true, avatarUrl: true } } } },
+      },
+    })
+    if (!track) return notFoundPage(reply, url)
+
+    const artist = track.artistName || track.channel.user.displayName
+    reply.header('Cache-Control', CACHE_CONTROL)
+    return reply.type('text/html').send(
+      ogPage({
+        title: `${track.title} by ${artist} on Tahti`,
+        description: track.description || `Listen to ${track.title} by ${artist} on Tahti.`,
+        image: track.bannerUrl ?? track.channel.user.avatarUrl,
         url,
       }),
     )

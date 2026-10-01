@@ -147,6 +147,45 @@ describe('GET /api/og/*', () => {
     expect(res.body).not.toContain('noindex')
   })
 
+  it('returns HTML with real track metadata', async () => {
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: artist.channel!.id,
+        title: 'OG Route Track',
+        description: 'A real track description for OG tests.',
+        status: 'READY',
+        isPublic: true,
+        bannerUrl: 'https://cdn.example/banner.jpg',
+      },
+    })
+    const res = await app.inject({ method: 'GET', url: `/api/og/track/${sound.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('<title>OG Route Track by OG Route Artist on Tahti</title>')
+    expect(res.body).toContain('A real track description for OG tests.')
+    expect(res.body).toContain('property="og:image" content="https://cdn.example/banner.jpg"')
+    expect(res.body).toContain(`/t/${sound.id}`)
+  })
+
+  it('404s for a private or unfinished track instead of leaking its title', async () => {
+    const hidden = await prisma.sound.create({
+      data: {
+        channelId: artist.channel!.id,
+        title: 'OG Route Secret',
+        isPublic: false,
+        status: 'READY',
+      },
+    })
+    const pending = await prisma.sound.create({
+      data: { channelId: artist.channel!.id, title: 'OG Route Pending', isPublic: true },
+    })
+    for (const id of [hidden.id, pending.id]) {
+      const res = await app.inject({ method: 'GET', url: `/api/og/track/${id}` })
+      expect(res.statusCode).toBe(404)
+      expect(res.body).not.toContain('OG Route Secret')
+      expect(res.body).not.toContain('OG Route Pending')
+    }
+  })
+
   it('404s for an unknown collection', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/og/collection/no-such-collection' })
     expect(res.statusCode).toBe(404)
