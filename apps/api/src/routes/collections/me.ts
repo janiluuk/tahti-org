@@ -14,7 +14,9 @@ import {
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
+import { notifyPlaylistOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
@@ -288,6 +290,10 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
+      // Title of what was added, when listeners may see it — private tracks
+      // stay off the public collection, so nobody is told about them.
+      let announceTitle: string | null = null
+
       if (body.soundId) {
         // Own tracks (any visibility) or anyone's public track — this is the
         // "save a track I'm listening to" path, not just the uploader managing
@@ -300,6 +306,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           },
         })
         if (!sound) return reply.status(400).send({ error: 'Sound item not found' })
+        if (sound.isPublic) announceTitle = sound.title
       }
 
       if (body.releaseId) {
@@ -307,6 +314,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           where: { id: body.releaseId, userId: user.id, state: 'PUBLISHED' },
         })
         if (!release) return reply.status(400).send({ error: 'Published release not found' })
+        announceTitle = release.title
       }
 
       if (body.soundId || body.releaseId) {
@@ -338,6 +346,20 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
             },
           })
         })
+        if (announceTitle) {
+          await notifyPlaylistOfNewTrack(
+            fastify.prisma,
+            {
+              id: col.id,
+              slug: col.slug,
+              name: col.name,
+              ownerUsername: user.username,
+              ownerUserId: user.id,
+            },
+            { id: user.id, displayName: safeDisplayName(user.displayName, user.username) },
+            { title: announceTitle },
+          ).catch((err: unknown) => fastify.log.warn({ err }, 'playlist-add notification failed'))
+        }
         return reply.status(201).send(item)
       } catch (err) {
         if (isUniqueConstraintError(err)) {
