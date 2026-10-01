@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { UserSearchListSchema, UserSearchQuerySchema, openApiResponse } from '@tahti/shared'
+import {
+  UserSearchListSchema,
+  UserSearchQuerySchema,
+  openApiResponse,
+  safeDisplayName,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 // M22 — username autocomplete for tracklist @tags
@@ -30,10 +35,16 @@ const meUsersRoutes: FastifyPluginAsync = async (fastify) => {
         },
         take: 8,
         orderBy: { username: 'asc' },
-        select: { username: true, displayName: true },
+        select: { username: true, displayName: true, avatarUrl: true },
       })
 
-      return reply.send(users)
+      return reply.send(
+        users.map((u) => ({
+          username: u.username,
+          displayName: safeDisplayName(u.displayName, u.username),
+          avatarUrl: u.avatarUrl,
+        })),
+      )
     },
   )
 }

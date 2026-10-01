@@ -6,6 +6,7 @@ import { z } from 'zod'
 export const UserSearchHitSchema = z.object({
   username: z.string(),
   displayName: z.string(),
+  avatarUrl: z.string().nullable(),
 })
 
 export const UserSearchListSchema = z.array(UserSearchHitSchema)
