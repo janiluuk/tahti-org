@@ -52,3 +52,14 @@ export const RadioStationSuggestionCreatedSchema = z.object({
   id: z.string(),
   status: RadioStationSuggestionStatusSchema,
 })
+
+export const RejectRadioStationSuggestionSchema = z.object({
+  note: z.string().trim().max(500).optional(),
+})
+
+export const RadioStationSuggestionReviewResponseSchema = z.object({
+  ok: z.literal(true),
+  status: RadioStationSuggestionStatusSchema,
+  /** Set on approval: the new (not yet enabled) internet radio preset. */
+  presetId: z.string().nullable(),
+})
