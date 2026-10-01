@@ -133,6 +133,45 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track!.pinned).toBe(true)
   })
 
+  it('lists tracks in the order saved by PUT /api/me/sound/reorder, newest first by default', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}order@example.com`,
+      username: 'public-profile-order',
+    })
+    const channelId = (
+      await prisma.channel.findUniqueOrThrow({ where: { userId: artist.id }, select: { id: true } })
+    ).id
+    const first = await createReadySound(prisma, channelId, 'First upload')
+    const second = await createReadySound(prisma, channelId, 'Second upload')
+    const third = await createReadySound(prisma, channelId, 'Third upload')
+    await prisma.sound.update({
+      where: { id: first.id },
+      data: { createdAt: new Date('2026-01-01') },
+    })
+    await prisma.sound.update({
+      where: { id: second.id },
+      data: { createdAt: new Date('2026-02-01') },
+    })
+    await prisma.sound.update({
+      where: { id: third.id },
+      data: { createdAt: new Date('2026-03-01') },
+    })
+
+    const titles = async () =>
+      (
+        (
+          await app.inject({ method: 'GET', url: '/api/v1/u/public-profile-order/profile' })
+        ).json() as { tracks: Array<{ title: string }> }
+      ).tracks.map((t) => t.title)
+
+    expect(await titles()).toEqual(['Third upload', 'Second upload', 'First upload'])
+
+    await prisma.sound.update({ where: { id: first.id }, data: { trackOrder: 0 } })
+    await prisma.sound.update({ where: { id: third.id }, data: { trackOrder: 1 } })
+    await prisma.sound.update({ where: { id: second.id }, data: { trackOrder: 2 } })
+    expect(await titles()).toEqual(['First upload', 'Third upload', 'Second upload'])
+  })
+
   it('links a track to its Release via releaseSlug when it belongs to one', async () => {
     const artist = await prisma.user.findUniqueOrThrow({
       where: { username: 'public-profile-artist' },
