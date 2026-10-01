@@ -632,6 +632,8 @@ enum NotificationType {
   CHANNEL_LIVE
   /// An artist you follow announced an upcoming event.
   NEW_EVENT
+  /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).
+  NEW_FAN_SUBSCRIBER
 
   @@schema("core")
 }
