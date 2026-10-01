@@ -23,6 +23,12 @@ export const publicCollectionItemWhere = {
   ],
 }
 
+/** Collections anyone with the link may open: public ones, plus unlisted
+ * ones, which stay out of profiles and discovery but work by link. */
+export const linkReachableCollectionWhere = {
+  OR: [{ isPublic: true }, { visibility: 'UNLISTED' as const }],
+}
+
 export const collectionItemInclude = {
   sound: {
     select: {
