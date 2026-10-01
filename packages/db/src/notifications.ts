@@ -189,6 +189,30 @@ export async function notifyArtistOfNewLike(
   })
 }
 
+/** Notify an artist that someone commented on one of their tracks (`item`
+ * set) or on their channel — never for their own comments. */
+export async function notifyArtistOfNewComment(
+  prisma: PrismaClient,
+  artistUserId: string,
+  commenter: { id: string; username: string; displayName: string },
+  comment: { body: string },
+  target: { channelSlug: string; item?: { id: string; title: string } },
+): Promise<void> {
+  if (artistUserId === commenter.id) return
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'NEW_COMMENT',
+      actorUserId: commenter.id,
+      title: target.item
+        ? `${commenter.displayName} commented on "${target.item.title}"`
+        : `${commenter.displayName} commented on your channel`,
+      body: comment.body.slice(0, 140),
+      url: target.item ? `/t/${target.item.id}` : `/c/${target.channelSlug}`,
+    },
+  })
+}
+
 /** Notify an artist that someone reposted/shared one of their tracks. */
 export async function notifyArtistOfNewRepost(
   prisma: PrismaClient,

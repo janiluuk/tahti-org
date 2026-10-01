@@ -636,6 +636,8 @@ enum NotificationType {
   NEW_FAN_SUBSCRIBER
   /// Someone paid for one of your purchase tiers (honours notifyMoneyMovesInApp).
   NEW_PURCHASE
+  /// Someone commented on one of your tracks or on your channel.
+  NEW_COMMENT
 
   @@schema("core")
 }

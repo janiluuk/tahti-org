@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { PrismaClient } from '@tahti/db'
+import { notifyArtistOfNewComment, type PrismaClient } from '@tahti/db'
 import {
   CommentBodySchema,
   CommentsListSchema,
@@ -10,6 +10,7 @@ import {
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
@@ -44,6 +45,14 @@ async function listComments(
     authorDisplayName: c.author.displayName,
     authorAvatarUrl: c.author.avatarUrl,
   }))
+}
+
+function commenterOf(user: { id: string; username: string; displayName: string }) {
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: safeDisplayName(user.displayName, user.username),
+  }
 }
 
 const commentsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -84,7 +93,12 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const item = await fastify.prisma.sound.findUnique({
       where: { id: routeParams.id },
-      select: { commentsEnabled: true, isPublic: true },
+      select: {
+        commentsEnabled: true,
+        isPublic: true,
+        title: true,
+        channel: { select: { slug: true, userId: true } },
+      },
     })
     const visible =
       item?.isPublic ||
@@ -113,6 +127,14 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         author: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
+
+    await notifyArtistOfNewComment(
+      fastify.prisma,
+      item.channel.userId,
+      commenterOf(request.sessionUser!),
+      comment,
+      { channelSlug: item.channel.slug, item: { id: routeParams.id, title: item.title } },
+    ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
 
     return reply.status(201).send({
       id: comment.id,
@@ -155,7 +177,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, commentsEnabled: true },
+        select: { id: true, commentsEnabled: true, userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
       if (!channel.commentsEnabled) {
@@ -175,6 +197,14 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
           author: { select: { username: true, displayName: true, avatarUrl: true } },
         },
       })
+
+      await notifyArtistOfNewComment(
+        fastify.prisma,
+        channel.userId,
+        commenterOf(request.sessionUser!),
+        comment,
+        { channelSlug: routeParams.slug },
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
 
       return reply.status(201).send({
         id: comment.id,
