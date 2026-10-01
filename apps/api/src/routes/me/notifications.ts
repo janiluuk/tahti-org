@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
+  NotificationListQuerySchema,
   NotificationListSchema,
   openApiResponse,
   parseRouteParams,
@@ -26,8 +27,9 @@ const NOTIFICATION_SELECT = {
 
 const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/notifications — most recent notifications + unread count.
-  // ?stickyOnly=true returns unread sticky notifications only (unbounded by
-  // NOTIFICATION_LIMIT) for the must-acknowledge toaster.
+  // ?limit=1..50 (default NOTIFICATION_LIMIT); ?before=<id> pages to the ones
+  // older than that notification. ?stickyOnly=true returns unread sticky
+  // notifications only (unbounded) for the must-acknowledge toaster.
   fastify.get(
     '/api/me/notifications',
     {
@@ -40,17 +42,35 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const stickyOnly = (request.query as { stickyOnly?: string })?.stickyOnly === 'true'
+      const query = NotificationListQuerySchema.safeParse(request.query ?? {})
+      if (!query.success) return reply.status(400).send({ error: 'Invalid query' })
+      const stickyOnly = query.data.stickyOnly === 'true'
+      const limit = query.data.limit ?? NOTIFICATION_LIMIT
 
-      const [notifications, unreadCount] = await Promise.all([
+      if (!stickyOnly && query.data.before) {
+        const anchor = await fastify.prisma.notification.findFirst({
+          where: { id: query.data.before, userId: user.id },
+          select: { id: true },
+        })
+        if (!anchor) return reply.status(400).send({ error: 'Unknown notification cursor' })
+      }
+
+      const [rows, unreadCount] = await Promise.all([
         fastify.prisma.notification.findMany({
           where: stickyOnly ? { userId: user.id, sticky: true, readAt: null } : { userId: user.id },
-          orderBy: { createdAt: 'desc' },
-          ...(stickyOnly ? {} : { take: NOTIFICATION_LIMIT }),
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          ...(stickyOnly
+            ? {}
+            : {
+                take: limit + 1,
+                ...(query.data.before ? { cursor: { id: query.data.before }, skip: 1 } : {}),
+              }),
           select: NOTIFICATION_SELECT,
         }),
         fastify.prisma.notification.count({ where: { userId: user.id, readAt: null } }),
       ])
+      const hasMore = !stickyOnly && rows.length > limit
+      const notifications = hasMore ? rows.slice(0, limit) : rows
 
       return reply.send({
         notifications: notifications.map((n) => ({
@@ -59,6 +79,7 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
           createdAt: n.createdAt.toISOString(),
         })),
         unreadCount,
+        hasMore,
       })
     },
   )
