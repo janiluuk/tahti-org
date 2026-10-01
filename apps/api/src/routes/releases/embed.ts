@@ -232,6 +232,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           coverKey: true,
           user: { select: { username: true, displayName: true } },
           items: {
+            where: { sound: { isPublic: true, status: 'READY' } },
             orderBy: { position: 'asc' },
             select: {
               sound: {
@@ -298,7 +299,11 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (!collection) return reply.status(404).send({ error: 'Collection not found' })
 
       const item = await fastify.prisma.collectionItem.findFirst({
-        where: { collectionId: collection.id, soundId: trackId },
+        where: {
+          collectionId: collection.id,
+          soundId: trackId,
+          sound: { isPublic: true, status: 'READY' },
+        },
         select: {
           sound: {
             select: {

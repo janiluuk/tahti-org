@@ -20,7 +20,12 @@ import { config } from '../../config.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
-import { collectionItemInclude, sortCollectionItems, zodError } from './helpers.js'
+import {
+  collectionItemInclude,
+  publicCollectionItemWhere,
+  sortCollectionItems,
+  zodError,
+} from './helpers.js'
 import {
   buildChannelSoundRssXml,
   buildRss,
@@ -50,6 +55,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         include: {
           user: { select: { username: true, displayName: true } },
           items: {
+            where: publicCollectionItemWhere,
             orderBy: { position: 'asc' },
             include: collectionItemInclude,
           },
@@ -323,6 +329,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       include: {
         user: { select: { username: true, displayName: true } },
         items: {
+          where: publicCollectionItemWhere,
           orderBy: { position: 'asc' },
           include: collectionItemInclude,
         },

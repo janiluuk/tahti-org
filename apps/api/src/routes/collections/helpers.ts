@@ -13,6 +13,16 @@ export function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+/** Items a public collection surface may show: the owner can keep private,
+ * unfinished or draft entries in a public collection, and those stay
+ * between them and the editor. */
+export const publicCollectionItemWhere = {
+  OR: [
+    { sound: { isPublic: true, status: 'READY' as const } },
+    { release: { state: 'PUBLISHED' as const } },
+  ],
+}
+
 export const collectionItemInclude = {
   sound: {
     select: {
