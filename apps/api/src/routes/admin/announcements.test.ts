@@ -100,6 +100,8 @@ describe('/api/admin/announcements', () => {
       headers: { cookie: boardCookie },
     })
     expect(list.json().clips.map((c: { id: string }) => c.id)).toContain(clipId)
+    const listed = list.json().clips.find((c: { id: string }) => c.id === clipId)
+    expect(listed.audioUrl).toContain('announcements/system/x.mp3')
 
     const patch = await app.inject({
       method: 'PATCH',

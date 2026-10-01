@@ -118,9 +118,17 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       const clips = await fastify.prisma.announcementClip.findMany({
         where: { channelId: null },
         orderBy: [{ position: 'asc' }, { createdAt: 'desc' }],
-        select: CLIP_SELECT,
+        select: { ...CLIP_SELECT, audioKey: true },
       })
-      return reply.send({ clips })
+      // A short-lived link per clip so the board can preview it in the list.
+      return reply.send({
+        clips: await Promise.all(
+          clips.map(async ({ audioKey, ...clip }) => ({
+            ...clip,
+            audioUrl: await presignedGetUrl(audioKey, PRESIGN_TTL_SEC),
+          })),
+        ),
+      })
     },
   )
 
