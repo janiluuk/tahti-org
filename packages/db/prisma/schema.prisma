@@ -953,6 +953,8 @@ model User {
   addonsAuthored                 Addon[]                         @relation("AddonAuthor")
   addonInstalls                  AddonInstall[]                  @relation("AddonListenerInstall")
   internetRadioStations          InternetRadioStation[]
+  radioStationSuggestions        RadioStationSuggestion[]        @relation("RadioStationSuggestionSubmitter")
+  radioStationSuggestionReviews  RadioStationSuggestion[]        @relation("RadioStationSuggestionReviewer")
   themes                         Theme[]
   integrationCredentials         IntegrationCredential[]
 
@@ -3824,6 +3826,39 @@ model ChannelBlock {
 // /admin/internet-radio ("internet radio source configuration"). streamUrl is
 // often intentionally blank (rights/URL not supplied yet); a user filling it
 // in on their own copy doesn't affect the shared preset.
+enum RadioStationSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("core")
+}
+
+/// A listener's suggestion for a board-curated internet radio preset. The
+/// board approves it into an InternetRadioPreset or rejects it with a note.
+model RadioStationSuggestion {
+  id            String                       @id @default(cuid())
+  submitterId   String?
+  submitter     User?                        @relation("RadioStationSuggestionSubmitter", fields: [submitterId], references: [id], onDelete: SetNull)
+  name          String
+  logoUrl       String?
+  language      String
+  bitrateKbps   Int?
+  streamUrl     String
+  status        RadioStationSuggestionStatus @default(PENDING)
+  rejectionNote String?
+  reviewedById  String?
+  reviewedBy    User?                        @relation("RadioStationSuggestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt    DateTime?
+  /// The preset created when this suggestion was approved.
+  presetId      String?
+  createdAt     DateTime                     @default(now())
+
+  @@index([status, createdAt])
+  @@index([submitterId])
+  @@schema("core")
+}
+
 model InternetRadioPreset {
   id             String   @id @default(cuid())
   name           String
