@@ -275,6 +275,50 @@ describe('M18 — release track downloads', () => {
     }
   })
 
+  it("applies the linked sound's repost and follow requirements", async () => {
+    const sound = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Share to download',
+        rawKey: 'raw/rel-dl-repost.wav',
+        mp3Key: 'mp3/rel-dl-repost.mp3',
+        fileSizeBytes: BigInt(1000),
+        status: 'READY',
+        repostToDownload: true,
+        followToDownload: true,
+      },
+    })
+    await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: sound.id } })
+    const url = `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?fp=rel-gate-repost`
+    try {
+      const anon = await app.inject({ method: 'GET', url, headers: dlHeaders })
+      expect(anon.statusCode).toBe(403)
+      expect(anon.json()).toMatchObject({ gates: ['repost', 'follow'], soundId: sound.id })
+
+      await prisma.soundRepostAck.create({
+        data: {
+          soundId: sound.id,
+          byFingerprint: createHash('sha256')
+            .update(
+              `rel-gate-repost:${createHash('sha256')
+                .update(`${config.internalSecret}:${new Date().toISOString().slice(0, 10)}`)
+                .digest('hex')}`,
+            )
+            .digest('hex'),
+        },
+      })
+      const fan = await app.inject({
+        method: 'GET',
+        url,
+        headers: { ...dlHeaders, cookie: fanCookie },
+      })
+      expect(fan.statusCode).toBe(200)
+    } finally {
+      await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: null } })
+      await prisma.sound.delete({ where: { id: sound.id } })
+    }
+  })
+
   it('returns 404 for unknown slug or track', async () => {
     const badSlug = await app.inject({
       method: 'GET',
