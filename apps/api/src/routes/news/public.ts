@@ -22,7 +22,16 @@ const newsPublicRoute: FastifyPluginAsync = async (fastify) => {
         where: { publishedAt: { not: null } },
         orderBy: { publishedAt: 'desc' },
         take: NEWS_FEED_LIMIT,
-        select: { id: true, headline: true, summary: true, authorName: true, publishedAt: true },
+        select: {
+          id: true,
+          headline: true,
+          summary: true,
+          imageUrl: true,
+          linkUrl: true,
+          linkLabel: true,
+          authorName: true,
+          publishedAt: true,
+        },
       })
 
       return reply.send(
@@ -30,6 +39,9 @@ const newsPublicRoute: FastifyPluginAsync = async (fastify) => {
           id: p.id,
           headline: p.headline,
           summary: p.summary,
+          imageUrl: p.imageUrl,
+          linkUrl: p.linkUrl,
+          linkLabel: p.linkLabel,
           authorName: p.authorName,
           publishedAt: p.publishedAt!.toISOString(),
         })),

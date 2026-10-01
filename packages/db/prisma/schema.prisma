@@ -3649,6 +3649,9 @@ model NewsPost {
   id          String    @id @default(cuid())
   headline    String
   summary     String
+  imageUrl    String?
+  linkUrl     String?
+  linkLabel   String?
   authorId    String?
   author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorName  String

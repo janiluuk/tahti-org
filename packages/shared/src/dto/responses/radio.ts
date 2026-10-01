@@ -44,6 +44,9 @@ export const NewsPostSchema = z.object({
   id: z.string(),
   headline: z.string(),
   summary: z.string(),
+  imageUrl: z.string().nullable(),
+  linkUrl: z.string().nullable(),
+  linkLabel: z.string().nullable(),
   authorName: z.string(),
   publishedAt: z.string(),
 })
