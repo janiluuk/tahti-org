@@ -126,6 +126,41 @@ function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+const SCHEDULE_SELECT = {
+  nextBroadcastAt: true,
+  nextBroadcastNote: true,
+  nextBroadcastShowId: true,
+  nextBroadcastDurationHours: true,
+  nextBroadcastShow: {
+    select: { showType: true, mode: true, description: true, artworkUrl: true },
+  },
+} as const
+
+function scheduleView(channel: {
+  nextBroadcastAt: Date | null
+  nextBroadcastNote: string | null
+  nextBroadcastShowId: string | null
+  nextBroadcastDurationHours: number | null
+  nextBroadcastShow: {
+    showType: 'LIVE_SET' | 'TALK'
+    mode: 'SINGLE' | 'SERIES'
+    description: string | null
+    artworkUrl: string | null
+  } | null
+}) {
+  const show = channel.nextBroadcastShow
+  return {
+    nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+    nextBroadcastNote: channel.nextBroadcastNote,
+    nextBroadcastShowId: channel.nextBroadcastShowId,
+    nextBroadcastDurationHours: channel.nextBroadcastDurationHours,
+    nextBroadcastShowType: show?.showType ?? null,
+    nextBroadcastMode: show?.mode ?? null,
+    nextBroadcastDescription: show?.description ?? null,
+    nextBroadcastCoverUrl: show?.artworkUrl ?? null,
+  }
+}
+
 /** LISTENER-002 — artist sets when they plan to go live next. */
 const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
   const showDb = showScheduleDb(fastify.prisma)
@@ -185,13 +220,10 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { nextBroadcastAt: true, nextBroadcastNote: true },
+        select: SCHEDULE_SELECT,
       })
       if (!channel) return reply.status(404).send({ error: 'No channel' })
-      return reply.send({
-        nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
-        nextBroadcastNote: channel.nextBroadcastNote,
-      })
+      return reply.send(scheduleView(channel))
     },
   )
 
@@ -206,7 +238,12 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!channel) return reply.status(404).send({ error: 'No channel' })
 
-    const data: { nextBroadcastAt?: Date | null; nextBroadcastNote?: string | null } = {}
+    const data: {
+      nextBroadcastAt?: Date | null
+      nextBroadcastNote?: string | null
+      nextBroadcastShowId?: string | null
+      nextBroadcastDurationHours?: number | null
+    } = {}
     if (parsed.data.nextBroadcastAt !== undefined) {
       data.nextBroadcastAt = parsed.data.nextBroadcastAt
         ? new Date(parsed.data.nextBroadcastAt)
@@ -215,6 +252,19 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     if (parsed.data.nextBroadcastNote !== undefined) {
       data.nextBroadcastNote = parsed.data.nextBroadcastNote?.trim() || null
     }
+    if (parsed.data.nextBroadcastShowId !== undefined) {
+      if (parsed.data.nextBroadcastShowId) {
+        const series = await fastify.prisma.liveShowSeries.findFirst({
+          where: { id: parsed.data.nextBroadcastShowId, channelId: channel.id },
+          select: { id: true },
+        })
+        if (!series) return reply.status(404).send({ error: 'Show not found' })
+      }
+      data.nextBroadcastShowId = parsed.data.nextBroadcastShowId
+    }
+    if (parsed.data.nextBroadcastDurationHours !== undefined) {
+      data.nextBroadcastDurationHours = parsed.data.nextBroadcastDurationHours
+    }
     if (Object.keys(data).length === 0) {
       return reply.status(400).send({ error: 'No schedule fields to update' })
     }
@@ -222,12 +272,9 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     const updated = await fastify.prisma.channel.update({
       where: { id: channel.id },
       data,
-      select: { nextBroadcastAt: true, nextBroadcastNote: true },
+      select: SCHEDULE_SELECT,
     })
-    return reply.send({
-      nextBroadcastAt: updated.nextBroadcastAt?.toISOString() ?? null,
-      nextBroadcastNote: updated.nextBroadcastNote,
-    })
+    return reply.send(scheduleView(updated))
   })
 
   fastify.get(
