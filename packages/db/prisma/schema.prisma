@@ -638,6 +638,10 @@ enum NotificationType {
   NEW_PURCHASE
   /// Someone commented on one of your tracks or on your channel.
   NEW_COMMENT
+  /// Fan-subscription money was paid out to you (honours notifyMoneyMovesInApp).
+  PAYOUT_SENT
+  /// A renewal payment for one of your fan subscriptions failed.
+  FAN_SUB_PAYMENT_FAILED
 
   @@schema("core")
 }
