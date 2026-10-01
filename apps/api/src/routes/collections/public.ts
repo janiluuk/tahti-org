@@ -25,6 +25,7 @@ import {
   linkReachableCollectionWhere,
   publicCollectionItemWhere,
   sortCollectionItems,
+  soundArtist,
   zodError,
 } from './helpers.js'
 import {
@@ -89,6 +90,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
               audioUrl: url,
               gate,
               channel: { slug: channel.slug },
+              artist: soundArtist(colItem.sound),
             },
           }
         }),

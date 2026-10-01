@@ -80,4 +80,27 @@ describe("collection editor and another artist's withdrawn track", () => {
     expect(theirs.audioUrl).toBeNull()
     expect(theirs.unavailable).toBe(true)
   })
+
+  it("names each track's artist, never by an email address", async () => {
+    await prisma.user.update({
+      where: { username: 'collection-withdrawn-other' },
+      data: { displayName: 'other@example.com' },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/collections/${SLUG}`,
+      headers: { cookie },
+    })
+    const items = res.json().items as Array<{
+      sound: { id: string; artist: { username: string; displayName: string }; channel: object }
+    }>
+    expect(items.find((i) => i.sound.id === theirsId)!.sound.artist).toEqual({
+      username: 'collection-withdrawn-other',
+      displayName: 'collection-withdrawn-other',
+    })
+    expect(items.find((i) => i.sound.id === ownId)!.sound.artist.username).toBe(
+      'collection-withdrawn-owner',
+    )
+    expect(JSON.stringify(res.json())).not.toContain('other@example.com')
+  })
 })

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyInstance } from 'fastify'
-import { soundPlaybackKey } from '@tahti/shared'
+import { safeDisplayName, soundPlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
@@ -48,7 +48,14 @@ export const collectionItemInclude = {
       purchaseTierId: true,
       isPublic: true,
       status: true,
-      channel: { select: { slug: true, userId: true } },
+      artistName: true,
+      channel: {
+        select: {
+          slug: true,
+          userId: true,
+          user: { select: { username: true, displayName: true } },
+        },
+      },
     },
   },
   release: {
@@ -73,6 +80,18 @@ export const collectionItemInclude = {
   },
 } as const
 
+/** Who made a collection item's track, never named by an email address. */
+export function soundArtist(sound: {
+  artistName: string | null
+  channel: { user: { username: string; displayName: string } }
+}) {
+  const { username, displayName } = sound.channel.user
+  return {
+    username,
+    displayName: sound.artistName?.trim() || safeDisplayName(displayName, username),
+  }
+}
+
 export async function addManagementPlayback<
   T extends {
     items: Array<{
@@ -83,7 +102,8 @@ export async function addManagementPlayback<
         purchaseTierId: string | null
         isPublic: boolean
         status: string
-        channel: { userId: string }
+        artistName: string | null
+        channel: { userId: string; user: { username: string; displayName: string } }
       } | null
       release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
     }>
@@ -108,7 +128,12 @@ export async function addManagementPlayback<
         const withdrawn =
           item.sound.channel.userId !== viewerUserId &&
           (!item.sound.isPublic || item.sound.status !== 'READY')
-        if (withdrawn) return { ...item, audioUrl: null, unavailable: true }
+        const sound = {
+          ...item.sound,
+          channel: { ...item.sound.channel, user: undefined },
+          artist: soundArtist(item.sound),
+        }
+        if (withdrawn) return { ...item, sound, audioUrl: null, unavailable: true }
         const { url } = await resolveGatedPlaybackUrl(fastify.prisma, {
           playbackKey,
           artistUserId: item.sound.channel.userId,
@@ -117,7 +142,7 @@ export async function addManagementPlayback<
           viewerUserId,
           ttlSec: 60 * 60,
         })
-        return { ...item, audioUrl: url }
+        return { ...item, sound, audioUrl: url }
       }),
     ),
   }
