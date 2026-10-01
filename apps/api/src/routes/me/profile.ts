@@ -10,6 +10,7 @@ import {
   openApiResponse,
   parseAvatarTheme,
   parseLogoPlacement,
+  parseMixcloudUsername,
 } from '@tahti/shared'
 import { parseHearthisUsername } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
@@ -193,9 +194,15 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         // (apps/api/src/routes/imports/hearthis.ts) rather than re-parsing the
         // social-links blob on every request — keep it in sync here, the one
         // place that field gets written.
-        const hearthisAt = (body.socialLinks as Record<string, string> | undefined)?.hearthisAt
+        const links = body.socialLinks as Record<string, string> | undefined
+        const hearthisAt = links?.hearthisAt
         if (hearthisAt !== undefined) {
           data.hearthisUsername = hearthisAt.trim() ? parseHearthisUsername(hearthisAt) : null
+        }
+        // Same for Mixcloud's "Your mixes" tab (routes/imports/mixcloud-embed.ts).
+        const mixcloud = links?.mixcloud
+        if (mixcloud !== undefined) {
+          data.mixcloudUsername = parseMixcloudUsername(mixcloud)
         }
       }
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
