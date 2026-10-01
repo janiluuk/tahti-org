@@ -19,6 +19,7 @@ import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
+import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // sound-item downloads. Reuses the Download table (releaseTrackId column).
@@ -77,12 +78,43 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
           flacKey: true,
           sourceKey: true,
           explicit: true,
+          soundId: true,
         },
       })
       if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
 
-      // Resolve the download key by format + subscriber status
+      // A track linked to a subscriber-only or paid sound downloads under the
+      // same gate as playing it, so the release page can't skip the paywall.
       const byUserId = request.sessionUser?.id ?? null
+      const linkedSound = track.soundId
+        ? await fastify.prisma.sound.findUnique({
+            where: { id: track.soundId },
+            select: { accessMode: true, purchaseTierId: true },
+          })
+        : null
+      if (linkedSound) {
+        const playbackGate = await resolvePlaybackGateStatus(
+          fastify.prisma,
+          {
+            artistUserId: release.userId,
+            accessMode: linkedSound.accessMode ?? 'FREE',
+            purchaseTierId: linkedSound.purchaseTierId ?? null,
+          },
+          byUserId,
+        )
+        if (!playbackGate.allowed) {
+          return reply.status(403).send({
+            error:
+              playbackGate.reason === 'PURCHASE'
+                ? 'Buy this track (or subscribe) to download'
+                : 'Subscribe to this artist to download',
+            gate: playbackGate.reason,
+            ...(playbackGate.tierId ? { tierId: playbackGate.tierId } : {}),
+          })
+        }
+      }
+
+      // Resolve the download key by format + subscriber status
       const isFanSub =
         byUserId && (await isActiveFanSubscriber(fastify.prisma, release.userId, byUserId))
 

@@ -240,6 +240,41 @@ describe('M18 — release track downloads', () => {
     expect(counted).toBe(1)
   })
 
+  it("applies the linked sound's subscriber gate to the download", async () => {
+    const sound = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Backers only',
+        rawKey: 'raw/rel-dl-gated.wav',
+        mp3Key: 'mp3/rel-dl-gated.mp3',
+        fileSizeBytes: BigInt(1000),
+        status: 'READY',
+        accessMode: 'SUBSCRIBERS_ONLY',
+      },
+    })
+    await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: sound.id } })
+    try {
+      const anon = await app.inject({
+        method: 'GET',
+        url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?fp=rel-gate-anon`,
+        headers: dlHeaders,
+      })
+      expect(anon.statusCode).toBe(403)
+      expect(anon.json().gate).toBe('SUBSCRIBERS_ONLY')
+      expect(await prisma.download.count({ where: { releaseTrackId: trackId } })).toBe(0)
+
+      const fan = await app.inject({
+        method: 'GET',
+        url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?fp=rel-gate-fan`,
+        headers: { ...dlHeaders, cookie: fanCookie },
+      })
+      expect(fan.statusCode).toBe(200)
+    } finally {
+      await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: null } })
+      await prisma.sound.delete({ where: { id: sound.id } })
+    }
+  })
+
   it('returns 404 for unknown slug or track', async () => {
     const badSlug = await app.inject({
       method: 'GET',
