@@ -48,7 +48,10 @@ export {
   notifyFollowersOfNewTrack,
   notifyFollowersOfNewRelease,
   notifyFollowersOfLiveChannel,
+<<<<<<< HEAD
   notifyFollowersOfNewEvent,
+=======
+>>>>>>> origin/main
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
   notifyArtistOfNewRepost,

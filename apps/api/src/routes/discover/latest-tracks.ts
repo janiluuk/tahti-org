@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { TahtiSelectsGalleryResponseSchema, openApiResponse } from '@tahti/shared'
 import { toGatedGalleryItem } from '../../lib/playback-url.js'
+import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
@@ -54,6 +55,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
         where: {
           isPublic: true,
           status: 'READY',
+          ...listedArtistSoundWhere,
           ...(genre ? { genre } : {}),
           ...(contentTypes ? { contentType: { in: contentTypes as never[] } } : {}),
           OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],

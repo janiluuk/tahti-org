@@ -630,8 +630,11 @@ enum NotificationType {
   STREAMING_COPY_READY
   /// An artist you follow went live on their channel.
   CHANNEL_LIVE
+<<<<<<< HEAD
   /// An artist you follow announced an upcoming event.
   NEW_EVENT
+=======
+>>>>>>> origin/main
 
   @@schema("core")
 }
