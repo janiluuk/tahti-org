@@ -4,6 +4,8 @@
 import type { PrismaClient } from '@tahti/db'
 import { computeFanSubSplit } from '@tahti/ledger'
 import { isActiveFanSubscriber } from './fansub.js'
+import { announceMoneyMove, formatEuros } from './money-moves.js'
+import { safeDisplayName } from '@tahti/shared'
 
 // One-time-purchase tiers (per-track paywall) — distinct from the recurring
 // FanTier/FanSubscription system. An active fan-subscriber always bypasses
@@ -68,7 +70,7 @@ export async function recordPurchasePayment(
     stripeCheckoutSessionId: string | null
   },
 ) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const purchase = await tx.purchase.findUnique({
       where: { id: args.purchaseId },
       select: { id: true, state: true, artistUserId: true, tier: { select: { name: true } } },
@@ -126,4 +128,28 @@ export async function recordPurchasePayment(
 
     return { alreadyPaid: false as const, purchaseId: purchase.id }
   })
+
+  // Free claims aren't money moving, so only paid purchases are announced.
+  if (!result.alreadyPaid && args.amountCents > 0) {
+    const purchase = await prisma.purchase.findUnique({
+      where: { id: result.purchaseId },
+      select: {
+        artistUserId: true,
+        buyerUserId: true,
+        tier: { select: { name: true } },
+        buyer: { select: { username: true, displayName: true } },
+      },
+    })
+    if (purchase) {
+      const buyer = safeDisplayName(purchase.buyer.displayName, purchase.buyer.username)
+      await announceMoneyMove(prisma, purchase.artistUserId, {
+        type: 'NEW_PURCHASE',
+        actorUserId: purchase.buyerUserId,
+        title: `${buyer} bought ${purchase.tier.name} (${formatEuros(args.amountCents)})`,
+        url: '/studio/revenue',
+      })
+    }
+  }
+
+  return result
 }

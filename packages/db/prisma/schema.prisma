@@ -634,6 +634,8 @@ enum NotificationType {
   NEW_EVENT
   /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).
   NEW_FAN_SUBSCRIBER
+  /// Someone paid for one of your purchase tiers (honours notifyMoneyMovesInApp).
+  NEW_PURCHASE
 
   @@schema("core")
 }
