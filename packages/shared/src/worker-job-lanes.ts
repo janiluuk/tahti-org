@@ -57,6 +57,7 @@ export const WORKER_JOB_LANES = {
     'fan-sub-daily',
     'membership-daily',
     'mention-digest',
+    'weekly-recap',
     'annual-grant-calc',
     'listen-session-close',
     'missed-live-show-scan',

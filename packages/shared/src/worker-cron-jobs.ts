@@ -118,6 +118,13 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     subTasks: ['tor-exit-list-sync', 'download-fraud-scan', 'live-show-recurrence-generate'],
   },
   {
+    name: 'weekly-recap',
+    pattern: '0 16 * * 0',
+    jobId: 'weekly-recap-cron',
+    description:
+      'Sunday 16:00 UTC: weekly recap email to artists who opted in (plays, downloads, followers, fan money)',
+  },
+  {
     name: 'mention-digest',
     pattern: '0 18 * * *',
     jobId: 'mention-digest-cron',
