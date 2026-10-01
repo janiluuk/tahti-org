@@ -18,6 +18,9 @@ export const NotificationTypeSchema = z.enum([
   'THEME_APPROVED',
   'THEME_REJECTED',
   'ADMIN_TEST',
+  'MISSED_LIVE_SHOW_FLAGGED',
+  'STREAMING_COPY_READY',
+  'CHANNEL_LIVE',
 ])
 
 export const NotificationSchema = z.object({

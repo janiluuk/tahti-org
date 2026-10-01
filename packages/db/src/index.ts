@@ -47,6 +47,7 @@ export {
   notifyFollowersOfNewPost,
   notifyFollowersOfNewTrack,
   notifyFollowersOfNewRelease,
+  notifyFollowersOfLiveChannel,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
   notifyArtistOfNewRepost,
