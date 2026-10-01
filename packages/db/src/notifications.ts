@@ -99,6 +99,33 @@ export async function notifyFollowersOfLiveChannel(
   })
 }
 
+/** Fan out a NEW_EVENT notification to everyone following the artist when
+ * they add an upcoming event (events already in the past tell nobody). */
+export async function notifyFollowersOfNewEvent(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  event: { title: string; place: string; location: string; startAt: Date },
+  now: Date = new Date(),
+): Promise<void> {
+  if (event.startAt <= now) return
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'NEW_EVENT' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} announced an event`,
+      body: `${event.title} · ${event.place}, ${event.location}`,
+      url: `/u/${artist.username}`,
+    })),
+  })
+}
+
 /** Fan out a NEW_RELEASE notification when a Tahti Radio–opted-in artist
  * publishes a release — callers must check `!channel.metaStreamOptOut` first. */
 export async function notifyFollowersOfNewRelease(
