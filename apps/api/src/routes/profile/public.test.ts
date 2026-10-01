@@ -111,6 +111,33 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(collection!.style).toBe('DJ_SET_SERIES')
   })
 
+  it('orders public collections by the saved profile order after featured ones', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}grid@example.com`,
+      username: 'public-profile-grid',
+    })
+    const make = (
+      slug: string,
+      data: { publicProfileOrder?: number; isFeatured?: boolean; createdAt: Date },
+    ) =>
+      prisma.collection.create({
+        data: { userId: artist.id, slug: `${PREFIX}${slug}`, name: slug, isPublic: true, ...data },
+      })
+    await make('a', { createdAt: new Date('2026-01-01'), publicProfileOrder: 1 })
+    await make('b', { createdAt: new Date('2026-02-01'), publicProfileOrder: 0 })
+    await make('c', { createdAt: new Date('2026-03-01'), publicProfileOrder: 2 })
+    await make('featured', {
+      createdAt: new Date('2025-01-01'),
+      publicProfileOrder: 3,
+      isFeatured: true,
+    })
+
+    const res = await app.inject({ method: 'GET', url: '/api/v1/u/public-profile-grid/profile' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { collections: Array<{ name: string }> }
+    expect(body.collections.map((c) => c.name)).toEqual(['featured', 'b', 'a', 'c'])
+  })
+
   it('lists all ready sound items under tracks, flagging pinned ones', async () => {
     const artist = await prisma.user.findUniqueOrThrow({
       where: { username: 'public-profile-artist' },
