@@ -46,6 +46,8 @@ export const collectionItemInclude = {
       embedProvider: true,
       accessMode: true,
       purchaseTierId: true,
+      isPublic: true,
+      status: true,
       channel: { select: { slug: true, userId: true } },
     },
   },
@@ -79,6 +81,8 @@ export async function addManagementPlayback<
         flacKey: string | null
         accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
         purchaseTierId: string | null
+        isPublic: boolean
+        status: string
         channel: { userId: string }
       } | null
       release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
@@ -99,6 +103,12 @@ export async function addManagementPlayback<
             audioUrl: playbackKey ? await presignedGetUrl(playbackKey, 60 * 60) : null,
           }
         }
+        // Someone else's track that has since gone private (or back to
+        // processing) stays listed for the owner, but no longer plays.
+        const withdrawn =
+          item.sound.channel.userId !== viewerUserId &&
+          (!item.sound.isPublic || item.sound.status !== 'READY')
+        if (withdrawn) return { ...item, audioUrl: null, unavailable: true }
         const { url } = await resolveGatedPlaybackUrl(fastify.prisma, {
           playbackKey,
           artistUserId: item.sound.channel.userId,
