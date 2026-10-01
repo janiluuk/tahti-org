@@ -173,12 +173,16 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           description: body.description?.trim() || null,
           type,
           style: body.style as never,
-          isPublic: body.isPublic ?? true,
+          isPublic: body.isPublic ?? (body.visibility ? body.visibility === 'PUBLIC' : true),
           coverUrl: body.coverUrl?.trim() || null,
+          ...(body.visibility ? { visibility: body.visibility } : {}),
+          ...(body.collaborative !== undefined ? { collaborative: body.collaborative } : {}),
+          ...(body.genres ? { genres: body.genres } : {}),
+          ...(body.releaseDate ? { releaseDate: new Date(`${body.releaseDate}T00:00:00Z`) } : {}),
         },
       })
       if (col.coverUrl) refreshCollectionCoverPalette(fastify.prisma, col.id, col.coverUrl)
-      return reply.status(201).send(col)
+      return reply.status(201).send(withDateOnly(col))
     } catch (err) {
       if (isUniqueConstraintError(err)) {
         return reply.status(409).send({ error: 'Slug already taken' })
