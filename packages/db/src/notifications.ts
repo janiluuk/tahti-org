@@ -99,7 +99,6 @@ export async function notifyFollowersOfLiveChannel(
   })
 }
 
-<<<<<<< HEAD
 /** Fan out a NEW_EVENT notification to everyone following the artist when
  * they add an upcoming event (events already in the past tell nobody). */
 export async function notifyFollowersOfNewEvent(
@@ -127,8 +126,6 @@ export async function notifyFollowersOfNewEvent(
   })
 }
 
-=======
->>>>>>> origin/main
 /** Fan out a NEW_RELEASE notification when a Tahti Radio–opted-in artist
  * publishes a release — callers must check `!channel.metaStreamOptOut` first. */
 export async function notifyFollowersOfNewRelease(
