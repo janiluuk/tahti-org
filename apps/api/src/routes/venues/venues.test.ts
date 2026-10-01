@@ -44,6 +44,7 @@ describe('M17 — venue calendar', () => {
         countryCode: 'FI',
         verifiedAt: new Date(),
         createdBy: artist.id,
+        photos: ['https://cdn.example.com/club-1.jpg', 'https://cdn.example.com/club-2.jpg'],
       },
     })
 
@@ -83,6 +84,10 @@ describe('M17 — venue calendar', () => {
     const slugs = res.json().map((v: { slug: string }) => v.slug)
     expect(slugs).toContain(venueSlug)
     expect(slugs).not.toContain(`${VENUE_PREFIX}-hidden`)
+    expect(res.json().find((v: { slug: string }) => v.slug === venueSlug).photos).toEqual([
+      'https://cdn.example.com/club-1.jpg',
+      'https://cdn.example.com/club-2.jpg',
+    ])
   })
 
   it('returns venue profile and upcoming broadcasts', async () => {

@@ -20,6 +20,8 @@ export const VenueDirectoryEntrySchema = z.object({
   countryCode: z.string().nullable(),
   capacity: z.number().int().nullable(),
   description: z.string().nullable(),
+  /** Promo photos, profile order; the directory card shows one of them. */
+  photos: z.array(z.string()),
 })
 
 export const VenueDirectoryListSchema = z.array(VenueDirectoryEntrySchema)
