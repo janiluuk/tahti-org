@@ -20,6 +20,7 @@ import {
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
 import { enqueueEncodeStreamingCopy, enqueueWarmSoundFallbackCache } from '../lib/queue.js'
+import { announceNewPublicTrack, isFirstTranscode } from '../lib/new-track-announcement.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import {
@@ -160,6 +161,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
   })
 
   logLine({ itemId }, `sound item ${itemId} transcode starting`)
+  const firstTranscode = await isFirstTranscode(prisma, itemId, item.status)
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-transcode-'))
 
@@ -213,6 +215,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         },
       })
       await ensureInitialVersion(prisma, itemId)
+      if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
       await enqueueWarmSoundFallbackCache(item.channelId)
       await enqueueEncodeStreamingCopy(itemId)
       logLine(
@@ -249,6 +252,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     })
 
     await ensureInitialVersion(prisma, itemId)
+    if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
     await enqueueWarmSoundFallbackCache(item.channelId)
     logLine(
       { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
