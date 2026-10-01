@@ -27,6 +27,16 @@ export const CreateCollectionSchema = z.object({
   style: z.enum(COLLECTION_STYLES).optional(),
   isPublic: z.boolean().optional(),
   coverUrl: z.string().max(500).optional(),
+  collaborative: z.boolean().optional(),
+  /** Calendar date, `YYYY-MM-DD`. */
+  releaseDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'releaseDate must be YYYY-MM-DD')
+    .nullable()
+    .optional(),
+  genres: z.array(z.string().trim().min(1).max(40)).max(5).optional(),
+  /** Also sets `isPublic` (PUBLIC ⇒ true) unless that is sent too, as on PATCH. */
+  visibility: z.enum(['PUBLIC', 'UNLISTED', 'DRAFT']).optional(),
 })
 
 export type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>
