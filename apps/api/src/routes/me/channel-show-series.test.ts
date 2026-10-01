@@ -123,6 +123,54 @@ describe('Show series and episodes', () => {
     ).toBe(3)
   })
 
+  it('keeps a one-off show and its backdrop', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/show-series',
+      headers: { cookie },
+      payload: {
+        name: 'Album launch night',
+        mode: 'SINGLE',
+        backdropUrl: 'https://cdn.example.com/launch-wide.jpg',
+      },
+    })
+    expect(create.statusCode).toBe(201)
+    expect(create.json()).toMatchObject({
+      mode: 'SINGLE',
+      backdropUrl: 'https://cdn.example.com/launch-wide.jpg',
+    })
+    const { id } = create.json()
+
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/channel/show-series/${id}`,
+      headers: { cookie },
+      payload: { backdropUrl: '', mode: 'SERIES' },
+    })
+    expect(cleared.statusCode).toBe(200)
+    expect(cleared.json()).toMatchObject({ mode: 'SERIES', backdropUrl: null })
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/show-series',
+      headers: { cookie },
+    })
+    expect(list.json().series.find((s: { id: string }) => s.id === id)).toMatchObject({
+      mode: 'SERIES',
+      backdropUrl: null,
+    })
+  })
+
+  it('defaults to a continuing series', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/show-series',
+      headers: { cookie },
+      payload: { name: 'Weekly selector' },
+    })
+    expect(create.json()).toMatchObject({ mode: 'SERIES', backdropUrl: null })
+  })
+
   it("rejects an episode create with someone else's sound item", async () => {
     const otherArtist = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,

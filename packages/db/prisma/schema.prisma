@@ -1649,6 +1649,10 @@ model LiveShowSeries {
   description           String?
   tagline               String?
   artworkUrl            String?
+  /// Wide header image on the show page, separate from the square artwork.
+  backdropUrl           String?
+  /// SINGLE: a one-off show; SERIES: a continuing series of episodes.
+  mode                  LiveShowMode        @default(SERIES)
   showType              BroadcastShowType   @default(LIVE_SET)
   visibility            BroadcastVisibility @default(PUBLIC)
   autoPublish           Boolean             @default(true)
@@ -1679,6 +1683,13 @@ model LiveShowSeries {
   updatedAt             DateTime            @updatedAt
 
   @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+enum LiveShowMode {
+  SINGLE
+  SERIES
+
   @@schema("channel")
 }
 

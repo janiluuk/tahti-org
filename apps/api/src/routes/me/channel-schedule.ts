@@ -38,6 +38,8 @@ type LiveShowSeriesDbRow = {
   description: string | null
   tagline: string | null
   artworkUrl: string | null
+  backdropUrl: string | null
+  mode: 'SINGLE' | 'SERIES'
   showType: 'LIVE_SET' | 'TALK'
   visibility: 'PUBLIC' | 'FAN_ONLY'
   autoPublish: boolean
