@@ -5,6 +5,8 @@ import type { PrismaClient } from '@tahti/db'
 import { computeFanSubSplit } from '@tahti/ledger'
 import { stripeEnabled } from './stripe.js'
 import { auditLog } from './audit.js'
+import { announceMoneyMove, formatEuros } from './money-moves.js'
+import { safeDisplayName } from '@tahti/shared'
 
 // Shared fan-subscription lifecycle used by both the dev/test direct-activation
 // path and the production Stripe webhook handler, so the two never diverge.
@@ -64,6 +66,19 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
       actorId: input.subscriberUserId,
       targetId: input.artistUserId,
       meta: { tierName: input.tierName, amountCents: input.amountCents },
+    })
+    const subscriber = await prisma.user.findUnique({
+      where: { id: input.subscriberUserId },
+      select: { username: true, displayName: true },
+    })
+    const name = subscriber
+      ? safeDisplayName(subscriber.displayName, subscriber.username)
+      : 'Someone'
+    await announceMoneyMove(prisma, input.artistUserId, {
+      type: 'NEW_FAN_SUBSCRIBER',
+      actorUserId: input.subscriberUserId,
+      title: `${name} subscribed (${input.tierName}, ${formatEuros(input.amountCents)}/mo)`,
+      url: '/studio/revenue',
     })
   }
 
