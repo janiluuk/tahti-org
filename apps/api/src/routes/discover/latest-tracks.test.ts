@@ -19,6 +19,7 @@ describe('/api/discover/latest-tracks', () => {
   let olderId: string
   let unlistedId: string
   let differentGenreId: string
+  let suspendedId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -82,6 +83,27 @@ describe('/api/discover/latest-tracks', () => {
       },
     })
     differentGenreId = otherGenre.id
+
+    const suspended = await createTestArtist(prisma, {
+      email: `${PREFIX}suspended@example.com`,
+      username: `${PREFIX}suspended`,
+    })
+    await prisma.user.update({
+      where: { id: suspended.id },
+      data: { suspendedAt: new Date(), suspendReason: 'test' },
+    })
+    const suspendedTrack = await prisma.sound.create({
+      data: {
+        channelId: suspended.channel!.id,
+        title: 'Suspended artist track',
+        genre: 'Techno',
+        status: 'READY',
+        isPublic: true,
+        mp3Key: `${PREFIX}suspended.mp3`,
+        releasedAt: new Date('2025-09-01'),
+      },
+    })
+    suspendedId = suspendedTrack.id
   })
 
   afterAll(async () => {
@@ -94,6 +116,7 @@ describe('/api/discover/latest-tracks', () => {
     expect(res.statusCode).toBe(200)
     const ids = res.json().items.map((i: { soundId: string }) => i.soundId)
     expect(ids).not.toContain(unlistedId)
+    expect(ids).not.toContain(suspendedId)
     expect(ids.indexOf(differentGenreId)).toBeLessThan(ids.indexOf(newestId))
     expect(ids.indexOf(newestId)).toBeLessThan(ids.indexOf(olderId))
   })
