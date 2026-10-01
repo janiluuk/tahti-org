@@ -118,6 +118,7 @@ export const AdminLiveStreamSchema = z.object({
   slug: z.string(),
   artistName: z.string(),
   username: z.string(),
+  avatarUrl: z.string().nullable(),
   goneLiveAt: z.coerce.date().nullable(),
   elapsedSec: z.number().int().nonnegative(),
   hlsUrl: z.string().url().nullable(),
