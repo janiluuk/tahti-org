@@ -19,6 +19,7 @@ describe('GET /api/og/*', () => {
   beforeAll(async () => {
     app = await buildApp({ logger: false })
     await app.ready()
+    await prisma.venue.deleteMany({ where: { slug: { startsWith: 'og-route-' } } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
 
     artist = await createTestArtist(prisma, {
@@ -33,6 +34,7 @@ describe('GET /api/og/*', () => {
   })
 
   afterAll(async () => {
+    await prisma.venue.deleteMany({ where: { slug: { startsWith: 'og-route-' } } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })
@@ -184,6 +186,41 @@ describe('GET /api/og/*', () => {
       expect(res.body).not.toContain('OG Route Secret')
       expect(res.body).not.toContain('OG Route Pending')
     }
+  })
+
+  it('returns HTML with real venue metadata', async () => {
+    await prisma.venue.create({
+      data: {
+        slug: 'og-route-venue',
+        name: 'OG Route Venue',
+        address: 'Testikatu 1',
+        city: 'Helsinki',
+        description: 'A real venue description for OG tests.',
+        photos: ['https://cdn.example/venue.jpg'],
+        verifiedAt: new Date(),
+        createdBy: artist.id,
+      },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/og/venue/og-route-venue' })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('<title>OG Route Venue, Helsinki on Tahti</title>')
+    expect(res.body).toContain('A real venue description for OG tests.')
+    expect(res.body).toContain('property="og:image" content="https://cdn.example/venue.jpg"')
+  })
+
+  it('404s for an unverified venue', async () => {
+    await prisma.venue.create({
+      data: {
+        slug: 'og-route-unverified-venue',
+        name: 'OG Route Unverified Venue',
+        address: 'Testikatu 2',
+        city: 'Turku',
+        createdBy: artist.id,
+      },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/og/venue/og-route-unverified-venue' })
+    expect(res.statusCode).toBe(404)
+    expect(res.body).not.toContain('OG Route Unverified Venue')
   })
 
   it('404s for an unknown collection', async () => {
