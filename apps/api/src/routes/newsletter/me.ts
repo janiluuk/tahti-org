@@ -136,7 +136,33 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       ])
 
-      return reply.send({ page, limit, total, drafts })
+      const counts = await fastify.prisma.newsletterSend.groupBy({
+        by: ['draftId', 'state'],
+        where: { draftId: { in: drafts.map((d) => d.id) } },
+        _count: { _all: true },
+      })
+      const delivery = new Map<
+        string,
+        { queued: number; sent: number; failed: number; bounced: number }
+      >()
+      for (const row of counts) {
+        const entry = delivery.get(row.draftId) ?? { queued: 0, sent: 0, failed: 0, bounced: 0 }
+        if (row.state === 'QUEUED') entry.queued += row._count._all
+        if (row.state === 'SENT') entry.sent += row._count._all
+        if (row.state === 'FAILED') entry.failed += row._count._all
+        if (row.state === 'BOUNCED') entry.bounced += row._count._all
+        delivery.set(row.draftId, entry)
+      }
+
+      return reply.send({
+        page,
+        limit,
+        total,
+        drafts: drafts.map((d) => ({
+          ...d,
+          delivery: delivery.get(d.id) ?? { queued: 0, sent: 0, failed: 0, bounced: 0 },
+        })),
+      })
     },
   )
 

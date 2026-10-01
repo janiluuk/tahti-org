@@ -209,8 +209,9 @@ export async function notifyArtistOfNewRepost(
   })
 }
 
-/** Notify a playlist's owner and everyone who has previously contributed a
- * track to it ("participants") when someone adds a new one — never notifies
+/** Notify a playlist's owner, everyone who has previously contributed a
+ * track to it ("participants") and its subscribers (while it is public or
+ * unlisted) when someone adds a new one — never notifies
  * the person who just did the adding, and de-dupes owner/participants so
  * nobody gets pinged twice. */
 export async function notifyPlaylistOfNewTrack(
@@ -231,10 +232,22 @@ export async function notifyPlaylistOfNewTrack(
     distinct: ['addedByUserId'],
   })
 
+  // Subscribers only hear about collections they can still open.
+  const subscribers = await prisma.collectionSubscription.findMany({
+    where: {
+      collectionId: collection.id,
+      collection: { OR: [{ isPublic: true }, { visibility: 'UNLISTED' }] },
+    },
+    select: { userId: true },
+  })
+
   const recipients = new Set<string>()
   if (collection.ownerUserId !== adder.id) recipients.add(collection.ownerUserId)
   for (const c of priorContributors) {
     if (c.addedByUserId && c.addedByUserId !== adder.id) recipients.add(c.addedByUserId)
+  }
+  for (const s of subscribers) {
+    if (s.userId !== adder.id) recipients.add(s.userId)
   }
   if (recipients.size === 0) return
 

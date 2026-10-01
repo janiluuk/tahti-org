@@ -32,9 +32,14 @@ const USER_DATE_FIELDS = [
   'createdAt',
   'updatedAt',
 ] as const satisfies readonly (keyof User)[]
+const USER_BIGINT_FIELDS = [
+  'softTargetBytes',
+  'hiddenCeilingBytes',
+  'storageUsedBytes',
+] as const satisfies readonly (keyof User)[]
 
-/** getCachedJson round-trips through JSON, which turns every Date into a
- * string — rehydrate them so callers (many, throughout the route tree) can
+/** getCachedJson round-trips through JSON, which turns every Date (and
+ * BigInt) into a string — rehydrate them so callers (many, throughout the route tree) can
  * keep calling .getTime()/.toISOString() on session/user fields without
  * caring whether this came from cache or a fresh query. */
 function rehydrateDates(session: SessionWithUser): SessionWithUser {
@@ -45,6 +50,9 @@ function rehydrateDates(session: SessionWithUser): SessionWithUser {
   const u = session.user as unknown as Record<string, unknown>
   for (const field of USER_DATE_FIELDS) {
     if (typeof u[field] === 'string') u[field] = new Date(u[field] as string)
+  }
+  for (const field of USER_BIGINT_FIELDS) {
+    if (typeof u[field] === 'string') u[field] = BigInt(u[field] as string)
   }
   return session
 }
