@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  LovedListResponseSchema,
   TopListPeriodSchema,
   TopListRanksResponseSchema,
   TopListResponseSchema,
@@ -10,6 +11,7 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { buildTopList, periodSince, rankLookup } from '../../lib/top-lists.js'
+import { buildLovedList } from '../../lib/loved-list.js'
 
 const VALID_CONTENT_TYPES = [
   'LIVE',
@@ -56,6 +58,28 @@ const topListsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send({ period: period.data, entries })
+    },
+  )
+
+  // GET /api/top-lists/loved?contentTypes=DJ_SET&genre=Techno — most-loved
+  // public tracks, counting each listener's LOVE once.
+  fastify.get(
+    '/api/top-lists/loved',
+    { schema: { response: openApiResponse(LovedListResponseSchema, 'LovedList') } },
+    async (request, reply) => {
+      const query = request.query as Record<string, unknown>
+      let contentTypes: string[] | undefined
+      if (typeof query.contentTypes === 'string' && query.contentTypes.length > 0) {
+        contentTypes = query.contentTypes.split(',').filter((t) => VALID_CONTENT_TYPES.includes(t))
+        if (contentTypes.length === 0) {
+          return reply.status(400).send({ error: 'Invalid contentTypes' })
+        }
+      }
+      const genre =
+        typeof query.genre === 'string' && query.genre.length > 0 ? query.genre : undefined
+
+      const entries = await buildLovedList(fastify.prisma, { contentTypes, genre, limit: 20 })
+      return reply.send({ entries })
     },
   )
 

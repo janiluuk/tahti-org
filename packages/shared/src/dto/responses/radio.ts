@@ -35,6 +35,12 @@ export const RadioRecentlyPlayedItemSchema = z.object({
   artistUsername: z.string().nullable(),
   artworkUrl: z.string().nullable(),
   playedAt: z.string(),
+  /** The track's id while it is still public; null once it went private or
+   * was removed, or when the play wasn't an archived track. */
+  soundId: z.string().nullable(),
+  /** Replay link, only when the listener may play the track (access gates
+   * apply, same as the track page). */
+  audioUrl: z.string().nullable(),
 })
 
 export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)
