@@ -35,15 +35,17 @@ function ogPage(opts: {
   description: string
   image: string | null
   url: string
+  noindex?: boolean
 }): string {
   const { title, description, image, url } = opts
   const imageTag = image ? `\n    <meta property="og:image" content="${escapeHtml(image)}" />` : ''
+  const robotsTag = opts.noindex ? '\n    <meta name="robots" content="noindex" />' : ''
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>${escapeHtml(title)}</title>
-    <meta name="description" content="${escapeHtml(description)}" />
+    <meta name="description" content="${escapeHtml(description)}" />${robotsTag}
     <link rel="canonical" href="${escapeHtml(url)}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${escapeHtml(title)}" />
@@ -175,13 +177,16 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
         name: true,
         description: true,
         isPublic: true,
+        visibility: true,
         coverUrl: true,
         coverKey: true,
         user: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
     const fallbackUrl = `${config.appUrl.replace(/\/$/, '')}/u/${collection?.user.username ?? ''}/c/${slug}`
-    if (!collection || !collection.isPublic) return notFoundPage(reply, fallbackUrl)
+    if (!collection || (!collection.isPublic && collection.visibility !== 'UNLISTED')) {
+      return notFoundPage(reply, fallbackUrl)
+    }
 
     const url = `${config.appUrl.replace(/\/$/, '')}/u/${collection.user.username}/c/${slug}`
     const image = (await resolveCollectionCoverUrl(collection)) ?? collection.user.avatarUrl
@@ -194,6 +199,7 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
           `Listen to ${collection.name}, a collection by ${collection.user.displayName} on Tahti.`,
         image,
         url,
+        noindex: !collection.isPublic,
       }),
     )
   })

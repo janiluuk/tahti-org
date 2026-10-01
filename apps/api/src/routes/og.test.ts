@@ -121,6 +121,32 @@ describe('GET /api/og/*', () => {
     expect(res.statusCode).toBe(404)
   })
 
+  it('previews an unlisted collection for people with the link, without indexing it', async () => {
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'og-route-unlisted-collection',
+        name: 'OG Route Unlisted Collection',
+        isPublic: false,
+        visibility: 'UNLISTED',
+      },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/og/collection/og-route-unlisted-collection',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain(
+      '<title>OG Route Unlisted Collection by OG Route Artist on Tahti</title>',
+    )
+    expect(res.body).toContain('<meta name="robots" content="noindex" />')
+  })
+
+  it('does not mark a public collection noindex', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/og/collection/og-route-collection' })
+    expect(res.body).not.toContain('noindex')
+  })
+
   it('404s for an unknown collection', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/og/collection/no-such-collection' })
     expect(res.statusCode).toBe(404)
