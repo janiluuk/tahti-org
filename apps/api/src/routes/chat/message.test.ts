@@ -315,4 +315,26 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     })
     expect(after).toBe(before)
   })
+
+  it('refuses posts with chat_disabled once the owner has switched chat off', async () => {
+    await prisma.user.update({ where: { id: artistId }, data: { chatEnabled: false } })
+    try {
+      for (const payload of [
+        { channel: `channel:${slug}`, data: { text: 'still here?' } },
+        { channel: `channel:${slug}`, meta: { userId: artistId }, data: { text: 'owner post' } },
+        { channel: `channel:${slug}:fans`, meta: { userId: fanId }, data: { text: 'fan post' } },
+      ]) {
+        const res = await app.inject({ method: 'POST', url: '/api/chat/message', payload })
+        expect(res.statusCode).toBe(403)
+        expect(res.json().error).toBe('chat_disabled')
+      }
+      const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+      const stored = await prisma.chatMessage.count({
+        where: { channelId: channel.id, text: { in: ['still here?', 'owner post', 'fan post'] } },
+      })
+      expect(stored).toBe(0)
+    } finally {
+      await prisma.user.update({ where: { id: artistId }, data: { chatEnabled: true } })
+    }
+  })
 })
