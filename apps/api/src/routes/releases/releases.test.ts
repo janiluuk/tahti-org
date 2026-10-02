@@ -149,6 +149,47 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().targets.tidal).toContain('tidal.com')
   })
 
+  it('turns the smart-link "Powered by Tahti" footer on and off', async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+    })
+    const smartLink = () =>
+      app.inject({ method: 'GET', url: `/api/v1/r/${release!.smartLinkSlug}` })
+    expect((await smartLink()).json().release.showPoweredByFooter).toBe(false)
+
+    const on = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: true },
+    })
+    expect(on.statusCode).toBe(200)
+    expect(on.json().showPoweredByFooter).toBe(true)
+    expect((await smartLink()).json().release.showPoweredByFooter).toBe(true)
+
+    const byId = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+    })
+    expect(byId.json().showPoweredByFooter).toBe(true)
+
+    const off = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: false },
+    })
+    expect(off.json().showPoweredByFooter).toBe(false)
+    const bad = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: 'yes' },
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
   it('pins a release and reflects it on the public profile, then unpins', async () => {
     const release = await prisma.release.findFirst({
       where: { user: { username }, state: 'PUBLISHED' },

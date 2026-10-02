@@ -85,6 +85,7 @@ const meReleaseSelect = {
   galleryMode: true,
   galleryAudioReactive: true,
   pinnedAt: true,
+  showPoweredByFooter: true,
   tracks: {
     orderBy: { position: 'asc' as const },
     select: {
@@ -295,6 +296,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         description?: string | null
         releaseDate?: Date
         pinnedAt?: Date | null
+        showPoweredByFooter?: boolean
       } = {}
 
       if (body.smartLinkTargets !== undefined) {
@@ -308,6 +310,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.pinned !== undefined) {
         data.pinnedAt = body.pinned ? new Date() : null
+      }
+      if (body.showPoweredByFooter !== undefined) {
+        data.showPoweredByFooter = body.showPoweredByFooter
       }
 
       if (body.state) {
