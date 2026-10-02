@@ -60,10 +60,18 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true, chatSubscribersOnly: true },
+        select: {
+          id: true,
+          userId: true,
+          chatSubscribersOnly: true,
+          user: { select: { chatEnabled: true } },
+        },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      // Applies to the owner too: with chat switched off there is no chat
+      // panel to post into, and turning it back on is one toggle away.
+      if (!channel.user.chatEnabled) return reply.status(403).send({ error: 'chat_disabled' })
 
       const cleanHandle = handle
 

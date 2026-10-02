@@ -43,10 +43,13 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, user: { select: { chatEnabled: true } } },
       })
 
       if (!channel) return reply.status(404).send({ error: 'channel not found' })
+      // Tokens issued before the owner switched chat off stay valid for up to
+      // an hour, so the toggle has to be enforced at publish time as well.
+      if (!channel.user.chatEnabled) return reply.status(403).send({ error: 'chat_disabled' })
 
       // Any client may subscribe in the `channel` namespace, so the fan room is
       // only kept to fans by refusing posts from anyone else here.
