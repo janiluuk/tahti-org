@@ -169,7 +169,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const data: Record<string, any> = {}
 
       if (body.displayName !== undefined) data.displayName = body.displayName
-      if (body.bio !== undefined) data.bio = body.bio.trim() || null
+      if (body.bio !== undefined) data.bio = body.bio?.trim() || null
       if (body.fullBio !== undefined) data.fullBio = body.fullBio?.trim() || null
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
       if (body.avatarPosterUrl !== undefined)
@@ -182,8 +182,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.backdropUrl !== undefined) data.backdropUrl = body.backdropUrl?.trim() || null
       if (body.nameplateText !== undefined) data.nameplateText = body.nameplateText?.trim() || null
       if (body.nameplateColor !== undefined) data.nameplateColor = body.nameplateColor ?? null
-      if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
-      if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl.trim() || null
+      if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl?.trim() || null
+      if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl?.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
       if (body.defaultLocation !== undefined)
