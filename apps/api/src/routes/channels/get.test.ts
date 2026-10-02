@@ -95,6 +95,22 @@ describe('GET /api/channels/:slug', () => {
     })
   })
 
+  it('returns the top bar text the artist set in the Channel Designer', async () => {
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { topBarText: 'New album out Friday' },
+    })
+
+    const res = await app.inject({ method: 'GET', url: '/api/channels/channel-get-testuser' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().topBarText).toBe('New album out Friday')
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { topBarText: null },
+    })
+  })
+
   it('returns ISO nextBroadcastAt when schedule is set', async () => {
     const at = new Date('2026-07-01T20:00:00.000Z')
     await prisma.channel.update({

@@ -83,6 +83,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       playerOverlayText: true,
       playerOverlayAlign: true,
       channelLinksJson: true,
+      topBarText: true,
       nowPlayingTitle: true,
       nowPlayingArtistName: true,
       nowPlayingArtistUsername: true,
