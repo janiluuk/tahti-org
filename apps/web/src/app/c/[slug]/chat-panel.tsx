@@ -244,13 +244,13 @@ export default function ChatPanel({
   }, [slug])
 
   // Artist-controlled (Settings → Artist info → "Show today's listener count") —
-  // the endpoint itself reports enabled=false when they've turned it off, so
+  // the endpoint reports enabled=false and count=null when they've turned it off, so
   // this stays null (hidden) in that case rather than needing a second fetch.
   useEffect(() => {
     let cancelled = false
     fetch(`${API_BASE}/api/channels/${slug}/daily-listeners`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { count: number; enabled: boolean } | null) => {
+      .then((data: { count: number | null; enabled: boolean } | null) => {
         if (!cancelled && data?.enabled) setDailyListenerCount(data.count)
       })
       .catch(() => undefined)
