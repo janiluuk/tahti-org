@@ -140,6 +140,32 @@ export const LiveShowSeriesListSchema = z.object({
   scheduledShows: z.array(ScheduledLiveShowViewSchema),
 })
 
+/** Listener-facing: only PUBLIC, uncanceled shows from now forward. */
+export const PublicChannelScheduleShowSchema = z.object({
+  id: z.string(),
+  seriesId: z.string(),
+  startAt: z.string().datetime(),
+  endAt: z.string().datetime().nullable(),
+  durationMin: z.number().int().min(1).nullable(),
+  title: z.string(),
+  episodeNumber: z.number().int().min(1).nullable(),
+  showType: BroadcastShowTypeSchema,
+})
+
+export const PublicChannelScheduleSeriesSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  scheduleNote: z.string().nullable(),
+})
+
+export const PublicChannelScheduleSchema = z.object({
+  shows: z.array(PublicChannelScheduleShowSchema),
+  series: z.array(PublicChannelScheduleSeriesSchema),
+})
+
+export type PublicChannelScheduleShow = z.infer<typeof PublicChannelScheduleShowSchema>
+export type PublicChannelSchedule = z.infer<typeof PublicChannelScheduleSchema>
+
 export type CreateLiveShowSeries = z.infer<typeof CreateLiveShowSeriesSchema>
 export type PatchLiveShowSeries = z.infer<typeof PatchLiveShowSeriesSchema>
 export type LiveShowSeriesView = z.infer<typeof LiveShowSeriesViewSchema>
