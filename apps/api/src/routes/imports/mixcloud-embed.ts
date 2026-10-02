@@ -16,7 +16,7 @@ import {
   searchMixcloudCloudcasts,
   openApiResponse,
 } from '@tahti/shared'
-import { getUserIntegrationCredential } from '@tahti/db'
+import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 
 // Mixcloud's read API (search, a user's cloudcasts) is public — no client ID, no OAuth.
@@ -169,6 +169,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
           isPublic: true,
           bannerUrl: track.coverUrl,
           ...(track.genre ? mapGenre(track.genre) : {}),
+          ...(await soundOwnerDefaults(fastify.prisma, channel.id)),
         },
         select: { id: true },
       })

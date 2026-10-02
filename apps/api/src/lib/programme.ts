@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import { soundOwnerDefaults, type PrismaClient } from '@tahti/db'
 import { soundPlaybackKey, type ChannelProgrammePatch } from '@tahti/shared'
 import { presignedGetUrl } from './minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from './fallback-rotation.js'
@@ -240,6 +240,7 @@ export async function promoteReleaseTrackToProgramme(
       isPublic: false,
       isFallback: true,
       fallbackOrder: (maxOrder._max.fallbackOrder ?? -1) + 1,
+      ...(await soundOwnerDefaults(prisma, channel.id)),
     },
     select: { id: true },
   })

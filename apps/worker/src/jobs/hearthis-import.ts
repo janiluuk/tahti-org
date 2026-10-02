@@ -4,7 +4,7 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { prisma } from '@tahti/db'
+import { prisma, soundOwnerDefaults } from '@tahti/db'
 import { extensionFromDriveFile } from '@tahti/shared'
 import { createHearthisClient } from '@tahti/hearthis'
 import { uploadStream } from '../lib/minio.js'
@@ -94,6 +94,7 @@ export async function processHearthisImportJob(job: Job): Promise<void> {
         fileSizeBytes: BigInt(contentLength ?? 0),
         status: 'PENDING',
         source: 'HEARTHIS',
+        ...(await soundOwnerDefaults(prisma, channel.id)),
       },
       select: { id: true },
     })

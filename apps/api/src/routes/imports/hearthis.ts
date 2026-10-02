@@ -11,7 +11,7 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { createHearthisClient, parseHearthisUsername, type HearthisTrack } from '@tahti/hearthis'
-import { getUserIntegrationCredential } from '@tahti/db'
+import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 
@@ -183,6 +183,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
           isPublic: true,
           bannerUrl: result.coverUrl,
           ...(result.genre ? mapGenre(result.genre) : {}),
+          ...(await soundOwnerDefaults(fastify.prisma, channel.id)),
         },
         select: { id: true },
       })
