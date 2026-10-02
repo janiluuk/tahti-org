@@ -84,6 +84,23 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(body.artist.isMember).toBe(true)
   })
 
+  it('returns showPageHero so the profile page can hide its hero', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}nohero@example.com`,
+      username: 'public-profile-nohero',
+    })
+    const fetchShowPageHero = async (username: string) =>
+      (
+        (await app.inject({ method: 'GET', url: `/api/v1/u/${username}/profile` })).json() as {
+          artist: { showPageHero?: boolean }
+        }
+      ).artist.showPageHero
+
+    expect(await fetchShowPageHero('public-profile-artist')).toBe(true)
+    await prisma.user.update({ where: { id: artist.id }, data: { showPageHero: false } })
+    expect(await fetchShowPageHero('public-profile-nohero')).toBe(false)
+  })
+
   it('includes collection style so the profile page can group DJ mixes/playlists/collections', async () => {
     await prisma.collection.create({
       data: {
