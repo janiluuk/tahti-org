@@ -32,6 +32,7 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
 import { auditLog } from '../../lib/audit.js'
+import { recordMentions } from '../../lib/mentions.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 
 function slugify(title: string): string {
@@ -347,6 +348,16 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           )
         })().catch((err: unknown) =>
           request.log.warn({ err, releaseId: id }, 'release feed announce failed'),
+        )
+      }
+
+      // Drafts stay private, so their mentions wait until the release is published.
+      const descriptionNowPublic =
+        release.state === 'PUBLISHED' &&
+        (body.description !== undefined || existing.state !== 'PUBLISHED')
+      if (descriptionNowPublic && release.description) {
+        recordMentions(fastify.prisma, user.id, release.description, 'RELEASE', id).catch((e) =>
+          fastify.log.warn(e, 'mention record failed'),
         )
       }
 

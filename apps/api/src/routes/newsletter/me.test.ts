@@ -274,4 +274,52 @@ describe('M13/M19 — newsletter drafts', () => {
     expect(send.statusCode).toBe(400)
     expect(send.json().error).toMatch(/FAN_NEWSLETTER/i)
   })
+
+  it('records body mentions when the newsletter is sent, not when it is drafted', async () => {
+    const sender = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioner@example.com`,
+      username: 'newsletter-me-mentioner',
+      tier: 'STUDIO',
+    })
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioned@example.com`,
+      username: 'newsletter-me-mentioned',
+    })
+    const senderCookie = await sessionCookieFor(prisma, sender.id)
+    await prisma.newsletterSubscriber.create({
+      data: {
+        artistUserId: sender.id,
+        email: 'mention-reader@example.com',
+        confirmedAt: new Date(),
+        unsubToken: 'unsub-me-mention',
+      },
+    })
+    const mentionsOf = () =>
+      prisma.mention.findMany({
+        where: { mentionerUserId: sender.id, targetUserId: target.id },
+      })
+
+    const draftRes = await app.inject({
+      method: 'POST',
+      url: '/api/me/newsletter/drafts',
+      headers: { cookie: senderCookie },
+      payload: { subject: 'Tour news', bodyMd: 'Touring with @newsletter-me-mentioned' },
+    })
+    expect(draftRes.statusCode).toBe(201)
+    const draftId = draftRes.json().id as string
+    expect(await mentionsOf()).toHaveLength(0)
+
+    const send = await app.inject({
+      method: 'POST',
+      url: `/api/me/newsletter/send/${draftId}`,
+      headers: { cookie: senderCookie },
+    })
+    expect(send.statusCode).toBe(200)
+
+    await vi.waitFor(async () => {
+      const rows = await mentionsOf()
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ surface: 'NEWSLETTER', sourceId: draftId })
+    })
+  })
 })
