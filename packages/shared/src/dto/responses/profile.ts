@@ -35,6 +35,8 @@ export const PublicProfileArtistSchema = z.object({
   /** Null when the artist has hidden their followers/following list from their profile. */
   followerCount: z.number().int().nullable().optional(),
   followingCount: z.number().int().nullable().optional(),
+  /** False when the artist turned off the profile hero/banner block. */
+  showPageHero: z.boolean().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({

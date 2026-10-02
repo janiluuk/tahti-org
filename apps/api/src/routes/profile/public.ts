@@ -158,6 +158,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       isMember: true,
       showFollowers: true,
       showFollowing: true,
+      showPageHero: true,
       stripeConnectChargesEnabled: true,
       createdAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
@@ -424,6 +425,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       isMember: user.isMember,
       followerCount: user.showFollowers ? user._count.artistFollowers : null,
       followingCount: user.showFollowing ? user._count.artistFollowing : null,
+      showPageHero: user.showPageHero,
     },
     channel: user.channel
       ? {
