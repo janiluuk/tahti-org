@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma } from '@tahti/db'
+import { prisma, soundOwnerDefaults } from '@tahti/db'
 import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
@@ -170,6 +170,7 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
             : `Auto-soundd live broadcast from ${startedAt.toISOString()}`),
         bannerUrl: scheduledArtworkUrl,
         ...(tracklist ? { tracklist } : {}),
+        ...(await soundOwnerDefaults(prisma, broadcast.channel.id)),
       },
     })
 

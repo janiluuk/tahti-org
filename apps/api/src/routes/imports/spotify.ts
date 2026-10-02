@@ -17,7 +17,7 @@ import {
   trackIdFromSpotifyUri,
   openApiResponse,
 } from '@tahti/shared'
-import { getUserIntegrationCredential } from '@tahti/db'
+import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { getSpotifyAppToken, spotifyConfigured } from '../../lib/spotify-session.js'
 
@@ -195,6 +195,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
           isPublic: true,
           bannerUrl: track.coverUrl,
           ...(genre ? mapGenre(genre) : {}),
+          ...(await soundOwnerDefaults(fastify.prisma, channel.id)),
         },
         select: { id: true },
       })

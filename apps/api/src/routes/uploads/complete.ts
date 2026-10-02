@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { soundDefaultsFromOwner } from '@tahti/db'
 import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
@@ -78,8 +79,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           ...autoEnrollData,
           // Always the account default at creation time — commentsEnabled isn't
           // client-settable until the track exists (PATCH /api/me/sound/:id).
-          commentsEnabled: channel.user.defaultTrackCommentsEnabled,
-          topListsEligible: !channel.user.topListsOptOut,
+          ...soundDefaultsFromOwner(channel.user),
         },
         select: { id: true, status: true },
       })

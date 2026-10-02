@@ -81,3 +81,5 @@ export {
   type RecurringSeriesInput,
   type ActiveRestriction,
 } from './live-show-recurrence.js'
+export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaults.js'
+export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
