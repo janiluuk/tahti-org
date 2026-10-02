@@ -15,8 +15,8 @@ const APP_URL = process.env.APP_URL ?? 'https://app.tahti.live'
 const SURFACE_LABEL: Record<MentionSurface, string> = {
   BIO: 'their profile bio',
   ANNOUNCEMENT: 'a channel announcement',
-  RELEASE: 'release credits',
-  NEWSLETTER: 'a newsletter draft',
+  RELEASE: 'a release description',
+  NEWSLETTER: 'a newsletter',
   TRACKLIST: 'a tracklist',
   CHAT: 'live chat',
 }

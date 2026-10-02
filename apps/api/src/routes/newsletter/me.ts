@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { mediaQueue } from '../../lib/queue.js'
+import { recordMentions } from '../../lib/mentions.js'
 import { artistOffersFanNewsletter, fanOnlyNewsletterSubscriberIds } from '../../lib/fan-perks.js'
 
 function zodError(
@@ -244,6 +245,16 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Enqueue the dispatch job
       await mediaQueue.add('newsletter-dispatch', { draftId, userId: user.id })
+
+      // Recorded here rather than on draft creation: a queued draft cannot be
+      // withdrawn, while an unsent one may never go out.
+      recordMentions(
+        fastify.prisma,
+        user.id,
+        `${draft.subject}\n${draft.bodyMd}`,
+        'NEWSLETTER',
+        draftId,
+      ).catch((e) => fastify.log.warn(e, 'mention record failed'))
 
       return reply.send({
         draftId,

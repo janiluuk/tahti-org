@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -302,5 +302,59 @@ describe('M12 — releases and public profile', () => {
       headers: { cookie },
     })
     expect(byId.statusCode).toBe(404)
+  })
+
+  it('records description mentions once the release is published, not while a draft', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioner@example.com`,
+      username: 'release-test-mentioner',
+    })
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioned@example.com`,
+      username: 'release-test-mentioned',
+    })
+    const mentionerCookie = await sessionCookieFor(prisma, mentioner.id)
+    const mentionsOf = () =>
+      prisma.mention.findMany({
+        where: { mentionerUserId: mentioner.id, targetUserId: target.id },
+      })
+
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie: mentionerCookie },
+      payload: {
+        title: 'Mention EP',
+        type: 'EP',
+        releaseDate: '2026-02-01',
+        description: 'Mastered by @release-test-mentioned',
+        tracks: [{ title: 'Only Track' }],
+      },
+    })
+    expect(create.statusCode).toBe(201)
+    const id = create.json().id as string
+
+    const draftEdit = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie: mentionerCookie },
+      payload: { description: 'Mixed and mastered by @release-test-mentioned' },
+    })
+    expect(draftEdit.statusCode).toBe(200)
+    expect(await mentionsOf()).toHaveLength(0)
+
+    const publish = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie: mentionerCookie },
+      payload: { state: 'PUBLISHED' },
+    })
+    expect(publish.statusCode).toBe(200)
+
+    await vi.waitFor(async () => {
+      const rows = await mentionsOf()
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ surface: 'RELEASE', sourceId: id })
+    })
   })
 })
