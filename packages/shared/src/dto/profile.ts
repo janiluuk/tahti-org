@@ -17,7 +17,7 @@ export const ProfilePatchSchema = z
       .max(100)
       .refine((value) => !containsEmailAddress(value), DISPLAY_NAME_EMAIL_MESSAGE)
       .optional(),
-    bio: z.string().max(5000).optional(),
+    bio: z.string().max(5000).nullable().optional(),
     /** Optional longer-form history, shown expanded below the short bio. */
     fullBio: z.string().max(20000).nullable().optional(),
     avatarUrl: z.string().trim().max(2000).optional(),
@@ -38,9 +38,9 @@ export const ProfilePatchSchema = z
       .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a 6-digit hex color')
       .nullable()
       .optional(),
-    tipJarUrl: z.string().trim().max(2000).optional(),
+    tipJarUrl: z.string().trim().max(2000).nullable().optional(),
     /** Artist-configured RSS/Atom feed URL for the public "Latest news" section. */
-    newsFeedUrl: z.string().trim().max(2000).optional(),
+    newsFeedUrl: z.string().trim().max(2000).nullable().optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
     pronouns: z.string().trim().max(40).nullable().optional(),
     defaultLocation: z.string().trim().max(120).nullable().optional(),

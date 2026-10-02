@@ -117,6 +117,19 @@ describe('M12 — artist profile API', () => {
     expect(res.json().newsFeedUrl).toBeNull()
   })
 
+  it('PATCH /api/me/profile clears bio, tipJarUrl and newsFeedUrl when set to null', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { bio: null, tipJarUrl: null, newsFeedUrl: null },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().bio).toBeNull()
+    expect(res.json().tipJarUrl).toBeNull()
+    expect(res.json().newsFeedUrl).toBeNull()
+  })
+
   it('PATCH /api/me/profile sets and clears backdropUrl and nameplate fields', async () => {
     const res = await app.inject({
       method: 'PATCH',
