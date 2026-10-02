@@ -20,6 +20,7 @@ describe('M20 — broadcast usage', () => {
   let freeUserId: string
   let channelId: string
   let liveSourcePass: string
+  let unlimitedCookie: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -54,6 +55,17 @@ describe('M20 — broadcast usage', () => {
     freeUserId = user.id
     channelId = user.channel!.id
     freeCookie = `tahti_session=${(await createSession(prisma, user.id)).id}`
+
+    const unlimited = await prisma.user.create({
+      data: {
+        email: `${PREFIX}artist@example.com`,
+        passwordHash,
+        username: 'bcap-artist',
+        displayName: 'Artist Tier',
+        tier: 'ARTIST',
+      },
+    })
+    unlimitedCookie = `tahti_session=${(await createSession(prisma, unlimited.id)).id}`
   })
 
   afterAll(async () => {
@@ -73,6 +85,22 @@ describe('M20 — broadcast usage', () => {
     expect(res.json().blocked).toBe(false)
     expect(res.json().warningLevel).toBe('grace')
     expect(res.json().unlimited).toBe(false)
+  })
+
+  it('reports no remaining-seconds limit for an unlimited tier', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/broadcast-usage',
+      headers: { cookie: unlimitedCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({
+      tier: 'ARTIST',
+      unlimited: true,
+      secondsRemaining: null,
+      blocked: false,
+      warningLevel: 'none',
+    })
   })
 
   it('denies icecast connect during grace when offline', async () => {
