@@ -58,4 +58,35 @@ describe('GET /api/channels/:slug/presence', () => {
     // Centrifugo not running in test — falls back to 0
     expect(res.json().numClients).toBe(0)
   })
+
+  describe('GET /api/channels/:slug/daily-listeners', () => {
+    it('returns the count when the artist shows it', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/channels/chat-presence-testuser/daily-listeners',
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ count: expect.any(Number), enabled: true })
+    })
+
+    it('withholds the count when the artist has hidden it', async () => {
+      await prisma.user.update({
+        where: { username: 'chat-presence-testuser' },
+        data: { showDailyListeners: false },
+      })
+      try {
+        const res = await app.inject({
+          method: 'GET',
+          url: '/api/channels/chat-presence-testuser/daily-listeners',
+        })
+        expect(res.statusCode).toBe(200)
+        expect(res.json()).toEqual({ count: null, enabled: false })
+      } finally {
+        await prisma.user.update({
+          where: { username: 'chat-presence-testuser' },
+          data: { showDailyListeners: true },
+        })
+      }
+    })
+  })
 })

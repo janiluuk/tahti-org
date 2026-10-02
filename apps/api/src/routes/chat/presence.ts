@@ -97,12 +97,16 @@ const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const result = await getCachedJson(`daily-listeners:${slug}`, 60, async () => {
+      // The endpoint is public, so a count the artist chose to hide must not
+      // leave the server at all; the owner sees it on their stats dashboard.
+      if (!channel.user.showDailyListeners) return reply.send({ count: null, enabled: false })
+
+      const count = await getCachedJson(`daily-listener-count:${slug}`, 60, async () => {
         const today = new Date().toISOString().slice(0, 10)
         const byDate = await fetchMeasuredHlsListenersByDate(slug, [today])
-        return { count: byDate[today] ?? 0, enabled: channel.user.showDailyListeners }
+        return byDate[today] ?? 0
       })
-      return reply.send(result)
+      return reply.send({ count, enabled: true })
     },
   )
 }

@@ -25,9 +25,8 @@ export const ChatPresenceResponseSchema = z.object({
 })
 
 export const ChatDailyListenersResponseSchema = z.object({
-  count: z.number().int().nonnegative(),
-  /** False when the artist has turned this off in their settings — the
-   * count itself is still computed above but callers should not display it. */
+  /** Null when the artist has turned the count off in their settings. */
+  count: z.number().int().nonnegative().nullable(),
   enabled: z.boolean(),
 })
 
