@@ -123,7 +123,8 @@ export const BroadcastUsageResponseSchema = z.object({
   weeklyCapSeconds: z.number().int(),
   graceSeconds: z.number().int(),
   secondsUsed: z.number().int(),
-  secondsRemaining: z.number().int(),
+  /** Null for unlimited tiers, which have no weekly cap. */
+  secondsRemaining: z.number().int().nullable(),
   warnings: z.array(z.string()),
   warningLevel: z.enum(['none', '45m', '55m', 'grace', 'blocked']),
   inGrace: z.boolean(),
