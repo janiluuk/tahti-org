@@ -108,7 +108,27 @@ describe('GET /api/tracks/:id', () => {
     expect(body.commentCount).toBe(0)
     expect(body.downloadCount).toBe(0)
     expect(body.accessMode).toBe('FREE')
+    expect(body.isAiGenerated).toBe(false)
     expect(body.gate).toBeNull()
+  })
+
+  it('exposes the artist-declared AI-generated flag', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'AI Track',
+        rawKey: 'raw/track-get-testuser/ai.mp3',
+        mp3Key: 'mp3/track-get-testuser/ai.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        isAiGenerated: true,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().isAiGenerated).toBe(true)
   })
 
   it('nulls audioUrl and exposes purchase gate for anonymous viewers', async () => {

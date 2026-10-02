@@ -94,6 +94,9 @@ export const PublicTrackDetailSchema = z
     releasedAt: z.string(),
     effectiveBpm: z.number().nullable(),
     effectiveKey: z.string().nullable(),
+    /** Artist-declared: the track was made with generative AI. Shown as a
+     * label on the public track page. */
+    isAiGenerated: z.boolean(),
     /** [0..255] amplitude buckets for the real waveform — null for tracks
      * ingested before M27 or without a decodable audio file. */
     peaks: z.array(z.number()).nullable(),

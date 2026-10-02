@@ -66,6 +66,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           bpmDetected: true,
           keyDetected: true,
           useDetectedBpmKey: true,
+          isAiGenerated: true,
           durationSec: true,
           bannerUrl: true,
           backgroundUrl: true,
