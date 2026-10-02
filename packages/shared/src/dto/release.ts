@@ -95,6 +95,8 @@ export const PatchReleaseSchema = z.object({
   /** Public "Stage" showcase: pin/unpin this release at the top of the artist's
    * profile Stage tab. Server converts to/from Release.pinnedAt. */
   pinned: z.boolean().optional(),
+  /** Shows a small "Powered by Tahti" footer on the public smart-link page. */
+  showPoweredByFooter: z.boolean().optional(),
 })
 
 export type PatchReleaseInput = z.infer<typeof PatchReleaseSchema>
