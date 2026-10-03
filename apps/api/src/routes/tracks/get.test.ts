@@ -160,6 +160,25 @@ describe('GET /api/tracks/:id', () => {
     }
   })
 
+  it('returns the artist-defined tags', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Tagged Track',
+        rawKey: 'raw/track-get-testuser/tagged.mp3',
+        mp3Key: 'mp3/track-get-testuser/tagged.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        tags: ['Late Night', 'field recording'],
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().tags).toEqual(['Late Night', 'field recording'])
+  })
+
   it('exposes the artist-declared AI-generated flag', async () => {
     const item = await prisma.sound.create({
       data: {
