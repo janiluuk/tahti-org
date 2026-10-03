@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-/** Suspended and deleted accounts are hidden from lists, search and messaging. */
-export const availableUserWhere = { deletedAt: null, suspendedAt: null } as const
+import { availableUserWhere } from '@tahti/db'
+
+export { availableUserWhere }
 
 /** Keeps tracks by suspended and deleted accounts out of discovery lists,
  * the same rule search applies to its results. */
