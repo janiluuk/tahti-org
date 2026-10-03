@@ -97,3 +97,13 @@ export const ChatFanTokenResponseSchema = z.object({
 export const ChatPublishAckSchema = z.object({
   result: z.object({}).passthrough(),
 })
+
+/** Centrifugo proxy error object; `message` is the code string the chat client maps. */
+export const ChatPublishRejectSchema = z.object({
+  error: z.object({
+    code: z.number().int().min(400).max(1999),
+    message: z.string(),
+  }),
+})
+
+export const ChatPublishProxyReplySchema = z.union([ChatPublishAckSchema, ChatPublishRejectSchema])
