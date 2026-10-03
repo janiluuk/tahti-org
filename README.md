@@ -55,7 +55,7 @@ Tahti exists to close that gap with one integrated, member-owned platform instea
 
 ## What Tahti solves, area by area
 
-Each section below states the problem an area of the product addresses and how Tahti answers it. Screenshots for every surface are in the [Screenshots](#screenshots) section.
+Each section below states the problem an area of the product addresses and how Tahti answers it. Representative screenshots are in the [Screenshots](#screenshots) section (regenerate stubs via `docs/e2e-screenshots/README.md`).
 
 ### Listening & discovery — `/listen`, `/c/:slug`, `/u/:username`
 
@@ -67,7 +67,7 @@ Each section below states the problem an area of the product addresses and how T
 
 **Problem:** Setting up a broadcast usually means separate accounts for ingest, hosting, and simulcasting, manual stream-key handling, and no safety net if something goes live before it should.
 
-**Solution:** The Studio's Go Live workspace gives an artist RTMP/Icecast credentials with reveal/copy/rotate controls, an OBS preset, and a test signal, and accepts input from OBS, Streamlabs, Mixxx, Traktor, butt, or any compatible client. Pre-flight lets them name the show, choose recording/auto-publish behavior, and preview in a listen-only "green room" before anyone else can hear it. Multistream mirrors the same broadcast to configured RTMP targets (Twitch, YouTube, Kick, custom) simultaneously. When the stream stops, the recording is automatically archived - no manual export step.
+**Solution:** The Studio's Go Live workspace gives an artist RTMP/Icecast credentials with reveal/copy/rotate controls, an OBS preset, and a test signal, and accepts input from OBS, Streamlabs, Mixxx, Traktor, butt, or any compatible client. Pre-flight lets them name the show, choose recording and auto-publish toggles, and preview in a listen-only "green room" before anyone else can hear it. Multistream mirrors the same broadcast to configured RTMP targets (Twitch, YouTube, Kick, custom) simultaneously. When recording is enabled, the capture lands in the archive without a separate export tool — artists can keep it private for editing before publishing.
 
 ### Music library, uploads & the audio editor — Discography, Stash, `/dashboard/editor`
 
@@ -115,7 +115,7 @@ Each section below states the problem an area of the product addresses and how T
 
 **Problem:** On a commercial platform, nobody outside the company can see what it earns, what it costs, or where a "creator fund" payout actually comes from.
 
-**Solution:** Every ledger entry - membership dues, fan-sub fees, grant disbursements, reserve transfers - is public and append-only on the [transparency page](https://tahti.live/transparency). Once a year, `packages/ledger`'s largest-remainder allocator distributes 90% of operating surplus to artist members weighted by engagement units, with a public methodology page and per-year grant reports. The remaining 10% builds a reserve capped at six months of costs; surplus above that cap also goes back to artists.
+**Solution:** Ledger UI and `packages/ledger` exist so membership dues, fan-sub fees, grant disbursements, and reserve transfers can be published append-only on the [transparency page](https://tahti.live/transparency). The annual allocator is designed to send **90% of operating surplus** to artist members by engagement units (methodology + per-year reports). Treat live money flow as dependent on Phase 0 incorporation and ops checklist items in [`remaining-work.md`](docs/remaining-work.md) — do not read the financial-model tables as payouts already made.
 
 ### Member governance
 
@@ -133,7 +133,7 @@ Each section below states the problem an area of the product addresses and how T
 
 **Problem:** A platform can shut down, get acquired, or change its rules, and every artist who depended on it loses their audience relationship along with it.
 
-**Solution:** The entire codebase - API, workers, web clients, infrastructure templates - is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Anyone can read it, self-host it, or fork it; a hosted fork must share its modified source back. Tahti's own instance runs on owned Helsinki hardware plus UpCloud Helsinki spillover (no CDN), with Docker Compose for development and Docker Swarm for production - documented in [`infra/`](infra/) and [`docs/infra-strategy.md`](docs/infra-strategy.md). The defense against forking isn't the code being hard to copy; it's the hosted instance and the community on it.
+**Solution:** The entire codebase - API, workers, web clients, infrastructure templates - is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Anyone can read it, self-host it, or fork it; a hosted fork must share its modified source back. **Target topology** (Phase 2 in `remaining-work.md`): owned Helsinki hardware plus UpCloud Helsinki spillover, no CDN — templates live in [`infra/`](infra/) and [`docs/infra-strategy.md`](docs/infra-strategy.md); Docker Compose for development and Docker Swarm for production. The defense against forking isn't the code being hard to copy; it's the hosted instance and the community on it.
 
 ## At a glance
 
@@ -142,8 +142,9 @@ Each section below states the problem an area of the product addresses and how T
 - **Audio quality:** free-tier artist channels use MP3-class delivery; member artists unlock higher-quality delivery and lossless **downloads** where configured. True lossless **live HLS** is still deferred (see remaining-work STREAM-011 B)
 - **Grant distribution (spec):** annual, weighted by engagement units = downloads + fan-sub euros (not listener-hours) — [`engagement-and-fansubs.md`](docs/engagement-and-fansubs.md)
 - **Direct artist revenue:** fan-to-artist subscriptions; 2% operational fee rolls into the grant pool
-- **Hosting:** owned Helsinki hardware + UpCloud Helsinki spillover; no CDN
-- **Membership:** €40/year to support the association; free-tier artists get MP3 delivery + limited live hours
+- **Hosting (target):** owned Helsinki hardware + UpCloud Helsinki spillover; no CDN — see Phase 2 / `infra-strategy.md`
+- **Tiers:** **FREE** (limited live hours, MP3-class delivery) · **ARTIST** €40/yr (member unlocks) · **STUDIO** €120/yr (always-mirror, newsletter/custom-domain extras — see `/help/tier-limits`)
+- **Membership:** €40/year ARTIST membership supports the association; free-tier artists get MP3 delivery + limited live hours
 
 ### Web clients
 
@@ -156,15 +157,15 @@ Both talk to the same API, chat, and media stack.
 
 ## Screenshots
 
-Captured against the seeded Docker stack (real fixture data, not empty states) via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh) - see [`docs/e2e-screenshots/README.md`](docs/e2e-screenshots/README.md) to regenerate. Full route -> file mapping in [`manifest.json`](docs/e2e-screenshots/manifest.json).
+Captured against the seeded Docker stack via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh) — see [`docs/e2e-screenshots/README.md`](docs/e2e-screenshots/README.md) to regenerate. Prefer journey captures when a flat `public/*.png` / `artist/*.png` file is a Loading stub (identical MD5 twins exist for `listen.png`, `stats.png`, and others). Full route → file mapping in [`manifest.json`](docs/e2e-screenshots/manifest.json).
 
 **Listener-facing**
 
 |                                                                              |                                                                                 |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | ![Channel page](docs/e2e-screenshots/public/channel.png)                     | ![Artist profile](docs/e2e-screenshots/public/profile.png)                      |
-| **Channel** (`/c/:slug`) - live player, archive rotation, chat, all one page | **Profile** (`/u/:username`) - bio, releases, archive, no algorithmic feed      |
-| ![Discover](docs/e2e-screenshots/public/listen.png)                          | ![Smart link](docs/e2e-screenshots/public/smart-link.png)                       |
+| **Channel** (`/c/:slug`) - player + archive tabs (chat when live; ABR badge reflects current delivery) | **Profile** (`/u/:username`) - bio, releases, archive, no algorithmic feed      |
+| ![Discover](docs/e2e-screenshots/anonymous/journey/dark/02-listen-hub.png)   | ![Smart link](docs/e2e-screenshots/public/smart-link.png)                       |
 | **Discover** (`/listen`) - live channels, replays, new releases              | **Smart link** (`/r/:slug`) - one link, buttons for every DSP the artist listed |
 
 **Artist studio**
@@ -173,10 +174,10 @@ Captured against the seeded Docker stack (real fixture data, not empty states) v
 | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | ![Artist dashboard](docs/e2e-screenshots/artist/dashboard.png)                                              | ![Broadcast studio](docs/e2e-screenshots/artist/broadcast-studio.png)                         |
 | **Dashboard** (`/dashboard`) - broadcast status, usage, revenue, recent uploads at a glance                 | **Broadcast studio** (`/dashboard/broadcast`) - RTMP/Icecast credentials, pre-flight, go-live |
-| ![Stats](docs/e2e-screenshots/artist/stats.png)                                                             | ![Releases](docs/e2e-screenshots/artist/releases.png)                                         |
-| **Stats** (`/dashboard/stats`) - plays, downloads, listener map, grant estimate                             | **Releases** (`/dashboard/releases`) - draft/publish, DSP URLs, smart links                   |
+| ![Fan subs](docs/e2e-screenshots/artist/settings-fan-subs.png)                                              | ![Releases](docs/e2e-screenshots/artist/releases.png)                                         |
+| **Fan tiers** (`/dashboard/settings/fan-subs`) - Stripe Connect tiers & perks                               | **Releases** (`/dashboard/releases`) - draft/publish, DSP URLs, smart links                   |
 | ![Channel design](docs/e2e-screenshots/artist/channel-appearance.png)                                       | ![Collections](docs/e2e-screenshots/artist/collections.png)                                   |
-| **Channel design** (`/dashboard/channel/edit`) - identity, backgrounds, visualizer, press kit, live preview | **Collections** (`/dashboard/collections`) - curated sets, each with one-click embed          |
+| **Channel design** (`/dashboard/channel/edit`) - identity, backgrounds, visualizer, live preview (press kit lives under Settings → Artist info → Branding) | **Collections** (`/dashboard/collections`) - curated sets, each with one-click embed          |
 
 **Governance & admin**
 
@@ -198,7 +199,7 @@ callout records the exact route.
 
 More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) — see that folder's `README.md` for the full manifest and how to regenerate them.
 
-**Mobile captures** (responsive web, not a native app): [`docs/e2e-screenshots-mobile/`](docs/e2e-screenshots-mobile/) (~51 PNGs). Beta player mobile chrome is documented in the tahti-player repo (`MOBILE-USABILITY-AUDIT.md`).
+**Mobile captures** (responsive web, not a native app): [`docs/e2e-screenshots-mobile/`](docs/e2e-screenshots-mobile/) (~51 PNGs, currently **artist/admin** journeys — regenerate anonymous/listener mobile if you need listen/channel frames). Beta player mobile chrome is documented in the tahti-player repo (`MOBILE-USABILITY-AUDIT.md`).
 
 **Beta (Nuclear) UI shots** live in tahti-player under `packages/tahti-web/docs/redesign-shots/` and the generated [VIEW-GUIDE](https://github.com/janiluuk/tahti-player/blob/master/packages/tahti-web/docs/VIEW-GUIDE.md).
 
@@ -225,6 +226,8 @@ More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are ca
 | [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md)                     | Listeners & fans: listen, chat, subscribe, smart links              |
 | [`docs/guides/for-artists.md`](docs/guides/for-artists.md)                     | Members: dashboard, profile, releases, fan tiers                    |
 | [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md)                 | Going live: OBS, RTMP, limits, multistream                          |
+| [`docs/guides/for-members.md`](docs/guides/for-members.md)                     | Association membership & governance (Phase 0 caveats)               |
+| [`docs/guides/plugins-and-addons.md`](docs/guides/plugins-and-addons.md)       | Channel blocks vs desktop Nuclear plugins                           |
 | [`docs/guides/multistream-simulcast.md`](docs/guides/multistream-simulcast.md) | Simulcast to Twitch, YouTube, Kick, etc. (stream keys per platform) |
 
 ### Implementation documents (for the agent + director)
@@ -287,7 +290,7 @@ Run the same lint, format, and typecheck gates as CI locally:
 pnpm ci:check
 ```
 
-Full app stack in Docker (API, web, worker, postgres, redis, minio - ports **3010** / **3011**):
+Full app stack in Docker (defaults from `scripts/stack-up.sh`: web **17777**, API **15011** — override with `WEB_PORT` / `API_PORT`):
 
 ```bash
 make stack-up          # or ./scripts/stack-up.sh --seed for demo fixtures
@@ -297,9 +300,9 @@ make stack-deploy      # rsync + stack-up on lab host (SSH required)
 Optional bash e2e against a running API:
 
 ```bash
-API_URL=http://localhost:3001 pnpm test:e2e
+API_URL=http://localhost:15011 pnpm test:e2e
 SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/tahti \
-  API_URL=http://localhost:3001 APP_URL=http://localhost:3010 pnpm test:e2e:journeys
+  API_URL=http://localhost:15011 APP_URL=http://localhost:17777 pnpm test:e2e:journeys
 # With web up: pnpm test:e2e:journeys:web
 # Dashboard + player (web): pnpm test:e2e:dashboard-player:web
 # Persona scripts (source helpers + fixtures first): journeys/listener|artist|member.sh
@@ -332,7 +335,9 @@ scripts/next-release-tag.sh
 
 Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
 
-## Headline numbers (base case)
+## Financial model (forecast only — not achieved results)
+
+Modeled Y1–Y3 base case from [`docs/financial-model.md`](docs/financial-model.md). These are planning figures, not historical payouts.
 
 |                                        | Y1           | Y2           | Y3            | 3-yr cum.     |
 | -------------------------------------- | ------------ | ------------ | ------------- | ------------- |

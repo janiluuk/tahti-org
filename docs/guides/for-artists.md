@@ -64,9 +64,12 @@ Open `/dashboard` after login.
 | **Header & backdrop**     | The banner style at the top of your page — gradient, solid color, or a looping video (paid tiers) — plus the backdrop media that style uses, and whether your join date and live listener count show next to your name.                                                         |
 | **Slideshow transitions** | Only appears once you turn on a gallery mode in Header & backdrop. Eight transition styles between images: four simple crossfades and four richer ones (particle dissolve, glitch wipe, cube flip, liquid distortion), plus how long each image shows and whether it autoplays. |
 | **Links**                 | The link buttons in your channel banner — label and URL for each; the platform icon is picked automatically from the URL.                                                                                                                                                       |
+| **Blocks**                | Optional logo / addon layout blocks on the channel page (see [plugins-and-addons](plugins-and-addons.md)).                                                                                                                                                                       |
 | **Player overlay text**   | An optional stylized headline over your player — five text effects, with alignment control.                                                                                                                                                                                     |
 
 Your name, avatar, country, pronouns, and tags aren't edited here — Header & backdrop links out to **Settings → Artist info** for those, so there's one place that saves them. Press kit lives there too, under the Branding tab.
+
+**Tiers at a glance:** FREE (limited live) · ARTIST €40/yr (member unlocks) · STUDIO €120/yr (always-mirror multistream, newsletter unlimited, custom domain extras). Canonical table: `/help/tier-limits`.
 
 ### Saving a Look
 

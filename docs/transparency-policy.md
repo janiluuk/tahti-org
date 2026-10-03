@@ -13,7 +13,7 @@ that we accept deliberately.
   pass-through, professional services)
 - Running surplus
 - Storage usage in aggregate (total TB, average per user, median per user)
-- Active channel count, member count, listener-hour total
+- Active channel count, member count, platform engagement totals (downloads / fan-sub euros where published — not vanity listener-hours for grants)
 
 ### Annually (within 90 days of fiscal year-end)
 
@@ -22,8 +22,8 @@ that we accept deliberately.
   - Audited financial statements
   - Per-channel grant disbursement (anonymized as "Channel #N" unless artist
     opts into public attribution)
-  - Methodology explanation (how listener-hours are counted, how the formula
-    works)
+  - Methodology explanation (how engagement units are counted, how the grant
+    formula works — see `engagement-and-fansubs.md`)
   - Board roster and trustee statements of conflict
   - Sustaining donor list (with consent)
 - All historical data preserved indefinitely; no quiet rewrites
@@ -34,7 +34,7 @@ that we accept deliberately.
   - `GET /monthly_rollup?year=YYYY` — array of monthly rollups
   - `GET /grants/:year` — grant disbursements for the year
   - `GET /categories` — category definitions and current YTD totals
-  - `GET /platform-stats` — channels, members, listener-hours (anonymized)
+  - `GET /platform-stats` — channels, members, anonymized platform totals
 - All endpoints CORS-open for third-party verification and journalism
 
 ### What we do NOT publish
@@ -93,8 +93,9 @@ Transparency does not mean exposing artists. The default treatment is:
 - Per-channel grant amounts are public (rule of accountability)
 - Per-channel artist identity is hidden behind "Channel #N" unless the artist
   has set `publicAttribution = true` in their settings (rule of consent)
-- Listener data is never personal — listener-hours are computed from anonymous
-  HLS request logs aggregated to the hour
+- Listener data is never personal — aggregate listen metrics (where published)
+  come from anonymized HLS request logs; **grants use engagement units**, not
+  listener-hours
 
 Artists can:
 - Opt into public attribution (their handle appears next to their grant amount)

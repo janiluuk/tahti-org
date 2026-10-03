@@ -2,45 +2,55 @@
 
 Cross-check of public docs against [`features.md`](./features.md), [`remaining-work.md`](./remaining-work.md), [`engagement-and-fansubs.md`](./engagement-and-fansubs.md), and the dual-client reality (`apps/web` production vs [tahti-player](https://github.com/janiluuk/tahti-player) on beta).
 
+Follow-up pass incorporated findings from the deep audit (screenshots, hosting tense, constitution/strategy drift, tier matrix, stack ports).
+
 ## Critical accuracy gaps (fixed or flagged)
 
 | Severity | Claim | Reality | Action |
 | --- | --- | --- | --- |
-| **High** | `about.md`: grants use “plays, downloads, and direct fan support” | v6 formula is **downloads + fan-sub euros only** (explicitly not plays / listener-hours) | Fixed in `about.md` |
-| **High** | README / guides: “registered” yhdistys as fact | `remaining-work.md` Phase 0 still lists PRH registration & founding checklist as open | README/guides now say **association model**; point to remaining-work for incorporation status |
-| **High** | README: members stream **FLAC to all listeners** | STREAM-011 B: tier-aware **MP3/AAC ABR shipped**; true lossless fMP4 HLS still deferred | Softened to “member quality tier + downloads”; link remaining-work |
-| **Medium** | Guides only teach `/dashboard/*` | Beta client uses `/studio/*` on `beta.tahti.live`; production stays `/dashboard` until cutover | Guides README + artist/streamer/viewer notes updated for dual UI |
-| **Medium** | Competitive gap docs (hearthis) still show open checklists | Header says “resolved” / historical | Left as historical; README points to `features.md` + `remaining-work.md` as live sources |
-| **Low** | `about.md` Year-4 board seat rule | Fine if bylaws-aligned; not verified against PRH filings | Left; legal docs own the detail |
+| **High** | `about.md`: grants use “plays, downloads, and direct fan support” | v6 formula is **downloads + fan-sub euros only** | Fixed in `about.md` |
+| **High** | README / guides: “registered” yhdistys as fact | Phase 0 PRH registration still open | Softened to **association model** |
+| **High** | CONSTITUTION / strategy: members stream **FLAC to all listeners** | STREAM-011 B: **MP3/AAC ABR** live; lossless fMP4 HLS deferred | CONSTITUTION + strategy softened; README honest limits |
+| **High** | Strategy opening: “listener-hour grants” | Engagement units (downloads + fan-sub euros) | Fixed; transparency-policy aligned |
+| **Medium** | “Runs on owned Helsinki hardware” as present fact | Phase 2 target topology | Hosting → **target** wording |
+| **Medium** | Auto-archive unconditional | Recording / auto-publish are toggles | Softened |
+| **Medium** | Guides only teach `/dashboard/*` | Beta uses `/studio/*` | Dual UI notes |
+| **Medium** | README omitted STUDIO €120 tier | Code has FREE / ARTIST / STUDIO | Tier matrix in At a glance + guides |
+| **Medium** | Stack ports documented as 3010/3011 | `stack-up.sh` defaults **17777 / 15011** | Fixed |
+| **Medium** | `remaining-work` “Channel Designer block system” open | Blocks UI ships in `apps/web` | Row → polish / beta parity |
+| **Low** | Headline numbers read as achieved | Financial model forecast | Section retitled |
 
 ## Screenshot quality
 
-- `docs/e2e-screenshots/` — **160** PNGs; all README-linked paths resolve.
-- Mobile set `docs/e2e-screenshots-mobile/` — **51** PNGs present but **not linked** from root README/guides.
-- Gap: README does not show a mobile listen/studio capture; guides do not mention phone UX limits.
+- Flat `public/listen.png`, `artist/stats.png`, and six other PNGs are **identical Loading stubs** (same MD5).
+- README Discover now uses `anonymous/journey/dark/02-listen-hub.png`; Stats tile replaced with fan-subs settings (real capture).
+- Channel caption no longer claims chat+live for the replay-oriented `channel.png`.
+- Channel design caption drops “press kit” (lives under Settings → Artist info → Branding).
+- Mobile set (~51 PNGs) is **artist/admin only** — noted in README.
 
-## Guide gaps
+## Guide gaps addressed this pass
 
-| Guide | Gap |
+| Guide | Fix |
 | --- | --- |
-| `for-viewers.md` | No link to beta player UX; no “no native app” note |
-| `for-artists.md` | Dashboard-only paths; no Distribution / Revelator honesty (prod credentials partial) |
-| `for-streamers.md` | Same `/dashboard/broadcast` only |
-| `for-members.md` | Very thin vs governance-explained |
-| `plugins-and-addons.md` | Easy to confuse Nuclear player plugins vs channel `@tahti/addon-sdk` widgets |
+| `for-viewers.md` | Dual beta URLs; honest channel caption (chat when live) |
+| `for-artists.md` | Blocks row; FREE/ARTIST/STUDIO pointer |
+| `for-streamers.md` | Beta `/channel/$slug`; STUDIO €120 always-mirror |
+| `transparency-policy.md` | Listener-hours → engagement units |
+| `about.md` | “Founded” → model + Phase 0 pointer |
 
-## Source-of-truth map (use these)
+## Source-of-truth map
 
 | Question | Read |
 | --- | --- |
 | What ships today? | [`features.md`](./features.md) |
 | What’s still open? | [`remaining-work.md`](./remaining-work.md) |
 | Grant math | [`engagement-and-fansubs.md`](./engagement-and-fansubs.md) |
+| Live audio quality | `/help/tier-limits` + STREAM-011 B |
 | Dual web clients / cutover | README “Web clients” + `ops/nuclear-web-cutover.md` |
 | Listener/artist how-to | [`guides/`](./guides/README.md) |
 
-## Rewrite done in this pass
+## Still deferred (not rewritten this pass)
 
-- Root `README.md` — current-state banner, dual clients, softened legal/audio claims, clearer doc map
-- `docs/about.md` — grant formula corrected
-- `docs/guides/README.md` + artist/streamer/viewer intros — dual UI paths + honesty notes
+- Full `project-roadmap.md` banner refresh (stale 2026-06-05 metrics / false FLAC HLS `[x]` rows)
+- Regenerating stub PNGs in place (paths swapped; files still on disk for journey tooling)
+- `for-members.md` depth vs `governance-explained.md`

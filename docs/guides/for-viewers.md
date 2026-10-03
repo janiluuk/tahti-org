@@ -4,18 +4,18 @@ You do **not** need an account to listen, download public files, or use public c
 
 **Clients:** production listen UI at [tahti.live](https://tahti.live); next listen UX at [beta.tahti.live](https://beta.tahti.live). There is **no native iOS/Android app** yet — use the mobile browser (responsive). Channel URLs: `/c/artist-slug` (production) or `/channel/artist-slug` (beta).
 
-![Channel page — live player, archive list, and chat](../e2e-screenshots/public/channel.png)
-_A channel page (`/c/artist-slug`): player at top, archive below, chat on the side._
+![Channel page — player and archive tabs](../e2e-screenshots/public/channel.png)
+_A channel page (`/c/artist-slug` or beta `/channel/artist-slug`): player + archive/releases tabs. Chat appears when the channel is live._
 
 ---
 
 ## 1. Find a show
 
 1. Open the link the artist shared. It usually looks like one of these:
-   - **Live channel:** `https://tahti.live/c/artist-slug`
-   - **Profile:** `https://tahti.live/u/artist-username`
+   - **Live channel:** `https://tahti.live/c/artist-slug` or `https://beta.tahti.live/channel/artist-slug`
+   - **Profile:** `https://tahti.live/u/artist-username` or `https://beta.tahti.live/u/artist-username`
    - **Release / smart link:** `https://tahti.live/r/release-slug`
-2. On the **channel** page you see the player, archive list, and chat on the side.
+2. On the **channel** page you see the player and archive/releases; chat when live.
 3. On the **profile** you see biography, latest music, archive, collections, upcoming events, and the artist channel.
 
 **Tip:** Bookmark the channel URL if you come back often.
@@ -24,7 +24,7 @@ _A channel page (`/c/artist-slug`): player at top, archive below, chat on the si
 
 ## 2. Listen live
 
-1. Go to `/c/artist-slug`.
+1. Go to `/c/artist-slug` (production) or `/channel/artist-slug` (beta).
 2. If the artist is **Live**, press play on the stream (HLS in the browser).
 3. If they are **Offline**, you may still hear **archive** mixes from past shows in the list below the player.
 

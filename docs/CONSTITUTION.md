@@ -32,12 +32,12 @@ Tahti's mission is to be the _best_ broadcasting platform for independent artist
 
 **Audio quality:**
 
-- Members stream FLAC 16/44 (lossless) to all their listeners. Free listeners hear the same lossless audio when listening to a member artist's channel. We do not cap audio quality at the listener tier. (SoundCloud caps free listeners at 128 kbps Opus; Mixcloud at 64 kbps AAC. Tahti does not.)
-- WAV and FLAC accepted as upload formats. Originals are preserved as-is. Free-tier artists broadcast at MP3 192 kbps — better than what most listeners get on a paid Mixcloud Pro stream — and can become members any time.
+- **Commitment:** Members' listeners hear the highest quality the platform can deliver; we do not cap audio quality at the *listener* tier. Target delivery is lossless FLAC 16/44 live HLS for member channels (see STREAM-011 B in `remaining-work.md`). Until that ships, member channels use the top **MP3/AAC ABR** tier plus lossless **downloads** where configured — still above SoundCloud/Mixcloud free caps. Free-tier artists broadcast at MP3 192 kbps and can become members any time.
+- WAV and FLAC accepted as upload formats. Originals are preserved as-is.
 
 **Product usefulness:**
 
-- The platform must do real work the artist needs: 24/7 channel with seamless live-to-archive transitions, real broadcasting tools (OBS / Mixxx / Traktor / browser ingest), real distribution (Spotify / Apple / Tidal via Revelator, Mixcloud direct), **release-ops tooling** (MusicBrainz submission, ISRC/UPC/credits, release checklist — M30), real promotional tooling (embed widget, smart links, social auto-post, newsletter), real analytics (engagement units, completion rates, embed sources).
+- The platform must do real work the artist needs: 24/7 channel with seamless live-to-archive transitions, real broadcasting tools (OBS / Mixxx / Traktor; browser ingest when shipped), real distribution (Spotify / Apple / Tidal via Revelator, Mixcloud direct), **release-ops tooling** (MusicBrainz submission, ISRC/UPC/credits, release checklist — M30), real promotional tooling (embed widget, smart links, social auto-post, newsletter), real analytics (engagement units, completion rates, embed sources).
 - No feature ships unless an artist would actually use it. We do not build vanity features to mark roadmap completion.
 - The product roadmap is published. Members vote on priority at AGM. The director's discretion is bounded by what members have approved.
 - No vendor lock-in for artists. Export of all data (releases, archive, analytics, fan-sub records) must work and is tested quarterly. Forks of Tahti are explicitly welcome under AGPL.

@@ -8,7 +8,7 @@ This guide is for **broadcasting live audio** to your Tahti channel. If you only
 
 ## The idea in one sentence
 
-Your app (OBS, Mixxx, …) sends audio to Tahti’s **RTMP** server using a **secret stream key**; Tahti turns that into a **live** stream and **HLS** playout on `/c/your-slug`.
+Your app (OBS, Mixxx, …) sends audio to Tahti’s **RTMP** server using a **secret stream key**; Tahti turns that into a **live** stream and **HLS** playout on `/c/your-slug` (production) or `/channel/your-slug` (beta).
 
 ![Broadcast studio](../e2e-screenshots/artist/broadcast-studio.png)
 _Dashboard → Broadcast: RTMP/Icecast credentials, test signal, pre-flight, and the Go Live button._
@@ -85,7 +85,7 @@ Tahti tiers cap **live hours per week** (fair use on owned hardware):
 
 The dashboard shows **warnings** (e.g. 45 / 55 minutes) and may **stop** the stream when you hit the cap, with a short **grace** if you disconnect right at the limit.
 
-**Plan:** Shorter regular shows beat one 8-hour marathon unless you are on Studio tier.
+**Plan:** Shorter regular shows beat one 8-hour marathon unless you are on **STUDIO** (€120/yr — unlimited live / always-mirror). See `/help/tier-limits`.
 
 ---
 
@@ -100,7 +100,7 @@ Tahti can **simulcast** your live show to other platforms while you only stream 
 
 **Important:** You paste each site’s **stream key**, not a Tahti API key and not YouTube/Twitch OAuth app credentials.
 
-**Studio tier:** “Always mirror” can push to all targets automatically. Other tiers: toggle **Active** per destination before each show.
+**STUDIO tier (€120/yr):** “Always mirror” can push to all targets automatically. FREE/ARTIST: toggle **Active** per destination before each show.
 
 Supported ingest URLs are configured for you (e.g. `rtmp://live.twitch.tv/app` + your Twitch key). **Custom** is for any other RTMP service — you fill in both URL and key.
 

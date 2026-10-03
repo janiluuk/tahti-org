@@ -3,14 +3,15 @@
 ## Positioning, in one sentence
 
 A nonprofit broadcasting platform for independent artists, owned by its members,
-giving operating surplus back as transparent listener-hour grants.
+giving operating surplus back as transparent **engagement-unit** grants
+(downloads + fan-sub euros — not listener-hours).
 
 ## Positioning, in three sentences
 
 Each artist gets a 24/7 channel — live when they're broadcasting, their archive
-when they're not. The platform is open source under AGPL, run by Tahti ry, a
-Finnish nonprofit. Every year the surplus is awarded as grants to artist
-members, weighted by listener engagement, with a public ledger anyone can audit.
+when they're not. The platform is open source under AGPL, run under a Finnish
+nonprofit association model. Every year the surplus is awarded as grants to
+artist members, weighted by engagement units, with a public ledger anyone can audit.
 
 ## Who we serve
 
@@ -31,17 +32,21 @@ We are not for:
 
 ## What the product is
 
-A two-tier subscription service running on owned infrastructure in Helsinki:
+Three product tiers (code: `FREE` / `ARTIST` / `STUDIO`). Live delivery today is
+tier-aware MP3/AAC ABR; true lossless live HLS is deferred. Hosting topology
+(Helsinki owned + UpCloud spillover) is the Phase 2 target — see `infra-strategy.md`.
 
 | Free | Artist €40/yr | Studio €120/yr |
 |---|---|---|
 | 1 channel | Unlimited archive | Everything in Artist |
-| 5 archive items | 1 multistream | Unlimited multistream |
-| Live + chat | Mixcloud upload | Custom domain |
-| Inactive deletion 60d | Pay-per-release DSP €8 | 12 DSP releases included |
-|  | Listener stats | Listener insights + FLAC |
+| Limited live hours | Unlimited live | Always-mirror multistream |
+| Live + chat | Mixcloud upload | Custom domain + newsletter unlimited |
+| Soft storage target | Pay-per-release DSP | Extra DSP allotment where configured |
+|  | Listener stats | Listener insights + top ABR / lossless downloads |
 |  | Member of association | Member of association |
 |  | Smart links + manual DSP URLs | **Release ops toolkit (M30):** MusicBrainz submission, ISRC/UPC, credits, release checklist |
+
+Canonical limits: production `/help/tier-limits` and `docs/features.md`.
 
 ## Differentiation
 
@@ -83,10 +88,11 @@ pricing model: **the artist pays, but the listener still gets a bad experience.*
 - The user-visible result: a Pro DJ uploads a flawless mixed-down master,
   and their listeners hear it through what sounds like a YouTube rip.
 
-Tahti's approach: **all members stream lossless to all listeners.** A
-€40/year Tahti member's listeners hear FLAC 16/44 from a real broadcast
-pipeline, not a degraded transcode. Free users on Tahti hear MP3 192 — better
-than what most listeners get on a paid Mixcloud Pro stream.
+Tahti's approach: **do not cap quality at the listener tier.** Target is
+lossless FLAC 16/44 live HLS for member channels (STREAM-011 B). Until that
+ships, members get the top ABR tier + lossless downloads; free-tier artists
+broadcast at MP3 192 — still better than what most listeners get on a paid
+Mixcloud Pro stream.
 
 ### Spotify has been overrun by AI-generated content with no required disclosure
 
@@ -199,9 +205,10 @@ nonprofit alternative to commercial US platforms" — that's our angle.
 
 ## The retention thesis
 
-**Listener-hours.** A successful channel doesn't just exist — it gets played.
-Channels that don't see listener engagement don't earn grant share. The grant
-model itself is a retention mechanism for the engaged tail.
+**Engagement units.** A successful channel doesn't just exist — fans download
+and subscribe. Passive listen time alone does not earn grant share. The grant
+model itself is a retention mechanism for the engaged tail
+(`engagement-and-fansubs.md`).
 
 Secondary retention factors:
 - Channel as "home base" — once an artist hangs their channel on Instagram bio,

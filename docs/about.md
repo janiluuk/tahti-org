@@ -6,7 +6,7 @@ Live page: [https://tahti.live/about](https://tahti.live/about)
 
 ## Our mission
 
-Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians - with no shareholders, no advertising, and no exit.
+Tahti is built as a Finnish nonprofit association (**yhdistys**) model to put money, audience, and infrastructure in the hands of independent musicians — no shareholders, no advertising, no exit. Formal PRH registration and Phase 0 legal checklist items may still be open — see [`remaining-work.md`](./remaining-work.md).
 
 The platform exists for one purpose: to be the best broadcasting platform for independent artists. Quality is a constitutional obligation, not an aspiration.
 
