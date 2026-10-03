@@ -133,6 +133,62 @@ describe('M6 — RTMP multistream targets', () => {
     expect(updated?.enabled).toBe(false)
   })
 
+  it('STUDIO tier can turn always-mirror on and off via PATCH', async () => {
+    const target = await prisma.rtmpTarget.findFirstOrThrow({ where: { channelId } })
+    for (const alwaysMirror of [true, false]) {
+      const patch = await app.inject({
+        method: 'PATCH',
+        url: `/api/me/rtmp-targets/${target.id}`,
+        headers: { cookie },
+        payload: { alwaysMirror },
+      })
+      expect(patch.statusCode).toBe(200)
+      const updated = await prisma.rtmpTarget.findUniqueOrThrow({ where: { id: target.id } })
+      expect(updated.alwaysMirror).toBe(alwaysMirror)
+    }
+  })
+
+  it('refuses always-mirror via PATCH below STUDIO tier but still lets it be turned off', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}artist-tier@example.com`,
+      username: 'rtmp-test-artist-tier',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98391,
+    })
+    const artistCookie = await sessionCookieFor(prisma, artist.id)
+    const target = await prisma.rtmpTarget.create({
+      data: {
+        channelId: artist.channel!.id,
+        provider: 'TWITCH',
+        label: 'Downgraded mirror',
+        rtmpUrl: 'rtmp://live.twitch.tv/app',
+        streamKeyEnc: Buffer.from('enc:k').toString('base64'),
+        alwaysMirror: true,
+      },
+    })
+
+    const enable = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/rtmp-targets/${target.id}`,
+      headers: { cookie: artistCookie },
+      payload: { alwaysMirror: true, label: 'Renamed' },
+    })
+    expect(enable.statusCode).toBe(403)
+    const unchanged = await prisma.rtmpTarget.findUniqueOrThrow({ where: { id: target.id } })
+    expect(unchanged.label).toBe('Downgraded mirror')
+
+    const disable = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/rtmp-targets/${target.id}`,
+      headers: { cookie: artistCookie },
+      payload: { alwaysMirror: false },
+    })
+    expect(disable.statusCode).toBe(200)
+    const updated = await prisma.rtmpTarget.findUniqueOrThrow({ where: { id: target.id } })
+    expect(updated.alwaysMirror).toBe(false)
+  })
+
   it('tests reachability of a real listening target', async () => {
     const server = createServer((socket) => socket.end())
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))

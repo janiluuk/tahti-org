@@ -75,6 +75,11 @@ const PROVIDER_RTMP_URLS: Record<string, string> = {
   CUSTOM: '',
 }
 
+/** Shared by create and PATCH so the two can't drift apart. */
+function canAlwaysMirror(tier: string, radioScope: boolean): boolean {
+  return radioScope || tier === 'STUDIO'
+}
+
 const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify, options) => {
   const radioScope = options.scope === 'radio'
   const basePath = radioScope ? '/api/admin/radio/rtmp-targets' : '/api/me/rtmp-targets'
@@ -168,7 +173,7 @@ const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify
           rtmpUrl,
           streamKeyEnc,
           enabled: body.enabled ?? true,
-          alwaysMirror: body.alwaysMirror === true && (radioScope || user.tier === 'STUDIO'),
+          alwaysMirror: body.alwaysMirror === true && canAlwaysMirror(user.tier, radioScope),
         },
         select: {
           id: true,
@@ -191,7 +196,7 @@ const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify
     },
   )
 
-  // PATCH /api/me/rtmp-targets/:id — toggle enabled / update stream key
+  // PATCH /api/me/rtmp-targets/:id — toggle enabled / always-mirror / update stream key
   fastify.patch(
     `${basePath}/:id`,
     {
@@ -211,6 +216,11 @@ const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
       const body = parsed.data
+      if (body.alwaysMirror === true && !canAlwaysMirror(user.tier, radioScope)) {
+        return reply
+          .status(403)
+          .send({ error: 'Mirroring the 24/7 rotation is available on the Studio tier' })
+      }
 
       const channel = await fastify.prisma.channel.findUnique({
         where: radioScope ? { slug: TAHTI_RADIO_SLUG } : { userId: user.id },
@@ -226,6 +236,7 @@ const rtmpTargetRoutes: FastifyPluginAsync<{ scope?: 'radio' }> = async (fastify
       const update: Record<string, unknown> = {}
       if (body.enabled !== undefined) update.enabled = body.enabled
       if (body.label) update.label = body.label
+      if (body.alwaysMirror !== undefined) update.alwaysMirror = body.alwaysMirror
       if (body.streamKey) update.streamKeyEnc = encryptStreamKey(body.streamKey)
 
       if (Object.keys(update).length === 0) {
