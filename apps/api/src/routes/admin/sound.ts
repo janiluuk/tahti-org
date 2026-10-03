@@ -16,6 +16,7 @@ import {
   metadataPatchFromBody,
   serializeSound,
 } from '../../lib/sound-metadata.js'
+import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
 import { auditLog } from '../../lib/audit.js'
 import type { TracklistEntry } from '@tahti/shared'
@@ -78,6 +79,11 @@ const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
 
       const patch = metadataPatchFromBody(request.body)
       if (!patch.ok) return reply.status(400).send({ error: patch.error })
+
+      const venueId = patch.data.venueId
+      if (typeof venueId === 'string' && !(await canAttachVenue(fastify.prisma, venueId, null))) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
 
       if (patch.title !== undefined) {
         const t = patch.title.trim()

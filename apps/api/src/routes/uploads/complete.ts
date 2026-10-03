@@ -7,6 +7,7 @@ import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } f
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/sound-metadata.js'
+import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { headObjectSize } from '../../lib/minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
 import { auditLog } from '../../lib/audit.js'
@@ -50,6 +51,10 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
 
       if (!uploadId.startsWith(`raw/${channel.slug}/`)) {
         return reply.status(403).send({ error: 'Upload does not belong to your channel' })
+      }
+
+      if (metadata?.venueId && !(await canAttachVenue(fastify.prisma, metadata.venueId, user.id))) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
       }
 
       const fileSizeBytes = (await headObjectSize(uploadId)) ?? 0
