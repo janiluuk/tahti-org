@@ -9,6 +9,7 @@ import {
   parseSocialLinksGenres,
 } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { userName } from '../../lib/safe-names.js'
 
 const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -43,7 +44,7 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
           items: channels.map((ch) => ({
             slug: ch.slug,
             username: ch.user.username,
-            displayName: ch.user.displayName,
+            displayName: userName(ch.user),
             avatarUrl: ch.user.avatarUrl,
             genres: parseSocialLinksGenres(ch.user.socialLinks),
             isActive: ch.state === 'LIVE' || ch.fallbackEnabled,

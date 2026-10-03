@@ -22,6 +22,7 @@ import { resolveArtistUrl } from '../lib/artist-url.js'
 import { resolveChannelUrl } from '../lib/channel-url.js'
 import { resolveCollectionCoverUrl } from '../lib/collection-cover.js'
 import { resolveReleaseArtworkUrl } from '../lib/release-artwork.js'
+import { trackArtistName, userName } from '../lib/safe-names.js'
 
 function escapeHtml(text: string): string {
   return text
@@ -90,11 +91,13 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
-      select: { user: { select: { displayName: true, bio: true, avatarUrl: true } } },
+      select: {
+        user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
+      },
     })
     if (!channel) return notFoundPage(reply, url)
 
-    const name = channel.user.displayName
+    const name = userName(channel.user)
     reply.header('Cache-Control', CACHE_CONTROL)
     return reply.type('text/html').send(
       ogPage({
@@ -115,17 +118,17 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
 
     const user = await fastify.prisma.user.findUnique({
       where: { username },
-      select: { displayName: true, bio: true, avatarUrl: true },
+      select: { username: true, displayName: true, bio: true, avatarUrl: true },
     })
     if (!user) return notFoundPage(reply, url)
+    const name = userName(user)
 
     reply.header('Cache-Control', CACHE_CONTROL)
     return reply.type('text/html').send(
       ogPage({
-        title: `${user.displayName} on Tahti`,
+        title: `${name} on Tahti`,
         description:
-          user.bio ||
-          `Explore ${user.displayName}'s music, releases, collections, and live channel on Tahti.`,
+          user.bio || `Explore ${name}'s music, releases, collections, and live channel on Tahti.`,
         image: user.avatarUrl,
         url,
       }),
@@ -145,7 +148,7 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
         description: true,
         artworkUrl: true,
         artworkKey: true,
-        user: { select: { displayName: true, avatarUrl: true } },
+        user: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
     if (!release) return notFoundPage(reply, url)
@@ -154,7 +157,7 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
     reply.header('Cache-Control', CACHE_CONTROL)
     return reply.type('text/html').send(
       ogPage({
-        title: `${release.title} by ${release.user.displayName} on Tahti`,
+        title: `${release.title} by ${userName(release.user)} on Tahti`,
         description:
           release.description || `Listen to ${release.title} and find its official links on Tahti.`,
         image,
@@ -183,12 +186,14 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
         artistName: true,
         description: true,
         bannerUrl: true,
-        channel: { select: { user: { select: { displayName: true, avatarUrl: true } } } },
+        channel: {
+          select: { user: { select: { username: true, displayName: true, avatarUrl: true } } },
+        },
       },
     })
     if (!track) return notFoundPage(reply, url)
 
-    const artist = track.artistName || track.channel.user.displayName
+    const artist = trackArtistName(track)
     reply.header('Cache-Control', CACHE_CONTROL)
     return reply.type('text/html').send(
       ogPage({
@@ -253,13 +258,14 @@ const ogRoutes: FastifyPluginAsync = async (fastify) => {
 
     const url = `${config.appUrl.replace(/\/$/, '')}/u/${collection.user.username}/c/${slug}`
     const image = (await resolveCollectionCoverUrl(collection)) ?? collection.user.avatarUrl
+    const owner = userName(collection.user)
     reply.header('Cache-Control', CACHE_CONTROL)
     return reply.type('text/html').send(
       ogPage({
-        title: `${collection.name} by ${collection.user.displayName} on Tahti`,
+        title: `${collection.name} by ${owner} on Tahti`,
         description:
           collection.description ||
-          `Listen to ${collection.name}, a collection by ${collection.user.displayName} on Tahti.`,
+          `Listen to ${collection.name}, a collection by ${owner} on Tahti.`,
         image,
         url,
         noindex: !collection.isPublic,

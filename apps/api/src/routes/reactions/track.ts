@@ -12,7 +12,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
-import { trackArtistName } from '../../lib/safe-names.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 interface TracklistEntry {
   startSec: number
@@ -185,7 +185,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
     if (parsed.data.type === 'LOVE') {
       publishLovedMessage({
         slug: item.channel.slug,
-        actorDisplayName: user.displayName,
+        actorDisplayName: userName(user),
         trackTitle: item.title,
         trackId: item.id,
       }).catch((err: unknown) => fastify.log.warn({ err }, 'centrifugo publish failed'))

@@ -266,3 +266,61 @@ describe('/api/comments — tracks and channels', () => {
     expect(created.commentsEnabled).toBe(false)
   })
 })
+
+describe('/api/comments — author names', () => {
+  const MAIL_PREFIX = 'comments-mail-test-'
+  let app: Awaited<ReturnType<typeof buildApp>>
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, MAIL_PREFIX)
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await cleanupUsersByEmailPrefix(prisma, MAIL_PREFIX)
+  })
+
+  it('never shows an email address as the comment author name', async () => {
+    const owner = await createTestArtist(prisma, {
+      email: `${MAIL_PREFIX}owner@example.com`,
+      username: `${MAIL_PREFIX}owner`,
+    })
+    const author = await createTestArtist(prisma, {
+      email: `${MAIL_PREFIX}author@example.com`,
+      username: `${MAIL_PREFIX}author`,
+      displayName: `${MAIL_PREFIX}author@example.com`,
+    })
+    const cookie = await sessionCookieFor(prisma, author.id)
+    const sound = await prisma.sound.create({
+      data: { channelId: owner.channel!.id, title: 'Mail track', status: 'READY', isPublic: true },
+    })
+
+    const trackPost = await app.inject({
+      method: 'POST',
+      url: `/api/comments/track/${sound.id}`,
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: { body: 'hello' },
+    })
+    expect(trackPost.statusCode).toBe(201)
+    expect(trackPost.json().authorDisplayName).toBe(`${MAIL_PREFIX}author`)
+
+    const channelPost = await app.inject({
+      method: 'POST',
+      url: `/api/comments/channel/${owner.channel!.slug}`,
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: { body: 'hello channel' },
+    })
+    expect(channelPost.statusCode).toBe(201)
+    expect(channelPost.json().authorDisplayName).toBe(`${MAIL_PREFIX}author`)
+
+    for (const url of [
+      `/api/comments/track/${sound.id}`,
+      `/api/comments/channel/${owner.channel!.slug}`,
+    ]) {
+      const list = await app.inject({ method: 'GET', url })
+      expect(list.json().comments[0].authorDisplayName).toBe(`${MAIL_PREFIX}author`)
+    }
+  })
+})

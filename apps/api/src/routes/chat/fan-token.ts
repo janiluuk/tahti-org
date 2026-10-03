@@ -11,6 +11,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { canUseFanChat } from '../../lib/fan-perks.js'
+import { userName } from '../../lib/safe-names.js'
 
 const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/fan-token — fan-only chat (logged-in active subscribers)
@@ -39,7 +40,7 @@ const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const handle = (user.displayName || user.username).slice(0, 32)
+      const handle = userName(user).slice(0, 32)
       const sub = `${handle}#fan-${user.id.slice(0, 8)}`
       // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
       // subscription JWTs can) — the client subscribes explicitly after connect.

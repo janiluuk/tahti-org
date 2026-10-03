@@ -249,4 +249,34 @@ describe('M14 — embed and oEmbed', () => {
       expect(res.statusCode).toBe(404)
     })
   })
+
+  it('never names the artist by an email address in oEmbed or embed metadata', async () => {
+    const mailArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}mail@example.com`,
+      username: 'embed-test-mail',
+      displayName: 'embed-test-mail@example.com',
+    })
+    const release = await createPublishedReleaseWithTrack(prisma, mailArtist.id, {
+      smartLinkSlug: 'embed-test-mail-release',
+    })
+
+    const releaseOembed = await app.inject({
+      method: 'GET',
+      url: `/oembed?url=${encodeURIComponent(`${config.appUrl}/r/${release.smartLinkSlug}`)}`,
+    })
+    expect(releaseOembed.json().author_name).toBe('embed-test-mail')
+
+    const channelOembed = await app.inject({
+      method: 'GET',
+      url: `/oembed?url=${encodeURIComponent(`${config.appUrl}/c/embed-test-mail`)}`,
+    })
+    expect(channelOembed.json().author_name).toBe('embed-test-mail')
+    expect(channelOembed.json().title).not.toContain('@example.com')
+
+    const releaseEmbed = await app.inject({ method: 'GET', url: `/api/v1/embed/r/${release.id}` })
+    expect(releaseEmbed.json().artist.displayName).toBe('embed-test-mail')
+
+    const channelEmbed = await app.inject({ method: 'GET', url: '/api/v1/embed/c/embed-test-mail' })
+    expect(channelEmbed.json().artist.displayName).toBe('embed-test-mail')
+  })
 })

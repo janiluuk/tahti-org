@@ -5,6 +5,7 @@ import type { GreenRoomInvitePool, GreenRoomInviteSource, Prisma, PrismaClient }
 import type { GreenRoomCandidateView, GreenRoomInviteView } from '@tahti/shared'
 import { liveHlsUrl } from './stream-quality.js'
 import { config } from '../config.js'
+import { userName } from './safe-names.js'
 
 const userSelect = { id: true, username: true, displayName: true } as const
 
@@ -53,7 +54,7 @@ export async function listGreenRoomCandidates(
       candidates.push({
         userId: mod.user.id,
         username: mod.user.username,
-        displayName: mod.user.displayName,
+        displayName: userName(mod.user),
         kind: 'MODERATOR',
       })
     }
@@ -71,7 +72,7 @@ export async function listGreenRoomCandidates(
       candidates.push({
         userId: sub.subscriber.id,
         username: sub.subscriber.username,
-        displayName: sub.subscriber.displayName,
+        displayName: userName(sub.subscriber),
         kind: 'FAN_SUB',
       })
     }
@@ -88,7 +89,7 @@ function mapInvite(
   return {
     userId: row.user.id,
     username: row.user.username,
-    displayName: row.user.displayName,
+    displayName: userName(row.user),
     source: row.source,
     invitedAt: row.invitedAt.toISOString(),
     joinedAt: row.joinedAt?.toISOString() ?? null,
@@ -180,7 +181,7 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
           ? liveHlsUrl(config.hlsBaseUrl, slug, 'STUDIO')
           : null,
       artistUsername: channel.user.username,
-      artistDisplayName: channel.user.displayName,
+      artistDisplayName: userName(channel.user),
     }
   }
 
@@ -198,7 +199,7 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
       joinedAt: null as string | null,
       hlsUrl: null as string | null,
       artistUsername: channel.user.username,
-      artistDisplayName: channel.user.displayName,
+      artistDisplayName: userName(channel.user),
     }
   }
 
@@ -219,7 +220,7 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
         joinedAt: null as string | null,
         hlsUrl: liveHlsUrl(config.hlsBaseUrl, slug, 'STUDIO'),
         artistUsername: channel.user.username,
-        artistDisplayName: channel.user.displayName,
+        artistDisplayName: userName(channel.user),
       }
     }
     return {
@@ -229,7 +230,7 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
       joinedAt: null as string | null,
       hlsUrl: null as string | null,
       artistUsername: channel.user.username,
-      artistDisplayName: channel.user.displayName,
+      artistDisplayName: userName(channel.user),
     }
   }
 
@@ -240,6 +241,6 @@ export async function resolveGreenRoomAccess(prisma: PrismaClient, slug: string,
     joinedAt: invite.joinedAt?.toISOString() ?? null,
     hlsUrl: liveHlsUrl(config.hlsBaseUrl, slug, 'STUDIO'),
     artistUsername: channel.user.username,
-    artistDisplayName: channel.user.displayName,
+    artistDisplayName: userName(channel.user),
   }
 }

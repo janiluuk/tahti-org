@@ -10,6 +10,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { userName } from '../../lib/safe-names.js'
 
 const userRepostsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/u/:username/reposts — tracks this user reposted, newest first.
@@ -62,7 +63,7 @@ const userRepostsRoutes: FastifyPluginAsync = async (fastify) => {
           bannerUrl: sound.bannerUrl,
           channelSlug: sound.channel.slug,
           artistUsername: sound.channel.user.username,
-          artistDisplayName: sound.channel.user.displayName,
+          artistDisplayName: userName(sound.channel.user),
           repostedAt: createdAt.toISOString(),
           url: resolveChannelUrl(sound.channel.slug, { hash: `sound-item-${sound.id}` }),
         })),

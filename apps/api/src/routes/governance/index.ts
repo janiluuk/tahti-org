@@ -28,6 +28,7 @@ import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import type { MotionState, Prisma } from '@tahti/db'
+import { userName } from '../../lib/safe-names.js'
 
 const MOTION_STATE_SET = new Set<string>(MOTION_LIST_STATES)
 
@@ -86,7 +87,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         members.map((m) => ({
           memberNumber: m.memberNumber,
-          displayName: m.displayName,
+          displayName: userName(m),
           username: m.username,
           memberSince: m.memberSince,
           isBoard: m.isBoard,
@@ -181,7 +182,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             advisory: m.advisory,
             openAt: m.openAt,
             closeAt: m.closeAt,
-            proposer: m.proposer.displayName,
+            proposer: userName(m.proposer),
             totalVotes: m._count.votes,
             youVoted: Boolean(myVote),
             yourChoice: myVote?.choice ?? null,
@@ -275,7 +276,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         advisory: motion.advisory,
         openAt: motion.openAt,
         closeAt: motion.closeAt,
-        proposer: motion.proposer.displayName,
+        proposer: userName(motion.proposer),
         totalVotes: motion.votes.length,
         youVoted: Boolean(myVote),
         yourChoice: myVote?.choice ?? null,
@@ -516,7 +517,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       const comments = await fastify.prisma.motionComment.findMany({
         where: { motionId: { in: ids } },
         orderBy: { createdAt: 'asc' },
-        include: { author: { select: { displayName: true } } },
+        include: { author: { select: { username: true, displayName: true } } },
       })
 
       const byMotion: Record<string, unknown[]> = Object.fromEntries(ids.map((id) => [id, []]))
@@ -525,7 +526,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           id: c.id.toString(),
           body: c.body,
           authorId: c.authorId,
-          authorDisplayName: c.author?.displayName ?? null,
+          authorDisplayName: c.author ? userName(c.author) : null,
           createdAt: c.createdAt,
         })
       }
@@ -556,7 +557,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       const comments = await fastify.prisma.motionComment.findMany({
         where: { motionId: id },
         orderBy: { createdAt: 'asc' },
-        include: { author: { select: { displayName: true } } },
+        include: { author: { select: { username: true, displayName: true } } },
       })
 
       return reply.send(
@@ -564,7 +565,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           id: c.id.toString(),
           body: c.body,
           authorId: c.authorId,
-          authorDisplayName: c.author?.displayName ?? null,
+          authorDisplayName: c.author ? userName(c.author) : null,
           createdAt: c.createdAt,
         })),
       )
@@ -607,7 +608,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
 
       const comment = await fastify.prisma.motionComment.create({
         data: { motionId: id, authorId: user.id, body: parsed.data.body },
-        include: { author: { select: { displayName: true } } },
+        include: { author: { select: { username: true, displayName: true } } },
       })
 
       await auditLog(fastify.prisma, {
@@ -620,7 +621,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         id: comment.id.toString(),
         body: comment.body,
         authorId: comment.authorId,
-        authorDisplayName: comment.author?.displayName ?? null,
+        authorDisplayName: comment.author ? userName(comment.author) : null,
         createdAt: comment.createdAt,
       })
     },
@@ -649,7 +650,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       const rows = await fastify.prisma.featureRequestQuarterlyReport.findMany({
         orderBy: [{ year: 'desc' }, { quarter: 'desc' }],
         take: 12,
-        include: { generatedBy: { select: { displayName: true } } },
+        include: { generatedBy: { select: { username: true, displayName: true } } },
       })
 
       const reports = await Promise.all(
@@ -659,7 +660,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           quarter: r.quarter,
           storageKey: r.storageKey,
           generatedAt: r.generatedAt,
-          generatedByDisplayName: r.generatedBy.displayName,
+          generatedByDisplayName: userName(r.generatedBy),
           downloadUrl: await presignedGetUrl(r.storageKey, 3600).catch(() => null),
         })),
       )

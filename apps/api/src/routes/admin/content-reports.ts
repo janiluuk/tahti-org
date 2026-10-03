@@ -13,6 +13,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { userName } from '../../lib/safe-names.js'
 
 function mapReportRow(report: {
   id: bigint
@@ -25,7 +26,7 @@ function mapReportRow(report: {
   resolutionNote: string | null
   resolvedAt: Date | null
   createdAt: Date
-  resolvedBy: { displayName: string } | null
+  resolvedBy: { username: string; displayName: string } | null
 }) {
   return {
     id: report.id.toString(),
@@ -35,7 +36,7 @@ function mapReportRow(report: {
     details: report.details,
     status: report.status,
     resolvedById: report.resolvedById,
-    resolvedByDisplayName: report.resolvedBy?.displayName ?? null,
+    resolvedByDisplayName: report.resolvedBy ? userName(report.resolvedBy) : null,
     resolutionNote: report.resolutionNote,
     resolvedAt: report.resolvedAt,
     createdAt: report.createdAt,
@@ -68,7 +69,7 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
-          include: { resolvedBy: { select: { displayName: true } } },
+          include: { resolvedBy: { select: { username: true, displayName: true } } },
         }),
       ])
 
@@ -91,7 +92,7 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
 
       const report = await fastify.prisma.contentReport.findUnique({
         where: { id: routeParams.id },
-        include: { resolvedBy: { select: { displayName: true } } },
+        include: { resolvedBy: { select: { username: true, displayName: true } } },
       })
       if (!report) return reply.status(404).send({ error: 'Report not found' })
 
@@ -137,7 +138,7 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
               ? { resolvedById: null, resolvedAt: null }
               : {}),
         },
-        include: { resolvedBy: { select: { displayName: true } } },
+        include: { resolvedBy: { select: { username: true, displayName: true } } },
       })
 
       return reply.send(mapReportRow(report))

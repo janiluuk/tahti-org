@@ -14,6 +14,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { userName } from '../../lib/safe-names.js'
 
 function displayGenre(item: { genre: string | null; genreCustom: string | null }) {
   return item.genreCustom?.trim() || item.genre?.trim() || null
@@ -207,7 +208,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         },
         artist: {
           username: release.user.username,
-          displayName: release.user.displayName,
+          displayName: userName(release.user),
           avatarUrl: release.user.avatarUrl,
         },
         featuredCollections,

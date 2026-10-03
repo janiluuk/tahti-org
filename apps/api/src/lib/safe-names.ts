@@ -10,6 +10,12 @@ export function userName(user: NamedUser): string {
   return safeDisplayName(user.displayName, user.username)
 }
 
+/** The same user with `displayName` replaced by its safe public name, for
+ * responses that send the selected user object as-is. */
+export function withSafeName<T extends NamedUser>(user: T): T {
+  return { ...user, displayName: userName(user) }
+}
+
 /** Who a track is credited to: its own artist name, else the channel owner's
  * name, never an email address. */
 export function trackArtistName(sound: {

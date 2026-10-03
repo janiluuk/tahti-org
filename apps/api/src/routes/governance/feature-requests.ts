@@ -17,6 +17,7 @@ import {
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { userName } from '../../lib/safe-names.js'
 
 const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/feature-requests — everyone's requests, most-voted first
@@ -35,7 +36,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: [{ votes: { _count: 'desc' } }, { createdAt: 'desc' }],
         take: 200,
         include: {
-          proposedBy: { select: { displayName: true } },
+          proposedBy: { select: { username: true, displayName: true } },
           mergedInto: { select: { title: true } },
           _count: { select: { votes: true, comments: true } },
           votes: { where: { userId: user.id }, select: { userId: true } },
@@ -48,7 +49,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
           title: f.title,
           description: f.description,
           status: f.status,
-          proposer: f.proposedBy.displayName,
+          proposer: userName(f.proposedBy),
           voteCount: f._count.votes,
           youVoted: f.votes.length > 0,
           commentCount: f._count.comments,
@@ -87,7 +88,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
           description: parsed.data.description,
           proposedById: user.id,
         },
-        include: { proposedBy: { select: { displayName: true } } },
+        include: { proposedBy: { select: { username: true, displayName: true } } },
       })
 
       await auditLog(fastify.prisma, {
@@ -102,7 +103,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
         title: created.title,
         description: created.description,
         status: created.status,
-        proposer: created.proposedBy.displayName,
+        proposer: userName(created.proposedBy),
         voteCount: 0,
         youVoted: false,
         commentCount: 0,
@@ -222,7 +223,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
       const comments = await fastify.prisma.featureRequestComment.findMany({
         where: { featureRequestId: id },
         orderBy: { createdAt: 'asc' },
-        include: { author: { select: { displayName: true } } },
+        include: { author: { select: { username: true, displayName: true } } },
       })
 
       return reply.send(
@@ -230,7 +231,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
           id: c.id.toString(),
           body: c.body,
           authorId: c.authorId,
-          authorDisplayName: c.author?.displayName ?? null,
+          authorDisplayName: c.author ? userName(c.author) : null,
           createdAt: c.createdAt,
         })),
       )
@@ -267,7 +268,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const comment = await fastify.prisma.featureRequestComment.create({
         data: { featureRequestId: id, authorId: user.id, body: parsed.data.body },
-        include: { author: { select: { displayName: true } } },
+        include: { author: { select: { username: true, displayName: true } } },
       })
 
       await auditLog(fastify.prisma, {
@@ -280,7 +281,7 @@ const featureRequestsRoutes: FastifyPluginAsync = async (fastify) => {
         id: comment.id.toString(),
         body: comment.body,
         authorId: comment.authorId,
-        authorDisplayName: comment.author?.displayName ?? null,
+        authorDisplayName: comment.author ? userName(comment.author) : null,
         createdAt: comment.createdAt,
       })
     },
