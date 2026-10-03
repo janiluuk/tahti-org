@@ -143,6 +143,26 @@ describe('M22/M24/M25 — sound metadata and slideshow', () => {
     expect(patch.statusCode).toBe(400)
   })
 
+  it('switches downloads off for a track and shows it in the owner list', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/sound/${soundId}`,
+      headers: { cookie },
+      payload: { downloadsEnabled: false },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().downloadsEnabled).toBe(false)
+    const stored = await prisma.sound.findUnique({
+      where: { id: soundId },
+      select: { downloadsEnabled: true },
+    })
+    expect(stored?.downloadsEnabled).toBe(false)
+
+    const list = await app.inject({ method: 'GET', url: '/api/me/sound', headers: { cookie } })
+    const row = list.json().find((i: { id: string }) => i.id === soundId)
+    expect(row.downloadsEnabled).toBe(false)
+  })
+
   it('updates channel slideshow images', async () => {
     const patch = await app.inject({
       method: 'PATCH',

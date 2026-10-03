@@ -15,7 +15,11 @@ import {
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
-import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
+import {
+  DOWNLOADS_DISABLED_BODY,
+  downloadsBlocked,
+  resolveDownloadGateStatus,
+} from '../../lib/download-gates.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
@@ -114,9 +118,13 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
             followToDownload: true,
             accessMode: true,
             purchaseTierId: true,
+            downloadsEnabled: true,
           },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+        if (downloadsBlocked(item.downloadsEnabled, channel.userId, request.sessionUser)) {
+          return reply.status(403).send(DOWNLOADS_DISABLED_BODY)
+        }
 
         const salt = dailySalt()
         const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
