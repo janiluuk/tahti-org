@@ -5,6 +5,28 @@ schemas — not hand-maintained. Frontend code (apps/web) should call the API th
 this package instead of raw `fetch`, so a route's shape only ever has to be defined
 once (in the route itself).
 
+Published to npm as [`@tahti/api-client`](https://www.npmjs.com/package/@tahti/api-client)
+on every tahti-org release, for consumers outside this monorepo (e.g. `tahti-cli`).
+
+## Install (outside the monorepo)
+
+```sh
+npm install @tahti/api-client@latest
+```
+
+ESM only (`"type": "module"`), Node 18+ or any runtime with a global `fetch`.
+Types ship in the package — TypeScript consumers need `moduleResolution`
+`NodeNext`, `Node16` or `Bundler` so the `exports` map resolves.
+
+Every release is published as `0.<YYYYMMDD>.<N>` (see [Versioning](#versioning)),
+so a caret range like `^0.20260926.2` never moves past that day. Depend on
+`latest` (or `>=0.20260926.2`) to always build against the newest API, and
+treat a type error after an upgrade as the API having changed.
+
+Inside the monorepo, workspace packages keep importing the TypeScript source
+(`main`/`exports` → `src/index.ts`); only the published tarball points at
+`dist/` (via `publishConfig`).
+
 ## Usage
 
 ```ts
@@ -64,17 +86,41 @@ never commit it, never edit it directly.
 
 ### Versioning
 
-This package follows semver against its own generated surface, independent of
-apps/api's `0.0.1` (apps aren't published, so their version doesn't mean much;
-this package's does, since apps/web and any external consumer depend on it):
+The version is derived from the tahti-org release tag, not bumped by hand:
+release `2026-09-26-2` publishes `0.20260926.2` (a tag without a build suffix
+counts as build 1). npm's semver order therefore matches release order, and
+`latest` is always the SDK generated from the newest released API. The
+`version` in this `package.json` is a placeholder for workspace use — CI sets
+the real one at publish time.
 
-- **patch** — new optional fields, new endpoints, docs-only changes.
-- **minor** — a previously-optional field becomes required, a param is renamed,
-  a scope requirement changes.
-- **major** — an endpoint is removed or its auth model changes.
+There is no semver compatibility promise: any release may remove or reshape an
+endpoint, and consumers find out at compile time.
 
-Bump `version` in `package.json` and add an entry to `CHANGELOG.md` alongside
-the route change (the regenerated `schema.d.ts` itself is gitignored).
+### Publishing
+
+The `publish-api-client` job in `.github/workflows/ci.yml` runs after the
+release job on every push to `main`:
+
+1. generates `src/schema.d.ts` from the exact `openapi.json` CI exported for
+   that commit (`generate --spec <path>`; falls back to an in-job export if the
+   artifact is missing),
+2. runs this package's lint, typecheck and tests,
+3. builds `dist/` (`pnpm build:dist` — refuses to build without schema types),
+   packs it with `pnpm pack` and smoke-tests the tarball from a scratch npm
+   project (`scripts/smoke-tarball.sh`),
+4. `npm publish --provenance --access public` (skipped with a warning when the
+   `NPM_TOKEN` secret is unset),
+5. sends a `repository_dispatch` (`api-client-published`, `client_payload.version`)
+   to `janiluuk/tahti-cli` when `TAHTI_CLI_DISPATCH_TOKEN` is set.
+
+To reproduce locally:
+
+```sh
+pnpm --filter @tahti/api-client generate            # or: generate --spec path/to/openapi.json
+pnpm --filter @tahti/api-client build:dist
+cd packages/api-client && pnpm pack
+bash scripts/smoke-tarball.sh tahti-api-client-*.tgz
+```
 
 ## Testing
 

@@ -1,14 +1,38 @@
 {
   "name": "@tahti/api-client",
   "version": "0.1.0",
-  "private": true,
+  "description": "Typed SDK for the Tahti API, generated from its OpenAPI schema",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janiluuk/tahti-org.git",
+    "directory": "packages/api-client"
+  },
+  "homepage": "https://github.com/janiluuk/tahti-org/tree/main/packages/api-client#readme",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
     "generate": "node scripts/generate.mjs",
+    "build:dist": "node scripts/build.mjs",
     "lint": "eslint src --ext .ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
