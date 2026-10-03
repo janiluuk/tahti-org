@@ -53,7 +53,19 @@ export const MessageSchema = z.object({
 export const ConversationDetailSchema = z.object({
   id: z.string(),
   otherUser: ConversationParticipantSchema,
+  /** Oldest first. */
   messages: z.array(MessageSchema),
+  /** More messages older than the first one returned; page with
+   * `?before=<first message id>`. */
+  hasMore: z.boolean(),
+})
+
+export const CONVERSATION_PAGE_LIMIT = 200
+
+export const ConversationDetailQuerySchema = z.object({
+  /** A message id from this conversation, or an ISO date-time. */
+  before: z.string().min(1).max(64).optional(),
+  limit: z.coerce.number().int().min(1).max(CONVERSATION_PAGE_LIMIT).optional(),
 })
 
 export const SendMessageSchema = z.object({
