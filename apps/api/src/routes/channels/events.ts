@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 
 // GET /api/channels/:slug/events — public, upcoming events only
 const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
@@ -31,7 +32,11 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const events = await fastify.prisma.artistEvent.findMany({
-        where: { userId: channel.userId, startAt: { gte: new Date() } },
+        where: {
+          userId: channel.userId,
+          startAt: { gte: new Date() },
+          user: availableUserWhere,
+        },
         orderBy: { startAt: 'asc' },
         take: 20,
       })
