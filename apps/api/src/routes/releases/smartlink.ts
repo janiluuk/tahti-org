@@ -15,6 +15,10 @@ import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
+function displayGenre(item: { genre: string | null; genreCustom: string | null }) {
+  return item.genreCustom?.trim() || item.genre?.trim() || null
+}
+
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -43,6 +47,8 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           smartLinkTargets: true,
           smartLinkViewCount: true,
           description: true,
+          genre: true,
+          genreCustom: true,
           upc: true,
           musicbrainzReleaseId: true,
           discogsReleaseId: true,
@@ -139,12 +145,19 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 id: true,
                 accessMode: true,
                 purchaseTierId: true,
+                genre: true,
+                genreCustom: true,
                 channel: { select: { userId: true } },
               },
             })
           : []
       const linkedById = new Map(linkedSounds.map((s) => [s.id, s]))
       const viewerUserId = request.sessionUser?.id ?? null
+      // Release genre is optional, while linked sounds usually carry one.
+      const genre =
+        [release, ...linkedSoundIds.map((id) => linkedById.get(id))]
+          .map((g) => (g ? displayGenre(g) : null))
+          .find(Boolean) ?? null
 
       return reply.send({
         release: {
@@ -154,6 +167,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           releaseDate: release.releaseDate,
           artworkUrl,
           description: release.description,
+          genre,
           smartLinkSlug,
           smartLinkViewCount: release.smartLinkViewCount + 1,
           upc: release.upc,

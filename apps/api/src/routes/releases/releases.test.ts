@@ -6,6 +6,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -188,6 +189,48 @@ describe('M12 — releases and public profile', () => {
       payload: { showPoweredByFooter: 'yes' },
     })
     expect(bad.statusCode).toBe(400)
+  })
+
+  it("shows the release's genre on its smart link, falling back to a linked sound's", async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+      include: { tracks: { orderBy: { position: 'asc' } } },
+    })
+    const smartLinkGenre = async () =>
+      (await app.inject({ method: 'GET', url: `/api/v1/r/${release!.smartLinkSlug}` })).json()
+        .release.genre
+
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: 'House', genreCustom: null },
+    })
+    expect(await smartLinkGenre()).toBe('House')
+
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: 'Other', genreCustom: 'Vaporwave' },
+    })
+    expect(await smartLinkGenre()).toBe('Vaporwave')
+
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug: username } })
+    const sound = await createReadySound(prisma, channel.id, 'Genre source')
+    await prisma.sound.update({ where: { id: sound.id }, data: { genre: 'Techno' } })
+    await prisma.releaseTrack.update({
+      where: { id: release!.tracks[0]!.id },
+      data: { soundId: sound.id },
+    })
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: null, genreCustom: null },
+    })
+    expect(await smartLinkGenre()).toBe('Techno')
+
+    await prisma.releaseTrack.update({
+      where: { id: release!.tracks[0]!.id },
+      data: { soundId: null },
+    })
+    await prisma.sound.delete({ where: { id: sound.id } })
+    expect(await smartLinkGenre()).toBeNull()
   })
 
   it('pins a release and reflects it on the public profile, then unpins', async () => {

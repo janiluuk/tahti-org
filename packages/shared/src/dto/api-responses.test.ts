@@ -122,7 +122,7 @@ describe('api response schemas', () => {
 
   it('parses smart link view', () => {
     const parsed = SmartLinkViewSchema.safeParse({
-      release: { id: 'r1', title: 'EP' },
+      release: { id: 'r1', title: 'EP', genre: 'House' },
       artist: { username: 'dj1', displayName: 'DJ', avatarUrl: null },
       featuredCollections: [],
       profileUrl: 'https://tahti.live/u/dj1',
