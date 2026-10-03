@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@prisma/client'
+import { actorDisplayName } from './display-name.js'
 
 /** Fan out a NEW_POST notification to everyone following the artist. Called both
  * synchronously (immediate-publish posts, from the API) and from the worker's
@@ -17,7 +18,7 @@ export async function notifyFollowersOfNewPost(
   })
   if (followers.length === 0) return
 
-  const title = `${artist.displayName} posted an update`
+  const title = `${actorDisplayName(artist)} posted an update`
   const body = post.title || post.body.slice(0, 140)
   const url = `/u/${artist.username}`
 
@@ -51,7 +52,7 @@ export async function notifyFollowersOfNewTrack(
       userId: f.followerUserId,
       type: 'NEW_TRACK' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} shared a new track`,
+      title: `${actorDisplayName(artist)} shared a new track`,
       body: item.title,
       url: `/u/${artist.username}`,
     })),
@@ -91,7 +92,7 @@ export async function notifyFollowersOfLiveChannel(
       userId: f.followerUserId,
       type: 'CHANNEL_LIVE' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} is live`,
+      title: `${actorDisplayName(artist)} is live`,
       body: null,
       url: `/c/${channel.slug}`,
       createdAt: now,
@@ -119,7 +120,7 @@ export async function notifyFollowersOfNewEvent(
       userId: f.followerUserId,
       type: 'NEW_EVENT' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} announced an event`,
+      title: `${actorDisplayName(artist)} announced an event`,
       body: `${event.title} · ${event.place}, ${event.location}`,
       url: `/u/${artist.username}`,
     })),
@@ -144,7 +145,7 @@ export async function notifyFollowersOfNewRelease(
       userId: f.followerUserId,
       type: 'NEW_RELEASE' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} released "${release.title}"`,
+      title: `${actorDisplayName(artist)} released "${release.title}"`,
       body: null,
       url: `/r/${release.smartLinkSlug}`,
     })),
@@ -162,7 +163,7 @@ export async function notifyArtistOfNewFollower(
       userId: artistUserId,
       type: 'NEW_FOLLOWER',
       actorUserId: follower.id,
-      title: `${follower.displayName} followed you`,
+      title: `${actorDisplayName(follower)} followed you`,
       body: `@${follower.username}`,
       url: `/u/${follower.username}`,
     },
@@ -182,7 +183,7 @@ export async function notifyArtistOfNewLike(
       userId: artistUserId,
       type: 'NEW_LIKE',
       actorUserId: liker.id,
-      title: `${liker.displayName} loved "${item.title}"`,
+      title: `${actorDisplayName(liker)} loved "${item.title}"`,
       body: null,
       url: `/t/${item.id}`,
     },
@@ -205,8 +206,8 @@ export async function notifyArtistOfNewComment(
       type: 'NEW_COMMENT',
       actorUserId: commenter.id,
       title: target.item
-        ? `${commenter.displayName} commented on "${target.item.title}"`
-        : `${commenter.displayName} commented on your channel`,
+        ? `${actorDisplayName(commenter)} commented on "${target.item.title}"`
+        : `${actorDisplayName(commenter)} commented on your channel`,
       body: comment.body.slice(0, 140),
       url: target.item ? `/t/${target.item.id}` : `/c/${target.channelSlug}`,
     },
@@ -226,7 +227,7 @@ export async function notifyArtistOfNewRepost(
       userId: artistUserId,
       type: 'NEW_REPOST',
       actorUserId: reposter.id,
-      title: `${reposter.displayName} reposted "${item.title}"`,
+      title: `${actorDisplayName(reposter)} reposted "${item.title}"`,
       body: null,
       url: `/t/${item.id}`,
     },
@@ -247,7 +248,7 @@ export async function notifyPlaylistOfNewTrack(
     ownerUsername: string
     ownerUserId: string
   },
-  adder: { id: string; displayName: string },
+  adder: { id: string; username: string; displayName: string },
   item: { title: string },
 ): Promise<void> {
   const priorContributors = await prisma.collectionItem.findMany({
@@ -275,7 +276,7 @@ export async function notifyPlaylistOfNewTrack(
   }
   if (recipients.size === 0) return
 
-  const title = `${adder.displayName} added "${item.title}" to ${collection.name}`
+  const title = `${actorDisplayName(adder)} added "${item.title}" to ${collection.name}`
   const url = `/u/${collection.ownerUsername}/c/${collection.slug}`
 
   await prisma.notification.createMany({
@@ -303,7 +304,7 @@ export async function notifyUserOfNewMessage(
       userId: recipientUserId,
       type: 'NEW_MESSAGE',
       actorUserId: sender.id,
-      title: `${sender.displayName} sent you a message`,
+      title: `${actorDisplayName(sender)} sent you a message`,
       body: messageBody.slice(0, 140),
       url: `/dashboard/messages/${conversationId}`,
     },
@@ -324,7 +325,7 @@ export async function notifyUsersOfChatMention(
       userId,
       type: 'CHAT_MENTION' as const,
       actorUserId: mentioner.id,
-      title: `${mentioner.displayName} mentioned you in chat`,
+      title: `${actorDisplayName(mentioner)} mentioned you in chat`,
       body: messageBody.slice(0, 140),
       url: `/c/${channelSlug}`,
     })),
@@ -437,7 +438,7 @@ export async function notifyUserThemeRejected(
 export async function notifyBoardOfMissedLiveShow(
   prisma: PrismaClient,
   show: { id: string; title: string; startAt: Date },
-  artistDisplayName: string,
+  artist: { username: string; displayName: string },
   boardMemberIds?: string[],
 ): Promise<void> {
   const ids =
@@ -451,7 +452,7 @@ export async function notifyBoardOfMissedLiveShow(
     data: ids.map((userId) => ({
       userId,
       type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
-      title: `${artistDisplayName} missed a scheduled show`,
+      title: `${actorDisplayName(artist)} missed a scheduled show`,
       body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,
       url: '/admin/missed-shows',
     })),

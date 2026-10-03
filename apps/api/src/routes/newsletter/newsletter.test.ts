@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
+import { sendMail } from '../../lib/email.js'
 import {
   cleanupUsersByEmailPrefix,
   createTestArtist,
@@ -246,5 +247,20 @@ describe('M13 — newsletter', () => {
     expect(send.json().queued).toBe(1)
 
     await prisma.user.delete({ where: { id: fanUser.id } })
+  })
+
+  it('never puts an email address in the confirmation subject', async () => {
+    await prisma.user.update({ where: { id: artistId }, data: { displayName: 'me@example.com' } })
+    vi.mocked(sendMail).mockClear()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/newsletter/subscribe',
+      payload: { email: 'subject-fan@example.com', artistUsername: username },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: `Confirm your subscription to ${username}` }),
+    )
   })
 })
