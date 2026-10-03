@@ -99,4 +99,46 @@ describe('M15 — mention settings API', () => {
     })
     expect(count).toBe(0)
   })
+
+  it('never names a muted handle or a mentioner by an email address', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}emailname@example.com`,
+      username: 'mention-email-name',
+      displayName: 'mentioner@example.com',
+    })
+    const user = await prisma.user.findUniqueOrThrow({ where: { username: 'mention-api-user' } })
+    await prisma.mention.create({
+      data: {
+        mentionerUserId: mentioner.id,
+        targetUserId: user.id,
+        surface: 'BIO',
+        sourceId: mentioner.id,
+      },
+    })
+    const mute = await app.inject({
+      method: 'POST',
+      url: '/api/me/mentions/mute/mention-email-name',
+      headers: { cookie },
+    })
+    expect(mute.statusCode).toBe(201)
+
+    const settings = await app.inject({
+      method: 'GET',
+      url: '/api/me/mentions/settings',
+      headers: { cookie },
+    })
+    expect((settings.json() as { muted: unknown[] }).muted).toContainEqual({
+      username: 'mention-email-name',
+      displayName: 'mention-email-name',
+    })
+
+    const list = await app.inject({ method: 'GET', url: '/api/me/mentions', headers: { cookie } })
+    const { mentions } = list.json() as {
+      mentions: Array<{ mentioner: { username: string; displayName: string } }>
+    }
+    expect(mentions[0]!.mentioner).toMatchObject({
+      username: 'mention-email-name',
+      displayName: 'mention-email-name',
+    })
+  })
 })
