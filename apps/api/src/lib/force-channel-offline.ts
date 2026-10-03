@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import type { FastifyBaseLogger } from 'fastify'
 import { broadcastSessionLogFields } from '@tahti/shared'
+import { endBroadcast } from '@tahti/shared/broadcast-end'
 import { enqueueFinalizeBroadcastRecording } from './queue.js'
 import { stopOrchestratorChannel } from './orchestrator.js'
 
@@ -26,10 +27,7 @@ export async function forceChannelOffline(
   ])
 
   if (broadcast) {
-    await prisma.broadcast.update({
-      where: { id: broadcast.id },
-      data: { endedAt: new Date() },
-    })
+    await endBroadcast(prisma, broadcast.id)
     // A session that never went LIVE (preview-only) has no public sound to finalize.
     // M35: artist can opt out of auto-recording per channel.
     if (broadcast.wentLiveAt && channel?.autoRecordEnabled) {
