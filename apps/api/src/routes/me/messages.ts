@@ -25,6 +25,8 @@ import {
   searchUsers,
   sendMessage,
 } from '../../lib/messaging.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/users/search?q= — for @-mention / "message this user" autocomplete
@@ -76,7 +78,10 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const relationships = await fastify.prisma.artistFollow.findMany({
         where: {
-          OR: [{ followerUserId: user.id }, { artistUserId: user.id }],
+          OR: [
+            { followerUserId: user.id, artist: availableUserWhere },
+            { artistUserId: user.id, follower: availableUserWhere },
+          ],
         },
         take: 400,
         orderBy: { createdAt: 'desc' },
@@ -101,7 +106,7 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
 
       for (const relationship of relationships) {
         const followedByYou = relationship.followerUserId === user.id
-        const person = followedByYou ? relationship.artist : relationship.follower
+        const person = withSafeName(followedByYou ? relationship.artist : relationship.follower)
         const existing = contacts.get(person.username)
         contacts.set(person.username, {
           ...person,
