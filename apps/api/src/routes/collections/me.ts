@@ -21,7 +21,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
-import { addManagementPlayback, collectionItemInclude, zodError } from './helpers.js'
+import { addManagementPlayback, collectionItemInclude, withSafeNames, zodError } from './helpers.js'
 
 /** `releaseDate` is a calendar date: send it as `YYYY-MM-DD`, not a
  * midnight-UTC timestamp the editor's date input can't show. */
@@ -52,13 +52,21 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       const expand = parsedQuery.data.expand === 'items'
-      const cols = await fastify.prisma.collection.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-        include: expand
-          ? { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } }
-          : { _count: { select: { items: true } } },
-      })
+      const where = { userId: user.id }
+      const orderBy = { createdAt: 'desc' as const }
+      const cols = expand
+        ? (
+            await fastify.prisma.collection.findMany({
+              where,
+              orderBy,
+              include: { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } },
+            })
+          ).map((col) => ({ ...col, items: col.items.map((item) => withSafeNames(item)) }))
+        : await fastify.prisma.collection.findMany({
+            where,
+            orderBy,
+            include: { _count: { select: { items: true } } },
+          })
       const withCovers = await Promise.all(
         cols.map(async (col) => ({ ...col, coverUrl: await resolveCollectionCoverUrl(col) })),
       )
@@ -417,7 +425,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: { position: 'asc' },
         include: collectionItemInclude,
       })
-      return reply.send({ items })
+      return reply.send({ items: items.map((item) => withSafeNames(item)) })
     },
   )
 
