@@ -221,6 +221,40 @@ describe('M38 — private messaging', () => {
     expect(convoForBAfter?.unreadCount).toBe(0)
   })
 
+  it('shows the newest 200 messages, oldest first, in a long thread', async () => {
+    const userC = await prisma.user.findUniqueOrThrow({
+      where: { username: 'dm-test-casey' },
+      select: { id: true },
+    })
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieA },
+      payload: { username: 'dm-test-casey' },
+    })
+    const longThreadId = start.json().conversationId as string
+    const base = Date.UTC(2026, 0, 1)
+    await prisma.message.createMany({
+      data: Array.from({ length: 205 }, (_, i) => ({
+        conversationId: longThreadId,
+        senderId: i % 2 === 0 ? userA.id : userC.id,
+        body: `message ${i}`,
+        createdAt: new Date(base + i * 1000),
+      })),
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/messages/conversations/${longThreadId}`,
+      headers: { cookie: cookieA },
+    })
+    expect(res.statusCode).toBe(200)
+    const bodies = (res.json() as { messages: Array<{ body: string }> }).messages.map((m) => m.body)
+    expect(bodies).toHaveLength(200)
+    expect(bodies[0]).toBe('message 5')
+    expect(bodies[199]).toBe('message 204')
+  })
+
   it('requires auth on every messaging route', async () => {
     const list = await app.inject({ method: 'GET', url: '/api/me/messages/conversations' })
     expect(list.statusCode).toBe(401)
