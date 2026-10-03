@@ -1945,6 +1945,8 @@ model Sound {
   license              SoundLicense       @default(ALL_RIGHTS_RESERVED)
   repostToDownload     Boolean            @default(false)
   followToDownload     Boolean            @default(false)
+  // Off = only the owner and board can fetch the file; listeners still stream it.
+  downloadsEnabled     Boolean            @default(true)
   // What kind of file this row actually holds — see SoundMediaKind. AUDIO (the
   // default) uses rawKey/mp3Key/flacKey + the transcode pipeline below as before;
   // IMAGE/VIDEO instead populate imageKey/videoKey and skip transcoding.

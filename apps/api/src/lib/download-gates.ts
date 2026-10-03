@@ -7,6 +7,21 @@ import { isActiveFanSubscriber } from './fansub.js'
 
 export type { DownloadGateStatus }
 
+export const DOWNLOADS_DISABLED_BODY = {
+  error: 'The artist has turned off downloads for this track',
+  code: 'downloads_disabled',
+} as const
+
+/** The owner and board keep access to a track's file when its downloads are off. */
+export function downloadsBlocked(
+  downloadsEnabled: boolean,
+  artistUserId: string,
+  viewer: { id: string; isBoard: boolean } | null,
+): boolean {
+  if (downloadsEnabled) return false
+  return !viewer || (viewer.id !== artistUserId && !viewer.isBoard)
+}
+
 export async function resolveDownloadGateStatus(
   prisma: PrismaClient,
   params: {
