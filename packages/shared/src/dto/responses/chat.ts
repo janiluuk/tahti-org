@@ -78,6 +78,8 @@ export const ChatBanViewSchema = z.object({
 export const ChatBanListSchema = z.array(ChatBanViewSchema)
 
 export const ChatAccessResponseSchema = z.object({
+  chatEnabled: z.boolean(),
+  artistUsername: z.string(),
   fanChatEnabled: z.boolean(),
   isSupporter: z.boolean(),
   canJoinFanChat: z.boolean(),

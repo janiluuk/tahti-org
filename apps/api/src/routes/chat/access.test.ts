@@ -110,6 +110,20 @@ describe('GET /api/chat/:slug/access', () => {
     expect(res.json()).toMatchObject({ isSupporter: false, canJoinFanChat: true })
   })
 
+  it('says whether the artist has chat switched on', async () => {
+    const on = await app.inject({ method: 'GET', url: `/api/chat/${slug}/access` })
+    expect(on.json()).toMatchObject({ chatEnabled: true, artistUsername: slug })
+
+    await prisma.user.update({ where: { username: slug }, data: { chatEnabled: false } })
+    try {
+      const off = await app.inject({ method: 'GET', url: `/api/chat/${slug}/access` })
+      expect(off.statusCode).toBe(200)
+      expect(off.json()).toMatchObject({ chatEnabled: false, artistUsername: slug })
+    } finally {
+      await prisma.user.update({ where: { username: slug }, data: { chatEnabled: true } })
+    }
+  })
+
   it('returns 404 for unknown channel', async () => {
     const res = await app.inject({
       method: 'GET',
