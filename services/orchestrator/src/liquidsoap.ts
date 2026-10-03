@@ -52,11 +52,15 @@ const LIQUIDSOAP_CONFIG_MOUNT = process.env.LIQUIDSOAP_CONFIG_MOUNT ?? '/liquids
 const API_URL = process.env.API_URL ?? 'http://api:3001'
 const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
-/** The visualizer's ffmpeg filter graph has not been run through
- * `liquidsoap --check` against LIQUIDSOAP_IMAGE yet, and a script that fails
- * to parse takes the whole channel offline (HLS too, not just the mirrors),
- * so it stays opt-in until verified on staging. */
-const STREAM_OVERLAY_VISUALIZER_ENABLED = process.env.STREAM_OVERLAY_VISUALIZER_ENABLED === 'true'
+/** Neither the backdrop's `video.add_image(x=, y=)` call nor the visualizer's
+ * ffmpeg filter graph has been run through `liquidsoap --check` against
+ * LIQUIDSOAP_IMAGE yet, and a script that fails to parse takes the whole
+ * channel offline (HLS too, not just the mirrors), so both stay opt-in until
+ * verified on staging. */
+const STREAM_OVERLAY_FLAGS: StreamOverlayFlags = {
+  backdrop: process.env.STREAM_OVERLAY_BACKDROP_ENABLED === 'true',
+  visualizer: process.env.STREAM_OVERLAY_VISUALIZER_ENABLED === 'true',
+}
 
 function decryptKey(enc: string): string {
   const hex =
@@ -136,6 +140,25 @@ export interface RtmpMirrorExtraLayers {
   /** Cover-cache path of a fetched backdrop image (see ensureBackdropImage). */
   backdropPath?: string
   visualPreset?: string
+}
+
+export interface StreamOverlayFlags {
+  backdrop: boolean
+  visualizer: boolean
+}
+
+/** Extra mirror layers for a channel, with each layer dropped while its
+ * feature flag is off. */
+export function resolveRtmpMirrorExtraLayers(
+  channelId: string,
+  backdropReady: boolean,
+  visualPreset: string | undefined,
+  flags: StreamOverlayFlags,
+): RtmpMirrorExtraLayers {
+  return {
+    backdropPath: flags.backdrop && backdropReady ? backdropImagePath(channelId) : undefined,
+    visualPreset: flags.visualizer ? visualPreset : undefined,
+  }
 }
 
 /** Liquidsoap function definition that renders `audioSource` through an
@@ -387,7 +410,7 @@ export async function spawnLiquidsoapContainer(
       channel.streamOverlayCoverUrl ?? channel.user.avatarUrl,
       COVER_CACHE_VOLUME,
     )
-    if (channel.streamOverlayBackdropUrl) {
+    if (STREAM_OVERLAY_FLAGS.backdrop && channel.streamOverlayBackdropUrl) {
       backdropReady = await ensureBackdropImage(
         channelId,
         channel.streamOverlayBackdropUrl,
@@ -427,12 +450,12 @@ export async function spawnLiquidsoapContainer(
     const overlaySubtitle = channel.streamOverlayShowTitle
       ? (channel.streamOverlaySubtitle ?? undefined)
       : undefined
-    const extraLayers = {
-      backdropPath: backdropReady ? backdropImagePath(channelId) : undefined,
-      visualPreset: STREAM_OVERLAY_VISUALIZER_ENABLED
-        ? channel.streamOverlayVisualPreset
-        : undefined,
-    }
+    const extraLayers = resolveRtmpMirrorExtraLayers(
+      channelId,
+      backdropReady,
+      channel.streamOverlayVisualPreset,
+      STREAM_OVERLAY_FLAGS,
+    )
     const rtmpBlock = targets
       .map((t) =>
         buildRtmpMirrorOutput(

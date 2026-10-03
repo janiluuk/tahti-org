@@ -3,7 +3,12 @@
 
 import { describe, it, expect } from 'vitest'
 import { VISUAL_PRESETS } from '@tahti/shared'
-import { buildRtmpMirrorOutput, escapeLiquidsoapString, visualizerFilterFor } from './liquidsoap.js'
+import {
+  buildRtmpMirrorOutput,
+  escapeLiquidsoapString,
+  resolveRtmpMirrorExtraLayers,
+  visualizerFilterFor,
+} from './liquidsoap.js'
 
 describe('escapeLiquidsoapString', () => {
   it('escapes double quotes and backslashes for a Liquidsoap string literal', () => {
@@ -306,5 +311,41 @@ describe('visualizerFilterFor', () => {
     expect(visualizerFilterFor('')).toBeNull()
     expect(visualizerFilterFor('toString')).toBeNull()
     expect(visualizerFilterFor('NOT_A_PRESET')).toBeNull()
+  })
+})
+
+describe('resolveRtmpMirrorExtraLayers', () => {
+  const target = { id: 'tgt', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false }
+  const coverPath = '/cover-cache/chan-1/cover.jpg'
+  const off = { backdrop: false, visualizer: false }
+
+  it('keeps the mirror output byte-identical with both flags off, even with a fetched backdrop and a preset', () => {
+    const layers = resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', off)
+    expect(layers).toEqual({ backdropPath: undefined, visualPreset: undefined })
+    expect(
+      buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', undefined, true, layers),
+    ).toBe(buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', undefined, true))
+  })
+
+  it('enables each layer only under its own flag', () => {
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', {
+        backdrop: true,
+        visualizer: false,
+      }),
+    ).toEqual({ backdropPath: '/cover-cache/chan-1/backdrop.jpg', visualPreset: undefined })
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', {
+        backdrop: false,
+        visualizer: true,
+      }),
+    ).toEqual({ backdropPath: undefined, visualPreset: 'WAVEFORM_BARS' })
+  })
+
+  it('leaves the backdrop out when its fetch failed, even with the flag on', () => {
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', false, undefined, { backdrop: true, visualizer: true })
+        .backdropPath,
+    ).toBeUndefined()
   })
 })
