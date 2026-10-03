@@ -48,7 +48,7 @@ export async function processMissedLiveShowScanJob(
       title: true,
       startAt: true,
       channelId: true,
-      channel: { select: { user: { select: { displayName: true } } } },
+      channel: { select: { user: { select: { username: true, displayName: true } } } },
     },
   })
 
@@ -66,7 +66,7 @@ export async function processMissedLiveShowScanJob(
       await notifyBoardOfMissedLiveShow(
         prisma,
         { id: show.id, title: show.title, startAt: show.startAt },
-        show.channel.user.displayName,
+        show.channel.user,
         boardMemberIds,
       )
     }

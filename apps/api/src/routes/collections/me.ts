@@ -14,7 +14,6 @@ import {
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
-  safeDisplayName,
 } from '@tahti/shared'
 import { notifyPlaylistOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -364,7 +363,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
               ownerUsername: user.username,
               ownerUserId: user.id,
             },
-            { id: user.id, displayName: safeDisplayName(user.displayName, user.username) },
+            user,
             { title: announceTitle },
           ).catch((err: unknown) => fastify.log.warn({ err }, 'playlist-add notification failed'))
         }

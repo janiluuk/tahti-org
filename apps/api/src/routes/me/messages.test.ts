@@ -421,6 +421,68 @@ describe('M38 — private messaging', () => {
       expect(res.json().code).toBe('recipient_unavailable')
       expect(await prisma.message.count({ where: { conversationId: id } })).toBe(0)
     })
+
+    it('leaves them out of the contact list', async () => {
+      await prisma.artistFollow.createMany({
+        data: [
+          { followerUserId: userA.id, artistUserId: suspended.id },
+          { followerUserId: deleted.id, artistUserId: userA.id },
+        ],
+        skipDuplicates: true,
+      })
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/contacts',
+        headers: { cookie: cookieA },
+      })
+      expect(res.statusCode).toBe(200)
+      const usernames = (res.json() as Array<{ username: string }>).map((c) => c.username)
+      expect(usernames).toContain(userB.username)
+      expect(usernames).not.toContain(suspended.username)
+      expect(usernames).not.toContain(deleted.username)
+    })
+
+    it('keeps existing conversations in the inbox but marks them unavailable', async () => {
+      const withDeleted = await prisma.conversation.create({
+        data: { participants: { create: [{ userId: userA.id }, { userId: deleted.id }] } },
+        select: { id: true },
+      })
+      await prisma.message.create({
+        data: { conversationId: withDeleted.id, senderId: deleted.id, body: 'Bye for now' },
+      })
+
+      const list = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieA },
+      })
+      expect(list.statusCode).toBe(200)
+      const byUsername = new Map(
+        (
+          list.json() as Array<{
+            id: string
+            otherUser: { username: string; available: boolean }
+          }>
+        ).map((c) => [c.otherUser.username, c]),
+      )
+      expect(byUsername.get(userB.username)?.otherUser.available).toBe(true)
+      expect(byUsername.get(suspended.username)?.otherUser.available).toBe(false)
+      expect(byUsername.get(deleted.username)?.otherUser.available).toBe(false)
+
+      const detail = await app.inject({
+        method: 'GET',
+        url: `/api/me/messages/conversations/${withDeleted.id}`,
+        headers: { cookie: cookieA },
+      })
+      expect(detail.statusCode).toBe(200)
+      const body = detail.json() as {
+        otherUser: { available: boolean }
+        messages: Array<{ body: string }>
+      }
+      expect(body.otherUser.available).toBe(false)
+      expect(body.messages.map((m) => m.body)).toEqual(['Bye for now'])
+    })
   })
 
   it('requires auth on every messaging route', async () => {

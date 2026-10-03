@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { sendGovernanceMeetingNoticeEmail } from './email.js'
+import { userName } from './safe-names.js'
 
 /**
  * Sends the meeting-notice email to every current member and records one
@@ -23,7 +24,7 @@ export async function sendMeetingNoticeAndRecordDeliveries(
 ): Promise<number> {
   const recipients = await prisma.user.findMany({
     where: { isMember: true },
-    select: { id: true, email: true, displayName: true },
+    select: { id: true, email: true, username: true, displayName: true },
   })
 
   let recorded = 0
@@ -32,7 +33,7 @@ export async function sendMeetingNoticeAndRecordDeliveries(
     try {
       await sendGovernanceMeetingNoticeEmail({
         to: recipient.email,
-        displayName: recipient.displayName,
+        displayName: userName(recipient),
         meetingTitle: meeting.title,
         meetingType: meeting.type,
         scheduledAt: meeting.scheduledAt,
