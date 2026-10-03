@@ -9,6 +9,7 @@
     "./web": "./src/web.ts",
     "./bundled-tor-exits": "./src/bundled-tor-exits.ts",
     "./broadcast-cap": "./src/broadcast-cap.ts",
+    "./broadcast-end": "./src/broadcast-end.ts",
     "./openapi-zod": "./src/openapi-zod.ts"
   },
   "scripts": {
