@@ -200,6 +200,59 @@ describe('public live-artist slot calendar', () => {
     expect(body[0]?.artist.username).toBe(`${PREFIX2}artist`)
     expect(body[0]?.artist.channelSlug).toBe(`${PREFIX2}artist`)
   })
+
+  it('leaves out slots, now-playing and show pages of deleted or suspended artists', async () => {
+    const suspended = await createTestArtist(prisma, {
+      email: `${PREFIX2}suspended@example.com`,
+      username: `${PREFIX2}suspended`,
+    })
+    const deleted = await createTestArtist(prisma, {
+      email: `${PREFIX2}deleted@example.com`,
+      username: `${PREFIX2}deleted`,
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+    await prisma.user.update({
+      where: { id: deleted.id },
+      data: { deletedAt: new Date(), displayName: 'Deleted user' },
+    })
+
+    const startAt = new Date()
+    startAt.setUTCMinutes(0, 0, 0)
+    startAt.setUTCDate(startAt.getUTCDate() + 3)
+    const endAt = new Date(startAt.getTime() + 60 * 60 * 1000)
+    const now = Date.now()
+    await prisma.radioSlotBooking.createMany({
+      data: [
+        { channelId: suspended.channel!.id, startAt, endAt },
+        {
+          channelId: deleted.channel!.id,
+          startAt: new Date(now - 5 * 60 * 1000),
+          endAt: new Date(now + 5 * 60 * 1000),
+        },
+      ],
+    })
+
+    const from = new Date(now - 3600_000).toISOString()
+    const to = new Date(endAt.getTime() + 3600_000).toISOString()
+    const slots = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/slots?from=${from}&to=${to}`,
+    })
+    expect(slots.statusCode).toBe(200)
+    const slugs = (slots.json() as Array<{ artist: { channelSlug: string } }>).map(
+      (s) => s.artist.channelSlug,
+    )
+    expect(slugs).not.toContain(`${PREFIX2}suspended`)
+    expect(slugs).not.toContain(`${PREFIX2}deleted`)
+
+    const nowPlaying = await app.inject({ method: 'GET', url: '/api/v1/radio' })
+    expect(nowPlaying.json()).toEqual({ live: false, channel: null })
+
+    for (const slug of [`${PREFIX2}suspended`, `${PREFIX2}deleted`]) {
+      const show = await app.inject({ method: 'GET', url: `/api/v1/radio/show/${slug}` })
+      expect(show.statusCode).toBe(404)
+    }
+  })
 })
 
 describe('radio show detail — past episode recording linkage', () => {

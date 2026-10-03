@@ -22,6 +22,7 @@ import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
@@ -78,7 +79,11 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const now = new Date()
       const liveBooking = await fastify.prisma.radioSlotBooking.findFirst({
-        where: { startAt: { lte: now }, endAt: { gt: now } },
+        where: {
+          startAt: { lte: now },
+          endAt: { gt: now },
+          channel: { user: availableUserWhere },
+        },
         select: {
           channel: {
             select: { slug: true, user: { select: { username: true, displayName: true } } },
@@ -266,7 +271,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (to <= from) return reply.status(400).send({ error: '"to" must be after "from"' })
 
       const rows = await fastify.prisma.radioSlotBooking.findMany({
-        where: { startAt: { lt: to }, endAt: { gt: from } },
+        where: { startAt: { lt: to }, endAt: { gt: from }, channel: { user: availableUserWhere } },
         orderBy: { startAt: 'asc' },
         include: {
           channel: {
@@ -344,8 +349,8 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug: request.params.channelSlug },
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug: request.params.channelSlug, user: availableUserWhere },
         select: {
           id: true,
           slug: true,

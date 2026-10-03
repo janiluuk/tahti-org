@@ -5,6 +5,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const TEST_EMAIL_PREFIX = 'radio-slot-test-'
 const USERNAME_A = 'radio-slot-testuser-a'
@@ -342,5 +347,64 @@ describe('radio slot bookings', () => {
       lastStatus = res.statusCode
     }
     expect(lastStatus).toBe(409)
+  })
+})
+
+describe('radio slot bookings held by unavailable accounts', () => {
+  const PREFIX = 'radio-slot-gone-'
+  let app: Awaited<ReturnType<typeof buildApp>>
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it('hides a suspended or deleted artist’s slot from the calendar and lets others book it', async () => {
+    const suspended = await createTestArtist(prisma, {
+      email: `${PREFIX}suspended@example.com`,
+      username: `${PREFIX}suspended`,
+      isMember: true,
+    })
+    const deleted = await createTestArtist(prisma, {
+      email: `${PREFIX}deleted@example.com`,
+      username: `${PREFIX}deleted`,
+      isMember: true,
+    })
+    const booker = await createTestArtist(prisma, {
+      email: `${PREFIX}booker@example.com`,
+      username: `${PREFIX}booker`,
+      isMember: true,
+    })
+    await prisma.radioSlotBooking.createMany({
+      data: [
+        { channelId: suspended.channel!.id, startAt: nextHour(200), endAt: nextHour(201) },
+        { channelId: deleted.channel!.id, startAt: nextHour(201), endAt: nextHour(202) },
+      ],
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+    await prisma.user.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } })
+    const cookie = await sessionCookieFor(prisma, booker.id)
+
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/me/radio-slot-bookings?from=${nextHour(199).toISOString()}&to=${nextHour(203).toISOString()}`,
+      headers: { cookie },
+    })
+    expect(list.statusCode).toBe(200)
+    expect(list.json()).toEqual([])
+
+    const book = await app.inject({
+      method: 'POST',
+      url: '/api/me/radio-slot-bookings',
+      headers: { cookie },
+      payload: { startAt: nextHour(200).toISOString(), endAt: nextHour(202).toISOString() },
+    })
+    expect(book.statusCode).toBe(201)
   })
 })
