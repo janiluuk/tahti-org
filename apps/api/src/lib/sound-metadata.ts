@@ -61,6 +61,7 @@ export const soundMetadataSelect = {
   accessMode: true,
   purchaseTierId: true,
   status: true,
+  processingError: true,
   streamingCopyStatus: true,
   durationSec: true,
   sourceFormat: true,

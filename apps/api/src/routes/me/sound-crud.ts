@@ -170,7 +170,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         ids.length > 0
           ? fastify.prisma.sound.findMany({
               where: { channelId: channel.id, id: { in: ids }, status: { in: ['READY', 'ERROR'] } },
-              select: { id: true, status: true },
+              select: { id: true, status: true, processingError: true },
             })
           : Promise.resolve([]),
       ])

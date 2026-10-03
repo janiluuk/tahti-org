@@ -9,6 +9,7 @@ export const SoundViewSchema = z
     id: z.string(),
     title: z.string(),
     status: z.string(),
+    processingError: z.string().nullable().optional(),
     effectiveBpm: z.number().nullable().optional(),
     effectiveKey: z.string().nullable().optional(),
     sourceFormat: z.string().nullable().optional(),
@@ -38,7 +39,18 @@ export const SoundProcessingStatusSchema = z.object({
       status: z.enum(['PENDING', 'PROCESSING']),
     }),
   ),
-  settled: z.array(z.object({ id: z.string(), status: z.enum(['READY', 'ERROR']) })),
+  settled: z.array(
+    z.object({
+      id: z.string(),
+      status: z.enum(['READY', 'ERROR']),
+      processingError: z.string().nullable().optional(),
+    }),
+  ),
+})
+
+export const SoundRetryProcessingSchema = z.object({
+  id: z.string(),
+  status: z.literal('PENDING'),
 })
 
 // PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to

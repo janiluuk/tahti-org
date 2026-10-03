@@ -5,12 +5,14 @@ import type { FastifyPluginAsync } from 'fastify'
 import meSoundCrudRoutes from './sound-crud.js'
 import meSoundVisualAccessRoutes from './sound-visual-access.js'
 import meSoundExportRoutes from './sound-export.js'
+import meSoundRetryProcessingRoutes from './sound-retry-processing.js'
 
 /** Artist sound library routes only — channel look/overlay plugins register via studio. */
 const meSoundRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(meSoundCrudRoutes)
   await fastify.register(meSoundVisualAccessRoutes)
   await fastify.register(meSoundExportRoutes)
+  await fastify.register(meSoundRetryProcessingRoutes)
 }
 
 export default meSoundRoutes
