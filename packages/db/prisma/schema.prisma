@@ -1992,6 +1992,9 @@ model Sound {
   // look tracks up by. Cleared once the track is localized to real audio.
   embedSourceUrl       String?
   status               SoundStatus         @default(PENDING)
+  // Short, user-safe reason shown to the owner when status is ERROR. Never
+  // holds raw ffmpeg/storage errors - see apps/worker/src/lib/sound-processing-error.ts.
+  processingError      String?
   // Set to PENDING (not NOT_NEEDED) by the transcode job itself once it
   // knows the source was lossless — see apps/worker/src/jobs/transcode.ts.
   streamingCopyStatus  StreamingCopyStatus @default(NOT_NEEDED)
