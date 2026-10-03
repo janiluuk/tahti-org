@@ -93,6 +93,11 @@ export const RadioShowEpisodeSchema = z.object({
   endAt: z.string(),
   note: z.string().nullable(),
   showType: z.enum(['LIVE_SET', 'TALK']),
+  /** Episode name, description and artwork from the aired broadcast. Null for
+   * upcoming slots, no-shows and fan-only broadcasts. */
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  coverUrl: z.string().nullable(),
   /** Set only for a past episode the artist actually broadcast AND published
    * to their sound afterward — null for a past slot with no broadcast (a
    * no-show) or one the artist hasn't published a recording of. */

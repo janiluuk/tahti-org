@@ -375,7 +375,19 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             // Broadcast.soundId is a bare scalar column (no Prisma
             // relation to Sound declared on either model) — resolved
             // via a second batch query below, not a nested select.
-            broadcasts: { select: { soundId: true }, take: 1 },
+            // A slot can have several sessions (e.g. a preview that never
+            // went live), so prefer the one that actually aired.
+            broadcasts: {
+              select: {
+                soundId: true,
+                title: true,
+                description: true,
+                artworkUrl: true,
+                visibility: true,
+              },
+              orderBy: { wentLiveAt: { sort: 'desc', nulls: 'last' } },
+              take: 1,
+            },
           },
         }),
         fastify.prisma.radioSlotBooking.findMany({
@@ -406,16 +418,28 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         endAt: Date
         note: string | null
         showType: 'LIVE_SET' | 'TALK'
-        broadcasts?: { soundId: string | null }[]
+        broadcasts?: {
+          soundId: string | null
+          title: string | null
+          description: string | null
+          artworkUrl: string | null
+          visibility: 'PUBLIC' | 'FAN_ONLY'
+        }[]
       }) => {
-        const soundId = r.broadcasts?.[0]?.soundId
+        const broadcast = r.broadcasts?.[0]
+        const soundId = broadcast?.soundId
         const recordingItem = soundId ? recordingBySoundId.get(soundId) : null
+        // This page is public, so a fan-only session's details stay hidden.
+        const publicBroadcast = broadcast?.visibility === 'PUBLIC' ? broadcast : null
         return {
           id: r.id,
           startAt: r.startAt.toISOString(),
           endAt: r.endAt.toISOString(),
           note: r.note,
           showType: r.showType,
+          title: publicBroadcast?.title ?? null,
+          description: publicBroadcast?.description ?? null,
+          coverUrl: publicBroadcast?.artworkUrl ?? null,
           recording: recordingItem
             ? {
                 soundId: recordingItem.id,
