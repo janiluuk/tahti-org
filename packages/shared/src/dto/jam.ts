@@ -54,7 +54,7 @@ export const JamSessionViewSchema = z.object({
 })
 export type JamSessionView = z.infer<typeof JamSessionViewSchema>
 
-/** The host's client sends this as it plays — every few seconds and on any
+/** The host's client (and any guest the host has given control) sends this as it plays — every few seconds and on any
  * transport change (play/pause/seek/track change). Everything else in the
  * session is derived from the most recent one of these. */
 export const JamStateUpdateSchema = z.object({
@@ -63,6 +63,12 @@ export const JamStateUpdateSchema = z.object({
   positionSec: z.number().min(0),
 })
 export type JamStateUpdateInput = z.infer<typeof JamStateUpdateSchema>
+
+/** Host-only: lets a guest change the jam's playback (or takes that back). */
+export const JamParticipantControlUpdateSchema = z.object({
+  canControl: z.boolean(),
+})
+export type JamParticipantControlUpdateInput = z.infer<typeof JamParticipantControlUpdateSchema>
 
 /** Envelope for every message on the `/api/v1/jam/:id/events` SSE stream. */
 export const JamEventSchema = z.discriminatedUnion('type', [
