@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
+  RECIPIENT_UNAVAILABLE_BODY,
   findOrCreateConversation,
   getConversationDetail,
   listConversations,
@@ -138,9 +139,12 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const other = await fastify.prisma.user.findUnique({
         where: { username: parsed.data.username },
-        select: { id: true },
+        select: { id: true, deletedAt: true, suspendedAt: true },
       })
       if (!other) return reply.status(404).send({ error: 'User not found' })
+      if (other.deletedAt || other.suspendedAt) {
+        return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
+      }
 
       const conversationId = await findOrCreateConversation(fastify.prisma, user.id, other.id)
       return reply.send({ conversationId })
@@ -187,9 +191,14 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const user = request.sessionUser!
 
-      const message = await sendMessage(fastify.prisma, user, routeParams.id, parsed.data.body)
-      if (!message) return reply.status(404).send({ error: 'Conversation not found' })
-      return reply.status(201).send(message)
+      const result = await sendMessage(fastify.prisma, user, routeParams.id, parsed.data.body)
+      if (result.status === 'not_found') {
+        return reply.status(404).send({ error: 'Conversation not found' })
+      }
+      if (result.status === 'recipient_unavailable') {
+        return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
+      }
+      return reply.status(201).send(result.message)
     },
   )
 }
