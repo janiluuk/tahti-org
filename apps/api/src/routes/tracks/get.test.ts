@@ -109,6 +109,7 @@ describe('GET /api/tracks/:id', () => {
     expect(body.downloadCount).toBe(0)
     expect(body.accessMode).toBe('FREE')
     expect(body.isAiGenerated).toBe(false)
+    expect(body.downloadsEnabled).toBe(true)
     expect(body.gate).toBeNull()
   })
 
@@ -129,6 +130,25 @@ describe('GET /api/tracks/:id', () => {
     const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
     expect(res.statusCode).toBe(200)
     expect(res.json().isAiGenerated).toBe(true)
+  })
+
+  it('tells the track page when the artist switched downloads off', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Stream only',
+        rawKey: 'raw/track-get-testuser/stream-only.mp3',
+        mp3Key: 'mp3/track-get-testuser/stream-only.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        downloadsEnabled: false,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().downloadsEnabled).toBe(false)
   })
 
   it('nulls audioUrl and exposes purchase gate for anonymous viewers', async () => {

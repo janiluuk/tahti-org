@@ -20,7 +20,11 @@ import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
-import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
+import {
+  DOWNLOADS_DISABLED_BODY,
+  downloadsBlocked,
+  resolveDownloadGateStatus,
+} from '../../lib/download-gates.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // sound-item downloads. Reuses the Download table (releaseTrackId column).
@@ -99,10 +103,14 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
               purchaseTierId: true,
               repostToDownload: true,
               followToDownload: true,
+              downloadsEnabled: true,
             },
           })
         : null
       if (linkedSound) {
+        if (downloadsBlocked(linkedSound.downloadsEnabled, release.userId, request.sessionUser)) {
+          return reply.status(403).send(DOWNLOADS_DISABLED_BODY)
+        }
         const playbackGate = await resolvePlaybackGateStatus(
           fastify.prisma,
           {

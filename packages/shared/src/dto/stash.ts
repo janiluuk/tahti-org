@@ -9,6 +9,15 @@ export const StashListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(100),
 })
 
+export const StashSharePermissionSchema = z.enum(['READ', 'DOWNLOAD'])
+
+export const CreateStashShareSchema = z.object({
+  granteeUsername: z.string().trim().min(1).max(64).optional(),
+  permission: StashSharePermissionSchema.default('READ'),
+  /** 0 or omitted means the link never expires. */
+  expiresInDays: z.number().int().min(0).max(365).optional(),
+})
+
 export const StashShareViewSchema = z.object({
   id: z.string(),
   granteeUsername: z.string().nullable(),

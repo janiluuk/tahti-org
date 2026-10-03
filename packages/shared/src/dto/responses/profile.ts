@@ -82,6 +82,8 @@ export const PublicProfileViewSchema = z.object({
       id: z.string(),
       name: z.string(),
       amountCents: z.number().int(),
+      description: z.string().nullable(),
+      perks: z.array(z.string()),
     }),
   ),
   purchaseTiers: z.array(

@@ -16,6 +16,7 @@ export const SoundViewSchema = z
     sourceSampleRateHz: z.number().int().nullable().optional(),
     sourceBitDepth: z.number().int().nullable().optional(),
     sourceChannels: z.number().int().nullable().optional(),
+    downloadsEnabled: z.boolean().optional(),
   })
   .passthrough()
 
@@ -102,6 +103,8 @@ export const PublicTrackDetailSchema = z
     peaks: z.array(z.number()).nullable(),
     commentCount: z.number().int(),
     downloadCount: z.number().int(),
+    /** False = the artist turned downloads off; the download routes answer 403 `downloads_disabled`. */
+    downloadsEnabled: z.boolean(),
     /** FREE | SUBSCRIBERS_ONLY | PURCHASE — one-time purchase tiers are distinct from fan-subs. */
     accessMode: z.enum(['FREE', 'SUBSCRIBERS_ONLY', 'PURCHASE']).optional(),
     purchaseTierId: z.string().nullable().optional(),

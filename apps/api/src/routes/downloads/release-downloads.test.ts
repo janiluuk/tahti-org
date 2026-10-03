@@ -319,6 +319,49 @@ describe('M18 — release track downloads', () => {
     }
   })
 
+  it("refuses the download when the linked sound's downloads are off, except for the owner", async () => {
+    const sound = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Stream only',
+        rawKey: 'raw/rel-dl-off.wav',
+        mp3Key: 'mp3/rel-dl-off.mp3',
+        fileSizeBytes: BigInt(1000),
+        status: 'READY',
+        downloadsEnabled: false,
+      },
+    })
+    await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: sound.id } })
+    const url = `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?fp=rel-dl-off`
+    try {
+      const anon = await app.inject({ method: 'GET', url, headers: dlHeaders })
+      expect(anon.statusCode).toBe(403)
+      expect(anon.json().code).toBe('downloads_disabled')
+
+      const fan = await app.inject({
+        method: 'GET',
+        url,
+        headers: { ...dlHeaders, cookie: fanCookie },
+      })
+      expect(fan.statusCode).toBe(403)
+      expect(fan.json().code).toBe('downloads_disabled')
+      expect(await prisma.download.count({ where: { releaseTrackId: trackId } })).toBe(0)
+
+      const owner = await app.inject({
+        method: 'GET',
+        url,
+        headers: {
+          ...dlHeaders,
+          cookie: `tahti_session=${(await createSession(prisma, artistId)).id}`,
+        },
+      })
+      expect(owner.statusCode).toBe(200)
+    } finally {
+      await prisma.releaseTrack.update({ where: { id: trackId }, data: { soundId: null } })
+      await prisma.sound.delete({ where: { id: sound.id } })
+    }
+  })
+
   it('returns 404 for unknown slug or track', async () => {
     const badSlug = await app.inject({
       method: 'GET',
