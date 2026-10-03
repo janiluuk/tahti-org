@@ -83,6 +83,46 @@ describe('GET /api/top-lists/loved', () => {
     expect(entries[0]!.artistName).toBe('Loved List Artist')
   })
 
+  it('counts likes and LOVE reactions once per listener', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}artist` },
+      include: { channel: true },
+    })
+    const fans = await prisma.user.findMany({
+      where: { username: { startsWith: `${PREFIX}fan` } },
+      orderBy: { username: 'asc' },
+    })
+    const track = (title: string) =>
+      prisma.sound.create({
+        data: {
+          channelId: artist.channel!.id,
+          title,
+          status: 'READY',
+          isPublic: true,
+          genre: 'Liked Test Genre',
+        },
+      })
+    const liked = await track('Liked by three')
+    const both = await track('Liked and loved by one')
+    for (const fan of fans)
+      await prisma.soundLike.create({ data: { soundId: liked.id, userId: fan.id } })
+    await prisma.soundLike.create({ data: { soundId: both.id, userId: fans[0]!.id } })
+    await prisma.trackReaction.create({
+      data: { soundId: both.id, userId: fans[0]!.id, type: 'LOVE', positionSec: 1 },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/top-lists/loved?genre=Liked%20Test%20Genre',
+    })
+    expect(res.statusCode).toBe(200)
+    const entries = res.json().entries as Array<{ soundId: string; loves: number }>
+    expect(entries.map((e) => [e.soundId, e.loves])).toEqual([
+      [liked.id, 3],
+      [both.id, 1],
+    ])
+  })
+
   it('rejects unknown content types', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/top-lists/loved?contentTypes=NOPE' })
     expect(res.statusCode).toBe(400)
