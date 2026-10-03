@@ -18,6 +18,12 @@ export function coverImagePath(channelId: string): string {
   return `/cover-cache/${channelId}/cover.jpg`
 }
 
+/** Full-frame image drawn behind the cover when the artist sets
+ * Channel.streamOverlayBackdropUrl. */
+export function backdropImagePath(channelId: string): string {
+  return `/cover-cache/${channelId}/backdrop.jpg`
+}
+
 export function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`
 }
@@ -50,6 +56,46 @@ export function buildCoverCacheDockerCommand(
     '-c',
     shellQuote(innerScript),
   ].join(' ')
+}
+
+/** Same fetch-and-crop as buildCoverCacheDockerCommand, for the backdrop.
+ * No solid-color fallback: a backdrop that can't be fetched is simply left
+ * out of the frame (see ensureBackdropImage). */
+export function buildBackdropCacheDockerCommand(
+  channelId: string,
+  backdropUrl: string,
+  coverCacheVolume: string,
+): string {
+  const coverDir = `/cover-cache/${channelId}`
+  const outPath = backdropImagePath(channelId)
+  const scaleFilter = `scale=${COVER_WIDTH}:${COVER_HEIGHT}:force_original_aspect_ratio=increase,crop=${COVER_WIDTH}:${COVER_HEIGHT}`
+  const innerScript = `mkdir -p ${coverDir} && ffmpeg -y -i "$BACKDROP_URL" -vf "${scaleFilter}" -frames:v 1 -update 1 ${outPath}`
+  return [
+    'docker run --rm',
+    `-e BACKDROP_URL=${shellQuote(backdropUrl)}`,
+    `-v ${coverCacheVolume}:/cover-cache`,
+    FFMPEG_IMAGE,
+    'sh',
+    '-c',
+    shellQuote(innerScript),
+  ].join(' ')
+}
+
+/** Resolves to whether backdropImagePath(channelId) now holds a fresh image.
+ * The caller must only reference the backdrop in the Liquidsoap script when
+ * this is true: Liquidsoap can't decode a file that isn't there. */
+export async function ensureBackdropImage(
+  channelId: string,
+  backdropUrl: string,
+  coverCacheVolume: string,
+): Promise<boolean> {
+  try {
+    await execAsync(buildBackdropCacheDockerCommand(channelId, backdropUrl, coverCacheVolume))
+    return true
+  } catch (err) {
+    console.error(`[orchestrator] backdrop image generation failed for channel ${channelId}:`, err)
+    return false
+  }
 }
 
 /**
