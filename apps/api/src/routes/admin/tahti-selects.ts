@@ -13,6 +13,7 @@ import { requireBoard } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { spawnChannelLiquidsoap, stopOrchestratorChannel } from '../../lib/orchestrator.js'
 import { buildTopList } from '../../lib/top-lists.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 const AUTO_PLAYLIST_SIZE = 10
 const PREVIEW_URL_TTL_SEC = 3600
@@ -131,7 +132,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           position: true,
           createdAt: true,
-          addedBy: { select: { displayName: true } },
+          addedBy: { select: { username: true, displayName: true } },
           sound: {
             select: {
               id: true,
@@ -141,7 +142,9 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
               artistName: true,
               mp3Key: true,
               flacKey: true,
-              channel: { select: { slug: true, user: { select: { displayName: true } } } },
+              channel: {
+                select: { slug: true, user: { select: { username: true, displayName: true } } },
+              },
             },
           },
         },
@@ -153,12 +156,12 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           id: item.id,
           position: item.position,
           addedAt: item.createdAt.toISOString(),
-          addedBy: item.addedBy.displayName,
+          addedBy: userName(item.addedBy),
           soundId: item.sound.id,
           title: item.sound.title,
           durationSec: item.sound.durationSec,
           license: item.sound.license,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           channelSlug: item.sound.channel.slug,
           audioUrl: audioUrls[index] ?? null,
         })),
@@ -194,7 +197,9 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           artistName: true,
           mp3Key: true,
           flacKey: true,
-          channel: { select: { slug: true, user: { select: { displayName: true } } } },
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
         },
       })
 
@@ -205,7 +210,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           title: item.title,
           durationSec: item.durationSec,
           license: item.license,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           channelSlug: item.channel.slug,
           audioUrl: audioUrls[index] ?? null,
         })),

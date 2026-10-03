@@ -123,6 +123,38 @@ describe('GET /api/top-lists/loved', () => {
     ])
   })
 
+  it('never names the artist by an email address', async () => {
+    const owner = await createTestArtist(prisma, {
+      email: `${PREFIX}email-name@example.com`,
+      username: `${PREFIX}email-name`,
+      // Older accounts can still hold an email display name the API now rejects.
+      displayName: 'owner@example.com',
+    })
+    const fan = await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}fan1` } })
+    // A per-run genre keeps a cached list from an earlier run out of the way.
+    const genre = `Email Name Genre ${Date.now()}`
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: owner.channel!.id,
+        title: 'Loved by email-named owner',
+        status: 'READY',
+        isPublic: true,
+        genre,
+      },
+    })
+    await prisma.soundLike.create({ data: { soundId: sound.id, userId: fan.id } })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/top-lists/loved?genre=${encodeURIComponent(genre)}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const entries = res.json().entries as Array<{ soundId: string; artistName: string }>
+    expect(entries.map((e) => [e.soundId, e.artistName])).toEqual([
+      [sound.id, `${PREFIX}email-name`],
+    ])
+  })
+
   it('rejects unknown content types', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/top-lists/loved?contentTypes=NOPE' })
     expect(res.statusCode).toBe(400)

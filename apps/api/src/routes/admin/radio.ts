@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireBoard } from '../../plugins/auth.js'
 import { getRadioFeatureHistory, listRadioEligibleChannels } from '../../lib/radio-feature.js'
+import { userName } from '../../lib/safe-names.js'
 
 const RADIO_URL = process.env.RADIO_SERVICE_URL ?? 'http://tahti-radio:3004'
 
@@ -36,14 +37,14 @@ const adminRadioRoutes: FastifyPluginAsync = async (fastify) => {
         eligible: eligible.map((ch) => ({
           channelId: ch.id,
           slug: ch.slug,
-          artistName: ch.user.displayName,
+          artistName: userName(ch.user),
           lastFeaturedAt: ch.lastFeaturedAt,
         })),
         history,
         optedOut: optedOut.map((ch) => ({
           channelId: ch.id,
           slug: ch.slug,
-          artistName: ch.user.displayName,
+          artistName: userName(ch.user),
           username: ch.user.username,
           isLive: ch.state === 'LIVE',
         })),

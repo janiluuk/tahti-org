@@ -10,6 +10,7 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 /** Core search, shared by the public REST route and the MCP `search` tool —
  * kept as one function so the two surfaces can't drift out of sync. */
@@ -39,7 +40,9 @@ export async function performSearch(
             artistName: true,
             durationSec: true,
             bannerUrl: true,
-            channel: { select: { slug: true, user: { select: { displayName: true } } } },
+            channel: {
+              select: { slug: true, user: { select: { username: true, displayName: true } } },
+            },
           },
         }),
     type === 'tracks'
@@ -88,7 +91,7 @@ export async function performSearch(
       name: c.name,
       coverUrl: await resolveCollectionCoverUrl(c),
       ownerUsername: c.user.username,
-      ownerDisplayName: c.user.displayName,
+      ownerDisplayName: userName(c.user),
     })),
   )
 
@@ -96,14 +99,14 @@ export async function performSearch(
     tracks: tracks.map((t) => ({
       id: t.id,
       title: t.title,
-      artistName: t.artistName ?? t.channel.user.displayName,
+      artistName: trackArtistName(t),
       channelSlug: t.channel.slug,
       durationSec: t.durationSec,
       coverUrl: t.bannerUrl,
     })),
     artists: artists.map((a) => ({
       username: a.username,
-      displayName: a.displayName,
+      displayName: userName(a),
       avatarUrl: a.avatarUrl,
       channelSlug: a.channel?.slug ?? null,
     })),

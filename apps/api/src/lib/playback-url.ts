@@ -5,6 +5,7 @@ import type { PrismaClient } from '@tahti/db'
 import { soundPlaybackKey, type TahtiSelectsGalleryItem } from '@tahti/shared'
 import { presignedGetUrl } from './minio.js'
 import { resolvePlaybackGateStatus, type PlaybackGateStatus } from './purchase-tiers.js'
+import { trackArtistName } from './safe-names.js'
 
 export type PlaybackGatePayload = {
   reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'
@@ -93,7 +94,7 @@ export async function toGatedGalleryItem(
   return {
     soundId: item.id,
     title: item.title,
-    artistName: item.artistName ?? item.channel.user.displayName,
+    artistName: trackArtistName(item),
     artistUsername: item.artistName ? null : item.channel.user.username,
     channelSlug: item.channel.slug,
     bannerUrl: item.bannerUrl,

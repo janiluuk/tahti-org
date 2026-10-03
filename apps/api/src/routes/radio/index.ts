@@ -21,6 +21,7 @@ import {
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
@@ -232,7 +233,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         items.map((item) => ({
           id: item.id,
           title: item.sound.title,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
           artworkUrl: item.sound.bannerUrl,
         })),
@@ -547,7 +548,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         ordered.map((item) => ({
           id: item.id,
           title: item.sound.title,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
           artworkUrl: item.sound.bannerUrl,
         })),

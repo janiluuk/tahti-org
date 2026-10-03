@@ -13,6 +13,7 @@ import { fetchMountSignalStatus } from '../../lib/icecast-status.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -177,7 +178,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
         const next = curated[(idx + 1) % curated.length]!.sound
         nowPlayingNext = {
           title: next.title,
-          artistName: next.artistName ?? next.channel.user.displayName,
+          artistName: trackArtistName(next),
           artistUsername: next.artistName ? null : next.channel.user.username,
         }
       }
