@@ -161,4 +161,102 @@ describe('artist followers/following list routes', () => {
     })
     expect(rows).toHaveLength(1)
   })
+
+  describe('unavailable accounts and unsafe names', () => {
+    let hostId: string
+    let hostUsername: string
+    let suspendedId: string
+    let deletedId: string
+
+    beforeAll(async () => {
+      const host = await createTestArtist(prisma, {
+        email: `${PREFIX}host@example.com`,
+        username: `${PREFIX}host`,
+        tier: 'ARTIST',
+      })
+      hostId = host.id
+      hostUsername = host.username
+      const emailNamed = await createTestArtist(prisma, {
+        email: `${PREFIX}emailnamed@example.com`,
+        username: `${PREFIX}emailnamed`,
+        displayName: `${PREFIX}emailnamed@example.com`,
+        tier: 'ARTIST',
+      })
+      const suspended = await createTestArtist(prisma, {
+        email: `${PREFIX}suspended@example.com`,
+        username: `${PREFIX}suspended`,
+        tier: 'ARTIST',
+      })
+      suspendedId = suspended.id
+      const deleted = await createTestArtist(prisma, {
+        email: `${PREFIX}deleted@example.com`,
+        username: `${PREFIX}deleted`,
+        tier: 'ARTIST',
+      })
+      deletedId = deleted.id
+      await prisma.user.update({ where: { id: suspendedId }, data: { suspendedAt: new Date() } })
+      await prisma.user.update({ where: { id: deletedId }, data: { deletedAt: new Date() } })
+
+      for (const other of [emailNamed.id, suspendedId, deletedId]) {
+        await prisma.artistFollow.create({ data: { followerUserId: other, artistUserId: hostId } })
+        await prisma.artistFollow.create({ data: { followerUserId: hostId, artistUserId: other } })
+      }
+    })
+
+    it('leaves suspended and deleted followers out of the list and count', async () => {
+      const list = await app.inject({
+        method: 'GET',
+        url: `/api/v1/artists/${hostUsername}/followers`,
+      })
+      const body = list.json() as { users: Array<{ username: string; displayName: string }> }
+      expect(body.users.map((u) => u.username)).toEqual([`${PREFIX}emailnamed`])
+
+      const count = await app.inject({
+        method: 'GET',
+        url: `/api/v1/artists/${hostUsername}/follow`,
+      })
+      expect(count.json().followerCount).toBe(1)
+    })
+
+    it('leaves suspended and deleted artists out of the following list', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/artists/${hostUsername}/following`,
+      })
+      const body = res.json() as { users: Array<{ username: string }> }
+      expect(body.users.map((u) => u.username)).toEqual([`${PREFIX}emailnamed`])
+    })
+
+    it('never sends an email address as a listed name', async () => {
+      for (const direction of ['followers', 'following']) {
+        const res = await app.inject({
+          method: 'GET',
+          url: `/api/v1/artists/${hostUsername}/${direction}`,
+        })
+        const body = res.json() as { users: Array<{ displayName: string }> }
+        expect(body.users[0]?.displayName).toBe(`${PREFIX}emailnamed`)
+      }
+    })
+
+    it('counts only available followers after follow and unfollow', async () => {
+      const viewer = await createTestArtist(prisma, {
+        email: `${PREFIX}viewer@example.com`,
+        username: `${PREFIX}viewer`,
+        tier: 'ARTIST',
+      })
+      const cookie = await sessionCookieFor(prisma, viewer.id)
+      const followed = await app.inject({
+        method: 'POST',
+        url: `/api/v1/artists/${hostUsername}/follow`,
+        headers: { cookie },
+      })
+      expect(followed.json().followerCount).toBe(2)
+      const unfollowed = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/artists/${hostUsername}/follow`,
+        headers: { cookie },
+      })
+      expect(unfollowed.json().followerCount).toBe(1)
+    })
+  })
 })
