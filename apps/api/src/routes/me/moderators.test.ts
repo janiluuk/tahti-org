@@ -28,6 +28,7 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     const owner = await createTestArtist(prisma, {
       email: `${PREFIX}owner@example.com`,
       username: 'me-mods-owner',
+      displayName: 'owner@example.com',
       tier: 'ARTIST',
       isMember: true,
       memberNumber: 98490,
@@ -35,6 +36,7 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     const moderator = await createTestArtist(prisma, {
       email: `${PREFIX}mod@example.com`,
       username: 'me-mods-mod',
+      displayName: 'mod@example.com',
       memberNumber: 98491,
     })
     const outsider = await createTestArtist(prisma, {
@@ -88,7 +90,11 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
       payload: { username: 'me-mods-mod' },
     })
     expect(res.statusCode).toBe(201)
-    expect(res.json()).toMatchObject({ userId: modUserId, username: 'me-mods-mod' })
+    expect(res.json()).toMatchObject({
+      userId: modUserId,
+      username: 'me-mods-mod',
+      displayName: 'me-mods-mod',
+    })
   })
 
   it('owner lists delegated moderators', async () => {
@@ -99,7 +105,11 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual([
-      expect.objectContaining({ userId: modUserId, username: 'me-mods-mod' }),
+      expect.objectContaining({
+        userId: modUserId,
+        username: 'me-mods-mod',
+        displayName: 'me-mods-mod',
+      }),
     ])
   })
 
@@ -111,7 +121,9 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual(
-      expect.arrayContaining([expect.objectContaining({ slug: ownerSlug, isOwner: false })]),
+      expect.arrayContaining([
+        expect.objectContaining({ slug: ownerSlug, displayName: 'me-mods-owner', isOwner: false }),
+      ]),
     )
   })
 

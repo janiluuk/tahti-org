@@ -83,3 +83,4 @@ export {
 } from './live-show-recurrence.js'
 export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaults.js'
 export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
+export { actorDisplayName } from './display-name.js'

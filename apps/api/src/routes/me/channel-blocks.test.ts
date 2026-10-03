@@ -216,4 +216,23 @@ describe('channel designer blocks', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('never sends an email address as the addon context display name', async () => {
+    await prisma.user.update({
+      where: { username: `${PREFIX}artist` },
+      data: { displayName: 'artist@example.com' },
+    })
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/blocks',
+      headers: { cookie },
+      payload: { type: 'ADDON', configJson: { addonInstallId: installId } },
+    })
+    expect(created.statusCode).toBe(201)
+
+    const res = await app.inject({ method: 'GET', url: `/api/v1/channels/${channelSlug}/blocks` })
+    const body = res.json() as { blocks: Array<{ addon?: { context: { displayName: string } } }> }
+    const addon = body.blocks.find((b) => b.addon)
+    expect(addon?.addon?.context.displayName).toBe(`${PREFIX}artist`)
+  })
 })

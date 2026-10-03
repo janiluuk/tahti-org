@@ -12,6 +12,7 @@ import {
 } from '@tahti/shared'
 import { sendMail } from '../../lib/email.js'
 import { config } from '../../config.js'
+import { userName } from '../../lib/safe-names.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -39,7 +40,7 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username: artistUsername },
-        select: { id: true, displayName: true },
+        select: { id: true, username: true, displayName: true },
       })
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })
 
@@ -71,7 +72,7 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
       const confirmUrl = `${config.apiUrl}/api/newsletter/confirm/${confirmToken}`
       await sendMail({
         to: email,
-        subject: `Confirm your subscription to ${artist.displayName}`,
+        subject: `Confirm your subscription to ${userName(artist)}`,
         text: `Click to confirm: ${confirmUrl}\n\nIf you didn't subscribe, ignore this email.`,
       })
 

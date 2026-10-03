@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
+import { userName } from './safe-names.js'
 
 export function currentQuarter(date = new Date()): { year: number; quarter: number } {
   return { year: date.getUTCFullYear(), quarter: Math.floor(date.getUTCMonth() / 3) + 1 }
@@ -33,7 +34,7 @@ export async function assembleFeatureRequestQuarterlyReportMarkdown(
       orderBy: { reviewedAt: 'asc' },
       include: {
         _count: { select: { votes: true } },
-        proposedBy: { select: { displayName: true } },
+        proposedBy: { select: { username: true, displayName: true } },
       },
     }),
     prisma.featureRequest.findMany({
@@ -41,7 +42,7 @@ export async function assembleFeatureRequestQuarterlyReportMarkdown(
       orderBy: { reviewedAt: 'asc' },
       include: {
         _count: { select: { votes: true } },
-        proposedBy: { select: { displayName: true } },
+        proposedBy: { select: { username: true, displayName: true } },
       },
     }),
     prisma.featureRequest.findMany({
@@ -71,7 +72,7 @@ export async function assembleFeatureRequestQuarterlyReportMarkdown(
   } else {
     for (const f of votedIn) {
       lines.push(
-        `- **${f.title}** (${f._count.votes} vote${f._count.votes === 1 ? '' : 's'}) — ${f.status} — proposed by ${f.proposedBy.displayName}${f.reviewNote ? ` — _${f.reviewNote}_` : ''}`,
+        `- **${f.title}** (${f._count.votes} vote${f._count.votes === 1 ? '' : 's'}) — ${f.status} — proposed by ${userName(f.proposedBy)}${f.reviewNote ? ` — _${f.reviewNote}_` : ''}`,
       )
     }
     lines.push('')

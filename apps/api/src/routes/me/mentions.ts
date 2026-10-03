@@ -13,6 +13,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { userName, withSafeName } from '../../lib/safe-names.js'
 
 // M15 — artist mention preferences and mute management
 const mentionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -34,7 +35,7 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
       publicMentionsEnabled: row?.publicMentionsEnabled ?? false,
       muted: (row?.mentionsMuted ?? []).map((m) => ({
         username: m.target.username,
-        displayName: m.target.displayName,
+        displayName: userName(m.target),
       })),
     })
   })
@@ -56,7 +57,9 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
         mentioner: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
-    return reply.send({ mentions })
+    return reply.send({
+      mentions: mentions.map((m) => ({ ...m, mentioner: withSafeName(m.mentioner) })),
+    })
   })
 
   // PATCH /api/me/mentions/settings — toggle mentions on/off
