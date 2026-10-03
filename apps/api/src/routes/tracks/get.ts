@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 
 // GET /api/tracks/:id — public, no auth required. Full detail for a
@@ -132,11 +133,11 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         ...serializeSound(rest),
-        artistName: item.artistName ?? channel.user.displayName,
+        artistName: trackArtistName({ artistName: item.artistName, channel }),
         channelSlug: channel.slug,
         channel: {
           username: channel.user.username,
-          displayName: channel.user.displayName,
+          displayName: userName(channel.user),
           avatarUrl: channel.user.avatarUrl,
           bio: channel.user.bio,
         },

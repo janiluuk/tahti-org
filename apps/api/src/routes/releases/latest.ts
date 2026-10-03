@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { LatestReleasesResponseSchema, openApiResponse } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { userName } from '../../lib/safe-names.js'
 
 const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX']
 
@@ -51,7 +52,7 @@ const latestReleasesRoutes: FastifyPluginAsync = async (fastify) => {
           releaseDate: r.releaseDate.toISOString(),
           artworkUrl: await resolveReleaseArtworkUrl(r),
           smartLinkSlug: r.smartLinkSlug,
-          artistDisplayName: r.user.displayName,
+          artistDisplayName: userName(r.user),
           artistUsername: r.user.username,
         })),
       )

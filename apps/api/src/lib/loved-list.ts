@@ -4,6 +4,7 @@
 import type { PrismaClient, Prisma } from '@tahti/db'
 import type { LovedListEntry } from '@tahti/shared'
 import { getCachedJson } from './json-cache.js'
+import { trackArtistName } from './safe-names.js'
 
 const CACHE_TTL_SEC = 30
 
@@ -59,7 +60,9 @@ export async function buildLovedList(
         bannerUrl: true,
         genre: true,
         contentType: true,
-        channel: { select: { slug: true, user: { select: { displayName: true } } } },
+        channel: {
+          select: { slug: true, user: { select: { username: true, displayName: true } } },
+        },
       },
     })
     const byId = new Map(items.map((item) => [item.id, item]))
@@ -71,7 +74,7 @@ export async function buildLovedList(
           soundId: item.id,
           loves: count,
           title: item.title,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           channelSlug: item.channel.slug,
           bannerUrl: item.bannerUrl,
           genre: item.genre,

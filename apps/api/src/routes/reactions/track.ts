@@ -12,6 +12,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 
 interface TracklistEntry {
   startSec: number
@@ -104,7 +105,10 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
           tracklist: true,
           isPublic: true,
           channel: {
-            select: { slug: true, user: { select: { displayName: true, avatarUrl: true } } },
+            select: {
+              slug: true,
+              user: { select: { username: true, displayName: true, avatarUrl: true } },
+            },
           },
         },
       })
@@ -127,7 +131,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         title: item.title,
-        artistName: item.artistName ?? item.channel.user.displayName,
+        artistName: trackArtistName(item),
         artistAvatarUrl: item.channel.user.avatarUrl,
         channelSlug: item.channel.slug,
         tracklist: parseTracklist(item.tracklist),

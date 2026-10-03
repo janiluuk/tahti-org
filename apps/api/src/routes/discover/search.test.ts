@@ -111,6 +111,44 @@ describe('GET /api/v1/search', () => {
     })
   })
 
+  it('never names an artist or collection owner by an email address', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}starlight@example.com`,
+      username: 'search-test-starlight',
+      // Older accounts can still hold an email display name the API now rejects.
+      displayName: 'starlight@example.com',
+    })
+    await prisma.sound.create({
+      data: {
+        channelId: artist.channel!.id,
+        title: 'Starlight Drone',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'search-test-starlight-crates',
+        name: 'Starlight Crates',
+        isPublic: true,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?q=starlight' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.tracks.map((t: { artistName: string }) => t.artistName)).toEqual([
+      'search-test-starlight',
+    ])
+    expect(body.artists.map((a: { displayName: string }) => a.displayName)).toEqual([
+      'search-test-starlight',
+    ])
+    expect(body.collections.map((c: { ownerDisplayName: string }) => c.ownerDisplayName)).toEqual([
+      'search-test-starlight',
+    ])
+  })
+
   it('scopes to tracks-only or artists-only via type', async () => {
     const tracksOnly = await app.inject({
       method: 'GET',

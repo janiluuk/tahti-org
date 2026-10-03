@@ -33,7 +33,8 @@ describe('/api/admin/tahti-selects preview audio', () => {
     const board = await createTestArtist(prisma, {
       email: `${PREFIX}board@example.com`,
       username: `${PREFIX}board`,
-      displayName: 'Selects Board',
+      // Older accounts can still hold an email display name the API now rejects.
+      displayName: 'board@example.com',
       isBoard: true,
       isMember: true,
     })
@@ -54,7 +55,7 @@ describe('/api/admin/tahti-selects preview audio', () => {
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}artist@example.com`,
       username: `${PREFIX}artist`,
-      displayName: 'Selects Artist',
+      displayName: 'artist@example.com',
     })
     const playable = await prisma.sound.create({
       data: {
@@ -108,6 +109,31 @@ describe('/api/admin/tahti-selects preview audio', () => {
       `https://minio.test/${PREFIX}playable.flac`,
     )
     expect(items.find((i) => i.soundId === unplayableId)?.audioUrl).toBeNull()
+  })
+
+  it('never names the curator or artist by an email address', async () => {
+    const rotation = await app.inject({
+      method: 'GET',
+      url: '/api/admin/tahti-selects',
+      headers: { cookie: boardCookie },
+    })
+    expect(rotation.statusCode).toBe(200)
+    const item = (
+      rotation.json().items as Array<{ soundId: string; addedBy: string; artistName: string }>
+    ).find((i) => i.soundId === playableId)
+    expect(item?.addedBy).toBe(`${PREFIX}board`)
+    expect(item?.artistName).toBe(`${PREFIX}artist`)
+
+    const browse = await app.inject({
+      method: 'GET',
+      url: `/api/admin/tahti-selects/browse?q=${PREFIX}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(browse.statusCode).toBe(200)
+    const result = (browse.json().items as Array<{ id: string; artistName: string }>).find(
+      (i) => i.id === playableId,
+    )
+    expect(result?.artistName).toBe(`${PREFIX}artist`)
   })
 
   it('returns a presigned preview url for each browse result', async () => {

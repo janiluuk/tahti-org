@@ -20,6 +20,7 @@ import { config } from '../../config.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 import {
   collectionItemInclude,
   safeUser,
@@ -305,7 +306,9 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           title: true,
           durationSec: true,
           artistName: true,
-          channel: { select: { slug: true, user: { select: { displayName: true } } } },
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
         },
       })
 
@@ -317,7 +320,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           id: item.id,
           title: item.title,
           durationSec: item.durationSec,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           channelSlug: item.channel.slug,
         })),
         hasMore,

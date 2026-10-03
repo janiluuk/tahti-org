@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { RadioFeaturedPatchSchema } from '@tahti/shared'
 import { config } from '../../config.js'
 import { listRadioEligibleChannels, recordRadioFeature } from '../../lib/radio-feature.js'
+import { userName } from '../../lib/safe-names.js'
 
 const HLS_BASE = config.hlsBaseUrl
 
@@ -32,7 +33,7 @@ const internalRadioRoutes: FastifyPluginAsync = async (fastify) => {
         channels.map((ch) => ({
           channelId: ch.id,
           slug: ch.slug,
-          artistName: ch.user.displayName,
+          artistName: userName(ch.user),
           hlsUrl: `${HLS_BASE}/${ch.slug}/index.m3u8`,
           lastFeaturedAt: ch.lastFeaturedAt,
         })),
