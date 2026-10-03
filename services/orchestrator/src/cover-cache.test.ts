@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { buildCoverCacheDockerCommand, coverImagePath, shellQuote } from './cover-cache.js'
+import {
+  backdropImagePath,
+  buildBackdropCacheDockerCommand,
+  buildCoverCacheDockerCommand,
+  coverImagePath,
+  shellQuote,
+} from './cover-cache.js'
 
 describe('coverImagePath', () => {
   it('is stable per channel id', () => {
@@ -51,5 +57,18 @@ describe('buildCoverCacheDockerCommand', () => {
   it('quotes an avatar URL containing a single quote safely', () => {
     const cmd = buildCoverCacheDockerCommand('chan-1', "https://x/a'b.jpg", 'cover_vol')
     expect(cmd).toContain(`-e AVATAR_URL='https://x/a'\\''b.jpg'`)
+  })
+})
+
+describe('buildBackdropCacheDockerCommand', () => {
+  it('fetches the backdrop via an env var into its own file next to the cover', () => {
+    const cmd = buildBackdropCacheDockerCommand('chan-1', "https://x/a'b.jpg", 'cover_vol')
+    expect(backdropImagePath('chan-1')).toBe('/cover-cache/chan-1/backdrop.jpg')
+    expect(cmd).toContain(`-e BACKDROP_URL='https://x/a'\\''b.jpg'`)
+    expect(cmd).toContain('-v cover_vol:/cover-cache')
+    expect(cmd).toContain('ffmpeg -y -i "$BACKDROP_URL"')
+    expect(cmd).toContain('scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720')
+    expect(cmd).toContain('/cover-cache/chan-1/backdrop.jpg')
+    expect(cmd).not.toContain('lavfi')
   })
 })
