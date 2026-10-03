@@ -276,6 +276,55 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track!.playUrl).toBeNull()
     expect(track!.gate?.reason).toBe('SUBSCRIBERS_ONLY')
   })
+
+  it('returns the description and perks of active fan tiers only', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: 'public-profile-artist' },
+      select: { id: true },
+    })
+    await prisma.fanTier.createMany({
+      data: [
+        {
+          artistUserId: artist.id,
+          name: 'Supporter',
+          amountCents: 500,
+          description: 'Keeps the lights on.',
+          perks: ['FAN_CHAT', 'Signed postcard'],
+          position: 0,
+        },
+        {
+          artistUserId: artist.id,
+          name: 'Retired',
+          amountCents: 900,
+          description: 'No longer offered.',
+          perks: ['FAN_NEWSLETTER'],
+          active: false,
+          position: 1,
+        },
+      ],
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-artist/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      fanTiers: Array<{
+        name: string
+        amountCents: number
+        description: string | null
+        perks: string[]
+      }>
+    }
+    expect(body.fanTiers).toHaveLength(1)
+    expect(body.fanTiers[0]).toMatchObject({
+      name: 'Supporter',
+      amountCents: 500,
+      description: 'Keeps the lights on.',
+      perks: ['FAN_CHAT', 'Signed postcard'],
+    })
+  })
 })
 
 describe('GET /api/v1/u/:username/news', () => {

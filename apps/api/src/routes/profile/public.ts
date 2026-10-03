@@ -230,7 +230,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       fanTiers: {
         where: { active: true },
         orderBy: { position: 'asc' },
-        select: { id: true, name: true, amountCents: true },
+        select: { id: true, name: true, amountCents: true, description: true, perks: true },
       },
       purchaseTiers: {
         where: { active: true },
