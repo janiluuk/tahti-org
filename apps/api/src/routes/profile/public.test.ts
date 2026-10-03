@@ -276,6 +276,48 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track!.playUrl).toBeNull()
     expect(track!.gate?.reason).toBe('SUBSCRIBERS_ONLY')
   })
+
+  it('keeps a pinned release that is older than the 24 newest, listing pinned releases first', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}many-releases@example.com`,
+      username: 'public-profile-many-releases',
+    })
+    const base = Date.UTC(2020, 0, 1)
+    const day = 24 * 60 * 60 * 1000
+    await prisma.release.createMany({
+      data: Array.from({ length: 30 }, (_, i) => ({
+        userId: artist.id,
+        title: `Release ${i}`,
+        type: 'SINGLE' as const,
+        releaseDate: new Date(base + i * day),
+        smartLinkSlug: `${PREFIX}many-${i}`,
+        state: 'PUBLISHED' as const,
+      })),
+    })
+    await prisma.release.update({
+      where: { smartLinkSlug: `${PREFIX}many-0` },
+      data: { pinnedAt: new Date(base + 100 * day) },
+    })
+    await prisma.release.update({
+      where: { smartLinkSlug: `${PREFIX}many-1` },
+      data: { pinnedAt: new Date(base + 200 * day) },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-many-releases/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { releases: Array<{ title: string; pinned: boolean }> }
+    expect(body.releases).toHaveLength(24)
+    expect(body.releases.slice(0, 4).map((r) => r.title)).toEqual([
+      'Release 1',
+      'Release 0',
+      'Release 29',
+      'Release 28',
+    ])
+    expect(body.releases.slice(0, 3).map((r) => r.pinned)).toEqual([true, true, false])
+  })
 })
 
 describe('GET /api/v1/u/:username/news', () => {

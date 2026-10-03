@@ -203,7 +203,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       },
       releases: {
         where: { state: 'PUBLISHED' },
-        orderBy: { releaseDate: 'desc' },
+        // Pinned first so the 24-row cap never drops an older pinned release
+        // from the Stage showcase.
+        orderBy: [{ pinnedAt: { sort: 'desc', nulls: 'last' } }, { releaseDate: 'desc' }],
         take: 24,
         select: {
           id: true,
