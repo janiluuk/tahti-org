@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import {
-  ChatPublishAckSchema,
+  ChatPublishProxyReplySchema,
   ChatPublishProxySchema,
   chatProxyMetaUserId,
   openApiResponse,
@@ -22,10 +22,17 @@ import { canUseFanChat } from '../../lib/fan-perks.js'
 // templating), so the route is generic and the channel slug is derived
 // from the proxy request body's `channel` field instead of a URL param —
 // it arrives as `channel:<slug>` or `channel:<slug>:fans`.
+// Centrifugo turns any non-200 proxy reply into a generic "internal server
+// error" for the browser, so refusals go back as a 200 carrying its error
+// object (codes must be in 400-1999) with the code string as the message.
+function refusePublish(reply: FastifyReply, code: 403 | 404, message: string) {
+  return reply.send({ error: { code, message } })
+}
+
 const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/chat/message',
-    { schema: { response: openApiResponse(ChatPublishAckSchema, 'ChatPublishAck') } },
+    { schema: { response: openApiResponse(ChatPublishProxyReplySchema, 'ChatPublishProxyReply') } },
     async (request, reply) => {
       const parsed = ChatPublishProxySchema.safeParse(request.body)
       if (!parsed.success) {
@@ -46,10 +53,10 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         select: { id: true, userId: true, user: { select: { chatEnabled: true } } },
       })
 
-      if (!channel) return reply.status(404).send({ error: 'channel not found' })
+      if (!channel) return refusePublish(reply, 404, 'channel not found')
       // Tokens issued before the owner switched chat off stay valid for up to
       // an hour, so the toggle has to be enforced at publish time as well.
-      if (!channel.user.chatEnabled) return reply.status(403).send({ error: 'chat_disabled' })
+      if (!channel.user.chatEnabled) return refusePublish(reply, 403, 'chat_disabled')
 
       // Any client may subscribe in the `channel` namespace, so the fan room is
       // only kept to fans by refusing posts from anyone else here.
@@ -57,7 +64,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         isFanChannel &&
         !(mentionerUserId && (await canUseFanChat(fastify.prisma, channel.userId, mentionerUserId)))
       ) {
-        return reply.status(403).send({ error: 'fan_chat_required' })
+        return refusePublish(reply, 403, 'fan_chat_required')
       }
 
       if (fingerprint) {
@@ -71,7 +78,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         if (!mentionerUserId) {
           const verified = await isChatCaptchaVerified(channel.id, fingerprint)
           if (!verified) {
-            return reply.status(403).send({ error: 'captcha_required' })
+            return refusePublish(reply, 403, 'captcha_required')
           }
         }
         const ban = await fastify.prisma.chatBan.findUnique({
@@ -79,7 +86,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
             channelId_fingerprintHash: { channelId: channel.id, fingerprintHash: fingerprint },
           },
         })
-        if (ban) return reply.status(403).send({ error: 'banned' })
+        if (ban) return refusePublish(reply, 403, 'banned')
       }
 
       // @mentions → Mention rows + in-app notifications (signed-in chatters only).

@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 
 const PREFIX = 'chat-message-'
+
+// Redis is absent in tests, which makes the real check report every
+// fingerprint as verified.
+const captcha = vi.hoisted(() => ({ verified: true }))
+vi.mock('../../lib/chat-captcha.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/chat-captcha.js')>()),
+  isChatCaptchaVerified: async () => captcha.verified,
+}))
+
+function refusal(message: string, code = 403) {
+  return { error: { code, message } }
+}
 
 describe('POST /api/chat/message — Centrifugo proxy', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -139,8 +151,8 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
           data: { text: 'sneaking into the fan room' },
         },
       })
-      expect(res.statusCode).toBe(403)
-      expect(res.json()).toEqual({ error: 'fan_chat_required' })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual(refusal('fan_chat_required'))
     }
     const leaked = await prisma.chatMessage.count({
       where: { text: 'sneaking into the fan room' },
@@ -148,13 +160,14 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(leaked).toBe(0)
   })
 
-  it('returns 404 for unknown channel', async () => {
+  it('refuses an unknown channel with a Centrifugo proxy error', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/chat/message',
       payload: { channel: 'channel:missing-slug', data: { text: 'hello' } },
     })
-    expect(res.statusCode).toBe(404)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(refusal('channel not found', 404))
   })
 
   it('rejects messages over 500 chars', async () => {
@@ -176,12 +189,26 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.statusCode).toBe(403)
   })
 
-  // Note: isChatCaptchaVerified fails *open* (treats an unreachable Redis as
-  // "verified") whenever the caller doesn't pass `failOpen: false`, and
-  // getRedisClient() always returns null in the test env (see redis.ts) — so
-  // the anonymous-and-never-verified 403 path isn't reachable from an
-  // integration test against this route. This suite only covers the new
-  // signed-in bypass, which doesn't depend on Redis at all.
+  it('asks an anonymous sender with no verified captcha to solve it again', async () => {
+    captcha.verified = false
+    try {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/chat/message',
+        payload: {
+          channel: `channel:${slug}`,
+          user: 'AnonListener#never-verified-fingerprint',
+          data: { text: 'anonymous, no captcha' },
+        },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual(refusal('captcha_required'))
+      const stored = await prisma.chatMessage.count({ where: { text: 'anonymous, no captcha' } })
+      expect(stored).toBe(0)
+    } finally {
+      captcha.verified = true
+    }
+  })
 
   it('accepts an unverified fingerprint when meta.userId is present (signed-in sender)', async () => {
     const sender = await createTestArtist(prisma, {
@@ -237,8 +264,8 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
         data: { text: 'should not post' },
       },
     })
-    expect(res.statusCode).toBe(403)
-    expect(res.json()).toEqual({ error: 'banned' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(refusal('banned'))
   })
 
   it('records CHAT mentions and notifies when meta.userId is present', async () => {
@@ -325,8 +352,8 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
         { channel: `channel:${slug}:fans`, meta: { userId: fanId }, data: { text: 'fan post' } },
       ]) {
         const res = await app.inject({ method: 'POST', url: '/api/chat/message', payload })
-        expect(res.statusCode).toBe(403)
-        expect(res.json().error).toBe('chat_disabled')
+        expect(res.statusCode).toBe(200)
+        expect(res.json()).toEqual(refusal('chat_disabled'))
       }
       const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
       const stored = await prisma.chatMessage.count({
