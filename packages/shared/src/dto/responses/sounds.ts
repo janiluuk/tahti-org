@@ -85,6 +85,9 @@ export const PublicTrackDetailSchema = z
     galleryMode: z.string().nullable().optional(),
     genre: z.string().nullable(),
     subGenres: z.array(z.string()),
+    /** Artist-defined free-form labels, as written. `GET /api/v1/search?tag=`
+     * finds other public tracks carrying the same tag. */
+    tags: z.array(z.string()),
     contentType: z.string(),
     mixVersion: z.string().nullable(),
     description: z.string().nullable(),
