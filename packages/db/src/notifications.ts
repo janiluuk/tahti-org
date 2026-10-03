@@ -335,7 +335,7 @@ export async function notifyUsersOfChatMention(
 export async function notifyArtistOfRadioSubmissionRejected(
   prisma: PrismaClient,
   artistUserId: string,
-  sound: { id: string; title: string },
+  trackTitle: string,
   rejectionNote: string,
 ): Promise<void> {
   const note = rejectionNote.trim()
@@ -344,9 +344,9 @@ export async function notifyArtistOfRadioSubmissionRejected(
     data: {
       userId: artistUserId,
       type: 'RADIO_SUBMISSION_REJECTED',
-      title: `"${sound.title}" was not added to Tahti Radio`,
+      title: `"${trackTitle}" was not added to Tahti Radio`,
       body: note.slice(0, 500),
-      url: `/studio/sounds/${sound.id}`,
+      url: '/studio/channel?tab=tahti-radio',
     },
   })
 }

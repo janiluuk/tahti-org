@@ -34,19 +34,19 @@ describe('notification target urls', () => {
     })
   })
 
-  it('links a rejected radio submission to the rejected sound', async () => {
+  it('links a rejected radio submission to the Tahti Radio submissions tab', async () => {
     const { prisma, create } = fakePrisma()
     await notifyArtistOfRadioSubmissionRejected(
       prisma,
       'artist-1',
-      { id: 'sound-1', title: 'Night Drive' },
+      'Night Drive',
       'Too quiet for rotation',
     )
     expect(create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         type: 'RADIO_SUBMISSION_REJECTED',
         title: '"Night Drive" was not added to Tahti Radio',
-        url: '/studio/sounds/sound-1',
+        url: '/studio/channel?tab=tahti-radio',
       }),
     })
   })
