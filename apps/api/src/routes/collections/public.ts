@@ -22,6 +22,8 @@ import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import {
   collectionItemInclude,
+  safeUser,
+  withSafeNames,
   linkReachableCollectionWhere,
   publicCollectionItemWhere,
   sortCollectionItems,
@@ -72,7 +74,8 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
       // Purchase/subscriber gates run per viewer; never cache these URLs.
       const items = await Promise.all(
-        ordered.map(async (colItem) => {
+        ordered.map(async (unsafeItem) => {
+          const colItem = withSafeNames(unsafeItem)
           if (!colItem.sound) return colItem
           const playbackKey = soundPlaybackKey(colItem.sound)
           const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
@@ -98,6 +101,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         ...col,
+        user: safeUser(col.user),
         coverUrl: await resolveCollectionCoverUrl(col),
         items,
         links: {
@@ -342,7 +346,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
     const xml = buildRss({
       title: col.name,
-      description: col.description ?? `${col.name} by ${col.user.displayName}`,
+      description: col.description ?? `${col.name} by ${safeUser(col.user).displayName}`,
       link: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
       items: collectionRssItems(col.items, col.user.username),
     })

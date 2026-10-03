@@ -80,6 +80,30 @@ export const collectionItemInclude = {
   },
 } as const
 
+type NamedUser = { username: string; displayName: string }
+
+export function safeUser<U extends NamedUser>(user: U): U {
+  return { ...user, displayName: safeDisplayName(user.displayName, user.username) }
+}
+
+/** A collection item whose contributor and track owner are never named by an
+ * email address. */
+export function withSafeNames<
+  T extends {
+    addedBy: NamedUser | null
+    sound: { channel: { user: NamedUser } } | null
+  },
+>(item: T): T {
+  return {
+    ...item,
+    addedBy: item.addedBy && safeUser(item.addedBy),
+    sound: item.sound && {
+      ...item.sound,
+      channel: { ...item.sound.channel, user: safeUser(item.sound.channel.user) },
+    },
+  }
+}
+
 /** Who made a collection item's track, never named by an email address. */
 export function soundArtist(sound: {
   artistName: string | null
@@ -106,13 +130,15 @@ export async function addManagementPlayback<
         channel: { userId: string; user: { username: string; displayName: string } }
       } | null
       release: { tracks: Array<{ streamKey: string | null; sourceKey: string | null }> } | null
+      addedBy: NamedUser | null
     }>
   },
 >(fastify: FastifyInstance, collection: T, viewerUserId: string) {
   return {
     ...collection,
     items: await Promise.all(
-      collection.items.map(async (item) => {
+      collection.items.map(async (unsafeItem) => {
+        const item = withSafeNames(unsafeItem)
         const soundKey = item.sound ? soundPlaybackKey(item.sound) : null
         const releaseTrack = item.release?.tracks[0]
         const releaseKey = releaseTrack?.streamKey ?? releaseTrack?.sourceKey ?? null
