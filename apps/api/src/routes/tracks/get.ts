@@ -60,6 +60,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           credits: true,
           genre: true,
           subGenres: true,
+          tags: true,
           contentType: true,
           mixVersion: true,
           bpm: true,
