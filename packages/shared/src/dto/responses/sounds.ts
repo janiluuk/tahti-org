@@ -101,6 +101,9 @@ export const PublicTrackDetailSchema = z
     /** [0..255] amplitude buckets for the real waveform — null for tracks
      * ingested before M27 or without a decodable audio file. */
     peaks: z.array(z.number()).nullable(),
+    /** Where the track was recorded - only a verified venue (one with a
+     * public page), else null. */
+    venue: z.object({ name: z.string(), slug: z.string() }).nullable(),
     commentCount: z.number().int(),
     downloadCount: z.number().int(),
     /** False = the artist turned downloads off; the download routes answer 403 `downloads_disabled`. */
