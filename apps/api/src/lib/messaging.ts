@@ -20,6 +20,12 @@ const participantSelect = {
   avatarUrl: true,
 } as const
 
+const otherUserSelect = {
+  ...participantSelect,
+  deletedAt: true,
+  suspendedAt: true,
+} as const
+
 function serializeParticipant(
   user: {
     username: string
@@ -33,6 +39,22 @@ function serializeParticipant(
     displayName: userName(user),
     avatarUrl: user.avatarUrl,
     channelRole,
+  }
+}
+
+function serializeOtherUser(
+  user: {
+    username: string
+    displayName: string
+    avatarUrl: string | null
+    deletedAt: Date | null
+    suspendedAt: Date | null
+  },
+  channelRole: ChannelStaffRole | null,
+) {
+  return {
+    ...serializeParticipant(user, channelRole),
+    available: !user.deletedAt && !user.suspendedAt,
   }
 }
 
@@ -98,7 +120,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
           updatedAt: true,
           participants: {
             where: { userId: { not: userId } },
-            select: { user: { select: participantSelect } },
+            select: { user: { select: otherUserSelect } },
           },
           messages: {
             orderBy: { createdAt: 'desc' },
@@ -143,7 +165,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
       const last = m.conversation.messages[0]
       return {
         id: m.conversation.id,
-        otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
+        otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
         lastMessage: last
           ? {
               body: last.body,
@@ -203,7 +225,7 @@ export async function getConversationDetail(
         id: true,
         participants: {
           where: { userId: { not: userId } },
-          select: { user: { select: participantSelect } },
+          select: { user: { select: otherUserSelect } },
         },
       },
     }),
@@ -235,7 +257,7 @@ export async function getConversationDetail(
 
   return {
     id: conversation.id,
-    otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
+    otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
     messages: messages.map((m) => ({
       id: m.id,
       senderUsername: m.sender.username,
