@@ -315,6 +315,92 @@ describe('radio show detail — past episode recording linkage', () => {
     expect(body.pastEpisodes).toHaveLength(1)
     expect(body.pastEpisodes[0]?.recording).toBeNull()
   })
+
+  it('names each aired episode from its broadcast, but not a fan-only one', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX3}details@example.com`,
+      username: `${PREFIX3}details`,
+      displayName: 'Episode Details Artist',
+    })
+    const now = new Date()
+    const hour = 60 * 60 * 1000
+
+    const publicBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 2 * hour),
+        endAt: new Date(now.getTime() - hour),
+      },
+    })
+    // A preview session that never went live must not win over the aired one.
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: publicBooking.id,
+        title: 'Soundcheck',
+        startedAt: new Date(publicBooking.startAt.getTime() + 30 * 60 * 1000),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: publicBooking.id,
+        title: 'Deep Forest #3',
+        description: 'Two hours of slow techno.',
+        artworkUrl: 'https://cdn.example.com/deep-forest-3.jpg',
+        startedAt: publicBooking.startAt,
+        wentLiveAt: publicBooking.startAt,
+        endedAt: publicBooking.endAt,
+      },
+    })
+
+    const fanOnlyBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 26 * hour),
+        endAt: new Date(now.getTime() - 25 * hour),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: fanOnlyBooking.id,
+        title: 'Members only',
+        description: 'Secret set.',
+        artworkUrl: 'https://cdn.example.com/secret.jpg',
+        visibility: 'FAN_ONLY',
+        wentLiveAt: fanOnlyBooking.startAt,
+        endedAt: fanOnlyBooking.endAt,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      pastEpisodes: Array<{
+        id: string
+        title: string | null
+        description: string | null
+        coverUrl: string | null
+      }>
+    }
+
+    const aired = body.pastEpisodes.find((ep) => ep.id === publicBooking.id)
+    expect(aired).toMatchObject({
+      title: 'Deep Forest #3',
+      description: 'Two hours of slow techno.',
+      coverUrl: 'https://cdn.example.com/deep-forest-3.jpg',
+    })
+
+    const fanOnly = body.pastEpisodes.find((ep) => ep.id === fanOnlyBooking.id)
+    expect(fanOnly).toMatchObject({ title: null, description: null, coverUrl: null })
+  })
 })
 
 describe('radio show now-playing and upcoming', () => {
