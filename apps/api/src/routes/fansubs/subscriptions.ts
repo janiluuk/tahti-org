@@ -30,6 +30,7 @@ import {
   markFanSubCanceledAtPeriodEnd,
   recordFanSubPayment,
 } from '../../lib/fansub.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -198,7 +199,7 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
         },
       })
-      return reply.send(subs)
+      return reply.send(subs.map((sub) => ({ ...sub, artist: withSafeName(sub.artist) })))
     },
   )
 

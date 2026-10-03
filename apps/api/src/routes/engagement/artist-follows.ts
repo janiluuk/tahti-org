@@ -12,8 +12,14 @@ import {
 import { notifyArtistOfNewFollower } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const FOLLOW_LIST_PAGE_SIZE = 30
+
+function availableFollowersWhere(artistUserId: string) {
+  return { artistUserId, follower: availableUserWhere }
+}
 
 const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -67,7 +73,7 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const followerCount = await fastify.prisma.artistFollow.count({
-        where: { artistUserId: artist.id },
+        where: availableFollowersWhere(artist.id),
       })
 
       return reply.send({ following: true, followerCount })
@@ -100,7 +106,7 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const followerCount = await fastify.prisma.artistFollow.count({
-        where: { artistUserId: artist.id },
+        where: availableFollowersWhere(artist.id),
       })
 
       return reply.send({ following: false, followerCount })
@@ -138,7 +144,7 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
               },
             })
           : null,
-        fastify.prisma.artistFollow.count({ where: { artistUserId: artist.id } }),
+        fastify.prisma.artistFollow.count({ where: availableFollowersWhere(artist.id) }),
       ])
 
       return reply.send({ following: !!follow, followerCount })
@@ -181,7 +187,9 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const where =
-          direction === 'followers' ? { artistUserId: artist.id } : { followerUserId: artist.id }
+          direction === 'followers'
+            ? availableFollowersWhere(artist.id)
+            : { followerUserId: artist.id, artist: availableUserWhere }
         const rows = await fastify.prisma.artistFollow.findMany({
           where,
           orderBy: { createdAt: 'desc' },
@@ -201,7 +209,9 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
 
         const hasMore = rows.length > FOLLOW_LIST_PAGE_SIZE
         const page = rows.slice(0, FOLLOW_LIST_PAGE_SIZE)
-        const users = page.map((row) => (direction === 'followers' ? row.follower! : row.artist!))
+        const users = page.map((row) =>
+          withSafeName(direction === 'followers' ? row.follower! : row.artist!),
+        )
 
         return reply.send({ users, hasMore })
       },

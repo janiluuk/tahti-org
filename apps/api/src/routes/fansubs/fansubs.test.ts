@@ -200,6 +200,23 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(res.json()[0].artist.username).toBe('fansub-artist')
   })
 
+  it('never lists an email address as the subscribed artist name', async () => {
+    await prisma.user.update({
+      where: { id: artist.id },
+      data: { displayName: `${PREFIX}artist@example.com` },
+    })
+    try {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/me/subscriptions',
+        headers: { cookie: fanCookie },
+      })
+      expect(res.json()[0].artist.displayName).toBe('fansub-artist')
+    } finally {
+      await prisma.user.update({ where: { id: artist.id }, data: { displayName: 'Fan Artist' } })
+    }
+  })
+
   it('M18: an active fan-subscriber download is weighted 5×', async () => {
     const item = await prisma.sound.create({
       data: {
