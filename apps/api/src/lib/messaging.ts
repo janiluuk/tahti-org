@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import type { Prisma, PrismaClient } from '@tahti/db'
 import { notifyUserOfNewMessage } from '@tahti/db'
+import { CONVERSATION_PAGE_LIMIT } from '@tahti/shared'
 import { availableUserWhere } from './listed-artist.js'
 import { userName, withSafeName } from './safe-names.js'
 
@@ -208,17 +209,43 @@ export async function findOrCreateConversation(
   return created.id
 }
 
+/** Resolves `?before=` to a Prisma page start: a message id in this
+ * conversation pages from that message, anything else must be an ISO
+ * date-time. Returns null when it is neither. */
+async function resolveBefore(
+  prisma: PrismaClient,
+  conversationId: string,
+  before: string,
+): Promise<Pick<Prisma.MessageFindManyArgs, 'cursor' | 'skip' | 'where'> | null> {
+  const anchor = await prisma.message.findFirst({
+    where: { id: before, conversationId },
+    select: { id: true },
+  })
+  if (anchor) return { cursor: { id: anchor.id }, skip: 1 }
+  const at = new Date(before)
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(before) || Number.isNaN(at.getTime())) return null
+  return { where: { createdAt: { lt: at } } }
+}
+
+/** One page of a conversation, newest `limit` messages before `before`
+ * (or the newest overall), returned oldest first. Viewing the newest page
+ * marks the conversation read. */
 export async function getConversationDetail(
   prisma: PrismaClient,
   userId: string,
   conversationId: string,
+  page: { before?: string; limit?: number } = {},
 ) {
   const membership = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId } },
   })
-  if (!membership) return null
+  if (!membership) return { status: 'not_found' as const }
 
-  const [conversation, newestFirst] = await Promise.all([
+  const limit = page.limit ?? CONVERSATION_PAGE_LIMIT
+  const start = page.before ? await resolveBefore(prisma, conversationId, page.before) : {}
+  if (!start) return { status: 'invalid_before' as const }
+
+  const [conversation, newestFirstPlusOne] = await Promise.all([
     prisma.conversation.findUnique({
       where: { id: conversationId },
       select: {
@@ -230,9 +257,11 @@ export async function getConversationDetail(
       },
     }),
     prisma.message.findMany({
-      where: { conversationId },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
+      ...start,
+      where: { ...start.where, conversationId },
+      // id breaks createdAt ties so a page boundary never skips or repeats a message.
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
       select: {
         id: true,
         body: true,
@@ -242,32 +271,39 @@ export async function getConversationDetail(
       },
     }),
   ])
-  if (!conversation) return null
+  if (!conversation) return { status: 'not_found' as const }
   const other = conversation.participants[0]?.user
-  if (!other) return null
-  const messages = newestFirst.reverse()
+  if (!other) return { status: 'not_found' as const }
+  const hasMore = newestFirstPlusOne.length > limit
+  const messages = newestFirstPlusOne.slice(0, limit).reverse()
 
   const roleUserIds = Array.from(new Set([other.id, ...messages.map((m) => m.senderId)]))
   const roles = await resolveChannelStaffRoles(prisma, roleUserIds)
 
-  await prisma.conversationParticipant.update({
-    where: { conversationId_userId: { conversationId, userId } },
-    data: { lastReadAt: new Date() },
-  })
+  if (!page.before) {
+    await prisma.conversationParticipant.update({
+      where: { conversationId_userId: { conversationId, userId } },
+      data: { lastReadAt: new Date() },
+    })
+  }
 
   return {
-    id: conversation.id,
-    otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
-    messages: messages.map((m) => ({
-      id: m.id,
-      senderUsername: m.sender.username,
-      senderDisplayName: userName(m.sender),
-      senderAvatarUrl: m.sender.avatarUrl,
-      body: m.body,
-      createdAt: m.createdAt.toISOString(),
-      isMine: m.senderId === userId,
-      senderChannelRole: roles.get(m.senderId) ?? null,
-    })),
+    status: 'ok' as const,
+    detail: {
+      id: conversation.id,
+      otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
+      messages: messages.map((m) => ({
+        id: m.id,
+        senderUsername: m.sender.username,
+        senderDisplayName: userName(m.sender),
+        senderAvatarUrl: m.sender.avatarUrl,
+        body: m.body,
+        createdAt: m.createdAt.toISOString(),
+        isMine: m.senderId === userId,
+        senderChannelRole: roles.get(m.senderId) ?? null,
+      })),
+      hasMore,
+    },
   }
 }
 

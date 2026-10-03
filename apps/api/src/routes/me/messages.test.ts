@@ -253,6 +253,104 @@ describe('M38 — private messaging', () => {
     expect(bodies).toHaveLength(200)
     expect(bodies[0]).toBe('message 5')
     expect(bodies[199]).toBe('message 204')
+    expect(res.json().hasMore).toBe(true)
+  })
+
+  it('pages back through older messages with ?before=', async () => {
+    const userC = await prisma.user.findUniqueOrThrow({
+      where: { username: 'dm-test-casey' },
+      select: { id: true },
+    })
+    const conversation = await prisma.conversation.create({
+      data: { participants: { create: [{ userId: userB.id }, { userId: userC.id }] } },
+      select: { id: true },
+    })
+    const base = Date.UTC(2026, 1, 1)
+    await prisma.message.createMany({
+      data: Array.from({ length: 7 }, (_, i) => ({
+        conversationId: conversation.id,
+        senderId: i % 2 === 0 ? userB.id : userC.id,
+        body: `page ${i}`,
+        createdAt: new Date(base + i * 1000),
+      })),
+    })
+    const url = `/api/me/messages/conversations/${conversation.id}`
+    type Page = { messages: Array<{ id: string; body: string }>; hasMore: boolean }
+
+    const newest = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3`,
+      headers: { cookie: cookieB },
+    })
+    expect(newest.statusCode).toBe(200)
+    const first = newest.json() as Page
+    expect(first.messages.map((m) => m.body)).toEqual(['page 4', 'page 5', 'page 6'])
+    expect(first.hasMore).toBe(true)
+
+    const older = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3&before=${first.messages[0]!.id}`,
+      headers: { cookie: cookieB },
+    })
+    expect(older.statusCode).toBe(200)
+    const second = older.json() as Page
+    expect(second.messages.map((m) => m.body)).toEqual(['page 1', 'page 2', 'page 3'])
+    expect(second.hasMore).toBe(true)
+
+    const oldest = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3&before=${second.messages[0]!.id}`,
+      headers: { cookie: cookieB },
+    })
+    expect((oldest.json() as Page).messages.map((m) => m.body)).toEqual(['page 0'])
+    expect((oldest.json() as Page).hasMore).toBe(false)
+
+    const byDate = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=2&before=${new Date(base + 3000).toISOString()}`,
+      headers: { cookie: cookieB },
+    })
+    expect((byDate.json() as Page).messages.map((m) => m.body)).toEqual(['page 1', 'page 2'])
+
+    const invalid = await app.inject({
+      method: 'GET',
+      url: `${url}?before=not-a-message`,
+      headers: { cookie: cookieB },
+    })
+    expect(invalid.statusCode).toBe(400)
+  })
+
+  it('only marks a conversation read when the newest page is viewed', async () => {
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieB },
+      payload: { username: 'dm-test-casey' },
+    })
+    const id = start.json().conversationId as string
+    await app.inject({
+      method: 'POST',
+      url: `/api/me/messages/conversations/${id}/messages`,
+      headers: { cookie: cookieC },
+      payload: { body: 'unread for Blair' },
+    })
+    const unread = async () => {
+      const list = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieB },
+      })
+      return (list.json() as Array<{ id: string; unreadCount: number }>).find((c) => c.id === id)
+        ?.unreadCount
+    }
+
+    expect(await unread()).toBe(1)
+    await app.inject({
+      method: 'GET',
+      url: `/api/me/messages/conversations/${id}?before=${new Date().toISOString()}`,
+      headers: { cookie: cookieB },
+    })
+    expect(await unread()).toBe(1)
   })
 
   describe('deleted and suspended accounts', () => {

@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  ConversationDetailQuerySchema,
   ConversationDetailSchema,
   ConversationListSchema,
   IdParamSchema,
@@ -156,7 +157,8 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // GET /api/me/messages/conversations/:id — thread + marks it read
+  // GET /api/me/messages/conversations/:id?before=&limit= — one page of the
+  // thread; the newest page also marks it read
   fastify.get(
     '/api/me/messages/conversations/:id',
     {
@@ -169,11 +171,27 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const query = ConversationDetailQuerySchema.safeParse(request.query ?? {})
+      if (!query.success) {
+        return reply.status(400).send({ error: query.error.issues[0]?.message ?? 'Invalid query' })
+      }
       const user = request.sessionUser!
 
-      const detail = await getConversationDetail(fastify.prisma, user.id, routeParams.id)
-      if (!detail) return reply.status(404).send({ error: 'Conversation not found' })
-      return reply.send(detail)
+      const result = await getConversationDetail(
+        fastify.prisma,
+        user.id,
+        routeParams.id,
+        query.data,
+      )
+      if (result.status === 'not_found') {
+        return reply.status(404).send({ error: 'Conversation not found' })
+      }
+      if (result.status === 'invalid_before') {
+        return reply
+          .status(400)
+          .send({ error: 'before must be a message id from this conversation or an ISO date-time' })
+      }
+      return reply.send(result.detail)
     },
   )
 
