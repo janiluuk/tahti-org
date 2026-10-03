@@ -113,6 +113,12 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
               amountCents: Number(meta.amountCents ?? obj.amount ?? 0),
               stripeSubscriptionId: String(obj.id),
               currentPeriodEnd: periodEnd,
+              // Portal and API cancels arrive as an update with renewal switched off;
+              // switching it back on (a portal "renew") reactivates the row.
+              cancelAtPeriodEnd:
+                obj.cancel_at_period_end === true ||
+                obj.cancel_at != null ||
+                obj.status === 'canceled',
             })
             break
           }
