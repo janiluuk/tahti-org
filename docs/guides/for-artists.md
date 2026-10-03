@@ -1,14 +1,16 @@
 # Tahti for artists (members & studio)
 
-This guide is for any artist account with a **channel**. Tahti ry membership adds membership benefits, but the free tier remains a complete artist product. Broadcasting itself is in **[For streamers](for-streamers.md)**. The complete inventory is in the [feature catalog](../features.md).
+This guide is for any artist account with a **channel**. Association membership adds benefits, but the free tier remains a complete artist product. Broadcasting itself is in **[For streamers](for-streamers.md)**. Inventory: [feature catalog](../features.md). UI hosts: see [guides README — Which UI](README.md#which-ui-am-i-using).
+
+Paths below use **production** (`/dashboard/*` on tahti.live). On **beta** (beta.tahti.live) the same jobs live under `/studio/*` (e.g. `/studio/go-live`, `/studio/releases`, `/studio/channel`).
 
 ---
 
 ## Before you start
 
-1. **Sign up:** `/signup` → verify email (`/verify` link in mail).
-2. **Optional membership:** €40/year supports Tahti ry and adds membership benefits such as lossless artist delivery and unlimited storage display.
-3. **Log in anytime:** `/login` → `/dashboard`.
+1. **Sign up:** `/signup` on production (`/join` on beta) → verify email (`/verify` link in mail).
+2. **Optional membership:** €40/year supports the association and unlocks membership benefits such as higher-quality delivery, lossless **downloads** where configured, and unlimited storage display. True lossless **live HLS** is still rolling out — see [remaining-work](../remaining-work.md).
+3. **Log in anytime:** `/login` → `/dashboard` (production) or `/studio` (beta).
 
 You get one **channel** (slug) and one **username** for your public profile.
 

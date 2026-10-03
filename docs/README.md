@@ -7,7 +7,8 @@ Short index for humans and agents. Deep rules live in linked files.
 Build and operate **Tahti ry**’s AGPL nonprofit broadcasting platform: always-on
 artist channels, anonymous listening, transparent surplus → artists. Hosted
 product is `apps/web`; **[Tahti Player](https://github.com/janiluuk/tahti-player)**
-(`beta.tahti.live`) is the separate listen/studio client on the same API; public
+(`beta.tahti.live`) is the separate listen/studio client on the same API. Doc accuracy
+pass: [`DOC-AUDIT.md`](./DOC-AUDIT.md). Public
 docs at `https://api.tahti.live/api`.
 
 ## Keep reading

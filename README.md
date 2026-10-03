@@ -2,27 +2,44 @@
 
 A nonprofit broadcasting platform owned and governed by its artist members.
 
-Tahti ry (Tahti association) is a Finnish nonprofit association (yhdistys) founded to put money, audience, and infrastructure in the hands of independent musicians - with no shareholders, no advertising, and no exit.
+Tahti is built as a Finnish **yhdistys** (nonprofit association) model: money, audience, and infrastructure in the hands of independent musicians — no shareholders, no advertising, no exit. Quality is a constitutional obligation ([`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)).
 
-The platform exists for one purpose: to be the best broadcasting platform for independent artists. Quality is a constitutional obligation, not an aspiration.
+Artists can use a free tier or pay a membership subscription (€40/year). **90% of operating surplus** is meant for annual artist grants weighted by **engagement units** (downloads + fan-sub euros — not listener-hours). Fan subscriptions go to the artist with a published **2% operational fee** that rolls into the grant pool.
 
-Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units. Fan subscriptions go directly to the artist, minus a 2% platform fee that rolls into the next grant pool - Tahti takes no cut of fan-sub revenue for itself.
-
-Every artist member has a vote. The board is elected by the membership. The entire platform is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Artists retain full copyright over everything they upload and broadcast.
+The entire platform is [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). Artists retain full copyright over everything they upload and broadcast.
 
 This monorepo is the **implementation package**: constitution and strategy docs, the production API/worker/web stack, ops, and guides.
 
+## Current product state (read this first)
+
+| Surface | Status | Where |
+| --- | --- | --- |
+| **API + workers + media** | Production | `api.tahti.live`, chat, ingest, HLS |
+| **Production web** | Live Next.js listen + studio + admin | `apps/web` → [tahti.live](https://tahti.live) / `app.tahti.live` |
+| **Next web client** | Beta SPA (Nuclear UI) | [tahti-player](https://github.com/janiluuk/tahti-player) → [beta.tahti.live](https://beta.tahti.live) |
+| **Desktop player** | Tauri app (local library, plugins, MCP) | same tahti-player repo |
+| **Mobile** | Responsive web only — no store/native app | beta + production web |
+| **Feature inventory** | Implemented catalog | [`docs/features.md`](docs/features.md) |
+| **Open work** | Legal Phase 0–1, lossless HLS, distribution ops, cutover, … | [`docs/remaining-work.md`](docs/remaining-work.md) |
+| **Doc audit** | Accuracy notes for this pass | [`docs/DOC-AUDIT.md`](docs/DOC-AUDIT.md) |
+
+**Honest limits:** association incorporation / grant pipeline items may still be open in `remaining-work.md` — do not treat financial-model tables as “already paid out.” Live/24-7 delivery today is tier-aware **MP3/AAC ABR**; true lossless fMP4 HLS is still deferred (STREAM-011 B). DSP distribution UIs exist; production credentials and webhook status sync are partial.
+
+Studio paths differ by client: production uses `/dashboard/*`; beta uses `/studio/*` (same API). Prefer beta when evaluating the upcoming UX; keep production until cutover P0s land ([`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md)).
+
 ## Read first
 
-**[`docs/about.md`](docs/about.md)** - About our mission, money, governance, AGPL, and what we do not do.
+**[`docs/about.md`](docs/about.md)** — mission, money, governance, AGPL, what we do not do.
 
-**[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** - the three rules that govern every other document in this repository:
+**[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules:
 
 1. This is for artists, not for corporate. Administration paid fairly. No profit motive.
-2. Highest quality, useful, community-driven platform - by design.
+2. Highest quality, useful, community-driven platform — by design.
 3. The artist shines brightest. We don't rip off anyone in the chain.
 
-These rules are constitutional. They are not changeable by management decision. Everything else in `docs/` implements them.
+**[`docs/features.md`](docs/features.md)** — what is implemented today (source of truth for product surface).
+
+**[`docs/guides/README.md`](docs/guides/README.md)** — plain-language walkthroughs for listeners, artists, streamers.
 
 ## The problem
 
@@ -120,22 +137,22 @@ Each section below states the problem an area of the product addresses and how T
 
 ## At a glance
 
-- **Legal form:** Finnish _yhdistys_ (registered nonprofit association)
+- **Legal form:** Finnish _yhdistys_ (nonprofit association) model — see [`remaining-work.md`](docs/remaining-work.md) Phase 0 for incorporation checklist status
 - **License:** AGPL-3.0
-- **Audio quality:** lossless FLAC for members (all their listeners); MP3 192 kbps for free-tier artists
-- **Grant distribution:** annual, weighted by engagement units (downloads + fan-sub euros, not listener-hours)
-- **Direct artist revenue:** fan-to-artist subscriptions with 0% org take (2% operational fee covers Stripe + GDPR + ops)
-- **Hosting:** owned hardware in Helsinki + UpCloud Helsinki spillover; no CDN
-- **Membership:** €40/year to support Tahti ry; free-tier artists get MP3 + 1 hr/week live broadcasting
+- **Audio quality:** free-tier artist channels use MP3-class delivery; member artists unlock higher-quality delivery and lossless **downloads** where configured. True lossless **live HLS** is still deferred (see remaining-work STREAM-011 B)
+- **Grant distribution (spec):** annual, weighted by engagement units = downloads + fan-sub euros (not listener-hours) — [`engagement-and-fansubs.md`](docs/engagement-and-fansubs.md)
+- **Direct artist revenue:** fan-to-artist subscriptions; 2% operational fee rolls into the grant pool
+- **Hosting:** owned Helsinki hardware + UpCloud Helsinki spillover; no CDN
+- **Membership:** €40/year to support the association; free-tier artists get MP3 delivery + limited live hours
 
 ### Web clients
 
-| Client                                                                                    | Role                                                                                                                                                                      |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/web`** (this repo)                                                                | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                              |
-| **[Tahti Player](https://github.com/janiluuk/tahti-player)** (`tahti-web`, separate repo) | Next listen + studio SPA on Tahti Player UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
+| Client | Routes | Role |
+| --- | --- | --- |
+| **`apps/web`** (this repo) | `/dashboard/*`, `/c/:slug`, … | Production Next.js listen + studio + admin — [tahti.live](https://tahti.live) |
+| **[Tahti Player](https://github.com/janiluuk/tahti-player)** | `/studio/*`, `/channel/$slug`, … | Beta Nuclear SPA + desktop Tauri — [beta.tahti.live](https://beta.tahti.live) |
 
-Both clients talk to the same API, chat, and media stack. Prefer the Tahti Player beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
+Both talk to the same API, chat, and media stack.
 
 ## Screenshots
 
@@ -179,7 +196,11 @@ callout records the exact route.
 | ![Annotated admin dashboard](docs/e2e-screenshots/admin/dashboard.png)                 | ![Annotated admin financial ledger](docs/e2e-screenshots/admin/financial-ledger.png) |
 | **Admin dashboard** (`/admin/dashboard`) - operational overview                        | **Financial ledger** (`/admin/financial/ledger`) - immutable financial records       |
 
-More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
+More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) — see that folder's `README.md` for the full manifest and how to regenerate them.
+
+**Mobile captures** (responsive web, not a native app): [`docs/e2e-screenshots-mobile/`](docs/e2e-screenshots-mobile/) (~51 PNGs). Beta player mobile chrome is documented in the tahti-player repo (`MOBILE-USABILITY-AUDIT.md`).
+
+**Beta (Nuclear) UI shots** live in tahti-player under `packages/tahti-web/docs/redesign-shots/` and the generated [VIEW-GUIDE](https://github.com/janiluuk/tahti-player/blob/master/packages/tahti-web/docs/VIEW-GUIDE.md).
 
 ## Package structure
 
@@ -353,6 +374,6 @@ This package is the seventh major iteration of a multi-session design process. T
 
 7. **Listener-hours are vanity metrics only.** Grant share comes from engagement units. The constitution forbids designing around listener metrics.
 
-8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's members stream FLAC to all their listeners, free tier included, at 192 kbps MP3 minimum.
+8. **The audio quality story must stay honest.** Competitors often cap free listeners at low bitrates. Tahti’s free tier targets MP3-class streaming; member artists unlock higher-quality delivery and lossless **downloads**. Do not claim universal FLAC **live HLS** until STREAM-011 B lands — track status in [`remaining-work.md`](docs/remaining-work.md).
 
-- Generated 2026-05-17. Rewritten 2026-09-08 to cover implemented functionality problem-by-problem.
+- Generated 2026-05-17. Rewritten 2026-09-08 for problem-by-problem product coverage. Accuracy pass 2026-10-03 ([`docs/DOC-AUDIT.md`](docs/DOC-AUDIT.md)).

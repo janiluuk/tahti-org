@@ -2,6 +2,8 @@
 
 You do **not** need an account to listen, download public files, or use public chat. Sign in for follows, likes, messages, fan subscriptions, fan-only chat, and supporter perks. See the [feature catalog](../features.md) for the full product surface.
 
+**Clients:** production listen UI at [tahti.live](https://tahti.live); next listen UX at [beta.tahti.live](https://beta.tahti.live). There is **no native iOS/Android app** yet — use the mobile browser (responsive). Channel URLs: `/c/artist-slug` (production) or `/channel/artist-slug` (beta).
+
 ![Channel page — live player, archive list, and chat](../e2e-screenshots/public/channel.png)
 _A channel page (`/c/artist-slug`): player at top, archive below, chat on the side._
 
@@ -28,7 +30,7 @@ _A channel page (`/c/artist-slug`): player at top, archive below, chat on the si
 
 **Why is there a delay?** Live web audio is often 10–30 seconds behind the DJ’s room. That is normal.
 
-**Sound quality:** Free-tier artist channels use MP3 delivery. Tahti ry member artists can provide lossless-quality delivery to their listeners; this is an artist membership benefit, not a listener paywall.
+**Sound quality:** Free-tier artist channels use MP3-class streaming. Member artists unlock higher-quality streaming derivatives and can offer lossless **downloads** to fans — an artist membership benefit, not a listener paywall. Universal lossless **live** HLS is still incomplete (platform backlog).
 
 ---
 

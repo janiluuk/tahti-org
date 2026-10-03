@@ -7,7 +7,14 @@ description: How Tahti can be extended with plugins, widgets, visual tools, and 
 Tahti is designed to be adaptable. Most of the product is built from small,
 replaceable capabilities rather than one fixed workflow, so you can choose a
 setup that fits the way you listen, publish, broadcast, or run the
-cooperative.
+association.
+
+**Two different extension systems (do not mix them up):**
+
+| System | Where | What |
+| --- | --- | --- |
+| **Channel addons / disco-widgets** | Hosted web (tahti-org + beta SPA) | Layout blocks and sandboxed widgets on public channel / listen pages (`@tahti/addon-sdk`) |
+| **Nuclear player plugins & themes** | Desktop Tahti Player (+ registry) | Streaming providers, metadata, scrobble, lyrics, themes — indexed at [tahti-registry](https://github.com/janiluuk/tahti-registry) |
 
 Some capabilities are built into the platform and are available immediately.
 Others are add-ons that you enable for a particular page or account. This

@@ -19,7 +19,7 @@ _Dashboard → Broadcast: RTMP/Icecast credentials, test signal, pre-flight, and
 
 ### 1. Get credentials
 
-1. Log in and open `/dashboard/broadcast`.
+1. Log in and open `/dashboard/broadcast` (production) or `/studio/go-live` (beta — [beta.tahti.live](https://beta.tahti.live)).
 2. Choose OBS/RTMP or DJ software/Icecast in **Setup**.
 3. Copy:
    - **RTMP server** (e.g. `rtmp://…/live`)
