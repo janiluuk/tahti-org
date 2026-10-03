@@ -195,7 +195,7 @@ export async function getConversationDetail(
   })
   if (!membership) return null
 
-  const [conversation, messages] = await Promise.all([
+  const [conversation, newestFirst] = await Promise.all([
     prisma.conversation.findUnique({
       where: { id: conversationId },
       select: {
@@ -208,7 +208,7 @@ export async function getConversationDetail(
     }),
     prisma.message.findMany({
       where: { conversationId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       take: 200,
       select: {
         id: true,
@@ -222,6 +222,7 @@ export async function getConversationDetail(
   if (!conversation) return null
   const other = conversation.participants[0]?.user
   if (!other) return null
+  const messages = newestFirst.reverse()
 
   const roleUserIds = Array.from(new Set([other.id, ...messages.map((m) => m.senderId)]))
   const roles = await resolveChannelStaffRoles(prisma, roleUserIds)
