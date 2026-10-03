@@ -24,6 +24,13 @@ export const CreateArtistEventSchema = z.object({
 
 export type CreateArtistEventInput = z.infer<typeof CreateArtistEventSchema>
 
+export const UpdateArtistEventSchema = CreateArtistEventSchema.partial().refine(
+  (body) => Object.values(body).some((v) => v !== undefined),
+  { message: 'Nothing to update' },
+)
+
+export type UpdateArtistEventInput = z.infer<typeof UpdateArtistEventSchema>
+
 export const ArtistEventSchema = z.object({
   id: z.string(),
   title: z.string(),
