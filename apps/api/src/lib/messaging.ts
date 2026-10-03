@@ -3,8 +3,14 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { notifyUserOfNewMessage } from '@tahti/db'
+import { availableUserWhere } from './listed-artist.js'
 
 export type ChannelStaffRole = 'owner' | 'moderator'
+
+export const RECIPIENT_UNAVAILABLE_BODY = {
+  error: 'This account is no longer available',
+  code: 'recipient_unavailable',
+} as const
 
 const participantSelect = {
   id: true,
@@ -63,6 +69,7 @@ export async function searchUsers(prisma: PrismaClient, query: string, excludeUs
   const users = await prisma.user.findMany({
     where: {
       id: { not: excludeUserId },
+      ...availableUserWhere,
       OR: [
         { username: { contains: q, mode: 'insensitive' } },
         { displayName: { contains: q, mode: 'insensitive' } },
@@ -241,8 +248,9 @@ export async function getConversationDetail(
   }
 }
 
-/** Sends a message and notifies every other participant. Returns null if the
- * sender isn't actually a participant of this conversation. */
+/** Sends a message and notifies every other participant. Returns
+ * `not_found` if the sender isn't a participant of this conversation and
+ * `recipient_unavailable` if another participant was deleted or suspended. */
 export async function sendMessage(
   prisma: PrismaClient,
   sender: { id: string; username: string; displayName: string; avatarUrl: string | null },
@@ -252,7 +260,17 @@ export async function sendMessage(
   const membership = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId: sender.id } },
   })
-  if (!membership) return null
+  if (!membership) return { status: 'not_found' as const }
+
+  const unavailableRecipient = await prisma.conversationParticipant.findFirst({
+    where: {
+      conversationId,
+      userId: { not: sender.id },
+      user: { NOT: availableUserWhere },
+    },
+    select: { userId: true },
+  })
+  if (unavailableRecipient) return { status: 'recipient_unavailable' as const }
 
   const [message] = await prisma.$transaction([
     prisma.message.create({
@@ -276,13 +294,16 @@ export async function sendMessage(
   const roles = await resolveChannelStaffRoles(prisma, [sender.id])
 
   return {
-    id: message.id,
-    senderUsername: sender.username,
-    senderDisplayName: sender.displayName,
-    senderAvatarUrl: sender.avatarUrl,
-    body: message.body,
-    createdAt: message.createdAt.toISOString(),
-    isMine: true,
-    senderChannelRole: roles.get(sender.id) ?? null,
+    status: 'sent' as const,
+    message: {
+      id: message.id,
+      senderUsername: sender.username,
+      senderDisplayName: sender.displayName,
+      senderAvatarUrl: sender.avatarUrl,
+      body: message.body,
+      createdAt: message.createdAt.toISOString(),
+      isMine: true,
+      senderChannelRole: roles.get(sender.id) ?? null,
+    },
   }
 }

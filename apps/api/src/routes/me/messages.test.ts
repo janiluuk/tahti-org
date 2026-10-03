@@ -255,6 +255,76 @@ describe('M38 — private messaging', () => {
     expect(bodies[199]).toBe('message 204')
   })
 
+  describe('deleted and suspended accounts', () => {
+    let suspended: { id: string; username: string }
+    let deleted: { id: string; username: string }
+
+    beforeAll(async () => {
+      const s = await createTestArtist(prisma, {
+        email: `${PREFIX}suspended@example.com`,
+        username: 'dm-test-gone-suspended',
+      })
+      const d = await createTestArtist(prisma, {
+        email: `${PREFIX}deleted@example.com`,
+        username: 'dm-test-gone-deleted',
+      })
+      suspended = { id: s.id, username: 'dm-test-gone-suspended' }
+      deleted = { id: d.id, username: 'dm-test-gone-deleted' }
+    })
+
+    it('leaves them out of user search', async () => {
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+      await prisma.user.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } })
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/users/search?q=dm-test-gone',
+        headers: { cookie: cookieA },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual([])
+    })
+
+    it('refuses to start a conversation with them', async () => {
+      for (const username of [suspended.username, deleted.username]) {
+        const res = await app.inject({
+          method: 'POST',
+          url: '/api/me/messages/conversations',
+          headers: { cookie: cookieA },
+          payload: { username },
+        })
+        expect(res.statusCode).toBe(403)
+        expect(res.json()).toEqual({
+          error: 'This account is no longer available',
+          code: 'recipient_unavailable',
+        })
+      }
+    })
+
+    it('refuses to send into an existing conversation once the recipient is suspended', async () => {
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: null } })
+      const start = await app.inject({
+        method: 'POST',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieA },
+        payload: { username: suspended.username },
+      })
+      expect(start.statusCode).toBe(200)
+      const id = start.json().conversationId as string
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/messages/conversations/${id}/messages`,
+        headers: { cookie: cookieA },
+        payload: { body: 'Still there?' },
+      })
+      expect(res.statusCode).toBe(403)
+      expect(res.json().code).toBe('recipient_unavailable')
+      expect(await prisma.message.count({ where: { conversationId: id } })).toBe(0)
+    })
+  })
+
   it('requires auth on every messaging route', async () => {
     const list = await app.inject({ method: 'GET', url: '/api/me/messages/conversations' })
     expect(list.statusCode).toBe(401)
