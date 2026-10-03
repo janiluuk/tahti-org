@@ -184,7 +184,7 @@ export async function notifyArtistOfNewLike(
       actorUserId: liker.id,
       title: `${liker.displayName} loved "${item.title}"`,
       body: null,
-      url: `/c/${item.channelSlug}`,
+      url: `/t/${item.id}`,
     },
   })
 }
@@ -228,7 +228,7 @@ export async function notifyArtistOfNewRepost(
       actorUserId: reposter.id,
       title: `${reposter.displayName} reposted "${item.title}"`,
       body: null,
-      url: `/c/${item.channelSlug}`,
+      url: `/t/${item.id}`,
     },
   })
 }
@@ -346,7 +346,7 @@ export async function notifyArtistOfRadioSubmissionRejected(
       type: 'RADIO_SUBMISSION_REJECTED',
       title: `"${trackTitle}" was not added to Tahti Radio`,
       body: note.slice(0, 500),
-      url: '/dashboard/settings/distribution',
+      url: '/studio/channel?tab=tahti-radio',
     },
   })
 }
