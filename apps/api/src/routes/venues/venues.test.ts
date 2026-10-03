@@ -102,6 +102,59 @@ describe('M17 — venue calendar', () => {
     expect(hidden.statusCode).toBe(404)
   })
 
+  it('lists public, ready tracks recorded at the venue, newest first', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: 'venue-test-artist' },
+      include: { channel: true },
+    })
+    const venue = await prisma.venue.findUniqueOrThrow({ where: { slug: venueSlug } })
+    const base = {
+      channelId: artist.channel!.id,
+      venueId: venue.id,
+      rawKey: 'raw/venue-test.wav',
+      fileSizeBytes: BigInt(1000),
+    }
+    await prisma.sound.createMany({
+      data: [
+        {
+          ...base,
+          title: 'Older Live Set',
+          status: 'READY',
+          isPublic: true,
+          artistName: 'Club Band',
+          releasedAt: new Date('2026-01-01T00:00:00Z'),
+        },
+        {
+          ...base,
+          title: 'Newer Live Set',
+          status: 'READY',
+          isPublic: true,
+          durationSec: 3600,
+          releasedAt: new Date('2026-06-01T00:00:00Z'),
+        },
+        { ...base, title: 'Private Soundcheck', status: 'READY', isPublic: false },
+        { ...base, title: 'Still Transcoding', status: 'PROCESSING', isPublic: true },
+      ],
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/v1/venues/${venueSlug}` })
+    expect(res.statusCode).toBe(200)
+    const recordings = res.json().recordings
+    expect(recordings.map((r: { title: string }) => r.title)).toEqual([
+      'Newer Live Set',
+      'Older Live Set',
+    ])
+    expect(recordings[0]).toMatchObject({
+      artistName: 'venue-test-artist',
+      channelSlug: artist.channel!.slug,
+      durationSec: 3600,
+      releasedAt: '2026-06-01T00:00:00.000Z',
+    })
+    expect(recordings[1].artistName).toBe('Club Band')
+
+    await prisma.sound.deleteMany({ where: { venueId: venue.id } })
+  })
+
   it('GET broadcasts JSON feed and calendar.ics', async () => {
     const bad = await app.inject({
       method: 'GET',

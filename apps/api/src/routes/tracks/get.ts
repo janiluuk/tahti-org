@@ -82,6 +82,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           flacKey: true,
           accessMode: true,
           purchaseTierId: true,
+          venue: { select: { name: true, slug: true, verifiedAt: true } },
           _count: { select: { comments: true } },
           channel: {
             select: {
@@ -114,6 +115,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         purchaseTier,
         accessMode,
         purchaseTierId,
+        venue,
         ...rest
       } = item
       const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
@@ -144,6 +146,8 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         },
         releasedAt: item.releasedAt.toISOString(),
         audioUrl: playback.url,
+        // Unverified venues have no public page (GET /api/v1/venues/:slug 404s).
+        venue: venue?.verifiedAt ? { name: venue.name, slug: venue.slug } : null,
         commentCount: _count.comments,
         downloadCount,
         accessMode: accessMode ?? 'FREE',

@@ -113,6 +113,53 @@ describe('GET /api/tracks/:id', () => {
     expect(body.gate).toBeNull()
   })
 
+  it('names the verified venue a track was recorded at, and hides an unverified one', async () => {
+    const [verified, unverified] = await Promise.all([
+      prisma.venue.create({
+        data: {
+          slug: 'track-get-test-venue-verified',
+          name: 'Kaiku',
+          address: '1 Test St',
+          city: 'Helsinki',
+          verifiedAt: new Date(),
+          createdBy: 'track-get-test',
+        },
+      }),
+      prisma.venue.create({
+        data: {
+          slug: 'track-get-test-venue-unverified',
+          name: 'Pending Club',
+          address: '2 Test St',
+          city: 'Helsinki',
+          createdBy: 'track-get-test',
+        },
+      }),
+    ])
+    const base = {
+      channelId,
+      rawKey: 'raw/track-get-testuser/venue.mp3',
+      fileSizeBytes: 0,
+      status: 'READY' as const,
+      isPublic: true,
+    }
+    const atVerified = await prisma.sound.create({
+      data: { ...base, title: 'Live at Kaiku', venueId: verified.id },
+    })
+    const atUnverified = await prisma.sound.create({
+      data: { ...base, title: 'Live at Pending', venueId: unverified.id },
+    })
+
+    try {
+      const res = await app.inject({ method: 'GET', url: `/api/tracks/${atVerified.id}` })
+      expect(res.json().venue).toEqual({ name: 'Kaiku', slug: 'track-get-test-venue-verified' })
+      const hidden = await app.inject({ method: 'GET', url: `/api/tracks/${atUnverified.id}` })
+      expect(hidden.json().venue).toBeNull()
+    } finally {
+      await prisma.sound.deleteMany({ where: { id: { in: [atVerified.id, atUnverified.id] } } })
+      await prisma.venue.deleteMany({ where: { slug: { startsWith: 'track-get-test-venue-' } } })
+    }
+  })
+
   it('returns the artist-defined tags', async () => {
     const item = await prisma.sound.create({
       data: {

@@ -26,11 +26,25 @@ export const VenueDirectoryEntrySchema = z.object({
 
 export const VenueDirectoryListSchema = z.array(VenueDirectoryEntrySchema)
 
+/** A public track recorded at the venue (Sound.venueId). */
+export const VenueRecordingSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+  channelSlug: z.string(),
+  durationSec: z.number().int().nullable(),
+  coverUrl: z.string().nullable(),
+  releasedAt: z.string(),
+})
+
 export const VenuePublicProfileSchema = z
   .object({
     id: z.string(),
     slug: z.string(),
     name: z.string(),
     broadcasts: z.array(z.unknown()),
+    /** Public, ready tracks recorded here, newest first, at most
+     * VENUE_RECORDINGS_LIMIT. */
+    recordings: z.array(VenueRecordingSchema),
   })
   .passthrough()
