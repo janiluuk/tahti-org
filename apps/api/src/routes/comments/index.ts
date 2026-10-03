@@ -10,10 +10,10 @@ import {
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
-  safeDisplayName,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
+import { userName } from '../../lib/safe-names.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -42,7 +42,7 @@ async function listComments(
     body: c.body,
     createdAt: c.createdAt,
     authorUsername: c.author.username,
-    authorDisplayName: c.author.displayName,
+    authorDisplayName: userName(c.author),
     authorAvatarUrl: c.author.avatarUrl,
   }))
 }
@@ -51,7 +51,7 @@ function commenterOf(user: { id: string; username: string; displayName: string }
   return {
     id: user.id,
     username: user.username,
-    displayName: safeDisplayName(user.displayName, user.username),
+    displayName: userName(user),
   }
 }
 
@@ -141,7 +141,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       body: comment.body,
       createdAt: comment.createdAt,
       authorUsername: comment.author.username,
-      authorDisplayName: comment.author.displayName,
+      authorDisplayName: userName(comment.author),
       authorAvatarUrl: comment.author.avatarUrl,
     })
   })
@@ -211,7 +211,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         body: comment.body,
         createdAt: comment.createdAt,
         authorUsername: comment.author.username,
-        authorDisplayName: comment.author.displayName,
+        authorDisplayName: userName(comment.author),
         authorAvatarUrl: comment.author.avatarUrl,
       })
     },

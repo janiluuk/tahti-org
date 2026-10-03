@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { resolveReleaseArtworkUrl } from './release-artwork.js'
+import { userName } from './safe-names.js'
 
 function webBase(): string {
   return (process.env.PUBLIC_WEB_URL ?? 'https://tahti.live').replace(/\/$/, '')
@@ -58,7 +59,7 @@ export async function buildPressKit(
 
   return {
     generatedAt: new Date(),
-    displayName: user.displayName,
+    displayName: userName(user),
     username: user.username,
     bio: user.bio,
     avatarUrl: user.avatarUrl,

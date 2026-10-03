@@ -14,6 +14,7 @@ import {
   openApiResponse,
   yearFromPathParams,
 } from '@tahti/shared'
+import { userName } from '../../lib/safe-names.js'
 
 // Public, CORS-open transparency endpoints.
 // These expose the nonprofit's financial data per AGPL principle 6.
@@ -291,7 +292,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
           title: true,
           description: true,
           closeAt: true,
-          proposer: { select: { displayName: true } },
+          proposer: { select: { username: true, displayName: true } },
           votes: { select: { choice: true } },
         },
       })
@@ -302,7 +303,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
           title: motion.title,
           description: motion.description,
           closedAt: motion.closeAt,
-          proposer: motion.proposer.displayName,
+          proposer: userName(motion.proposer),
           voteFor: motion.votes.filter((vote) => vote.choice === 'YES').length,
           voteAgainst: motion.votes.filter((vote) => vote.choice === 'NO').length,
           voteAbstain: motion.votes.filter((vote) => vote.choice === 'ABSTAIN').length,

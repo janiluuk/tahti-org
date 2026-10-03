@@ -20,6 +20,7 @@ import {
 } from '../../lib/stripe.js'
 import { recordPurchasePayment } from '../../lib/purchase-tiers.js'
 import { config } from '../../config.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const MAX_TIERS = 8
 
@@ -127,7 +128,7 @@ const purchaseTierRoutes: FastifyPluginAsync = async (fastify) => {
           buyer: { select: { username: true, displayName: true, avatarUrl: true } },
         },
       })
-      return reply.send(orders)
+      return reply.send(orders.map((o) => ({ ...o, buyer: withSafeName(o.buyer) })))
     },
   )
 
@@ -156,7 +157,7 @@ const purchaseTierRoutes: FastifyPluginAsync = async (fastify) => {
         tierName: p.tier.name,
         amountCents: p.amountCents,
         createdAt: p.createdAt,
-        artist: p.tier.artist,
+        artist: withSafeName(p.tier.artist),
         tracks: p.tier.sounds,
       })),
     )

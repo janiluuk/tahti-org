@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import { notifyUserOfNewMessage } from '@tahti/db'
 import { availableUserWhere } from './listed-artist.js'
+import { userName, withSafeName } from './safe-names.js'
 
 export type ChannelStaffRole = 'owner' | 'moderator'
 
@@ -29,7 +30,7 @@ function serializeParticipant(
 ) {
   return {
     username: user.username,
-    displayName: user.displayName,
+    displayName: userName(user),
     avatarUrl: user.avatarUrl,
     channelRole,
   }
@@ -238,7 +239,7 @@ export async function getConversationDetail(
     messages: messages.map((m) => ({
       id: m.id,
       senderUsername: m.sender.username,
-      senderDisplayName: m.sender.displayName,
+      senderDisplayName: userName(m.sender),
       senderAvatarUrl: m.sender.avatarUrl,
       body: m.body,
       createdAt: m.createdAt.toISOString(),
@@ -288,7 +289,9 @@ export async function sendMessage(
     select: { userId: true },
   })
   await Promise.all(
-    others.map((p) => notifyUserOfNewMessage(prisma, p.userId, sender, conversationId, body)),
+    others.map((p) =>
+      notifyUserOfNewMessage(prisma, p.userId, withSafeName(sender), conversationId, body),
+    ),
   )
 
   const roles = await resolveChannelStaffRoles(prisma, [sender.id])
@@ -298,7 +301,7 @@ export async function sendMessage(
     message: {
       id: message.id,
       senderUsername: sender.username,
-      senderDisplayName: sender.displayName,
+      senderDisplayName: userName(sender),
       senderAvatarUrl: sender.avatarUrl,
       body: message.body,
       createdAt: message.createdAt.toISOString(),

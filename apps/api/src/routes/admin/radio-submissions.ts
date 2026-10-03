@@ -11,10 +11,12 @@ import {
   soundPlaybackKey,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { notifyArtistOfRadioSubmissionRejected } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { userName, withSafeName } from '../../lib/safe-names.js'
 
 const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/admin/radio-submissions?status=PENDING
@@ -74,7 +76,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           createdAt: item.createdAt,
           batchId: item.batchId,
           batchNote: item.batch.note,
-          submitter: item.batch.submitter,
+          submitter: withSafeName(item.batch.submitter),
           sound: item.sound,
         })),
       })
@@ -110,10 +112,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         audioUrl,
         title: item.sound.title,
-        artistName:
-          item.sound.artistName ??
-          item.batch.submitter.displayName ??
-          item.batch.submitter.username,
+        artistName: safeDisplayName(item.sound.artistName, userName(item.batch.submitter)),
         soundId: item.sound.id,
       })
     },

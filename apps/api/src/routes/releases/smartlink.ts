@@ -14,6 +14,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { userName } from '../../lib/safe-names.js'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -193,7 +194,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         },
         artist: {
           username: release.user.username,
-          displayName: release.user.displayName,
+          displayName: userName(release.user),
           avatarUrl: release.user.avatarUrl,
         },
         featuredCollections,

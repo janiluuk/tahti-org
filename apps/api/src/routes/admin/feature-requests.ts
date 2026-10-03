@@ -24,6 +24,7 @@ import {
   featureRequestQuarterlyReportStorageKey,
 } from '../../lib/feature-request-report.js'
 import { presignedGetUrl, putObjectText } from '../../lib/minio.js'
+import { userName } from '../../lib/safe-names.js'
 
 const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/admin/feature-requests?status=
@@ -59,7 +60,7 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
           title: f.title,
           description: f.description,
           status: f.status,
-          proposer: f.proposedBy.displayName,
+          proposer: userName(f.proposedBy),
           proposerUsername: f.proposedBy.username,
           voteCount: f._count.votes,
           youVoted: false,
@@ -156,7 +157,7 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
         title: updated.title,
         description: updated.description,
         status: updated.status,
-        proposer: updated.proposedBy.displayName,
+        proposer: userName(updated.proposedBy),
         proposerUsername: updated.proposedBy.username,
         voteCount: updated._count.votes,
         youVoted: false,
@@ -186,7 +187,7 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const rows = await fastify.prisma.featureRequestQuarterlyReport.findMany({
         orderBy: [{ year: 'desc' }, { quarter: 'desc' }],
-        include: { generatedBy: { select: { displayName: true } } },
+        include: { generatedBy: { select: { username: true, displayName: true } } },
       })
 
       const reports = await Promise.all(
@@ -196,7 +197,7 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
           quarter: r.quarter,
           storageKey: r.storageKey,
           generatedAt: r.generatedAt,
-          generatedByDisplayName: r.generatedBy.displayName,
+          generatedByDisplayName: userName(r.generatedBy),
           downloadUrl: await presignedGetUrl(r.storageKey, 3600).catch(() => null),
         })),
       )

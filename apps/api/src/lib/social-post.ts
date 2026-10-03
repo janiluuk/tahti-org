@@ -6,6 +6,7 @@ import { DEFAULT_SOCIAL_TEMPLATE, LIVE_SOCIAL_TEMPLATE } from '@tahti/shared'
 import { config } from '../config.js'
 import { encryptStreamKey, decryptStreamKey } from './stream-key-enc.js'
 import { mediaQueue } from './queue.js'
+import { userName } from './safe-names.js'
 
 const BSKY_PDS = 'https://bsky.social'
 
@@ -140,13 +141,13 @@ export async function queueReleaseSocialPost(
       title: true,
       smartLinkSlug: true,
       artworkUrl: true,
-      user: { select: { displayName: true } },
+      user: { select: { username: true, displayName: true } },
     },
   })
   if (!release) return
 
   const vars: SocialTemplateVars = {
-    artist: release.user.displayName,
+    artist: userName(release.user),
     release: release.title,
     smart_link: `${config.appUrl}/r/${release.smartLinkSlug}`,
     cover_url: release.artworkUrl ?? undefined,
@@ -169,12 +170,12 @@ export async function queueChannelLiveSocialPost(
 ): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { displayName: true },
+    select: { username: true, displayName: true },
   })
   if (!user) return
 
   const vars: SocialTemplateVars = {
-    artist: user.displayName,
+    artist: userName(user),
     channel_url: `${config.appUrl}/c/${slug}`,
   }
 

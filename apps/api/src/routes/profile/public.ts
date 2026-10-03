@@ -23,6 +23,7 @@ import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { playbackGatePayload } from '../../lib/playback-url.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
+import { userName } from '../../lib/safe-names.js'
 
 interface GatedTrack {
   playUrl: string | null
@@ -407,7 +408,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     _internalArtistId: user.id,
     artist: {
       username: user.username,
-      displayName: user.displayName,
+      displayName: userName(user),
       bio: user.bio,
       fullBio: user.fullBio,
       avatarUrl: user.avatarUrl,

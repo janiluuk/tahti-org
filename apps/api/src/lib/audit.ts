@@ -5,6 +5,7 @@ import type { AuditAction, PrismaClient } from '@tahti/db'
 import {
   isSecretBallotAuditAction,
   redactSecretBallotAuditMeta,
+  safeDisplayName,
   topicForAuditAction,
 } from '@tahti/shared'
 
@@ -38,7 +39,8 @@ export function presentAuditLogRow(
     targetId: row.targetId,
     meta: redactSecretBallotAuditMeta(row.action, rawMeta),
     createdAt: row.createdAt,
-    actorDisplayName: secret ? null : (actor?.displayName ?? null),
+    actorDisplayName:
+      secret || !actor ? null : safeDisplayName(actor.displayName, actor.username ?? '') || null,
     actorUsername: secret ? null : (actor?.username ?? null),
     topic: topicForAuditAction(row.action),
   }

@@ -227,4 +227,47 @@ describe('GET /api/og/*', () => {
     const res = await app.inject({ method: 'GET', url: '/api/og/collection/no-such-collection' })
     expect(res.statusCode).toBe(404)
   })
+
+  it('never names an artist or collection owner by an email address', async () => {
+    const mailArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}mail@example.com`,
+      username: 'og-route-mail',
+      displayName: 'og-route-mail@example.com',
+    })
+    const release = await createPublishedReleaseWithTrack(prisma, mailArtist.id, {
+      smartLinkSlug: 'og-route-mail-release',
+    })
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: mailArtist.channel!.id,
+        title: 'Mail Track',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    await prisma.collection.create({
+      data: {
+        userId: mailArtist.id,
+        name: 'Mail Mix',
+        slug: 'og-route-mail-mix',
+        isPublic: true,
+        visibility: 'PUBLIC',
+      },
+    })
+
+    const expected = {
+      '/api/og/channel/og-route-mail': '<title>og-route-mail live on Tahti</title>',
+      '/api/og/profile/og-route-mail': '<title>og-route-mail on Tahti</title>',
+      [`/api/og/release/${release.smartLinkSlug}`]:
+        '<title>Embed Test Release by og-route-mail on Tahti</title>',
+      [`/api/og/track/${sound.id}`]: '<title>Mail Track by og-route-mail on Tahti</title>',
+      '/api/og/collection/og-route-mail-mix': '<title>Mail Mix by og-route-mail on Tahti</title>',
+    }
+    for (const [url, title] of Object.entries(expected)) {
+      const res = await app.inject({ method: 'GET', url })
+      expect(res.statusCode, url).toBe(200)
+      expect(res.body, url).toContain(title)
+      expect(res.body, url).not.toContain('@example.com')
+    }
+  })
 })

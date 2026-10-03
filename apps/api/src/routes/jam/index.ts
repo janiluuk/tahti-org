@@ -17,6 +17,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { generateJamCode } from '../../lib/jam-code.js'
 import { publishToJam, subscribeToJam } from '../../lib/jam-broadcast.js'
+import { userName } from '../../lib/safe-names.js'
 
 const sessionWithParticipants = {
   include: {
@@ -59,7 +60,7 @@ function serialize(session: SessionWithParticipants): JamSessionView {
     participants: session.participants.map((p) => ({
       userId: p.user.id,
       username: p.user.username,
-      displayName: p.user.displayName,
+      displayName: userName(p.user),
       avatarUrl: p.user.avatarUrl,
       role: p.role,
       canControl: p.canControl,

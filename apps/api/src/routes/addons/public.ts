@@ -19,6 +19,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { getObjectBuffer } from '../../lib/minio.js'
 import { resolveAddonRenderSet } from '../../lib/addons.js'
+import { userName } from '../../lib/safe-names.js'
 
 function sandboxUrl(bundleHash: string): string {
   return `/widget-sandbox/${bundleHash}`
@@ -57,7 +58,12 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, slug: true, state: true, user: { select: { displayName: true } } },
+        select: {
+          id: true,
+          slug: true,
+          state: true,
+          user: { select: { username: true, displayName: true } },
+        },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -68,7 +74,7 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       )
       const context = {
         channelSlug: channel.slug,
-        displayName: channel.user.displayName,
+        displayName: userName(channel.user),
         isLive: channel.state === 'LIVE',
       }
 

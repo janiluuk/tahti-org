@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { trackArtistName, userName } from './safe-names.js'
+import { trackArtistName, userName, withSafeName } from './safe-names.js'
 
 const owner = (displayName: string) => ({ username: 'owner', displayName })
 
@@ -27,5 +27,15 @@ describe('trackArtistName', () => {
         'owner',
       )
     }
+  })
+})
+
+describe('withSafeName', () => {
+  it('keeps the other fields and swaps an email display name for the username', () => {
+    expect(withSafeName({ ...owner('owner@example.com'), avatarUrl: 'a.png' })).toEqual({
+      username: 'owner',
+      displayName: 'owner',
+      avatarUrl: 'a.png',
+    })
   })
 })

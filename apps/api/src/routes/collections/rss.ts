@@ -6,6 +6,7 @@ import { soundPlaybackKey } from '@tahti/shared'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
+import { userName } from '../../lib/safe-names.js'
 
 export type ChannelSoundRssSource = {
   slug: string
@@ -61,9 +62,10 @@ export function rssEnclosureUrl(item: {
 }
 
 export function buildChannelSoundRssXml(channel: ChannelSoundRssSource): string {
+  const name = userName(channel.user)
   return buildRss({
-    title: `${channel.user.displayName} — Tahti`,
-    description: channel.user.bio ?? `${channel.user.displayName} on Tahti`,
+    title: `${name} — Tahti`,
+    description: channel.user.bio ?? `${name} on Tahti`,
     link: resolveArtistUrl(channel.user.username),
     items: channel.sounds.map((i) => ({
       title: i.title,

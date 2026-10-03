@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { userName } from '../../lib/safe-names.js'
 
 const MS_PER_HOUR = 60 * 60 * 1000
 
@@ -97,7 +98,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
             showType: r.showType,
             channelSlug: r.channel.slug,
             username: r.channel.user.username,
-            displayName: r.channel.user.displayName,
+            displayName: userName(r.channel.user),
             avatarUrl: r.channel.user.avatarUrl,
             isMine: r.channelId === channel?.id,
             showId: episode?.series.id ?? null,
@@ -222,7 +223,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         showType: row.showType,
         channelSlug: channel.slug,
         username: channel.user.username,
-        displayName: channel.user.displayName,
+        displayName: userName(channel.user),
         avatarUrl: channel.user.avatarUrl,
         isMine: true,
       })
@@ -287,7 +288,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         showType: row.showType,
         channelSlug: channel.slug,
         username: channel.user.username,
-        displayName: channel.user.displayName,
+        displayName: userName(channel.user),
         avatarUrl: channel.user.avatarUrl,
         isMine: true,
       })

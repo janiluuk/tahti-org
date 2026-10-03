@@ -19,6 +19,7 @@ import {
   listGreenRoomInvites,
   syncGreenRoomInvites,
 } from '../../lib/green-room.js'
+import { userName } from '../../lib/safe-names.js'
 
 const meGreenRoomRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -242,7 +243,7 @@ const meGreenRoomRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(201).send({
         userId: invite.user.id,
         username: invite.user.username,
-        displayName: invite.user.displayName,
+        displayName: userName(invite.user),
         source: invite.source,
         invitedAt: invite.invitedAt.toISOString(),
         joinedAt: invite.joinedAt?.toISOString() ?? null,

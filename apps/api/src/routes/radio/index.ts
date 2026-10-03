@@ -21,7 +21,7 @@ import {
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
-import { trackArtistName } from '../../lib/safe-names.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
@@ -79,7 +79,11 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       const now = new Date()
       const liveBooking = await fastify.prisma.radioSlotBooking.findFirst({
         where: { startAt: { lte: now }, endAt: { gt: now } },
-        select: { channel: { select: { slug: true, user: { select: { displayName: true } } } } },
+        select: {
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
+        },
       })
 
       if (!liveBooking) return reply.send({ live: false, channel: null })
@@ -88,7 +92,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         live: true,
         channel: {
           slug: liveBooking.channel.slug,
-          artistName: liveBooking.channel.user.displayName,
+          artistName: userName(liveBooking.channel.user),
         },
       })
     },
@@ -316,7 +320,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             nextShowAt: schedule.nextShowAt,
             lastShowAt: schedule.lastShowAt,
             artist: {
-              displayName: r.channel.user.displayName,
+              displayName: userName(r.channel.user),
               username: r.channel.user.username,
               avatarUrl: r.channel.user.avatarUrl,
               channelSlug: r.channel.slug,
@@ -454,7 +458,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         artist: {
-          displayName: channel.user.displayName,
+          displayName: userName(channel.user),
           username: channel.user.username,
           avatarUrl: channel.user.avatarUrl,
           channelSlug: channel.slug,

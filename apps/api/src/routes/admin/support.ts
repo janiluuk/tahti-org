@@ -16,6 +16,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { userName } from '../../lib/safe-names.js'
 
 function mapTicketRow(ticket: {
   id: bigint
@@ -36,7 +37,7 @@ function mapTicketRow(ticket: {
     status: ticket.status,
     artistId: ticket.artistId,
     artistUsername: ticket.artist?.username ?? null,
-    artistDisplayName: ticket.artist?.displayName ?? null,
+    artistDisplayName: ticket.artist ? userName(ticket.artist) : null,
     contactEmail: ticket.contactEmail,
     assignedToId: ticket.assignedToId,
     createdAt: ticket.createdAt,
@@ -129,7 +130,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
           notes: {
             orderBy: { createdAt: 'asc' },
-            include: { author: { select: { displayName: true } } },
+            include: { author: { select: { username: true, displayName: true } } },
           },
         },
       })
@@ -142,7 +143,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           body: n.body,
           kind: n.kind,
           authorId: n.authorId,
-          authorDisplayName: n.author?.displayName ?? null,
+          authorDisplayName: n.author ? userName(n.author) : null,
           createdAt: n.createdAt,
         })),
       })
@@ -169,7 +170,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
           notes: {
             orderBy: { createdAt: 'asc' },
-            include: { author: { select: { displayName: true } } },
+            include: { author: { select: { username: true, displayName: true } } },
           },
         },
       })
@@ -183,7 +184,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           body: n.body,
           kind: n.kind,
           authorId: n.authorId,
-          authorDisplayName: n.author?.displayName ?? null,
+          authorDisplayName: n.author ? userName(n.author) : null,
           createdAt: n.createdAt,
         })),
       })
@@ -242,7 +243,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
           notes: {
             orderBy: { createdAt: 'asc' },
-            include: { author: { select: { displayName: true } } },
+            include: { author: { select: { username: true, displayName: true } } },
           },
         },
       })
@@ -255,7 +256,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           body: n.body,
           kind: n.kind,
           authorId: n.authorId,
-          authorDisplayName: n.author?.displayName ?? null,
+          authorDisplayName: n.author ? userName(n.author) : null,
           createdAt: n.createdAt,
         })),
       })
@@ -301,7 +302,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
           notes: {
             orderBy: { createdAt: 'asc' },
-            include: { author: { select: { displayName: true } } },
+            include: { author: { select: { username: true, displayName: true } } },
           },
         },
       })
@@ -314,7 +315,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           body: n.body,
           kind: n.kind,
           authorId: n.authorId,
-          authorDisplayName: n.author?.displayName ?? null,
+          authorDisplayName: n.author ? userName(n.author) : null,
           createdAt: n.createdAt,
         })),
       })

@@ -9,6 +9,7 @@ import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { submitListenBrainzListen } from '../../lib/listenbrainz.js'
 import { submitLastFmScrobble } from '../../lib/lastfm.js'
 import { config } from '../../config.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 
 // In-memory rate limit: max 60 listen-events per listener per hour — bounds
 // abuse (rapidly "voting" for many tracks) without constraining a genuine
@@ -78,7 +79,7 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
           channel: {
             select: {
               slug: true,
-              user: { select: { displayName: true } },
+              user: { select: { username: true, displayName: true } },
             },
           },
         },
@@ -101,9 +102,7 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
       if (sessionUser) {
         void (async () => {
           const trackName = item.title.trim()
-          const artistName = (
-            item.artistName?.trim() || item.channel.user.displayName.trim()
-          ).trim()
+          const artistName = trackArtistName(item)
           if (!trackName || !artistName) return
 
           const listenedAt = Math.floor(Date.now() / 1000)

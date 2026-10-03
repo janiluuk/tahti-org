@@ -16,6 +16,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { userName } from '../../lib/safe-names.js'
 
 const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -39,7 +40,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         where: parsed.data.publishedOnly ? { publishedAt: { not: null } } : undefined,
         orderBy: { votedAt: 'desc' },
         take: 100,
-        include: { createdBy: { select: { displayName: true } } },
+        include: { createdBy: { select: { username: true, displayName: true } } },
       })
 
       return reply.send(
@@ -54,7 +55,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           voteAbstain: r.voteAbstain,
           publishedAt: r.publishedAt,
           createdAt: r.createdAt,
-          createdByDisplayName: r.createdBy.displayName,
+          createdByDisplayName: userName(r.createdBy),
           meetingId: r.meetingId,
           binding: r.binding,
         })),
@@ -104,7 +105,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           meetingId: body.meetingId,
           binding: body.binding,
         },
-        include: { createdBy: { select: { displayName: true } } },
+        include: { createdBy: { select: { username: true, displayName: true } } },
       })
 
       await auditLog(fastify.prisma, {
@@ -130,7 +131,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         voteAbstain: row.voteAbstain,
         publishedAt: row.publishedAt,
         createdAt: row.createdAt,
-        createdByDisplayName: row.createdBy.displayName,
+        createdByDisplayName: userName(row.createdBy),
         meetingId: row.meetingId,
         binding: row.binding,
       })
@@ -185,7 +186,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await fastify.prisma.boardResolution.update({
         where: { id },
         data: parsed.data,
-        include: { createdBy: { select: { displayName: true } } },
+        include: { createdBy: { select: { username: true, displayName: true } } },
       })
 
       await auditLog(fastify.prisma, {
@@ -212,7 +213,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         voteAbstain: row.voteAbstain,
         publishedAt: row.publishedAt,
         createdAt: row.createdAt,
-        createdByDisplayName: row.createdBy.displayName,
+        createdByDisplayName: userName(row.createdBy),
         meetingId: row.meetingId,
         binding: row.binding,
       })
