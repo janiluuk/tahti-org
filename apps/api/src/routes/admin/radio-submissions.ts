@@ -253,7 +253,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
         await notifyArtistOfRadioSubmissionRejected(
           fastify.prisma,
           submission.batch.submitterId,
-          submission.sound.title,
+          { id: submission.soundId, title: submission.sound.title },
           rejectionNote,
         )
       }
