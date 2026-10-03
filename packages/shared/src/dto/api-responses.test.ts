@@ -151,6 +151,8 @@ describe('api response schemas', () => {
   it('parses chat access response', () => {
     expect(
       ChatAccessResponseSchema.safeParse({
+        chatEnabled: true,
+        artistUsername: 'artist',
         fanChatEnabled: true,
         isSupporter: false,
         canJoinFanChat: false,

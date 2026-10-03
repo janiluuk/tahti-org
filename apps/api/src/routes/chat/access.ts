@@ -23,7 +23,12 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true, chatSubscribersOnly: true },
+        select: {
+          id: true,
+          userId: true,
+          chatSubscribersOnly: true,
+          user: { select: { chatEnabled: true, username: true } },
+        },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -38,6 +43,8 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.send({
+        chatEnabled: channel.user.chatEnabled,
+        artistUsername: channel.user.username,
         fanChatEnabled,
         isSupporter,
         canJoinFanChat,
