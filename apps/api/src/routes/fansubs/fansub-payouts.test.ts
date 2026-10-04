@@ -119,6 +119,24 @@ describe('M19 — fan-sub payout and churn crons', () => {
     expect(after).toBeGreaterThan(before)
   })
 
+  it('tells the fan their subscription ended, once', async () => {
+    const lapsed = await prisma.user.findUniqueOrThrow({
+      where: { email: `${PREFIX}lapsed@example.com` },
+    })
+    const notices = await prisma.notification.findMany({
+      where: { userId: lapsed.id, type: 'FAN_SUB_EXPIRED' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]?.title).toBe('Your Lapsed subscription to Payout Artist has ended')
+    expect(notices[0]?.url).toBe('/subscribe/fansub-payout-artist')
+    expect(notices[0]?.actorUserId).toBe(artistId)
+
+    await processFanSubExpire(prisma)
+    expect(
+      await prisma.notification.count({ where: { userId: lapsed.id, type: 'FAN_SUB_EXPIRED' } }),
+    ).toBe(1)
+  })
+
   it('buildApp still boots with payout routes registered', async () => {
     const app = await buildApp({ logger: false })
     await app.ready()

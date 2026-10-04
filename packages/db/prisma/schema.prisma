@@ -642,6 +642,8 @@ enum NotificationType {
   PAYOUT_SENT
   /// A renewal payment for one of your fan subscriptions failed.
   FAN_SUB_PAYMENT_FAILED
+  /// One of your fan subscriptions ended (lapsed or ran out after canceling).
+  FAN_SUB_EXPIRED
 
   @@schema("core")
 }
