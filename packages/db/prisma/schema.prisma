@@ -3528,6 +3528,8 @@ enum ContentReportTargetType {
   CHANNEL
   COLLECTION
   MOTION_COMMENT
+  /// A comment on a track or a channel.
+  COMMENT
 
   @@schema("admin")
 }
