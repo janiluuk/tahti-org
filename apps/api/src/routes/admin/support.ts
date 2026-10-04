@@ -63,7 +63,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           error: parsed.error.issues[0]?.message ?? 'Invalid query',
         })
       }
-      const { page, limit, status, category, q } = parsed.data
+      const { page, limit, status, category, q, awaitingReply } = parsed.data
       const where: Prisma.SupportTicketWhereInput = {}
       if (status) where.status = status
       if (category) where.category = category
@@ -77,6 +77,47 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         ]
       }
 
+      const include = {
+        artist: { select: { username: true, displayName: true } },
+        notes: {
+          where: { kind: 'MESSAGE' as const },
+          orderBy: { createdAt: 'desc' as const },
+          take: 1,
+          select: { authorId: true },
+        },
+      }
+      const isAwaitingReply = (row: {
+        status: string
+        artistId: string | null
+        notes: Array<{ authorId: string | null }>
+      }) => {
+        const lastMessage = row.notes[0]
+        const requesterWroteLast = lastMessage
+          ? row.artistId !== null && lastMessage.authorId === row.artistId
+          : true
+        return row.status !== 'RESOLVED' && requesterWroteLast
+      }
+
+      // "Who wrote last" is not something the database can filter on cheaply,
+      // so the waiting list is taken from the unresolved tickets (a short
+      // list) and paged in memory.
+      if (awaitingReply === 'true') {
+        const unresolved = await fastify.prisma.supportTicket.findMany({
+          where: { ...where, status: status ?? { not: 'RESOLVED' } },
+          orderBy: { createdAt: 'desc' },
+          include,
+        })
+        const waiting = unresolved.filter(isAwaitingReply)
+        return reply.send({
+          page,
+          limit,
+          total: waiting.length,
+          tickets: waiting
+            .slice((page - 1) * limit, page * limit)
+            .map((row) => ({ ...mapTicketRow(row), awaitingReply: true })),
+        })
+      }
+
       const [total, rows] = await Promise.all([
         fastify.prisma.supportTicket.count({ where }),
         fastify.prisma.supportTicket.findMany({
@@ -84,15 +125,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
-          include: {
-            artist: { select: { username: true, displayName: true } },
-            notes: {
-              where: { kind: 'MESSAGE' },
-              orderBy: { createdAt: 'desc' },
-              take: 1,
-              select: { authorId: true },
-            },
-          },
+          include,
         }),
       ])
 
@@ -100,16 +133,7 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         page,
         limit,
         total,
-        tickets: rows.map((row) => {
-          const lastMessage = row.notes[0]
-          const requesterWroteLast = lastMessage
-            ? row.artistId !== null && lastMessage.authorId === row.artistId
-            : true
-          return {
-            ...mapTicketRow(row),
-            awaitingReply: row.status !== 'RESOLVED' && requesterWroteLast,
-          }
-        }),
+        tickets: rows.map((row) => ({ ...mapTicketRow(row), awaitingReply: isAwaitingReply(row) })),
       })
     },
   )
