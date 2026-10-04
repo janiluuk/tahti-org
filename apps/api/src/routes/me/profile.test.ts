@@ -88,6 +88,31 @@ describe('M12 — artist profile API', () => {
     void target
   })
 
+  it('PATCH /api/me/profile hides the share button, and the channel page says so', async () => {
+    const slug = (await prisma.channel.findUniqueOrThrow({ where: { userId } })).slug
+    const shown = await app.inject({ method: 'GET', url: `/api/channels/${slug}` })
+    expect(shown.json().user.showShareButton).toBe(true)
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { showShareButton: false },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().showShareButton).toBe(false)
+
+    const hidden = await app.inject({ method: 'GET', url: `/api/channels/${slug}` })
+    expect(hidden.json().user.showShareButton).toBe(false)
+
+    await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { showShareButton: true },
+    })
+  })
+
   it('PATCH /api/me/profile clears fullBio when set to null', async () => {
     await app.inject({
       method: 'PATCH',

@@ -50,6 +50,7 @@ export const ProfilePatchSchema = z
     showFollowers: z.boolean().optional(),
     showFollowing: z.boolean().optional(),
     showDailyListeners: z.boolean().optional(),
+    showShareButton: z.boolean().optional(),
     showLikes: z.boolean().optional(),
     chatEnabled: z.boolean().optional(),
     /** Shows/hides the shared PageHero block on the profile and channel pages. */
