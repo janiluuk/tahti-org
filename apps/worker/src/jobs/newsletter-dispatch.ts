@@ -20,7 +20,10 @@ const API_URL = process.env.API_URL?.replace(/\/$/, '')
 /** Unsubscribe links for one subscriber: the page a person opens, and the
  * headers a mail provider uses for its own Unsubscribe button. One-click
  * (RFC 8058) is only announced when there is an API address to POST to. */
-export function newsletterUnsubscribeLinks(unsubToken: string) {
+export function newsletterUnsubscribeLinks(unsubToken: string): {
+  pageUrl: string
+  headers: Record<string, string>
+} {
   const pageUrl = `${APP_URL}/newsletter/unsubscribe/${unsubToken}`
   if (!API_URL) {
     return { pageUrl, headers: { 'List-Unsubscribe': `<${pageUrl}>` } }
