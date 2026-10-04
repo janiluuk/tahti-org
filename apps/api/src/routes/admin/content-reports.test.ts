@@ -165,6 +165,45 @@ describe('content moderation reports', () => {
     expect(body.resolvedAt).toBeNull()
   })
 
+  it('tells the board what was reported, and when it has since been removed', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/admin/content-reports?limit=100',
+      headers: { cookie: boardCookie },
+    })
+    type Row = {
+      targetType: string
+      targetId: string
+      targetLabel: string | null
+      targetUrl: string | null
+      targetExcerpt: string | null
+    }
+    const reports = (list.json() as { reports: Row[] }).reports
+    const track = reports.find((r) => r.targetType === 'SOUND_ITEM' && r.targetId === soundId)
+    expect(track).toMatchObject({
+      targetLabel: 'Reported Track',
+      targetUrl: `/t/${soundId}`,
+      targetExcerpt: null,
+    })
+    const comment = reports.find((r) => r.targetType === 'COMMENT' && r.targetId === commentId)
+    expect(comment).toMatchObject({
+      targetLabel: 'Comment by @content-report-board',
+      targetUrl: `/t/${soundId}`,
+      targetExcerpt: 'a rude comment',
+    })
+
+    await prisma.comment.delete({ where: { id: commentId } })
+    const after = await app.inject({
+      method: 'GET',
+      url: '/api/admin/content-reports?limit=100',
+      headers: { cookie: boardCookie },
+    })
+    const gone = (after.json() as { reports: Row[] }).reports.find(
+      (r) => r.targetType === 'COMMENT' && r.targetId === commentId,
+    )
+    expect(gone).toMatchObject({ targetLabel: null, targetUrl: null, targetExcerpt: null })
+  })
+
   it('returns 404 for an unknown report id', async () => {
     const res = await app.inject({
       method: 'GET',

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { Prisma } from '@tahti/db'
+import type { Prisma, PrismaClient } from '@tahti/db'
 import {
   AdminContentReportListQuerySchema,
   AdminContentReportListSchema,
@@ -14,8 +14,9 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { userName } from '../../lib/safe-names.js'
+import { resolveContentReportTarget } from '../../lib/content-report-target.js'
 
-function mapReportRow(report: {
+type ReportRow = {
   id: bigint
   targetType: string
   targetId: string
@@ -27,11 +28,19 @@ function mapReportRow(report: {
   resolvedAt: Date | null
   createdAt: Date
   resolvedBy: { username: string; displayName: string } | null
-}) {
+}
+
+/** A report row with what it points at, so the board can open it. The target
+ * fields are null when the reported thing has since been removed. */
+async function mapReportRow(prisma: PrismaClient, report: ReportRow) {
+  const target = await resolveContentReportTarget(prisma, report.targetType, report.targetId)
   return {
     id: report.id.toString(),
     targetType: report.targetType,
     targetId: report.targetId,
+    targetLabel: target?.label ?? null,
+    targetUrl: target?.url ?? null,
+    targetExcerpt: target?.excerpt ?? null,
     reason: report.reason,
     details: report.details,
     status: report.status,
@@ -73,7 +82,12 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       ])
 
-      return reply.send({ page, limit, total, reports: rows.map(mapReportRow) })
+      return reply.send({
+        page,
+        limit,
+        total,
+        reports: await Promise.all(rows.map((row) => mapReportRow(fastify.prisma, row))),
+      })
     },
   )
 
@@ -96,7 +110,7 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!report) return reply.status(404).send({ error: 'Report not found' })
 
-      return reply.send(mapReportRow(report))
+      return reply.send(await mapReportRow(fastify.prisma, report))
     },
   )
 
@@ -141,7 +155,7 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
         include: { resolvedBy: { select: { username: true, displayName: true } } },
       })
 
-      return reply.send(mapReportRow(report))
+      return reply.send(await mapReportRow(fastify.prisma, report))
     },
   )
 }
