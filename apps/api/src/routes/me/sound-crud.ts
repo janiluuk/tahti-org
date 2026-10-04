@@ -15,6 +15,7 @@ import {
   ReorderSoundsSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -25,6 +26,7 @@ import {
   serializeSound,
 } from '../../lib/sound-metadata.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
+import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import {
   MAX_FALLBACK_ITEMS,
   fallbackCount,
@@ -168,7 +170,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         ids.length > 0
           ? fastify.prisma.sound.findMany({
               where: { channelId: channel.id, id: { in: ids }, status: { in: ['READY', 'ERROR'] } },
-              select: { id: true, status: true },
+              select: { id: true, status: true, processingError: true },
             })
           : Promise.resolve([]),
       ])
@@ -218,12 +220,20 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.sound.findFirst({
         where: { id, channel: { userId: user.id } },
-        select: { id: true, channelId: true, isFallback: true, isPublic: true },
+        select: { id: true, channelId: true, isFallback: true, isPublic: true, venueId: true },
       })
       if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
       const patch = metadataPatchFromBody(request.body)
       if (!patch.ok) return reply.status(400).send({ error: patch.error })
+
+      const venueId = patch.data.venueId
+      if (
+        typeof venueId === 'string' &&
+        !(await canAttachVenue(fastify.prisma, venueId, user.id, item.venueId))
+      ) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
 
       if (patch.title !== undefined) {
         const t = patch.title.trim()
@@ -282,9 +292,11 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       // Fan out to followers exactly once, the moment a track first goes public —
       // not on every subsequent metadata edit.
       if (patch.data.isPublic === true && !item.isPublic) {
-        await notifyFollowersOfNewTrack(fastify.prisma, user, updated).catch((e) =>
-          fastify.log.warn(e, 'new-track notification failed'),
-        )
+        await notifyFollowersOfNewTrack(
+          fastify.prisma,
+          { ...user, displayName: safeDisplayName(user.displayName, user.username) },
+          updated,
+        ).catch((e) => fastify.log.warn(e, 'new-track notification failed'))
       }
 
       if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {

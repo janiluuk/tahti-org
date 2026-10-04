@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ArtistTier, PrismaClient } from '@tahti/db'
+import { endBroadcast } from './broadcast-end.js'
 import { TAHTI_RADIO_SLUG } from './tahti-radio.js'
 import { TAHTI_SELECTS_SLUG } from './tahti-selects.js'
 
@@ -196,10 +197,7 @@ export async function enforceWeeklyCapDisconnects(prisma: PrismaClient): Promise
     // Cap applies to live shows only — leave 24/7 fallback rotation running.
     if (isFallbackOnlyLiveSession(u.channel.state, broadcast)) continue
     if (broadcast) {
-      await prisma.broadcast.update({
-        where: { id: broadcast.id },
-        data: { endedAt: new Date() },
-      })
+      await endBroadcast(prisma, broadcast.id)
     }
     await prisma.channel.update({
       where: { id: u.channel.id },

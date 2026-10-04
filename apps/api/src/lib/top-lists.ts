@@ -3,6 +3,8 @@
 
 import type { PrismaClient, Prisma } from '@tahti/db'
 import { getCachedJson } from './json-cache.js'
+import { listedArtistSoundWhere } from './listed-artist.js'
+import { trackArtistName } from './safe-names.js'
 
 const CACHE_TTL_SEC = 30
 
@@ -54,7 +56,13 @@ async function rankedEntriesSince(
     by: ['soundId'],
     where: {
       ...(since ? { playedAt: { gte: since } } : {}),
-      sound: { isPublic: true, status: 'READY', topListsEligible: true, ...extraWhere },
+      sound: {
+        isPublic: true,
+        status: 'READY',
+        topListsEligible: true,
+        ...listedArtistSoundWhere,
+        ...extraWhere,
+      },
     },
     _count: { _all: true },
   })
@@ -70,7 +78,7 @@ async function rankedEntriesSince(
       bannerUrl: true,
       genre: true,
       contentType: true,
-      channel: { select: { slug: true, user: { select: { displayName: true } } } },
+      channel: { select: { slug: true, user: { select: { username: true, displayName: true } } } },
     },
   })
 
@@ -79,7 +87,7 @@ async function rankedEntriesSince(
       soundId: item.id,
       listens: countById.get(item.id) ?? 0,
       title: item.title,
-      artistName: item.artistName ?? item.channel.user.displayName,
+      artistName: trackArtistName(item),
       channelSlug: item.channel.slug,
       bannerUrl: item.bannerUrl,
       genre: item.genre,

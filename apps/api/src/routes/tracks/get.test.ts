@@ -108,7 +108,113 @@ describe('GET /api/tracks/:id', () => {
     expect(body.commentCount).toBe(0)
     expect(body.downloadCount).toBe(0)
     expect(body.accessMode).toBe('FREE')
+    expect(body.isAiGenerated).toBe(false)
+    expect(body.downloadsEnabled).toBe(true)
     expect(body.gate).toBeNull()
+  })
+
+  it('names the verified venue a track was recorded at, and hides an unverified one', async () => {
+    const [verified, unverified] = await Promise.all([
+      prisma.venue.create({
+        data: {
+          slug: 'track-get-test-venue-verified',
+          name: 'Kaiku',
+          address: '1 Test St',
+          city: 'Helsinki',
+          verifiedAt: new Date(),
+          createdBy: 'track-get-test',
+        },
+      }),
+      prisma.venue.create({
+        data: {
+          slug: 'track-get-test-venue-unverified',
+          name: 'Pending Club',
+          address: '2 Test St',
+          city: 'Helsinki',
+          createdBy: 'track-get-test',
+        },
+      }),
+    ])
+    const base = {
+      channelId,
+      rawKey: 'raw/track-get-testuser/venue.mp3',
+      fileSizeBytes: 0,
+      status: 'READY' as const,
+      isPublic: true,
+    }
+    const atVerified = await prisma.sound.create({
+      data: { ...base, title: 'Live at Kaiku', venueId: verified.id },
+    })
+    const atUnverified = await prisma.sound.create({
+      data: { ...base, title: 'Live at Pending', venueId: unverified.id },
+    })
+
+    try {
+      const res = await app.inject({ method: 'GET', url: `/api/tracks/${atVerified.id}` })
+      expect(res.json().venue).toEqual({ name: 'Kaiku', slug: 'track-get-test-venue-verified' })
+      const hidden = await app.inject({ method: 'GET', url: `/api/tracks/${atUnverified.id}` })
+      expect(hidden.json().venue).toBeNull()
+    } finally {
+      await prisma.sound.deleteMany({ where: { id: { in: [atVerified.id, atUnverified.id] } } })
+      await prisma.venue.deleteMany({ where: { slug: { startsWith: 'track-get-test-venue-' } } })
+    }
+  })
+
+  it('returns the artist-defined tags', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Tagged Track',
+        rawKey: 'raw/track-get-testuser/tagged.mp3',
+        mp3Key: 'mp3/track-get-testuser/tagged.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        tags: ['Late Night', 'field recording'],
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().tags).toEqual(['Late Night', 'field recording'])
+  })
+
+  it('exposes the artist-declared AI-generated flag', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'AI Track',
+        rawKey: 'raw/track-get-testuser/ai.mp3',
+        mp3Key: 'mp3/track-get-testuser/ai.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        isAiGenerated: true,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().isAiGenerated).toBe(true)
+  })
+
+  it('tells the track page when the artist switched downloads off', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Stream only',
+        rawKey: 'raw/track-get-testuser/stream-only.mp3',
+        mp3Key: 'mp3/track-get-testuser/stream-only.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+        downloadsEnabled: false,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().downloadsEnabled).toBe(false)
   })
 
   it('nulls audioUrl and exposes purchase gate for anonymous viewers', async () => {

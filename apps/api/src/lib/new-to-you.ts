@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import { parseSocialLinksGenres, type TahtiSelectsGalleryItem } from '@tahti/shared'
 import { toGatedGalleryItem } from './playback-url.js'
+import { listedArtistSoundWhere } from './listed-artist.js'
 
 const CANDIDATE_POOL = 200
 const DEFAULT_LIMIT = 24
@@ -120,6 +121,7 @@ export async function buildNewToYou(
     where: {
       isPublic: true,
       status: 'READY',
+      ...listedArtistSoundWhere,
       ...(heardIds.length > 0 ? { id: { notIn: heardIds } } : {}),
       OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
     },

@@ -47,8 +47,11 @@ export {
   notifyFollowersOfNewPost,
   notifyFollowersOfNewTrack,
   notifyFollowersOfNewRelease,
+  notifyFollowersOfLiveChannel,
+  notifyFollowersOfNewEvent,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
+  notifyArtistOfNewComment,
   notifyArtistOfNewRepost,
   notifyArtistStreamingCopyReady,
   notifyPlaylistOfNewTrack,
@@ -78,3 +81,7 @@ export {
   type RecurringSeriesInput,
   type ActiveRestriction,
 } from './live-show-recurrence.js'
+export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaults.js'
+export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
+export { actorDisplayName } from './display-name.js'
+export { availableUserWhere } from './available-user.js'

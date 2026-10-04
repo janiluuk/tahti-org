@@ -106,6 +106,9 @@ export const PublicChannelViewSchema = z.object({
   playerOverlayMode: z.string().optional(),
   playerOverlayText: z.string().optional(),
   playerOverlayAlign: z.string().optional(),
+  /** Short line the artist set in the Channel Designer, shown as a strip
+   * across the top of the channel page. Null when unset. */
+  topBarText: z.string().nullable().optional(),
   channelLinksJson: z.string().nullable().optional(),
   user: PublicChannelUserSchema,
   // STREAM-012: current rotation track, resolved from Liquidsoap telnet metadata

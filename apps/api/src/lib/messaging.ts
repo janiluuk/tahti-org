@@ -1,16 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import type { Prisma, PrismaClient } from '@tahti/db'
 import { notifyUserOfNewMessage } from '@tahti/db'
+import { CONVERSATION_PAGE_LIMIT } from '@tahti/shared'
+import { availableUserWhere } from './listed-artist.js'
+import { userName, withSafeName } from './safe-names.js'
 
 export type ChannelStaffRole = 'owner' | 'moderator'
+
+export const RECIPIENT_UNAVAILABLE_BODY = {
+  error: 'This account is no longer available',
+  code: 'recipient_unavailable',
+} as const
 
 const participantSelect = {
   id: true,
   username: true,
   displayName: true,
   avatarUrl: true,
+} as const
+
+const otherUserSelect = {
+  ...participantSelect,
+  deletedAt: true,
+  suspendedAt: true,
 } as const
 
 function serializeParticipant(
@@ -23,9 +37,25 @@ function serializeParticipant(
 ) {
   return {
     username: user.username,
-    displayName: user.displayName,
+    displayName: userName(user),
     avatarUrl: user.avatarUrl,
     channelRole,
+  }
+}
+
+function serializeOtherUser(
+  user: {
+    username: string
+    displayName: string
+    avatarUrl: string | null
+    deletedAt: Date | null
+    suspendedAt: Date | null
+  },
+  channelRole: ChannelStaffRole | null,
+) {
+  return {
+    ...serializeParticipant(user, channelRole),
+    available: !user.deletedAt && !user.suspendedAt,
   }
 }
 
@@ -63,6 +93,7 @@ export async function searchUsers(prisma: PrismaClient, query: string, excludeUs
   const users = await prisma.user.findMany({
     where: {
       id: { not: excludeUserId },
+      ...availableUserWhere,
       OR: [
         { username: { contains: q, mode: 'insensitive' } },
         { displayName: { contains: q, mode: 'insensitive' } },
@@ -90,7 +121,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
           updatedAt: true,
           participants: {
             where: { userId: { not: userId } },
-            select: { user: { select: participantSelect } },
+            select: { user: { select: otherUserSelect } },
           },
           messages: {
             orderBy: { createdAt: 'desc' },
@@ -135,7 +166,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
       const last = m.conversation.messages[0]
       return {
         id: m.conversation.id,
-        otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
+        otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
         lastMessage: last
           ? {
               body: last.body,
@@ -178,31 +209,59 @@ export async function findOrCreateConversation(
   return created.id
 }
 
+/** Resolves `?before=` to a Prisma page start: a message id in this
+ * conversation pages from that message, anything else must be an ISO
+ * date-time. Returns null when it is neither. */
+async function resolveBefore(
+  prisma: PrismaClient,
+  conversationId: string,
+  before: string,
+): Promise<Pick<Prisma.MessageFindManyArgs, 'cursor' | 'skip' | 'where'> | null> {
+  const anchor = await prisma.message.findFirst({
+    where: { id: before, conversationId },
+    select: { id: true },
+  })
+  if (anchor) return { cursor: { id: anchor.id }, skip: 1 }
+  const at = new Date(before)
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(before) || Number.isNaN(at.getTime())) return null
+  return { where: { createdAt: { lt: at } } }
+}
+
+/** One page of a conversation, newest `limit` messages before `before`
+ * (or the newest overall), returned oldest first. Viewing the newest page
+ * marks the conversation read. */
 export async function getConversationDetail(
   prisma: PrismaClient,
   userId: string,
   conversationId: string,
+  page: { before?: string; limit?: number } = {},
 ) {
   const membership = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId } },
   })
-  if (!membership) return null
+  if (!membership) return { status: 'not_found' as const }
 
-  const [conversation, messages] = await Promise.all([
+  const limit = page.limit ?? CONVERSATION_PAGE_LIMIT
+  const start = page.before ? await resolveBefore(prisma, conversationId, page.before) : {}
+  if (!start) return { status: 'invalid_before' as const }
+
+  const [conversation, newestFirstPlusOne] = await Promise.all([
     prisma.conversation.findUnique({
       where: { id: conversationId },
       select: {
         id: true,
         participants: {
           where: { userId: { not: userId } },
-          select: { user: { select: participantSelect } },
+          select: { user: { select: otherUserSelect } },
         },
       },
     }),
     prisma.message.findMany({
-      where: { conversationId },
-      orderBy: { createdAt: 'asc' },
-      take: 200,
+      ...start,
+      where: { ...start.where, conversationId },
+      // id breaks createdAt ties so a page boundary never skips or repeats a message.
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
       select: {
         id: true,
         body: true,
@@ -212,36 +271,45 @@ export async function getConversationDetail(
       },
     }),
   ])
-  if (!conversation) return null
+  if (!conversation) return { status: 'not_found' as const }
   const other = conversation.participants[0]?.user
-  if (!other) return null
+  if (!other) return { status: 'not_found' as const }
+  const hasMore = newestFirstPlusOne.length > limit
+  const messages = newestFirstPlusOne.slice(0, limit).reverse()
 
   const roleUserIds = Array.from(new Set([other.id, ...messages.map((m) => m.senderId)]))
   const roles = await resolveChannelStaffRoles(prisma, roleUserIds)
 
-  await prisma.conversationParticipant.update({
-    where: { conversationId_userId: { conversationId, userId } },
-    data: { lastReadAt: new Date() },
-  })
+  if (!page.before) {
+    await prisma.conversationParticipant.update({
+      where: { conversationId_userId: { conversationId, userId } },
+      data: { lastReadAt: new Date() },
+    })
+  }
 
   return {
-    id: conversation.id,
-    otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
-    messages: messages.map((m) => ({
-      id: m.id,
-      senderUsername: m.sender.username,
-      senderDisplayName: m.sender.displayName,
-      senderAvatarUrl: m.sender.avatarUrl,
-      body: m.body,
-      createdAt: m.createdAt.toISOString(),
-      isMine: m.senderId === userId,
-      senderChannelRole: roles.get(m.senderId) ?? null,
-    })),
+    status: 'ok' as const,
+    detail: {
+      id: conversation.id,
+      otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
+      messages: messages.map((m) => ({
+        id: m.id,
+        senderUsername: m.sender.username,
+        senderDisplayName: userName(m.sender),
+        senderAvatarUrl: m.sender.avatarUrl,
+        body: m.body,
+        createdAt: m.createdAt.toISOString(),
+        isMine: m.senderId === userId,
+        senderChannelRole: roles.get(m.senderId) ?? null,
+      })),
+      hasMore,
+    },
   }
 }
 
-/** Sends a message and notifies every other participant. Returns null if the
- * sender isn't actually a participant of this conversation. */
+/** Sends a message and notifies every other participant. Returns
+ * `not_found` if the sender isn't a participant of this conversation and
+ * `recipient_unavailable` if another participant was deleted or suspended. */
 export async function sendMessage(
   prisma: PrismaClient,
   sender: { id: string; username: string; displayName: string; avatarUrl: string | null },
@@ -251,7 +319,17 @@ export async function sendMessage(
   const membership = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId: sender.id } },
   })
-  if (!membership) return null
+  if (!membership) return { status: 'not_found' as const }
+
+  const unavailableRecipient = await prisma.conversationParticipant.findFirst({
+    where: {
+      conversationId,
+      userId: { not: sender.id },
+      user: { NOT: availableUserWhere },
+    },
+    select: { userId: true },
+  })
+  if (unavailableRecipient) return { status: 'recipient_unavailable' as const }
 
   const [message] = await prisma.$transaction([
     prisma.message.create({
@@ -269,19 +347,24 @@ export async function sendMessage(
     select: { userId: true },
   })
   await Promise.all(
-    others.map((p) => notifyUserOfNewMessage(prisma, p.userId, sender, conversationId, body)),
+    others.map((p) =>
+      notifyUserOfNewMessage(prisma, p.userId, withSafeName(sender), conversationId, body),
+    ),
   )
 
   const roles = await resolveChannelStaffRoles(prisma, [sender.id])
 
   return {
-    id: message.id,
-    senderUsername: sender.username,
-    senderDisplayName: sender.displayName,
-    senderAvatarUrl: sender.avatarUrl,
-    body: message.body,
-    createdAt: message.createdAt.toISOString(),
-    isMine: true,
-    senderChannelRole: roles.get(sender.id) ?? null,
+    status: 'sent' as const,
+    message: {
+      id: message.id,
+      senderUsername: sender.username,
+      senderDisplayName: userName(sender),
+      senderAvatarUrl: sender.avatarUrl,
+      body: message.body,
+      createdAt: message.createdAt.toISOString(),
+      isMine: true,
+      senderChannelRole: roles.get(sender.id) ?? null,
+    },
   }
 }

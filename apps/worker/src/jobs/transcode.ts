@@ -20,6 +20,7 @@ import {
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
 import { enqueueEncodeStreamingCopy, enqueueWarmSoundFallbackCache } from '../lib/queue.js'
+import { announceNewPublicTrack, isFirstTranscode } from '../lib/new-track-announcement.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 import {
@@ -28,6 +29,11 @@ import {
   finePeaksKey,
 } from '../lib/editor-peaks.js'
 import { FINE_PEAKS_MIN_DURATION_SEC } from '@tahti/audio-edit'
+import {
+  isFinalAttempt,
+  soundProcessingErrorMessage,
+  type SoundProcessingStage,
+} from '../lib/sound-processing-error.js'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode' }))
@@ -156,18 +162,22 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
   await prisma.sound.update({
     where: { id: itemId },
-    data: { status: 'PROCESSING' },
+    data: { status: 'PROCESSING', processingError: null },
   })
 
   logLine({ itemId }, `sound item ${itemId} transcode starting`)
+  const firstTranscode = await isFirstTranscode(prisma, itemId, item.status)
 
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-transcode-'))
+  let stage: SoundProcessingStage | null = 'download'
 
   try {
     const rawPath = join(tmpDir, 'raw_input')
     await downloadSourceCached(item.rawKey, rawPath)
 
+    stage = 'probe'
     const sourceMeta = await ffprobeFormat(rawPath)
+    stage = 'encode'
     const embeddedTags = await ffprobeEmbeddedTags(rawPath).catch(() => ({}))
     const tagPatch = await buildTagPatch(item, embeddedTags, rawPath, tmpDir, sourceMeta.duration)
     const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)
@@ -187,12 +197,15 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       const flacPath = join(tmpDir, 'output.flac')
       await ffmpegToFlac(rawPath, flacPath)
       const flacKey = `flac/${item.channel.slug}/${itemId}.flac`
+      stage = 'store'
       await uploadFile(flacKey, flacPath, 'audio/flac')
+      stage = null
 
       await prisma.sound.update({
         where: { id: itemId },
         data: {
           status: 'READY',
+          processingError: null,
           flacKey,
           mp3Key: null,
           // A lossless upload is playable now, off the FLAC — the
@@ -213,6 +226,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         },
       })
       await ensureInitialVersion(prisma, itemId)
+      if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
       await enqueueWarmSoundFallbackCache(item.channelId)
       await enqueueEncodeStreamingCopy(itemId)
       logLine(
@@ -228,12 +242,15 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     const mp3Path = join(tmpDir, 'output.mp3')
     await ffmpegToMp3(rawPath, mp3Path, outputBitrateKbps)
     const mp3Key = `mp3/${item.channel.slug}/${itemId}.mp3`
+    stage = 'store'
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
+    stage = null
 
     await prisma.sound.update({
       where: { id: itemId },
       data: {
         status: 'READY',
+        processingError: null,
         mp3Key,
         durationSec: sourceMeta.duration,
         peaks,
@@ -249,19 +266,27 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     })
 
     await ensureInitialVersion(prisma, itemId)
+    if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
     await enqueueWarmSoundFallbackCache(item.channelId)
     logLine(
       { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
       `sound item ${itemId} transcode to mp3 done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
   } catch (err) {
+    // Until BullMQ runs out of attempts the sound stays in the processing
+    // list, so the owner is not told it failed and then see it succeed.
+    const final = isFinalAttempt(job)
     await prisma.sound.update({
       where: { id: itemId },
-      data: { status: 'ERROR' },
+      data: final
+        ? { status: 'ERROR', processingError: soundProcessingErrorMessage(stage) }
+        : { status: 'PENDING' },
     })
     logLine(
       {
         itemId,
+        stage,
+        finalAttempt: final,
         elapsedMs: Date.now() - startedAt,
         error: err instanceof Error ? err.message : String(err),
       },

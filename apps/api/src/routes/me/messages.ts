@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  ConversationDetailQuerySchema,
   ConversationDetailSchema,
   ConversationListSchema,
   IdParamSchema,
@@ -18,12 +19,15 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
+  RECIPIENT_UNAVAILABLE_BODY,
   findOrCreateConversation,
   getConversationDetail,
   listConversations,
   searchUsers,
   sendMessage,
 } from '../../lib/messaging.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/users/search?q= — for @-mention / "message this user" autocomplete
@@ -75,7 +79,10 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const relationships = await fastify.prisma.artistFollow.findMany({
         where: {
-          OR: [{ followerUserId: user.id }, { artistUserId: user.id }],
+          OR: [
+            { followerUserId: user.id, artist: availableUserWhere },
+            { artistUserId: user.id, follower: availableUserWhere },
+          ],
         },
         take: 400,
         orderBy: { createdAt: 'desc' },
@@ -100,7 +107,7 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
 
       for (const relationship of relationships) {
         const followedByYou = relationship.followerUserId === user.id
-        const person = followedByYou ? relationship.artist : relationship.follower
+        const person = withSafeName(followedByYou ? relationship.artist : relationship.follower)
         const existing = contacts.get(person.username)
         contacts.set(person.username, {
           ...person,
@@ -138,16 +145,20 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const other = await fastify.prisma.user.findUnique({
         where: { username: parsed.data.username },
-        select: { id: true },
+        select: { id: true, deletedAt: true, suspendedAt: true },
       })
       if (!other) return reply.status(404).send({ error: 'User not found' })
+      if (other.deletedAt || other.suspendedAt) {
+        return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
+      }
 
       const conversationId = await findOrCreateConversation(fastify.prisma, user.id, other.id)
       return reply.send({ conversationId })
     },
   )
 
-  // GET /api/me/messages/conversations/:id — thread + marks it read
+  // GET /api/me/messages/conversations/:id?before=&limit= — one page of the
+  // thread; the newest page also marks it read
   fastify.get(
     '/api/me/messages/conversations/:id',
     {
@@ -160,11 +171,27 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const query = ConversationDetailQuerySchema.safeParse(request.query ?? {})
+      if (!query.success) {
+        return reply.status(400).send({ error: query.error.issues[0]?.message ?? 'Invalid query' })
+      }
       const user = request.sessionUser!
 
-      const detail = await getConversationDetail(fastify.prisma, user.id, routeParams.id)
-      if (!detail) return reply.status(404).send({ error: 'Conversation not found' })
-      return reply.send(detail)
+      const result = await getConversationDetail(
+        fastify.prisma,
+        user.id,
+        routeParams.id,
+        query.data,
+      )
+      if (result.status === 'not_found') {
+        return reply.status(404).send({ error: 'Conversation not found' })
+      }
+      if (result.status === 'invalid_before') {
+        return reply
+          .status(400)
+          .send({ error: 'before must be a message id from this conversation or an ISO date-time' })
+      }
+      return reply.send(result.detail)
     },
   )
 
@@ -187,9 +214,14 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const user = request.sessionUser!
 
-      const message = await sendMessage(fastify.prisma, user, routeParams.id, parsed.data.body)
-      if (!message) return reply.status(404).send({ error: 'Conversation not found' })
-      return reply.status(201).send(message)
+      const result = await sendMessage(fastify.prisma, user, routeParams.id, parsed.data.body)
+      if (result.status === 'not_found') {
+        return reply.status(404).send({ error: 'Conversation not found' })
+      }
+      if (result.status === 'recipient_unavailable') {
+        return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
+      }
+      return reply.status(201).send(result.message)
     },
   )
 }

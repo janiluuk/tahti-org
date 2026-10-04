@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
+  createReadySound,
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
@@ -147,6 +148,89 @@ describe('M12 — releases and public profile', () => {
       url: `/api/v1/r/${release!.smartLinkSlug}`,
     })
     expect(link.json().targets.tidal).toContain('tidal.com')
+  })
+
+  it('turns the smart-link "Powered by Tahti" footer on and off', async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+    })
+    const smartLink = () =>
+      app.inject({ method: 'GET', url: `/api/v1/r/${release!.smartLinkSlug}` })
+    expect((await smartLink()).json().release.showPoweredByFooter).toBe(false)
+
+    const on = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: true },
+    })
+    expect(on.statusCode).toBe(200)
+    expect(on.json().showPoweredByFooter).toBe(true)
+    expect((await smartLink()).json().release.showPoweredByFooter).toBe(true)
+
+    const byId = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+    })
+    expect(byId.json().showPoweredByFooter).toBe(true)
+
+    const off = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: false },
+    })
+    expect(off.json().showPoweredByFooter).toBe(false)
+    const bad = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { showPoweredByFooter: 'yes' },
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
+  it("shows the release's genre on its smart link, falling back to a linked sound's", async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+      include: { tracks: { orderBy: { position: 'asc' } } },
+    })
+    const smartLinkGenre = async () =>
+      (await app.inject({ method: 'GET', url: `/api/v1/r/${release!.smartLinkSlug}` })).json()
+        .release.genre
+
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: 'House', genreCustom: null },
+    })
+    expect(await smartLinkGenre()).toBe('House')
+
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: 'Other', genreCustom: 'Vaporwave' },
+    })
+    expect(await smartLinkGenre()).toBe('Vaporwave')
+
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug: username } })
+    const sound = await createReadySound(prisma, channel.id, 'Genre source')
+    await prisma.sound.update({ where: { id: sound.id }, data: { genre: 'Techno' } })
+    await prisma.releaseTrack.update({
+      where: { id: release!.tracks[0]!.id },
+      data: { soundId: sound.id },
+    })
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: { genre: null, genreCustom: null },
+    })
+    expect(await smartLinkGenre()).toBe('Techno')
+
+    await prisma.releaseTrack.update({
+      where: { id: release!.tracks[0]!.id },
+      data: { soundId: null },
+    })
+    await prisma.sound.delete({ where: { id: sound.id } })
+    expect(await smartLinkGenre()).toBeNull()
   })
 
   it('pins a release and reflects it on the public profile, then unpins', async () => {
@@ -302,5 +386,59 @@ describe('M12 — releases and public profile', () => {
       headers: { cookie },
     })
     expect(byId.statusCode).toBe(404)
+  })
+
+  it('records description mentions once the release is published, not while a draft', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioner@example.com`,
+      username: 'release-test-mentioner',
+    })
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioned@example.com`,
+      username: 'release-test-mentioned',
+    })
+    const mentionerCookie = await sessionCookieFor(prisma, mentioner.id)
+    const mentionsOf = () =>
+      prisma.mention.findMany({
+        where: { mentionerUserId: mentioner.id, targetUserId: target.id },
+      })
+
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie: mentionerCookie },
+      payload: {
+        title: 'Mention EP',
+        type: 'EP',
+        releaseDate: '2026-02-01',
+        description: 'Mastered by @release-test-mentioned',
+        tracks: [{ title: 'Only Track' }],
+      },
+    })
+    expect(create.statusCode).toBe(201)
+    const id = create.json().id as string
+
+    const draftEdit = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie: mentionerCookie },
+      payload: { description: 'Mixed and mastered by @release-test-mentioned' },
+    })
+    expect(draftEdit.statusCode).toBe(200)
+    expect(await mentionsOf()).toHaveLength(0)
+
+    const publish = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}`,
+      headers: { cookie: mentionerCookie },
+      payload: { state: 'PUBLISHED' },
+    })
+    expect(publish.statusCode).toBe(200)
+
+    await vi.waitFor(async () => {
+      const rows = await mentionsOf()
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ surface: 'RELEASE', sourceId: id })
+    })
   })
 })

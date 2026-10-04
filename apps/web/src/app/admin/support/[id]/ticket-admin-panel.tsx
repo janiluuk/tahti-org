@@ -119,11 +119,16 @@ export function TicketAdminPanel({
 
       <form onSubmit={onNote} style={{ marginBottom: '1rem' }}>
         <label>
-          Add note
+          Reply to requester
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
         </label>
+        <p className="admin-stat-sub">
+          {artistId
+            ? 'The requester sees this reply, signed "Tahti support", under their support requests.'
+            : 'Filed while signed out - the requester cannot see replies here. Email them instead.'}
+        </p>
         <button type="submit" className="admin-btn admin-btn--sm" disabled={pending}>
-          Save note
+          Send reply
         </button>
       </form>
 

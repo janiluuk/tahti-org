@@ -35,6 +35,12 @@ export const RadioRecentlyPlayedItemSchema = z.object({
   artistUsername: z.string().nullable(),
   artworkUrl: z.string().nullable(),
   playedAt: z.string(),
+  /** The track's id while it is still public; null once it went private or
+   * was removed, or when the play wasn't an archived track. */
+  soundId: z.string().nullable(),
+  /** Replay link, only when the listener may play the track (access gates
+   * apply, same as the track page). */
+  audioUrl: z.string().nullable(),
 })
 
 export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)
@@ -44,6 +50,9 @@ export const NewsPostSchema = z.object({
   id: z.string(),
   headline: z.string(),
   summary: z.string(),
+  imageUrl: z.string().nullable(),
+  linkUrl: z.string().nullable(),
+  linkLabel: z.string().nullable(),
   authorName: z.string(),
   publishedAt: z.string(),
 })
@@ -84,6 +93,11 @@ export const RadioShowEpisodeSchema = z.object({
   endAt: z.string(),
   note: z.string().nullable(),
   showType: z.enum(['LIVE_SET', 'TALK']),
+  /** Episode name, description and artwork from the aired broadcast. Null for
+   * upcoming slots, no-shows and fan-only broadcasts. */
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  coverUrl: z.string().nullable(),
   /** Set only for a past episode the artist actually broadcast AND published
    * to their sound afterward — null for a past slot with no broadcast (a
    * no-show) or one the artist hasn't published a recording of. */

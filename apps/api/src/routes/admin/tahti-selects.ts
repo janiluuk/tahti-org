@@ -2,12 +2,29 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
+import {
+  AdminTahtiSelectsBrowseResponseSchema,
+  AdminTahtiSelectsRotationResponseSchema,
+  TAHTI_SELECTS_SLUG,
+  openApiResponse,
+  soundPlaybackKey,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 import { spawnChannelLiquidsoap, stopOrchestratorChannel } from '../../lib/orchestrator.js'
 import { buildTopList } from '../../lib/top-lists.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 const AUTO_PLAYLIST_SIZE = 10
+const PREVIEW_URL_TTL_SEC = 3600
+
+async function previewAudioUrl(sound: {
+  mp3Key: string | null
+  flacKey: string | null
+}): Promise<string | null> {
+  const key = soundPlaybackKey(sound)
+  return key ? presignedGetUrl(key, PREVIEW_URL_TTL_SEC) : null
+}
 
 async function selectTopPlayedSoundIds(
   prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
@@ -94,7 +111,16 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/admin/tahti-selects — current curated rotation, ordered
   fastify.get(
     '/api/admin/tahti-selects',
-    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(
+          AdminTahtiSelectsRotationResponseSchema,
+          'AdminTahtiSelectsRotation',
+        ),
+      },
+    },
     async (_request, reply) => {
       const channelId = await getTahtiSelectsChannelId(fastify.prisma)
       if (!channelId) return reply.send({ items: [] })
@@ -106,7 +132,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           position: true,
           createdAt: true,
-          addedBy: { select: { displayName: true } },
+          addedBy: { select: { username: true, displayName: true } },
           sound: {
             select: {
               id: true,
@@ -114,24 +140,30 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
               durationSec: true,
               license: true,
               artistName: true,
-              channel: { select: { slug: true, user: { select: { displayName: true } } } },
+              mp3Key: true,
+              flacKey: true,
+              channel: {
+                select: { slug: true, user: { select: { username: true, displayName: true } } },
+              },
             },
           },
         },
       })
 
+      const audioUrls = await Promise.all(items.map((item) => previewAudioUrl(item.sound)))
       return reply.send({
-        items: items.map((item) => ({
+        items: items.map((item, index) => ({
           id: item.id,
           position: item.position,
-          addedAt: item.createdAt,
-          addedBy: item.addedBy.displayName,
+          addedAt: item.createdAt.toISOString(),
+          addedBy: userName(item.addedBy),
           soundId: item.sound.id,
           title: item.sound.title,
           durationSec: item.sound.durationSec,
           license: item.sound.license,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           channelSlug: item.sound.channel.slug,
+          audioUrl: audioUrls[index] ?? null,
         })),
       })
     },
@@ -140,7 +172,13 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/admin/tahti-selects/browse?q= — search public sound items to add
   fastify.get(
     '/api/admin/tahti-selects/browse',
-    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminTahtiSelectsBrowseResponseSchema, 'AdminTahtiSelectsBrowse'),
+      },
+    },
     async (request, reply) => {
       const { q } = request.query as { q?: string }
       const items = await fastify.prisma.sound.findMany({
@@ -157,18 +195,24 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: true,
           license: true,
           artistName: true,
-          channel: { select: { slug: true, user: { select: { displayName: true } } } },
+          mp3Key: true,
+          flacKey: true,
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
         },
       })
 
+      const audioUrls = await Promise.all(items.map((item) => previewAudioUrl(item)))
       return reply.send({
-        items: items.map((item) => ({
+        items: items.map((item, index) => ({
           id: item.id,
           title: item.title,
           durationSec: item.durationSec,
           license: item.license,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           channelSlug: item.channel.slug,
+          audioUrl: audioUrls[index] ?? null,
         })),
       })
     },

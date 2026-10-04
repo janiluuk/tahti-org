@@ -33,6 +33,12 @@ export async function subscriberHasFanChat(
   return isActiveFanSubscriber(prisma, artistUserId, subscriberUserId)
 }
 
+/** The artist and their fan-chat subscribers may read and post in the `:fans` room. */
+export async function canUseFanChat(prisma: PrismaClient, artistUserId: string, userId: string) {
+  if (userId === artistUserId) return artistOffersFanChat(prisma, artistUserId)
+  return subscriberHasFanChat(prisma, artistUserId, userId)
+}
+
 export async function subscriberHasFanNewsletter(
   prisma: PrismaClient,
   artistUserId: string,

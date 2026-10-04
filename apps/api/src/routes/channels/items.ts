@@ -75,6 +75,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             peaks: true,
             repostToDownload: true,
             followToDownload: true,
+            downloadsEnabled: true,
             backgroundUrl: true,
             slideshowUrls: true,
             galleryMode: true,

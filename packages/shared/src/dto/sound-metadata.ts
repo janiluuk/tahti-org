@@ -130,6 +130,8 @@ export const SoundMetadataFieldsSchema = z.object({
   license: z.enum(SOUND_LICENSES).optional(),
   repostToDownload: z.boolean().optional(),
   followToDownload: z.boolean().optional(),
+  /** Off hides the track from every public download route; streaming is unaffected. */
+  downloadsEnabled: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   isFallback: z.boolean().optional(),
   commentsEnabled: z.boolean().optional(),

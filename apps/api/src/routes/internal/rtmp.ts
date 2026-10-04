@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { verifyRtmpStreamName } from '../../lib/ingest-credentials.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
+import { endBroadcast, endOpenBroadcasts } from '@tahti/shared/broadcast-end'
 import {
   broadcastSessionLogFields,
   IngestForbiddenTextSchema,
@@ -85,10 +86,7 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       // A fallback-rotation placeholder (or an abnormally-terminated previous session)
       // may still be open for this channel — close it out before starting a new one so
       // go-live's unordered findFirst({ endedAt: null }) can't grab the wrong row.
-      await fastify.prisma.broadcast.updateMany({
-        where: { channelId: channel.id, endedAt: null },
-        data: { endedAt: new Date() },
-      })
+      await endOpenBroadcasts(fastify.prisma, channel.id)
 
       const broadcast = await fastify.prisma.broadcast.create({
         data: {
@@ -149,10 +147,7 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       if (broadcast) {
-        await fastify.prisma.broadcast.update({
-          where: { id: broadcast.id },
-          data: { endedAt: new Date() },
-        })
+        await endBroadcast(fastify.prisma, broadcast.id)
         // A session that never went LIVE (preview-only) has no public sound to finalize.
         // M35: artist can opt out of auto-recording per channel.
         if (broadcast.wentLiveAt && channel.autoRecordEnabled) {

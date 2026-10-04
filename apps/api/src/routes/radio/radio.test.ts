@@ -200,6 +200,59 @@ describe('public live-artist slot calendar', () => {
     expect(body[0]?.artist.username).toBe(`${PREFIX2}artist`)
     expect(body[0]?.artist.channelSlug).toBe(`${PREFIX2}artist`)
   })
+
+  it('leaves out slots, now-playing and show pages of deleted or suspended artists', async () => {
+    const suspended = await createTestArtist(prisma, {
+      email: `${PREFIX2}suspended@example.com`,
+      username: `${PREFIX2}suspended`,
+    })
+    const deleted = await createTestArtist(prisma, {
+      email: `${PREFIX2}deleted@example.com`,
+      username: `${PREFIX2}deleted`,
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+    await prisma.user.update({
+      where: { id: deleted.id },
+      data: { deletedAt: new Date(), displayName: 'Deleted user' },
+    })
+
+    const startAt = new Date()
+    startAt.setUTCMinutes(0, 0, 0)
+    startAt.setUTCDate(startAt.getUTCDate() + 3)
+    const endAt = new Date(startAt.getTime() + 60 * 60 * 1000)
+    const now = Date.now()
+    await prisma.radioSlotBooking.createMany({
+      data: [
+        { channelId: suspended.channel!.id, startAt, endAt },
+        {
+          channelId: deleted.channel!.id,
+          startAt: new Date(now - 5 * 60 * 1000),
+          endAt: new Date(now + 5 * 60 * 1000),
+        },
+      ],
+    })
+
+    const from = new Date(now - 3600_000).toISOString()
+    const to = new Date(endAt.getTime() + 3600_000).toISOString()
+    const slots = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/slots?from=${from}&to=${to}`,
+    })
+    expect(slots.statusCode).toBe(200)
+    const slugs = (slots.json() as Array<{ artist: { channelSlug: string } }>).map(
+      (s) => s.artist.channelSlug,
+    )
+    expect(slugs).not.toContain(`${PREFIX2}suspended`)
+    expect(slugs).not.toContain(`${PREFIX2}deleted`)
+
+    const nowPlaying = await app.inject({ method: 'GET', url: '/api/v1/radio' })
+    expect(nowPlaying.json()).toEqual({ live: false, channel: null })
+
+    for (const slug of [`${PREFIX2}suspended`, `${PREFIX2}deleted`]) {
+      const show = await app.inject({ method: 'GET', url: `/api/v1/radio/show/${slug}` })
+      expect(show.statusCode).toBe(404)
+    }
+  })
 })
 
 describe('radio show detail — past episode recording linkage', () => {
@@ -314,6 +367,92 @@ describe('radio show detail — past episode recording linkage', () => {
     const body = res.json() as { pastEpisodes: Array<{ recording: unknown }> }
     expect(body.pastEpisodes).toHaveLength(1)
     expect(body.pastEpisodes[0]?.recording).toBeNull()
+  })
+
+  it('names each aired episode from its broadcast, but not a fan-only one', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX3}details@example.com`,
+      username: `${PREFIX3}details`,
+      displayName: 'Episode Details Artist',
+    })
+    const now = new Date()
+    const hour = 60 * 60 * 1000
+
+    const publicBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 2 * hour),
+        endAt: new Date(now.getTime() - hour),
+      },
+    })
+    // A preview session that never went live must not win over the aired one.
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: publicBooking.id,
+        title: 'Soundcheck',
+        startedAt: new Date(publicBooking.startAt.getTime() + 30 * 60 * 1000),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: publicBooking.id,
+        title: 'Deep Forest #3',
+        description: 'Two hours of slow techno.',
+        artworkUrl: 'https://cdn.example.com/deep-forest-3.jpg',
+        startedAt: publicBooking.startAt,
+        wentLiveAt: publicBooking.startAt,
+        endedAt: publicBooking.endAt,
+      },
+    })
+
+    const fanOnlyBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: artist.channel!.id,
+        startAt: new Date(now.getTime() - 26 * hour),
+        endAt: new Date(now.getTime() - 25 * hour),
+      },
+    })
+    await prisma.broadcast.create({
+      data: {
+        channelId: artist.channel!.id,
+        source: 'RTMP',
+        radioSlotBookingId: fanOnlyBooking.id,
+        title: 'Members only',
+        description: 'Secret set.',
+        artworkUrl: 'https://cdn.example.com/secret.jpg',
+        visibility: 'FAN_ONLY',
+        wentLiveAt: fanOnlyBooking.startAt,
+        endedAt: fanOnlyBooking.endAt,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/show/${artist.channel!.slug}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      pastEpisodes: Array<{
+        id: string
+        title: string | null
+        description: string | null
+        coverUrl: string | null
+      }>
+    }
+
+    const aired = body.pastEpisodes.find((ep) => ep.id === publicBooking.id)
+    expect(aired).toMatchObject({
+      title: 'Deep Forest #3',
+      description: 'Two hours of slow techno.',
+      coverUrl: 'https://cdn.example.com/deep-forest-3.jpg',
+    })
+
+    const fanOnly = body.pastEpisodes.find((ep) => ep.id === fanOnlyBooking.id)
+    expect(fanOnly).toMatchObject({ title: null, description: null, coverUrl: null })
   })
 })
 

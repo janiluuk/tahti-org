@@ -7,6 +7,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { config } from '../../config.js'
+import { createSession } from '../../lib/session.js'
 
 const HOUR_MS = 60 * 60 * 1000
 
@@ -26,6 +27,7 @@ describe('M18 — sound downloads + engagement units', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let channelId: string
   let itemId: string
+  let artistId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -55,6 +57,7 @@ describe('M18 — sound downloads + engagement units', () => {
       include: { channel: true },
     })
     channelId = user.channel!.id
+    artistId = user.id
 
     const item = await prisma.sound.create({
       data: {
@@ -245,5 +248,60 @@ describe('M18 — sound downloads + engagement units', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().url).toBeTruthy()
+  })
+
+  it('refuses downloads the artist switched off, except for the owner and board', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Stream only',
+        rawKey: 'raw/stream-only.wav',
+        mp3Key: 'mp3/stream-only.mp3',
+        fileSizeBytes: BigInt(1000),
+        status: 'READY',
+        downloadsEnabled: false,
+      },
+    })
+    const passwordHash = await hashPassword('testpassword')
+    const [fan, board] = await Promise.all(
+      ['fan', 'board'].map((name) =>
+        prisma.user.create({
+          data: {
+            email: `${TEST_EMAIL_PREFIX}${name}@example.com`,
+            passwordHash,
+            username: `download-test-${name}`,
+            displayName: `Download ${name}`,
+            emailVerifiedAt: new Date(),
+            isBoard: name === 'board',
+          },
+        }),
+      ),
+    )
+    const cookieFor = async (userId: string) =>
+      `tahti_session=${(await createSession(prisma, userId)).id}`
+    const url = `/api/v1/c/${SLUG}/sounds/${item.id}/download?fp=disabled-dl`
+    const headers = { 'x-forwarded-for': '203.0.113.61' }
+
+    const anon = await app.inject({ method: 'GET', url, headers })
+    expect(anon.statusCode).toBe(403)
+    expect(anon.json().code).toBe('downloads_disabled')
+
+    const listener = await app.inject({
+      method: 'GET',
+      url,
+      headers: { ...headers, cookie: await cookieFor(fan!.id) },
+    })
+    expect(listener.statusCode).toBe(403)
+    expect(listener.json().code).toBe('downloads_disabled')
+    expect(await prisma.download.count({ where: { soundId: item.id } })).toBe(0)
+
+    for (const userId of [artistId, board!.id]) {
+      const res = await app.inject({
+        method: 'GET',
+        url,
+        headers: { ...headers, cookie: await cookieFor(userId) },
+      })
+      expect(res.statusCode).toBe(200)
+    }
   })
 })

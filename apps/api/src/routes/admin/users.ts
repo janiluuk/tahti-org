@@ -46,6 +46,7 @@ async function fetchUserDetail(prisma: Parameters<typeof computeEngagementUnits>
           goneLiveAt: true,
           totalLiveHours: true,
           metaStreamOptOut: true,
+          channelKind: true,
         },
       },
       _count: { select: { fanSubsAsArtist: { where: { state: 'ACTIVE' } } } },

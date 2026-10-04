@@ -20,7 +20,17 @@ import { config } from '../../config.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
-import { collectionItemInclude, sortCollectionItems, zodError } from './helpers.js'
+import { trackArtistName } from '../../lib/safe-names.js'
+import {
+  collectionItemInclude,
+  safeUser,
+  withSafeNames,
+  linkReachableCollectionWhere,
+  publicCollectionItemWhere,
+  sortCollectionItems,
+  soundArtist,
+  zodError,
+} from './helpers.js'
 import {
   buildChannelSoundRssXml,
   buildRss,
@@ -46,10 +56,11 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         include: {
           user: { select: { username: true, displayName: true } },
           items: {
+            where: publicCollectionItemWhere,
             orderBy: { position: 'asc' },
             include: collectionItemInclude,
           },
@@ -64,7 +75,8 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
       // Purchase/subscriber gates run per viewer; never cache these URLs.
       const items = await Promise.all(
-        ordered.map(async (colItem) => {
+        ordered.map(async (unsafeItem) => {
+          const colItem = withSafeNames(unsafeItem)
           if (!colItem.sound) return colItem
           const playbackKey = soundPlaybackKey(colItem.sound)
           const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
@@ -82,6 +94,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
               audioUrl: url,
               gate,
               channel: { slug: channel.slug },
+              artist: soundArtist(colItem.sound),
             },
           }
         }),
@@ -89,6 +102,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         ...col,
+        user: safeUser(col.user),
         coverUrl: await resolveCollectionCoverUrl(col),
         items,
         links: {
@@ -185,7 +199,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true, _count: { select: { subscribers: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -212,7 +226,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -241,7 +255,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug: routeParams.slug, isPublic: true },
+        where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
@@ -292,7 +306,9 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           title: true,
           durationSec: true,
           artistName: true,
-          channel: { select: { slug: true, user: { select: { displayName: true } } } },
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
         },
       })
 
@@ -304,7 +320,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           id: item.id,
           title: item.title,
           durationSec: item.durationSec,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           channelSlug: item.channel.slug,
         })),
         hasMore,
@@ -319,10 +335,11 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = routeParams
 
     const col = await fastify.prisma.collection.findFirst({
-      where: { slug, isPublic: true },
+      where: { slug, ...linkReachableCollectionWhere },
       include: {
         user: { select: { username: true, displayName: true } },
         items: {
+          where: publicCollectionItemWhere,
           orderBy: { position: 'asc' },
           include: collectionItemInclude,
         },
@@ -332,7 +349,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
     const xml = buildRss({
       title: col.name,
-      description: col.description ?? `${col.name} by ${col.user.displayName}`,
+      description: col.description ?? `${col.name} by ${safeUser(col.user).displayName}`,
       link: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
       items: collectionRssItems(col.items, col.user.username),
     })

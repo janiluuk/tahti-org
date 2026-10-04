@@ -195,6 +195,116 @@ describe('Tahti Jam', () => {
     })
   })
 
+  describe('participant control', () => {
+    const track = {
+      id: 'track-2',
+      title: 'Co-control Track',
+      artistName: 'Test Artist',
+      coverUrl: null,
+      streamUrl: 'https://cdn.example.com/track-2.mp3',
+      protocol: 'https' as const,
+      channelSlug: 'test-channel',
+      durationSec: 180,
+    }
+
+    async function startJamWithGuest(): Promise<string> {
+      const create = await app.inject({
+        method: 'POST',
+        url: '/api/v1/jam',
+        headers: { cookie: hostCookie },
+        payload: { collectionSlug },
+      })
+      const { id, code } = create.json()
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/jam/${code}/join`,
+        headers: { cookie: guestCookie },
+      })
+      return id
+    }
+
+    function setControl(sessionId: string, userId: string, cookie: string, canControl: boolean) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/v1/jam/${sessionId}/participants/${userId}`,
+        headers: { cookie },
+        payload: { canControl },
+      })
+    }
+
+    function pushState(sessionId: string, cookie: string) {
+      return app.inject({
+        method: 'POST',
+        url: `/api/v1/jam/${sessionId}/state`,
+        headers: { cookie },
+        payload: { isPlaying: true, currentTrack: track, positionSec: 3 },
+      })
+    }
+
+    it('lets a guest change playback once the host grants control, and not after it is revoked', async () => {
+      const sessionId = await startJamWithGuest()
+
+      expect((await pushState(sessionId, guestCookie)).statusCode).toBe(403)
+
+      const grant = await setControl(sessionId, guestId, hostCookie, true)
+      expect(grant.statusCode).toBe(200)
+      const guestRow = grant
+        .json()
+        .participants.find((p: { userId: string }) => p.userId === guestId)
+      expect(guestRow).toMatchObject({ role: 'GUEST', canControl: true })
+
+      const guestPush = await pushState(sessionId, guestCookie)
+      expect(guestPush.statusCode).toBe(200)
+      expect(guestPush.json()).toMatchObject({ isPlaying: true, currentTrack: track })
+
+      expect((await setControl(sessionId, guestId, hostCookie, false)).statusCode).toBe(200)
+      expect((await pushState(sessionId, guestCookie)).statusCode).toBe(403)
+    })
+
+    it('only the host can grant control', async () => {
+      const sessionId = await startJamWithGuest()
+
+      const res = await setControl(sessionId, guestId, guestCookie, true)
+      expect(res.statusCode).toBe(403)
+
+      const row = await prisma.jamParticipant.findUnique({
+        where: { sessionId_userId: { sessionId, userId: guestId } },
+      })
+      expect(row?.canControl).toBe(false)
+    })
+
+    it('does not let the host take away their own control', async () => {
+      const sessionId = await startJamWithGuest()
+
+      const res = await setControl(sessionId, hostId, hostCookie, false)
+      expect(res.statusCode).toBe(400)
+      expect((await pushState(sessionId, hostCookie)).statusCode).toBe(200)
+    })
+
+    it('404s for someone who is not in the jam', async () => {
+      const sessionId = await startJamWithGuest()
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/jam/${sessionId}/leave`,
+        headers: { cookie: guestCookie },
+      })
+
+      const res = await setControl(sessionId, guestId, hostCookie, true)
+      expect(res.statusCode).toBe(404)
+    })
+
+    it('rejects a body without a boolean canControl', async () => {
+      const sessionId = await startJamWithGuest()
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/jam/${sessionId}/participants/${guestId}`,
+        headers: { cookie: hostCookie },
+        payload: { canControl: 'yes' },
+      })
+      expect(res.statusCode).toBe(400)
+    })
+  })
+
   it('only the host can end the jam', async () => {
     const create = await app.inject({
       method: 'POST',

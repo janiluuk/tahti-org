@@ -67,13 +67,13 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 
 ### Venues, collab, and other public features
 
-| Purpose                      | Endpoints                                                                                                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Venue directory and calendar | `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`                                         |
-| TahtiJam (synced listening)  | `POST /api/v1/jam`, `POST /api/v1/jam/:code/join`, `GET /api/v1/jam/:id`, `GET /api/v1/jam/:id/events` (SSE), `POST /api/v1/jam/:id/state`, `POST /api/v1/jam/:id/leave` |
-| Support contact form         | `POST /api/support/contact`                                                                                                                                              |
-| Newsletter public subscribe  | `POST /api/newsletter/subscribe`, `GET /api/newsletter/confirm/:token`, `GET /api/newsletter/unsubscribe/:token`                                                         |
-| MCP (Model Context Protocol) | `/api/v1/mcp`                                                                                                                                                            |
+| Purpose                      | Endpoints                                                                                                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venue directory and calendar | `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`                                                                                       |
+| TahtiJam (synced listening)  | `POST /api/v1/jam`, `POST /api/v1/jam/:code/join`, `GET /api/v1/jam/:id`, `GET /api/v1/jam/:id/events` (SSE), `POST /api/v1/jam/:id/state`, `PATCH /api/v1/jam/:id/participants/:userId`, `POST /api/v1/jam/:id/leave` |
+| Support contact form         | `POST /api/support/contact`                                                                                                                                                                                            |
+| Newsletter public subscribe  | `POST /api/newsletter/subscribe`, `GET /api/newsletter/confirm/:token`, `GET /api/newsletter/unsubscribe/:token`                                                                                                       |
+| MCP (Model Context Protocol) | `/api/v1/mcp`                                                                                                                                                                                                          |
 
 ### Engagement and community
 

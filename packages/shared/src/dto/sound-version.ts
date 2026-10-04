@@ -26,6 +26,9 @@ export const SoundVersionViewSchema = z.object({
   durationSec: z.number().int().nullable(),
   sourceFormat: z.string().nullable(),
   sourceBitrateKbps: z.number().int().nullable(),
+  sourceSampleRateHz: z.number().int().nullable(),
+  sourceBitDepth: z.number().int().nullable(),
+  sourceChannels: z.number().int().nullable(),
   createdAt: z.string(),
 })
 

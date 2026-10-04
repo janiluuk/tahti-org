@@ -363,6 +363,16 @@ export async function cancelStripeSubscription(subscriptionId: string): Promise<
   await stripeDelete(`/subscriptions/${encodeURIComponent(subscriptionId)}`)
 }
 
+/** Stop (or restart) renewal at the end of the current period; access runs until then. */
+export async function setStripeSubscriptionCancelAtPeriodEnd(
+  subscriptionId: string,
+  cancelAtPeriodEnd: boolean,
+): Promise<void> {
+  await stripePost(`/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+    cancel_at_period_end: String(cancelAtPeriodEnd),
+  })
+}
+
 export interface StripeEvent {
   id?: string
   type: string

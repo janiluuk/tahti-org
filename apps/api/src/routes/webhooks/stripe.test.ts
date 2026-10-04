@@ -8,6 +8,11 @@ import { hashPassword } from '../../lib/password.js'
 import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 import * as membership from '../../lib/membership.js'
 
+vi.mock('../../lib/email.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/email.js')>()),
+  sendMail: vi.fn().mockResolvedValue(undefined),
+}))
+
 const PREFIX = 'stripe-wh-'
 
 describe('Stripe webhooks', () => {
@@ -190,6 +195,144 @@ describe('Stripe webhooks', () => {
     const updated = await prisma.fanSubscription.findUnique({ where: { id: sub.id } })
     expect(updated?.state).toBe('CANCELED')
     expect(updated?.canceledAt).not.toBeNull()
+  })
+
+  it('customer.subscription.updated keeps a cancel-at-period-end subscription canceled, then a renew reactivates it', async () => {
+    const fan = await createTestArtist(prisma, {
+      email: `${PREFIX}period-end@example.com`,
+      username: 'stripe-wh-period-end',
+    })
+    const canceledAt = new Date(Date.now() - 60_000)
+    const sub = await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artistId,
+        subscriberUserId: fan.id,
+        tierName: 'Backer',
+        amountCents: 500,
+        stripeSubscriptionId: 'sub_period_end',
+        state: 'CANCELED',
+        canceledAt,
+        currentPeriodEnd: new Date(Date.now() + 10 * 24 * 3600 * 1000),
+      },
+    })
+    const updated = (cancelAtPeriodEnd: boolean) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/webhooks/stripe',
+        headers: { 'content-type': 'application/json' },
+        payload: JSON.stringify({
+          type: 'customer.subscription.updated',
+          data: {
+            object: {
+              id: 'sub_period_end',
+              status: 'active',
+              cancel_at_period_end: cancelAtPeriodEnd,
+              current_period_end: Math.floor(Date.now() / 1000) + 10 * 24 * 3600,
+              metadata: {
+                artistUserId: artistId,
+                subscriberUserId: fan.id,
+                tierName: 'Backer',
+                amountCents: '500',
+              },
+            },
+          },
+        }),
+      })
+
+    expect((await updated(true)).statusCode).toBe(200)
+    const stillCanceled = await prisma.fanSubscription.findUnique({ where: { id: sub.id } })
+    expect(stillCanceled?.state).toBe('CANCELED')
+    expect(stillCanceled?.canceledAt?.getTime()).toBe(canceledAt.getTime())
+
+    expect((await updated(false)).statusCode).toBe(200)
+    const renewed = await prisma.fanSubscription.findUnique({ where: { id: sub.id } })
+    expect(renewed?.state).toBe('ACTIVE')
+    expect(renewed?.canceledAt).toBeNull()
+  })
+
+  it('customer.subscription.updated marks a portal cancel on an active subscription', async () => {
+    const fan = await createTestArtist(prisma, {
+      email: `${PREFIX}portal-cancel@example.com`,
+      username: 'stripe-wh-portal-cancel',
+    })
+    const sub = await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artistId,
+        subscriberUserId: fan.id,
+        tierName: 'Backer',
+        amountCents: 500,
+        stripeSubscriptionId: 'sub_portal_cancel',
+        state: 'ACTIVE',
+        currentPeriodEnd: new Date(Date.now() + 10 * 24 * 3600 * 1000),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/stripe',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({
+        type: 'customer.subscription.updated',
+        data: {
+          object: {
+            id: 'sub_portal_cancel',
+            status: 'active',
+            cancel_at_period_end: true,
+            current_period_end: Math.floor(Date.now() / 1000) + 10 * 24 * 3600,
+            metadata: {
+              artistUserId: artistId,
+              subscriberUserId: fan.id,
+              tierName: 'Backer',
+              amountCents: '500',
+            },
+          },
+        },
+      }),
+    })
+    expect(res.statusCode).toBe(200)
+
+    const row = await prisma.fanSubscription.findUnique({ where: { id: sub.id } })
+    expect(row?.state).toBe('CANCELED')
+    expect(row?.canceledAt).not.toBeNull()
+  })
+
+  it('invoice.payment_failed tells the fan once a day', async () => {
+    const fan = await createTestArtist(prisma, {
+      email: `${PREFIX}failed@example.com`,
+      username: 'stripe-wh-failed-fan',
+    })
+    await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artistId,
+        subscriberUserId: fan.id,
+        tierName: 'Backer',
+        amountCents: 500,
+        stripeSubscriptionId: 'sub_payment_failed',
+        state: 'ACTIVE',
+        currentPeriodEnd: new Date(Date.now() + 24 * 3600 * 1000),
+      },
+    })
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/webhooks/stripe',
+        headers: { 'content-type': 'application/json' },
+        payload: JSON.stringify({
+          type: 'invoice.payment_failed',
+          data: { object: { id: `in_failed_${attempt}`, subscription: 'sub_payment_failed' } },
+        }),
+      })
+      expect(res.statusCode).toBe(200)
+    }
+
+    const notes = await prisma.notification.findMany({
+      where: { userId: fan.id, type: 'FAN_SUB_PAYMENT_FAILED' },
+      select: { title: true, url: true },
+    })
+    expect(notes).toEqual([
+      { title: "Your payment for WH Artist's Backer subscription failed", url: '/account' },
+    ])
   })
 
   it('writes audit dead-letter when a handler throws', async () => {

@@ -15,10 +15,14 @@ import {
   TAHTI_RADIO_SLUG,
   openApiResponse,
   resolveColorScheme,
+  soundPlaybackKey,
   type ColorScheme,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
@@ -75,8 +79,16 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const now = new Date()
       const liveBooking = await fastify.prisma.radioSlotBooking.findFirst({
-        where: { startAt: { lte: now }, endAt: { gt: now } },
-        select: { channel: { select: { slug: true, user: { select: { displayName: true } } } } },
+        where: {
+          startAt: { lte: now },
+          endAt: { gt: now },
+          channel: { user: availableUserWhere },
+        },
+        select: {
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
+        },
       })
 
       if (!liveBooking) return reply.send({ live: false, channel: null })
@@ -85,7 +97,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         live: true,
         channel: {
           slug: liveBooking.channel.slug,
-          artistName: liveBooking.channel.user.displayName,
+          artistName: userName(liveBooking.channel.user),
         },
       })
     },
@@ -118,7 +130,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(RadioRecentlyPlayedSchema, 'RadioRecentlyPlayed'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: TAHTI_RADIO_SLUG },
         select: { id: true },
@@ -136,10 +148,54 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           artistUsername: true,
           artworkUrl: true,
           playedAt: true,
+          sound: {
+            select: {
+              id: true,
+              isPublic: true,
+              status: true,
+              mp3Key: true,
+              flacKey: true,
+              accessMode: true,
+              purchaseTierId: true,
+              channel: {
+                select: {
+                  userId: true,
+                  user: { select: { deletedAt: true, suspendedAt: true } },
+                },
+              },
+            },
+          },
         },
       })
 
-      return reply.send(rows.map((r) => ({ ...r, playedAt: r.playedAt.toISOString() })))
+      const viewerUserId = request.sessionUser?.id ?? null
+      const items = await Promise.all(
+        rows.map(async ({ sound, ...row }) => {
+          const replayable =
+            sound &&
+            sound.isPublic &&
+            sound.status === 'READY' &&
+            !sound.channel.user.deletedAt &&
+            !sound.channel.user.suspendedAt
+          const { url } = replayable
+            ? await resolveGatedPlaybackUrl(fastify.prisma, {
+                playbackKey: soundPlaybackKey(sound),
+                artistUserId: sound.channel.userId,
+                accessMode: sound.accessMode,
+                purchaseTierId: sound.purchaseTierId,
+                viewerUserId,
+              })
+            : { url: null }
+          return {
+            ...row,
+            playedAt: row.playedAt.toISOString(),
+            soundId: replayable ? sound.id : null,
+            audioUrl: url,
+          }
+        }),
+      )
+
+      return reply.send(items)
     },
   )
 
@@ -166,7 +222,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.send([])
 
       const items = await fastify.prisma.curatedRotationItem.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
         orderBy: { position: 'asc' },
         take: 20,
         select: {
@@ -186,7 +242,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         items.map((item) => ({
           id: item.id,
           title: item.sound.title,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
           artworkUrl: item.sound.bannerUrl,
         })),
@@ -215,7 +271,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (to <= from) return reply.status(400).send({ error: '"to" must be after "from"' })
 
       const rows = await fastify.prisma.radioSlotBooking.findMany({
-        where: { startAt: { lt: to }, endAt: { gt: from } },
+        where: { startAt: { lt: to }, endAt: { gt: from }, channel: { user: availableUserWhere } },
         orderBy: { startAt: 'asc' },
         include: {
           channel: {
@@ -269,7 +325,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             nextShowAt: schedule.nextShowAt,
             lastShowAt: schedule.lastShowAt,
             artist: {
-              displayName: r.channel.user.displayName,
+              displayName: userName(r.channel.user),
               username: r.channel.user.username,
               avatarUrl: r.channel.user.avatarUrl,
               channelSlug: r.channel.slug,
@@ -293,8 +349,8 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug: request.params.channelSlug },
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug: request.params.channelSlug, user: availableUserWhere },
         select: {
           id: true,
           slug: true,
@@ -328,7 +384,19 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             // Broadcast.soundId is a bare scalar column (no Prisma
             // relation to Sound declared on either model) — resolved
             // via a second batch query below, not a nested select.
-            broadcasts: { select: { soundId: true }, take: 1 },
+            // A slot can have several sessions (e.g. a preview that never
+            // went live), so prefer the one that actually aired.
+            broadcasts: {
+              select: {
+                soundId: true,
+                title: true,
+                description: true,
+                artworkUrl: true,
+                visibility: true,
+              },
+              orderBy: { wentLiveAt: { sort: 'desc', nulls: 'last' } },
+              take: 1,
+            },
           },
         }),
         fastify.prisma.radioSlotBooking.findMany({
@@ -359,16 +427,28 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         endAt: Date
         note: string | null
         showType: 'LIVE_SET' | 'TALK'
-        broadcasts?: { soundId: string | null }[]
+        broadcasts?: {
+          soundId: string | null
+          title: string | null
+          description: string | null
+          artworkUrl: string | null
+          visibility: 'PUBLIC' | 'FAN_ONLY'
+        }[]
       }) => {
-        const soundId = r.broadcasts?.[0]?.soundId
+        const broadcast = r.broadcasts?.[0]
+        const soundId = broadcast?.soundId
         const recordingItem = soundId ? recordingBySoundId.get(soundId) : null
+        // This page is public, so a fan-only session's details stay hidden.
+        const publicBroadcast = broadcast?.visibility === 'PUBLIC' ? broadcast : null
         return {
           id: r.id,
           startAt: r.startAt.toISOString(),
           endAt: r.endAt.toISOString(),
           note: r.note,
           showType: r.showType,
+          title: publicBroadcast?.title ?? null,
+          description: publicBroadcast?.description ?? null,
+          coverUrl: publicBroadcast?.artworkUrl ?? null,
           recording: recordingItem
             ? {
                 soundId: recordingItem.id,
@@ -383,7 +463,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         artist: {
-          displayName: channel.user.displayName,
+          displayName: userName(channel.user),
           username: channel.user.username,
           avatarUrl: channel.user.avatarUrl,
           channelSlug: channel.slug,
@@ -469,7 +549,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Show not found' })
 
       const items = await fastify.prisma.curatedRotationItem.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
         orderBy: { position: 'asc' },
         select: {
           id: true,
@@ -501,7 +581,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         ordered.map((item) => ({
           id: item.id,
           title: item.sound.title,
-          artistName: item.sound.artistName ?? item.sound.channel.user.displayName,
+          artistName: trackArtistName(item.sound),
           artistUsername: item.sound.artistName ? null : item.sound.channel.user.username,
           artworkUrl: item.sound.bannerUrl,
         })),

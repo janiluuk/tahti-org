@@ -25,9 +25,8 @@ export const ChatPresenceResponseSchema = z.object({
 })
 
 export const ChatDailyListenersResponseSchema = z.object({
-  count: z.number().int().nonnegative(),
-  /** False when the artist has turned this off in their settings — the
-   * count itself is still computed above but callers should not display it. */
+  /** Null when the artist has turned the count off in their settings. */
+  count: z.number().int().nonnegative().nullable(),
   enabled: z.boolean(),
 })
 
@@ -79,6 +78,8 @@ export const ChatBanViewSchema = z.object({
 export const ChatBanListSchema = z.array(ChatBanViewSchema)
 
 export const ChatAccessResponseSchema = z.object({
+  chatEnabled: z.boolean(),
+  artistUsername: z.string(),
   fanChatEnabled: z.boolean(),
   isSupporter: z.boolean(),
   canJoinFanChat: z.boolean(),
@@ -96,3 +97,13 @@ export const ChatFanTokenResponseSchema = z.object({
 export const ChatPublishAckSchema = z.object({
   result: z.object({}).passthrough(),
 })
+
+/** Centrifugo proxy error object; `message` is the code string the chat client maps. */
+export const ChatPublishRejectSchema = z.object({
+  error: z.object({
+    code: z.number().int().min(400).max(1999),
+    message: z.string(),
+  }),
+})
+
+export const ChatPublishProxyReplySchema = z.union([ChatPublishAckSchema, ChatPublishRejectSchema])

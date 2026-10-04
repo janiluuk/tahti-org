@@ -32,6 +32,7 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
 import { auditLog } from '../../lib/audit.js'
+import { recordMentions } from '../../lib/mentions.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 
 function slugify(title: string): string {
@@ -84,6 +85,7 @@ const meReleaseSelect = {
   galleryMode: true,
   galleryAudioReactive: true,
   pinnedAt: true,
+  showPoweredByFooter: true,
   tracks: {
     orderBy: { position: 'asc' as const },
     select: {
@@ -99,6 +101,7 @@ const meReleaseSelect = {
       sourceKey: true,
       credits: true,
       fingerprintMatch: true,
+      soundId: true,
     },
   },
   _count: { select: { tracks: true } },
@@ -293,6 +296,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         description?: string | null
         releaseDate?: Date
         pinnedAt?: Date | null
+        showPoweredByFooter?: boolean
       } = {}
 
       if (body.smartLinkTargets !== undefined) {
@@ -306,6 +310,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.pinned !== undefined) {
         data.pinnedAt = body.pinned ? new Date() : null
+      }
+      if (body.showPoweredByFooter !== undefined) {
+        data.showPoweredByFooter = body.showPoweredByFooter
       }
 
       if (body.state) {
@@ -346,6 +353,16 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           )
         })().catch((err: unknown) =>
           request.log.warn({ err, releaseId: id }, 'release feed announce failed'),
+        )
+      }
+
+      // Drafts stay private, so their mentions wait until the release is published.
+      const descriptionNowPublic =
+        release.state === 'PUBLISHED' &&
+        (body.description !== undefined || existing.state !== 'PUBLISHED')
+      if (descriptionNowPublic && release.description) {
+        recordMentions(fastify.prisma, user.id, release.description, 'RELEASE', id).catch((e) =>
+          fastify.log.warn(e, 'mention record failed'),
         )
       }
 

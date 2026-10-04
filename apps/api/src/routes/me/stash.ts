@@ -3,7 +3,12 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
-import { StashListQuerySchema, StashPagedListSchema, openApiResponse } from '@tahti/shared'
+import {
+  CreateStashShareSchema,
+  StashListQuerySchema,
+  StashPagedListSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
@@ -183,11 +188,13 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/me/stash/:id/share', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const { id } = request.params as { id: string }
-    const body = request.body as {
-      granteeUsername?: string
-      permission?: string
-      expiresInDays?: number
+    const parsed = CreateStashShareSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      return reply
+        .status(400)
+        .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
     }
+    const body = parsed.data
 
     const file = await fastify.prisma.stashFile.findUnique({
       where: { id },
@@ -206,7 +213,7 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
       data: {
         fileId: id,
         granteeUsername: body.granteeUsername ?? null,
-        permission: body.permission ?? 'READ',
+        permission: body.permission,
         expiresAt,
       },
     })

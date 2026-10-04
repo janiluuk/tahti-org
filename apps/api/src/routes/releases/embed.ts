@@ -18,10 +18,12 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { linkReachableCollectionWhere } from '../collections/helpers.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
+import { userName, withSafeName } from '../../lib/safe-names.js'
 import { playbackForbiddenBody } from '../../lib/playback-url.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 
@@ -70,7 +72,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         if (!release) return reply.status(404).send({ error: 'Release not found' })
 
         title = release.title
-        authorName = release.user.displayName
+        authorName = userName(release.user)
         authorUrl = resolveArtistUrl(release.user.username)
         embedUrl = `${config.appUrl}/embed/r/${release.id}`
         thumbnailUrl = (await resolveReleaseArtworkUrl(release)) ?? undefined
@@ -86,8 +88,8 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         })
         if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-        title = `${channel.user.displayName} — live channel`
-        authorName = channel.user.displayName
+        authorName = userName(channel.user)
+        title = `${authorName} — live channel`
         authorUrl = resolveArtistUrl(channel.user.username)
         embedUrl = `${config.appUrl}/embed/c/${slug}`
       }
@@ -158,7 +160,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         type: release.type,
         artworkUrl,
         smartLinkSlug: release.smartLinkSlug,
-        artist: release.user,
+        artist: withSafeName(release.user),
         tracks: release.tracks.map((t) => ({
           id: t.id,
           position: t.position,
@@ -201,7 +203,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         slug: channel.slug,
         state: channel.state,
-        artist: channel.user,
+        artist: withSafeName(channel.user),
         embedUrl: `${config.appUrl}/embed/c/${slug}`,
         profileUrl: resolveArtistUrl(channel.user.username),
         hlsUrl: channel.state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
@@ -224,7 +226,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
 
       const collection = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         select: {
           slug: true,
           name: true,
@@ -232,6 +234,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           coverKey: true,
           user: { select: { username: true, displayName: true } },
           items: {
+            where: { sound: { isPublic: true, status: 'READY' } },
             orderBy: { position: 'asc' },
             select: {
               sound: {
@@ -258,7 +261,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         coverUrl: await resolveCollectionCoverUrl(collection),
         embedUrl: `${config.appUrl}/embed/col/${collection.slug}`,
         profileUrl: resolveArtistUrl(collection.user.username),
-        artist: collection.user,
+        artist: withSafeName(collection.user),
         // Only sound-item-backed entries have a single playable file (a release
         // is itself a multi-track grouping) — same limitation as the Manage panel
         // playlist-switch feature (apps/api/src/routes/internal/channel-fallback.ts).
@@ -292,13 +295,17 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug, trackId } = routeParams
 
       const collection = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true },
+        where: { slug, ...linkReachableCollectionWhere },
         select: { id: true },
       })
       if (!collection) return reply.status(404).send({ error: 'Collection not found' })
 
       const item = await fastify.prisma.collectionItem.findFirst({
-        where: { collectionId: collection.id, soundId: trackId },
+        where: {
+          collectionId: collection.id,
+          soundId: trackId,
+          sound: { isPublic: true, status: 'READY' },
+        },
         select: {
           sound: {
             select: {

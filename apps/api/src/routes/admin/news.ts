@@ -5,15 +5,39 @@ import { z } from 'zod'
 import type { FastifyPluginAsync } from 'fastify'
 import { requireBoard } from '../../plugins/auth.js'
 
+// Blank clears the field; anything else must be an http(s) URL.
+const optionalHttpUrl = z
+  .string()
+  .trim()
+  .max(2000)
+  .nullable()
+  .optional()
+  .refine((v) => !v || /^https?:\/\//i.test(v), { message: 'Must be an http(s) URL' })
+  .transform((v) => (v === undefined ? undefined : v || null))
+
+const optionalLinkLabel = z
+  .string()
+  .trim()
+  .max(60)
+  .nullable()
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v || null))
+
 const CreateNewsPostSchema = z.object({
   headline: z.string().trim().min(1).max(200),
   summary: z.string().trim().min(1).max(500),
+  imageUrl: optionalHttpUrl,
+  linkUrl: optionalHttpUrl,
+  linkLabel: optionalLinkLabel,
   publish: z.boolean().optional(),
 })
 
 const UpdateNewsPostSchema = z.object({
   headline: z.string().trim().min(1).max(200).optional(),
   summary: z.string().trim().min(1).max(500).optional(),
+  imageUrl: optionalHttpUrl,
+  linkUrl: optionalHttpUrl,
+  linkLabel: optionalLinkLabel,
   publish: z.boolean().optional(),
 })
 
@@ -47,6 +71,9 @@ const adminNewsRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           headline: parsed.data.headline,
           summary: parsed.data.summary,
+          imageUrl: parsed.data.imageUrl ?? null,
+          linkUrl: parsed.data.linkUrl ?? null,
+          linkLabel: parsed.data.linkLabel ?? null,
           authorId: user.id,
           authorName: user.displayName,
           publishedAt: parsed.data.publish ? new Date() : null,

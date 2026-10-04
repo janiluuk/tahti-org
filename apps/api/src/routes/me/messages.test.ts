@@ -221,6 +221,270 @@ describe('M38 — private messaging', () => {
     expect(convoForBAfter?.unreadCount).toBe(0)
   })
 
+  it('shows the newest 200 messages, oldest first, in a long thread', async () => {
+    const userC = await prisma.user.findUniqueOrThrow({
+      where: { username: 'dm-test-casey' },
+      select: { id: true },
+    })
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieA },
+      payload: { username: 'dm-test-casey' },
+    })
+    const longThreadId = start.json().conversationId as string
+    const base = Date.UTC(2026, 0, 1)
+    await prisma.message.createMany({
+      data: Array.from({ length: 205 }, (_, i) => ({
+        conversationId: longThreadId,
+        senderId: i % 2 === 0 ? userA.id : userC.id,
+        body: `message ${i}`,
+        createdAt: new Date(base + i * 1000),
+      })),
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/messages/conversations/${longThreadId}`,
+      headers: { cookie: cookieA },
+    })
+    expect(res.statusCode).toBe(200)
+    const bodies = (res.json() as { messages: Array<{ body: string }> }).messages.map((m) => m.body)
+    expect(bodies).toHaveLength(200)
+    expect(bodies[0]).toBe('message 5')
+    expect(bodies[199]).toBe('message 204')
+    expect(res.json().hasMore).toBe(true)
+  })
+
+  it('pages back through older messages with ?before=', async () => {
+    const userC = await prisma.user.findUniqueOrThrow({
+      where: { username: 'dm-test-casey' },
+      select: { id: true },
+    })
+    const conversation = await prisma.conversation.create({
+      data: { participants: { create: [{ userId: userB.id }, { userId: userC.id }] } },
+      select: { id: true },
+    })
+    const base = Date.UTC(2026, 1, 1)
+    await prisma.message.createMany({
+      data: Array.from({ length: 7 }, (_, i) => ({
+        conversationId: conversation.id,
+        senderId: i % 2 === 0 ? userB.id : userC.id,
+        body: `page ${i}`,
+        createdAt: new Date(base + i * 1000),
+      })),
+    })
+    const url = `/api/me/messages/conversations/${conversation.id}`
+    type Page = { messages: Array<{ id: string; body: string }>; hasMore: boolean }
+
+    const newest = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3`,
+      headers: { cookie: cookieB },
+    })
+    expect(newest.statusCode).toBe(200)
+    const first = newest.json() as Page
+    expect(first.messages.map((m) => m.body)).toEqual(['page 4', 'page 5', 'page 6'])
+    expect(first.hasMore).toBe(true)
+
+    const older = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3&before=${first.messages[0]!.id}`,
+      headers: { cookie: cookieB },
+    })
+    expect(older.statusCode).toBe(200)
+    const second = older.json() as Page
+    expect(second.messages.map((m) => m.body)).toEqual(['page 1', 'page 2', 'page 3'])
+    expect(second.hasMore).toBe(true)
+
+    const oldest = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=3&before=${second.messages[0]!.id}`,
+      headers: { cookie: cookieB },
+    })
+    expect((oldest.json() as Page).messages.map((m) => m.body)).toEqual(['page 0'])
+    expect((oldest.json() as Page).hasMore).toBe(false)
+
+    const byDate = await app.inject({
+      method: 'GET',
+      url: `${url}?limit=2&before=${new Date(base + 3000).toISOString()}`,
+      headers: { cookie: cookieB },
+    })
+    expect((byDate.json() as Page).messages.map((m) => m.body)).toEqual(['page 1', 'page 2'])
+
+    const invalid = await app.inject({
+      method: 'GET',
+      url: `${url}?before=not-a-message`,
+      headers: { cookie: cookieB },
+    })
+    expect(invalid.statusCode).toBe(400)
+  })
+
+  it('only marks a conversation read when the newest page is viewed', async () => {
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieB },
+      payload: { username: 'dm-test-casey' },
+    })
+    const id = start.json().conversationId as string
+    await app.inject({
+      method: 'POST',
+      url: `/api/me/messages/conversations/${id}/messages`,
+      headers: { cookie: cookieC },
+      payload: { body: 'unread for Blair' },
+    })
+    const unread = async () => {
+      const list = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieB },
+      })
+      return (list.json() as Array<{ id: string; unreadCount: number }>).find((c) => c.id === id)
+        ?.unreadCount
+    }
+
+    expect(await unread()).toBe(1)
+    await app.inject({
+      method: 'GET',
+      url: `/api/me/messages/conversations/${id}?before=${new Date().toISOString()}`,
+      headers: { cookie: cookieB },
+    })
+    expect(await unread()).toBe(1)
+  })
+
+  describe('deleted and suspended accounts', () => {
+    let suspended: { id: string; username: string }
+    let deleted: { id: string; username: string }
+
+    beforeAll(async () => {
+      const s = await createTestArtist(prisma, {
+        email: `${PREFIX}suspended@example.com`,
+        username: 'dm-test-gone-suspended',
+      })
+      const d = await createTestArtist(prisma, {
+        email: `${PREFIX}deleted@example.com`,
+        username: 'dm-test-gone-deleted',
+      })
+      suspended = { id: s.id, username: 'dm-test-gone-suspended' }
+      deleted = { id: d.id, username: 'dm-test-gone-deleted' }
+    })
+
+    it('leaves them out of user search', async () => {
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+      await prisma.user.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } })
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/users/search?q=dm-test-gone',
+        headers: { cookie: cookieA },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual([])
+    })
+
+    it('refuses to start a conversation with them', async () => {
+      for (const username of [suspended.username, deleted.username]) {
+        const res = await app.inject({
+          method: 'POST',
+          url: '/api/me/messages/conversations',
+          headers: { cookie: cookieA },
+          payload: { username },
+        })
+        expect(res.statusCode).toBe(403)
+        expect(res.json()).toEqual({
+          error: 'This account is no longer available',
+          code: 'recipient_unavailable',
+        })
+      }
+    })
+
+    it('refuses to send into an existing conversation once the recipient is suspended', async () => {
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: null } })
+      const start = await app.inject({
+        method: 'POST',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieA },
+        payload: { username: suspended.username },
+      })
+      expect(start.statusCode).toBe(200)
+      const id = start.json().conversationId as string
+      await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/messages/conversations/${id}/messages`,
+        headers: { cookie: cookieA },
+        payload: { body: 'Still there?' },
+      })
+      expect(res.statusCode).toBe(403)
+      expect(res.json().code).toBe('recipient_unavailable')
+      expect(await prisma.message.count({ where: { conversationId: id } })).toBe(0)
+    })
+
+    it('leaves them out of the contact list', async () => {
+      await prisma.artistFollow.createMany({
+        data: [
+          { followerUserId: userA.id, artistUserId: suspended.id },
+          { followerUserId: deleted.id, artistUserId: userA.id },
+        ],
+        skipDuplicates: true,
+      })
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/contacts',
+        headers: { cookie: cookieA },
+      })
+      expect(res.statusCode).toBe(200)
+      const usernames = (res.json() as Array<{ username: string }>).map((c) => c.username)
+      expect(usernames).toContain(userB.username)
+      expect(usernames).not.toContain(suspended.username)
+      expect(usernames).not.toContain(deleted.username)
+    })
+
+    it('keeps existing conversations in the inbox but marks them unavailable', async () => {
+      const withDeleted = await prisma.conversation.create({
+        data: { participants: { create: [{ userId: userA.id }, { userId: deleted.id }] } },
+        select: { id: true },
+      })
+      await prisma.message.create({
+        data: { conversationId: withDeleted.id, senderId: deleted.id, body: 'Bye for now' },
+      })
+
+      const list = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/conversations',
+        headers: { cookie: cookieA },
+      })
+      expect(list.statusCode).toBe(200)
+      const byUsername = new Map(
+        (
+          list.json() as Array<{
+            id: string
+            otherUser: { username: string; available: boolean }
+          }>
+        ).map((c) => [c.otherUser.username, c]),
+      )
+      expect(byUsername.get(userB.username)?.otherUser.available).toBe(true)
+      expect(byUsername.get(suspended.username)?.otherUser.available).toBe(false)
+      expect(byUsername.get(deleted.username)?.otherUser.available).toBe(false)
+
+      const detail = await app.inject({
+        method: 'GET',
+        url: `/api/me/messages/conversations/${withDeleted.id}`,
+        headers: { cookie: cookieA },
+      })
+      expect(detail.statusCode).toBe(200)
+      const body = detail.json() as {
+        otherUser: { available: boolean }
+        messages: Array<{ body: string }>
+      }
+      expect(body.otherUser.available).toBe(false)
+      expect(body.messages.map((m) => m.body)).toEqual(['Bye for now'])
+    })
+  })
+
   it('requires auth on every messaging route', async () => {
     const list = await app.inject({ method: 'GET', url: '/api/me/messages/conversations' })
     expect(list.statusCode).toBe(401)

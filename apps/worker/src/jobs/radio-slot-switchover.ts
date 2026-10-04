@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Job } from 'bullmq'
-import type { PrismaClient } from '@tahti/db'
+import { availableUserWhere, type PrismaClient } from '@tahti/db'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { restartChannelLiquidsoap, spawnOrchestratorChannel } from '../lib/orchestrator.js'
 
@@ -14,7 +14,7 @@ export interface RadioSlotSwitchoverResult {
 /**
  * Keeps Tahti Radio's Liquidsoap live input in sync with the current
  * RadioSlotBooking (if any): a booked artist's slug while their slot is
- * active, or null (the channel's own dead mount, so fallback() plays the
+ * active and their account is neither suspended nor deleted, or null (the channel's own dead mount, so fallback() plays the
  * curated rotation) otherwise. Only restarts Liquidsoap when the desired
  * source actually changes — every other tick is a cheap no-op.
  */
@@ -64,7 +64,11 @@ export async function processRadioSlotSwitchoverJob(
 
   const now = new Date()
   const active = await prisma.radioSlotBooking.findFirst({
-    where: { startAt: { lte: now }, endAt: { gt: now } },
+    where: {
+      startAt: { lte: now },
+      endAt: { gt: now },
+      channel: { user: availableUserWhere },
+    },
     orderBy: { startAt: 'asc' },
     select: { channel: { select: { slug: true } } },
   })

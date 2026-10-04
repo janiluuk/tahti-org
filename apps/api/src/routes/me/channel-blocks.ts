@@ -29,6 +29,7 @@ import {
   resolveLogoBlockUrl,
   sandboxUrlForBundle,
 } from '../../lib/channel-blocks.js'
+import { userName } from '../../lib/safe-names.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -207,7 +208,12 @@ const meChannelBlockRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, slug: true, state: true, user: { select: { displayName: true } } },
+        select: {
+          id: true,
+          slug: true,
+          state: true,
+          user: { select: { username: true, displayName: true } },
+        },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -236,7 +242,7 @@ const meChannelBlockRoutes: FastifyPluginAsync = async (fastify) => {
       const installById = new Map(installs.map((install) => [install.id, install]))
       const context = {
         channelSlug: channel.slug,
-        displayName: channel.user.displayName,
+        displayName: userName(channel.user),
         isLive: channel.state === 'LIVE',
       }
 

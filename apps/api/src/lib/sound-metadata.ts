@@ -47,6 +47,7 @@ export const soundMetadataSelect = {
   license: true,
   repostToDownload: true,
   followToDownload: true,
+  downloadsEnabled: true,
   isPublic: true,
   isFallback: true,
   selectsOptIn: true,
@@ -60,6 +61,7 @@ export const soundMetadataSelect = {
   accessMode: true,
   purchaseTierId: true,
   status: true,
+  processingError: true,
   streamingCopyStatus: true,
   durationSec: true,
   sourceFormat: true,
@@ -160,6 +162,7 @@ function fieldsToPrismaData(fields: SoundMetadataFields): Record<string, unknown
   if (fields.license !== undefined) data.license = fields.license
   if (fields.repostToDownload !== undefined) data.repostToDownload = fields.repostToDownload
   if (fields.followToDownload !== undefined) data.followToDownload = fields.followToDownload
+  if (fields.downloadsEnabled !== undefined) data.downloadsEnabled = fields.downloadsEnabled
   if (fields.isPublic !== undefined) data.isPublic = fields.isPublic
   if (fields.isFallback !== undefined) data.isFallback = fields.isFallback
   if (fields.selectsOptIn !== undefined) data.selectsOptIn = fields.selectsOptIn

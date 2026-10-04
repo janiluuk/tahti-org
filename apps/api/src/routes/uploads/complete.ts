@@ -2,10 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { soundDefaultsFromOwner } from '@tahti/db'
 import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/sound-metadata.js'
+import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { headObjectSize } from '../../lib/minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
 import { auditLog } from '../../lib/audit.js'
@@ -51,6 +53,10 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Upload does not belong to your channel' })
       }
 
+      if (metadata?.venueId && !(await canAttachVenue(fastify.prisma, metadata.venueId, user.id))) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
+
       const fileSizeBytes = (await headObjectSize(uploadId)) ?? 0
 
       // Auto-join the 24/7 rotation on upload unless the artist opted out or the
@@ -78,8 +84,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           ...autoEnrollData,
           // Always the account default at creation time — commentsEnabled isn't
           // client-settable until the track exists (PATCH /api/me/sound/:id).
-          commentsEnabled: channel.user.defaultTrackCommentsEnabled,
-          topListsEligible: !channel.user.topListsOptOut,
+          ...soundDefaultsFromOwner(channel.user),
         },
         select: { id: true, status: true },
       })

@@ -24,6 +24,32 @@ export const SupportContactResponseSchema = z.object({
   ticketId: z.string(),
 })
 
+// Requesters see replies from the team, not from the individual board member
+// who wrote them.
+export const SUPPORT_REPLY_AUTHOR_NAME = 'Tahti support'
+
+export const MySupportTicketReplySchema = z.object({
+  id: z.string(),
+  body: z.string(),
+  authorName: z.string(),
+  createdAt: z.coerce.date(),
+})
+
+export const MySupportTicketSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  message: z.string(),
+  category: SupportCategorySchema,
+  status: SupportStatusSchema,
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  replies: z.array(MySupportTicketReplySchema),
+})
+
+export const MySupportTicketListSchema = z.object({
+  tickets: z.array(MySupportTicketSchema),
+})
+
 export const AdminSupportTicketListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
+import { userName } from './safe-names.js'
 
 /** Record a Tahti Radio feature event and update channel rotation timestamp. */
 export async function recordRadioFeature(prisma: PrismaClient, channelId: string): Promise<void> {
@@ -29,7 +30,7 @@ export async function listRadioEligibleChannels(prisma: PrismaClient) {
       id: true,
       slug: true,
       lastFeaturedAt: true,
-      user: { select: { displayName: true } },
+      user: { select: { username: true, displayName: true } },
     },
   })
 
@@ -52,7 +53,7 @@ export async function getRadioFeatureHistory(prisma: PrismaClient, limit = 10) {
         select: {
           id: true,
           slug: true,
-          user: { select: { displayName: true } },
+          user: { select: { username: true, displayName: true } },
         },
       },
     },
@@ -61,7 +62,7 @@ export async function getRadioFeatureHistory(prisma: PrismaClient, limit = 10) {
   return rows.map((row) => ({
     channelId: row.channel.id,
     slug: row.channel.slug,
-    artistName: row.channel.user.displayName,
+    artistName: userName(row.channel.user),
     featuredAt: row.featuredAt,
   }))
 }

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyFollowersOfNewEvent } from '@tahti/db'
 import {
   ArtistEventListSchema,
   ArtistEventSchema,
@@ -10,12 +11,15 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  safeDisplayName,
+  UpdateArtistEventSchema,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 function serialize(event: {
   id: string
   title: string
+  description: string | null
   place: string
   location: string
   eventUrl: string | null
@@ -71,6 +75,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           userId: user.id,
           title: body.title,
+          description: body.description,
           place: body.place,
           location: body.location,
           eventUrl: body.eventUrl || null,
@@ -78,7 +83,61 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      await notifyFollowersOfNewEvent(
+        fastify.prisma,
+        {
+          id: user.id,
+          username: user.username,
+          displayName: safeDisplayName(user.displayName, user.username),
+        },
+        event,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'new-event notification failed'))
+
       return reply.status(201).send(serialize(event))
+    },
+  )
+
+  // PATCH /api/me/events/:id — edits don't notify followers again; only new events do
+  fastify.patch(
+    '/api/me/events/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArtistEventSchema, 'ArtistEvent'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const parsed = UpdateArtistEventSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+      const body = parsed.data
+
+      const event = await fastify.prisma.artistEvent.findFirst({
+        where: { id: routeParams.id, userId: user.id },
+        select: { id: true },
+      })
+      if (!event) return reply.status(404).send({ error: 'Event not found' })
+
+      const updated = await fastify.prisma.artistEvent.update({
+        where: { id: event.id },
+        data: {
+          title: body.title,
+          description: body.description,
+          place: body.place,
+          location: body.location,
+          eventUrl: body.eventUrl === undefined ? undefined : body.eventUrl || null,
+          startAt: body.startAt === undefined ? undefined : new Date(body.startAt),
+        },
+      })
+      return reply.send(serialize(updated))
     },
   )
 

@@ -15,7 +15,13 @@ import {
 } from './fingerprint-ingest.js'
 import { ARCHIVE_CACHE_VOLUME, COVER_CACHE_VOLUME, FFMPEG_IMAGE } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
-import { ensureCoverImage, coverImagePath } from './cover-cache.js'
+import type { VisualPreset } from '@tahti/shared'
+import {
+  ensureBackdropImage,
+  ensureCoverImage,
+  backdropImagePath,
+  coverImagePath,
+} from './cover-cache.js'
 import { liveInputUrl } from './live-input.js'
 import {
   LIQUIDSOAP_FADE_SEC,
@@ -46,6 +52,15 @@ const LIQUIDSOAP_CONFIG_MOUNT = process.env.LIQUIDSOAP_CONFIG_MOUNT ?? '/liquids
 const API_URL = process.env.API_URL ?? 'http://api:3001'
 const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
+/** Neither the backdrop's `video.add_image(x=, y=)` call nor the visualizer's
+ * ffmpeg filter graph has been run through `liquidsoap --check` against
+ * LIQUIDSOAP_IMAGE yet, and a script that fails to parse takes the whole
+ * channel offline (HLS too, not just the mirrors), so both stay opt-in until
+ * verified on staging. */
+const STREAM_OVERLAY_FLAGS: StreamOverlayFlags = {
+  backdrop: process.env.STREAM_OVERLAY_BACKDROP_ENABLED === 'true',
+  visualizer: process.env.STREAM_OVERLAY_VISUALIZER_ENABLED === 'true',
+}
 
 function decryptKey(enc: string): string {
   const hex =
@@ -91,6 +106,77 @@ function toLiquidsoapColor(hex: string | undefined, fallback: string): string {
   return fallback
 }
 
+/** ffmpeg audio-visualization filter per stored visualizer preset. Presets
+ * with no reasonable ffmpeg equivalent (3D scenes, cloudscapes) draw nothing. */
+const VISUALIZER_FILTERS: Record<VisualPreset, string | null> = {
+  MINIMAL: null,
+  WATER_RIPPLE: 'showwaves',
+  WAVEFORM_BARS: 'showfreqs',
+  PARTICLE_FIELD: 'avectorscope',
+  AURORA: null,
+  REACTIVE_GRID: 'showfreqs',
+  CLOUDSCAPE: null,
+  LINE_TANGLE: 'avectorscope',
+  BACKDROP_BOX: null,
+  LENS_FLARES: null,
+  IES_SPOTLIGHT: null,
+}
+
+export function visualizerFilterFor(preset: string | undefined): string | null {
+  if (!preset || !Object.hasOwn(VISUALIZER_FILTERS, preset)) return null
+  return VISUALIZER_FILTERS[preset as VisualPreset]
+}
+
+/** Visualizer strip: full width, along the bottom of the frame, under the
+ * scrim and text layers. */
+const VISUALIZER_HEIGHT = 200
+const VISUALIZER_Y = 720 - VISUALIZER_HEIGHT
+
+/** With a backdrop, the cover shrinks to a centered 16:9 card (it is cached at
+ * 1280x720, so this keeps its aspect) that ends above the text strip. */
+const COVER_CARD = { width: 640, height: 360, x: 320, y: 140 }
+
+export interface RtmpMirrorExtraLayers {
+  /** Cover-cache path of a fetched backdrop image (see ensureBackdropImage). */
+  backdropPath?: string
+  visualPreset?: string
+}
+
+export interface StreamOverlayFlags {
+  backdrop: boolean
+  visualizer: boolean
+}
+
+/** Extra mirror layers for a channel, with each layer dropped while its
+ * feature flag is off. */
+export function resolveRtmpMirrorExtraLayers(
+  channelId: string,
+  backdropReady: boolean,
+  visualPreset: string | undefined,
+  flags: StreamOverlayFlags,
+): RtmpMirrorExtraLayers {
+  return {
+    backdropPath: flags.backdrop && backdropReady ? backdropImagePath(channelId) : undefined,
+    visualPreset: flags.visualizer ? visualPreset : undefined,
+  }
+}
+
+/** Liquidsoap function definition that renders `audioSource` through an
+ * ffmpeg visualization filter, scaled to the strip and padded with
+ * transparency to the full frame so it can be layered with `add`. */
+function buildVisualizerDefinition(name: string, filter: string, audioSource: string): string {
+  return [
+    `def ${name}_graph(graph) =`,
+    `  a = ffmpeg.filter.audio.input(graph, ${audioSource})`,
+    `  v = ffmpeg.filter.${filter}(graph, a)`,
+    `  v = ffmpeg.filter.scale(graph, w="1280", h="${VISUALIZER_HEIGHT}", v)`,
+    `  v = ffmpeg.filter.pad(graph, w="1280", h="720", x="0", y="${VISUALIZER_Y}", color="black@0", v)`,
+    `  ffmpeg.filter.video.output(graph, v)`,
+    'end',
+    `${name} = ffmpeg.filter.create(${name}_graph)`,
+  ].join('\n')
+}
+
 /**
  * Renders one multistream RTMP output: the live/archive audio muxed with a video
  * track built from the channel's cover-cache image + title text. Verified against
@@ -109,9 +195,16 @@ export function buildRtmpMirrorOutput(
   subtitleText?: string,
   textColor?: string,
   scrimEnabled?: boolean,
+  extraLayers: RtmpMirrorExtraLayers = {},
 ): string {
   const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
-  const base = `video.add_image(file="${coverPath}", width=1280, height=720, blank())`
+  const outputId = rtmpMirrorOutputId(target.id)
+  const cover = extraLayers.backdropPath
+    ? `video.add_image(file="${coverPath}", width=${COVER_CARD.width}, height=${COVER_CARD.height}, x=${COVER_CARD.x}, y=${COVER_CARD.y}, video.add_image(file="${extraLayers.backdropPath}", width=1280, height=720, blank()))`
+    : `video.add_image(file="${coverPath}", width=1280, height=720, blank())`
+  const visualizerFilter = visualizerFilterFor(extraLayers.visualPreset)
+  const visualizerName = `${outputId}_vis`
+  const base = visualizerFilter ? `add(normalize=false, [${cover}, ${visualizerName}])` : cover
   // Dark bar behind the title/subtitle text region only — not the whole
   // frame, so the rest of the cover art stays untouched. Sized to the
   // bottom strip both text lines already render into (title y=628,
@@ -128,8 +221,10 @@ export function buildRtmpMirrorOutput(
   const videoSource = titleText
     ? `video.add_text(color=${titleColor}, size=28, x=20, y=628, "${escapeLiquidsoapString(titleText)}", ${withSubtitle})`
     : withSubtitle
-  const outputId = rtmpMirrorOutputId(target.id)
-  return `output.url(\n  id="${outputId}",\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
+  const definition = visualizerFilter
+    ? `${buildVisualizerDefinition(visualizerName, visualizerFilter, audioSource)}\n`
+    : ''
+  return `${definition}output.url(\n  id="${outputId}",\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
 }
 
 // Track running containers: channelId → containerName
@@ -280,6 +375,8 @@ export async function spawnLiquidsoapContainer(
       streamOverlayTextColor: true,
       streamOverlayScrimEnabled: true,
       streamOverlayCoverUrl: true,
+      streamOverlayBackdropUrl: true,
+      streamOverlayVisualPreset: true,
       user: { select: { displayName: true, avatarUrl: true } },
     },
   })
@@ -306,12 +403,20 @@ export async function spawnLiquidsoapContainer(
   // populate the cache when there's actually a mirror target enabled. The artist
   // can override both via Dashboard → Multistream → stream overlay; falls back
   // to their avatar/display name when unset.
+  let backdropReady = false
   if (targets.length > 0) {
     await ensureCoverImage(
       channelId,
       channel.streamOverlayCoverUrl ?? channel.user.avatarUrl,
       COVER_CACHE_VOLUME,
     )
+    if (STREAM_OVERLAY_FLAGS.backdrop && channel.streamOverlayBackdropUrl) {
+      backdropReady = await ensureBackdropImage(
+        channelId,
+        channel.streamOverlayBackdropUrl,
+        COVER_CACHE_VOLUME,
+      )
+    }
   }
 
   // Render Liquidsoap config from template
@@ -345,6 +450,12 @@ export async function spawnLiquidsoapContainer(
     const overlaySubtitle = channel.streamOverlayShowTitle
       ? (channel.streamOverlaySubtitle ?? undefined)
       : undefined
+    const extraLayers = resolveRtmpMirrorExtraLayers(
+      channelId,
+      backdropReady,
+      channel.streamOverlayVisualPreset,
+      STREAM_OVERLAY_FLAGS,
+    )
     const rtmpBlock = targets
       .map((t) =>
         buildRtmpMirrorOutput(
@@ -354,6 +465,7 @@ export async function spawnLiquidsoapContainer(
           overlaySubtitle,
           channel.streamOverlayTextColor ?? undefined,
           channel.streamOverlayScrimEnabled,
+          extraLayers,
         ),
       )
       .join('\n\n')

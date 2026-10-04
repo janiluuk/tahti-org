@@ -4,7 +4,7 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { prisma } from '@tahti/db'
+import { prisma, soundOwnerDefaults } from '@tahti/db'
 import { extensionFromDriveFile, mapGenre } from '@tahti/shared'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
 import { uploadStream } from '../lib/minio.js'
@@ -108,6 +108,7 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
         source: 'SOUNDCLOUD',
         bannerUrl: track.artwork_url ?? null,
         ...(track.genre ? mapGenre(track.genre) : {}),
+        ...(await soundOwnerDefaults(prisma, channel.id)),
       },
       select: { id: true },
     })

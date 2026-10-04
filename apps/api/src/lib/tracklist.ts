@@ -5,6 +5,7 @@ import type { PrismaClient } from '@tahti/db'
 import type { TracklistEntry } from '@tahti/shared'
 import { TracklistEntrySchema } from '@tahti/shared'
 import { recordMentions } from './mentions.js'
+import { userName } from './safe-names.js'
 
 export async function normalizeTracklist(
   prisma: PrismaClient,
@@ -31,7 +32,7 @@ export async function normalizeTracklist(
         throw new Error(`Unknown Tahti artist @${artistUsername}`)
       }
       artistUsername = user.username.toLowerCase()
-      if (!artist?.trim()) artist = user.displayName
+      if (!artist?.trim()) artist = userName(user)
     }
     normalized.push({
       startSec: row.startSec,

@@ -20,9 +20,13 @@ const channelProvisionRoutes: FastifyPluginAsync = async (fastify) => {
     const liveSourceMount = `/live/${slug}`
     const liveSourcePass = nanoid(24)
     const rtmpStreamKey = `${slug}__${nanoid(32)}`
-    const [liveSourcePassHash, rtmpStreamKeyHash] = await Promise.all([
+    const [liveSourcePassHash, rtmpStreamKeyHash, commentDefaults] = await Promise.all([
       hashPassword(liveSourcePass),
       hashPassword(rtmpStreamKey),
+      fastify.prisma.user.findUniqueOrThrow({
+        where: { id: user.id },
+        select: { defaultChannelCommentsEnabled: true },
+      }),
     ])
 
     const channel = await fastify.prisma.channel.create({
@@ -34,6 +38,7 @@ const channelProvisionRoutes: FastifyPluginAsync = async (fastify) => {
         liveSourcePassHash,
         rtmpStreamKey,
         rtmpStreamKeyHash,
+        commentsEnabled: commentDefaults.defaultChannelCommentsEnabled,
       },
       select: { slug: true },
     })

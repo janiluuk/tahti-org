@@ -6,6 +6,7 @@ import { Prisma } from '@tahti/db'
 import type { JamSession, JamParticipant, User } from '@tahti/db'
 import {
   CreateJamSessionSchema,
+  JamParticipantControlUpdateSchema,
   JamStateUpdateSchema,
   JamTrackSchema,
   type JamSessionView,
@@ -16,6 +17,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { generateJamCode } from '../../lib/jam-code.js'
 import { publishToJam, subscribeToJam } from '../../lib/jam-broadcast.js'
+import { userName } from '../../lib/safe-names.js'
 
 const sessionWithParticipants = {
   include: {
@@ -58,7 +60,7 @@ function serialize(session: SessionWithParticipants): JamSessionView {
     participants: session.participants.map((p) => ({
       userId: p.user.id,
       username: p.user.username,
-      displayName: p.user.displayName,
+      displayName: userName(p.user),
       avatarUrl: p.user.avatarUrl,
       role: p.role,
       canControl: p.canControl,
@@ -189,7 +191,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/v1/jam/:id/events — SSE stream of session state, pushed
-  // whenever the host reports a change (see POST .../state below).
+  // whenever playback or the participant list changes.
   fastify.get(
     '/api/v1/jam/:id/events',
     { preHandler: requireAuth, schema: { tags: ['jam'] } },
@@ -229,7 +231,8 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // POST /api/v1/jam/:id/state — host-only: reports current playback.
+  // POST /api/v1/jam/:id/state — the host, or a guest the host has given
+  // control, reports current playback.
   fastify.post(
     '/api/v1/jam/:id/state',
     { preHandler: requireAuth, schema: { tags: ['jam'] } },
@@ -243,8 +246,9 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
 
       const existing = await loadActiveSession(id)
       if (!existing) return reply.status(404).send({ error: 'Jam not found' })
-      if (existing.hostUserId !== user.id) {
-        return reply.status(403).send({ error: 'Only the host can report playback state' })
+      const caller = existing.participants.find((p) => p.userId === user.id)
+      if (existing.hostUserId !== user.id && !caller?.canControl) {
+        return reply.status(403).send({ error: 'Only the host can change playback in this jam' })
       }
 
       const session = await fastify.prisma.jamSession.update({
@@ -259,6 +263,49 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const view = serialize(session)
+      void publishToJam(id, { type: 'state', session: view })
+      return reply.send(view)
+    },
+  )
+
+  // PATCH /api/v1/jam/:id/participants/:userId — host-only: gives a guest
+  // control of playback, or takes it back.
+  fastify.patch(
+    '/api/v1/jam/:id/participants/:userId',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'Let a Tahti Jam guest control playback',
+        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id, userId } = request.params as { id: string; userId: string }
+      const parsed = JamParticipantControlUpdateSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const session = await requireParticipant(request, id)
+      if (!session) return reply.status(404).send({ error: 'Jam not found' })
+      if (session.hostUserId !== user.id) {
+        return reply.status(403).send({ error: 'Only the host can change who controls this jam' })
+      }
+      if (userId === session.hostUserId) {
+        return reply.status(400).send({ error: 'The host always controls the jam' })
+      }
+      const target = session.participants.find((p) => p.userId === userId)
+      if (!target) return reply.status(404).send({ error: 'Not in this jam' })
+
+      await fastify.prisma.jamParticipant.update({
+        where: { id: target.id },
+        data: { canControl: parsed.data.canControl },
+      })
+
+      const fresh = await loadActiveSession(id)
+      const view = serialize(fresh!)
       void publishToJam(id, { type: 'state', session: view })
       return reply.send(view)
     },

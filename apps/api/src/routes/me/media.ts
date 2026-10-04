@@ -7,21 +7,72 @@ import {
   ImageUploadPrepareResponseSchema,
   ImageUploadPrepareSchema,
   UserMediaCompleteSchema,
+  UserMediaFileListSchema,
   UserMediaFileSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
+import {
+  deleteUserMediaObject,
+  listUserMediaObjects,
+  userMediaObjectExists,
+} from '../../lib/user-media-store.js'
 
 const PRESIGN_TTL_SEC = 900
+
+const CONTENT_TYPE_BY_EXT: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+}
+
+const contentTypeForKey = (key: string) =>
+  CONTENT_TYPE_BY_EXT[key.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream'
 
 /** Generic "my media" upload — backs `ImageUploadField`/`uploadUserMediaFile` on the
  * client, used wherever a feature needs an ad hoc image (radio widget cover art,
  * channel backdrops, stream overlay images) without its own dedicated attach
- * endpoint. No DB row: the object key itself is the identity, nothing lists these
- * back server-side today. */
+ * endpoint. No DB row: the object key itself is the identity, so the list below
+ * reads the storage prefix (the original filename isn't kept; the key's last
+ * segment stands in for it). */
 const meMediaRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/me/media',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: "List the caller's generic media uploads, newest first",
+        response: openApiResponse(UserMediaFileListSchema, 'UserMediaList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const objects = await listUserMediaObjects(`media/${user.username}/`)
+      const files = objects
+        .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+        .flatMap((object) => {
+          const url = publicMediaUrl(object.key)
+          return url
+            ? [
+                {
+                  id: object.key,
+                  filename: object.key.split('/').pop() ?? object.key,
+                  contentType: contentTypeForKey(object.key),
+                  sizeBytes: object.sizeBytes,
+                  url,
+                  createdAt: object.lastModified.toISOString(),
+                },
+              ]
+            : []
+        })
+      return reply.send({ files })
+    },
+  )
+
   fastify.post(
     '/api/me/media/prepare',
     {
@@ -81,6 +132,29 @@ const meMediaRoutes: FastifyPluginAsync = async (fastify) => {
         url,
         createdAt: new Date().toISOString(),
       })
+    },
+  )
+
+  // DELETE /api/me/media/:id — `id` is the object key (URL-encoded, so it
+  // carries its slashes), and must sit under the caller's own prefix.
+  fastify.delete(
+    '/api/me/media/:id',
+    {
+      preHandler: requireAuth,
+      schema: { tags: ['channel'], description: 'Delete one of your generic media uploads' },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id?: string }
+      const key = id?.trim() ?? ''
+      if (!key.startsWith(`media/${user.username}/`) || key.includes('..')) {
+        return reply.status(403).send({ error: 'That file is not one of your uploads' })
+      }
+      if (!(await userMediaObjectExists(key))) {
+        return reply.status(404).send({ error: 'File not found' })
+      }
+      await deleteUserMediaObject(key)
+      return reply.send({ ok: true as const })
     },
   )
 }

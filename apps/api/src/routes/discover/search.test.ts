@@ -31,6 +31,7 @@ describe('GET /api/v1/search', () => {
         title: 'Midnight Ambient Set',
         status: 'READY',
         isPublic: true,
+        tags: ['Late Night'],
         durationSec: 1800,
         rawKey: `raw/${channelId}.wav`,
         mp3Key: `mp3/${channelId}.mp3`,
@@ -43,8 +44,21 @@ describe('GET /api/v1/search', () => {
         title: 'Private Rehearsal',
         status: 'READY',
         isPublic: false,
+        tags: ['late night'],
         rawKey: `raw/${channelId}-2.wav`,
         mp3Key: `mp3/${channelId}-2.mp3`,
+        fileSizeBytes: BigInt(1000),
+      },
+    })
+    await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Sunrise Drone',
+        status: 'READY',
+        isPublic: true,
+        tags: ['drone'],
+        rawKey: `raw/${channelId}-3.wav`,
+        mp3Key: `mp3/${channelId}-3.mp3`,
         fileSizeBytes: BigInt(1000),
       },
     })
@@ -111,6 +125,44 @@ describe('GET /api/v1/search', () => {
     })
   })
 
+  it('never names an artist or collection owner by an email address', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}starlight@example.com`,
+      username: 'search-test-starlight',
+      // Older accounts can still hold an email display name the API now rejects.
+      displayName: 'starlight@example.com',
+    })
+    await prisma.sound.create({
+      data: {
+        channelId: artist.channel!.id,
+        title: 'Starlight Drone',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    await prisma.collection.create({
+      data: {
+        userId: artist.id,
+        slug: 'search-test-starlight-crates',
+        name: 'Starlight Crates',
+        isPublic: true,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?q=starlight' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.tracks.map((t: { artistName: string }) => t.artistName)).toEqual([
+      'search-test-starlight',
+    ])
+    expect(body.artists.map((a: { displayName: string }) => a.displayName)).toEqual([
+      'search-test-starlight',
+    ])
+    expect(body.collections.map((c: { ownerDisplayName: string }) => c.ownerDisplayName)).toEqual([
+      'search-test-starlight',
+    ])
+  })
+
   it('scopes to tracks-only or artists-only via type', async () => {
     const tracksOnly = await app.inject({
       method: 'GET',
@@ -128,5 +180,24 @@ describe('GET /api/v1/search', () => {
   it('returns empty results for no match (different data shape: empty arrays)', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/search?q=zzz-no-such-thing-zzz' })
     expect(res.json()).toEqual({ tracks: [], artists: [], collections: [] })
+  })
+
+  it('filters public tracks by exact tag, case-insensitive, without q', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?tag=LATE+NIGHT' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.tracks.map((t: { title: string }) => t.title)).toEqual(['Midnight Ambient Set'])
+    expect(body.artists).toEqual([])
+    expect(body.collections).toEqual([])
+  })
+
+  it('does not match a tag by substring', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?tag=night' })
+    expect(res.json().tracks).toEqual([])
+  })
+
+  it('combines tag with q', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/search?tag=drone&q=se' })
+    expect(res.json().tracks.map((t: { title: string }) => t.title)).toEqual(['Sunrise Drone'])
   })
 })

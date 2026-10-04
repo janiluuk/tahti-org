@@ -11,6 +11,8 @@ import {
 } from '@tahti/shared'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { trackArtistName, userName } from '../../lib/safe-names.js'
+import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 
 // GET /api/tracks/:id — public, no auth required. Full detail for a
 // standalone track page reached anywhere a track id travels without its
@@ -22,6 +24,8 @@ import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 // `audioUrl` and set `gate` when the viewer is not entitled (artist and
 // active fan-subscribers always pass). Tier name/price are included so
 // the Tahti Player buy CTA can render without a second request.
+// A valid share-link `?key=` (SoundShare) also opens a non-public sound;
+// the gate above still applies.
 const trackGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/tracks/:id',
@@ -37,9 +41,15 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
+      const shared = await soundShareGrantsAccess(
+        fastify.prisma,
+        id,
+        shareKeyFromQuery(request.query),
+        request.sessionUser?.username ?? null,
+      )
 
       const item = await fastify.prisma.sound.findFirst({
-        where: { id, status: 'READY', isPublic: true },
+        where: { id, status: 'READY', ...(shared ? {} : { isPublic: true }) },
         select: {
           id: true,
           title: true,
@@ -50,6 +60,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           credits: true,
           genre: true,
           subGenres: true,
+          tags: true,
           contentType: true,
           mixVersion: true,
           bpm: true,
@@ -57,6 +68,8 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           bpmDetected: true,
           keyDetected: true,
           useDetectedBpmKey: true,
+          isAiGenerated: true,
+          downloadsEnabled: true,
           durationSec: true,
           bannerUrl: true,
           backgroundUrl: true,
@@ -69,6 +82,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           flacKey: true,
           accessMode: true,
           purchaseTierId: true,
+          venue: { select: { name: true, slug: true, verifiedAt: true } },
           _count: { select: { comments: true } },
           channel: {
             select: {
@@ -101,6 +115,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         purchaseTier,
         accessMode,
         purchaseTierId,
+        venue,
         ...rest
       } = item
       const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
@@ -121,16 +136,18 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         ...serializeSound(rest),
-        artistName: item.artistName ?? channel.user.displayName,
+        artistName: trackArtistName({ artistName: item.artistName, channel }),
         channelSlug: channel.slug,
         channel: {
           username: channel.user.username,
-          displayName: channel.user.displayName,
+          displayName: userName(channel.user),
           avatarUrl: channel.user.avatarUrl,
           bio: channel.user.bio,
         },
         releasedAt: item.releasedAt.toISOString(),
         audioUrl: playback.url,
+        // Unverified venues have no public page (GET /api/v1/venues/:slug 404s).
+        venue: venue?.verifiedAt ? { name: venue.name, slug: venue.slug } : null,
         commentCount: _count.comments,
         downloadCount,
         accessMode: accessMode ?? 'FREE',

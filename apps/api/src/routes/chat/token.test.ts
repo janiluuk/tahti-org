@@ -16,6 +16,8 @@ const PREFIX = 'chat-token-supporter-'
 describe('POST /api/chat/:slug/token — supporter badge', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let artistSlug: string
+  let artistId: string
+  let artistCookie: string
   let fanCookie: string
 
   beforeAll(async () => {
@@ -31,6 +33,8 @@ describe('POST /api/chat/:slug/token — supporter badge', () => {
       isMember: true,
       memberNumber: 98520,
     })
+    artistId = artist.id
+    artistCookie = await sessionCookieFor(prisma, artist.id)
 
     const passwordHash = await hashPassword('testpassword')
     const fan = await prisma.user.create({
@@ -93,5 +97,23 @@ describe('POST /api/chat/:slug/token — supporter badge', () => {
       payload: {},
     })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('returns 403 chat_disabled for everyone, owner included, when chat is switched off', async () => {
+    await prisma.user.update({ where: { id: artistId }, data: { chatEnabled: false } })
+    try {
+      for (const cookie of [undefined, fanCookie, artistCookie]) {
+        const res = await app.inject({
+          method: 'POST',
+          url: `/api/chat/${artistSlug}/token`,
+          headers: cookie ? { cookie } : {},
+          payload: { handle: 'blocked-handle' },
+        })
+        expect(res.statusCode).toBe(403)
+        expect(res.json().error).toBe('chat_disabled')
+      }
+    } finally {
+      await prisma.user.update({ where: { id: artistId }, data: { chatEnabled: true } })
+    }
   })
 })

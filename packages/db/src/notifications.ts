@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@prisma/client'
+import { actorDisplayName } from './display-name.js'
 
 /** Fan out a NEW_POST notification to everyone following the artist. Called both
  * synchronously (immediate-publish posts, from the API) and from the worker's
@@ -17,7 +18,7 @@ export async function notifyFollowersOfNewPost(
   })
   if (followers.length === 0) return
 
-  const title = `${artist.displayName} posted an update`
+  const title = `${actorDisplayName(artist)} posted an update`
   const body = post.title || post.body.slice(0, 140)
   const url = `/u/${artist.username}`
 
@@ -51,8 +52,76 @@ export async function notifyFollowersOfNewTrack(
       userId: f.followerUserId,
       type: 'NEW_TRACK' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} shared a new track`,
+      title: `${actorDisplayName(artist)} shared a new track`,
       body: item.title,
+      url: `/u/${artist.username}`,
+    })),
+  })
+}
+
+const LIVE_NOTIFY_COOLDOWN_MS = 30 * 60_000
+
+/** Fan out a CHANNEL_LIVE notification to everyone following the artist when
+ * they go live. Skipped if this artist already sent one in the last 30
+ * minutes, so a dropped stream that comes straight back doesn't ping everyone
+ * twice. */
+export async function notifyFollowersOfLiveChannel(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  channel: { slug: string },
+  now: Date = new Date(),
+): Promise<void> {
+  const recent = await prisma.notification.findFirst({
+    where: {
+      actorUserId: artist.id,
+      type: 'CHANNEL_LIVE',
+      createdAt: { gte: new Date(now.getTime() - LIVE_NOTIFY_COOLDOWN_MS) },
+    },
+    select: { id: true },
+  })
+  if (recent) return
+
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'CHANNEL_LIVE' as const,
+      actorUserId: artist.id,
+      title: `${actorDisplayName(artist)} is live`,
+      body: null,
+      url: `/c/${channel.slug}`,
+      createdAt: now,
+    })),
+  })
+}
+
+/** Fan out a NEW_EVENT notification to everyone following the artist when
+ * they add an upcoming event (events already in the past tell nobody). */
+export async function notifyFollowersOfNewEvent(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  event: { title: string; place: string; location: string; startAt: Date },
+  now: Date = new Date(),
+): Promise<void> {
+  if (event.startAt <= now) return
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'NEW_EVENT' as const,
+      actorUserId: artist.id,
+      title: `${actorDisplayName(artist)} announced an event`,
+      body: `${event.title} · ${event.place}, ${event.location}`,
       url: `/u/${artist.username}`,
     })),
   })
@@ -76,7 +145,7 @@ export async function notifyFollowersOfNewRelease(
       userId: f.followerUserId,
       type: 'NEW_RELEASE' as const,
       actorUserId: artist.id,
-      title: `${artist.displayName} released "${release.title}"`,
+      title: `${actorDisplayName(artist)} released "${release.title}"`,
       body: null,
       url: `/r/${release.smartLinkSlug}`,
     })),
@@ -94,7 +163,7 @@ export async function notifyArtistOfNewFollower(
       userId: artistUserId,
       type: 'NEW_FOLLOWER',
       actorUserId: follower.id,
-      title: `${follower.displayName} followed you`,
+      title: `${actorDisplayName(follower)} followed you`,
       body: `@${follower.username}`,
       url: `/u/${follower.username}`,
     },
@@ -114,9 +183,33 @@ export async function notifyArtistOfNewLike(
       userId: artistUserId,
       type: 'NEW_LIKE',
       actorUserId: liker.id,
-      title: `${liker.displayName} loved "${item.title}"`,
+      title: `${actorDisplayName(liker)} loved "${item.title}"`,
       body: null,
-      url: `/c/${item.channelSlug}`,
+      url: `/t/${item.id}`,
+    },
+  })
+}
+
+/** Notify an artist that someone commented on one of their tracks (`item`
+ * set) or on their channel — never for their own comments. */
+export async function notifyArtistOfNewComment(
+  prisma: PrismaClient,
+  artistUserId: string,
+  commenter: { id: string; username: string; displayName: string },
+  comment: { body: string },
+  target: { channelSlug: string; item?: { id: string; title: string } },
+): Promise<void> {
+  if (artistUserId === commenter.id) return
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'NEW_COMMENT',
+      actorUserId: commenter.id,
+      title: target.item
+        ? `${actorDisplayName(commenter)} commented on "${target.item.title}"`
+        : `${actorDisplayName(commenter)} commented on your channel`,
+      body: comment.body.slice(0, 140),
+      url: target.item ? `/t/${target.item.id}` : `/c/${target.channelSlug}`,
     },
   })
 }
@@ -134,15 +227,16 @@ export async function notifyArtistOfNewRepost(
       userId: artistUserId,
       type: 'NEW_REPOST',
       actorUserId: reposter.id,
-      title: `${reposter.displayName} reposted "${item.title}"`,
+      title: `${actorDisplayName(reposter)} reposted "${item.title}"`,
       body: null,
-      url: `/c/${item.channelSlug}`,
+      url: `/t/${item.id}`,
     },
   })
 }
 
-/** Notify a playlist's owner and everyone who has previously contributed a
- * track to it ("participants") when someone adds a new one — never notifies
+/** Notify a playlist's owner, everyone who has previously contributed a
+ * track to it ("participants") and its subscribers (while it is public or
+ * unlisted) when someone adds a new one — never notifies
  * the person who just did the adding, and de-dupes owner/participants so
  * nobody gets pinged twice. */
 export async function notifyPlaylistOfNewTrack(
@@ -154,7 +248,7 @@ export async function notifyPlaylistOfNewTrack(
     ownerUsername: string
     ownerUserId: string
   },
-  adder: { id: string; displayName: string },
+  adder: { id: string; username: string; displayName: string },
   item: { title: string },
 ): Promise<void> {
   const priorContributors = await prisma.collectionItem.findMany({
@@ -163,14 +257,26 @@ export async function notifyPlaylistOfNewTrack(
     distinct: ['addedByUserId'],
   })
 
+  // Subscribers only hear about collections they can still open.
+  const subscribers = await prisma.collectionSubscription.findMany({
+    where: {
+      collectionId: collection.id,
+      collection: { OR: [{ isPublic: true }, { visibility: 'UNLISTED' }] },
+    },
+    select: { userId: true },
+  })
+
   const recipients = new Set<string>()
   if (collection.ownerUserId !== adder.id) recipients.add(collection.ownerUserId)
   for (const c of priorContributors) {
     if (c.addedByUserId && c.addedByUserId !== adder.id) recipients.add(c.addedByUserId)
   }
+  for (const s of subscribers) {
+    if (s.userId !== adder.id) recipients.add(s.userId)
+  }
   if (recipients.size === 0) return
 
-  const title = `${adder.displayName} added "${item.title}" to ${collection.name}`
+  const title = `${actorDisplayName(adder)} added "${item.title}" to ${collection.name}`
   const url = `/u/${collection.ownerUsername}/c/${collection.slug}`
 
   await prisma.notification.createMany({
@@ -198,7 +304,7 @@ export async function notifyUserOfNewMessage(
       userId: recipientUserId,
       type: 'NEW_MESSAGE',
       actorUserId: sender.id,
-      title: `${sender.displayName} sent you a message`,
+      title: `${actorDisplayName(sender)} sent you a message`,
       body: messageBody.slice(0, 140),
       url: `/dashboard/messages/${conversationId}`,
     },
@@ -219,7 +325,7 @@ export async function notifyUsersOfChatMention(
       userId,
       type: 'CHAT_MENTION' as const,
       actorUserId: mentioner.id,
-      title: `${mentioner.displayName} mentioned you in chat`,
+      title: `${actorDisplayName(mentioner)} mentioned you in chat`,
       body: messageBody.slice(0, 140),
       url: `/c/${channelSlug}`,
     })),
@@ -241,7 +347,7 @@ export async function notifyArtistOfRadioSubmissionRejected(
       type: 'RADIO_SUBMISSION_REJECTED',
       title: `"${trackTitle}" was not added to Tahti Radio`,
       body: note.slice(0, 500),
-      url: '/dashboard/settings/distribution',
+      url: '/studio/channel?tab=tahti-radio',
     },
   })
 }
@@ -332,7 +438,7 @@ export async function notifyUserThemeRejected(
 export async function notifyBoardOfMissedLiveShow(
   prisma: PrismaClient,
   show: { id: string; title: string; startAt: Date },
-  artistDisplayName: string,
+  artist: { username: string; displayName: string },
   boardMemberIds?: string[],
 ): Promise<void> {
   const ids =
@@ -346,7 +452,7 @@ export async function notifyBoardOfMissedLiveShow(
     data: ids.map((userId) => ({
       userId,
       type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
-      title: `${artistDisplayName} missed a scheduled show`,
+      title: `${actorDisplayName(artist)} missed a scheduled show`,
       body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,
       url: '/admin/missed-shows',
     })),

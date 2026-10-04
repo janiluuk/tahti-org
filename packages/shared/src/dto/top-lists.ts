@@ -52,6 +52,8 @@ export const LatestReleaseCardSchema = z.object({
   artworkUrl: z.string().nullable(),
   smartLinkSlug: z.string(),
   artistDisplayName: z.string(),
+  /** Links the card to the artist's page (`/u/:username`). */
+  artistUsername: z.string(),
 })
 
 export const LatestReleasesResponseSchema = z.object({

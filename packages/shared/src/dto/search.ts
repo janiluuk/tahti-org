@@ -3,8 +3,14 @@
 
 import { z } from 'zod'
 
+/** At least one of `q` and `tag` is required (the REST route answers 400
+ * otherwise). `tag` narrows tracks only; artists and collections still match
+ * on `q` alone. */
 export const SearchQuerySchema = z.object({
-  q: z.string().trim().min(1).max(100),
+  q: z.string().trim().min(1).max(100).optional(),
+  /** Exact track tag, matched case-insensitively. Same trim + max length as
+   * `SoundMetadataFieldsSchema.tags` entries. */
+  tag: z.string().trim().min(1).max(40).optional(),
   type: z.enum(['all', 'tracks', 'artists', 'collections']).default('all'),
   count: z.coerce.number().int().min(1).max(50).default(20),
 })

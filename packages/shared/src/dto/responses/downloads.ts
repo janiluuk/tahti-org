@@ -83,6 +83,13 @@ export const ChannelFunnelResponseSchema = z.object({
 export const ChannelScheduleViewSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
+  nextBroadcastShowId: z.string().nullable(),
+  nextBroadcastDurationHours: z.number().int().nullable(),
+  /** Read from the linked show; null when no show is linked. */
+  nextBroadcastShowType: z.enum(['LIVE_SET', 'TALK']).nullable(),
+  nextBroadcastMode: z.enum(['SINGLE', 'SERIES']).nullable(),
+  nextBroadcastDescription: z.string().nullable(),
+  nextBroadcastCoverUrl: z.string().nullable(),
 })
 
 export const DownloadUrlResponseSchema = z.object({
@@ -116,7 +123,8 @@ export const BroadcastUsageResponseSchema = z.object({
   weeklyCapSeconds: z.number().int(),
   graceSeconds: z.number().int(),
   secondsUsed: z.number().int(),
-  secondsRemaining: z.number().int(),
+  /** Null for unlimited tiers, which have no weekly cap. */
+  secondsRemaining: z.number().int().nullable(),
   warnings: z.array(z.string()),
   warningLevel: z.enum(['none', '45m', '55m', 'grace', 'blocked']),
   inGrace: z.boolean(),

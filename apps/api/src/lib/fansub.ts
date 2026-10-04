@@ -5,6 +5,8 @@ import type { PrismaClient } from '@tahti/db'
 import { computeFanSubSplit } from '@tahti/ledger'
 import { stripeEnabled } from './stripe.js'
 import { auditLog } from './audit.js'
+import { announceMoneyMove, formatEuros } from './money-moves.js'
+import { safeDisplayName } from '@tahti/shared'
 
 // Shared fan-subscription lifecycle used by both the dev/test direct-activation
 // path and the production Stripe webhook handler, so the two never diverge.
@@ -16,9 +18,17 @@ export interface ActivateInput {
   amountCents: number
   stripeSubscriptionId: string
   currentPeriodEnd: Date
+  /** Stripe will not renew it: store CANCELED (perks run to period end) instead of ACTIVE. */
+  cancelAtPeriodEnd?: boolean
 }
 
-// Upserts an ACTIVE subscription (idempotent on the artist/subscriber pair).
+/** Subscriptions created by the dev/test direct-activation path have no Stripe counterpart. */
+export function isDevStubSubscriptionId(stripeSubscriptionId: string): boolean {
+  return stripeSubscriptionId.startsWith('dev_')
+}
+
+// Upserts the subscription (idempotent on the artist/subscriber pair): ACTIVE, or
+// CANCELED when Stripe is set to stop renewing it.
 export async function activateSubscription(prisma: PrismaClient, input: ActivateInput) {
   const existed = await prisma.fanSubscription.findUnique({
     where: {
@@ -27,8 +37,10 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
         subscriberUserId: input.subscriberUserId,
       },
     },
-    select: { subscriberUserId: true },
+    select: { subscriberUserId: true, canceledAt: true },
   })
+  const state = input.cancelAtPeriodEnd ? 'CANCELED' : 'ACTIVE'
+  const canceledAt = input.cancelAtPeriodEnd ? (existed?.canceledAt ?? new Date()) : null
 
   const result = await prisma.fanSubscription.upsert({
     where: {
@@ -41,9 +53,9 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
       tierName: input.tierName,
       amountCents: input.amountCents,
       stripeSubscriptionId: input.stripeSubscriptionId,
-      state: 'ACTIVE',
+      state,
       currentPeriodEnd: input.currentPeriodEnd,
-      canceledAt: null,
+      canceledAt,
     },
     create: {
       artistUserId: input.artistUserId,
@@ -51,8 +63,9 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
       tierName: input.tierName,
       amountCents: input.amountCents,
       stripeSubscriptionId: input.stripeSubscriptionId,
-      state: 'ACTIVE',
+      state,
       currentPeriodEnd: input.currentPeriodEnd,
+      canceledAt,
     },
   })
 
@@ -64,6 +77,19 @@ export async function activateSubscription(prisma: PrismaClient, input: Activate
       actorId: input.subscriberUserId,
       targetId: input.artistUserId,
       meta: { tierName: input.tierName, amountCents: input.amountCents },
+    })
+    const subscriber = await prisma.user.findUnique({
+      where: { id: input.subscriberUserId },
+      select: { username: true, displayName: true },
+    })
+    const name = subscriber
+      ? safeDisplayName(subscriber.displayName, subscriber.username)
+      : 'Someone'
+    await announceMoneyMove(prisma, input.artistUserId, {
+      type: 'NEW_FAN_SUBSCRIBER',
+      actorUserId: input.subscriberUserId,
+      title: `${name} subscribed (${input.tierName}, ${formatEuros(input.amountCents)}/mo)`,
+      url: '/studio/revenue',
     })
   }
 

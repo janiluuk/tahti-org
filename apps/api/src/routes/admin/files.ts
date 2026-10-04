@@ -17,6 +17,7 @@ import {
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { trackArtistName } from '../../lib/safe-names.js'
 
 const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 100
@@ -211,7 +212,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         items: page.map((item) => ({
           id: item.id,
           title: item.title,
-          artistName: item.artistName ?? item.channel.user.displayName,
+          artistName: trackArtistName(item),
           genre: item.genre,
           genreCustom: item.genreCustom,
           contentType: item.contentType,
@@ -256,7 +257,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           mp3Key: true,
           flacKey: true,
           channel: {
-            select: { slug: true, user: { select: { displayName: true } } },
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
           },
         },
       })
@@ -267,7 +268,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         audioUrl,
         title: item.title,
-        artistName: item.artistName ?? item.channel.user.displayName,
+        artistName: trackArtistName(item),
         channelSlug: item.channel.slug,
         bannerUrl: item.bannerUrl,
         durationSec: item.durationSec,

@@ -91,6 +91,38 @@ describe('M28 — sound item version history', () => {
     expect(body.versionNumber).toBe(2)
   })
 
+  it('returns the detected sample rate, bit depth and channels', async () => {
+    const v2 = await prisma.soundVersion.findFirstOrThrow({
+      where: { soundId, versionLabel: 'Re-edit 2026' },
+    })
+    await prisma.soundVersion.update({
+      where: { id: v2.id },
+      data: { sourceSampleRateHz: 96000, sourceBitDepth: 24, sourceChannels: 2 },
+    })
+
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/me/sound/${soundId}/versions`,
+      headers: { cookie },
+    })
+    expect(list.json().find((v: { id: string }) => v.id === v2.id)).toMatchObject({
+      sourceSampleRateHz: 96000,
+      sourceBitDepth: 24,
+      sourceChannels: 2,
+    })
+
+    const one = await app.inject({
+      method: 'GET',
+      url: `/api/me/sound/${soundId}/versions/${v2.id}`,
+      headers: { cookie },
+    })
+    expect(one.json()).toMatchObject({
+      sourceSampleRateHz: 96000,
+      sourceBitDepth: 24,
+      sourceChannels: 2,
+    })
+  })
+
   it('activates a ready version and syncs audio keys to the parent item', async () => {
     const v2 = await prisma.soundVersion.findFirst({
       where: { soundId, versionLabel: 'Re-edit 2026' },

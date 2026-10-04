@@ -4,12 +4,14 @@
 import type { FastifyInstance } from 'fastify'
 import adminMembersRoutes from '../routes/admin/members.js'
 import adminStatsRoutes from '../routes/admin/stats.js'
+import adminContentStatsRoutes from '../routes/admin/content-stats.js'
 import adminStreamsRoutes from '../routes/admin/streams.js'
 import adminRadioRoutes from '../routes/admin/radio.js'
 import adminRadioSubmissionRoutes from '../routes/admin/radio-submissions.js'
 import adminTahtiSelectsRoutes from '../routes/admin/tahti-selects.js'
 import adminNewsRoutes from '../routes/admin/news.js'
 import adminChannelsRoutes from '../routes/admin/channels.js'
+import adminChannelKindRoutes from '../routes/admin/channel-kind.js'
 import adminSoundRoutes from '../routes/admin/sound.js'
 import adminFilesRoutes from '../routes/admin/files.js'
 import adminFanSubsRoutes from '../routes/admin/fansubs.js'
@@ -22,6 +24,7 @@ import adminMissedLiveShowRoutes from '../routes/admin/missed-live-shows.js'
 import adminAccountRestrictionRoutes from '../routes/admin/account-restrictions.js'
 import adminResolutionsRoutes from '../routes/admin/resolutions.js'
 import governanceRecordsRoutes from '../routes/admin/governance-records.js'
+import adminGovernanceOverviewRoutes from '../routes/admin/governance-overview.js'
 import adminReportsRoutes from '../routes/admin/reports.js'
 import adminContentReportRoutes from '../routes/admin/content-reports.js'
 import adminFeatureRequestRoutes from '../routes/admin/feature-requests.js'
@@ -33,18 +36,21 @@ import adminBetaRoutes from '../routes/admin/beta.js'
 import adminIntegrationsRoutes from '../routes/admin/integrations.js'
 import adminDiscordBotRoutes from '../routes/admin/discord-bot.js'
 import supportContactRoutes from '../routes/support/contact.js'
+import mySupportTicketsRoutes from '../routes/support/my-tickets.js'
 import contentReportsRoute from '../routes/reports/submit.js'
 import betaApplyRoutes from '../routes/beta/apply.js'
 
 export async function registerAdminRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(adminMembersRoutes)
   await fastify.register(adminStatsRoutes)
+  await fastify.register(adminContentStatsRoutes)
   await fastify.register(adminStreamsRoutes)
   await fastify.register(adminRadioRoutes)
   await fastify.register(adminRadioSubmissionRoutes)
   await fastify.register(adminTahtiSelectsRoutes)
   await fastify.register(adminNewsRoutes)
   await fastify.register(adminChannelsRoutes)
+  await fastify.register(adminChannelKindRoutes)
   await fastify.register(adminSoundRoutes)
   await fastify.register(adminFilesRoutes)
   await fastify.register(adminFanSubsRoutes)
@@ -57,6 +63,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminAccountRestrictionRoutes)
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(governanceRecordsRoutes)
+  await fastify.register(adminGovernanceOverviewRoutes)
   await fastify.register(adminReportsRoutes)
   await fastify.register(adminContentReportRoutes)
   await fastify.register(adminFeatureRequestRoutes)
@@ -68,6 +75,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminIntegrationsRoutes)
   await fastify.register(adminDiscordBotRoutes)
   await fastify.register(supportContactRoutes)
+  await fastify.register(mySupportTicketsRoutes)
   await fastify.register(contentReportsRoute)
   await fastify.register(betaApplyRoutes)
 }

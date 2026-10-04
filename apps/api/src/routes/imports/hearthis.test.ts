@@ -185,6 +185,31 @@ describe('hearthis.at mixed-source import', () => {
     expect(sound?.qualityBadge).toBe('EMBED_ONLY')
   })
 
+  it("starts an added track with the owner's comment and top-list settings", async () => {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { defaultTrackCommentsEnabled: false, topListsOptOut: true },
+    })
+    try {
+      mockGetTrackByUrl.mockResolvedValueOnce(SAMPLE_TRACK)
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/imports/hearthis/add',
+        headers: { cookie },
+        payload: { collectionId, trackUrl: 'https://hearthis.at/candana-dj/credo/' },
+      })
+      expect(res.statusCode).toBe(201)
+      const sound = await prisma.sound.findUnique({ where: { id: res.json().soundId } })
+      expect(sound?.commentsEnabled).toBe(false)
+      expect(sound?.topListsEligible).toBe(false)
+    } finally {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { defaultTrackCommentsEnabled: true, topListsOptOut: false },
+      })
+    }
+  })
+
   it('rejects add with an invalid trackUrl', async () => {
     const res = await app.inject({
       method: 'POST',

@@ -21,13 +21,16 @@ import {
   createStripeCustomer,
   createFanSubCheckoutSession,
   createBillingPortalSession,
+  setStripeSubscriptionCancelAtPeriodEnd,
 } from '../../lib/stripe.js'
 import { config } from '../../config.js'
 import {
   activateSubscription,
+  isDevStubSubscriptionId,
   markFanSubCanceledAtPeriodEnd,
   recordFanSubPayment,
 } from '../../lib/fansub.js'
+import { withSafeName } from '../../lib/safe-names.js'
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -83,10 +86,17 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
             subscriberUserId: subscriber.id,
           },
         },
-        select: { state: true },
+        select: { state: true, currentPeriodEnd: true },
       })
       if (existing && existing.state === 'ACTIVE') {
         return reply.status(409).send({ error: 'Already subscribed to this artist' })
+      }
+      // The canceled Stripe subscription is still live until period end, so a new
+      // checkout here would bill the fan twice.
+      if (existing && existing.state === 'CANCELED' && existing.currentPeriodEnd > new Date()) {
+        return reply.status(409).send({
+          error: `Your canceled subscription to this artist runs until ${existing.currentPeriodEnd.toISOString().slice(0, 10)}. Resume it from the billing portal in your account settings, or subscribe again after it ends.`,
+        })
       }
 
       // Production: Stripe Checkout (Connect destination charge). Block until the
@@ -189,7 +199,7 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
           artist: { select: { username: true, displayName: true } },
         },
       })
-      return reply.send(subs)
+      return reply.send(subs.map((sub) => ({ ...sub, artist: withSafeName(sub.artist) })))
     },
   )
 
@@ -213,6 +223,20 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id, subscriberUserId: user.id },
       })
       if (!sub) return reply.status(404).send({ error: 'Subscription not found' })
+      if (sub.state === 'EXPIRED') {
+        return reply.status(409).send({ error: 'This subscription has already ended' })
+      }
+
+      if (stripeEnabled && !isDevStubSubscriptionId(sub.stripeSubscriptionId)) {
+        try {
+          await setStripeSubscriptionCancelAtPeriodEnd(sub.stripeSubscriptionId, true)
+        } catch (err) {
+          request.log.error({ err, subscriptionId: sub.id }, 'fan-sub Stripe cancel failed')
+          return reply
+            .status(502)
+            .send({ error: 'Could not cancel the subscription with Stripe. Please try again.' })
+        }
+      }
 
       await markFanSubCanceledAtPeriodEnd(fastify.prisma, { subscriptionId: id })
       const updated = await fastify.prisma.fanSubscription.findUnique({
@@ -242,8 +266,13 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
 
+      // Canceled subs still inside their paid period count: the portal is where a
+      // fan resumes one.
       const activeSub = await fastify.prisma.fanSubscription.findFirst({
-        where: { subscriberUserId: user.id, state: 'ACTIVE' },
+        where: {
+          subscriberUserId: user.id,
+          OR: [{ state: 'ACTIVE' }, { state: 'CANCELED', currentPeriodEnd: { gt: new Date() } }],
+        },
       })
       if (!activeSub) {
         return reply.status(400).send({ error: 'No active fan subscriptions' })

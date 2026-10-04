@@ -115,6 +115,44 @@ describe('processRadioSlotSwitchoverJob', () => {
     )
   })
 
+  it('only considers bookings whose owner is neither suspended nor deleted', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
+    mockFindFirstBooking.mockResolvedValue(null)
+
+    await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
+
+    expect(mockFindFirstBooking).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          channel: { user: { deletedAt: null, suspendedAt: null } },
+        }),
+      }),
+    )
+  })
+
+  it('falls back to the rotation when the active slot owner was suspended mid-slot', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: 'suspended-artist',
+      state: 'LIVE',
+    })
+    mockFindFirstBooking.mockImplementation(async (args: { where: Record<string, unknown> }) =>
+      'channel' in args.where ? null : { channel: { slug: 'suspended-artist' } },
+    )
+
+    const result = await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
+
+    expect(result).toEqual({ liveArtistSlug: null, switched: true })
+    expect(mockUpdateChannel).toHaveBeenCalledWith({
+      where: { id: 'radio-ch' },
+      data: { liveInputOverrideSlug: null },
+    })
+  })
+
   it('switches back to rotation fallback when the slot ends', async () => {
     mockFindUniqueChannel.mockResolvedValue({
       id: 'radio-ch',

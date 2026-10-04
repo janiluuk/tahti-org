@@ -10,6 +10,7 @@ import {
   openApiResponse,
   parseAvatarTheme,
   parseLogoPlacement,
+  parseMixcloudUsername,
 } from '@tahti/shared'
 import { parseHearthisUsername } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
@@ -168,7 +169,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const data: Record<string, any> = {}
 
       if (body.displayName !== undefined) data.displayName = body.displayName
-      if (body.bio !== undefined) data.bio = body.bio.trim() || null
+      if (body.bio !== undefined) data.bio = body.bio?.trim() || null
       if (body.fullBio !== undefined) data.fullBio = body.fullBio?.trim() || null
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
       if (body.avatarPosterUrl !== undefined)
@@ -181,8 +182,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.backdropUrl !== undefined) data.backdropUrl = body.backdropUrl?.trim() || null
       if (body.nameplateText !== undefined) data.nameplateText = body.nameplateText?.trim() || null
       if (body.nameplateColor !== undefined) data.nameplateColor = body.nameplateColor ?? null
-      if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
-      if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl.trim() || null
+      if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl?.trim() || null
+      if (body.newsFeedUrl !== undefined) data.newsFeedUrl = body.newsFeedUrl?.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
       if (body.defaultLocation !== undefined)
@@ -193,9 +194,15 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         // (apps/api/src/routes/imports/hearthis.ts) rather than re-parsing the
         // social-links blob on every request — keep it in sync here, the one
         // place that field gets written.
-        const hearthisAt = (body.socialLinks as Record<string, string> | undefined)?.hearthisAt
+        const links = body.socialLinks as Record<string, string> | undefined
+        const hearthisAt = links?.hearthisAt
         if (hearthisAt !== undefined) {
           data.hearthisUsername = hearthisAt.trim() ? parseHearthisUsername(hearthisAt) : null
+        }
+        // Same for Mixcloud's "Your mixes" tab (routes/imports/mixcloud-embed.ts).
+        const mixcloud = links?.mixcloud
+        if (mixcloud !== undefined) {
+          data.mixcloudUsername = parseMixcloudUsername(mixcloud)
         }
       }
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution

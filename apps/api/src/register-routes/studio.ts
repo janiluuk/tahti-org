@@ -21,6 +21,8 @@ import addonPublicRoutes from '../routes/addons/public.js'
 import internetRadioPresetsRoute from '../routes/internet-radio/presets.js'
 import meInternetRadioRoutes from '../routes/me/internet-radio.js'
 import adminInternetRadioRoutes from '../routes/admin/internet-radio.js'
+import meRadioStationSuggestionRoutes from '../routes/me/radio-station-suggestions.js'
+import adminRadioStationSuggestionRoutes from '../routes/admin/radio-station-suggestions.js'
 import meThemesRoutes from '../routes/me/themes.js'
 import adminThemesRoutes from '../routes/admin/themes.js'
 import themeGalleryRoute from '../routes/themes/gallery.js'
@@ -36,6 +38,7 @@ import socialInstagramRoutes from '../routes/me/social-instagram.js'
 import meChannelScheduleRoutes from '../routes/me/channel-schedule.js'
 import meChannelProvisionRoutes from '../routes/me/channel-provision.js'
 import meSoundVersionRoutes from '../routes/me/sound-versions.js'
+import meSoundShareRoutes from '../routes/me/sound-shares.js'
 import meSoundEditorRoutes from '../routes/me/sound-editor.js'
 import meEditorProjectRoutes from '../routes/me/editor-projects.js'
 import meDownloadGateStatsRoutes from '../routes/me/download-gate-stats.js'
@@ -74,6 +77,8 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(internetRadioPresetsRoute)
   await fastify.register(meInternetRadioRoutes)
   await fastify.register(adminInternetRadioRoutes)
+  await fastify.register(meRadioStationSuggestionRoutes)
+  await fastify.register(adminRadioStationSuggestionRoutes)
   await fastify.register(meThemesRoutes)
   await fastify.register(adminThemesRoutes)
   await fastify.register(themeGalleryRoute)
@@ -89,6 +94,7 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meChannelProvisionRoutes)
   await fastify.register(meSoundVersionRoutes)
+  await fastify.register(meSoundShareRoutes)
   await fastify.register(meSoundEditorRoutes)
   await fastify.register(meEditorProjectRoutes)
   await fastify.register(meDownloadGateStatsRoutes)

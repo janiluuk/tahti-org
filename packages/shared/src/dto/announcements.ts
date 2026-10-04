@@ -48,6 +48,8 @@ export const AnnouncementClipViewSchema = z.object({
   createdAt: z.coerce.date(),
   /** True when this clip is the looping ambient music on the artist's public page. */
   isProfileBackground: z.boolean().optional(),
+  /** Presigned preview link; only the board's system-clip list sets it. */
+  audioUrl: z.string().optional(),
 })
 
 export const ProfileBackgroundClipSchema = z.object({

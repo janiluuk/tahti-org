@@ -22,6 +22,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelForModeration } from '../../lib/channel-access.js'
+import { userName } from '../../lib/safe-names.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -58,7 +59,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
         moderators.map((m) => ({
           userId: m.user.id,
           username: m.user.username,
-          displayName: m.user.displayName,
+          displayName: userName(m.user),
           grantedAt: m.grantedAt,
         })),
       )
@@ -106,7 +107,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       return reply.status(201).send({
         userId: target.id,
         username: target.username,
-        displayName: target.displayName,
+        displayName: userName(target),
         grantedAt: moderator.grantedAt,
       })
     },
@@ -150,22 +151,25 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
 
       const owned = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { slug: true, user: { select: { displayName: true } } },
+        select: { slug: true, user: { select: { username: true, displayName: true } } },
       })
 
       const modRows = await fastify.prisma.channelModerator.findMany({
         where: { userId: user.id },
         orderBy: { grantedAt: 'asc' },
-        include: { channel: { select: { slug: true, user: { select: { displayName: true } } } } },
+        include: {
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
+        },
       })
 
       const result: Array<{ slug: string; displayName: string; isOwner: boolean }> = []
-      if (owned)
-        result.push({ slug: owned.slug, displayName: owned.user.displayName, isOwner: true })
+      if (owned) result.push({ slug: owned.slug, displayName: userName(owned.user), isOwner: true })
       for (const m of modRows) {
         result.push({
           slug: m.channel.slug,
-          displayName: m.channel.user.displayName,
+          displayName: userName(m.channel.user),
           isOwner: false,
         })
       }

@@ -20,9 +20,22 @@ export const VenueDirectoryEntrySchema = z.object({
   countryCode: z.string().nullable(),
   capacity: z.number().int().nullable(),
   description: z.string().nullable(),
+  /** Promo photos, profile order; the directory card shows one of them. */
+  photos: z.array(z.string()),
 })
 
 export const VenueDirectoryListSchema = z.array(VenueDirectoryEntrySchema)
+
+/** A public track recorded at the venue (Sound.venueId). */
+export const VenueRecordingSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+  channelSlug: z.string(),
+  durationSec: z.number().int().nullable(),
+  coverUrl: z.string().nullable(),
+  releasedAt: z.string(),
+})
 
 export const VenuePublicProfileSchema = z
   .object({
@@ -30,5 +43,8 @@ export const VenuePublicProfileSchema = z
     slug: z.string(),
     name: z.string(),
     broadcasts: z.array(z.unknown()),
+    /** Public, ready tracks recorded here, newest first, at most
+     * VENUE_RECORDINGS_LIMIT. */
+    recordings: z.array(VenueRecordingSchema),
   })
   .passthrough()

@@ -390,6 +390,7 @@ enum AuditAction {
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
   STREAM_RESTART
+  CHANNEL_KIND_CHANGE
   DISCORD_BOT_RESTART
   ACCOUNT_DELETE
   SOUND_EDIT_RENDER
@@ -627,6 +628,20 @@ enum NotificationType {
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
+  /// An artist you follow went live on their channel.
+  CHANNEL_LIVE
+  /// An artist you follow announced an upcoming event.
+  NEW_EVENT
+  /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).
+  NEW_FAN_SUBSCRIBER
+  /// Someone paid for one of your purchase tiers (honours notifyMoneyMovesInApp).
+  NEW_PURCHASE
+  /// Someone commented on one of your tracks or on your channel.
+  NEW_COMMENT
+  /// Fan-subscription money was paid out to you (honours notifyMoneyMovesInApp).
+  PAYOUT_SENT
+  /// A renewal payment for one of your fan subscriptions failed.
+  FAN_SUB_PAYMENT_FAILED
 
   @@schema("core")
 }
@@ -952,6 +967,8 @@ model User {
   addonsAuthored                 Addon[]                         @relation("AddonAuthor")
   addonInstalls                  AddonInstall[]                  @relation("AddonListenerInstall")
   internetRadioStations          InternetRadioStation[]
+  radioStationSuggestions        RadioStationSuggestion[]        @relation("RadioStationSuggestionSubmitter")
+  radioStationSuggestionReviews  RadioStationSuggestion[]        @relation("RadioStationSuggestionReviewer")
   themes                         Theme[]
   integrationCredentials         IntegrationCredential[]
 
@@ -965,12 +982,13 @@ model ArtistEvent {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  place     String
-  location  String
-  eventUrl  String?
-  startAt   DateTime
-  createdAt DateTime @default(now())
+  title       String
+  description String?
+  place       String
+  location    String
+  eventUrl    String?
+  startAt     DateTime
+  createdAt   DateTime @default(now())
 
   @@index([userId, startAt])
   @@schema("core")
@@ -1222,6 +1240,23 @@ model StashFile {
   @@schema("core")
 }
 
+// Keyed access link for one sound (usually PRIVATE or STASH): a request that
+// presents the token as ?key= may read the sound despite its visibility.
+// granteeUsername, when set, limits the link to that signed-in member.
+model SoundShare {
+  id              String    @id @default(cuid())
+  soundId         String
+  sound           Sound     @relation(fields: [soundId], references: [id], onDelete: Cascade)
+  granteeUsername String?
+  token           String    @unique
+  permission      String    @default("READ") // READ | DOWNLOAD
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([soundId])
+  @@schema("channel")
+}
+
 model StashShare {
   id              String    @id @default(cuid())
   fileId          String
@@ -1373,6 +1408,10 @@ model Channel {
   channelLinksJson              String?
   nextBroadcastAt               DateTime? // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote             String? // e.g. "Weekly show — Thursdays 22:00 EET"
+  /// The show the next broadcast belongs to; its type, mode, description and artwork are read from it.
+  nextBroadcastShowId           String?
+  nextBroadcastShow             LiveShowSeries?       @relation("ChannelNextBroadcastShow", fields: [nextBroadcastShowId], references: [id], onDelete: SetNull)
+  nextBroadcastDurationHours    Int?
   lastFeaturedAt                DateTime? // M16: Tahti Radio fair rotation
   commentsEnabled               Boolean               @default(true) // initialized from User.defaultChannelCommentsEnabled
   pressKitGalleryPublic         Boolean               @default(false) // show press-kit images in a public gallery on the artist page
@@ -1629,6 +1668,10 @@ model LiveShowSeries {
   description           String?
   tagline               String?
   artworkUrl            String?
+  /// Wide header image on the show page, separate from the square artwork.
+  backdropUrl           String?
+  /// SINGLE: a one-off show; SERIES: a continuing series of episodes.
+  mode                  LiveShowMode        @default(SERIES)
   showType              BroadcastShowType   @default(LIVE_SET)
   visibility            BroadcastVisibility @default(PUBLIC)
   autoPublish           Boolean             @default(true)
@@ -1654,11 +1697,19 @@ model LiveShowSeries {
   recurrenceTimezone    String?
   recurrenceHorizonDays Int                 @default(28)
   scheduledShows        ScheduledLiveShow[]
+  nextBroadcastFor      Channel[]           @relation("ChannelNextBroadcastShow")
   episodes              LiveShowEpisode[]
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
   @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+enum LiveShowMode {
+  SINGLE
+  SERIES
+
   @@schema("channel")
 }
 
@@ -1894,6 +1945,8 @@ model Sound {
   license              SoundLicense       @default(ALL_RIGHTS_RESERVED)
   repostToDownload     Boolean            @default(false)
   followToDownload     Boolean            @default(false)
+  // Off = only the owner and board can fetch the file; listeners still stream it.
+  downloadsEnabled     Boolean            @default(true)
   // What kind of file this row actually holds — see SoundMediaKind. AUDIO (the
   // default) uses rawKey/mp3Key/flacKey + the transcode pipeline below as before;
   // IMAGE/VIDEO instead populate imageKey/videoKey and skip transcoding.
@@ -1939,6 +1992,9 @@ model Sound {
   // look tracks up by. Cleared once the track is localized to real audio.
   embedSourceUrl       String?
   status               SoundStatus         @default(PENDING)
+  // Short, user-safe reason shown to the owner when status is ERROR. Never
+  // holds raw ffmpeg/storage errors - see apps/worker/src/lib/sound-processing-error.ts.
+  processingError      String?
   // Set to PENDING (not NOT_NEEDED) by the transcode job itself once it
   // knows the source was lossless — see apps/worker/src/jobs/transcode.ts.
   streamingCopyStatus  StreamingCopyStatus @default(NOT_NEEDED)
@@ -1969,6 +2025,7 @@ model Sound {
   radioPlayLogs        RadioPlayLog[]
   stemJobs             SoundStemJob[]
   liveShowEpisodes     LiveShowEpisode[]
+  shares               SoundShare[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
@@ -3628,6 +3685,9 @@ model NewsPost {
   id          String    @id @default(cuid())
   headline    String
   summary     String
+  imageUrl    String?
+  linkUrl     String?
+  linkLabel   String?
   authorId    String?
   author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorName  String
@@ -3805,6 +3865,39 @@ model ChannelBlock {
 // /admin/internet-radio ("internet radio source configuration"). streamUrl is
 // often intentionally blank (rights/URL not supplied yet); a user filling it
 // in on their own copy doesn't affect the shared preset.
+enum RadioStationSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("core")
+}
+
+/// A listener's suggestion for a board-curated internet radio preset. The
+/// board approves it into an InternetRadioPreset or rejects it with a note.
+model RadioStationSuggestion {
+  id            String                       @id @default(cuid())
+  submitterId   String?
+  submitter     User?                        @relation("RadioStationSuggestionSubmitter", fields: [submitterId], references: [id], onDelete: SetNull)
+  name          String
+  logoUrl       String?
+  language      String
+  bitrateKbps   Int?
+  streamUrl     String
+  status        RadioStationSuggestionStatus @default(PENDING)
+  rejectionNote String?
+  reviewedById  String?
+  reviewedBy    User?                        @relation("RadioStationSuggestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt    DateTime?
+  /// The preset created when this suggestion was approved.
+  presetId      String?
+  createdAt     DateTime                     @default(now())
+
+  @@index([status, createdAt])
+  @@index([submitterId])
+  @@schema("core")
+}
+
 model InternetRadioPreset {
   id             String   @id @default(cuid())
   name           String

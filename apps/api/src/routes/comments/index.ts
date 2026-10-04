@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { PrismaClient } from '@tahti/db'
+import { notifyArtistOfNewComment, type PrismaClient } from '@tahti/db'
 import {
   CommentBodySchema,
   CommentsListSchema,
@@ -12,6 +12,8 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
+import { userName } from '../../lib/safe-names.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -40,9 +42,17 @@ async function listComments(
     body: c.body,
     createdAt: c.createdAt,
     authorUsername: c.author.username,
-    authorDisplayName: c.author.displayName,
+    authorDisplayName: userName(c.author),
     authorAvatarUrl: c.author.avatarUrl,
   }))
+}
+
+function commenterOf(user: { id: string; username: string; displayName: string }) {
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: userName(user),
+  }
 }
 
 const commentsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -58,7 +68,16 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         select: { commentsEnabled: true, isPublic: true },
       })
-      if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+      const visible =
+        item?.isPublic ||
+        (item &&
+          (await soundShareGrantsAccess(
+            fastify.prisma,
+            routeParams.id,
+            shareKeyFromQuery(request.query),
+            request.sessionUser?.username ?? null,
+          )))
+      if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
 
       const comments = await listComments(fastify.prisma, { soundId: routeParams.id })
       return reply.send({ comments, commentsEnabled: item.commentsEnabled })
@@ -74,9 +93,23 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const item = await fastify.prisma.sound.findUnique({
       where: { id: routeParams.id },
-      select: { commentsEnabled: true, isPublic: true },
+      select: {
+        commentsEnabled: true,
+        isPublic: true,
+        title: true,
+        channel: { select: { slug: true, userId: true } },
+      },
     })
-    if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+    const visible =
+      item?.isPublic ||
+      (item &&
+        (await soundShareGrantsAccess(
+          fastify.prisma,
+          routeParams.id,
+          shareKeyFromQuery(request.query),
+          request.sessionUser!.username,
+        )))
+    if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
     if (!item.commentsEnabled) {
       return reply.status(403).send({ error: 'Comments are off for this track' })
     }
@@ -95,12 +128,20 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     })
 
+    await notifyArtistOfNewComment(
+      fastify.prisma,
+      item.channel.userId,
+      commenterOf(request.sessionUser!),
+      comment,
+      { channelSlug: item.channel.slug, item: { id: routeParams.id, title: item.title } },
+    ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
+
     return reply.status(201).send({
       id: comment.id,
       body: comment.body,
       createdAt: comment.createdAt,
       authorUsername: comment.author.username,
-      authorDisplayName: comment.author.displayName,
+      authorDisplayName: userName(comment.author),
       authorAvatarUrl: comment.author.avatarUrl,
     })
   })
@@ -136,7 +177,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, commentsEnabled: true },
+        select: { id: true, commentsEnabled: true, userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
       if (!channel.commentsEnabled) {
@@ -157,12 +198,20 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      await notifyArtistOfNewComment(
+        fastify.prisma,
+        channel.userId,
+        commenterOf(request.sessionUser!),
+        comment,
+        { channelSlug: routeParams.slug },
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
+
       return reply.status(201).send({
         id: comment.id,
         body: comment.body,
         createdAt: comment.createdAt,
         authorUsername: comment.author.username,
-        authorDisplayName: comment.author.displayName,
+        authorDisplayName: userName(comment.author),
         authorAvatarUrl: comment.author.avatarUrl,
       })
     },

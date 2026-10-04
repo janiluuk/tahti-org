@@ -19,6 +19,12 @@ import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
+import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
+import {
+  DOWNLOADS_DISABLED_BODY,
+  downloadsBlocked,
+  resolveDownloadGateStatus,
+} from '../../lib/download-gates.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // sound-item downloads. Reuses the Download table (releaseTrackId column).
@@ -77,12 +83,82 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
           flacKey: true,
           sourceKey: true,
           explicit: true,
+          soundId: true,
         },
       })
       if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
 
-      // Resolve the download key by format + subscriber status
+      // A track linked to a subscriber-only or paid sound downloads under the
+      // same gate as playing it, so the release page can't skip the paywall.
       const byUserId = request.sessionUser?.id ?? null
+      const salt = dailySalt()
+      const fpInput = query.fp?.trim() || (request.headers['user-agent'] ?? 'unknown')
+      const byFingerprint = sha256(`${fpInput}:${salt}`)
+      const linkedSound = track.soundId
+        ? await fastify.prisma.sound.findUnique({
+            where: { id: track.soundId },
+            select: {
+              id: true,
+              accessMode: true,
+              purchaseTierId: true,
+              repostToDownload: true,
+              followToDownload: true,
+              downloadsEnabled: true,
+            },
+          })
+        : null
+      if (linkedSound) {
+        if (downloadsBlocked(linkedSound.downloadsEnabled, release.userId, request.sessionUser)) {
+          return reply.status(403).send(DOWNLOADS_DISABLED_BODY)
+        }
+        const playbackGate = await resolvePlaybackGateStatus(
+          fastify.prisma,
+          {
+            artistUserId: release.userId,
+            accessMode: linkedSound.accessMode ?? 'FREE',
+            purchaseTierId: linkedSound.purchaseTierId ?? null,
+          },
+          byUserId,
+        )
+        if (!playbackGate.allowed) {
+          return reply.status(403).send({
+            error:
+              playbackGate.reason === 'PURCHASE'
+                ? 'Buy this track (or subscribe) to download'
+                : 'Subscribe to this artist to download',
+            gate: playbackGate.reason,
+            ...(playbackGate.tierId ? { tierId: playbackGate.tierId } : {}),
+          })
+        }
+
+        // The sound's repost / follow requirements hold on its release too.
+        const gates = await resolveDownloadGateStatus(fastify.prisma, {
+          artistUserId: release.userId,
+          soundId: linkedSound.id,
+          repostToDownload: linkedSound.repostToDownload,
+          followToDownload: linkedSound.followToDownload,
+          byUserId,
+          byFingerprint,
+          skipGates: byUserId === release.userId,
+        })
+        if (!gates.canDownload) {
+          const missing: string[] = []
+          if (gates.repostRequired && !gates.repostSatisfied) missing.push('repost')
+          if (gates.followRequired && !gates.followSatisfied) missing.push('follow')
+          return reply.status(403).send({
+            error:
+              missing.includes('follow') && !byUserId
+                ? 'Sign in and follow this artist to download'
+                : missing.includes('follow')
+                  ? 'Follow this artist to download'
+                  : 'Acknowledge sharing this track to download',
+            gates: missing,
+            soundId: linkedSound.id,
+          })
+        }
+      }
+
+      // Resolve the download key by format + subscriber status
       const isFanSub =
         byUserId && (await isActiveFanSubscriber(fastify.prisma, release.userId, byUserId))
 
@@ -120,10 +196,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       const servedFormat = wantSource ? 'source' : wantFlac ? 'flac' : 'opus'
 
       // Anti-fraud — same logic as sound downloads
-      const salt = dailySalt()
       const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
-      const fpInput = query.fp?.trim() || (request.headers['user-agent'] ?? 'unknown')
-      const byFingerprint = sha256(`${fpInput}:${salt}`)
       const byIpHash = sha256(`${clientIp}:${salt}`)
 
       const now = Date.now()

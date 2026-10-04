@@ -8,6 +8,7 @@ import {
   DISCOGS_SUBMIT_URL,
   MUSICBRAINZ_SUBMIT_URL,
 } from '@tahti/shared'
+import { userName } from './safe-names.js'
 
 export const releaseCatalogSelect = {
   id: true,
@@ -99,7 +100,7 @@ export function buildReleaseExportPack(release: {
     musicbrainzSubmitUrl: MUSICBRAINZ_SUBMIT_URL,
     discogsPrefill,
     discogsSubmitUrl: DISCOGS_SUBMIT_URL,
-    artist: { username: release.user.username, displayName: release.user.displayName },
+    artist: { username: release.user.username, displayName: userName(release.user) },
     release: {
       title: release.title,
       type: release.type,

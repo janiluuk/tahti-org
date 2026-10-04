@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { buildRtmpMirrorOutput, escapeLiquidsoapString } from './liquidsoap.js'
+import { VISUAL_PRESETS } from '@tahti/shared'
+import {
+  buildRtmpMirrorOutput,
+  escapeLiquidsoapString,
+  resolveRtmpMirrorExtraLayers,
+  visualizerFilterFor,
+} from './liquidsoap.js'
 
 describe('escapeLiquidsoapString', () => {
   it('escapes double quotes and backslashes for a Liquidsoap string literal', () => {
@@ -186,5 +192,160 @@ describe('buildRtmpMirrorOutput', () => {
       'My Show',
     )
     expect(out).not.toContain('video.add_rectangle')
+  })
+
+  describe('backdrop and visualizer layers', () => {
+    const target = { id: 'tgt', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false }
+    const backdropPath = '/cover-cache/chan-1/backdrop.jpg'
+
+    it('renders byte-identical output when neither a backdrop nor a visualizer is set', () => {
+      const without = buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', testColor, true)
+      expect(buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', testColor, true, {})).toBe(
+        without,
+      )
+      expect(
+        buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', testColor, true, {
+          visualPreset: 'MINIMAL',
+        }),
+      ).toBe(without)
+      expect(without).toBe(
+        'output.url(\n  id="rtmp_tgt",\n  url="rtmp://x/k",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=video.add_text(color=0x22d3ee, size=28, x=20, y=628, "My Show", video.add_text(color=0x22d3ee, size=18, x=20, y=662, "Sub", video.add_rectangle(color=0x000000, alpha=0.5, width=1280, height=110, x=0, y=610, video.add_image(file="/cover-cache/chan-1/cover.jpg", width=1280, height=720, blank())))), live_source)\n)',
+      )
+    })
+
+    it('draws the backdrop full-frame behind a centered 16:9 cover card', () => {
+      const out = buildRtmpMirrorOutput(target, coverPath, undefined, undefined, undefined, false, {
+        backdropPath,
+      })
+      expect(out).toContain(
+        `source.mux.video(video=video.add_image(file="${coverPath}", width=640, height=360, x=320, y=140, video.add_image(file="${backdropPath}", width=1280, height=720, blank())), live_source)`,
+      )
+      expect(out.startsWith('output.url(')).toBe(true)
+    })
+
+    it('keeps the scrim and text above the backdrop', () => {
+      const out = buildRtmpMirrorOutput(target, coverPath, 'My Show', undefined, undefined, true, {
+        backdropPath,
+      })
+      expect(out).toContain(
+        `video.add_text(color=0xffffff, size=28, x=20, y=628, "My Show", video.add_rectangle(color=0x000000, alpha=0.5, width=1280, height=110, x=0, y=610, video.add_image(file="${coverPath}", width=640`,
+      )
+    })
+
+    it('defines a per-target ffmpeg visualizer graph fed by the same audio as the mux', () => {
+      const out = buildRtmpMirrorOutput(
+        { ...target, alwaysMirror: true },
+        coverPath,
+        undefined,
+        undefined,
+        undefined,
+        false,
+        { visualPreset: 'WAVEFORM_BARS' },
+      )
+      expect(out.startsWith('def rtmp_tgt_vis_graph(graph) =\n')).toBe(true)
+      expect(out).toContain('  a = ffmpeg.filter.audio.input(graph, radio)\n')
+      expect(out).toContain('  v = ffmpeg.filter.showfreqs(graph, a)\n')
+      expect(out).toContain('  v = ffmpeg.filter.scale(graph, w="1280", h="200", v)\n')
+      expect(out).toContain(
+        '  v = ffmpeg.filter.pad(graph, w="1280", h="720", x="0", y="520", color="black@0", v)\n',
+      )
+      expect(out).toContain('rtmp_tgt_vis = ffmpeg.filter.create(rtmp_tgt_vis_graph)\noutput.url(')
+      expect(out).toContain(
+        `source.mux.video(video=add(normalize=false, [video.add_image(file="${coverPath}", width=1280, height=720, blank()), rtmp_tgt_vis]), radio)`,
+      )
+    })
+
+    it('layers backdrop, cover, visualizer, then scrim and text', () => {
+      const out = buildRtmpMirrorOutput(target, coverPath, 'My Show', undefined, undefined, true, {
+        backdropPath,
+        visualPreset: 'WATER_RIPPLE',
+      })
+      expect(out).toContain('ffmpeg.filter.showwaves(graph, a)')
+      expect(out).toContain('ffmpeg.filter.audio.input(graph, live_source)')
+      expect(out).toContain(
+        `"My Show", video.add_rectangle(color=0x000000, alpha=0.5, width=1280, height=110, x=0, y=610, add(normalize=false, [video.add_image(file="${coverPath}", width=640, height=360, x=320, y=140, video.add_image(file="${backdropPath}", width=1280, height=720, blank())), rtmp_tgt_vis])))`,
+      )
+    })
+
+    it('keeps visualizer names unique per target so several mirrors can share one script', () => {
+      const a = buildRtmpMirrorOutput(target, coverPath, undefined, undefined, undefined, false, {
+        visualPreset: 'PARTICLE_FIELD',
+      })
+      const b = buildRtmpMirrorOutput(
+        { ...target, id: 'other' },
+        coverPath,
+        undefined,
+        undefined,
+        undefined,
+        false,
+        { visualPreset: 'PARTICLE_FIELD' },
+      )
+      expect(a).toContain('rtmp_tgt_vis = ')
+      expect(b).toContain('rtmp_other_vis = ')
+    })
+
+    it('draws no visualizer for an unknown preset', () => {
+      const out = buildRtmpMirrorOutput(target, coverPath, undefined, undefined, undefined, false, {
+        visualPreset: 'NOT_A_PRESET',
+      })
+      expect(out).not.toContain('ffmpeg.filter')
+      expect(out).not.toContain('add(normalize')
+    })
+  })
+})
+
+describe('visualizerFilterFor', () => {
+  it('maps every preset the API accepts to an ffmpeg filter or to none', () => {
+    const allowed = new Set(['showwaves', 'showfreqs', 'avectorscope', null])
+    for (const preset of VISUAL_PRESETS) {
+      expect(allowed.has(visualizerFilterFor(preset))).toBe(true)
+    }
+    expect(visualizerFilterFor('MINIMAL')).toBeNull()
+    expect(visualizerFilterFor('WAVEFORM_BARS')).toBe('showfreqs')
+    expect(visualizerFilterFor('WATER_RIPPLE')).toBe('showwaves')
+    expect(visualizerFilterFor('LINE_TANGLE')).toBe('avectorscope')
+  })
+
+  it('returns none for unknown values and inherited object keys', () => {
+    expect(visualizerFilterFor(undefined)).toBeNull()
+    expect(visualizerFilterFor('')).toBeNull()
+    expect(visualizerFilterFor('toString')).toBeNull()
+    expect(visualizerFilterFor('NOT_A_PRESET')).toBeNull()
+  })
+})
+
+describe('resolveRtmpMirrorExtraLayers', () => {
+  const target = { id: 'tgt', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false }
+  const coverPath = '/cover-cache/chan-1/cover.jpg'
+  const off = { backdrop: false, visualizer: false }
+
+  it('keeps the mirror output byte-identical with both flags off, even with a fetched backdrop and a preset', () => {
+    const layers = resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', off)
+    expect(layers).toEqual({ backdropPath: undefined, visualPreset: undefined })
+    expect(
+      buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', undefined, true, layers),
+    ).toBe(buildRtmpMirrorOutput(target, coverPath, 'My Show', 'Sub', undefined, true))
+  })
+
+  it('enables each layer only under its own flag', () => {
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', {
+        backdrop: true,
+        visualizer: false,
+      }),
+    ).toEqual({ backdropPath: '/cover-cache/chan-1/backdrop.jpg', visualPreset: undefined })
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', true, 'WAVEFORM_BARS', {
+        backdrop: false,
+        visualizer: true,
+      }),
+    ).toEqual({ backdropPath: undefined, visualPreset: 'WAVEFORM_BARS' })
+  })
+
+  it('leaves the backdrop out when its fetch failed, even with the flag on', () => {
+    expect(
+      resolveRtmpMirrorExtraLayers('chan-1', false, undefined, { backdrop: true, visualizer: true })
+        .backdropPath,
+    ).toBeUndefined()
   })
 })

@@ -83,6 +83,54 @@ describe('GET/POST /api/me/notifications', () => {
     expect(body.notifications[0]!.readAt).toBeNull()
   })
 
+  it('honours ?limit and pages older ones with ?before', async () => {
+    const all = await app.inject({
+      method: 'GET',
+      url: '/api/me/notifications',
+      headers: { cookie },
+    })
+    const ids = (all.json().notifications as Array<{ id: string }>).map((n) => n.id)
+    expect(ids.length).toBeGreaterThanOrEqual(2)
+    expect(all.json().hasMore).toBe(false)
+
+    const first = await app.inject({
+      method: 'GET',
+      url: '/api/me/notifications?limit=1',
+      headers: { cookie },
+    })
+    expect(first.statusCode).toBe(200)
+    expect(first.json().notifications.map((n: { id: string }) => n.id)).toEqual([ids[0]])
+    expect(first.json().hasMore).toBe(true)
+
+    const older = await app.inject({
+      method: 'GET',
+      url: `/api/me/notifications?limit=50&before=${ids[0]}`,
+      headers: { cookie },
+    })
+    expect(older.statusCode).toBe(200)
+    expect(older.json().notifications.map((n: { id: string }) => n.id)).toEqual(ids.slice(1))
+    expect(older.json().hasMore).toBe(false)
+  })
+
+  it("rejects a bad limit and another user's cursor", async () => {
+    const bad = await app.inject({
+      method: 'GET',
+      url: '/api/me/notifications?limit=500',
+      headers: { cookie },
+    })
+    expect(bad.statusCode).toBe(400)
+
+    const foreign = await prisma.notification.create({
+      data: { userId: actorId, type: 'NEW_POST', title: 'Not yours' },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/notifications?before=${foreign.id}`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('marks everything read', async () => {
     const res = await app.inject({
       method: 'POST',

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AdminLiveStreamListSchema, openApiResponse } from '@tahti/shared'
+import { AdminLiveStreamListSchema, openApiResponse, safeDisplayName } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
@@ -28,7 +28,7 @@ const adminStreamsRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           slug: true,
           goneLiveAt: true,
-          user: { select: { displayName: true, username: true, tier: true } },
+          user: { select: { displayName: true, username: true, tier: true, avatarUrl: true } },
           curatedRotationItems: { select: { id: true }, take: 1 },
         },
       })
@@ -36,8 +36,9 @@ const adminStreamsRoutes: FastifyPluginAsync = async (fastify) => {
       const streams = live.map((ch) => ({
         channelId: ch.id,
         slug: ch.slug,
-        artistName: ch.user.displayName,
+        artistName: safeDisplayName(ch.user.displayName, ch.user.username),
         username: ch.user.username,
+        avatarUrl: ch.user.avatarUrl,
         goneLiveAt: ch.goneLiveAt,
         elapsedSec: ch.goneLiveAt
           ? Math.max(0, Math.floor((now - ch.goneLiveAt.getTime()) / 1000))

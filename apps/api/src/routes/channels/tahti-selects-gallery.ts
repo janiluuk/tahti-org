@@ -29,7 +29,7 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
         if (!channel) return { items: [] as GallerySoundRow[] }
 
         const rows = await fastify.prisma.curatedRotationItem.findMany({
-          where: { channelId: channel.id },
+          where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
           orderBy: { position: 'asc' },
           select: {
             sound: {

@@ -9,6 +9,7 @@ export const SoundViewSchema = z
     id: z.string(),
     title: z.string(),
     status: z.string(),
+    processingError: z.string().nullable().optional(),
     effectiveBpm: z.number().nullable().optional(),
     effectiveKey: z.string().nullable().optional(),
     sourceFormat: z.string().nullable().optional(),
@@ -16,6 +17,7 @@ export const SoundViewSchema = z
     sourceSampleRateHz: z.number().int().nullable().optional(),
     sourceBitDepth: z.number().int().nullable().optional(),
     sourceChannels: z.number().int().nullable().optional(),
+    downloadsEnabled: z.boolean().optional(),
   })
   .passthrough()
 
@@ -37,7 +39,18 @@ export const SoundProcessingStatusSchema = z.object({
       status: z.enum(['PENDING', 'PROCESSING']),
     }),
   ),
-  settled: z.array(z.object({ id: z.string(), status: z.enum(['READY', 'ERROR']) })),
+  settled: z.array(
+    z.object({
+      id: z.string(),
+      status: z.enum(['READY', 'ERROR']),
+      processingError: z.string().nullable().optional(),
+    }),
+  ),
+})
+
+export const SoundRetryProcessingSchema = z.object({
+  id: z.string(),
+  status: z.literal('PENDING'),
 })
 
 // PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to
@@ -84,6 +97,9 @@ export const PublicTrackDetailSchema = z
     galleryMode: z.string().nullable().optional(),
     genre: z.string().nullable(),
     subGenres: z.array(z.string()),
+    /** Artist-defined free-form labels, as written. `GET /api/v1/search?tag=`
+     * finds other public tracks carrying the same tag. */
+    tags: z.array(z.string()),
     contentType: z.string(),
     mixVersion: z.string().nullable(),
     description: z.string().nullable(),
@@ -94,11 +110,19 @@ export const PublicTrackDetailSchema = z
     releasedAt: z.string(),
     effectiveBpm: z.number().nullable(),
     effectiveKey: z.string().nullable(),
+    /** Artist-declared: the track was made with generative AI. Shown as a
+     * label on the public track page. */
+    isAiGenerated: z.boolean(),
     /** [0..255] amplitude buckets for the real waveform — null for tracks
      * ingested before M27 or without a decodable audio file. */
     peaks: z.array(z.number()).nullable(),
+    /** Where the track was recorded - only a verified venue (one with a
+     * public page), else null. */
+    venue: z.object({ name: z.string(), slug: z.string() }).nullable(),
     commentCount: z.number().int(),
     downloadCount: z.number().int(),
+    /** False = the artist turned downloads off; the download routes answer 403 `downloads_disabled`. */
+    downloadsEnabled: z.boolean(),
     /** FREE | SUBSCRIBERS_ONLY | PURCHASE — one-time purchase tiers are distinct from fan-subs. */
     accessMode: z.enum(['FREE', 'SUBSCRIBERS_ONLY', 'PURCHASE']).optional(),
     purchaseTierId: z.string().nullable().optional(),

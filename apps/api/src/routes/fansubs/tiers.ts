@@ -13,6 +13,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { stripeEnabled } from '../../lib/stripe.js'
+import { userName } from '../../lib/safe-names.js'
 
 const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/u/:username/tiers — public, active tiers for the subscribe page
@@ -53,7 +54,7 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         artist: {
           id: artist.id,
-          displayName: artist.displayName,
+          displayName: userName(artist),
           username: artist.username,
           bio: artist.bio,
           avatarUrl: artist.avatarUrl,

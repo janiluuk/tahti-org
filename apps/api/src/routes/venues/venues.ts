@@ -16,6 +16,9 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { trackArtistName } from '../../lib/safe-names.js'
+
+const VENUE_RECORDINGS_LIMIT = 24
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -47,6 +50,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
           countryCode: true,
           capacity: true,
           description: true,
+          photos: true,
         },
         orderBy: { name: 'asc' },
       })
@@ -83,7 +87,40 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
       if (!venue.verifiedAt) return reply.status(404).send({ error: 'Venue not found' })
 
-      return reply.send(venue)
+      const sounds = await fastify.prisma.sound.findMany({
+        where: {
+          venueId: venue.id,
+          isPublic: true,
+          status: 'READY',
+          channel: { user: { deletedAt: null, suspendedAt: null } },
+        },
+        orderBy: { releasedAt: 'desc' },
+        take: VENUE_RECORDINGS_LIMIT,
+        select: {
+          id: true,
+          title: true,
+          artistName: true,
+          durationSec: true,
+          bannerUrl: true,
+          releasedAt: true,
+          channel: {
+            select: { slug: true, user: { select: { username: true, displayName: true } } },
+          },
+        },
+      })
+
+      return reply.send({
+        ...venue,
+        recordings: sounds.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artistName: trackArtistName(s),
+          channelSlug: s.channel.slug,
+          durationSec: s.durationSec,
+          coverUrl: s.bannerUrl,
+          releasedAt: s.releasedAt.toISOString(),
+        })),
+      })
     },
   )
 

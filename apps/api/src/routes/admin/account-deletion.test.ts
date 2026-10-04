@@ -90,6 +90,19 @@ describe('M19 — account deletion execute', () => {
   })
 
   it('POST delete-account anonymizes user', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { userId: targetId } })
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: channel.id,
+        title: 'Left behind',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    const collection = await prisma.collection.create({
+      data: { userId: targetId, name: 'Left behind', slug: `acct-del-col-${Date.now()}` },
+    })
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/admin/users/${targetId}/delete-account`,
@@ -103,11 +116,74 @@ describe('M19 — account deletion execute', () => {
     expect(user?.email).not.toBe(targetEmail)
     expect(user?.displayName).toBe('Deleted user')
 
+    const hiddenSound = await prisma.sound.findUnique({ where: { id: sound.id } })
+    expect(hiddenSound?.isPublic).toBe(false)
+    const hiddenCollection = await prisma.collection.findUnique({ where: { id: collection.id } })
+    expect(hiddenCollection?.isPublic).toBe(false)
+    expect(hiddenCollection?.visibility).toBe('DRAFT')
+    const page = await app.inject({ method: 'GET', url: `/api/tracks/${sound.id}` })
+    expect(page.statusCode).toBe(404)
+
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: targetEmail, password: 'testpassword' },
     })
     expect(login.statusCode).toBe(401)
+  })
+
+  it('POST delete-account drops future radio bookings and events, keeps past ones', async () => {
+    const victim = await createTestArtist(prisma, {
+      email: `${PREFIX}future@example.com`,
+      username: 'acct-del-future',
+    })
+    const hour = 3600_000
+    const now = Date.now()
+    const pastBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: victim.channel!.id,
+        startAt: new Date(now - 48 * hour),
+        endAt: new Date(now - 47 * hour),
+      },
+    })
+    const futureBooking = await prisma.radioSlotBooking.create({
+      data: {
+        channelId: victim.channel!.id,
+        startAt: new Date(now + 47 * hour),
+        endAt: new Date(now + 48 * hour),
+      },
+    })
+    const pastEvent = await prisma.artistEvent.create({
+      data: {
+        userId: victim.id,
+        title: 'Old gig',
+        place: 'Club',
+        location: 'Helsinki',
+        startAt: new Date(now - 48 * hour),
+      },
+    })
+    const futureEvent = await prisma.artistEvent.create({
+      data: {
+        userId: victim.id,
+        title: 'Next gig',
+        place: 'Club',
+        location: 'Helsinki',
+        startAt: new Date(now + 48 * hour),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${victim.id}/delete-account`,
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+
+    expect(await prisma.radioSlotBooking.findUnique({ where: { id: futureBooking.id } })).toBeNull()
+    expect(await prisma.artistEvent.findUnique({ where: { id: futureEvent.id } })).toBeNull()
+    expect(
+      await prisma.radioSlotBooking.findUnique({ where: { id: pastBooking.id } }),
+    ).not.toBeNull()
+    expect(await prisma.artistEvent.findUnique({ where: { id: pastEvent.id } })).not.toBeNull()
   })
 })

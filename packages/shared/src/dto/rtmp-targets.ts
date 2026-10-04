@@ -36,6 +36,7 @@ export const PatchRtmpTargetSchema = z.object({
   enabled: z.boolean().optional(),
   streamKey: z.string().trim().min(1).optional(),
   label: z.string().trim().min(1).max(64).optional(),
+  alwaysMirror: z.boolean().optional(),
 })
 
 export type PatchRtmpTargetInput = z.infer<typeof PatchRtmpTargetSchema>

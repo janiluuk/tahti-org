@@ -4,7 +4,11 @@
 import { z } from 'zod'
 
 export const SmartLinkViewSchema = z.object({
-  release: z.record(z.string(), z.unknown()),
+  release: z
+    .object({
+      genre: z.string().nullable(),
+    })
+    .passthrough(),
   artist: z.object({
     username: z.string(),
     displayName: z.string(),

@@ -8,7 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { artistOffersFanChat, subscriberHasFanChat } from '../../lib/fan-perks.js'
+import { artistOffersFanChat, canUseFanChat } from '../../lib/fan-perks.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 
 const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
@@ -23,7 +23,12 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true, chatSubscribersOnly: true },
+        select: {
+          id: true,
+          userId: true,
+          chatSubscribersOnly: true,
+          user: { select: { chatEnabled: true, username: true } },
+        },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -34,10 +39,12 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
 
       if (user) {
         isSupporter = await isActiveFanSubscriber(fastify.prisma, channel.userId, user.id)
-        canJoinFanChat = await subscriberHasFanChat(fastify.prisma, channel.userId, user.id)
+        canJoinFanChat = await canUseFanChat(fastify.prisma, channel.userId, user.id)
       }
 
       return reply.send({
+        chatEnabled: channel.user.chatEnabled,
+        artistUsername: channel.user.username,
         fanChatEnabled,
         isSupporter,
         canJoinFanChat,

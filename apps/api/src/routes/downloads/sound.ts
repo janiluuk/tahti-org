@@ -15,13 +15,18 @@ import {
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
-import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
+import {
+  DOWNLOADS_DISABLED_BODY,
+  downloadsBlocked,
+  resolveDownloadGateStatus,
+} from '../../lib/download-gates.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
+import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -87,8 +92,21 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         })
         if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
+        // A DOWNLOAD share link opens a private sound; every gate below still applies.
+        const shared = await soundShareGrantsAccess(
+          fastify.prisma,
+          itemId,
+          shareKeyFromQuery(request.query),
+          request.sessionUser?.username ?? null,
+          'DOWNLOAD',
+        )
         const item = await fastify.prisma.sound.findFirst({
-          where: { id: itemId, channelId: channel.id, status: 'READY', isPublic: true },
+          where: {
+            id: itemId,
+            channelId: channel.id,
+            status: 'READY',
+            ...(shared ? {} : { isPublic: true }),
+          },
           select: {
             id: true,
             title: true,
@@ -100,9 +118,13 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
             followToDownload: true,
             accessMode: true,
             purchaseTierId: true,
+            downloadsEnabled: true,
           },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+        if (downloadsBlocked(item.downloadsEnabled, channel.userId, request.sessionUser)) {
+          return reply.status(403).send(DOWNLOADS_DISABLED_BODY)
+        }
 
         const salt = dailySalt()
         const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')

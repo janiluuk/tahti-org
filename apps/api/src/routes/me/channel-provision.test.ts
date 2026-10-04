@@ -48,6 +48,30 @@ describe('self-service channel provisioning', () => {
     expect(channel?.slug).toBe('cp-no-channel')
   })
 
+  it("starts the channel's comments off when the user's channel default is off", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `${PREFIX}comments-off@example.com`,
+        passwordHash: await hashPassword('testpassword'),
+        username: 'cp-comments-off',
+        displayName: 'Comments Off',
+        emailVerifiedAt: new Date(),
+        defaultChannelCommentsEnabled: false,
+      },
+    })
+    const cookie = await sessionCookieFor(prisma, user.id)
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/provision',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(201)
+
+    const channel = await prisma.channel.findUnique({ where: { userId: user.id } })
+    expect(channel?.commentsEnabled).toBe(false)
+  })
+
   it('rejects with 409 when the user already has a channel', async () => {
     const user = await prisma.user.create({
       data: {

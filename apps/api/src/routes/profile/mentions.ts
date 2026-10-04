@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { userName } from '../../lib/safe-names.js'
 
 // M15 — public mention feed (opt-in via publicMentionsEnabled)
 const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -65,7 +66,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
       const [sounds, chatChannels] = await Promise.all([
         soundIds.length > 0
           ? fastify.prisma.sound.findMany({
-              where: { id: { in: soundIds } },
+              where: { id: { in: soundIds }, isPublic: true, status: 'READY' },
               select: { id: true, title: true },
             })
           : Promise.resolve([]),
@@ -84,7 +85,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
           case 'BIO':
             return {
               ...m,
-              sourceTitle: m.mentioner.displayName,
+              sourceTitle: userName(m.mentioner),
               sourceUrl: `/u/${m.mentioner.username}`,
             }
           case 'TRACKLIST': {
@@ -99,7 +100,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
             const slug = m.mentioner.channel?.slug
             return {
               ...m,
-              sourceTitle: m.mentioner.displayName,
+              sourceTitle: userName(m.mentioner),
               sourceUrl: slug ? `/channel/${slug}` : null,
             }
           }
@@ -108,7 +109,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
             const channel = channelId ? chatChannelById.get(channelId) : undefined
             return {
               ...m,
-              sourceTitle: m.mentioner.displayName,
+              sourceTitle: userName(m.mentioner),
               sourceUrl: channel ? `/chat/${channel.slug}` : null,
             }
           }

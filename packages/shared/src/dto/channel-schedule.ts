@@ -7,6 +7,12 @@ import { BroadcastShowTypeSchema, BroadcastVisibilitySchema } from './broadcast-
 export const ChannelSchedulePatchSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable().optional(),
   nextBroadcastNote: z.string().max(200).nullable().optional(),
+  /** One of the channel's own show series; null unlinks it. */
+  nextBroadcastShowId: z.string().min(1).nullable().optional(),
+  nextBroadcastDurationHours: z
+    .union([z.literal(1), z.literal(2)])
+    .nullable()
+    .optional(),
 })
 
 export type ChannelSchedulePatch = z.infer<typeof ChannelSchedulePatchSchema>
@@ -16,6 +22,17 @@ export const CreateLiveShowSeriesSchema = z.object({
   description: z.string().trim().max(2_000).nullable().optional(),
   tagline: z.string().trim().max(200).nullable().optional(),
   artworkUrl: z.string().url().max(2_000).nullable().optional(),
+  /** Blank clears it, like the other optional text fields. */
+  backdropUrl: z
+    .string()
+    .trim()
+    .max(2_000)
+    .nullable()
+    .optional()
+    .refine((v) => !v || /^https?:\/\//i.test(v), { message: 'backdropUrl must be an http(s) URL' })
+    .transform((v) => (v === undefined ? undefined : v || null)),
+  /** SINGLE: a one-off show; SERIES: a continuing series of episodes. */
+  mode: z.enum(['SINGLE', 'SERIES']).default('SERIES'),
   showType: BroadcastShowTypeSchema.default('LIVE_SET'),
   visibility: BroadcastVisibilitySchema.default('PUBLIC'),
   autoPublish: z.boolean().default(true),
@@ -53,6 +70,7 @@ export const LiveShowSeriesViewSchema = CreateLiveShowSeriesSchema.extend({
   description: z.string().nullable(),
   tagline: z.string().nullable(),
   artworkUrl: z.string().nullable(),
+  backdropUrl: z.string().nullable(),
   scheduleNote: z.string().nullable(),
   createdAt: z.string().datetime(),
 })
@@ -121,6 +139,32 @@ export const LiveShowSeriesListSchema = z.object({
   series: z.array(LiveShowSeriesViewSchema),
   scheduledShows: z.array(ScheduledLiveShowViewSchema),
 })
+
+/** Listener-facing: only PUBLIC, uncanceled shows from now forward. */
+export const PublicChannelScheduleShowSchema = z.object({
+  id: z.string(),
+  seriesId: z.string(),
+  startAt: z.string().datetime(),
+  endAt: z.string().datetime().nullable(),
+  durationMin: z.number().int().min(1).nullable(),
+  title: z.string(),
+  episodeNumber: z.number().int().min(1).nullable(),
+  showType: BroadcastShowTypeSchema,
+})
+
+export const PublicChannelScheduleSeriesSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  scheduleNote: z.string().nullable(),
+})
+
+export const PublicChannelScheduleSchema = z.object({
+  shows: z.array(PublicChannelScheduleShowSchema),
+  series: z.array(PublicChannelScheduleSeriesSchema),
+})
+
+export type PublicChannelScheduleShow = z.infer<typeof PublicChannelScheduleShowSchema>
+export type PublicChannelSchedule = z.infer<typeof PublicChannelScheduleSchema>
 
 export type CreateLiveShowSeries = z.infer<typeof CreateLiveShowSeriesSchema>
 export type PatchLiveShowSeries = z.infer<typeof PatchLiveShowSeriesSchema>

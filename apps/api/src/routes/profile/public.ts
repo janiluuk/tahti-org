@@ -23,6 +23,7 @@ import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { playbackGatePayload } from '../../lib/playback-url.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
+import { userName } from '../../lib/safe-names.js'
 
 interface GatedTrack {
   playUrl: string | null
@@ -158,6 +159,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       isMember: true,
       showFollowers: true,
       showFollowing: true,
+      showPageHero: true,
       stripeConnectChargesEnabled: true,
       createdAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
@@ -202,7 +204,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       },
       releases: {
         where: { state: 'PUBLISHED' },
-        orderBy: { releaseDate: 'desc' },
+        // Pinned first so the 24-row cap never drops an older pinned release
+        // from the Stage showcase.
+        orderBy: [{ pinnedAt: { sort: 'desc', nulls: 'last' } }, { releaseDate: 'desc' }],
         take: 24,
         select: {
           id: true,
@@ -229,7 +233,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       fanTiers: {
         where: { active: true },
         orderBy: { position: 'asc' },
-        select: { id: true, name: true, amountCents: true },
+        select: { id: true, name: true, amountCents: true, description: true, perks: true },
       },
       purchaseTiers: {
         where: { active: true },
@@ -238,7 +242,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       },
       collections: {
         where: { isPublic: true },
-        orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ isFeatured: 'desc' }, { publicProfileOrder: 'asc' }, { createdAt: 'desc' }],
         take: 12,
         select: {
           slug: true,
@@ -266,6 +270,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
   const allSounds = user.channel
     ? await fastify.prisma.sound.findMany({
         where: { channelId: user.channel.id, status: 'READY', isPublic: true },
+        orderBy: [{ trackOrder: 'asc' }, { createdAt: 'desc' }],
         select: {
           id: true,
           title: true,
@@ -403,7 +408,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     _internalArtistId: user.id,
     artist: {
       username: user.username,
-      displayName: user.displayName,
+      displayName: userName(user),
       bio: user.bio,
       fullBio: user.fullBio,
       avatarUrl: user.avatarUrl,
@@ -423,6 +428,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       isMember: user.isMember,
       followerCount: user.showFollowers ? user._count.artistFollowers : null,
       followingCount: user.showFollowing ? user._count.artistFollowing : null,
+      showPageHero: user.showPageHero,
     },
     channel: user.channel
       ? {

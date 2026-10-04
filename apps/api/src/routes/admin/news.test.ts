@@ -126,6 +126,53 @@ describe('admin news routes', () => {
     expect((unpublished.json() as { publishedAt: string | null }).publishedAt).toBeNull()
   })
 
+  it('keeps an image and a link and shows them in the public feed', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/admin/news',
+      headers: { cookie: boardCookie },
+      payload: {
+        headline: 'Radio turns one',
+        summary: 'A year of fair rotation.',
+        imageUrl: 'https://cdn.example.com/radio.jpg',
+        linkUrl: 'https://tahti.live/radio',
+        linkLabel: 'Listen now',
+        publish: true,
+      },
+    })
+    expect(created.statusCode).toBe(201)
+    const { id } = created.json() as { id: string }
+
+    const feed = await app.inject({ method: 'GET', url: '/api/v1/news' })
+    expect(feed.json().find((p: { id: string }) => p.id === id)).toMatchObject({
+      imageUrl: 'https://cdn.example.com/radio.jpg',
+      linkUrl: 'https://tahti.live/radio',
+      linkLabel: 'Listen now',
+    })
+
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/news/${id}`,
+      headers: { cookie: boardCookie },
+      payload: { linkUrl: '', linkLabel: null },
+    })
+    expect(cleared.json()).toMatchObject({
+      imageUrl: 'https://cdn.example.com/radio.jpg',
+      linkUrl: null,
+      linkLabel: null,
+    })
+  })
+
+  it('rejects an image that is not an http(s) URL', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/news',
+      headers: { cookie: boardCookie },
+      payload: { headline: 'Bad image', summary: 'x', imageUrl: 'javascript:alert(1)' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('deletes a post', async () => {
     const created = await app.inject({
       method: 'POST',
