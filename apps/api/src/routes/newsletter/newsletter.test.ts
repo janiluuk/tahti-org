@@ -100,6 +100,52 @@ describe('M13 — newsletter', () => {
     expect(after?.unsubscribedAt).not.toBeNull()
   })
 
+  it('asks an unsubscribed address to confirm again before it is back on the list', async () => {
+    const where = { artistUserId_email: { artistUserId: artistId, email: 'fan@example.com' } }
+    const before = await prisma.newsletterSubscriber.findUnique({ where })
+    expect(before?.confirmedAt).not.toBeNull()
+    expect(before?.unsubscribedAt).not.toBeNull()
+
+    const again = await app.inject({
+      method: 'POST',
+      url: '/api/newsletter/subscribe',
+      payload: { email: 'fan@example.com', artistUsername: username },
+    })
+    expect(again.json().status).toBe('confirmation_sent')
+    const pending = await prisma.newsletterSubscriber.findUnique({ where })
+    expect(pending?.confirmedAt).toBeNull()
+    expect(
+      await prisma.newsletterSubscriber.count({
+        where: { artistUserId: artistId, confirmedAt: { not: null }, unsubscribedAt: null },
+      }),
+    ).toBe(0)
+
+    const confirm = await app.inject({
+      method: 'GET',
+      url: `/api/newsletter/confirm/${pending!.confirmToken}`,
+    })
+    expect(confirm.statusCode).toBe(302)
+    const confirmed = await prisma.newsletterSubscriber.findUnique({ where })
+    expect(confirmed?.confirmedAt).not.toBeNull()
+    expect(confirmed?.unsubscribedAt).toBeNull()
+  })
+
+  it('does not take subscriptions for a suspended or deleted artist', async () => {
+    for (const data of [{ suspendedAt: new Date() }, { deletedAt: new Date() }]) {
+      await prisma.user.update({ where: { id: artistId }, data })
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/newsletter/subscribe',
+        payload: { email: 'late-fan@example.com', artistUsername: username },
+      })
+      expect(res.statusCode).toBe(404)
+      await prisma.user.update({
+        where: { id: artistId },
+        data: { suspendedAt: null, deletedAt: null },
+      })
+    }
+  })
+
   it('artist can create a draft and queue send to confirmed subscribers', async () => {
     await prisma.newsletterSubscriber.updateMany({
       where: { artistUserId: artistId, email: 'fan@example.com' },
