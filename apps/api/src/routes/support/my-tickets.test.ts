@@ -130,4 +130,58 @@ describe('GET /api/me/support/tickets', () => {
     expect(res.body).not.toContain('Board Person')
     expect(res.body).not.toContain('@example.com')
   })
+
+  it('lets the requester reply on their own ticket and reopens a resolved one', async () => {
+    await prisma.supportTicket.update({ where: { id: ownTicketId }, data: { status: 'RESOLVED' } })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/support/tickets/${ownTicketId}/replies`,
+      headers: { cookie },
+      payload: { body: 'Still missing, sorry.' },
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json()).toMatchObject({
+      body: 'Still missing, sorry.',
+      authorName: 'You',
+      fromRequester: true,
+    })
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/support/tickets',
+      headers: { cookie },
+    })
+    const [ticket] = MySupportTicketListSchema.parse(list.json()).tickets
+    expect(ticket?.status).toBe('OPEN')
+    expect(ticket?.replies.map((r) => [r.body, r.fromRequester])).toEqual([
+      ['Looking into it', false],
+      ['Still missing, sorry.', true],
+    ])
+    expect(list.body).not.toContain('Status changed')
+  })
+
+  it("refuses a reply on someone else's ticket, a signed-out ticket, or without a body", async () => {
+    for (const id of [otherTicketId, signedOutTicketId]) {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/support/tickets/${id}/replies`,
+        headers: { cookie },
+        payload: { body: 'let me in' },
+      })
+      expect(res.statusCode).toBe(404)
+    }
+    const empty = await app.inject({
+      method: 'POST',
+      url: `/api/me/support/tickets/${ownTicketId}/replies`,
+      headers: { cookie },
+      payload: { body: '   ' },
+    })
+    expect(empty.statusCode).toBe(400)
+    const anon = await app.inject({
+      method: 'POST',
+      url: `/api/me/support/tickets/${ownTicketId}/replies`,
+      payload: { body: 'hello' },
+    })
+    expect(anon.statusCode).toBe(401)
+  })
 })
