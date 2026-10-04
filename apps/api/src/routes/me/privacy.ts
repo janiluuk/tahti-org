@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { Readable } from 'node:stream'
+import { availableUserWhere } from '@tahti/db'
 import * as archiver from 'archiver'
 import {
   AccountDeletionRequestSchema,
@@ -182,7 +183,7 @@ const publicPressKitRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const channel = await fastify.prisma.channel.findFirst({
-        where: { user: { username: routeParams.username } },
+        where: { user: { username: routeParams.username, ...availableUserWhere } },
         select: { id: true, pressKitGalleryPublic: true },
       })
       if (!channel || !channel.pressKitGalleryPublic) return reply.send([])
