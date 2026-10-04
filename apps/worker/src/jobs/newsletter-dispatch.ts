@@ -4,7 +4,7 @@
 import type { Job } from 'bullmq'
 import nodemailer from 'nodemailer'
 import { smtpTransportOptions } from '@tahti/shared'
-import { prisma } from '@tahti/db'
+import { actorDisplayName, prisma } from '@tahti/db'
 
 const SMTP_HOST = process.env.SMTP_HOST ?? 'localhost'
 const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '1025', 10)
@@ -13,6 +13,26 @@ const SMTP_PASS = process.env.SMTP_PASS ?? ''
 const SMTP_FROM = process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>'
 const APP_URL = process.env.APP_URL ?? 'https://app.tahti.live'
 const SOURCE_REPO = 'https://github.com/tahtiapp/tahti'
+// Public address of the API. Mail providers POST the one-click unsubscribe
+// to it; the web app page at APP_URL cannot take a POST.
+const API_URL = process.env.API_URL?.replace(/\/$/, '')
+
+/** Unsubscribe links for one subscriber: the page a person opens, and the
+ * headers a mail provider uses for its own Unsubscribe button. One-click
+ * (RFC 8058) is only announced when there is an API address to POST to. */
+export function newsletterUnsubscribeLinks(unsubToken: string) {
+  const pageUrl = `${APP_URL}/newsletter/unsubscribe/${unsubToken}`
+  if (!API_URL) {
+    return { pageUrl, headers: { 'List-Unsubscribe': `<${pageUrl}>` } }
+  }
+  return {
+    pageUrl,
+    headers: {
+      'List-Unsubscribe': `<${API_URL}/api/newsletter/unsubscribe/${unsubToken}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
+  }
+}
 const BATCH_SIZE = 50
 
 let _transport: nodemailer.Transporter | null = null
@@ -39,6 +59,7 @@ export async function processNewsletterDispatch(job: Job): Promise<void> {
   })
 
   if (!draft) throw new Error(`NewsletterDraft ${draftId} not found`)
+  const artistName = actorDisplayName(draft.user)
 
   // Process in batches to avoid memory pressure on large lists
   let processed = 0
@@ -49,32 +70,43 @@ export async function processNewsletterDispatch(job: Job): Promise<void> {
       where: { draftId, state: 'QUEUED' },
       take: BATCH_SIZE,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      include: { subscriber: { select: { id: true, email: true, unsubToken: true } } },
+      include: {
+        subscriber: {
+          select: { id: true, email: true, unsubToken: true, unsubscribedAt: true },
+        },
+      },
     })
 
     if (sends.length === 0) break
 
     for (const send of sends) {
       const { subscriber } = send
-      const unsubUrl = `${APP_URL}/newsletter/unsubscribe/${subscriber.unsubToken}`
+      // Someone who unsubscribed after the send was queued gets nothing, and
+      // the row goes so the delivery report does not count them.
+      if (subscriber.unsubscribedAt) {
+        await prisma.newsletterSend.delete({ where: { id: send.id } })
+        continue
+      }
+      const { pageUrl: unsubUrl, headers: unsubHeaders } = newsletterUnsubscribeLinks(
+        subscriber.unsubToken,
+      )
       const plainText = [
         draft.bodyMd,
         '',
         '─',
-        `You are receiving this because you subscribed to ${draft.user.displayName}.`,
+        `You are receiving this because you subscribed to ${artistName}.`,
         `Unsubscribe: ${unsubUrl}`,
         `Source code: ${SOURCE_REPO}`,
       ].join('\n')
 
       try {
         await getTransport().sendMail({
-          from: `${draft.user.displayName} via Tahti <${SMTP_FROM}>`,
+          from: `${artistName} via Tahti <${SMTP_FROM}>`,
           to: subscriber.email,
           subject: draft.subject,
           text: plainText,
           headers: {
-            'List-Unsubscribe': `<${unsubUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            ...unsubHeaders,
             'X-Source-Code': SOURCE_REPO,
           },
         })

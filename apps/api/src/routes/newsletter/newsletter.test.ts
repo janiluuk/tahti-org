@@ -100,6 +100,36 @@ describe('M13 — newsletter', () => {
     expect(after?.unsubscribedAt).not.toBeNull()
   })
 
+  it('unsubscribes on a one-click POST from a mail provider', async () => {
+    const sub = await prisma.newsletterSubscriber.create({
+      data: {
+        artistUserId: artistId,
+        email: 'one-click@example.com',
+        confirmedAt: new Date(),
+        unsubToken: `one-click-token-${Date.now()}`,
+      },
+    })
+    const post = () =>
+      app.inject({
+        method: 'POST',
+        url: `/api/newsletter/unsubscribe/${sub.unsubToken}`,
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        payload: 'List-Unsubscribe=One-Click',
+      })
+    const first = await post()
+    expect(first.statusCode).toBe(200)
+    const after = await prisma.newsletterSubscriber.findUnique({ where: { id: sub.id } })
+    expect(after?.unsubscribedAt).not.toBeNull()
+    expect((await post()).statusCode).toBe(200)
+
+    const unknown = await app.inject({
+      method: 'POST',
+      url: '/api/newsletter/unsubscribe/not-a-real-token',
+    })
+    expect(unknown.statusCode).toBe(404)
+    await prisma.newsletterSubscriber.delete({ where: { id: sub.id } })
+  })
+
   it('asks an unsubscribed address to confirm again before it is back on the list', async () => {
     const where = { artistUserId_email: { artistUserId: artistId, email: 'fan@example.com' } }
     const before = await prisma.newsletterSubscriber.findUnique({ where })
