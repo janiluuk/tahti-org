@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { availableUserWhere } from '@tahti/db'
 import {
   DraftIdParamSchema,
   NewsletterDraftListQuerySchema,
@@ -310,8 +311,17 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const artist = await fastify.prisma.user.findUnique({
-        where: { username: routeParams.username },
+      // The shortcut past the confirmation email is only safe for an address
+      // the account has proven it owns.
+      if (!viewer.emailVerifiedAt) {
+        return reply.status(403).send({
+          error: 'Verify your email address before subscribing with it',
+          code: 'email_not_verified',
+        })
+      }
+
+      const artist = await fastify.prisma.user.findFirst({
+        where: { username: routeParams.username, ...availableUserWhere },
         select: { id: true },
       })
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })

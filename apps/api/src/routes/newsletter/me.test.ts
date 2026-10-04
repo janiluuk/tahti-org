@@ -323,3 +323,71 @@ describe('M13/M19 — newsletter drafts', () => {
     })
   })
 })
+
+describe('newsletter — subscribing with an account email', () => {
+  const P = 'newsletter-me-sub-test-'
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let artistId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, P)
+    const artist = await createTestArtist(prisma, {
+      email: `${P}artist@example.com`,
+      username: `${P}artist`,
+    })
+    artistId = artist.id
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, P)
+    await app.close()
+  })
+
+  it('subscribes a verified account without a confirmation email', async () => {
+    const fan = await createTestArtist(prisma, {
+      email: `${P}fan@example.com`,
+      username: `${P}fan`,
+    })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/newsletter/subscription/${P}artist`,
+      headers: { cookie: await sessionCookieFor(prisma, fan.id) },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ subscribed: true })
+  })
+
+  it('refuses an account whose email is not verified', async () => {
+    const stranger = await createTestArtist(prisma, {
+      email: `${P}someone-else@example.com`,
+      username: `${P}stranger`,
+      emailVerified: false,
+    })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/newsletter/subscription/${P}artist`,
+      headers: { cookie: await sessionCookieFor(prisma, stranger.id) },
+    })
+    expect(res.statusCode).toBe(403)
+    expect(res.json().code).toBe('email_not_verified')
+    expect(
+      await prisma.newsletterSubscriber.count({
+        where: { artistUserId: artistId, email: `${P}someone-else@example.com` },
+      }),
+    ).toBe(0)
+  })
+
+  it('does not subscribe to a suspended artist', async () => {
+    const fan = await prisma.user.findUniqueOrThrow({ where: { email: `${P}fan@example.com` } })
+    await prisma.user.update({ where: { id: artistId }, data: { suspendedAt: new Date() } })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/newsletter/subscription/${P}artist`,
+      headers: { cookie: await sessionCookieFor(prisma, fan.id) },
+    })
+    expect(res.statusCode).toBe(404)
+    await prisma.user.update({ where: { id: artistId }, data: { suspendedAt: null } })
+  })
+})
