@@ -38,6 +38,8 @@ export const AdminContentReportListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: ContentReportStatusSchema.optional(),
+  /** Only reports about this kind of thing, e.g. `COMMENT`. */
+  targetType: ContentReportTargetTypeSchema.optional(),
 })
 
 export const AdminContentReportRowSchema = z.object({
