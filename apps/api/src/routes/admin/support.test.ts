@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -9,6 +9,12 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
+
+const sendMail = vi.hoisted(() => vi.fn())
+vi.mock('../../lib/email.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/email.js')>()),
+  sendMail,
+}))
 
 const PREFIX = 'admin-support-'
 
@@ -93,6 +99,58 @@ describe('M21-F — support tickets', () => {
       notes: Array<{ body: string; kind: string }>
     }
     expect(detail.notes.some((n) => n.body.includes('Investigating'))).toBe(true)
+  })
+
+  it('tells the requester about a board reply, by notification and email', async () => {
+    sendMail.mockClear()
+    const before = await prisma.notification.count({
+      where: { userId: artistId, type: 'SUPPORT_REPLY' },
+    })
+    const note = await app.inject({
+      method: 'POST',
+      url: `/api/admin/support/tickets/${ticketId}/notes`,
+      headers: { cookie: boardCookie },
+      payload: { body: 'Fixed on our side, please try again.' },
+    })
+    expect(note.statusCode).toBe(200)
+
+    const notices = await prisma.notification.findMany({
+      where: { userId: artistId, type: 'SUPPORT_REPLY' },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(notices).toHaveLength(before + 1)
+    expect(notices[0]?.title).toContain('Tahti support replied to')
+    expect(notices[0]?.body).toBe('Fixed on our side, please try again.')
+    expect(notices[0]?.url).toBe('/help')
+    expect(sendMail).toHaveBeenCalledTimes(1)
+    expect(sendMail.mock.calls[0]?.[0]).toMatchObject({ to: `${PREFIX}artist@example.com` })
+  })
+
+  it('emails a board reply to someone who wrote in while signed out', async () => {
+    const ticket = await prisma.supportTicket.create({
+      data: {
+        contactEmail: 'visitor@example.com',
+        subject: 'Cannot sign up',
+        message: 'The form fails.',
+        category: 'OTHER',
+      },
+    })
+    sendMail.mockClear()
+    const before = await prisma.notification.count({ where: { type: 'SUPPORT_REPLY' } })
+    const note = await app.inject({
+      method: 'POST',
+      url: `/api/admin/support/tickets/${ticket.id}/notes`,
+      headers: { cookie: boardCookie },
+      payload: { body: 'Try again now.' },
+    })
+    expect(note.statusCode).toBe(200)
+    expect(sendMail).toHaveBeenCalledTimes(1)
+    expect(sendMail.mock.calls[0]?.[0]).toMatchObject({
+      to: 'visitor@example.com',
+      subject: 'Tahti · Re: Cannot sign up',
+      text: 'Try again now.',
+    })
+    expect(await prisma.notification.count({ where: { type: 'SUPPORT_REPLY' } })).toBe(before)
   })
 
   it('PATCH status transition auto-logs a STATUS_CHANGE timeline entry', async () => {

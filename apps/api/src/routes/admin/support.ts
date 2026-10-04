@@ -17,6 +17,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { userName } from '../../lib/safe-names.js'
+import { notifyRequesterOfSupportReply } from '../../lib/support-reply-notice.js'
 
 function mapTicketRow(ticket: {
   id: bigint
@@ -295,6 +296,12 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           authorId: actor.id,
         },
       })
+      await notifyRequesterOfSupportReply(
+        fastify.prisma,
+        id,
+        { body: parsed.data.body, authorId: actor.id },
+        fastify.log,
+      )
 
       const ticket = await fastify.prisma.supportTicket.findUnique({
         where: { id },
