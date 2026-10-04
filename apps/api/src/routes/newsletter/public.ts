@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { availableUserWhere } from '@tahti/db'
 import { nanoid } from 'nanoid'
 import {
   NewsletterSubscribeSchema,
@@ -38,8 +39,8 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
       const email = parsed.data.email.toLowerCase()
       const artistUsername = parsed.data.artistUsername
 
-      const artist = await fastify.prisma.user.findUnique({
-        where: { username: artistUsername },
+      const artist = await fastify.prisma.user.findFirst({
+        where: { username: artistUsername, ...availableUserWhere },
         select: { id: true, username: true, displayName: true },
       })
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })
@@ -63,9 +64,12 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
           confirmToken,
           unsubToken,
         },
+        // Someone who unsubscribed has to confirm again: without this, anyone
+        // who knows the address could put it back on the list.
         update: {
           confirmToken,
           unsubscribedAt: null,
+          ...(existing?.unsubscribedAt ? { confirmedAt: null } : {}),
         },
       })
 
