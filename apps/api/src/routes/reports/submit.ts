@@ -46,6 +46,22 @@ const reportsRoute: FastifyPluginAsync = async (fastify) => {
       const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
       const reporterIpHash = createHash('sha256').update(`${clientIp}:${dailySalt()}`).digest('hex')
 
+      // One open report per reporter and target: pressing Send again (or a
+      // script doing so) must not flood the board's queue. The hash rotates
+      // daily, so this only folds repeats made on the same day.
+      const duplicate = await fastify.prisma.contentReport.findFirst({
+        where: {
+          targetType,
+          targetId,
+          reporterIpHash,
+          status: { in: ['OPEN', 'REVIEWING'] },
+        },
+        select: { id: true },
+      })
+      if (duplicate) {
+        return reply.status(200).send({ ok: true as const, reportId: duplicate.id.toString() })
+      }
+
       const report = await fastify.prisma.contentReport.create({
         data: {
           targetType,
