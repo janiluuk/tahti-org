@@ -15,7 +15,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { requireAuth } from '../../plugins/auth.js'
+import { requireAuth, requireSession } from '../../plugins/auth.js'
 import { buildPressKit, formatPressKitText } from '../../lib/press-kit.js'
 import { buildActivityExport } from '../../lib/data-export.js'
 import { getObjectStream } from '../../lib/minio.js'
@@ -110,7 +110,7 @@ const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/me/account/deletion-request',
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: {
         tags: ['channel'],
         description: 'M19: request account deletion (creates support ticket for board review)',

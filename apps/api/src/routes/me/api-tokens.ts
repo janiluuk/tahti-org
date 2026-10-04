@@ -11,7 +11,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { requireAuth } from '../../plugins/auth.js'
+import { requireSession } from '../../plugins/auth.js'
 import { generateApiToken } from '../../lib/api-token.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -22,7 +22,7 @@ const apiTokenRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/api-tokens',
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: {
         tags: ['settings'],
         summary: 'List your personal API tokens',
@@ -52,7 +52,7 @@ const apiTokenRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/me/api-tokens',
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: {
         tags: ['settings'],
         summary: 'Create a personal API token',
@@ -122,31 +122,35 @@ const apiTokenRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // DELETE /api/me/api-tokens/:id — revoke (soft-delete, keeps the audit trail)
-  fastify.delete('/api/me/api-tokens/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const { id } = routeParams
+  fastify.delete(
+    '/api/me/api-tokens/:id',
+    { preHandler: requireSession },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
-    const token = await fastify.prisma.apiToken.findFirst({
-      where: { id, userId: user.id, revokedAt: null },
-    })
-    if (!token) return reply.status(404).send({ error: 'Token not found' })
+      const token = await fastify.prisma.apiToken.findFirst({
+        where: { id, userId: user.id, revokedAt: null },
+      })
+      if (!token) return reply.status(404).send({ error: 'Token not found' })
 
-    await fastify.prisma.apiToken.update({
-      where: { id },
-      data: { revokedAt: new Date() },
-    })
+      await fastify.prisma.apiToken.update({
+        where: { id },
+        data: { revokedAt: new Date() },
+      })
 
-    await auditLog(fastify.prisma, {
-      action: 'API_TOKEN_REVOKE',
-      actorId: user.id,
-      targetId: id,
-      meta: { name: token.name },
-    })
+      await auditLog(fastify.prisma, {
+        action: 'API_TOKEN_REVOKE',
+        actorId: user.id,
+        targetId: id,
+        meta: { name: token.name },
+      })
 
-    return reply.status(204).send()
-  })
+      return reply.status(204).send()
+    },
+  )
 }
 
 export default apiTokenRoutes
