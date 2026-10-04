@@ -103,6 +103,43 @@ describe('M19 — account deletion execute', () => {
       data: { userId: targetId, name: 'Left behind', slug: `acct-del-col-${Date.now()}` },
     })
 
+    const board = await prisma.user.findUniqueOrThrow({
+      where: { email: `${PREFIX}board@example.com` },
+      select: { channel: { select: { id: true } } },
+    })
+    await prisma.apiToken.create({
+      data: {
+        userId: targetId,
+        name: 'cli',
+        tokenHash: `acct-del-hash-${Date.now()}`,
+        tokenPrefix: 'tahti_ab',
+      },
+    })
+    await prisma.integrationCredential.create({
+      data: { userId: targetId, providerSlug: 'acct-del-provider', fieldsEnc: 'secret' },
+    })
+    await prisma.rtmpTarget.create({
+      data: {
+        channelId: channel.id,
+        provider: 'YOUTUBE',
+        label: 'YouTube',
+        rtmpUrl: 'rtmp://example.com/live',
+        streamKeyEnc: 'secret',
+      },
+    })
+    await prisma.channelModerator.create({
+      data: { channelId: board.channel!.id, userId: targetId },
+    })
+    await prisma.user.update({
+      where: { id: targetId },
+      data: {
+        totpSecretEnc: 'secret',
+        totpEnabledAt: new Date(),
+        soundcloudAccessTokenEnc: 'secret',
+        googleDriveRefreshTokenEnc: 'secret',
+      },
+    })
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/admin/users/${targetId}/delete-account`,
@@ -110,6 +147,16 @@ describe('M19 — account deletion execute', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().fanSubscriptionsCanceled).toBe(0)
+
+    expect(await prisma.apiToken.count({ where: { userId: targetId } })).toBe(0)
+    expect(await prisma.integrationCredential.count({ where: { userId: targetId } })).toBe(0)
+    expect(await prisma.rtmpTarget.count({ where: { channelId: channel.id } })).toBe(0)
+    expect(await prisma.channelModerator.count({ where: { userId: targetId } })).toBe(0)
+    const wiped = await prisma.user.findUniqueOrThrow({ where: { id: targetId } })
+    expect(wiped.totpSecretEnc).toBeNull()
+    expect(wiped.totpEnabledAt).toBeNull()
+    expect(wiped.soundcloudAccessTokenEnc).toBeNull()
+    expect(wiped.googleDriveRefreshTokenEnc).toBeNull()
 
     const user = await prisma.user.findUnique({ where: { id: targetId } })
     expect(user?.deletedAt).not.toBeNull()
