@@ -324,3 +324,105 @@ describe('/api/comments — author names', () => {
     }
   })
 })
+
+describe('/api/comments — long threads and unavailable authors', () => {
+  const P = 'comments-long-test-'
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let soundId: string
+  let authorId: string
+  let goneId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, P)
+    const owner = await createTestArtist(prisma, {
+      email: `${P}owner@example.com`,
+      username: `${P}owner`,
+      displayName: 'Long Thread Owner',
+    })
+    const author = await createTestArtist(prisma, {
+      email: `${P}author@example.com`,
+      username: `${P}author`,
+      displayName: 'Long Thread Author',
+    })
+    authorId = author.id
+    const gone = await createTestArtist(prisma, {
+      email: `${P}gone@example.com`,
+      username: `${P}gone`,
+      displayName: 'Long Thread Gone',
+    })
+    goneId = gone.id
+    const item = await prisma.sound.create({
+      data: {
+        channelId: owner.channel!.id,
+        title: 'Long Thread Track',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    soundId = item.id
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await cleanupUsersByEmailPrefix(prisma, P)
+  })
+
+  it('keeps the newest comments when a thread is longer than the limit', async () => {
+    const start = Date.now() - 1_000_000
+    await prisma.comment.createMany({
+      data: Array.from({ length: 205 }, (_, i) => ({
+        body: `comment ${i}`,
+        authorId,
+        soundId,
+        createdAt: new Date(start + i * 1000),
+      })),
+    })
+    const res = await app.inject({ method: 'GET', url: `/api/comments/track/${soundId}` })
+    const bodies = (res.json().comments as Array<{ body: string }>).map((c) => c.body)
+    expect(bodies).toHaveLength(200)
+    expect(bodies[0]).toBe('comment 5')
+    expect(bodies[199]).toBe('comment 204')
+  })
+
+  it('leaves out comments from suspended and deleted accounts', async () => {
+    await prisma.comment.create({
+      data: { body: 'from a gone account', authorId: goneId, soundId },
+    })
+    const listed = async () =>
+      (
+        (await app.inject({ method: 'GET', url: `/api/comments/track/${soundId}` })).json()
+          .comments as Array<{ body: string }>
+      ).some((c) => c.body === 'from a gone account')
+    expect(await listed()).toBe(true)
+
+    await prisma.user.update({ where: { id: goneId }, data: { suspendedAt: new Date() } })
+    expect(await listed()).toBe(false)
+
+    await prisma.user.update({
+      where: { id: goneId },
+      data: { suspendedAt: null, deletedAt: new Date() },
+    })
+    expect(await listed()).toBe(false)
+  })
+
+  it('lets a board member delete a comment', async () => {
+    const board = await createTestArtist(prisma, {
+      email: `${P}board@example.com`,
+      username: `${P}board`,
+      displayName: 'Long Thread Board',
+    })
+    await prisma.user.update({ where: { id: board.id }, data: { isBoard: true } })
+    const comment = await prisma.comment.create({
+      data: { body: 'to be moderated', authorId, soundId },
+    })
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/comments/${comment.id}`,
+      headers: { cookie: await sessionCookieFor(prisma, board.id) },
+    })
+    expect(res.statusCode).toBe(204)
+    expect(await prisma.comment.findUnique({ where: { id: comment.id } })).toBeNull()
+  })
+})

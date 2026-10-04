@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { notifyArtistOfNewComment, type PrismaClient } from '@tahti/db'
+import { availableUserWhere, notifyArtistOfNewComment, type PrismaClient } from '@tahti/db'
 import {
   CommentBodySchema,
   CommentsListSchema,
@@ -22,14 +22,17 @@ function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+const COMMENTS_LIMIT = 200
+
+/** The newest comments, oldest first, without those of deleted or suspended accounts. */
 async function listComments(
   prisma: PrismaClient,
   where: { soundId: string } | { channelId: string },
 ) {
-  const rows = await prisma.comment.findMany({
-    where,
-    orderBy: { createdAt: 'asc' },
-    take: 200,
+  const newest = await prisma.comment.findMany({
+    where: { ...where, author: availableUserWhere },
+    orderBy: { createdAt: 'desc' },
+    take: COMMENTS_LIMIT,
     select: {
       id: true,
       body: true,
@@ -37,7 +40,7 @@ async function listComments(
       author: { select: { username: true, displayName: true, avatarUrl: true } },
     },
   })
-  return rows.map((c) => ({
+  return newest.reverse().map((c) => ({
     id: c.id,
     body: c.body,
     createdAt: c.createdAt,
@@ -217,7 +220,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // DELETE /api/comments/:id — the comment's own author, or the channel/track owner
+  // DELETE /api/comments/:id — the comment's own author, the channel/track owner, or the board
   fastify.delete('/api/comments/:id', { preHandler: requireAuth }, async (request, reply) => {
     const routeParams = parseRouteParams(IdParamSchema, request.params)
     if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -234,7 +237,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const ownerId = comment.sound?.channel.userId ?? comment.channel?.userId
     const user = request.sessionUser!
-    if (comment.authorId !== user.id && ownerId !== user.id) {
+    if (comment.authorId !== user.id && ownerId !== user.id && !user.isBoard) {
       return reply.status(403).send({ error: 'Not allowed to delete this comment' })
     }
 
