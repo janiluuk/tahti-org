@@ -108,6 +108,36 @@ describe('content moderation reports', () => {
     expect(await prisma.contentReport.count()).toBe(before + 2)
   })
 
+  it('folds a repeat report from the same reporter into the open one', async () => {
+    const payload = { targetType: 'CHANNEL', targetId: channelSlug, reason: 'SPAM' }
+    const before = await prisma.contentReport.count({
+      where: { targetType: 'CHANNEL', targetId: channelSlug },
+    })
+    expect(before).toBeGreaterThan(0)
+
+    const repeat = await app.inject({ method: 'POST', url: '/api/v1/reports', payload })
+    expect(repeat.statusCode).toBe(200)
+    expect(repeat.json().ok).toBe(true)
+    expect(
+      await prisma.contentReport.count({ where: { targetType: 'CHANNEL', targetId: channelSlug } }),
+    ).toBe(before)
+
+    const elsewhere = await app.inject({
+      method: 'POST',
+      url: '/api/v1/reports',
+      headers: { 'x-forwarded-for': '203.0.113.77' },
+      payload,
+    })
+    expect(elsewhere.statusCode).toBe(201)
+
+    await prisma.contentReport.updateMany({
+      where: { targetType: 'CHANNEL', targetId: channelSlug },
+      data: { status: 'DISMISSED' },
+    })
+    const afterResolve = await app.inject({ method: 'POST', url: '/api/v1/reports', payload })
+    expect(afterResolve.statusCode).toBe(201)
+  })
+
   it('requires board auth for the admin list', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/admin/content-reports' })
     expect(res.statusCode).toBe(401)

@@ -153,6 +153,47 @@ describe('M21-F — support tickets', () => {
     expect(await prisma.notification.count({ where: { type: 'SUPPORT_REPLY' } })).toBe(before)
   })
 
+  it("marks tickets where the next move is the board's", async () => {
+    const awaiting = async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/admin/support/tickets?limit=100',
+        headers: { cookie: boardCookie },
+      })
+      const rows = res.json().tickets as Array<{ id: string; awaitingReply?: boolean }>
+      return rows.find((t) => t.id === ticketId)?.awaitingReply
+    }
+    await prisma.supportTicketNote.deleteMany({ where: { ticketId: BigInt(ticketId) } })
+    await prisma.supportTicket.update({
+      where: { id: BigInt(ticketId) },
+      data: { status: 'OPEN' },
+    })
+    expect(await awaiting()).toBe(true)
+
+    await app.inject({
+      method: 'POST',
+      url: `/api/admin/support/tickets/${ticketId}/notes`,
+      headers: { cookie: boardCookie },
+      payload: { body: 'We are on it.' },
+    })
+    expect(await awaiting()).toBe(false)
+
+    await prisma.supportTicketNote.create({
+      data: { ticketId: BigInt(ticketId), body: 'Any update?', authorId: artistId },
+    })
+    expect(await awaiting()).toBe(true)
+
+    await prisma.supportTicket.update({
+      where: { id: BigInt(ticketId) },
+      data: { status: 'RESOLVED' },
+    })
+    expect(await awaiting()).toBe(false)
+    await prisma.supportTicket.update({
+      where: { id: BigInt(ticketId) },
+      data: { status: 'IN_PROGRESS' },
+    })
+  })
+
   it('PATCH status transition auto-logs a STATUS_CHANGE timeline entry', async () => {
     const patch = await app.inject({
       method: 'PATCH',

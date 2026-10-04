@@ -19,6 +19,7 @@ import adminAddonsRoutes from '../routes/admin/addons.js'
 import addonStoreRoutes from '../routes/addons/store.js'
 import addonPublicRoutes from '../routes/addons/public.js'
 import internetRadioPresetsRoute from '../routes/internet-radio/presets.js'
+import internetRadioNowPlayingRoute from '../routes/internet-radio/now-playing.js'
 import meInternetRadioRoutes from '../routes/me/internet-radio.js'
 import adminInternetRadioRoutes from '../routes/admin/internet-radio.js'
 import meRadioStationSuggestionRoutes from '../routes/me/radio-station-suggestions.js'
@@ -75,6 +76,7 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(addonStoreRoutes)
   await fastify.register(addonPublicRoutes)
   await fastify.register(internetRadioPresetsRoute)
+  await fastify.register(internetRadioNowPlayingRoute)
   await fastify.register(meInternetRadioRoutes)
   await fastify.register(adminInternetRadioRoutes)
   await fastify.register(meRadioStationSuggestionRoutes)

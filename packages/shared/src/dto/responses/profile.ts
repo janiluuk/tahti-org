@@ -160,6 +160,7 @@ export const ProfileFieldsSchema = z.object({
   showFollowers: z.boolean(),
   showFollowing: z.boolean(),
   showDailyListeners: z.boolean(),
+  showShareButton: z.boolean(),
   showLikes: z.boolean(),
   chatEnabled: z.boolean(),
   showPageHero: z.boolean(),

@@ -87,3 +87,15 @@ export const PatchInternetRadioStationSchema = z
   })
   .refine((b) => Object.keys(b).length > 0, { message: 'No fields to update' })
 export type PatchInternetRadioStationInput = z.infer<typeof PatchInternetRadioStationSchema>
+
+/** What a station is playing, read from its own programme page. Both fields
+ * are null when the page gave nothing we could read. */
+export const InternetRadioNowPlayingSchema = z.object({
+  title: z.string().nullable(),
+  artist: z.string().nullable(),
+})
+export type InternetRadioNowPlaying = z.infer<typeof InternetRadioNowPlayingSchema>
+
+export const InternetRadioNowPlayingQuerySchema = z.object({
+  url: z.string().url().max(500),
+})

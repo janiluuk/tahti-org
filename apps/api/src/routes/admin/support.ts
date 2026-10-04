@@ -86,6 +86,12 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
           take: limit,
           include: {
             artist: { select: { username: true, displayName: true } },
+            notes: {
+              where: { kind: 'MESSAGE' },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { authorId: true },
+            },
           },
         }),
       ])
@@ -94,7 +100,16 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
         page,
         limit,
         total,
-        tickets: rows.map(mapTicketRow),
+        tickets: rows.map((row) => {
+          const lastMessage = row.notes[0]
+          const requesterWroteLast = lastMessage
+            ? row.artistId !== null && lastMessage.authorId === row.artistId
+            : true
+          return {
+            ...mapTicketRow(row),
+            awaitingReply: row.status !== 'RESOLVED' && requesterWroteLast,
+          }
+        }),
       })
     },
   )
