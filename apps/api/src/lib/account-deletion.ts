@@ -90,6 +90,19 @@ export async function executeAccountDeletion(
   await prisma.session.deleteMany({ where: { userId } })
   await prisma.emailVerification.deleteMany({ where: { userId } })
 
+  // Nothing that can act for the account, or reach a third party in its name,
+  // outlives it: API tokens, 2FA material, integration secrets, stream keys
+  // for mirrored broadcasts and moderator rights on other channels.
+  await prisma.apiToken.deleteMany({ where: { userId } })
+  await prisma.totpBackupCode.deleteMany({ where: { userId } })
+  await prisma.totpChallenge.deleteMany({ where: { userId } })
+  await prisma.integrationCredential.deleteMany({ where: { userId } })
+  await prisma.channelModerator.deleteMany({ where: { userId } })
+  if (user.channel) {
+    await prisma.rtmpTarget.deleteMany({ where: { channelId: user.channel.id } })
+    await prisma.channelModerator.deleteMany({ where: { channelId: user.channel.id } })
+  }
+
   await prisma.release.updateMany({
     where: { userId, state: { not: 'ARCHIVED' } },
     data: { state: 'ARCHIVED' },
@@ -145,6 +158,14 @@ export async function executeAccountDeletion(
       stripeConnectAccountId: null,
       stripeConnectChargesEnabled: false,
       mixcloudAccessTokenEnc: null,
+      bandcampAccessTokenEnc: null,
+      soundcloudAccessTokenEnc: null,
+      googleDriveAccessTokenEnc: null,
+      googleDriveRefreshTokenEnc: null,
+      musicbrainzAccessTokenEnc: null,
+      musicbrainzRefreshTokenEnc: null,
+      totpSecretEnc: null,
+      totpEnabledAt: null,
       suspendedAt: null,
       suspendReason: null,
       deletedAt: new Date(),
