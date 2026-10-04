@@ -17,6 +17,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { buildPressKit, formatPressKitText } from '../../lib/press-kit.js'
+import { buildActivityExport } from '../../lib/data-export.js'
 import { getObjectStream } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 
@@ -43,7 +44,11 @@ const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/data-export.json',
     {
       preHandler: requireAuth,
-      schema: { tags: ['channel'], description: 'M19: GDPR data export for signed-in artist' },
+      schema: {
+        tags: ['channel'],
+        description:
+          'GDPR data export: profile, billing, uploads and activity of the signed-in user',
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!
@@ -89,12 +94,15 @@ const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       ])
 
+      const activity = await buildActivityExport(fastify.prisma, user)
+
       return reply.send({
         exportedAt: new Date().toISOString(),
         profile,
         fanSubscriptionsAsArtist: fanSubsAsArtist,
         fanSubscriptionsAsSubscriber: fanSubsAsSubscriber,
         releases,
+        ...activity,
       })
     },
   )

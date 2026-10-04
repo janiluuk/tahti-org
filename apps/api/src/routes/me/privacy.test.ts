@@ -63,6 +63,58 @@ describe('M12/M19 — press kit and privacy', () => {
     expect(res.json().email).toContain('@example.com')
   })
 
+  it('GET /api/me/data-export.json includes what the account made and did', async () => {
+    const me = await prisma.user.findUniqueOrThrow({
+      where: { username },
+      select: { id: true, email: true, channel: { select: { id: true } } },
+    })
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: 'press-kit-other',
+    })
+    const sound = await prisma.sound.create({
+      data: { channelId: me.channel!.id, title: 'Exported Track', status: 'READY', isPublic: true },
+    })
+    const theirs = await prisma.sound.create({
+      data: { channelId: other.channel!.id, title: 'Their Track', status: 'READY', isPublic: true },
+    })
+    await prisma.comment.create({
+      data: { body: 'my comment', authorId: me.id, soundId: theirs.id },
+    })
+    await prisma.comment.create({
+      data: { body: 'not mine', authorId: other.id, soundId: sound.id },
+    })
+    await prisma.soundLike.create({ data: { userId: me.id, soundId: theirs.id } })
+    await prisma.artistFollow.create({ data: { followerUserId: me.id, artistUserId: other.id } })
+    await prisma.newsletterSubscriber.create({
+      data: {
+        artistUserId: other.id,
+        email: me.email,
+        confirmedAt: new Date(),
+        unsubToken: `press-kit-unsub-${Date.now()}`,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/data-export.json',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.profile.username).toBe(username)
+    expect(body.sounds.map((s: { title: string }) => s.title)).toEqual(['Exported Track'])
+    expect(body.comments.map((c: { body: string }) => c.body)).toEqual(['my comment'])
+    expect(body.comments[0].sound.title).toBe('Their Track')
+    expect(body.likes).toHaveLength(1)
+    expect(body.following.map((f: { artist: { username: string } }) => f.artist.username)).toEqual([
+      'press-kit-other',
+    ])
+    expect(body.newsletterSubscriptions).toHaveLength(1)
+    expect(res.body).not.toContain('not mine')
+    expect(res.body).not.toContain(`${PREFIX}other@example.com`)
+  })
+
   it('POST account deletion request creates support ticket', async () => {
     const res = await app.inject({
       method: 'POST',
