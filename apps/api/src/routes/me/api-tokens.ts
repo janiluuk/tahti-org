@@ -78,8 +78,15 @@ const apiTokenRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const body = parsed.data
 
+      // Expired tokens no longer work, so they must not use up the allowance:
+      // otherwise an account with ten old tokens could never create another
+      // without revoking dead ones first.
       const activeCount = await fastify.prisma.apiToken.count({
-        where: { userId: user.id, revokedAt: null },
+        where: {
+          userId: user.id,
+          revokedAt: null,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
       })
       if (activeCount >= MAX_TOKENS_PER_USER) {
         return reply.status(400).send({ error: `Maximum ${MAX_TOKENS_PER_USER} active tokens` })
