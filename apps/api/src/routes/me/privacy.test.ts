@@ -77,4 +77,48 @@ describe('M12/M19 — press kit and privacy', () => {
     })
     expect(ticket?.subject).toBe('Account deletion request')
   })
+
+  it('hides the public press kit, gallery and zip of a suspended or deleted artist', async () => {
+    const gone = await createTestArtist(prisma, {
+      email: `${PREFIX}gone@example.com`,
+      username: 'press-kit-gone',
+      displayName: 'Press Kit Gone',
+    })
+    await prisma.channel.update({
+      where: { id: gone.channel!.id },
+      data: { pressKitGalleryPublic: true },
+    })
+    await prisma.pressKitImage.create({
+      data: {
+        channelId: gone.channel!.id,
+        imageKey: 'press/gone.jpg',
+        title: 'Promo',
+        position: 0,
+      },
+    })
+    const statuses = async () => {
+      const kit = await app.inject({
+        method: 'GET',
+        url: '/api/v1/u/press-kit-gone/press-kit.json',
+      })
+      const zip = await app.inject({ method: 'GET', url: '/api/v1/u/press-kit-gone/press-kit.zip' })
+      const images = await app.inject({
+        method: 'GET',
+        url: '/api/v1/u/press-kit-gone/press-kit-images.json',
+      })
+      return [kit.statusCode, zip.statusCode, (images.json() as unknown[]).length]
+    }
+    const before = await statuses()
+    expect(before[0]).toBe(200)
+    expect(before[2]).toBe(1)
+
+    await prisma.user.update({ where: { id: gone.id }, data: { suspendedAt: new Date() } })
+    expect(await statuses()).toEqual([404, 404, 0])
+
+    await prisma.user.update({
+      where: { id: gone.id },
+      data: { suspendedAt: null, deletedAt: new Date() },
+    })
+    expect(await statuses()).toEqual([404, 404, 0])
+  })
 })

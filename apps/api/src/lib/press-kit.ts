@@ -24,6 +24,8 @@ export async function buildPressKit(
       avatarUrl: true,
       socialLinks: true,
       tipJarUrl: true,
+      deletedAt: true,
+      suspendedAt: true,
       channel: { select: { slug: true } },
       releases: {
         where: { state: 'PUBLISHED' },
@@ -42,7 +44,9 @@ export async function buildPressKit(
     },
   })
 
-  if (!user) return null
+  // A deleted account has no press kit for anyone; a suspended one keeps it
+  // for its owner (the includeEmail caller) and loses it publicly.
+  if (!user || user.deletedAt || (user.suspendedAt && !opts?.includeEmail)) return null
 
   const base = webBase()
   const releases = await Promise.all(

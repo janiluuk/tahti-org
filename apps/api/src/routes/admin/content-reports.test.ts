@@ -16,6 +16,9 @@ describe('content moderation reports', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let boardCookie: string
   let reportId: string
+  let soundId: string
+  let channelSlug: string
+  let commentId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -28,6 +31,21 @@ describe('content moderation reports', () => {
     })
     await prisma.user.update({ where: { id: board.id }, data: { isBoard: true, isMember: true } })
     boardCookie = await sessionCookieFor(prisma, board.id)
+
+    channelSlug = board.channel!.slug
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: board.channel!.id,
+        title: 'Reported Track',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    soundId = sound.id
+    const comment = await prisma.comment.create({
+      data: { body: 'a rude comment', authorId: board.id, soundId },
+    })
+    commentId = comment.id
   })
 
   afterAll(async () => {
@@ -42,7 +60,7 @@ describe('content moderation reports', () => {
       url: '/api/v1/reports',
       payload: {
         targetType: 'SOUND_ITEM',
-        targetId: 'some-sound-item-id',
+        targetId: soundId,
         reason: 'COPYRIGHT',
         details: 'This is a re-upload of my track without permission.',
       },
@@ -62,6 +80,34 @@ describe('content moderation reports', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('rejects a report about something that does not exist', async () => {
+    for (const targetType of ['SOUND_ITEM', 'RELEASE', 'CHANNEL', 'COLLECTION', 'COMMENT']) {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/reports',
+        payload: { targetType, targetId: 'no-such-thing', reason: 'SPAM' },
+      })
+      expect(res.statusCode, targetType).toBe(404)
+    }
+  })
+
+  it('accepts a report about a comment and about a channel by slug', async () => {
+    const before = await prisma.contentReport.count()
+    const comment = await app.inject({
+      method: 'POST',
+      url: '/api/v1/reports',
+      payload: { targetType: 'COMMENT', targetId: commentId, reason: 'HARASSMENT' },
+    })
+    expect(comment.statusCode).toBe(201)
+    const channel = await app.inject({
+      method: 'POST',
+      url: '/api/v1/reports',
+      payload: { targetType: 'CHANNEL', targetId: channelSlug, reason: 'SPAM' },
+    })
+    expect(channel.statusCode).toBe(201)
+    expect(await prisma.contentReport.count()).toBe(before + 2)
+  })
+
   it('requires board auth for the admin list', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/admin/content-reports' })
     expect(res.statusCode).toBe(401)
@@ -75,9 +121,7 @@ describe('content moderation reports', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json() as { reports: Array<{ id: string; targetId: string }> }
-    expect(body.reports.some((r) => r.id === reportId && r.targetId === 'some-sound-item-id')).toBe(
-      true,
-    )
+    expect(body.reports.some((r) => r.id === reportId && r.targetId === soundId)).toBe(true)
   })
 
   it('GET /api/admin/content-reports/:id returns the detail', async () => {
