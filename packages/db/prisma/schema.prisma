@@ -644,6 +644,8 @@ enum NotificationType {
   FAN_SUB_PAYMENT_FAILED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
+  /// The board replied to your support request.
+  SUPPORT_REPLY
 
   @@schema("core")
 }
