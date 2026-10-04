@@ -10,6 +10,7 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { resolveContentReportTarget } from '../../lib/content-report-target.js'
 
 // Platform-level abuse-report queue — previously entirely missing (only artist-side
 // chat moderation existed via ChatBan/ChannelModerator). No account required to
@@ -26,7 +27,7 @@ const reportsRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['reports'],
         description:
-          'Report a channel, release, sound item, or collection for review (auth optional)',
+          'Report a channel, release, sound item, collection or comment for review (auth optional)',
         response: openApiResponse(SubmitContentReportResponseSchema, 'SubmitContentReportResponse'),
       },
     },
@@ -38,6 +39,9 @@ const reportsRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
       const { targetType, targetId, reason, details } = parsed.data
+
+      const target = await resolveContentReportTarget(fastify.prisma, targetType, targetId)
+      if (!target) return reply.status(404).send({ error: 'Nothing to report there' })
 
       const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
       const reporterIpHash = createHash('sha256').update(`${clientIp}:${dailySalt()}`).digest('hex')
