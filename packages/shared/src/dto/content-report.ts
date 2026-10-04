@@ -44,6 +44,12 @@ export const AdminContentReportRowSchema = z.object({
   id: z.string(),
   targetType: ContentReportTargetTypeSchema,
   targetId: z.string(),
+  /** Title of the reported thing, or who wrote the reported comment. Null once it's gone. */
+  targetLabel: z.string().nullable(),
+  /** Web path of the page the reported thing is on. */
+  targetUrl: z.string().nullable(),
+  /** The reported comment's text. */
+  targetExcerpt: z.string().nullable(),
   reason: ContentReportReasonSchema,
   details: z.string().nullable(),
   status: ContentReportStatusSchema,
