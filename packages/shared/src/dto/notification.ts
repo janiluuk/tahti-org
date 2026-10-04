@@ -27,6 +27,7 @@ export const NotificationTypeSchema = z.enum([
   'NEW_COMMENT',
   'PAYOUT_SENT',
   'FAN_SUB_PAYMENT_FAILED',
+  'FAN_SUB_EXPIRED',
 ])
 
 export const NotificationSchema = z.object({
