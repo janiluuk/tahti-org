@@ -58,6 +58,8 @@ export const PublicChannelUserSchema = z.object({
   /** True when the artist currently supports Tahti ry (association member). */
   isMember: z.boolean().optional(),
   chatEnabled: z.boolean().optional(),
+  /** False when the artist turned the channel's share button off. */
+  showShareButton: z.boolean().optional(),
   showPageHero: z.boolean().optional(),
 })
 
