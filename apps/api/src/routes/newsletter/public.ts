@@ -123,6 +123,27 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.redirect(`${config.appUrl}/newsletter/unsubscribed`)
   })
+
+  // POST /api/newsletter/unsubscribe/:token — RFC 8058 one-click unsubscribe.
+  // Mail providers send this themselves when someone presses their Unsubscribe
+  // button, so it answers 200 with no redirect and is safe to repeat.
+  fastify.post('/api/newsletter/unsubscribe/:token', async (request, reply) => {
+    const routeParams = parseRouteParams(TokenParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+    const { count } = await fastify.prisma.newsletterSubscriber.updateMany({
+      where: { unsubToken: routeParams.token, unsubscribedAt: null },
+      data: { unsubscribedAt: new Date() },
+    })
+    if (count === 0) {
+      const known = await fastify.prisma.newsletterSubscriber.findUnique({
+        where: { unsubToken: routeParams.token },
+        select: { id: true },
+      })
+      if (!known) return reply.status(404).send({ error: 'Invalid unsubscribe link' })
+    }
+    return reply.send({ ok: true })
+  })
 }
 
 export default newsletterPublicRoutes
