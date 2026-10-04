@@ -20,6 +20,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
+import { actorDisplayName, availableUserWhere } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelForModeration } from '../../lib/channel-access.js'
 import { userName } from '../../lib/safe-names.js'
@@ -50,7 +51,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const moderators = await fastify.prisma.channelModerator.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, user: availableUserWhere },
         orderBy: { grantedAt: 'asc' },
         include: { user: { select: { id: true, username: true, displayName: true } } },
       })
@@ -85,12 +86,12 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true },
+        select: { id: true, slug: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const target = await fastify.prisma.user.findUnique({
-        where: { username },
+      const target = await fastify.prisma.user.findFirst({
+        where: { username, ...availableUserWhere },
         select: { id: true, username: true, displayName: true },
       })
       if (!target) return reply.status(404).send({ error: 'User not found' })
@@ -98,11 +99,32 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'Cannot add yourself as a moderator' })
       }
 
+      const already = await fastify.prisma.channelModerator.findUnique({
+        where: { channelId_userId: { channelId: channel.id, userId: target.id } },
+        select: { id: true },
+      })
       const moderator = await fastify.prisma.channelModerator.upsert({
         where: { channelId_userId: { channelId: channel.id, userId: target.id } },
         create: { channelId: channel.id, userId: target.id },
         update: {},
       })
+
+      // Told once, when the role is granted, so they know they can now remove
+      // messages and ban people in this channel's chat.
+      if (!already) {
+        await fastify.prisma.notification
+          .create({
+            data: {
+              userId: target.id,
+              type: 'MODERATOR_ADDED',
+              actorUserId: user.id,
+              title: `${actorDisplayName(user)} made you a moderator of their channel`,
+              body: 'You can now remove messages and ban people from posting in its chat.',
+              url: `/channel/${channel.slug}`,
+            },
+          })
+          .catch((err: unknown) => fastify.log.warn({ err }, 'moderator notification failed'))
+      }
 
       return reply.status(201).send({
         userId: target.id,

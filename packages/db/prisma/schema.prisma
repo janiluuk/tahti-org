@@ -646,6 +646,8 @@ enum NotificationType {
   FAN_SUB_EXPIRED
   /// The board replied to your support request.
   SUPPORT_REPLY
+  /// An artist made you a moderator of their channel's chat.
+  MODERATOR_ADDED
 
   @@schema("core")
 }

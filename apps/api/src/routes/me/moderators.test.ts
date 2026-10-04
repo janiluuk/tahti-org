@@ -97,6 +97,49 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     })
   })
 
+  it('tells the new moderator once, linking to the channel', async () => {
+    const notices = await prisma.notification.findMany({
+      where: { userId: modUserId, type: 'MODERATOR_ADDED' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]?.url).toBe(`/channel/${ownerSlug}`)
+    expect(notices[0]?.title).toContain('made you a moderator')
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/moderators',
+      headers: { cookie: ownerCookie },
+      payload: { username: 'me-mods-mod' },
+    })
+    expect(
+      await prisma.notification.count({ where: { userId: modUserId, type: 'MODERATOR_ADDED' } }),
+    ).toBe(1)
+  })
+
+  it('does not delegate to, or list, a suspended account', async () => {
+    const outsider = await prisma.user.findUniqueOrThrow({
+      where: { username: 'me-mods-outsider' },
+    })
+    await prisma.user.update({ where: { id: outsider.id }, data: { suspendedAt: new Date() } })
+    const add = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/moderators',
+      headers: { cookie: ownerCookie },
+      payload: { username: 'me-mods-outsider' },
+    })
+    expect(add.statusCode).toBe(404)
+    await prisma.user.update({ where: { id: outsider.id }, data: { suspendedAt: null } })
+
+    await prisma.user.update({ where: { id: modUserId }, data: { suspendedAt: new Date() } })
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/moderators',
+      headers: { cookie: ownerCookie },
+    })
+    expect(list.json()).toEqual([])
+    await prisma.user.update({ where: { id: modUserId }, data: { suspendedAt: null } })
+  })
+
   it('owner lists delegated moderators', async () => {
     const res = await app.inject({
       method: 'GET',
