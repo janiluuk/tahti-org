@@ -32,7 +32,13 @@ export const MySupportTicketReplySchema = z.object({
   id: z.string(),
   body: z.string(),
   authorName: z.string(),
+  /** True for the requester's own follow-up, false for a reply from the board. */
+  fromRequester: z.boolean(),
   createdAt: z.coerce.date(),
+})
+
+export const MySupportTicketReplyBodySchema = z.object({
+  body: z.string().trim().min(1, 'Reply cannot be empty').max(5000),
 })
 
 export const MySupportTicketSchema = z.object({
