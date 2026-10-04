@@ -76,6 +76,9 @@ export const AdminSupportTicketRowSchema = z.object({
   artistDisplayName: z.string().nullable(),
   contactEmail: z.string().nullable(),
   assignedToId: z.string().nullable(),
+  /** List rows only: the requester wrote last (or nobody has answered yet) on
+   * a ticket that is not resolved, so the next move is the board's. */
+  awaitingReply: z.boolean().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
