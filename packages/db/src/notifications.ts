@@ -2,7 +2,18 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@prisma/client'
+import { availableUserWhere } from './available-user.js'
 import { actorDisplayName } from './display-name.js'
+
+/** The artist's followers who can still receive a notification: deleted and
+ * suspended accounts are left out, so a fan-out never writes rows nobody
+ * will read. */
+function followersToNotify(prisma: PrismaClient, artistUserId: string) {
+  return prisma.artistFollow.findMany({
+    where: { artistUserId, follower: availableUserWhere },
+    select: { followerUserId: true },
+  })
+}
 
 /** Fan out a NEW_POST notification to everyone following the artist. Called both
  * synchronously (immediate-publish posts, from the API) and from the worker's
@@ -12,10 +23,7 @@ export async function notifyFollowersOfNewPost(
   artist: { id: string; username: string; displayName: string },
   post: { title: string | null; body: string },
 ): Promise<void> {
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   const title = `${actorDisplayName(artist)} posted an update`
@@ -50,10 +58,7 @@ export async function notifyFollowersOfNewTrack(
   })
   if (announced) return
 
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -90,10 +95,7 @@ export async function notifyFollowersOfLiveChannel(
   })
   if (recent) return
 
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -118,10 +120,7 @@ export async function notifyFollowersOfNewEvent(
   now: Date = new Date(),
 ): Promise<void> {
   if (event.startAt <= now) return
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -143,10 +142,7 @@ export async function notifyFollowersOfNewRelease(
   artist: { id: string; username: string; displayName: string },
   release: { title: string; smartLinkSlug: string },
 ): Promise<void> {
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
