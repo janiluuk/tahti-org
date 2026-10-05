@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 /**
- * Versioned boundary shared by Tahti core and Tahti Player / Nuclear clients.
+ * Versioned boundary shared by Tahti core and Tahti Player clients.
  *
  * Providers are intentionally split by kind so clients do not force OAuth,
  * search, and link/tool sources into one start/status/import shape:

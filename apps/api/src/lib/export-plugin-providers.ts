@@ -5,7 +5,7 @@ import type { ExportPluginProvider } from '@tahti/shared'
 import { EXPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
 
 /**
- * Core-owned export-provider metadata for Tahti Player / Nuclear clients.
+ * Core-owned export-provider metadata for Tahti Player clients.
  * Credentials stay in `/api/me/integrations`; this registry is route + capability
  * discovery only.
  *

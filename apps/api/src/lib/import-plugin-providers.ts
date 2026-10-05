@@ -5,7 +5,7 @@ import type { ImportPluginProvider } from '@tahti/shared'
 import { IMPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
 
 /**
- * Core-owned provider metadata for Tahti Player / Nuclear clients.
+ * Core-owned provider metadata for Tahti Player clients.
  * Configuration UI stays in the player Configure modal; this registry
  * deliberately contains no credentials or per-user state.
  *
@@ -43,19 +43,19 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     id: 'bandcamp',
     name: 'Bandcamp',
     description:
-      'Connect Bandcamp. Album listing is a stub until Bandcamp API v1; catalog import is not wired yet.',
+      'Connect Bandcamp OAuth. Album listing and catalog import are not available until Bandcamp API v1; use status/oauth only.',
     kind: 'oauth',
     capabilities: {
       configure: true,
       connectionTest: true,
-      fileList: true,
+      fileList: false,
       import: false,
       search: false,
       playback: true,
     },
     oauthStartPath: '/api/me/bandcamp/oauth/start',
     statusPath: '/api/me/bandcamp',
-    listPath: '/api/me/bandcamp/albums',
+    listPath: null,
     importPath: null,
   },
   {

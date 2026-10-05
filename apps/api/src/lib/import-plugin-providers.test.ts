@@ -57,7 +57,9 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
 
     const bandcamp = body.providers.find((provider) => provider.id === 'bandcamp')
     expect(bandcamp?.capabilities.import).toBe(false)
+    expect(bandcamp?.capabilities.fileList).toBe(false)
     expect(bandcamp?.importPath).toBeNull()
+    expect(bandcamp?.listPath).toBeNull()
 
     const googleDrive = body.providers.find((provider) => provider.id === 'google-drive')
     expect(googleDrive?.importPath).toBe('/api/me/google-drive/import')

@@ -17,6 +17,20 @@ Import sources do not share one `start/status/import` shape:
 Tahti Player must keep separate adapter interfaces for these kinds.
 Do not force search or paste-a-link tools through an OAuth connect modal.
 
+## Vocabulary map (do not conflate)
+
+| Name | Backend | Player surface | Notes |
+| ---- | ------- | -------------- | ----- |
+| `GET /api/me/import-plugins` | Capability catalog (`import-plugin-providers.ts`) | Add-ons → Import | Route + capability discovery only |
+| `GET /api/me/export-plugins` | Capability catalog (`export-plugin-providers.ts`) | Add-ons → Export | Revelator submit/status/webhook; storefront IDs are **deep-links**, not submit providers |
+| `/api/me/integrations` | Per-user credentials | Configure / Connections | Install/uninstall secrets; not the Store |
+| Add-ons | Channel/homepage widgets | Channel designer / store | Distinct from import/export catalogs |
+| Store / `tahti-registry` | Marketplace JSON | Plugin/theme Store | Sibling repo; not `GET /api/me/import-plugins` |
+
+Slug collisions to watch: import `hearthis` vs integration `hearthis-import` /
+`hearthis-export`; import `mixcloud` (OAuth upload) vs `mixcloud-embed` (search);
+export `spotify`/`apple`/… are deep-link labels that go through Revelator.
+
 ## Client boundary
 
 - **Tahti core** owns routes, OAuth, encrypted credentials, import jobs, and

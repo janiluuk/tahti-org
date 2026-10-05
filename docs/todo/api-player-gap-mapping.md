@@ -45,14 +45,29 @@
 | 29  | tahti-cli README notes import/export plugin catalogs                               | done   |
 | 30  | Gap ledger + INDEX refresh                                                         | done   |
 
+## Batch 4 (2026-10-06) — honesty residuals + docs/OpenAPI
+
+| #   | Slice                                                                 | Status |
+| --- | --------------------------------------------------------------------- | ------ |
+| 31  | Bandcamp `fileList: false` / `listPath: null` residual                | done   |
+| 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)          | done   |
+| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)   | done   |
+| 34  | OpenAPI swagger tag catalog expanded for used route tags              | done   |
+| 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done |
+| 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log             | done   |
+| 37  | `remaining-work` Discord/Revelator/hearthis rows aligned to code      | done   |
+| 38  | Drop “Nuclear clients” wording in shared import/export contracts      | done   |
+| 39  | Plugin vocabulary cheat-sheet in import/export contracts              | done   |
+| 40  | Discord prod HLS cutover checklist (ops; not `/api/v1/radio`)         | done   |
+
 ---
 
 ## Remaining open
 
 | Level | Item                                                               |
 | ----- | ------------------------------------------------------------------ |
-| P1    | Bandcamp albums + import route (real Bandcamp API v1)              |
-| P2    | Full Discord cutover to always-on HLS (ops: set audio URL in prod) |
+| P1    | Bandcamp albums + import route (real Bandcamp API v1 — needs keys) |
+| P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops   |
 | P2    | Large god modules / further radio-plugin merge (player todos)      |
 | P3    | Account-backed favorites/history; FORCE_MOCK demos                 |
 

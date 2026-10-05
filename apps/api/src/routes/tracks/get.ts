@@ -12,7 +12,11 @@ import {
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
-import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
+import {
+  shareKeyFromQuery,
+  resolveSoundShare,
+  recordSoundShareAccess,
+} from '../../lib/sound-share-access.js'
 
 // GET /api/tracks/:id — public, no auth required. Full detail for a
 // standalone track page reached anywhere a track id travels without its
@@ -41,12 +45,23 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
-      const shared = await soundShareGrantsAccess(
+      const share = await resolveSoundShare(
         fastify.prisma,
         id,
         shareKeyFromQuery(request.query),
         request.sessionUser?.username ?? null,
       )
+      const shared = share !== null
+      if (share) {
+        void recordSoundShareAccess(fastify.prisma, {
+          shareId: share.id,
+          soundId: id,
+          ownerId: share.ownerId,
+          actorId: request.sessionUser?.id ?? null,
+          surface: 'track',
+          permission: 'READ',
+        })
+      }
 
       const item = await fastify.prisma.sound.findFirst({
         where: { id, status: 'READY', ...(shared ? {} : { isPublic: true }) },
