@@ -52,11 +52,29 @@ function serializeOtherUser(
     suspendedAt: Date | null
   },
   channelRole: ChannelStaffRole | null,
+  blockedViewer = false,
 ) {
   return {
     ...serializeParticipant(user, channelRole),
-    available: !user.deletedAt && !user.suspendedAt,
+    // Someone who blocked the viewer looks the same as a closed account, so
+    // the thread shows as unavailable before a send is tried. The person who
+    // set a block still sees the other as available, and can lift it.
+    available: !user.deletedAt && !user.suspendedAt && !blockedViewer,
   }
+}
+
+/** Which of `otherUserIds` have blocked `viewerId`. */
+async function usersWhoBlocked(
+  prisma: PrismaClient,
+  viewerId: string,
+  otherUserIds: string[],
+): Promise<Set<string>> {
+  if (otherUserIds.length === 0) return new Set()
+  const rows = await prisma.userBlock.findMany({
+    where: { blockedUserId: viewerId, blockerUserId: { in: otherUserIds } },
+    select: { blockerUserId: true },
+  })
+  return new Set(rows.map((row) => row.blockerUserId))
 }
 
 /** Resolve channel-owner / moderator badges for a set of user ids. Owner wins. */
@@ -162,6 +180,12 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
   ])
   const unreadByConversation = new Map(unreadRows.map((r) => [r.conversationId, Number(r.count)]))
 
+  const blockedBy = await usersWhoBlocked(
+    prisma,
+    userId,
+    memberships.flatMap((m) => m.conversation.participants.map((p) => p.user.id)),
+  )
+
   return memberships
     .map((m) => {
       const other = m.conversation.participants[0]?.user
@@ -169,7 +193,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
       const last = m.conversation.messages[0]
       return {
         id: m.conversation.id,
-        otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
+        otherUser: serializeOtherUser(other, roles.get(other.id) ?? null, blockedBy.has(other.id)),
         lastMessage: last
           ? {
               body: last.body,
@@ -290,11 +314,13 @@ export async function getConversationDetail(
     })
   }
 
+  const blockedBy = await usersWhoBlocked(prisma, userId, [other.id])
+
   return {
     status: 'ok' as const,
     detail: {
       id: conversation.id,
-      otherUser: serializeOtherUser(other, roles.get(other.id) ?? null),
+      otherUser: serializeOtherUser(other, roles.get(other.id) ?? null, blockedBy.has(other.id)),
       messages: messages.map((m) => ({
         id: m.id,
         senderUsername: m.sender.username,
