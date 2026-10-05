@@ -234,6 +234,29 @@ describe('content moderation reports', () => {
     expect(gone).toMatchObject({ targetLabel: null, targetUrl: null, targetExcerpt: null })
   })
 
+  it('filters the queue by what was reported', async () => {
+    const list = async (query: string) => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/content-reports?limit=100${query}`,
+        headers: { cookie: boardCookie },
+      })
+      return res.json() as { total: number; reports: Array<{ targetType: string }> }
+    }
+    const all = await list('')
+    const tracks = await list('&targetType=SOUND_ITEM')
+    expect(tracks.reports.length).toBeGreaterThan(0)
+    expect(tracks.reports.every((r) => r.targetType === 'SOUND_ITEM')).toBe(true)
+    expect(tracks.total).toBeLessThan(all.total)
+
+    const bad = await app.inject({
+      method: 'GET',
+      url: '/api/admin/content-reports?targetType=NOPE',
+      headers: { cookie: boardCookie },
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
   it('returns 404 for an unknown report id', async () => {
     const res = await app.inject({
       method: 'GET',

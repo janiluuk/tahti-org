@@ -67,9 +67,10 @@ const adminContentReportRoutes: FastifyPluginAsync = async (fastify) => {
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid query' })
       }
-      const { page, limit, status } = parsed.data
+      const { page, limit, status, targetType } = parsed.data
       const where: Prisma.ContentReportWhereInput = {}
       if (status) where.status = status
+      if (targetType) where.targetType = targetType
 
       const [total, rows] = await Promise.all([
         fastify.prisma.contentReport.count({ where }),
