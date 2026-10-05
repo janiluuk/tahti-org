@@ -4,7 +4,7 @@
 import { z } from 'zod'
 
 /**
- * Versioned boundary shared by Tahti core and Tahti Player / Nuclear clients
+ * Versioned boundary shared by Tahti core and Tahti Player clients
  * for DSP / distribution export adapters (submit → status → webhook).
  *
  * Distinct from import-plugin contracts: export providers push releases out;

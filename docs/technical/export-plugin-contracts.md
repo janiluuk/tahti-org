@@ -13,6 +13,8 @@ Import sources connect catalogs into Tahti. Export providers push releases
 Credentials for marketplace installables still live on
 `GET` / `POST` / `DELETE /api/me/integrations`. See
 [`integration-credential-lifecycle.md`](integration-credential-lifecycle.md).
+Vocabulary map (import vs export vs integrations vs Store):
+[`import-plugin-contracts.md`](import-plugin-contracts.md#vocabulary-map-do-not-conflate).
 
 ## Live provider: Revelator
 

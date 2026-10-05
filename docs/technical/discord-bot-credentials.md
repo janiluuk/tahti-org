@@ -107,6 +107,18 @@ yt-dlp). Wire the same env into the `radio-discord-bot` Compose service.
 
 Do not “fix” Discord playout by pointing the bot at `GET /api/v1/radio`.
 
+### Prod HLS cutover checklist
+
+1. Point `TAHTI_RADIO_AUDIO_URL` at the always-on Tahti Radio HLS (or direct)
+   URL used by listeners (same origin the web player uses for `/c/tahti-radio`).
+2. Set the same env on the Compose / host `radio-discord-bot` service (see
+   `infra/docker-compose.stack.yml` and `infra/stack.env.example`).
+3. Restart **one** bot replica only (two replicas join Discord twice).
+4. Confirm Discord voice plays HLS (ffmpeg), not the default `tracks.txt`
+   YouTube playlist.
+5. Keep `GET /api/v1/radio` for now-playing UI only — never as the bot’s audio
+   source.
+
 ## Player UI
 
 `packages/tahti-web` (Tahti Player): `DiscordBotAddonCard` under Settings →

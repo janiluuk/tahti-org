@@ -431,6 +431,7 @@ enum AuditAction {
   MEETING_NOTICE_PUBLISH
   MEETING_NOTICE_SEND
   CONFLICT_DECLARE
+  SOUND_SHARE_ACCESS
 
   @@schema("governance")
 }
