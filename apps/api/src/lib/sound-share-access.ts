@@ -52,7 +52,7 @@ export async function resolveSoundShare(
       granteeUsername: true,
       expiresAt: true,
       permission: true,
-      sound: { select: { userId: true } },
+      sound: { select: { channel: { select: { userId: true } } } },
     },
   })
   if (!share || share.soundId !== soundId) return null
@@ -65,7 +65,7 @@ export async function resolveSoundShare(
     granteeUsername: share.granteeUsername,
     expiresAt: share.expiresAt,
     permission: share.permission,
-    ownerId: share.sound.userId,
+    ownerId: share.sound.channel.userId,
   }
 }
 
