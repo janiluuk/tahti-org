@@ -132,8 +132,17 @@ const soundLikeRoutes: FastifyPluginAsync = async (fastify) => {
         if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
         const { slug, itemId } = routeParams
 
+        // Counts are public for public tracks only. A private or unfinished
+        // track answers as if it did not exist, except to its own artist.
         const item = await fastify.prisma.sound.findFirst({
-          where: { id: itemId, channel: { slug } },
+          where: {
+            id: itemId,
+            channel: { slug },
+            OR: [
+              { isPublic: true, status: 'READY' },
+              ...(user ? [{ channel: { userId: user.id } }] : []),
+            ],
+          },
           select: { id: true },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })
