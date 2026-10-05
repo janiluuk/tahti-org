@@ -67,6 +67,8 @@ export const HearthisUserSetsResponseSchema = z.object({
 export const HearthisSetTracksResponseSchema = z.object({
   permalink: z.string(),
   url: z.string(),
+  /** Playlist metadata when resolvable from the owner's Sets list; null if unknown. */
+  set: HearthisSetResultSchema.nullable(),
   tracks: z.array(HearthisSetTrackResultSchema),
 })
 

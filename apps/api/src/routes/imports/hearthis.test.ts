@@ -219,8 +219,19 @@ describe('hearthis.at mixed-source import', () => {
     })
   })
 
-  it('lists tracks inside a set with download flags', async () => {
+  it('lists tracks inside a set with download flags and set metadata', async () => {
     mockGetSetTracks.mockResolvedValueOnce([SAMPLE_TRACK])
+    mockGetUserPlaylists.mockResolvedValueOnce([
+      {
+        id: '378936',
+        permalink: '378936-9675121',
+        title: 'Recorded sets from gigs',
+        description: 'Recordings',
+        track_count: 176,
+        artwork_url: null,
+        user: SAMPLE_TRACK.user,
+      },
+    ])
     const res = await app.inject({
       method: 'GET',
       url: '/api/v1/imports/hearthis/sets/378936-9675121/tracks',
@@ -229,6 +240,11 @@ describe('hearthis.at mixed-source import', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.permalink).toBe('378936-9675121')
+    expect(body.set).toMatchObject({
+      permalink: '378936-9675121',
+      title: 'Recorded sets from gigs',
+      trackCount: 176,
+    })
     expect(body.tracks).toHaveLength(1)
     expect(body.tracks[0]).toMatchObject({
       position: 1,

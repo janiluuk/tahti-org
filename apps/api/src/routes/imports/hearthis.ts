@@ -217,10 +217,24 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const tracks = await hearthis.getSetTracks(permalink)
+        const mapped = tracks.map((track, index) => toSetTrackResult(track, index + 1))
+        // Resolve album-like Set title/artist/year from the owner's playlist catalog.
+        let setMeta: ReturnType<typeof toSetResult> | null = null
+        const ownerPermalink = tracks[0]?.user.permalink
+        if (ownerPermalink) {
+          try {
+            const playlists = await hearthis.getUserPlaylists(ownerPermalink)
+            const match = playlists.find((playlist) => playlist.permalink === permalink)
+            if (match) setMeta = toSetResult(match)
+          } catch {
+            // Set tracks still return without metadata.
+          }
+        }
         return reply.send({
           permalink,
           url: `https://hearthis.at/set/${encodeURIComponent(permalink)}/`,
-          tracks: tracks.map((track, index) => toSetTrackResult(track, index + 1)),
+          set: setMeta,
+          tracks: mapped,
         })
       } catch {
         return reply.status(502).send({ error: 'hearthis.at set tracks lookup failed' })
