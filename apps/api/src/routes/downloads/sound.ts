@@ -26,7 +26,11 @@ import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
 import { downloadFilename } from '../../lib/download-filename.js'
-import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
+import {
+  shareKeyFromQuery,
+  resolveSoundShare,
+  recordSoundShareAccess,
+} from '../../lib/sound-share-access.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -93,13 +97,24 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
         // A DOWNLOAD share link opens a private sound; every gate below still applies.
-        const shared = await soundShareGrantsAccess(
+        const share = await resolveSoundShare(
           fastify.prisma,
           itemId,
           shareKeyFromQuery(request.query),
           request.sessionUser?.username ?? null,
           'DOWNLOAD',
         )
+        const shared = share !== null
+        if (share) {
+          void recordSoundShareAccess(fastify.prisma, {
+            shareId: share.id,
+            soundId: itemId,
+            ownerId: share.ownerId,
+            actorId: request.sessionUser?.id ?? null,
+            surface: 'download',
+            permission: 'DOWNLOAD',
+          })
+        }
         const item = await fastify.prisma.sound.findFirst({
           where: {
             id: itemId,

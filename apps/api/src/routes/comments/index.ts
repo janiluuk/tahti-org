@@ -12,7 +12,12 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
+import {
+  shareKeyFromQuery,
+  resolveSoundShare,
+  recordSoundShareAccess,
+  soundShareGrantsAccess,
+} from '../../lib/sound-share-access.js'
 import { userName } from '../../lib/safe-names.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
@@ -81,15 +86,23 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         select: { commentsEnabled: true, isPublic: true, channel: { select: { userId: true } } },
       })
-      const visible =
-        item?.isPublic ||
-        (item &&
-          (await soundShareGrantsAccess(
-            fastify.prisma,
-            routeParams.id,
-            shareKeyFromQuery(request.query),
-            request.sessionUser?.username ?? null,
-          )))
+      const share = await resolveSoundShare(
+        fastify.prisma,
+        routeParams.id,
+        shareKeyFromQuery(request.query),
+        request.sessionUser?.username ?? null,
+      )
+      const visible = item?.isPublic || Boolean(item && share)
+      if (share) {
+        void recordSoundShareAccess(fastify.prisma, {
+          shareId: share.id,
+          soundId: routeParams.id,
+          ownerId: share.ownerId,
+          actorId: request.sessionUser?.id ?? null,
+          surface: 'comments',
+          permission: 'READ',
+        })
+      }
       if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
 
       const comments = await listComments(
