@@ -177,6 +177,54 @@ describe('/api/me/blocks', () => {
     expect(await prisma.comment.count({ where: { authorId: b.id } })).toBe(0)
   })
 
+  it('hides the two from each other in user search and hides earlier comments', async () => {
+    const a = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}a` },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    const b = await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}b` } })
+    const track = await prisma.sound.create({
+      data: { channelId: a.channel!.id, title: 'Old Thread', status: 'READY', isPublic: true },
+    })
+    await prisma.comment.create({
+      data: { body: 'written before', authorId: b.id, soundId: track.id },
+    })
+
+    const search = async (cookie: string, q: string) =>
+      (
+        (
+          await app.inject({
+            method: 'GET',
+            url: `/api/users/search?q=${encodeURIComponent(q)}`,
+            headers: { cookie },
+          })
+        ).json() as Array<{ username: string }>
+      ).map((u) => u.username)
+    expect(await search(cookieA, `${PREFIX}b`)).toEqual([])
+    expect(await search(cookieB, `${PREFIX}a`)).toEqual([])
+
+    const listed = async () =>
+      (
+        (await app.inject({ method: 'GET', url: `/api/comments/track/${track.id}` })).json()
+          .comments as Array<{ body: string }>
+      ).map((c) => c.body)
+    expect(await listed()).toEqual([])
+
+    await app.inject({
+      method: 'DELETE',
+      url: `/api/me/blocks/${PREFIX}b`,
+      headers: { cookie: cookieA },
+    })
+    expect(await listed()).toEqual(['written before'])
+    expect(await search(cookieA, `${PREFIX}b`)).toEqual([`${PREFIX}b`])
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}b` },
+    })
+  })
+
   it('lets them talk again after an unblock', async () => {
     const unblock = await app.inject({
       method: 'DELETE',

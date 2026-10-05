@@ -33,9 +33,14 @@ const COMMENTS_LIMIT = 200
 async function listComments(
   prisma: PrismaClient,
   where: { soundId: string } | { channelId: string },
+  ownerUserId: string,
 ) {
   const newest = await prisma.comment.findMany({
-    where: { ...where, author: availableUserWhere },
+    // Also without what an account the owner has blocked wrote earlier.
+    where: {
+      ...where,
+      author: { ...availableUserWhere, blocksReceived: { none: { blockerUserId: ownerUserId } } },
+    },
     orderBy: { createdAt: 'desc' },
     take: COMMENTS_LIMIT,
     select: {
@@ -74,7 +79,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.sound.findUnique({
         where: { id: routeParams.id },
-        select: { commentsEnabled: true, isPublic: true },
+        select: { commentsEnabled: true, isPublic: true, channel: { select: { userId: true } } },
       })
       const visible =
         item?.isPublic ||
@@ -87,7 +92,11 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
           )))
       if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
 
-      const comments = await listComments(fastify.prisma, { soundId: routeParams.id })
+      const comments = await listComments(
+        fastify.prisma,
+        { soundId: routeParams.id },
+        item.channel.userId,
+      )
       return reply.send({ comments, commentsEnabled: item.commentsEnabled })
     },
   )
@@ -167,11 +176,11 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, commentsEnabled: true },
+        select: { id: true, commentsEnabled: true, userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const comments = await listComments(fastify.prisma, { channelId: channel.id })
+      const comments = await listComments(fastify.prisma, { channelId: channel.id }, channel.userId)
       return reply.send({ comments, commentsEnabled: channel.commentsEnabled })
     },
   )
