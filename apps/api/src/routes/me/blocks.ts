@@ -91,6 +91,17 @@ const meBlocksRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      // Their loves and reposts of each other's tracks go too, so neither
+      // stays in the other's fan lists or counts.
+      const betweenTheTwo = {
+        OR: [
+          { userId: target.id, sound: { channel: { userId: user.id } } },
+          { userId: user.id, sound: { channel: { userId: target.id } } },
+        ],
+      }
+      await fastify.prisma.soundLike.deleteMany({ where: betweenTheTwo })
+      await fastify.prisma.soundRepost.deleteMany({ where: betweenTheTwo })
+
       // Neither stays a moderator of the other's channel.
       await fastify.prisma.channelModerator.deleteMany({
         where: {
