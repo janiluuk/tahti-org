@@ -22,6 +22,7 @@ import {
 } from '@tahti/shared'
 import { actorDisplayName, availableUserWhere } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { resolveChannelForModeration } from '../../lib/channel-access.js'
 import { userName } from '../../lib/safe-names.js'
 
@@ -97,6 +98,9 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       if (!target) return reply.status(404).send({ error: 'User not found' })
       if (target.id === user.id) {
         return reply.status(400).send({ error: 'Cannot add yourself as a moderator' })
+      }
+      if (await isBlockedEitherWay(fastify.prisma, user.id, target.id)) {
+        return reply.status(404).send({ error: 'User not found' })
       }
 
       const already = await fastify.prisma.channelModerator.findUnique({
