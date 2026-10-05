@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { notifyArtistOfNewFollower } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { auditLog } from '../../lib/audit.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { withSafeName } from '../../lib/safe-names.js'
@@ -44,6 +45,10 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })
       if (artist.id === user.id) {
         return reply.status(400).send({ error: 'Cannot follow yourself' })
+      }
+      // A block either way stops a new follow; it answers like a missing artist.
+      if (await isBlockedEitherWay(fastify.prisma, artist.id, user.id)) {
+        return reply.status(404).send({ error: 'Artist not found' })
       }
 
       const { didCreate } = await fastify.prisma.$transaction(async (tx) => {

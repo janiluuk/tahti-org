@@ -122,6 +122,61 @@ describe('/api/me/blocks', () => {
     expect(restart.statusCode).toBe(403)
   })
 
+  it('also stops comments and follows between the two, and drops existing follows', async () => {
+    const a = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}a` },
+      select: { id: true, channel: { select: { id: true, slug: true } } },
+    })
+    const b = await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}b` } })
+    const track = await prisma.sound.create({
+      data: { channelId: a.channel!.id, title: 'Blocked Track', status: 'READY', isPublic: true },
+    })
+    // Unblock, follow, then block again: the follow must not survive the block.
+    await app.inject({
+      method: 'DELETE',
+      url: `/api/me/blocks/${PREFIX}b`,
+      headers: { cookie: cookieA },
+    })
+    const followed = await app.inject({
+      method: 'POST',
+      url: `/api/v1/artists/${PREFIX}a/follow`,
+      headers: { cookie: cookieB },
+    })
+    expect(followed.statusCode).toBe(200)
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}b` },
+    })
+    expect(
+      await prisma.artistFollow.count({ where: { followerUserId: b.id, artistUserId: a.id } }),
+    ).toBe(0)
+
+    const refollow = await app.inject({
+      method: 'POST',
+      url: `/api/v1/artists/${PREFIX}a/follow`,
+      headers: { cookie: cookieB },
+    })
+    expect(refollow.statusCode).toBe(404)
+
+    const onTrack = await app.inject({
+      method: 'POST',
+      url: `/api/comments/track/${track.id}`,
+      headers: { cookie: cookieB },
+      payload: { body: 'let me in' },
+    })
+    expect(onTrack.statusCode).toBe(403)
+    const onChannel = await app.inject({
+      method: 'POST',
+      url: `/api/comments/channel/${a.channel!.slug}`,
+      headers: { cookie: cookieB },
+      payload: { body: 'let me in' },
+    })
+    expect(onChannel.statusCode).toBe(403)
+    expect(await prisma.comment.count({ where: { authorId: b.id } })).toBe(0)
+  })
+
   it('lets them talk again after an unblock', async () => {
     const unblock = await app.inject({
       method: 'DELETE',
