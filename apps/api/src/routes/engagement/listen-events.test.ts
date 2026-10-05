@@ -121,6 +121,23 @@ describe('/api/listen-events', () => {
     expect(res.json()).toEqual({ recorded: false })
   })
 
+  it("does not count the artist's own play of their track", async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({
+      where: { id: ownerChannelId },
+      select: { userId: true },
+    })
+    const before = await prisma.listenEvent.count({ where: { soundId: eligibleItemId } })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/listen-events',
+      headers: { cookie: await sessionCookieFor(prisma, owner.userId) },
+      payload: { soundId: eligibleItemId },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ recorded: false })
+    expect(await prisma.listenEvent.count({ where: { soundId: eligibleItemId } })).toBe(before)
+  })
+
   it('rejects a missing soundId', async () => {
     const res = await app.inject({ method: 'POST', url: '/api/listen-events', payload: {} })
     expect(res.statusCode).toBe(400)
