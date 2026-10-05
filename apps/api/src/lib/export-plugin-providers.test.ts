@@ -22,6 +22,10 @@ describe('EXPORT_PLUGIN_PROVIDERS', () => {
     expect(revelator?.statusPath).toBe('/api/me/releases/:id/revelator')
     expect(revelator?.webhookPath).toBe('/api/webhooks/export/revelator')
 
+    const hearthis = body.providers.find((provider) => provider.id === 'hearthis-export')
+    expect(hearthis?.capabilities.submit).toBe(true)
+    expect(hearthis?.submitPath).toBe('/api/me/sound/:id/export/hearthis')
+
     for (const provider of body.providers) {
       if (provider.capabilities.submit) {
         expect(provider.submitPath).toBeTruthy()

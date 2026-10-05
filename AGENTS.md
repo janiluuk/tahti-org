@@ -68,11 +68,13 @@ testing the connection, and only then saving/enabling the plugin. Do not add a
 second configuration surface in Tahti core or silently enable an unverified
 provider.
 
-Still to clarify before extending the plugin API: whether Configure is a
-first-class SDK lifecycle hook or a host-rendered settings modal; the exact
-connection-test contract and error states; and whether Save and Enable are one
-atomic action or separate actions. Record the decision in both repositories’
-agent instructions when settled.
+**Configure lifecycle (settled 2026-10-05):** host-rendered settings modal in
+Tahti Player (not an SDK lifecycle hook). Connection test returns
+`{ ok: true } | { ok: false, error: string }` and blocks Save on failure when
+`connectionTest` is advertised. **Save** and **Enable** are separate actions —
+Save persists credentials/settings; Enable turns the provider on only after a
+successful test (or after Save when the catalog has no connection test). Same
+decision recorded in `../tahti-player/docs/DECISIONS.md`.
 
 ### Official marketplace catalog (`tahti-registry`)
 
@@ -105,18 +107,17 @@ Shipped in `../tahti-player`: the `PluginRegistryStore` contract + LazyStore
 adapter (`pluginRegistryContract.ts` / `pluginRegistryAdapter.ts`), the
 `PluginRegistryHost` façade (`pluginRegistryHost.ts`), and caller migration
 (core callers now import `pluginRegistryStore`, not `pluginRegistry.ts`
-directly — player PR #46). Contract-test coverage was verified line-by-line
-2026-09-11: 20 of 22 documented scenarios pass; 2 gaps remain open (enable/
-disable persistence across restart — `it.todo` in `App.hydration.test.tsx`;
-and refusing to delete outside the managed plugins dir —
-`removeManagedPluginInstall` has no test at all). Still open, and required
-before real extraction: close those 2 gaps, accept a migration/rollback
-plan, and sign off on the ownership split drafted in
+directly — player PR #46). Unit-test gaps formerly listed here (enable/disable
+persistence across restart; refuse delete outside managed plugins dir) are
+covered in player `App.hydration.test.tsx` and `pluginDir.test.ts` (see player
+`docs/todo/HISTORY.md` 2026-09-15). Still open before real extraction: accept a
+migration/rollback plan and sign off on the ownership split drafted in
 `docs/todo/plugin-registry-extraction.md` §7 (player core / plugin SDK /
 import-provider plugins / tahti-registry / Tahti API). Until then, do not
 change registry keys, bootstrap ordering, plugin discovery semantics, or
 storage location. Full detail: `docs/todo/plugin-registry-extraction.md`
-(this repo) — read that before touching any of the files above.
+(this repo) — read that before touching any of the files above. Cross-repo
+API honesty work: `docs/todo/api-player-gap-mapping.md`.
 
 ## Tahti Radio Discord bot
 
@@ -145,6 +146,11 @@ Board admins set Client ID and token in Tahti Player → Settings → Add-ons �
 Radio (`PUT /api/admin/discord-bot`; never returns the raw token). Optional
 `DISCORD_CLIENT_ID` / `DISCORD_TOKEN` on the API or bot are env fallbacks.
 Contract: `docs/technical/discord-bot-credentials.md`.
+
+Playback: default is curated YouTube URLs in the bot’s `tracks.txt` (yt-dlp).
+`GET /api/v1/radio` is **now-playing metadata only**, not audio. To play the
+live Tahti Radio HLS feed, set `TAHTI_RADIO_AUDIO_URL` on the
+`radio-discord-bot` service (same env as the web/API radio audio override).
 
 ## Running the app locally (env gotchas)
 

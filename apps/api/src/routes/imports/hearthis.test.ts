@@ -12,6 +12,8 @@ const SAMPLE_TRACK = {
   duration: '4015',
   genre: 'Techno',
   downloadable: '1',
+  download_url: 'https://hearthis.at/candana-dj/credo/download/',
+  download_filename: 'Credo.mp3',
   created_at: '2026-08-12 12:18:43',
   release_date: '2026-08-12 12:18:43',
   artwork_url: 'https://img.hearthis.at/artwork.jpg',
@@ -25,16 +27,21 @@ const SAMPLE_TRACK = {
   stream_url: 'https://hearthis.app/candana-dj/credo/listen/?s=XPS',
 }
 
-const { mockSearch, mockGetUserTracks, mockGetTrackByUrl } = vi.hoisted(() => ({
-  mockSearch: vi.fn(),
-  mockGetUserTracks: vi.fn(),
-  mockGetTrackByUrl: vi.fn(),
-}))
+const { mockSearch, mockGetUserTracks, mockGetUserPlaylists, mockGetSetTracks, mockGetTrackByUrl } =
+  vi.hoisted(() => ({
+    mockSearch: vi.fn(),
+    mockGetUserTracks: vi.fn(),
+    mockGetUserPlaylists: vi.fn(),
+    mockGetSetTracks: vi.fn(),
+    mockGetTrackByUrl: vi.fn(),
+  }))
 
 vi.mock('@tahti/hearthis', () => ({
   createHearthisClient: () => ({
     search: mockSearch,
     getUserTracks: mockGetUserTracks,
+    getUserPlaylists: mockGetUserPlaylists,
+    getSetTracks: mockGetSetTracks,
     getTrackByUrl: mockGetTrackByUrl,
   }),
   parseHearthisUsername: (input: string) => {
@@ -46,6 +53,22 @@ vi.mock('@tahti/hearthis', () => ({
     } catch {
       return /^[A-Za-z0-9_-]+$/.test(input) ? input : null
     }
+  },
+  parseHearthisSetPermalink: (input: string) => {
+    const value = input.trim()
+    if (!value) return null
+    try {
+      const url = new URL(value.startsWith('http') ? value : `https://hearthis.at/set/${value}/`)
+      if (!/(^|\.)hearthis\.at$/.test(url.hostname)) return null
+      const match = /^\/set\/([^/]+)\/?$/.exec(url.pathname)
+      if (match) {
+        const permalink = decodeURIComponent(match[1])
+        return /^[\w-]+$/.test(permalink) ? permalink : null
+      }
+    } catch {
+      // bare permalink
+    }
+    return /^[\w-]+$/.test(value) ? value : null
   },
 }))
 
@@ -156,6 +179,91 @@ describe('hearthis.at mixed-source import', () => {
     const body = res.json()
     expect(body.username).toBe('candana-dj')
     expect(body.tracks).toHaveLength(1)
+  })
+
+  it('me-sets is empty when no hearthisUsername is stored', async () => {
+    await prisma.user.update({ where: { id: userId }, data: { hearthisUsername: null } })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/hearthis/me-sets',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ username: null, sets: [] })
+  })
+
+  it('me-sets lists playlists for the stored handle', async () => {
+    await prisma.user.update({ where: { id: userId }, data: { hearthisUsername: 'yaniho' } })
+    mockGetUserPlaylists.mockResolvedValueOnce([
+      {
+        id: '378936',
+        permalink: '378936-9675121',
+        title: 'Recorded sets from gigs',
+        description: 'Recordings',
+        track_count: 176,
+        artwork_url: null,
+        user: SAMPLE_TRACK.user,
+      },
+    ])
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/hearthis/me-sets',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.username).toBe('yaniho')
+    expect(body.sets).toHaveLength(1)
+    expect(body.sets[0]).toMatchObject({
+      permalink: '378936-9675121',
+      title: 'Recorded sets from gigs',
+      trackCount: 176,
+      url: 'https://hearthis.at/set/378936-9675121/',
+    })
+  })
+
+  it('lists tracks inside a set with download flags and set metadata', async () => {
+    mockGetSetTracks.mockResolvedValueOnce([SAMPLE_TRACK])
+    mockGetUserPlaylists.mockResolvedValueOnce([
+      {
+        id: '378936',
+        permalink: '378936-9675121',
+        title: 'Recorded sets from gigs',
+        description: 'Recordings',
+        track_count: 176,
+        artwork_url: null,
+        user: SAMPLE_TRACK.user,
+      },
+    ])
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/hearthis/sets/378936-9675121/tracks',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.permalink).toBe('378936-9675121')
+    expect(body.set).toMatchObject({
+      permalink: '378936-9675121',
+      title: 'Recorded sets from gigs',
+      trackCount: 176,
+    })
+    expect(body.tracks).toHaveLength(1)
+    expect(body.tracks[0]).toMatchObject({
+      position: 1,
+      title: 'Credo',
+      downloadable: true,
+      downloadUrl: expect.any(String),
+    })
+  })
+
+  it('rejects an invalid set permalink', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/hearthis/sets/not%20a%20set/tracks',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('by-username rejects an unparseable profileUrl', async () => {

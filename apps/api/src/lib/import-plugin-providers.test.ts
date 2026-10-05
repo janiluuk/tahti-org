@@ -29,7 +29,11 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
     expect(byKind.oauth).toEqual(
       expect.arrayContaining(['google-drive', 'bandcamp', 'soundcloud', 'mixcloud']),
     )
-    expect(byKind.search).toEqual(expect.arrayContaining(['spotify', 'hearthis']))
+    expect(byKind.search).toEqual(expect.arrayContaining(['spotify', 'hearthis', 'mixcloud-embed']))
+    const mixcloudEmbed = body.providers.find((provider) => provider.id === 'mixcloud-embed')
+    expect(mixcloudEmbed?.searchPath).toBe('/api/v1/imports/mixcloud/search')
+    expect(mixcloudEmbed?.importPath).toBe('/api/v1/imports/mixcloud/add')
+    expect(mixcloudEmbed?.capabilities.search).toBe(true)
     expect(byKind.tool).toEqual(expect.arrayContaining(['url', 'radio']))
     expect(byKind.upload).toEqual(expect.arrayContaining(['upload', 'stash']))
 
@@ -40,6 +44,22 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
       } else {
         expect(provider.oauthStartPath).toBeNull()
       }
+      if (provider.capabilities.import) {
+        expect(provider.importPath).toBeTruthy()
+      }
+      if (provider.capabilities.search) {
+        expect(provider.searchPath).toBeTruthy()
+      }
+      if (provider.capabilities.fileList) {
+        expect(provider.listPath).toBeTruthy()
+      }
     }
+
+    const bandcamp = body.providers.find((provider) => provider.id === 'bandcamp')
+    expect(bandcamp?.capabilities.import).toBe(false)
+    expect(bandcamp?.importPath).toBeNull()
+
+    const googleDrive = body.providers.find((provider) => provider.id === 'google-drive')
+    expect(googleDrive?.importPath).toBe('/api/me/google-drive/import')
   })
 })

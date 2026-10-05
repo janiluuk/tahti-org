@@ -3,9 +3,15 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
-import { ExportWebhookAcceptedSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
+import {
+  ExportWebhookAcceptedSchema,
+  RevelatorExportWebhookBodySchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { EXPORT_PLUGIN_PROVIDERS } from '../../lib/export-plugin-providers.js'
+import { applyRevelatorWebhookStatus } from '../../lib/revelator-delivery.js'
 
 const ProviderParamSchema = z.object({
   provider: z.string().min(1),
@@ -27,8 +33,8 @@ function exportWebhookAuthorized(request: { headers: Record<string, unknown> }):
 
 /**
  * Provider callback receiver for ExportProvider webhooks.
- * Full Revelator status sync is not wired yet — accept, log, and ack so
- * Nuclear clients and provider sandboxes have a stable URL.
+ * Revelator: parse body → update Release.revelatorStatus (see applyRevelatorWebhookStatus).
+ * Auth is still INTERNAL_SECRET until vendor HMAC docs land.
  */
 const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -37,7 +43,7 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['webhooks'],
         description:
-          'Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Currently accepts and logs.',
+          'Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Revelator updates release delivery status.',
         response: openApiResponse(ExportWebhookAcceptedSchema, 'ExportWebhookAccepted'),
       },
     },
@@ -50,10 +56,37 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
       const known = EXPORT_PLUGIN_PROVIDERS.some(
-        (provider) => provider.id === routeParams.provider && provider.capabilities.webhook,
+        (provider) => provider.id === routeParams.provider && provider.webhookPath != null,
       )
       if (!known) {
         return reply.status(404).send({ error: 'Unknown export provider' })
+      }
+
+      if (routeParams.provider === 'revelator') {
+        const parsed = RevelatorExportWebhookBodySchema.safeParse(request.body ?? {})
+        if (!parsed.success) {
+          return reply
+            .status(400)
+            .send({ error: parsed.error.issues[0]?.message ?? 'Invalid webhook body' })
+        }
+        const applied = await applyRevelatorWebhookStatus(fastify.prisma, parsed.data)
+        if (!applied.ok) {
+          return reply.status(applied.status).send({ error: applied.error })
+        }
+        request.log.info(
+          {
+            provider: 'revelator',
+            releaseId: applied.releaseId,
+            revelatorStatus: applied.revelatorStatus,
+            applied: applied.applied,
+          },
+          'revelator export webhook applied',
+        )
+        return reply.send({
+          ok: true as const,
+          provider: 'revelator',
+          accepted: true as const,
+        })
       }
 
       request.log.info(
@@ -64,7 +97,7 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
               ? Object.keys(request.body as object)
               : [],
         },
-        'export provider webhook accepted (stub)',
+        'export provider webhook accepted (no status sync for this provider)',
       )
 
       return reply.send({

@@ -47,6 +47,9 @@ export async function submitReleaseToRevelator(
   const apiKey = revelatorApiKey()
 
   if (!apiKey) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('REVELATOR_API_KEY is not set — refusing stub DSP submit in production')
+    }
     return {
       revelatorId: `stub-${input.tahtiReleaseId}`,
       status: 'submitted',

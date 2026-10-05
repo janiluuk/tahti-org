@@ -16,11 +16,11 @@ Credentials for marketplace installables still live on
 
 ## Live provider: Revelator
 
-| Capability | Route                                        |
-| ---------- | -------------------------------------------- |
-| Submit     | `POST /api/me/releases/:id/revelator/submit` |
-| Status     | `GET /api/me/releases/:id/revelator`         |
-| Webhook    | `POST /api/webhooks/export/revelator`        |
+| Capability | Route                                        | Ready?                                  |
+| ---------- | -------------------------------------------- | --------------------------------------- |
+| Submit     | `POST /api/me/releases/:id/revelator/submit` | yes                                     |
+| Status     | `GET /api/me/releases/:id/revelator`         | yes                                     |
+| Webhook    | `POST /api/webhooks/export/revelator`        | yes — updates `Release.revelatorStatus` |
 
 Uniform ExportProvider aliases (same handlers):
 
@@ -30,18 +30,47 @@ Uniform ExportProvider aliases (same handlers):
 The registry lists the **canonical** Revelator paths above. Billing /
 checkout remain Revelator-specific (`…/revelator/billing`, `…/checkout`).
 
-### Webhook auth
+### Webhook auth and payload
 
 `Authorization: Bearer $INTERNAL_SECRET` or header
-`X-Tahti-Webhook-Secret: $INTERNAL_SECRET`. The receiver currently accepts
-and logs the payload; full Revelator status sync is a follow-up.
+`X-Tahti-Webhook-Secret: $INTERNAL_SECRET`.
+
+Body (Zod `RevelatorExportWebhookBodySchema`):
+
+- Identity (at least one): `externalId` or `releaseId` (Tahti release id from
+  submit), and/or `revelatorId`
+- Status (at least one): `status` and/or `event` — mapped via
+  `mapRevelatorWebhookStatus` onto `pending` | `submitted` | `delivered` |
+  `failed`
+
+Unknown release → `404`. Unmapped status → `400`. Updates are monotonic
+(no `delivered` → `submitted` regression); `failed` is always allowed.
+
+Production refuses stub DSP submit when `REVELATOR_API_KEY` is unset
+(`packages/revelator`).
+
+## Live provider: hearthis-export (sound-scoped)
+
+| Capability | Route                                    |
+| ---------- | ---------------------------------------- |
+| Submit     | `POST /api/me/sound/:id/export/hearthis` |
+
+Uniform ExportProvider alias (same handler):
+
+- `POST /api/me/export-plugins/hearthis-export/sounds/:id/submit`
+
+Do **not** call the release-scoped `/export-plugins/:provider/releases/...`
+aliases for hearthis — those only accept `revelator`.
+
+Credentials via `/api/me/integrations` (`hearthis-export`). Status is stored
+on the sound (`hearthisExportStatus`); there is no separate statusPath yet.
 
 ## Deep-link stubs
 
-Storefront IDs (`spotify`, `apple`, `deezer`, `youtube`) and
-`hearthis-export` appear in the catalog with all capabilities `false` and
-null paths. Tahti Player may still deep-link into Studio distribution / Add-ons;
-do not invent per-DSP submit routes until product wires them.
+Storefront IDs (`spotify`, `apple`, `deezer`, `youtube`) appear in the catalog
+with all capabilities `false` and null paths. Tahti Player may still deep-link
+into Studio distribution / Add-ons; do not invent per-DSP submit routes until
+product wires them.
 
 ## Client boundary
 

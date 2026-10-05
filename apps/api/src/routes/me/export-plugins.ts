@@ -15,15 +15,26 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { EXPORT_PLUGIN_PROVIDERS } from '../../lib/export-plugin-providers.js'
 import { getRevelatorReleaseStatus, submitRevelatorRelease } from '../../lib/revelator-delivery.js'
+import { submitHearthisSoundExport } from '../../lib/hearthis-export-submit.js'
 
 const ExportProviderReleaseParamsSchema = IdParamSchema.extend({
   provider: z.string().min(1),
+})
+
+const ExportProviderSoundParamsSchema = IdParamSchema.extend({
+  provider: z.string().min(1),
+})
+
+const HearthisExportQueuedSchema = z.object({
+  soundId: z.string().min(1),
+  hearthisExportStatus: z.literal('pending'),
 })
 
 /**
  * Versioned export-provider registry plus thin aliases that ExportProvider
  * clients can call with a uniform `/api/me/export-plugins/:provider/...` shape.
  * Canonical Revelator routes remain under `/api/me/releases/:id/revelator*`.
+ * Canonical hearthis-export remains under `/api/me/sound/:id/export/hearthis`.
  */
 const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -103,6 +114,39 @@ const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(202).send({
         releaseId: result.releaseId,
         revelatorStatus: result.revelatorStatus,
+      })
+    },
+  )
+
+  // Sound-scoped ExportProvider alias — hearthis-export is not release-scoped.
+  fastify.post(
+    '/api/me/export-plugins/:provider/sounds/:id/submit',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description:
+          'Sound-scoped ExportProvider submit alias (hearthis-export → POST /api/me/sound/:id/export/hearthis)',
+        response: openApiResponses([
+          { status: 202, schema: HearthisExportQueuedSchema, name: 'HearthisExportQueued' },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ExportProviderSoundParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      if (routeParams.provider !== 'hearthis-export') {
+        return reply.status(404).send({ error: 'Unknown sound-scoped export provider' })
+      }
+
+      const result = await submitHearthisSoundExport(fastify.prisma, user.id, routeParams.id)
+      if (!result.ok) return reply.status(result.status).send({ error: result.error })
+
+      return reply.status(202).send({
+        soundId: result.soundId,
+        hearthisExportStatus: result.hearthisExportStatus,
       })
     },
   )

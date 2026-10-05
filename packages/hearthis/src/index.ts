@@ -73,6 +73,8 @@ export interface HearthisTrack {
   genre?: string
   tags?: string
   bpm?: string
+  /** Track kind from hearthis.at — e.g. empty, `Track`, `DJ-Set`. */
+  type?: string
   downloadable: string
   created_at: string
   release_date: string
@@ -98,6 +100,22 @@ export interface HearthisTrack {
   favoritings_count?: number
   comment_count?: number
   is_live?: boolean
+}
+
+/**
+ * A hearthis.at playlist / set (web UI "Set" — album-like grouping or playlist).
+ * Listed via `GET /{user}/?type=playlists`; tracks via `GET /set/{permalink}/?type=tracks`.
+ */
+export interface HearthisPlaylist {
+  id: string
+  permalink: string
+  title: string
+  description?: string
+  track_count?: number
+  artwork_url?: string | null
+  created_at?: string | null
+  release_date?: string | null
+  user: HearthisUserRef
 }
 
 export interface HearthisSearchParams {
@@ -140,6 +158,27 @@ export function parseHearthisUsername(input: string): string | null {
   }
 }
 
+/**
+ * The set permalink from a pasted hearthis.at set link
+ * (`https://hearthis.at/set/378936-9675121/`) or a bare permalink.
+ */
+export function parseHearthisSetPermalink(input: string): string | null {
+  const value = input.trim()
+  if (!value) return null
+  try {
+    const url = new URL(value.startsWith('http') ? value : `https://hearthis.at/set/${value}/`)
+    if (!/(^|\.)hearthis\.at$/.test(url.hostname)) return null
+    const match = /^\/set\/([^/]+)\/?$/.exec(url.pathname)
+    if (match) {
+      const permalink = decodeURIComponent(match[1])
+      return /^[\w-]+$/.test(permalink) ? permalink : null
+    }
+  } catch {
+    // bare permalink below
+  }
+  return /^[\w-]+$/.test(value) ? value : null
+}
+
 export interface HearthisClient {
   /** VERIFIED — GET /categories/ */
   listCategories(): Promise<HearthisCategory[]>
@@ -157,6 +196,16 @@ export interface HearthisClient {
    * `{"status":"error","message":"Content Gone"}` — confirmed live against hearthis.at/yaniho). */
   getUserTracks(
     permalink: string,
+    params?: { page?: number; count?: number },
+  ): Promise<HearthisTrack[]>
+  /** VERIFIED — GET /{permalink}/?type=playlists (sets / playlist collections). */
+  getUserPlaylists(
+    permalink: string,
+    params?: { page?: number; count?: number },
+  ): Promise<HearthisPlaylist[]>
+  /** VERIFIED — GET /set/{permalink}/?type=tracks (tracks inside a set/playlist). */
+  getSetTracks(
+    setPermalink: string,
     params?: { page?: number; count?: number },
   ): Promise<HearthisTrack[]>
 }
@@ -235,6 +284,20 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
         type: 'tracks',
         page: params.page,
         count: params.count,
+      }),
+
+    getUserPlaylists: (permalink, params = {}) =>
+      get<HearthisPlaylist[]>(`/${encodeURIComponent(permalink)}/`, {
+        type: 'playlists',
+        page: params.page,
+        count: params.count ?? 100,
+      }),
+
+    getSetTracks: (setPermalink, params = {}) =>
+      get<HearthisTrack[]>(`/set/${encodeURIComponent(setPermalink)}/`, {
+        type: 'tracks',
+        page: params.page,
+        count: params.count ?? 500,
       }),
   }
 }

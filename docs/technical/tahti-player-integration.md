@@ -1,6 +1,6 @@
 # Tahti Player integration audit
 
-Last audited: 2026-08-31.
+Last audited: 2026-10-05.
 
 The listen and studio client is maintained in the separate
 [Tahti Player repository](https://github.com/janiluuk/tahti-player). It is a
@@ -8,6 +8,10 @@ Vite/Tauri client, not a second backend: production data, authentication,
 chat, and media continue to come from this repository's API and services.
 The beta deployment is documented in [`ops/beta-tahti-live.md`](../../ops/beta-tahti-live.md)
 and the cutover plan in [`ops/nuclear-web-cutover.md`](../../ops/nuclear-web-cutover.md).
+
+CLI for the same API lives in the player monorepo as `@tahti-player/tahti-cli`
+(`../tahti-player/packages/tahti-cli`) — bearer-token library/releases/upload
+commands against this API.
 
 ## Reference mastering audit
 
@@ -27,10 +31,23 @@ have colocated unit and end-to-end tests.
 
 The client has a generated API reference at
 `packages/tahti-web/docs/API-REFERENCE.md`, checked against this repository's
-`openapi.json` by `check:api-docs`. The audit found one documentation gap:
-the reference hash is stale relative to the current OpenAPI paths and must be
-regenerated/updated in the Tahti Player checkout before its API freshness check
-can pass. This is documentation drift, not evidence of a missing runtime API.
+`openapi.json` by `check:api-docs`. After changing routes, export OpenAPI and
+refresh the player reference hash:
+
+```bash
+pnpm --filter @tahti/api run openapi:export
+pnpm --filter @tahti-player/tahti-web check:api-docs
+```
+
+Cross-repo production-readiness ledger:
+[`docs/todo/api-player-gap-mapping.md`](../todo/api-player-gap-mapping.md).
+
+Shipped (do not re-open as missing):
+
+- Keyed sound share links — `POST/GET/DELETE /api/me/sound/:id/share(s)` +
+  `?key=` on public track/comments (#568).
+- Jam host participant control —
+  `PATCH /api/v1/jam/:id/participants/:userId`.
 
 No new endpoint is needed for Reference mastering. The existing archive editor
 source endpoint supplies the hosted source audio; browser decoding supplies
@@ -52,5 +69,5 @@ Tahti Player calls. Run the client-side freshness check from the Tahti Player
 checkout after an API route change:
 
 ```bash
-pnpm --filter @nuclearplayer/tahti-web check:api-docs
+pnpm --filter @tahti-player/tahti-web check:api-docs
 ```
