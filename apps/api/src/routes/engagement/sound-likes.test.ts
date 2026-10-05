@@ -130,6 +130,21 @@ describe('sound item like routes', () => {
     await app.inject({ method: 'DELETE', url, headers })
   })
 
+  it('refuses to love a track whose artist is suspended', async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({
+      where: { slug: channelSlug },
+      select: { userId: true },
+    })
+    await prisma.user.update({ where: { id: owner.userId }, data: { suspendedAt: new Date() } })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/c/${channelSlug}/sounds/${itemId}/like`,
+      headers: { cookie: likerCookie },
+    })
+    expect(res.statusCode).toBe(404)
+    await prisma.user.update({ where: { id: owner.userId }, data: { suspendedAt: null } })
+  })
+
   it('404s for an unknown sound item', async () => {
     const res = await app.inject({
       method: 'POST',

@@ -259,4 +259,28 @@ describe('artist followers/following list routes', () => {
       expect(unfollowed.json().followerCount).toBe(1)
     })
   })
+
+  it('refuses a new follow of a suspended or deleted artist', async () => {
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}gone@example.com`,
+      username: `${PREFIX}gone`,
+    })
+    const follow = () =>
+      app.inject({
+        method: 'POST',
+        url: `/api/v1/artists/${PREFIX}gone/follow`,
+        headers: { cookie: followerCookie },
+      })
+    await prisma.user.update({ where: { id: target.id }, data: { suspendedAt: new Date() } })
+    expect((await follow()).statusCode).toBe(404)
+    await prisma.user.update({
+      where: { id: target.id },
+      data: { suspendedAt: null, deletedAt: new Date() },
+    })
+    expect((await follow()).statusCode).toBe(404)
+    expect(await prisma.artistFollow.count({ where: { artistUserId: target.id } })).toBe(0)
+
+    await prisma.user.update({ where: { id: target.id }, data: { deletedAt: null } })
+    expect((await follow()).statusCode).toBe(200)
+  })
 })
