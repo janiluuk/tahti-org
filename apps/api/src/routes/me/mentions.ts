@@ -13,7 +13,8 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { userName, withSafeName } from '../../lib/safe-names.js'
+import { mentionSourceSelect, resolveMentionSources } from '../../lib/mention-sources.js'
+import { userName } from '../../lib/safe-names.js'
 
 // M15 — artist mention preferences and mute management
 const mentionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -44,22 +45,16 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/mentions', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const query = request.query as { limit?: string }
-    const limit = Math.min(parseInt(query.limit ?? '20', 10), 50)
+    const asked = Number.parseInt(query.limit ?? '', 10)
+    const limit = asked > 0 ? Math.min(asked, 50) : 20
 
     const mentions = await fastify.prisma.mention.findMany({
       where: { targetUserId: user.id },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: {
-        id: true,
-        surface: true,
-        createdAt: true,
-        mentioner: { select: { username: true, displayName: true, avatarUrl: true } },
-      },
+      select: mentionSourceSelect,
     })
-    return reply.send({
-      mentions: mentions.map((m) => ({ ...m, mentioner: withSafeName(m.mentioner) })),
-    })
+    return reply.send({ mentions: await resolveMentionSources(fastify.prisma, mentions) })
   })
 
   // PATCH /api/me/mentions/settings — toggle mentions on/off
