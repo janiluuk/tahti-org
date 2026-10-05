@@ -38,8 +38,10 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { username } = routeParams
 
-      const artist = await fastify.prisma.user.findUnique({
-        where: { username },
+      // Only the follow itself is refused for a suspended or deleted artist;
+      // unfollowing and reading the count below still work.
+      const artist = await fastify.prisma.user.findFirst({
+        where: { username, ...availableUserWhere },
         select: { id: true, username: true, displayName: true },
       })
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })

@@ -8,7 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { notifyArtistOfNewRepost } from '@tahti/db'
+import { availableUserWhere, notifyArtistOfNewRepost } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 
 // Distinct from routes/engagement/sound-repost-ack.ts (SoundRepostAck — an
@@ -42,7 +42,12 @@ const soundRepostRoutes: FastifyPluginAsync = async (fastify) => {
         const { slug, itemId } = routeParams
 
         const item = await fastify.prisma.sound.findFirst({
-          where: { id: itemId, channel: { slug }, status: 'READY', isPublic: true },
+          where: {
+            id: itemId,
+            channel: { slug, user: availableUserWhere },
+            status: 'READY',
+            isPublic: true,
+          },
           select: { id: true, title: true, channel: { select: { slug: true, userId: true } } },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })

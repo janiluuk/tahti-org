@@ -8,7 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { notifyArtistOfNewLike } from '@tahti/db'
+import { availableUserWhere, notifyArtistOfNewLike } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -38,7 +38,12 @@ const soundLikeRoutes: FastifyPluginAsync = async (fastify) => {
         const { slug, itemId } = routeParams
 
         const item = await fastify.prisma.sound.findFirst({
-          where: { id: itemId, channel: { slug }, status: 'READY', isPublic: true },
+          where: {
+            id: itemId,
+            channel: { slug, user: availableUserWhere },
+            status: 'READY',
+            isPublic: true,
+          },
           select: { id: true, title: true, channel: { select: { slug: true, userId: true } } },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })
