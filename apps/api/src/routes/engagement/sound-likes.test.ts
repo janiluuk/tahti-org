@@ -115,6 +115,21 @@ describe('sound item like routes', () => {
     expect(res.json()).toEqual({ liked: false, likeCount: 0 })
   })
 
+  it('tells the artist once when a track is loved, unloved and loved again', async () => {
+    const url = `/api/v1/c/${channelSlug}/sounds/${itemId}/like`
+    const headers = { cookie: likerCookie }
+    await app.inject({ method: 'POST', url, headers })
+    await app.inject({ method: 'DELETE', url, headers })
+    const again = await app.inject({ method: 'POST', url, headers })
+    expect(again.json().liked).toBe(true)
+    expect(
+      await prisma.notification.count({
+        where: { type: 'NEW_LIKE', actorUserId: likerId, url: `/t/${itemId}` },
+      }),
+    ).toBe(1)
+    await app.inject({ method: 'DELETE', url, headers })
+  })
+
   it('404s for an unknown sound item', async () => {
     const res = await app.inject({
       method: 'POST',

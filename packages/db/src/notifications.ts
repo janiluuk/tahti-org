@@ -152,12 +152,45 @@ export async function notifyFollowersOfNewRelease(
   })
 }
 
+const REPEAT_QUIET_MS = 24 * 60 * 60 * 1000
+
+/** True when this person already triggered the same notification for the same
+ * thing within a day. Following, loving and reposting can all be undone and
+ * done again, and each round used to notify the artist afresh, which made
+ * the toggle a way to flood someone's inbox. */
+async function alreadyToldToday(
+  prisma: PrismaClient,
+  match: {
+    userId: string
+    actorUserId: string
+    type: 'NEW_FOLLOWER' | 'NEW_LIKE' | 'NEW_REPOST'
+    url: string
+  },
+  now: Date = new Date(),
+): Promise<boolean> {
+  const recent = await prisma.notification.findFirst({
+    where: { ...match, createdAt: { gte: new Date(now.getTime() - REPEAT_QUIET_MS) } },
+    select: { id: true },
+  })
+  return recent !== null
+}
+
 /** M40: notify an artist that someone followed them. */
 export async function notifyArtistOfNewFollower(
   prisma: PrismaClient,
   artistUserId: string,
   follower: { id: string; username: string; displayName: string },
 ): Promise<void> {
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: follower.id,
+      type: 'NEW_FOLLOWER',
+      url: `/u/${follower.username}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
@@ -178,6 +211,16 @@ export async function notifyArtistOfNewLike(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === liker.id) return
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: liker.id,
+      type: 'NEW_LIKE',
+      url: `/t/${item.id}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
@@ -222,6 +265,16 @@ export async function notifyArtistOfNewRepost(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === reposter.id) return
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: reposter.id,
+      type: 'NEW_REPOST',
+      url: `/t/${item.id}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
