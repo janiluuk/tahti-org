@@ -81,6 +81,21 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
   }
 }
 
+// Routes that change how the account is signed in to: minting or revoking API
+// tokens, setting up or turning off 2FA, asking for the account to be deleted.
+// A personal API token must not be able to do these, or a leaked token could
+// make itself permanent or weaken the account it belongs to.
+export async function requireSession(request: FastifyRequest, reply: FastifyReply) {
+  await requireAuth(request, reply)
+  if (reply.sent) return
+  if (request.apiTokenScopes !== null) {
+    return reply.status(403).send({
+      error: 'Sign in on tahti.live to do this. An API token cannot.',
+      code: 'session_required',
+    })
+  }
+}
+
 // Members-only routes (the yhdistys register). Requires an authenticated user
 // who has an active membership.
 export async function requireMember(request: FastifyRequest, reply: FastifyReply) {

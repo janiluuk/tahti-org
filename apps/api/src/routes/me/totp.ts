@@ -10,7 +10,7 @@ import {
   TotpStatusResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
-import { requireAuth } from '../../plugins/auth.js'
+import { requireAuth, requireSession } from '../../plugins/auth.js'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import { generateTotpSecret, totpUri, verifyTotpCode } from '../../lib/totp.js'
 import { encryptTotpSecret, decryptTotpSecret } from '../../lib/totp-secret-enc.js'
@@ -42,7 +42,7 @@ const meTotpRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/me/totp/setup',
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: { tags: ['auth'], response: openApiResponse(TotpSetupResponseSchema, 'TotpSetup') },
     },
     async (request, reply) => {
@@ -62,7 +62,7 @@ const meTotpRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/me/totp/confirm',
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: {
         tags: ['auth'],
         response: openApiResponse(TotpConfirmResponseSchema, 'TotpConfirm'),
@@ -108,7 +108,7 @@ const meTotpRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/totp/disable { password }
   fastify.post(
     '/api/me/totp/disable',
-    { preHandler: requireAuth, schema: { tags: ['auth'] } },
+    { preHandler: requireSession, schema: { tags: ['auth'] } },
     async (request, reply) => {
       const user = request.sessionUser!
       const parsed = TotpDisableSchema.safeParse(request.body)

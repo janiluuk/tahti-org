@@ -83,7 +83,7 @@ describe('personal API tokens', () => {
 
     const me = await app.inject({
       method: 'GET',
-      url: '/api/me/api-tokens',
+      url: '/api/auth/me',
       headers: { authorization: `Bearer ${token}` },
     })
     expect(me.statusCode).toBe(200)
@@ -99,10 +99,10 @@ describe('personal API tokens', () => {
     const token = create.json().token as string
 
     const blocked = await app.inject({
-      method: 'POST',
-      url: '/api/me/api-tokens',
+      method: 'PATCH',
+      url: '/api/me/profile',
       headers: { authorization: `Bearer ${token}` },
-      payload: { name: 'should-not-be-created' },
+      payload: { bio: 'should not be saved' },
     })
     expect(blocked.statusCode).toBe(403)
   })
@@ -115,14 +115,53 @@ describe('personal API tokens', () => {
       payload: { name: 'read-write', scopes: ['read', 'write'] },
     })
     const token = create.json().token as string
-    const createdId = create.json().id as string
 
-    const revoke = await app.inject({
-      method: 'DELETE',
-      url: `/api/me/api-tokens/${createdId}`,
+    const saved = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
       headers: { authorization: `Bearer ${token}` },
+      payload: { bio: 'saved with a write token' },
     })
-    expect(revoke.statusCode).toBe(204)
+    expect(saved.statusCode).toBe(200)
+  })
+
+  it('never lets a token manage tokens, 2FA or account deletion', async () => {
+    const create = await app.inject({
+      method: 'POST',
+      url: '/api/me/api-tokens',
+      headers: { cookie },
+      payload: { name: 'self-serving', scopes: ['read', 'write'] },
+    })
+    const token = create.json().token as string
+    const id = create.json().id as string
+    const authorization = `Bearer ${token}`
+    const before = await prisma.apiToken.count({ where: { revokedAt: null } })
+
+    const attempts = [
+      { method: 'GET', url: '/api/me/api-tokens' },
+      { method: 'POST', url: '/api/me/api-tokens', payload: { name: 'spawn', scopes: ['write'] } },
+      { method: 'DELETE', url: `/api/me/api-tokens/${id}` },
+      { method: 'POST', url: '/api/me/totp/setup' },
+      { method: 'POST', url: '/api/me/totp/disable', payload: { code: '000000' } },
+      {
+        method: 'POST',
+        url: '/api/me/account/deletion-request',
+        payload: { reason: 'not me' },
+      },
+    ] as const
+    for (const attempt of attempts) {
+      const res = await app.inject({ ...attempt, headers: { authorization } })
+      expect(res.statusCode, `${attempt.method} ${attempt.url}`).toBe(403)
+      expect(res.json().code).toBe('session_required')
+    }
+    expect(await prisma.apiToken.count({ where: { revokedAt: null } })).toBe(before)
+
+    const status = await app.inject({
+      method: 'GET',
+      url: '/api/me/totp/status',
+      headers: { authorization },
+    })
+    expect(status.statusCode).toBe(200)
   })
 
   it('rejects an unknown or revoked bearer token', async () => {
