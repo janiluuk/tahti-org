@@ -94,6 +94,9 @@ export async function searchUsers(prisma: PrismaClient, query: string, excludeUs
     where: {
       id: { not: excludeUserId },
       ...availableUserWhere,
+      // Nobody the searcher blocked, and nobody who blocked the searcher.
+      blocksReceived: { none: { blockerUserId: excludeUserId } },
+      blocksMade: { none: { blockedUserId: excludeUserId } },
       OR: [
         { username: { contains: q, mode: 'insensitive' } },
         { displayName: { contains: q, mode: 'insensitive' } },
