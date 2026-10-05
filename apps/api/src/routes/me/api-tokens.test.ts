@@ -196,4 +196,36 @@ describe('personal API tokens', () => {
     })
     expect(reuse.statusCode).toBe(401)
   })
+
+  it('does not count expired tokens toward the limit', async () => {
+    await prisma.apiToken.deleteMany({ where: { userId } })
+    await prisma.apiToken.createMany({
+      data: Array.from({ length: 20 }, (_, i) => ({
+        userId,
+        name: `expired-${i}`,
+        tokenHash: `api-token-test-expired-${i}-${Date.now()}`,
+        tokenPrefix: 'tahti_ex',
+        expiresAt: new Date(Date.now() - 60_000),
+      })),
+    })
+    const fresh = await app.inject({
+      method: 'POST',
+      url: '/api/me/api-tokens',
+      headers: { cookie },
+      payload: { name: 'after-expiry' },
+    })
+    expect(fresh.statusCode).toBe(201)
+
+    await prisma.apiToken.updateMany({
+      where: { userId, name: { startsWith: 'expired-' } },
+      data: { expiresAt: new Date(Date.now() + 86_400_000) },
+    })
+    const full = await app.inject({
+      method: 'POST',
+      url: '/api/me/api-tokens',
+      headers: { cookie },
+      payload: { name: 'one-too-many' },
+    })
+    expect(full.statusCode).toBe(400)
+  })
 })
