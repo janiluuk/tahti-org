@@ -80,6 +80,25 @@ describe('announcing a new public upload', () => {
     expect(await isFirstTranscode(prisma, track.id, 'ERROR')).toBe(false)
   })
 
+  it('links to the track and announces each track only once', async () => {
+    const track = await sound('second-wind', true)
+    await announceNewPublicTrack(prisma, track.id)
+    await announceNewPublicTrack(prisma, track.id)
+    const notes = await prisma.notification.findMany({
+      where: { userId: followerId, type: 'NEW_TRACK', body: 'second-wind' },
+    })
+    expect(notes).toHaveLength(1)
+    expect(notes[0]?.url).toBe(`/t/${track.id}`)
+
+    const other = await sound('third-coast', true)
+    await announceNewPublicTrack(prisma, other.id)
+    expect(
+      await prisma.notification.count({
+        where: { userId: followerId, type: 'NEW_TRACK', body: 'third-coast' },
+      }),
+    ).toBe(1)
+  })
+
   it('stays quiet for a private upload', async () => {
     const track = await sound('demo-cut', false)
     await announceNewPublicTrack(prisma, track.id)
