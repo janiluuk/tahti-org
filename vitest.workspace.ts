@@ -8,5 +8,8 @@ export default defineWorkspace([
   'packages/db',
   'packages/ledger',
   'packages/ui',
+  // Runs against a real API instance, so a route change that breaks the
+  // published SDK's own tests fails the PR, not the publish job on main.
+  'packages/api-client',
   'services/orchestrator',
 ])
