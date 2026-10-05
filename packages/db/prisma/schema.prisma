@@ -927,6 +927,8 @@ model User {
   collections                    Collection[]
   artistFollowers                ArtistFollow[]                  @relation("ArtistFollowers")
   artistFollowing                ArtistFollow[]                  @relation("ArtistFollowing")
+  blocksMade                     UserBlock[]                     @relation("UserBlocker")
+  blocksReceived                 UserBlock[]                     @relation("UserBlocked")
   soundLikes                     SoundLike[]
   collectionSubscriptions        CollectionSubscription[]
   collectionItemsAdded           CollectionItem[]                @relation("CollectionItemAddedBy")
@@ -2670,6 +2672,20 @@ model ListenSession {
   @@index([countryCode, startedAt])
   @@index([byFingerprint, channelId, soundId, endedAt])
   @@index([endedAt])
+  @@schema("engagement")
+}
+
+// One account blocking another. While a block exists in either direction the
+// two cannot send each other direct messages or start a conversation.
+model UserBlock {
+  blockerUserId String
+  blockedUserId String
+  blocker       User     @relation("UserBlocker", fields: [blockerUserId], references: [id], onDelete: Cascade)
+  blocked       User     @relation("UserBlocked", fields: [blockedUserId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@id([blockerUserId, blockedUserId])
+  @@index([blockedUserId])
   @@schema("engagement")
 }
 

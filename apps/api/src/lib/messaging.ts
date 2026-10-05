@@ -331,6 +331,23 @@ export async function sendMessage(
   })
   if (unavailableRecipient) return { status: 'recipient_unavailable' as const }
 
+  // A block in either direction closes the thread. The sender gets the same
+  // answer as for an unavailable account, so a block is not announced.
+  const recipients = await prisma.conversationParticipant.findMany({
+    where: { conversationId, userId: { not: sender.id } },
+    select: { userId: true },
+  })
+  const blocked = await prisma.userBlock.findFirst({
+    where: {
+      OR: recipients.flatMap((recipient) => [
+        { blockerUserId: sender.id, blockedUserId: recipient.userId },
+        { blockerUserId: recipient.userId, blockedUserId: sender.id },
+      ]),
+    },
+    select: { blockerUserId: true },
+  })
+  if (blocked) return { status: 'recipient_unavailable' as const }
+
   const [message] = await prisma.$transaction([
     prisma.message.create({
       data: { conversationId, senderId: sender.id, body },

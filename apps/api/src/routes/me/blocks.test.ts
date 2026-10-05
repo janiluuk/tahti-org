@@ -1,0 +1,135 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { prisma } from '@tahti/db'
+import { buildApp } from '../../server.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
+
+const PREFIX = 'me-blocks-test-'
+
+describe('/api/me/blocks', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let cookieA: string
+  let cookieB: string
+  let conversationId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    const a = await createTestArtist(prisma, {
+      email: `${PREFIX}a@example.com`,
+      username: `${PREFIX}a`,
+      displayName: 'Block Alex',
+    })
+    const b = await createTestArtist(prisma, {
+      email: `${PREFIX}b@example.com`,
+      username: `${PREFIX}b`,
+      displayName: 'b-hidden@example.com',
+    })
+    cookieA = await sessionCookieFor(prisma, a.id)
+    cookieB = await sessionCookieFor(prisma, b.id)
+    const started = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}b` },
+    })
+    conversationId = started.json().conversationId
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  const send = (cookie: string) =>
+    app.inject({
+      method: 'POST',
+      url: `/api/me/messages/conversations/${conversationId}/messages`,
+      headers: { cookie },
+      payload: { body: 'hello' },
+    })
+
+  it('requires auth and refuses blocking yourself or nobody', async () => {
+    expect((await app.inject({ method: 'GET', url: '/api/me/blocks' })).statusCode).toBe(401)
+    const self = await app.inject({
+      method: 'POST',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}a` },
+    })
+    expect(self.statusCode).toBe(400)
+    const nobody = await app.inject({
+      method: 'POST',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}nobody` },
+    })
+    expect(nobody.statusCode).toBe(404)
+  })
+
+  it('blocks an account, lists it with a safe name, and is fine to repeat', async () => {
+    expect((await send(cookieB)).statusCode).toBe(201)
+
+    for (let i = 0; i < 2; i++) {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/me/blocks',
+        headers: { cookie: cookieA },
+        payload: { username: `${PREFIX}b` },
+      })
+      expect(res.statusCode).toBe(201)
+    }
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+    })
+    expect(list.json().blocked).toHaveLength(1)
+    expect(list.json().blocked[0]).toMatchObject({
+      username: `${PREFIX}b`,
+      displayName: `${PREFIX}b`,
+    })
+    expect(list.body).not.toContain('@example.com')
+
+    const theirs = await app.inject({
+      method: 'GET',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieB },
+    })
+    expect(theirs.json().blocked).toEqual([])
+  })
+
+  it('stops direct messages in both directions without saying who blocked', async () => {
+    const fromBlocked = await send(cookieB)
+    const fromBlocker = await send(cookieA)
+    expect(fromBlocked.statusCode).toBe(403)
+    expect(fromBlocker.statusCode).toBe(403)
+    expect(fromBlocked.json()).toEqual(fromBlocker.json())
+
+    const restart = await app.inject({
+      method: 'POST',
+      url: '/api/me/messages/conversations',
+      headers: { cookie: cookieB },
+      payload: { username: `${PREFIX}a` },
+    })
+    expect(restart.statusCode).toBe(403)
+  })
+
+  it('lets them talk again after an unblock', async () => {
+    const unblock = await app.inject({
+      method: 'DELETE',
+      url: `/api/me/blocks/${PREFIX}b`,
+      headers: { cookie: cookieA },
+    })
+    expect(unblock.statusCode).toBe(204)
+    expect((await send(cookieB)).statusCode).toBe(201)
+    expect((await send(cookieA)).statusCode).toBe(201)
+  })
+})
