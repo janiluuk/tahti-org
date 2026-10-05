@@ -225,6 +225,29 @@ describe('/api/me/blocks', () => {
     })
   })
 
+  it('does not notify the blocker when the blocked account loves their track', async () => {
+    const a = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}a` },
+      select: { id: true, channel: { select: { id: true, slug: true } } },
+    })
+    const b = await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}b` } })
+    const track = await prisma.sound.create({
+      data: { channelId: a.channel!.id, title: 'Quiet Love', status: 'READY', isPublic: true },
+    })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/c/${a.channel!.slug}/sounds/${track.id}/like`,
+      headers: { cookie: cookieB },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().liked).toBe(true)
+    expect(
+      await prisma.notification.count({
+        where: { userId: a.id, actorUserId: b.id, type: 'NEW_LIKE' },
+      }),
+    ).toBe(0)
+  })
+
   it('lets them talk again after an unblock', async () => {
     const unblock = await app.inject({
       method: 'DELETE',

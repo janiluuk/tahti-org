@@ -157,6 +157,25 @@ export async function notifyFollowersOfNewRelease(
   })
 }
 
+/** True when either account has blocked the other. Someone you blocked can
+ * still love or repost a public track, but you are not told about it. */
+async function blockedEitherWay(
+  prisma: PrismaClient,
+  userId: string,
+  otherUserId: string,
+): Promise<boolean> {
+  const block = await prisma.userBlock.findFirst({
+    where: {
+      OR: [
+        { blockerUserId: userId, blockedUserId: otherUserId },
+        { blockerUserId: otherUserId, blockedUserId: userId },
+      ],
+    },
+    select: { blockerUserId: true },
+  })
+  return block !== null
+}
+
 const REPEAT_QUIET_MS = 24 * 60 * 60 * 1000
 
 /** True when this person already triggered the same notification for the same
@@ -186,6 +205,7 @@ export async function notifyArtistOfNewFollower(
   artistUserId: string,
   follower: { id: string; username: string; displayName: string },
 ): Promise<void> {
+  if (await blockedEitherWay(prisma, artistUserId, follower.id)) return
   if (
     await alreadyToldToday(prisma, {
       userId: artistUserId,
@@ -216,6 +236,7 @@ export async function notifyArtistOfNewLike(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === liker.id) return
+  if (await blockedEitherWay(prisma, artistUserId, liker.id)) return
   if (
     await alreadyToldToday(prisma, {
       userId: artistUserId,
@@ -270,6 +291,7 @@ export async function notifyArtistOfNewRepost(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === reposter.id) return
+  if (await blockedEitherWay(prisma, artistUserId, reposter.id)) return
   if (
     await alreadyToldToday(prisma, {
       userId: artistUserId,
