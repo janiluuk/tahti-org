@@ -145,6 +145,27 @@ describe('sound item like routes', () => {
     await prisma.user.update({ where: { id: owner.userId }, data: { suspendedAt: null } })
   })
 
+  it('hides the count of a private track from everyone but its artist', async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({
+      where: { slug: channelSlug },
+      select: { userId: true },
+    })
+    await prisma.sound.update({ where: { id: itemId }, data: { isPublic: false } })
+    const url = `/api/v1/c/${channelSlug}/sounds/${itemId}/like`
+    expect((await app.inject({ method: 'GET', url })).statusCode).toBe(404)
+    expect(
+      (await app.inject({ method: 'GET', url, headers: { cookie: likerCookie } })).statusCode,
+    ).toBe(404)
+    const mine = await app.inject({
+      method: 'GET',
+      url,
+      headers: { cookie: await sessionCookieFor(prisma, owner.userId) },
+    })
+    expect(mine.statusCode).toBe(200)
+    await prisma.sound.update({ where: { id: itemId }, data: { isPublic: true } })
+    expect((await app.inject({ method: 'GET', url })).statusCode).toBe(200)
+  })
+
   it('404s for an unknown sound item', async () => {
     const res = await app.inject({
       method: 'POST',

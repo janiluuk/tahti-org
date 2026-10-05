@@ -379,14 +379,33 @@ export async function notifyUserOfNewMessage(
   conversationId: string,
   messageBody: string,
 ): Promise<void> {
+  const url = `/dashboard/messages/${conversationId}`
+  const title = `${actorDisplayName(sender)} sent you a message`
+  const body = messageBody.slice(0, 140)
+
+  // One unread notification per conversation: a second message while the
+  // first is still unread refreshes it, instead of stacking a new bell entry
+  // for every line someone types.
+  const unread = await prisma.notification.findFirst({
+    where: { userId: recipientUserId, type: 'NEW_MESSAGE', url, readAt: null },
+    select: { id: true },
+  })
+  if (unread) {
+    await prisma.notification.update({
+      where: { id: unread.id },
+      data: { actorUserId: sender.id, title, body, createdAt: new Date() },
+    })
+    return
+  }
+
   await prisma.notification.create({
     data: {
       userId: recipientUserId,
       type: 'NEW_MESSAGE',
       actorUserId: sender.id,
-      title: `${actorDisplayName(sender)} sent you a message`,
-      body: messageBody.slice(0, 140),
-      url: `/dashboard/messages/${conversationId}`,
+      title,
+      body,
+      url,
     },
   })
 }
