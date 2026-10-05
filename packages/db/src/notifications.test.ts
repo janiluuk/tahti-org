@@ -17,11 +17,15 @@ import {
   notifyUsersOfChatMention,
 } from './notifications.js'
 
-function fakePrisma(recent: { id: string } | null = null) {
+function fakePrisma(recent: { id: string } | null = null, blocked = false) {
   const create = vi.fn().mockResolvedValue({})
   const findFirst = vi.fn().mockResolvedValue(recent)
+  const findBlock = vi.fn().mockResolvedValue(blocked ? { blockerUserId: 'artist-1' } : null)
   return {
-    prisma: { notification: { create, findFirst } } as unknown as PrismaClient,
+    prisma: {
+      notification: { create, findFirst },
+      userBlock: { findFirst: findBlock },
+    } as unknown as PrismaClient,
     create,
     findFirst,
   }
@@ -76,6 +80,7 @@ describe('notification titles never carry an email address', () => {
       artistFollow: { findMany: vi.fn().mockResolvedValue([{ followerUserId: 'follower-1' }]) },
       collectionItem: { findMany: vi.fn().mockResolvedValue([]) },
       collectionSubscription: { findMany: vi.fn().mockResolvedValue([]) },
+      userBlock: { findFirst: vi.fn().mockResolvedValue(null) },
     } as unknown as PrismaClient
     const titles = () =>
       [
@@ -186,5 +191,15 @@ describe('follow, love and repost notices are not repeated within a day', () => 
     await notifyArtistOfNewLike(prisma, 'artist-1', actor, item)
     await notifyArtistOfNewRepost(prisma, 'artist-1', actor, item)
     expect(create).toHaveBeenCalledTimes(3)
+  })
+})
+
+describe('notices from a blocked account', () => {
+  it('are not sent for a follow, love or repost', async () => {
+    const { prisma, create } = fakePrisma(null, true)
+    await notifyArtistOfNewFollower(prisma, 'artist-1', actor)
+    await notifyArtistOfNewLike(prisma, 'artist-1', actor, item)
+    await notifyArtistOfNewRepost(prisma, 'artist-1', actor, item)
+    expect(create).not.toHaveBeenCalled()
   })
 })
