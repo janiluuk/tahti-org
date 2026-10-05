@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { availableUserWhere } from '@tahti/db'
 import type { PrismaClient } from '@tahti/db'
 import { userName } from './safe-names.js'
 
@@ -19,6 +20,21 @@ export const mentionSourceSelect = {
     },
   },
 } as const
+
+/** The mentions of `targetUserId` worth listing: not from a suspended or
+ * deleted account, not from someone the target has muted, and not from
+ * someone with a block between the two in either direction. */
+export function listedMentionsWhere(targetUserId: string) {
+  return {
+    targetUserId,
+    mentioner: {
+      ...availableUserWhere,
+      mentionsMutedBy: { none: { muterId: targetUserId } },
+      blocksMade: { none: { blockedUserId: targetUserId } },
+      blocksReceived: { none: { blockerUserId: targetUserId } },
+    },
+  }
+}
 
 type MentionRow = {
   id: string

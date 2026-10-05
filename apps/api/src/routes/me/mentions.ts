@@ -13,7 +13,11 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { mentionSourceSelect, resolveMentionSources } from '../../lib/mention-sources.js'
+import {
+  listedMentionsWhere,
+  mentionSourceSelect,
+  resolveMentionSources,
+} from '../../lib/mention-sources.js'
 import { userName } from '../../lib/safe-names.js'
 
 // M15 — artist mention preferences and mute management
@@ -49,7 +53,7 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     const limit = asked > 0 ? Math.min(asked, 50) : 20
 
     const mentions = await fastify.prisma.mention.findMany({
-      where: { targetUserId: user.id },
+      where: listedMentionsWhere(user.id),
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: mentionSourceSelect,

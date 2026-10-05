@@ -115,6 +115,15 @@ describe('M15 — mention settings API', () => {
         sourceId: mentioner.id,
       },
     })
+    const list = await app.inject({ method: 'GET', url: '/api/me/mentions', headers: { cookie } })
+    const { mentions } = list.json() as {
+      mentions: Array<{ mentioner: { username: string; displayName: string } }>
+    }
+    expect(mentions[0]!.mentioner).toMatchObject({
+      username: 'mention-email-name',
+      displayName: 'mention-email-name',
+    })
+
     const mute = await app.inject({
       method: 'POST',
       url: '/api/me/mentions/mute/mention-email-name',
@@ -132,14 +141,12 @@ describe('M15 — mention settings API', () => {
       displayName: 'mention-email-name',
     })
 
-    const list = await app.inject({ method: 'GET', url: '/api/me/mentions', headers: { cookie } })
-    const { mentions } = list.json() as {
-      mentions: Array<{ mentioner: { username: string; displayName: string } }>
-    }
-    expect(mentions[0]!.mentioner).toMatchObject({
-      username: 'mention-email-name',
-      displayName: 'mention-email-name',
+    const afterMute = await app.inject({
+      method: 'GET',
+      url: '/api/me/mentions',
+      headers: { cookie },
     })
+    expect(afterMute.body).not.toContain('mention-email-name')
   })
 
   it('says where each mention happened', async () => {
@@ -195,5 +202,50 @@ describe('M15 — mention settings API', () => {
       headers: { cookie },
     })
     expect(res.statusCode).toBe(200)
+  })
+
+  it('leaves out mentions from blocked and suspended accounts until the block is lifted', async () => {
+    const user = await prisma.user.findUniqueOrThrow({ where: { username: 'mention-api-user' } })
+    const make = async (name: string) => {
+      const mentioner = await createTestArtist(prisma, {
+        email: `${PREFIX}${name}@example.com`,
+        username: `mention-${name}`,
+      })
+      await prisma.mention.create({
+        data: {
+          mentionerUserId: mentioner.id,
+          targetUserId: user.id,
+          surface: 'BIO',
+          sourceId: mentioner.id,
+        },
+      })
+      return mentioner
+    }
+    const blockedByMe = await make('hide-blocked')
+    const blockedMe = await make('hide-blocker')
+    const suspended = await make('hide-suspended')
+    await make('hide-kept')
+    await prisma.userBlock.createMany({
+      data: [
+        { blockerUserId: user.id, blockedUserId: blockedByMe.id },
+        { blockerUserId: blockedMe.id, blockedUserId: user.id },
+      ],
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+
+    const names = async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/me/mentions', headers: { cookie } })
+      return (res.json() as { mentions: Array<{ mentioner: { username: string } }> }).mentions.map(
+        (m) => m.mentioner.username,
+      )
+    }
+    const listed = await names()
+    expect(listed).toContain('mention-hide-kept')
+    expect(listed).not.toContain('mention-hide-blocked')
+    expect(listed).not.toContain('mention-hide-blocker')
+    expect(listed).not.toContain('mention-hide-suspended')
+
+    await prisma.userBlock.deleteMany({ where: { blockerUserId: user.id } })
+    expect(await names()).toContain('mention-hide-blocked')
   })
 })
