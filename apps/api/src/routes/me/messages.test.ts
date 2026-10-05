@@ -221,6 +221,34 @@ describe('M38 — private messaging', () => {
     expect(convoForBAfter?.unreadCount).toBe(0)
   })
 
+  it('keeps one unread notification per conversation, showing the latest message', async () => {
+    const send = (body: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/me/messages/conversations/${conversationId}/messages`,
+        headers: { cookie: cookieA, 'content-type': 'application/json' },
+        payload: { body },
+      })
+    await prisma.notification.deleteMany({ where: { userId: userB.id, type: 'NEW_MESSAGE' } })
+    await send('first line')
+    await send('second line')
+    await send('third line')
+    const unread = await prisma.notification.findMany({
+      where: { userId: userB.id, type: 'NEW_MESSAGE', readAt: null },
+    })
+    expect(unread).toHaveLength(1)
+    expect(unread[0]?.body).toBe('third line')
+
+    await prisma.notification.updateMany({
+      where: { userId: userB.id, type: 'NEW_MESSAGE' },
+      data: { readAt: new Date() },
+    })
+    await send('after reading')
+    expect(
+      await prisma.notification.count({ where: { userId: userB.id, type: 'NEW_MESSAGE' } }),
+    ).toBe(2)
+  })
+
   it('shows the newest 200 messages, oldest first, in a long thread', async () => {
     const userC = await prisma.user.findUniqueOrThrow({
       where: { username: 'dm-test-casey' },
