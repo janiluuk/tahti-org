@@ -91,6 +91,16 @@ const meBlocksRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      // Neither stays a moderator of the other's channel.
+      await fastify.prisma.channelModerator.deleteMany({
+        where: {
+          OR: [
+            { userId: target.id, channel: { userId: user.id } },
+            { userId: user.id, channel: { userId: target.id } },
+          ],
+        },
+      })
+
       const block = await fastify.prisma.userBlock.upsert({
         where: {
           blockerUserId_blockedUserId: { blockerUserId: user.id, blockedUserId: target.id },

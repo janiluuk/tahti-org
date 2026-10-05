@@ -248,6 +248,46 @@ describe('/api/me/blocks', () => {
     ).toBe(0)
   })
 
+  it('ends moderator rights between the two and lists the block in the data export', async () => {
+    const a = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}a` },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    const b = await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}b` } })
+    await app.inject({
+      method: 'DELETE',
+      url: `/api/me/blocks/${PREFIX}b`,
+      headers: { cookie: cookieA },
+    })
+    await prisma.channelModerator.create({ data: { channelId: a.channel!.id, userId: b.id } })
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/blocks',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}b` },
+    })
+    expect(await prisma.channelModerator.count({ where: { userId: b.id } })).toBe(0)
+
+    const again = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/moderators',
+      headers: { cookie: cookieA },
+      payload: { username: `${PREFIX}b` },
+    })
+    expect(again.statusCode).toBe(404)
+
+    const exported = await app.inject({
+      method: 'GET',
+      url: '/api/me/data-export.json',
+      headers: { cookie: cookieA },
+    })
+    expect(
+      (exported.json().blockedAccounts as Array<{ blocked: { username: string } }>).map(
+        (row) => row.blocked.username,
+      ),
+    ).toEqual([`${PREFIX}b`])
+  })
+
   it('lets them talk again after an unblock', async () => {
     const unblock = await app.inject({
       method: 'DELETE',
