@@ -2,17 +2,32 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, parseRouteParams } from '@tahti/shared'
+import { z } from 'zod'
+import { IdParamSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
 import { getUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisExport } from '../../lib/queue.js'
+
+const HearthisExportQueuedSchema = z.object({
+  soundId: z.string().min(1),
+  hearthisExportStatus: z.literal('pending'),
+})
 
 const meSoundExportRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/sound/:id/export/hearthis — push this track out to the
   // caller's own hearthis.at account, via their installed hearthis-export credential.
   fastify.post(
     '/api/me/sound/:id/export/hearthis',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Queue hearthis.at export for a sound',
+        description:
+          'Sound-scoped ExportProvider submit (see GET /api/me/export-plugins hearthis-export). Requires installed hearthis-export integration credentials.',
+        response: openApiResponse(HearthisExportQueuedSchema, 'HearthisExportQueued'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)

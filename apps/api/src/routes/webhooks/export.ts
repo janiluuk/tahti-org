@@ -28,7 +28,8 @@ function exportWebhookAuthorized(request: { headers: Record<string, unknown> }):
 /**
  * Provider callback receiver for ExportProvider webhooks.
  * Full Revelator status sync is not wired yet — accept, log, and ack so
- * Nuclear clients and provider sandboxes have a stable URL.
+ * clients and provider sandboxes have a stable URL. Catalog capability
+ * `webhook` stays false until sync lands; webhookPath remains registered.
  */
 const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -49,8 +50,10 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(ProviderParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
+      // Accept when a webhookPath is registered (capability.webhook may stay
+      // false until status sync is implemented — path is still the stable URL).
       const known = EXPORT_PLUGIN_PROVIDERS.some(
-        (provider) => provider.id === routeParams.provider && provider.capabilities.webhook,
+        (provider) => provider.id === routeParams.provider && provider.webhookPath != null,
       )
       if (!known) {
         return reply.status(404).send({ error: 'Unknown export provider' })
@@ -64,7 +67,7 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
               ? Object.keys(request.body as object)
               : [],
         },
-        'export provider webhook accepted (stub)',
+        'export provider webhook accepted (stub — status sync not wired)',
       )
 
       return reply.send({

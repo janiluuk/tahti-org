@@ -59,6 +59,16 @@ Behavioral `ExportProvider` contracts live in
 (`GET /api/me/export-plugins`). Import adapters must not absorb submit /
 status / webhook shapes.
 
+## Honesty rules
+
+- If `capabilities.import` / `fileList` / `search` is true, the matching
+  `importPath` / `listPath` / `searchPath` must be a real route.
+- Never advertise a phantom path (e.g. Bandcamp import was wrongly
+  `/api/v1/imports/bandcamp/add` with no handler — keep `import: false` until
+  Bandcamp API v1 lands).
+- OAuth Mixcloud connect is for **upload to Mixcloud**, not catalog import;
+  embed search lives at `/api/v1/imports/mixcloud/*` and is a separate adapter.
+
 ## Parity checklist for new providers
 
 1. Add a row to `IMPORT_PLUGIN_PROVIDERS` with the correct `kind`.

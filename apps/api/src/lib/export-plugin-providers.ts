@@ -12,6 +12,9 @@ import { EXPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
  * Revelator is the live DSP delivery path. Storefront IDs (spotify, apple, …)
  * remain deep-link stubs until a provider-specific submit exists — they still
  * go through Revelator in Studio distribution.
+ *
+ * hearthis-export submits a *sound* (not a release) via
+ * `POST /api/me/sound/:id/export/hearthis`.
  */
 export const EXPORT_PLUGIN_PROVIDERS: ExportPluginProvider[] = [
   {
@@ -23,10 +26,12 @@ export const EXPORT_PLUGIN_PROVIDERS: ExportPluginProvider[] = [
     capabilities: {
       submit: true,
       status: true,
-      webhook: true,
+      // Receiver accepts callbacks but does not sync status yet — do not claim webhook.
+      webhook: false,
     },
     submitPath: '/api/me/releases/:id/revelator/submit',
     statusPath: '/api/me/releases/:id/revelator',
+    // Stable URL for provider sandboxes / future sync; capability stays false until wired.
     webhookPath: '/api/webhooks/export/revelator',
   },
   {
@@ -90,13 +95,13 @@ export const EXPORT_PLUGIN_PROVIDERS: ExportPluginProvider[] = [
     id: 'hearthis-export',
     name: 'hearthis.at',
     description:
-      'Push a track to a hearthis.at Premium account. Credentials via /api/me/integrations; submit route not yet wired.',
+      'Push a track to a hearthis.at Premium account. Credentials via /api/me/integrations. Sound-scoped submit (not release-scoped).',
     capabilities: {
-      submit: false,
+      submit: true,
       status: false,
       webhook: false,
     },
-    submitPath: null,
+    submitPath: '/api/me/sound/:id/export/hearthis',
     statusPath: null,
     webhookPath: null,
   },

@@ -105,18 +105,17 @@ Shipped in `../tahti-player`: the `PluginRegistryStore` contract + LazyStore
 adapter (`pluginRegistryContract.ts` / `pluginRegistryAdapter.ts`), the
 `PluginRegistryHost` façade (`pluginRegistryHost.ts`), and caller migration
 (core callers now import `pluginRegistryStore`, not `pluginRegistry.ts`
-directly — player PR #46). Contract-test coverage was verified line-by-line
-2026-09-11: 20 of 22 documented scenarios pass; 2 gaps remain open (enable/
-disable persistence across restart — `it.todo` in `App.hydration.test.tsx`;
-and refusing to delete outside the managed plugins dir —
-`removeManagedPluginInstall` has no test at all). Still open, and required
-before real extraction: close those 2 gaps, accept a migration/rollback
-plan, and sign off on the ownership split drafted in
+directly — player PR #46). Unit-test gaps formerly listed here (enable/disable
+persistence across restart; refuse delete outside managed plugins dir) are
+covered in player `App.hydration.test.tsx` and `pluginDir.test.ts` (see player
+`docs/todo/HISTORY.md` 2026-09-15). Still open before real extraction: accept a
+migration/rollback plan and sign off on the ownership split drafted in
 `docs/todo/plugin-registry-extraction.md` §7 (player core / plugin SDK /
 import-provider plugins / tahti-registry / Tahti API). Until then, do not
 change registry keys, bootstrap ordering, plugin discovery semantics, or
 storage location. Full detail: `docs/todo/plugin-registry-extraction.md`
-(this repo) — read that before touching any of the files above.
+(this repo) — read that before touching any of the files above. Cross-repo
+API honesty work: `docs/todo/api-player-gap-mapping.md`.
 
 ## Tahti Radio Discord bot
 

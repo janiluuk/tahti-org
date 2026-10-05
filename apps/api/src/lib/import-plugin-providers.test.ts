@@ -40,6 +40,22 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
       } else {
         expect(provider.oauthStartPath).toBeNull()
       }
+      if (provider.capabilities.import) {
+        expect(provider.importPath).toBeTruthy()
+      }
+      if (provider.capabilities.search) {
+        expect(provider.searchPath).toBeTruthy()
+      }
+      if (provider.capabilities.fileList) {
+        expect(provider.listPath).toBeTruthy()
+      }
     }
+
+    const bandcamp = body.providers.find((provider) => provider.id === 'bandcamp')
+    expect(bandcamp?.capabilities.import).toBe(false)
+    expect(bandcamp?.importPath).toBeNull()
+
+    const googleDrive = body.providers.find((provider) => provider.id === 'google-drive')
+    expect(googleDrive?.importPath).toBe('/api/me/google-drive/import')
   })
 })

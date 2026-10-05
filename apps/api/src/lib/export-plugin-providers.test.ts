@@ -6,7 +6,7 @@ import { ExportPluginProviderListSchema } from '@tahti/shared'
 import { EXPORT_PLUGIN_PROVIDERS } from './export-plugin-providers.js'
 
 describe('EXPORT_PLUGIN_PROVIDERS', () => {
-  it('lists revelator with real submit/status/webhook paths', () => {
+  it('lists revelator with real submit/status paths and honest webhook flag', () => {
     const body = ExportPluginProviderListSchema.parse({
       providers: EXPORT_PLUGIN_PROVIDERS,
     })
@@ -16,11 +16,15 @@ describe('EXPORT_PLUGIN_PROVIDERS', () => {
     expect(revelator?.capabilities).toEqual({
       submit: true,
       status: true,
-      webhook: true,
+      webhook: false,
     })
     expect(revelator?.submitPath).toBe('/api/me/releases/:id/revelator/submit')
     expect(revelator?.statusPath).toBe('/api/me/releases/:id/revelator')
     expect(revelator?.webhookPath).toBe('/api/webhooks/export/revelator')
+
+    const hearthis = body.providers.find((provider) => provider.id === 'hearthis-export')
+    expect(hearthis?.capabilities.submit).toBe(true)
+    expect(hearthis?.submitPath).toBe('/api/me/sound/:id/export/hearthis')
 
     for (const provider of body.providers) {
       if (provider.capabilities.submit) {

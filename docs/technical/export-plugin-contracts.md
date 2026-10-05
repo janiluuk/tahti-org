@@ -16,11 +16,11 @@ Credentials for marketplace installables still live on
 
 ## Live provider: Revelator
 
-| Capability | Route                                        |
-| ---------- | -------------------------------------------- |
-| Submit     | `POST /api/me/releases/:id/revelator/submit` |
-| Status     | `GET /api/me/releases/:id/revelator`         |
-| Webhook    | `POST /api/webhooks/export/revelator`        |
+| Capability | Route                                        | Ready?                                                                      |
+| ---------- | -------------------------------------------- | --------------------------------------------------------------------------- |
+| Submit     | `POST /api/me/releases/:id/revelator/submit` | yes                                                                         |
+| Status     | `GET /api/me/releases/:id/revelator`         | yes                                                                         |
+| Webhook    | `POST /api/webhooks/export/revelator`        | path only — accept-and-log; `capabilities.webhook: false` until status sync |
 
 Uniform ExportProvider aliases (same handlers):
 
@@ -34,14 +34,24 @@ checkout remain Revelator-specific (`…/revelator/billing`, `…/checkout`).
 
 `Authorization: Bearer $INTERNAL_SECRET` or header
 `X-Tahti-Webhook-Secret: $INTERNAL_SECRET`. The receiver currently accepts
-and logs the payload; full Revelator status sync is a follow-up.
+and logs the payload; full Revelator status sync is a follow-up. Until then
+the catalog must not advertise `webhook: true`.
+
+## Live provider: hearthis-export (sound-scoped)
+
+| Capability | Route                                    |
+| ---------- | ---------------------------------------- |
+| Submit     | `POST /api/me/sound/:id/export/hearthis` |
+
+Credentials via `/api/me/integrations` (`hearthis-export`). Status is stored
+on the sound (`hearthisExportStatus`); there is no separate statusPath yet.
 
 ## Deep-link stubs
 
-Storefront IDs (`spotify`, `apple`, `deezer`, `youtube`) and
-`hearthis-export` appear in the catalog with all capabilities `false` and
-null paths. Tahti Player may still deep-link into Studio distribution / Add-ons;
-do not invent per-DSP submit routes until product wires them.
+Storefront IDs (`spotify`, `apple`, `deezer`, `youtube`) appear in the catalog
+with all capabilities `false` and null paths. Tahti Player may still deep-link
+into Studio distribution / Add-ons; do not invent per-DSP submit routes until
+product wires them.
 
 ## Client boundary
 

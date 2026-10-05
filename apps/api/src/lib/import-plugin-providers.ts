@@ -12,18 +12,23 @@ import { IMPORT_PLUGIN_CONTRACT_VERSION } from '@tahti/shared'
  * Keep kinds separate: OAuth, search, and tool/upload adapters are not one
  * universal start/status/import interface. Export/DSP delivery is
  * `GET /api/me/export-plugins` — see `export-plugin-providers.ts`.
+ *
+ * Capability flags must match real routes: never advertise import/fileList/
+ * search with a null or phantom path.
  */
 export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'google-drive',
     name: 'Google Drive',
-    description: "Import audio files from the artist's Google Drive.",
+    description:
+      "Import audio files from the artist's Google Drive (Picker UI via /api/me/google-drive/picker-config, then import job).",
     kind: 'oauth',
     capabilities: {
       configure: true,
       connectionTest: true,
-      fileList: true,
+      // File picking is Google Picker (not a REST listPath); see picker-config.
+      fileList: false,
       import: true,
       search: false,
       playback: false,
@@ -31,26 +36,27 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     oauthStartPath: '/api/me/google-drive/oauth/start',
     statusPath: '/api/me/google-drive',
     listPath: null,
-    importPath: null,
+    importPath: '/api/me/google-drive/import',
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'bandcamp',
     name: 'Bandcamp',
-    description: 'Connect Bandcamp and import albums into the catalog.',
+    description:
+      'Connect Bandcamp. Album listing is a stub until Bandcamp API v1; catalog import is not wired yet.',
     kind: 'oauth',
     capabilities: {
       configure: true,
       connectionTest: true,
       fileList: true,
-      import: true,
+      import: false,
       search: false,
       playback: true,
     },
     oauthStartPath: '/api/me/bandcamp/oauth/start',
     statusPath: '/api/me/bandcamp',
     listPath: '/api/me/bandcamp/albums',
-    importPath: '/api/v1/imports/bandcamp/add',
+    importPath: null,
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
@@ -75,13 +81,14 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'mixcloud',
     name: 'Mixcloud',
-    description: 'Connect Mixcloud for rescue/upload of mixes to/from the archive.',
+    description:
+      'Connect Mixcloud to upload archive mixes to Mixcloud (POST /api/me/sound/:itemId/mixcloud). Catalog import is separate embed search.',
     kind: 'oauth',
     capabilities: {
       configure: true,
       connectionTest: true,
       fileList: false,
-      import: true,
+      import: false,
       search: false,
       playback: false,
     },
@@ -145,7 +152,7 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     },
     oauthStartPath: null,
     statusPath: null,
-    importPath: null,
+    importPath: '/api/uploads/prepare',
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
@@ -164,7 +171,8 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     oauthStartPath: null,
     statusPath: '/api/me/stash',
     listPath: '/api/me/stash',
-    importPath: null,
+    // Stash upload uses the same prepare/complete upload flow as local upload.
+    importPath: '/api/uploads/prepare',
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
@@ -187,14 +195,15 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'radio',
     name: 'Internet radio',
-    description: 'Paste an M3U/M3U8 playlist or direct stream URL to play a station.',
+    description:
+      'Paste an M3U/M3U8 playlist or direct stream URL to play a station (client-side; no search API).',
     kind: 'tool',
     capabilities: {
       configure: false,
       connectionTest: false,
       fileList: false,
       import: false,
-      search: true,
+      search: false,
       playback: true,
     },
     oauthStartPath: null,
