@@ -48,7 +48,7 @@ describe('mentions lib', () => {
     expect(rows[0].surface).toBe('BIO')
   })
 
-  it('recordMentions skips self-mentions and muted artists', async () => {
+  it('recordMentions skips self-mentions and artists who muted the mentioner', async () => {
     const mentioner = await createTestArtist(prisma, {
       email: `${PREFIX}self@example.com`,
       username: 'mention-self',
@@ -59,7 +59,7 @@ describe('mentions lib', () => {
     })
 
     await prisma.mentionMute.create({
-      data: { muterId: mentioner.id, targetUserId: muted.id },
+      data: { muterId: muted.id, targetUserId: mentioner.id },
     })
 
     await recordMentions(
@@ -72,6 +72,31 @@ describe('mentions lib', () => {
 
     const count = await prisma.mention.count({ where: { mentionerUserId: mentioner.id } })
     expect(count).toBe(0)
+  })
+
+  it('recordMentions still reaches an artist the mentioner has muted', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}muter@example.com`,
+      username: 'mention-muter',
+    })
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}heard@example.com`,
+      username: 'mention-heard',
+    })
+
+    await prisma.mentionMute.create({
+      data: { muterId: mentioner.id, targetUserId: target.id },
+    })
+
+    const targetIds = await recordMentions(
+      prisma,
+      mentioner.id,
+      'thanks @mention-heard',
+      'ANNOUNCEMENT',
+      'ann-2',
+    )
+
+    expect(targetIds).toEqual([target.id])
   })
 
   it('recordMentions respects the daily limit of 20', async () => {
