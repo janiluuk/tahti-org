@@ -6,11 +6,19 @@ import {
   HearthisAddTrackRequestSchema,
   HearthisAddTrackResponseSchema,
   HearthisSearchResponseSchema,
+  HearthisSetTracksResponseSchema,
+  HearthisUserSetsResponseSchema,
   HearthisUserTracksResponseSchema,
   mapGenre,
   openApiResponse,
 } from '@tahti/shared'
-import { createHearthisClient, parseHearthisUsername, type HearthisTrack } from '@tahti/hearthis'
+import {
+  createHearthisClient,
+  parseHearthisSetPermalink,
+  parseHearthisUsername,
+  type HearthisPlaylist,
+  type HearthisTrack,
+} from '@tahti/hearthis'
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
@@ -18,6 +26,14 @@ import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 // hearthis.at's read API (search, feed, profiles, tracks) is public — no key/secret required.
 // Mirrors imports/mixcloud-embed.ts: embed-only, we never fetch or re-host hearthis.at audio.
 const hearthis = createHearthisClient()
+
+function yearFromHearthisDate(value: string | null | undefined): number | null {
+  if (!value) return null
+  const match = /^(\d{4})/.exec(value.trim())
+  if (!match) return null
+  const year = Number.parseInt(match[1], 10)
+  return year >= 1900 && year <= 2100 ? year : null
+}
 
 function toTrackResult(track: HearthisTrack) {
   return {
@@ -30,6 +46,35 @@ function toTrackResult(track: HearthisTrack) {
     coverUrl: track.artwork_url ?? null,
     genre: track.genre ?? null,
     streamUrl: track.stream_url ?? null,
+  }
+}
+
+function toSetResult(set: HearthisPlaylist) {
+  const permalink = set.permalink
+  return {
+    id: set.id,
+    permalink,
+    url: `https://hearthis.at/set/${encodeURIComponent(permalink)}/`,
+    title: set.title,
+    description: set.description ?? '',
+    trackCount: set.track_count ?? 0,
+    coverUrl: set.artwork_url ?? null,
+    username: set.user.username,
+    userPermalink: set.user.permalink,
+    year: yearFromHearthisDate(set.release_date ?? set.created_at),
+  }
+}
+
+function toSetTrackResult(track: HearthisTrack, position: number) {
+  const downloadable = track.downloadable === '1' && Boolean(track.download_url)
+  return {
+    ...toTrackResult(track),
+    position,
+    kind: track.type?.trim() || null,
+    releaseDate: track.release_date?.trim() || null,
+    downloadable,
+    downloadUrl: downloadable ? (track.download_url ?? null) : null,
+    downloadFilename: downloadable ? (track.download_filename ?? null) : null,
   }
 }
 
@@ -115,6 +160,70 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.send({ username, tracks: tracks.map(toTrackResult) })
       } catch {
         return reply.status(502).send({ error: 'hearthis.at lookup failed' })
+      }
+    },
+  )
+
+  // GET /api/v1/imports/hearthis/me-sets — artist's hearthis.at Sets (playlists).
+  // On hearthis.at a "Set" is usually an album-like grouping but can also be a playlist.
+  fastify.get(
+    '/api/v1/imports/hearthis/me-sets',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        description:
+          "List the connected artist's hearthis.at Sets (playlists). Requires hearthisUsername on the profile.",
+        response: openApiResponse(HearthisUserSetsResponseSchema, 'HearthisUserSetsResponse'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { hearthisUsername: true },
+      })
+      if (!row?.hearthisUsername) {
+        return reply.send({ username: null, sets: [] })
+      }
+
+      try {
+        const sets = await hearthis.getUserPlaylists(row.hearthisUsername)
+        return reply.send({ username: row.hearthisUsername, sets: sets.map(toSetResult) })
+      } catch {
+        return reply.status(502).send({ error: 'hearthis.at set listing failed' })
+      }
+    },
+  )
+
+  // GET /api/v1/imports/hearthis/sets/:permalink/tracks — tracks inside one Set.
+  fastify.get(
+    '/api/v1/imports/hearthis/sets/:permalink/tracks',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        description:
+          'List tracks in a hearthis.at Set (playlist). Permalink from GET …/me-sets or a set URL.',
+        response: openApiResponse(HearthisSetTracksResponseSchema, 'HearthisSetTracksResponse'),
+      },
+    },
+    async (request, reply) => {
+      const raw = (request.params as { permalink?: string }).permalink ?? ''
+      const permalink = parseHearthisSetPermalink(decodeURIComponent(raw))
+      if (!permalink) {
+        return reply.status(400).send({ error: 'Invalid set permalink' })
+      }
+
+      try {
+        const tracks = await hearthis.getSetTracks(permalink)
+        return reply.send({
+          permalink,
+          url: `https://hearthis.at/set/${encodeURIComponent(permalink)}/`,
+          tracks: tracks.map((track, index) => toSetTrackResult(track, index + 1)),
+        })
+      } catch {
+        return reply.status(502).send({ error: 'hearthis.at set tracks lookup failed' })
       }
     },
   )

@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   createHearthisClient,
   parseHearthisUsername,
+  parseHearthisSetPermalink,
   loginToHearthis,
   uploadTrackToHearthis,
   HearthisLoginError,
@@ -131,6 +132,37 @@ describe('@tahti/hearthis client', () => {
     expect(calledUrl).toContain('count=5')
   })
 
+  it("lists a user's sets/playlists via ?type=playlists", async () => {
+    const fetchMock = mockFetch(200, [
+      {
+        id: '378936',
+        permalink: '378936-9675121',
+        title: 'Recorded sets from gigs',
+        description: 'Recordings',
+        track_count: 176,
+        artwork_url: null,
+        user: SAMPLE_TRACK.user,
+      },
+    ])
+    const client = createHearthisClient({ fetch: fetchMock })
+    const sets = await client.getUserPlaylists('yaniho')
+    expect(sets).toHaveLength(1)
+    expect(sets[0]?.permalink).toBe('378936-9675121')
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).toMatch(/\/yaniho\/\?.*type=playlists/)
+    expect(calledUrl).toContain('count=100')
+  })
+
+  it('lists tracks inside a set via /set/{permalink}/?type=tracks', async () => {
+    const fetchMock = mockFetch(200, [SAMPLE_TRACK])
+    const client = createHearthisClient({ fetch: fetchMock })
+    const tracks = await client.getSetTracks('378936-9675121', { count: 50 })
+    expect(tracks[0]?.title).toBe('Credo')
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).toMatch(/\/set\/378936-9675121\/\?.*type=tracks/)
+    expect(calledUrl).toContain('count=50')
+  })
+
   it('throws on a 200 response carrying {status:"error"} (a gone/unresolvable permalink)', async () => {
     const fetchMock = mockFetch(200, { status: 'error', message: 'Content Gone' })
     const client = createHearthisClient({ fetch: fetchMock })
@@ -174,6 +206,26 @@ describe('parseHearthisUsername', () => {
 
   it('rejects empty input', () => {
     expect(parseHearthisUsername('')).toBeNull()
+  })
+})
+
+describe('parseHearthisSetPermalink', () => {
+  it('extracts the permalink from a set URL', () => {
+    expect(parseHearthisSetPermalink('https://hearthis.at/set/378936-9675121/')).toBe(
+      '378936-9675121',
+    )
+  })
+
+  it('accepts a bare set permalink', () => {
+    expect(parseHearthisSetPermalink('378936-9675121')).toBe('378936-9675121')
+  })
+
+  it('rejects a track URL', () => {
+    expect(parseHearthisSetPermalink('https://hearthis.at/yaniho/credo/')).toBeNull()
+  })
+
+  it('rejects empty input', () => {
+    expect(parseHearthisSetPermalink('')).toBeNull()
   })
 })
 
