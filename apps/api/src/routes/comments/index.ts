@@ -14,6 +14,11 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 import { userName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
+
+// A block between the artist and the commenter closes comments for that
+// person. The wording does not say a block is the reason.
+const BLOCKED_COMMENT_BODY = { error: 'You cannot comment here' }
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -116,6 +121,9 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!item.commentsEnabled) {
       return reply.status(403).send({ error: 'Comments are off for this track' })
     }
+    if (await isBlockedEitherWay(fastify.prisma, item.channel.userId, request.sessionUser!.id)) {
+      return reply.status(403).send(BLOCKED_COMMENT_BODY)
+    }
 
     const comment = await fastify.prisma.comment.create({
       data: {
@@ -185,6 +193,9 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
       if (!channel.commentsEnabled) {
         return reply.status(403).send({ error: 'Comments are off for this channel' })
+      }
+      if (await isBlockedEitherWay(fastify.prisma, channel.userId, request.sessionUser!.id)) {
+        return reply.status(403).send(BLOCKED_COMMENT_BODY)
       }
 
       const comment = await fastify.prisma.comment.create({

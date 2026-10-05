@@ -80,6 +80,17 @@ const meBlocksRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: `You can block at most ${MAX_BLOCKS} accounts` })
       }
 
+      // Blocking also ends any follow between the two, in both directions, so
+      // neither keeps getting the other's notifications.
+      await fastify.prisma.artistFollow.deleteMany({
+        where: {
+          OR: [
+            { followerUserId: user.id, artistUserId: target.id },
+            { followerUserId: target.id, artistUserId: user.id },
+          ],
+        },
+      })
+
       const block = await fastify.prisma.userBlock.upsert({
         where: {
           blockerUserId_blockedUserId: { blockerUserId: user.id, blockedUserId: target.id },
