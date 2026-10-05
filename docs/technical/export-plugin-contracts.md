@@ -55,6 +55,13 @@ Production refuses stub DSP submit when `REVELATOR_API_KEY` is unset
 | ---------- | ---------------------------------------- |
 | Submit     | `POST /api/me/sound/:id/export/hearthis` |
 
+Uniform ExportProvider alias (same handler):
+
+- `POST /api/me/export-plugins/hearthis-export/sounds/:id/submit`
+
+Do **not** call the release-scoped `/export-plugins/:provider/releases/...`
+aliases for hearthis — those only accept `revelator`.
+
 Credentials via `/api/me/integrations` (`hearthis-export`). Status is stored
 on the sound (`hearthisExportStatus`); there is no separate statusPath yet.
 

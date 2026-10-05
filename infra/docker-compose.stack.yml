@@ -450,6 +450,9 @@ services:
       INTERNAL_SECRET: ${INTERNAL_SECRET:-local-stack-internal-secret}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      # Optional: play Tahti Radio HLS instead of curated YouTube tracks.txt.
+      # GET /api/v1/radio is metadata only — not an audio source.
+      TAHTI_RADIO_AUDIO_URL: ${TAHTI_RADIO_AUDIO_URL:-${TAHTI_RADIO_HLS_URL:-}}
     depends_on:
       api:
         condition: service_healthy

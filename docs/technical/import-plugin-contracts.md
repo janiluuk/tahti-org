@@ -66,8 +66,10 @@ status / webhook shapes.
 - Never advertise a phantom path (e.g. Bandcamp import was wrongly
   `/api/v1/imports/bandcamp/add` with no handler — keep `import: false` until
   Bandcamp API v1 lands).
-- OAuth Mixcloud connect is for **upload to Mixcloud**, not catalog import;
-  embed search lives at `/api/v1/imports/mixcloud/*` and is a separate adapter.
+- OAuth Mixcloud connect (`id: mixcloud`) is for **upload/rescue to Mixcloud**,
+  not catalog import. Catalog embed search is a separate search provider
+  (`id: mixcloud-embed`) pointing at `/api/v1/imports/mixcloud/search` and
+  `/api/v1/imports/mixcloud/add`.
 
 ## Parity checklist for new providers
 

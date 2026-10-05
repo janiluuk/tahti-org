@@ -138,6 +138,26 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'mixcloud-embed',
+    name: 'Mixcloud search',
+    description:
+      'Search Mixcloud cloudcasts and add them as provider-hosted embeds (no audio re-host). Distinct from Mixcloud OAuth upload/rescue.',
+    kind: 'search',
+    capabilities: {
+      configure: false,
+      connectionTest: false,
+      fileList: false,
+      import: true,
+      search: true,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+    searchPath: '/api/v1/imports/mixcloud/search',
+    importPath: '/api/v1/imports/mixcloud/add',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'upload',
     name: 'Local upload',
     description: 'Upload audio files into the archive (prepare → object store → complete).',

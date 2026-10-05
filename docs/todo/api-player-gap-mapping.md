@@ -30,16 +30,30 @@
 | 19  | Soulseek “Desktop only” (not Test connection)                       | done   |
 | 20  | Settings “Not available yet” copy                                   | done   |
 
+## Batch 3 (2026-10-05) — catalogs + Discord audio path
+
+| #   | Slice                                                                              | Status |
+| --- | ---------------------------------------------------------------------------------- | ------ |
+| 21  | `mixcloud-embed` search provider in import registry (≠ Mixcloud OAuth)             | done   |
+| 22  | hearthis-export ExportProvider sound alias `/export-plugins/.../sounds/:id/submit` | done   |
+| 23  | Discord playback docs: HLS / `TAHTI_RADIO_AUDIO_URL`, not `GET /api/v1/radio`      | done   |
+| 24  | Compose `radio-discord-bot` gets `TAHTI_RADIO_AUDIO_URL`                           | done   |
+| 25  | Discord bot optional HLS playlist (sibling repo)                                   | done   |
+| 26  | Player `mixcloud-embed` search adapter + catalog honesty (radio/mixcloud flags)    | done   |
+| 27  | Radio help catalog disambiguation (stations vs paste-URL)                          | done   |
+| 28  | PluginLoader `@nuclearplayer` aliases documented as intentional compat             | done   |
+| 29  | tahti-cli README notes import/export plugin catalogs                               | done   |
+| 30  | Gap ledger + INDEX refresh                                                         | done   |
+
 ---
 
 ## Remaining open
 
-| Level | Item                                                                  |
-| ----- | --------------------------------------------------------------------- |
-| P1    | Bandcamp albums + import route (real Bandcamp API v1)                 |
-| P1    | Discord bot playback source → Tahti Radio API                         |
-| P2    | `@nuclearplayer` PluginLoader / UMD compat aliases (keep for plugins) |
-| P2    | Large god modules / duplicate radio plugins (player todos)            |
-| P3    | Account-backed favorites/history; FORCE_MOCK demos                    |
+| Level | Item                                                               |
+| ----- | ------------------------------------------------------------------ |
+| P1    | Bandcamp albums + import route (real Bandcamp API v1)              |
+| P2    | Full Discord cutover to always-on HLS (ops: set audio URL in prod) |
+| P2    | Large god modules / further radio-plugin merge (player todos)      |
+| P3    | Account-backed favorites/history; FORCE_MOCK demos                 |
 
 When fully done: fold into `docs/todo/HISTORY.md` and delete.

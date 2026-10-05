@@ -29,7 +29,11 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
     expect(byKind.oauth).toEqual(
       expect.arrayContaining(['google-drive', 'bandcamp', 'soundcloud', 'mixcloud']),
     )
-    expect(byKind.search).toEqual(expect.arrayContaining(['spotify', 'hearthis']))
+    expect(byKind.search).toEqual(expect.arrayContaining(['spotify', 'hearthis', 'mixcloud-embed']))
+    const mixcloudEmbed = body.providers.find((provider) => provider.id === 'mixcloud-embed')
+    expect(mixcloudEmbed?.searchPath).toBe('/api/v1/imports/mixcloud/search')
+    expect(mixcloudEmbed?.importPath).toBe('/api/v1/imports/mixcloud/add')
+    expect(mixcloudEmbed?.capabilities.search).toBe(true)
     expect(byKind.tool).toEqual(expect.arrayContaining(['url', 'radio']))
     expect(byKind.upload).toEqual(expect.arrayContaining(['upload', 'stash']))
 

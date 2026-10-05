@@ -11,14 +11,14 @@ generated client under `packages/api-client`.
 
 ## Schemas (`@tahti/shared`)
 
-| Schema                            | Role                                                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `AdminDiscordBotSettings`          | Board-facing view: `clientId`, `tokenConfigured`, `tokenHint` (last four), `source` (`database` \| `env` \| `none`) |
-| `UpdateDiscordBotSettings`         | Board PUT body: `clientId` (17–20 digit snowflake), optional `token` (min 20 chars)                                 |
-| `InternalDiscordBotCredentials`    | Bot fetch: plaintext `clientId` + `token`                                                                           |
-| `DiscordBotHeartbeat`              | Bot → API liveness ping: `guildCount`, `uptimeSecs`, `currentTrack?`                                                |
-| `DiscordBotHeartbeatAck`           | `{ ok: true }`                                                                                                       |
-| `AdminDiscordBotRestartResponse`   | `{ ok: true, action: 'restart', container }`                                                                        |
+| Schema                           | Role                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `AdminDiscordBotSettings`        | Board-facing view: `clientId`, `tokenConfigured`, `tokenHint` (last four), `source` (`database` \| `env` \| `none`) |
+| `UpdateDiscordBotSettings`       | Board PUT body: `clientId` (17–20 digit snowflake), optional `token` (min 20 chars)                                 |
+| `InternalDiscordBotCredentials`  | Bot fetch: plaintext `clientId` + `token`                                                                           |
+| `DiscordBotHeartbeat`            | Bot → API liveness ping: `guildCount`, `uptimeSecs`, `currentTrack?`                                                |
+| `DiscordBotHeartbeatAck`         | `{ ok: true }`                                                                                                      |
+| `AdminDiscordBotRestartResponse` | `{ ok: true, action: 'restart', container }`                                                                        |
 
 The raw token is never returned on board routes. `tokenHint` is `••••` + last four
 characters when a token is configured.
@@ -92,6 +92,20 @@ heartbeat is older than `ONLINE_THRESHOLD_MS` (60s, `apps/api/src/lib/liveness.t
 - `GET /api/admin/stats/system-health` (board) — `discordBot: 'up' | 'down'`,
   shown as a `StatusPill` on `/admin/dashboard`'s System health card, next to
   a "Restart Discord bot" button.
+
+## Playback source (not `GET /api/v1/radio`)
+
+`GET /api/v1/radio` returns **live-slot / now-playing metadata** for the
+Tahti Radio channel. It is **not** an audio stream the Discord bot can play.
+
+Real audio for Tahti Radio is the channel HLS playlist (or the deployment
+override `TAHTI_RADIO_AUDIO_URL` / legacy `TAHTI_RADIO_HLS_URL`). The sibling
+bot (`../tahti-radio-discord-bot`) defaults to a curated YouTube `tracks.txt`
+playlist via yt-dlp. When `TAHTI_RADIO_AUDIO_URL` is set on the bot process,
+it plays that HLS/direct URL instead (ffmpeg decodes `.m3u8` directly — no
+yt-dlp). Wire the same env into the `radio-discord-bot` Compose service.
+
+Do not “fix” Discord playout by pointing the bot at `GET /api/v1/radio`.
 
 ## Player UI
 

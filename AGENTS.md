@@ -147,6 +147,11 @@ Radio (`PUT /api/admin/discord-bot`; never returns the raw token). Optional
 `DISCORD_CLIENT_ID` / `DISCORD_TOKEN` on the API or bot are env fallbacks.
 Contract: `docs/technical/discord-bot-credentials.md`.
 
+Playback: default is curated YouTube URLs in the bot’s `tracks.txt` (yt-dlp).
+`GET /api/v1/radio` is **now-playing metadata only**, not audio. To play the
+live Tahti Radio HLS feed, set `TAHTI_RADIO_AUDIO_URL` on the
+`radio-discord-bot` service (same env as the web/API radio audio override).
+
 ## Running the app locally (env gotchas)
 
 **Use `./scripts/stack-up.sh --seed` first** — it builds and runs the full
