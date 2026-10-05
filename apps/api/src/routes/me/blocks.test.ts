@@ -288,6 +288,27 @@ describe('/api/me/blocks', () => {
     ).toEqual([`${PREFIX}b`])
   })
 
+  it('shows the thread as unavailable to the blocked person, not to the blocker', async () => {
+    const available = async (cookie: string) => {
+      const inbox = await app.inject({
+        method: 'GET',
+        url: '/api/me/messages/conversations',
+        headers: { cookie },
+      })
+      const thread = await app.inject({
+        method: 'GET',
+        url: `/api/me/messages/conversations/${conversationId}`,
+        headers: { cookie },
+      })
+      const row = (inbox.json() as Array<{ id: string; otherUser: { available: boolean } }>).find(
+        (c) => c.id === conversationId,
+      )
+      return [row?.otherUser.available, thread.json().otherUser.available]
+    }
+    expect(await available(cookieB)).toEqual([false, false])
+    expect(await available(cookieA)).toEqual([true, true])
+  })
+
   it('lets them talk again after an unblock', async () => {
     const unblock = await app.inject({
       method: 'DELETE',
