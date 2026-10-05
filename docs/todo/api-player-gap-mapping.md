@@ -51,7 +51,7 @@
 | --- | --------------------------------------------------------------------- | ------ |
 | 31  | Bandcamp `fileList: false` / `listPath: null` residual                | done   |
 | 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)          | done   |
-| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)   | open   |
+| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)   | done   |
 | 34  | OpenAPI swagger tag catalog expanded for used route tags              | done   |
 | 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done |
 | 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log             | done   |
@@ -67,7 +67,6 @@
 | Level | Item                                                               |
 | ----- | ------------------------------------------------------------------ |
 | P1    | Bandcamp albums + import route (real Bandcamp API v1 — needs keys) |
-| P2    | Slice 33: regen player API-REFERENCE after org OpenAPI export      |
 | P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops   |
 | P2    | Large god modules / further radio-plugin merge (player todos)      |
 | P3    | Account-backed favorites/history; FORCE_MOCK demos                 |
