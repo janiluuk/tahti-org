@@ -49,6 +49,7 @@ describe('GET /api/me/export-plugins', () => {
     const body = ExportPluginProviderListSchema.parse(res.json())
     const revelator = body.providers.find((provider) => provider.id === 'revelator')
     expect(revelator?.capabilities.submit).toBe(true)
+    expect(revelator?.capabilities.webhook).toBe(true)
     expect(revelator?.submitPath).toBe('/api/me/releases/:id/revelator/submit')
     expect(revelator?.webhookPath).toBe('/api/webhooks/export/revelator')
   })
@@ -56,13 +57,35 @@ describe('GET /api/me/export-plugins', () => {
 
 describe('POST /api/webhooks/export/:provider', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
+  let userId: string
+  let releaseId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
     await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, `${PREFIX}wh-`)
+    const user = await createTestArtist(prisma, {
+      email: `${PREFIX}wh@example.com`,
+      username: `${PREFIX}wh`,
+    })
+    userId = user.id
+    const release = await prisma.release.create({
+      data: {
+        userId,
+        title: 'Webhook Sync EP',
+        type: 'EP',
+        releaseDate: new Date('2026-01-01'),
+        smartLinkSlug: `${PREFIX}wh-ep`,
+        revelatorStatus: 'submitted',
+        revelatorId: 'rev-wh-1',
+      },
+    })
+    releaseId = release.id
   })
 
   afterAll(async () => {
+    await prisma.release.deleteMany({ where: { userId } })
+    await cleanupUsersByEmailPrefix(prisma, `${PREFIX}wh-`)
     await app.close()
   })
 
@@ -75,14 +98,29 @@ describe('POST /api/webhooks/export/:provider', () => {
     expect(res.statusCode).toBe(401)
   })
 
-  it('accepts INTERNAL_SECRET and acks known providers', async () => {
+  it('404s when the release is unknown', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/webhooks/export/revelator',
       headers: { authorization: `Bearer ${config.internalSecret}` },
-      payload: { event: 'status', releaseId: 'rel_stub' },
+      payload: { event: 'delivery.completed', releaseId: 'rel_missing' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('updates revelatorStatus to delivered', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/export/revelator',
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+      payload: { event: 'delivery.completed', releaseId },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ ok: true, provider: 'revelator', accepted: true })
+    const row = await prisma.release.findUnique({
+      where: { id: releaseId },
+      select: { revelatorStatus: true },
+    })
+    expect(row?.revelatorStatus).toBe('delivered')
   })
 })

@@ -68,11 +68,13 @@ testing the connection, and only then saving/enabling the plugin. Do not add a
 second configuration surface in Tahti core or silently enable an unverified
 provider.
 
-Still to clarify before extending the plugin API: whether Configure is a
-first-class SDK lifecycle hook or a host-rendered settings modal; the exact
-connection-test contract and error states; and whether Save and Enable are one
-atomic action or separate actions. Record the decision in both repositories’
-agent instructions when settled.
+**Configure lifecycle (settled 2026-10-05):** host-rendered settings modal in
+Tahti Player (not an SDK lifecycle hook). Connection test returns
+`{ ok: true } | { ok: false, error: string }` and blocks Save on failure when
+`connectionTest` is advertised. **Save** and **Enable** are separate actions —
+Save persists credentials/settings; Enable turns the provider on only after a
+successful test (or after Save when the catalog has no connection test). Same
+decision recorded in `../tahti-player/docs/DECISIONS.md`.
 
 ### Official marketplace catalog (`tahti-registry`)
 

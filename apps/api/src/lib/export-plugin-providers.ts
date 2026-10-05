@@ -26,12 +26,10 @@ export const EXPORT_PLUGIN_PROVIDERS: ExportPluginProvider[] = [
     capabilities: {
       submit: true,
       status: true,
-      // Receiver accepts callbacks but does not sync status yet — do not claim webhook.
-      webhook: false,
+      webhook: true,
     },
     submitPath: '/api/me/releases/:id/revelator/submit',
     statusPath: '/api/me/releases/:id/revelator',
-    // Stable URL for provider sandboxes / future sync; capability stays false until wired.
     webhookPath: '/api/webhooks/export/revelator',
   },
   {

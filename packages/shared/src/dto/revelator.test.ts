@@ -8,9 +8,37 @@ import {
   RevelatorCheckoutResponseSchema,
   RevelatorRoyaltyReportsSchema,
   RevelatorSubmitAcceptedSchema,
+  mapRevelatorWebhookStatus,
+  shouldApplyRevelatorStatus,
+  RevelatorExportWebhookBodySchema,
 } from './revelator.js'
 
 describe('Revelator DTOs', () => {
+  it('maps webhook status/event strings', () => {
+    expect(mapRevelatorWebhookStatus('delivered')).toBe('delivered')
+    expect(mapRevelatorWebhookStatus(undefined, 'delivery.completed')).toBe('delivered')
+    expect(mapRevelatorWebhookStatus('processing')).toBe('submitted')
+    expect(mapRevelatorWebhookStatus('failed')).toBe('failed')
+    expect(mapRevelatorWebhookStatus('mystery')).toBeNull()
+  })
+
+  it('does not regress delivered → submitted', () => {
+    expect(shouldApplyRevelatorStatus('delivered', 'submitted')).toBe(false)
+    expect(shouldApplyRevelatorStatus('submitted', 'delivered')).toBe(true)
+    expect(shouldApplyRevelatorStatus('delivered', 'failed')).toBe(true)
+    expect(shouldApplyRevelatorStatus('failed', 'submitted')).toBe(true)
+  })
+
+  it('parses export webhook body', () => {
+    expect(
+      RevelatorExportWebhookBodySchema.safeParse({
+        releaseId: 'rel_1',
+        event: 'delivery.completed',
+      }).success,
+    ).toBe(true)
+    expect(RevelatorExportWebhookBodySchema.safeParse({ event: 'status' }).success).toBe(false)
+  })
+
   it('parses release status', () => {
     const parsed = RevelatorReleaseStatusSchema.safeParse({
       revelatorId: 'rev-1',

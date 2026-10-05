@@ -16,11 +16,11 @@ Credentials for marketplace installables still live on
 
 ## Live provider: Revelator
 
-| Capability | Route                                        | Ready?                                                                      |
-| ---------- | -------------------------------------------- | --------------------------------------------------------------------------- |
-| Submit     | `POST /api/me/releases/:id/revelator/submit` | yes                                                                         |
-| Status     | `GET /api/me/releases/:id/revelator`         | yes                                                                         |
-| Webhook    | `POST /api/webhooks/export/revelator`        | path only — accept-and-log; `capabilities.webhook: false` until status sync |
+| Capability | Route                                        | Ready?                                  |
+| ---------- | -------------------------------------------- | --------------------------------------- |
+| Submit     | `POST /api/me/releases/:id/revelator/submit` | yes                                     |
+| Status     | `GET /api/me/releases/:id/revelator`         | yes                                     |
+| Webhook    | `POST /api/webhooks/export/revelator`        | yes — updates `Release.revelatorStatus` |
 
 Uniform ExportProvider aliases (same handlers):
 
@@ -30,12 +30,24 @@ Uniform ExportProvider aliases (same handlers):
 The registry lists the **canonical** Revelator paths above. Billing /
 checkout remain Revelator-specific (`…/revelator/billing`, `…/checkout`).
 
-### Webhook auth
+### Webhook auth and payload
 
 `Authorization: Bearer $INTERNAL_SECRET` or header
-`X-Tahti-Webhook-Secret: $INTERNAL_SECRET`. The receiver currently accepts
-and logs the payload; full Revelator status sync is a follow-up. Until then
-the catalog must not advertise `webhook: true`.
+`X-Tahti-Webhook-Secret: $INTERNAL_SECRET`.
+
+Body (Zod `RevelatorExportWebhookBodySchema`):
+
+- Identity (at least one): `externalId` or `releaseId` (Tahti release id from
+  submit), and/or `revelatorId`
+- Status (at least one): `status` and/or `event` — mapped via
+  `mapRevelatorWebhookStatus` onto `pending` | `submitted` | `delivered` |
+  `failed`
+
+Unknown release → `404`. Unmapped status → `400`. Updates are monotonic
+(no `delivered` → `submitted` regression); `failed` is always allowed.
+
+Production refuses stub DSP submit when `REVELATOR_API_KEY` is unset
+(`packages/revelator`).
 
 ## Live provider: hearthis-export (sound-scoped)
 

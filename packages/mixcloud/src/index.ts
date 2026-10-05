@@ -30,6 +30,9 @@ export async function uploadToMixcloud(
   const clientId = process.env.MIXCLOUD_CLIENT_ID
 
   if (!clientId) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('MIXCLOUD_CLIENT_ID is not set — refusing stub Mixcloud upload in production')
+    }
     // Stub mode — return a fake result so CI/dev works without credentials
     return {
       key: `/stub/${Date.now()}/`,

@@ -6,7 +6,7 @@ import { ExportPluginProviderListSchema } from '@tahti/shared'
 import { EXPORT_PLUGIN_PROVIDERS } from './export-plugin-providers.js'
 
 describe('EXPORT_PLUGIN_PROVIDERS', () => {
-  it('lists revelator with real submit/status paths and honest webhook flag', () => {
+  it('lists revelator with real submit/status/webhook paths', () => {
     const body = ExportPluginProviderListSchema.parse({
       providers: EXPORT_PLUGIN_PROVIDERS,
     })
@@ -16,7 +16,7 @@ describe('EXPORT_PLUGIN_PROVIDERS', () => {
     expect(revelator?.capabilities).toEqual({
       submit: true,
       status: true,
-      webhook: false,
+      webhook: true,
     })
     expect(revelator?.submitPath).toBe('/api/me/releases/:id/revelator/submit')
     expect(revelator?.statusPath).toBe('/api/me/releases/:id/revelator')

@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it, expect, afterEach } from 'vitest'
-import { fetchRoyaltyReports, isRevelatorConfigured } from './index.js'
+import { fetchRoyaltyReports, isRevelatorConfigured, submitReleaseToRevelator } from './index.js'
 
 describe('fetchRoyaltyReports stub mode', () => {
   it('returns deterministic stub rows per release and month', async () => {
@@ -60,6 +60,61 @@ describe('fetchRoyaltyReports stub mode', () => {
   it('returns empty array when no releases', async () => {
     const rows = await fetchRoyaltyReports([], { year: 2026, month: 1 })
     expect(rows).toEqual([])
+  })
+})
+
+describe('submitReleaseToRevelator stub mode', () => {
+  const prevKey = process.env.REVELATOR_API_KEY
+  const prevFile = process.env.REVELATOR_API_KEY_FILE
+  const prevEnv = process.env.NODE_ENV
+
+  afterEach(() => {
+    if (prevKey) process.env.REVELATOR_API_KEY = prevKey
+    else delete process.env.REVELATOR_API_KEY
+    if (prevFile) process.env.REVELATOR_API_KEY_FILE = prevFile
+    else delete process.env.REVELATOR_API_KEY_FILE
+    process.env.NODE_ENV = prevEnv
+  })
+
+  it('returns stub ids outside production', async () => {
+    delete process.env.REVELATOR_API_KEY
+    delete process.env.REVELATOR_API_KEY_FILE
+    process.env.NODE_ENV = 'test'
+    const result = await submitReleaseToRevelator({
+      tahtiReleaseId: 'rel_stub',
+      title: 'Stub',
+      type: 'SINGLE',
+      releaseDate: '2026-01-01',
+      upc: null,
+      pLine: null,
+      cLine: null,
+      labelImprint: null,
+      artistDisplayName: 'Artist',
+      artistUsername: 'artist',
+      tracks: [],
+    })
+    expect(result.revelatorId).toBe('stub-rel_stub')
+  })
+
+  it('refuses stub submit in production', async () => {
+    delete process.env.REVELATOR_API_KEY
+    delete process.env.REVELATOR_API_KEY_FILE
+    process.env.NODE_ENV = 'production'
+    await expect(
+      submitReleaseToRevelator({
+        tahtiReleaseId: 'rel_stub',
+        title: 'Stub',
+        type: 'SINGLE',
+        releaseDate: '2026-01-01',
+        upc: null,
+        pLine: null,
+        cLine: null,
+        labelImprint: null,
+        artistDisplayName: 'Artist',
+        artistUsername: 'artist',
+        tracks: [],
+      }),
+    ).rejects.toThrow(/refusing stub DSP submit/)
   })
 })
 

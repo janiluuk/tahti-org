@@ -3,9 +3,17 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
+import { openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { encryptStreamKey, decryptStreamKey } from '../../lib/stream-key-enc.js'
+
+const BandcampAlbumsStubSchema = z.object({
+  albums: z.array(z.unknown()),
+  message: z.string(),
+  importAvailable: z.literal(false),
+})
 
 const OAUTH_STATE_MAX_AGE_SEC = 600
 const BANDCAMP_AUTHORIZE_URL = 'https://bandcamp.com/oauth_login'
@@ -112,22 +120,38 @@ const bandcampRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ connected: false, configured: Boolean(config.bandcamp.clientId) })
   })
 
-  // GET /api/me/bandcamp/albums — list connected artist's albums (stub until Bandcamp API v1)
-  fastify.get('/api/me/bandcamp/albums', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { bandcampAccessTokenEnc: true },
-    })
-    if (!row?.bandcampAccessTokenEnc) {
-      return reply.status(403).send({ error: 'Bandcamp account not connected' })
-    }
-    // Decrypt token (kept for future Bandcamp API calls)
-    void decryptStreamKey(row.bandcampAccessTokenEnc)
-    // Bandcamp's artist sales/album APIs require a separate approval process.
-    // Return empty for now — the web UI will show a "coming soon" state.
-    return reply.send({ albums: [], message: 'Album listing coming soon' })
-  })
+  // GET /api/me/bandcamp/albums — stub until Bandcamp API v1 (catalog import:false).
+  fastify.get(
+    '/api/me/bandcamp/albums',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'List Bandcamp albums (stub)',
+        description:
+          'Connected-account album listing. Currently returns an empty stub until Bandcamp API v1 approval; import is not available (see GET /api/me/import-plugins).',
+        response: openApiResponse(BandcampAlbumsStubSchema, 'BandcampAlbumsStub'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { bandcampAccessTokenEnc: true },
+      })
+      if (!row?.bandcampAccessTokenEnc) {
+        return reply.status(403).send({ error: 'Bandcamp account not connected' })
+      }
+      // Decrypt token (kept for future Bandcamp API calls)
+      void decryptStreamKey(row.bandcampAccessTokenEnc)
+      return reply.send({
+        albums: [],
+        message:
+          'Bandcamp album listing and catalog import are not available yet (API approval pending).',
+        importAvailable: false as const,
+      })
+    },
+  )
 }
 
 export default bandcampRoutes
