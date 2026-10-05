@@ -34,13 +34,22 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
-/** Fan out a NEW_TRACK notification to everyone following the artist, when a
- * track/set goes public (Sound.isPublic flips false -> true). */
+/** Fan out a NEW_TRACK notification to everyone following the artist, the
+ * first time a track/set goes public. The notification opens the track. */
 export async function notifyFollowersOfNewTrack(
   prisma: PrismaClient,
   artist: { id: string; username: string; displayName: string },
   item: { id: string; title: string },
 ): Promise<void> {
+  const url = `/t/${item.id}`
+  // Announced once per track. Without this check, taking a track private
+  // and public again pinged every follower each time.
+  const announced = await prisma.notification.findFirst({
+    where: { type: 'NEW_TRACK', actorUserId: artist.id, url },
+    select: { id: true },
+  })
+  if (announced) return
+
   const followers = await prisma.artistFollow.findMany({
     where: { artistUserId: artist.id },
     select: { followerUserId: true },
@@ -54,7 +63,7 @@ export async function notifyFollowersOfNewTrack(
       actorUserId: artist.id,
       title: `${actorDisplayName(artist)} shared a new track`,
       body: item.title,
-      url: `/u/${artist.username}`,
+      url,
     })),
   })
 }
