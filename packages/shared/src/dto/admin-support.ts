@@ -64,6 +64,8 @@ export const AdminSupportTicketListQuerySchema = z.object({
   // Free-text search across subject, message body, requester email, and
   // requester username/display name (see admin/support.ts GET handler).
   q: z.string().trim().min(1).max(200).optional(),
+  /** `true` lists only unresolved tickets where the next move is the board's. */
+  awaitingReply: z.enum(['true', 'false']).optional(),
 })
 
 export const AdminSupportTicketRowSchema = z.object({

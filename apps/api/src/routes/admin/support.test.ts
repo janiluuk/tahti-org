@@ -194,6 +194,47 @@ describe('M21-F — support tickets', () => {
     })
   })
 
+  it('lists only the tickets waiting on the board with awaitingReply=true', async () => {
+    const answered = await prisma.supportTicket.create({
+      data: {
+        artistId,
+        subject: 'Already answered',
+        message: 'Thanks',
+        category: 'OTHER',
+        status: 'IN_PROGRESS',
+      },
+    })
+    const board = await prisma.user.findUniqueOrThrow({ where: { username: 'admin-sup-board' } })
+    await prisma.supportTicketNote.create({
+      data: { ticketId: answered.id, body: 'Done.', authorId: board.id },
+    })
+    const waiting = await prisma.supportTicket.create({
+      data: { artistId, subject: 'Still waiting', message: 'Hello?', category: 'OTHER' },
+    })
+    const resolved = await prisma.supportTicket.create({
+      data: {
+        artistId,
+        subject: 'Closed',
+        message: 'Fixed',
+        category: 'OTHER',
+        status: 'RESOLVED',
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/support/tickets?awaitingReply=true&limit=100',
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { total: number; tickets: Array<{ id: string }> }
+    const ids = body.tickets.map((t) => t.id)
+    expect(ids).toContain(waiting.id.toString())
+    expect(ids).not.toContain(answered.id.toString())
+    expect(ids).not.toContain(resolved.id.toString())
+    expect(body.total).toBe(ids.length)
+  })
+
   it('PATCH status transition auto-logs a STATUS_CHANGE timeline entry', async () => {
     const patch = await app.inject({
       method: 'PATCH',
