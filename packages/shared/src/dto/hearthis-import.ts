@@ -21,7 +21,9 @@ export type HearthisTrackResult = z.infer<typeof HearthisTrackResultSchema>
 
 /** Richer track row for discography / set inspection (download flags for future CLI import). */
 export const HearthisSetTrackResultSchema = HearthisTrackResultSchema.extend({
-  position: z.number().int().positive(),
+  // Use min(1) rather than positive() — Fastify OpenAPI serialization rejects
+  // Zod's exclusiveMinimum boolean form for integers.
+  position: z.number().int().min(1),
   kind: z.string().nullable(),
   releaseDate: z.string().nullable(),
   downloadable: z.boolean(),
