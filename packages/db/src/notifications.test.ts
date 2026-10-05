@@ -17,9 +17,18 @@ import {
   notifyUsersOfChatMention,
 } from './notifications.js'
 
-function fakePrisma() {
+function fakePrisma(recent: { id: string } | null = null, blocked = false) {
   const create = vi.fn().mockResolvedValue({})
-  return { prisma: { notification: { create } } as unknown as PrismaClient, create }
+  const findFirst = vi.fn().mockResolvedValue(recent)
+  const findBlock = vi.fn().mockResolvedValue(blocked ? { blockerUserId: 'artist-1' } : null)
+  return {
+    prisma: {
+      notification: { create, findFirst },
+      userBlock: { findFirst: findBlock },
+    } as unknown as PrismaClient,
+    create,
+    findFirst,
+  }
 }
 
 const actor = { id: 'fan-1', username: 'fan', displayName: 'Fan' }
@@ -71,6 +80,7 @@ describe('notification titles never carry an email address', () => {
       artistFollow: { findMany: vi.fn().mockResolvedValue([{ followerUserId: 'follower-1' }]) },
       collectionItem: { findMany: vi.fn().mockResolvedValue([]) },
       collectionSubscription: { findMany: vi.fn().mockResolvedValue([]) },
+      userBlock: { findFirst: vi.fn().mockResolvedValue(null) },
     } as unknown as PrismaClient
     const titles = () =>
       [
@@ -156,5 +166,40 @@ describe('notification titles never carry an email address', () => {
     const { prisma, titles } = fanOutPrisma()
     await notify(prisma)
     expect(titles()).toEqual([title])
+  })
+})
+
+describe('follow, love and repost notices are not repeated within a day', () => {
+  it('stays quiet when the same person already triggered it today', async () => {
+    const { prisma, create, findFirst } = fakePrisma({ id: 'n1' })
+    await notifyArtistOfNewFollower(prisma, 'artist-1', actor)
+    await notifyArtistOfNewLike(prisma, 'artist-1', actor, item)
+    await notifyArtistOfNewRepost(prisma, 'artist-1', actor, item)
+    expect(create).not.toHaveBeenCalled()
+    expect(findFirst).toHaveBeenCalledTimes(3)
+    expect(findFirst.mock.calls[1]?.[0].where).toMatchObject({
+      userId: 'artist-1',
+      actorUserId: 'fan-1',
+      type: 'NEW_LIKE',
+      url: '/t/sound-1',
+    })
+  })
+
+  it('still notifies the first time', async () => {
+    const { prisma, create } = fakePrisma(null)
+    await notifyArtistOfNewFollower(prisma, 'artist-1', actor)
+    await notifyArtistOfNewLike(prisma, 'artist-1', actor, item)
+    await notifyArtistOfNewRepost(prisma, 'artist-1', actor, item)
+    expect(create).toHaveBeenCalledTimes(3)
+  })
+})
+
+describe('notices from a blocked account', () => {
+  it('are not sent for a follow, love or repost', async () => {
+    const { prisma, create } = fakePrisma(null, true)
+    await notifyArtistOfNewFollower(prisma, 'artist-1', actor)
+    await notifyArtistOfNewLike(prisma, 'artist-1', actor, item)
+    await notifyArtistOfNewRepost(prisma, 'artist-1', actor, item)
+    expect(create).not.toHaveBeenCalled()
   })
 })

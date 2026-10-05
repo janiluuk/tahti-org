@@ -14,6 +14,11 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { shareKeyFromQuery, soundShareGrantsAccess } from '../../lib/sound-share-access.js'
 import { userName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
+
+// A block between the artist and the commenter closes comments for that
+// person. The wording does not say a block is the reason.
+const BLOCKED_COMMENT_BODY = { error: 'You cannot comment here' }
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -28,9 +33,14 @@ const COMMENTS_LIMIT = 200
 async function listComments(
   prisma: PrismaClient,
   where: { soundId: string } | { channelId: string },
+  ownerUserId: string,
 ) {
   const newest = await prisma.comment.findMany({
-    where: { ...where, author: availableUserWhere },
+    // Also without what an account the owner has blocked wrote earlier.
+    where: {
+      ...where,
+      author: { ...availableUserWhere, blocksReceived: { none: { blockerUserId: ownerUserId } } },
+    },
     orderBy: { createdAt: 'desc' },
     take: COMMENTS_LIMIT,
     select: {
@@ -69,7 +79,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.sound.findUnique({
         where: { id: routeParams.id },
-        select: { commentsEnabled: true, isPublic: true },
+        select: { commentsEnabled: true, isPublic: true, channel: { select: { userId: true } } },
       })
       const visible =
         item?.isPublic ||
@@ -82,7 +92,11 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
           )))
       if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
 
-      const comments = await listComments(fastify.prisma, { soundId: routeParams.id })
+      const comments = await listComments(
+        fastify.prisma,
+        { soundId: routeParams.id },
+        item.channel.userId,
+      )
       return reply.send({ comments, commentsEnabled: item.commentsEnabled })
     },
   )
@@ -115,6 +129,9 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
     if (!item.commentsEnabled) {
       return reply.status(403).send({ error: 'Comments are off for this track' })
+    }
+    if (await isBlockedEitherWay(fastify.prisma, item.channel.userId, request.sessionUser!.id)) {
+      return reply.status(403).send(BLOCKED_COMMENT_BODY)
     }
 
     const comment = await fastify.prisma.comment.create({
@@ -159,11 +176,11 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
-        select: { id: true, commentsEnabled: true },
+        select: { id: true, commentsEnabled: true, userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const comments = await listComments(fastify.prisma, { channelId: channel.id })
+      const comments = await listComments(fastify.prisma, { channelId: channel.id }, channel.userId)
       return reply.send({ comments, commentsEnabled: channel.commentsEnabled })
     },
   )
@@ -185,6 +202,9 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
       if (!channel.commentsEnabled) {
         return reply.status(403).send({ error: 'Comments are off for this channel' })
+      }
+      if (await isBlockedEitherWay(fastify.prisma, channel.userId, request.sessionUser!.id)) {
+        return reply.status(403).send(BLOCKED_COMMENT_BODY)
       }
 
       const comment = await fastify.prisma.comment.create({

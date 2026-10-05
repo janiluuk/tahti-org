@@ -2,7 +2,18 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@prisma/client'
+import { availableUserWhere } from './available-user.js'
 import { actorDisplayName } from './display-name.js'
+
+/** The artist's followers who can still receive a notification: deleted and
+ * suspended accounts are left out, so a fan-out never writes rows nobody
+ * will read. */
+function followersToNotify(prisma: PrismaClient, artistUserId: string) {
+  return prisma.artistFollow.findMany({
+    where: { artistUserId, follower: availableUserWhere },
+    select: { followerUserId: true },
+  })
+}
 
 /** Fan out a NEW_POST notification to everyone following the artist. Called both
  * synchronously (immediate-publish posts, from the API) and from the worker's
@@ -12,10 +23,7 @@ export async function notifyFollowersOfNewPost(
   artist: { id: string; username: string; displayName: string },
   post: { title: string | null; body: string },
 ): Promise<void> {
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   const title = `${actorDisplayName(artist)} posted an update`
@@ -34,17 +42,23 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
-/** Fan out a NEW_TRACK notification to everyone following the artist, when a
- * track/set goes public (Sound.isPublic flips false -> true). */
+/** Fan out a NEW_TRACK notification to everyone following the artist, the
+ * first time a track/set goes public. The notification opens the track. */
 export async function notifyFollowersOfNewTrack(
   prisma: PrismaClient,
   artist: { id: string; username: string; displayName: string },
   item: { id: string; title: string },
 ): Promise<void> {
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
+  const url = `/t/${item.id}`
+  // Announced once per track. Without this check, taking a track private
+  // and public again pinged every follower each time.
+  const announced = await prisma.notification.findFirst({
+    where: { type: 'NEW_TRACK', actorUserId: artist.id, url },
+    select: { id: true },
   })
+  if (announced) return
+
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -54,7 +68,7 @@ export async function notifyFollowersOfNewTrack(
       actorUserId: artist.id,
       title: `${actorDisplayName(artist)} shared a new track`,
       body: item.title,
-      url: `/u/${artist.username}`,
+      url,
     })),
   })
 }
@@ -81,10 +95,7 @@ export async function notifyFollowersOfLiveChannel(
   })
   if (recent) return
 
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -109,10 +120,7 @@ export async function notifyFollowersOfNewEvent(
   now: Date = new Date(),
 ): Promise<void> {
   if (event.startAt <= now) return
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -134,10 +142,7 @@ export async function notifyFollowersOfNewRelease(
   artist: { id: string; username: string; displayName: string },
   release: { title: string; smartLinkSlug: string },
 ): Promise<void> {
-  const followers = await prisma.artistFollow.findMany({
-    where: { artistUserId: artist.id },
-    select: { followerUserId: true },
-  })
+  const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
   await prisma.notification.createMany({
@@ -152,12 +157,65 @@ export async function notifyFollowersOfNewRelease(
   })
 }
 
+/** True when either account has blocked the other. Someone you blocked can
+ * still love or repost a public track, but you are not told about it. */
+async function blockedEitherWay(
+  prisma: PrismaClient,
+  userId: string,
+  otherUserId: string,
+): Promise<boolean> {
+  const block = await prisma.userBlock.findFirst({
+    where: {
+      OR: [
+        { blockerUserId: userId, blockedUserId: otherUserId },
+        { blockerUserId: otherUserId, blockedUserId: userId },
+      ],
+    },
+    select: { blockerUserId: true },
+  })
+  return block !== null
+}
+
+const REPEAT_QUIET_MS = 24 * 60 * 60 * 1000
+
+/** True when this person already triggered the same notification for the same
+ * thing within a day. Following, loving and reposting can all be undone and
+ * done again, and each round used to notify the artist afresh, which made
+ * the toggle a way to flood someone's inbox. */
+async function alreadyToldToday(
+  prisma: PrismaClient,
+  match: {
+    userId: string
+    actorUserId: string
+    type: 'NEW_FOLLOWER' | 'NEW_LIKE' | 'NEW_REPOST'
+    url: string
+  },
+  now: Date = new Date(),
+): Promise<boolean> {
+  const recent = await prisma.notification.findFirst({
+    where: { ...match, createdAt: { gte: new Date(now.getTime() - REPEAT_QUIET_MS) } },
+    select: { id: true },
+  })
+  return recent !== null
+}
+
 /** M40: notify an artist that someone followed them. */
 export async function notifyArtistOfNewFollower(
   prisma: PrismaClient,
   artistUserId: string,
   follower: { id: string; username: string; displayName: string },
 ): Promise<void> {
+  if (await blockedEitherWay(prisma, artistUserId, follower.id)) return
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: follower.id,
+      type: 'NEW_FOLLOWER',
+      url: `/u/${follower.username}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
@@ -178,6 +236,17 @@ export async function notifyArtistOfNewLike(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === liker.id) return
+  if (await blockedEitherWay(prisma, artistUserId, liker.id)) return
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: liker.id,
+      type: 'NEW_LIKE',
+      url: `/t/${item.id}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
@@ -222,6 +291,17 @@ export async function notifyArtistOfNewRepost(
   item: { id: string; title: string; channelSlug: string },
 ): Promise<void> {
   if (artistUserId === reposter.id) return
+  if (await blockedEitherWay(prisma, artistUserId, reposter.id)) return
+  if (
+    await alreadyToldToday(prisma, {
+      userId: artistUserId,
+      actorUserId: reposter.id,
+      type: 'NEW_REPOST',
+      url: `/t/${item.id}`,
+    })
+  ) {
+    return
+  }
   await prisma.notification.create({
     data: {
       userId: artistUserId,
@@ -299,14 +379,33 @@ export async function notifyUserOfNewMessage(
   conversationId: string,
   messageBody: string,
 ): Promise<void> {
+  const url = `/dashboard/messages/${conversationId}`
+  const title = `${actorDisplayName(sender)} sent you a message`
+  const body = messageBody.slice(0, 140)
+
+  // One unread notification per conversation: a second message while the
+  // first is still unread refreshes it, instead of stacking a new bell entry
+  // for every line someone types.
+  const unread = await prisma.notification.findFirst({
+    where: { userId: recipientUserId, type: 'NEW_MESSAGE', url, readAt: null },
+    select: { id: true },
+  })
+  if (unread) {
+    await prisma.notification.update({
+      where: { id: unread.id },
+      data: { actorUserId: sender.id, title, body, createdAt: new Date() },
+    })
+    return
+  }
+
   await prisma.notification.create({
     data: {
       userId: recipientUserId,
       type: 'NEW_MESSAGE',
       actorUserId: sender.id,
-      title: `${actorDisplayName(sender)} sent you a message`,
-      body: messageBody.slice(0, 140),
-      url: `/dashboard/messages/${conversationId}`,
+      title,
+      body,
+      url,
     },
   })
 }

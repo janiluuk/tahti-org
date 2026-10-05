@@ -90,10 +90,15 @@ describe('@tahti/api-client connectivity', () => {
     // Same SDK, switched to bearer-token auth instead of the cookie — proves
     // the client works unmodified for the third-party / scripted use case.
     const tokenApi = createTahtiClient({ baseUrl, token: created.data!.token })
-    const viaToken = await tokenApi.GET('/api/me/api-tokens')
-    expect(viaToken.data).toHaveLength(1)
+    const me = await tokenApi.GET('/api/auth/me')
+    expect(me.response.status).toBe(200)
 
-    const revoke = await tokenApi.DELETE('/api/me/api-tokens/{id}', {
+    // A token cannot manage tokens: that needs a browser session, so a leaked
+    // token can't mint itself a replacement.
+    const viaToken = await tokenApi.GET('/api/me/api-tokens')
+    expect(viaToken.response.status).toBe(403)
+
+    const revoke = await api.DELETE('/api/me/api-tokens/{id}', {
       params: { path: { id: created.data!.id } },
     })
     expect(revoke.response.status).toBe(204)

@@ -17,6 +17,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   RECIPIENT_UNAVAILABLE_BODY,
@@ -149,6 +150,9 @@ const meMessagesRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!other) return reply.status(404).send({ error: 'User not found' })
       if (other.deletedAt || other.suspendedAt) {
+        return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
+      }
+      if (await isBlockedEitherWay(fastify.prisma, user.id, other.id)) {
         return reply.status(403).send(RECIPIENT_UNAVAILABLE_BODY)
       }
 

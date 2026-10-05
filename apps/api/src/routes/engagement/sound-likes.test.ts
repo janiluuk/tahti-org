@@ -115,6 +115,57 @@ describe('sound item like routes', () => {
     expect(res.json()).toEqual({ liked: false, likeCount: 0 })
   })
 
+  it('tells the artist once when a track is loved, unloved and loved again', async () => {
+    const url = `/api/v1/c/${channelSlug}/sounds/${itemId}/like`
+    const headers = { cookie: likerCookie }
+    await app.inject({ method: 'POST', url, headers })
+    await app.inject({ method: 'DELETE', url, headers })
+    const again = await app.inject({ method: 'POST', url, headers })
+    expect(again.json().liked).toBe(true)
+    expect(
+      await prisma.notification.count({
+        where: { type: 'NEW_LIKE', actorUserId: likerId, url: `/t/${itemId}` },
+      }),
+    ).toBe(1)
+    await app.inject({ method: 'DELETE', url, headers })
+  })
+
+  it('refuses to love a track whose artist is suspended', async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({
+      where: { slug: channelSlug },
+      select: { userId: true },
+    })
+    await prisma.user.update({ where: { id: owner.userId }, data: { suspendedAt: new Date() } })
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/c/${channelSlug}/sounds/${itemId}/like`,
+      headers: { cookie: likerCookie },
+    })
+    expect(res.statusCode).toBe(404)
+    await prisma.user.update({ where: { id: owner.userId }, data: { suspendedAt: null } })
+  })
+
+  it('hides the count of a private track from everyone but its artist', async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({
+      where: { slug: channelSlug },
+      select: { userId: true },
+    })
+    await prisma.sound.update({ where: { id: itemId }, data: { isPublic: false } })
+    const url = `/api/v1/c/${channelSlug}/sounds/${itemId}/like`
+    expect((await app.inject({ method: 'GET', url })).statusCode).toBe(404)
+    expect(
+      (await app.inject({ method: 'GET', url, headers: { cookie: likerCookie } })).statusCode,
+    ).toBe(404)
+    const mine = await app.inject({
+      method: 'GET',
+      url,
+      headers: { cookie: await sessionCookieFor(prisma, owner.userId) },
+    })
+    expect(mine.statusCode).toBe(200)
+    await prisma.sound.update({ where: { id: itemId }, data: { isPublic: true } })
+    expect((await app.inject({ method: 'GET', url })).statusCode).toBe(200)
+  })
+
   it('404s for an unknown sound item', async () => {
     const res = await app.inject({
       method: 'POST',

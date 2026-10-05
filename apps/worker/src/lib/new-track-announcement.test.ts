@@ -80,6 +80,46 @@ describe('announcing a new public upload', () => {
     expect(await isFirstTranscode(prisma, track.id, 'ERROR')).toBe(false)
   })
 
+  it('links to the track and announces each track only once', async () => {
+    const track = await sound('second-wind', true)
+    await announceNewPublicTrack(prisma, track.id)
+    await announceNewPublicTrack(prisma, track.id)
+    const notes = await prisma.notification.findMany({
+      where: { userId: followerId, type: 'NEW_TRACK', body: 'second-wind' },
+    })
+    expect(notes).toHaveLength(1)
+    expect(notes[0]?.url).toBe(`/t/${track.id}`)
+
+    const other = await sound('third-coast', true)
+    await announceNewPublicTrack(prisma, other.id)
+    expect(
+      await prisma.notification.count({
+        where: { userId: followerId, type: 'NEW_TRACK', body: 'third-coast' },
+      }),
+    ).toBe(1)
+  })
+
+  it('leaves out followers whose account is suspended or deleted', async () => {
+    const suspended = await makeUser('suspended', 'Suspended Fan')
+    const deleted = await makeUser('deleted', 'Deleted Fan')
+    await prisma.artistFollow.createMany({
+      data: [suspended, deleted].map((fan) => ({
+        followerUserId: fan.id,
+        artistUserId: artistId,
+      })),
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+    await prisma.user.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } })
+
+    const track = await sound('fourth-wall', true)
+    await announceNewPublicTrack(prisma, track.id)
+    const notes = await prisma.notification.findMany({
+      where: { type: 'NEW_TRACK', body: 'fourth-wall' },
+      select: { userId: true },
+    })
+    expect(notes.map((n) => n.userId)).toEqual([followerId])
+  })
+
   it('stays quiet for a private upload', async () => {
     const track = await sound('demo-cut', false)
     await announceNewPublicTrack(prisma, track.id)

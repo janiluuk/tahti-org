@@ -79,12 +79,18 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
           channel: {
             select: {
               slug: true,
+              userId: true,
               user: { select: { username: true, displayName: true } },
             },
           },
         },
       })
       if (!item || !item.isPublic || item.status !== 'READY' || !item.topListsEligible) {
+        return reply.send({ recorded: false })
+      }
+      // An artist playing their own track is not a listen: it would let anyone
+      // nudge their own tracks up the charts by pressing play each day.
+      if (sessionUser && sessionUser.id === item.channel.userId) {
         return reply.send({ recorded: false })
       }
 
