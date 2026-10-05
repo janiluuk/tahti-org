@@ -227,6 +227,11 @@ describe('parseHearthisSetPermalink', () => {
   it('rejects empty input', () => {
     expect(parseHearthisSetPermalink('')).toBeNull()
   })
+
+  it('rejects a permalink with characters hearthis never uses', () => {
+    expect(parseHearthisSetPermalink('not a set')).toBeNull()
+    expect(parseHearthisSetPermalink('https://hearthis.at/set/not%20a%20set/')).toBeNull()
+  })
 })
 
 describe('loginToHearthis', () => {

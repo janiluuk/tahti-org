@@ -169,7 +169,10 @@ export function parseHearthisSetPermalink(input: string): string | null {
     const url = new URL(value.startsWith('http') ? value : `https://hearthis.at/set/${value}/`)
     if (!/(^|\.)hearthis\.at$/.test(url.hostname)) return null
     const match = /^\/set\/([^/]+)\/?$/.exec(url.pathname)
-    if (match) return decodeURIComponent(match[1])
+    if (match) {
+      const permalink = decodeURIComponent(match[1])
+      return /^[\w-]+$/.test(permalink) ? permalink : null
+    }
   } catch {
     // bare permalink below
   }
