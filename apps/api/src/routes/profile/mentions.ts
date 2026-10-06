@@ -8,8 +8,11 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { availableUserWhere } from '@tahti/db'
-import { mentionSourceSelect, resolveMentionSources } from '../../lib/mention-sources.js'
+import {
+  listedMentionsWhere,
+  mentionSourceSelect,
+  resolveMentionSources,
+} from '../../lib/mention-sources.js'
 
 // M15 — public mention feed (opt-in via publicMentionsEnabled)
 const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -37,7 +40,7 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const mentions = await fastify.prisma.mention.findMany({
-        where: { targetUserId: user.id, mentioner: availableUserWhere },
+        where: listedMentionsWhere(user.id),
         orderBy: { createdAt: 'desc' },
         take: 50,
         select: mentionSourceSelect,

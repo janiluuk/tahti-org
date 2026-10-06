@@ -222,6 +222,20 @@ describe('M15 — public mentions API', () => {
     expect(bio?.sourceTitle).toBe('pub-mentioner')
   })
 
+  it('leaves out mentions by someone the artist muted', async () => {
+    await prisma.mentionMute.create({ data: { muterId: targetId, targetUserId: mentionerId } })
+
+    const muted = await app.inject({ method: 'GET', url: '/api/v1/u/pub-mention-target/mentions' })
+    expect(muted.json()).toEqual([])
+
+    await prisma.mentionMute.deleteMany({ where: { muterId: targetId } })
+    const unmuted = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/pub-mention-target/mentions',
+    })
+    expect((unmuted.json() as unknown[]).length).toBeGreaterThan(0)
+  })
+
   it('leaves out mentions by a suspended account', async () => {
     await prisma.user.update({ where: { id: mentionerId }, data: { suspendedAt: new Date() } })
 
