@@ -140,7 +140,8 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       const sessionUserId = request.sessionUser?.id ?? null
       // sub encodes handle + fingerprint; info carries badges + country for Centrifugo;
-      // meta.userId is backend-only so the publish proxy can notify @mentions.
+      // meta is backend-only: the publish proxy reads the sender and their
+      // badges from it, never from the message the client sends.
       const sub = `${cleanHandle}#${fingerprint}`
       // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
       // subscription JWTs can) — the client subscribes explicitly after connect.
@@ -148,7 +149,13 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         {
           sub,
           info: { supporter, countryCode, channelRole },
-          ...(sessionUserId ? { meta: { userId: sessionUserId } } : {}),
+          meta: {
+            ...(sessionUserId ? { userId: sessionUserId } : {}),
+            channelId: channel.id,
+            supporter,
+            channelRole,
+            countryCode,
+          },
         },
         3600,
       )

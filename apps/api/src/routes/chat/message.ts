@@ -5,7 +5,7 @@ import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import {
   ChatPublishProxyReplySchema,
   ChatPublishProxySchema,
-  chatProxyMetaUserId,
+  chatProxyTokenMeta,
   openApiResponse,
 } from '@tahti/shared'
 import { notifyUsersOfChatMention } from '@tahti/db'
@@ -43,11 +43,14 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       const slug = body.channel.replace(/^channel:/, '').replace(/:fans$/, '')
       if (!slug) return reply.status(400).send({ error: 'Invalid channel' })
 
+      // `sub` is `<handle>#<fingerprint>`; a handle may itself hold a `#`.
       const sub = body.user ?? ''
-      const fingerprint = sub.split('#')[1] ?? ''
+      const subSplit = sub.lastIndexOf('#')
+      const fingerprint = subSplit === -1 ? '' : sub.slice(subSplit + 1)
       const text = body.data?.text?.trim() ?? ''
       const isFanChannel = body.channel.endsWith(':fans')
-      const mentionerUserId = chatProxyMetaUserId(body.meta)
+      const tokenMeta = chatProxyTokenMeta(body.meta)
+      const mentionerUserId = tokenMeta.userId
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
@@ -122,14 +125,24 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      // Who posted and with which badges comes from the signed token, not from
+      // the message: the client writes `data`, so a handle or an owner badge
+      // taken from there could be anyone's.
+      const data = (body.data ?? {}) as Record<string, unknown>
+      const handle =
+        (subSplit > 0 && sub.slice(0, subSplit)) ||
+        (typeof data.handle === 'string' && data.handle.trim()) ||
+        'anon'
+      const supporter = isFanChannel || tokenMeta.supporter
+      const channelRole = tokenMeta.channelRole
+      const countryCode = tokenMeta.countryCode
+
       // Permanent record — Centrifugo's own history is a 1h rolling in-memory
       // buffer with nothing surviving a restart. This is the only place a
       // user-typed message is ever seen server-side (system-generated
       // messages, e.g. love announcements, publish straight to Centrifugo
       // from elsewhere and skip this proxy, so they aren't captured here).
       if (text) {
-        const data = (body.data ?? {}) as Record<string, unknown>
-        const handle = (typeof data.handle === 'string' && data.handle.trim()) || 'anon'
         const message = await fastify.prisma.chatMessage.create({
           data: {
             channelId: channel.id,
@@ -137,12 +150,9 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
             handle,
             text,
             userId: mentionerUserId,
-            supporter: data.supporter === true,
-            channelRole:
-              data.channelRole === 'owner' || data.channelRole === 'moderator'
-                ? data.channelRole
-                : null,
-            countryCode: typeof data.countryCode === 'string' ? data.countryCode : null,
+            supporter,
+            channelRole,
+            countryCode,
           },
         })
         // No message body here by design — the audit log is broadly readable
@@ -155,8 +165,21 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      // Return the data as-is — Centrifugo publishes it
-      return reply.send({ result: {} })
+      if (!body.data) return reply.send({ result: {} })
+      // Centrifugo publishes `result.data` in place of what the client sent.
+      const rest = { ...data }
+      for (const key of ['supporter', 'channelRole', 'countryCode', 'system']) delete rest[key]
+      return reply.send({
+        result: {
+          data: {
+            ...rest,
+            handle,
+            ...(supporter ? { supporter } : {}),
+            ...(channelRole ? { channelRole } : {}),
+            ...(countryCode ? { countryCode } : {}),
+          },
+        },
+      })
     },
   )
 }
