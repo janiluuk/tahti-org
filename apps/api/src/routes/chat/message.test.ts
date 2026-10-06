@@ -364,4 +364,48 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       await prisma.user.update({ where: { id: artistId }, data: { chatEnabled: true } })
     }
   })
+
+  it('refuses posts across a block with the channel owner, in either direction', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    const [blockedByOwner, blockedOwner, bystander] = await Promise.all(
+      ['blocked', 'blocker', 'bystander'].map((name) =>
+        prisma.user.create({
+          data: {
+            email: `${PREFIX}chat-${name}@example.com`,
+            passwordHash: 'x',
+            username: `chat-message-${name}`,
+            displayName: name,
+          },
+        }),
+      ),
+    )
+    await prisma.userBlock.createMany({
+      data: [
+        { blockerUserId: artistId, blockedUserId: blockedByOwner!.id },
+        { blockerUserId: blockedOwner!.id, blockedUserId: artistId },
+      ],
+    })
+    const post = (userId: string, text: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/chat/message',
+        payload: { channel: `channel:${slug}`, meta: { userId }, data: { text } },
+      })
+
+    for (const sender of [blockedByOwner!, blockedOwner!]) {
+      const res = await post(sender.id, 'across the block')
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual(refusal('banned'))
+    }
+    expect((await post(bystander!.id, 'hello from a bystander')).json()).toEqual({ result: {} })
+    expect((await post(artistId, 'hello from the owner')).json()).toEqual({ result: {} })
+
+    const stored = await prisma.chatMessage.findMany({
+      where: { channelId: channel.id, userId: { in: [blockedByOwner!.id, blockedOwner!.id] } },
+    })
+    expect(stored).toEqual([])
+
+    await prisma.userBlock.deleteMany({ where: { blockerUserId: artistId } })
+    expect((await post(blockedByOwner!.id, 'unblocked')).json()).toEqual({ result: {} })
+  })
 })
