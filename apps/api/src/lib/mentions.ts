@@ -5,6 +5,7 @@
 // Parses @username tokens from free text and records Mention rows for targets
 // who have mentionsEnabled and haven't muted the mentioner.
 
+import { availableUserWhere } from '@tahti/db'
 import type { PrismaClient, MentionSurface } from '@tahti/db'
 
 const HANDLE_RE = /@([a-z0-9_-]{2,32})/gi
@@ -40,14 +41,18 @@ export async function recordMentions(
 
   const slice = handles.slice(0, remaining)
 
-  // Resolve handles to user IDs; skip unknown handles, self-mentions, and
-  // anyone who has muted the mentioner
+  // Resolve handles to user IDs; skip unknown handles, self-mentions, closed
+  // or suspended accounts, anyone who has muted the mentioner, and anyone
+  // with a block between them and the mentioner in either direction
   const targets = await prisma.user.findMany({
     where: {
       username: { in: slice, mode: 'insensitive' },
       mentionsEnabled: true,
       id: { not: mentionerUserId },
+      ...availableUserWhere,
       mentionsMuted: { none: { targetUserId: mentionerUserId } },
+      blocksMade: { none: { blockedUserId: mentionerUserId } },
+      blocksReceived: { none: { blockerUserId: mentionerUserId } },
     },
     select: { id: true },
   })
