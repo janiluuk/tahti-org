@@ -4,6 +4,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { Prisma, PrismaClient } from '@tahti/db'
 import { safeDisplayName, soundPlaybackKey } from '@tahti/shared'
+import { availableUserWhere, listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
@@ -14,20 +15,31 @@ export function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+/** A track anyone may see in a collection or add to one: public, ready, and
+ * not by a suspended or deleted account. */
+export const publicCollectionSoundWhere = {
+  isPublic: true,
+  status: 'READY' as const,
+  ...listedArtistSoundWhere,
+}
+
 /** Items a public collection surface may show: the owner can keep private,
  * unfinished or draft entries in a public collection, and those stay
- * between them and the editor. */
+ * between them and the editor. Work by a suspended or deleted account drops
+ * out of other people's collections too. */
 export const publicCollectionItemWhere = {
   OR: [
-    { sound: { isPublic: true, status: 'READY' as const } },
-    { release: { state: 'PUBLISHED' as const } },
+    { sound: publicCollectionSoundWhere },
+    { release: { state: 'PUBLISHED' as const, user: availableUserWhere } },
   ],
 }
 
 /** Collections anyone with the link may open: public ones, plus unlisted
- * ones, which stay out of profiles and discovery but work by link. */
+ * ones, which stay out of profiles and discovery but work by link. A
+ * suspended or deleted owner's collections open for nobody. */
 export const linkReachableCollectionWhere = {
   OR: [{ isPublic: true }, { visibility: 'UNLISTED' as const }],
+  user: availableUserWhere,
 }
 
 export const collectionItemInclude = {
