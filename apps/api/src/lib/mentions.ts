@@ -40,13 +40,14 @@ export async function recordMentions(
 
   const slice = handles.slice(0, remaining)
 
-  // Resolve handles to user IDs; skip unknown handles, self-mentions, and mutes
+  // Resolve handles to user IDs; skip unknown handles, self-mentions, and
+  // anyone who has muted the mentioner
   const targets = await prisma.user.findMany({
     where: {
       username: { in: slice, mode: 'insensitive' },
       mentionsEnabled: true,
       id: { not: mentionerUserId },
-      mentionsMutedBy: { none: { muterId: mentionerUserId } },
+      mentionsMuted: { none: { targetUserId: mentionerUserId } },
     },
     select: { id: true },
   })
