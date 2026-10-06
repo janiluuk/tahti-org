@@ -9,6 +9,7 @@ import {
   JamParticipantControlUpdateSchema,
   JamStateUpdateSchema,
   JamTrackSchema,
+  type JamEvent,
   type JamSessionView,
   type JamTrack,
   openApiResponse,
@@ -17,6 +18,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { generateJamCode } from '../../lib/jam-code.js'
 import { publishToJam, subscribeToJam } from '../../lib/jam-broadcast.js'
+import { isLastJamEventFor } from '../../lib/jam-stream.js'
 import { userName } from '../../lib/safe-names.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
@@ -236,26 +238,33 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       })
       reply.raw.write(`data: ${JSON.stringify({ type: 'state', session: serialize(session) })}\n\n`)
 
-      const unsubscribe = await subscribeToJam(id, (event) => {
-        reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)
-      })
-      // subscribeToJam's Redis SUBSCRIBE is an async round-trip — re-send the
-      // freshest state now that it's active, in case a state change landed
-      // in the (sub-ms, but non-zero) gap between the snapshot above and the
-      // subscription actually taking effect.
-      const settled = await loadActiveSession(id)
-      if (settled) {
-        reply.raw.write(
-          `data: ${JSON.stringify({ type: 'state', session: serialize(settled) })}\n\n`,
-        )
+      // A listener who left or was removed, and everyone once the jam ends,
+      // gets that last event and then the stream closes. Before, it stayed
+      // open and kept sending them what the host played.
+      const listenerId = request.sessionUser!.id
+      let unsubscribe: (() => void) | null = null
+      let keepAlive: NodeJS.Timeout | null = null
+      let closed = false
+      const close = () => {
+        if (closed) return
+        closed = true
+        if (keepAlive) clearInterval(keepAlive)
+        unsubscribe?.()
+        reply.raw.end()
       }
-      // Comment-only pings keep intermediaries (proxies, browsers) from
-      // treating an idle-but-open jam as a dead connection.
-      const keepAlive = setInterval(() => reply.raw.write(': ping\n\n'), 20_000)
-      request.raw.on('close', () => {
-        clearInterval(keepAlive)
-        unsubscribe()
-      })
+      const send = (event: JamEvent) => {
+        if (closed) return
+        reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)
+        if (isLastJamEventFor(event, listenerId)) close()
+      }
+
+      unsubscribe = await subscribeToJam(id, send)
+      if (closed) unsubscribe()
+      const settled = await loadActiveSession(id)
+      if (settled) send({ type: 'state', session: serialize(settled) })
+      else send({ type: 'ended' })
+      if (!closed) keepAlive = setInterval(() => reply.raw.write(': ping\n\n'), 20_000)
+      request.raw.on('close', close)
     },
   )
 
