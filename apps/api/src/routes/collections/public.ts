@@ -18,6 +18,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { trackArtistName } from '../../lib/safe-names.js'
@@ -29,6 +30,7 @@ import {
   linkReachableCollectionWhere,
   nextCollectionPosition,
   publicCollectionItemWhere,
+  publicCollectionSoundWhere,
   sortCollectionItems,
   soundArtist,
   zodError,
@@ -133,7 +135,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true, collaborative: true },
+        where: { slug, isPublic: true, collaborative: true, user: availableUserWhere },
         include: {
           user: { select: { id: true, username: true } },
         },
@@ -150,7 +152,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const sound = await fastify.prisma.sound.findFirst({
-        where: { id: soundId, status: 'READY', isPublic: true },
+        where: { id: soundId, ...publicCollectionSoundWhere },
         select: { id: true, title: true },
       })
       if (!sound) return reply.status(400).send({ error: 'Track not found' })
@@ -304,8 +306,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const items = await fastify.prisma.sound.findMany({
         where: {
-          isPublic: true,
-          status: 'READY',
+          ...publicCollectionSoundWhere,
           ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
         },
         orderBy: { createdAt: 'desc' },
