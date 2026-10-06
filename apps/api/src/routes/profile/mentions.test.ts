@@ -155,4 +155,81 @@ describe('M15 — public mentions API', () => {
     expect(hiddenMention).toMatchObject({ sourceTitle: null, sourceUrl: null })
     expect(res.body).not.toContain('Unreleased Secret')
   })
+
+  it('links a release mention once the release is published', async () => {
+    const [published, draft] = await Promise.all(
+      (['PUBLISHED', 'DRAFT'] as const).map((state) =>
+        prisma.release.create({
+          data: {
+            userId: mentionerId,
+            title: `Pub Mention ${state}`,
+            type: 'EP',
+            releaseDate: new Date(),
+            smartLinkSlug: `${PREFIX}${state.toLowerCase()}`,
+            state,
+          },
+        }),
+      ),
+    )
+    await prisma.mention.createMany({
+      data: [published, draft].map((release) => ({
+        mentionerUserId: mentionerId,
+        targetUserId: targetId,
+        surface: 'RELEASE' as const,
+        sourceId: release.id,
+      })),
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/pub-mention-target/mentions',
+    })
+    const body = res.json() as Array<{
+      sourceId: string
+      sourceTitle: string | null
+      sourceUrl: string | null
+    }>
+    expect(body.find((m) => m.sourceId === published.id)).toMatchObject({
+      sourceTitle: 'Pub Mention PUBLISHED',
+      sourceUrl: `/r/${PREFIX}published`,
+    })
+    expect(body.find((m) => m.sourceId === draft.id)).toMatchObject({
+      sourceTitle: null,
+      sourceUrl: null,
+    })
+    expect(res.body).not.toContain('Pub Mention DRAFT')
+  })
+
+  it('never sends an email address as the mentioner name', async () => {
+    await prisma.user.update({
+      where: { id: mentionerId },
+      data: { displayName: 'someone@example.com' },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/pub-mention-target/mentions',
+    })
+    expect(res.body).not.toContain('someone@example.com')
+    const bio = (
+      res.json() as Array<{
+        surface: string
+        sourceTitle: string
+        mentioner: { displayName: string }
+      }>
+    ).find((m) => m.surface === 'BIO')
+    expect(bio?.mentioner.displayName).toBe('pub-mentioner')
+    expect(bio?.sourceTitle).toBe('pub-mentioner')
+  })
+
+  it('leaves out mentions by a suspended account', async () => {
+    await prisma.user.update({ where: { id: mentionerId }, data: { suspendedAt: new Date() } })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/pub-mention-target/mentions',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual([])
+  })
 })
