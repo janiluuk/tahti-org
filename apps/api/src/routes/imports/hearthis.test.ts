@@ -318,6 +318,31 @@ describe('hearthis.at mixed-source import', () => {
     }
   })
 
+  it('adds a track after an earlier one was removed from the collection', async () => {
+    const items = await prisma.collectionItem.findMany({
+      where: { collectionId },
+      orderBy: { position: 'asc' },
+      select: { id: true, position: true },
+    })
+    expect(items.length).toBeGreaterThan(1)
+    const last = items[items.length - 1]!
+    await prisma.collectionItem.delete({ where: { id: items[0]!.id } })
+
+    mockGetTrackByUrl.mockResolvedValueOnce(SAMPLE_TRACK)
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/imports/hearthis/add',
+      headers: { cookie },
+      payload: { collectionId, trackUrl: 'https://hearthis.at/candana-dj/credo/' },
+    })
+    expect(res.statusCode).toBe(201)
+    const added = await prisma.collectionItem.findUniqueOrThrow({
+      where: { id: res.json().collectionItemId },
+      select: { position: true },
+    })
+    expect(added.position).toBe(last.position + 1)
+  })
+
   it('rejects add with an invalid trackUrl', async () => {
     const res = await app.inject({
       method: 'POST',
