@@ -3477,6 +3477,9 @@ model JamParticipant {
   canControl Boolean            @default(false)
   joinedAt   DateTime           @default(now())
   leftAt     DateTime?
+  // Set when the host removes a guest. Unlike leftAt it is never cleared, so
+  // the same link does not let them straight back in.
+  removedAt  DateTime?
 
   @@unique([sessionId, userId])
   @@index([sessionId])
