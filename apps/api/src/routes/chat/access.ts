@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { resolveChatChannelRole } from '../../lib/chat-role.js'
 import { artistOffersFanChat, canUseFanChat } from '../../lib/fan-perks.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 
@@ -36,8 +37,12 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser
       let isSupporter = false
       let canJoinFanChat = false
+      let runsTheRoom = false
 
       if (user) {
+        runsTheRoom =
+          (await resolveChatChannelRole(fastify.prisma, channel.id, channel.userId, user.id)) !==
+          null
         isSupporter = await isActiveFanSubscriber(fastify.prisma, channel.userId, user.id)
         canJoinFanChat = await canUseFanChat(fastify.prisma, channel.userId, user.id)
       }
@@ -49,7 +54,7 @@ const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
         isSupporter,
         canJoinFanChat,
         subscribersOnly: channel.chatSubscribersOnly,
-        canPostInChat: !channel.chatSubscribersOnly || isSupporter,
+        canPostInChat: !channel.chatSubscribersOnly || isSupporter || runsTheRoom,
       })
     },
   )
