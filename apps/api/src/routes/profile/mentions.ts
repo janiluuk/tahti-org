@@ -8,7 +8,8 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { userName } from '../../lib/safe-names.js'
+import { availableUserWhere } from '@tahti/db'
+import { mentionSourceSelect, resolveMentionSources } from '../../lib/mention-sources.js'
 
 // M15 — public mention feed (opt-in via publicMentionsEnabled)
 const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -36,89 +37,13 @@ const publicMentionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const mentions = await fastify.prisma.mention.findMany({
-        where: { targetUserId: user.id },
+        where: { targetUserId: user.id, mentioner: availableUserWhere },
         orderBy: { createdAt: 'desc' },
         take: 50,
-        select: {
-          id: true,
-          surface: true,
-          sourceId: true,
-          createdAt: true,
-          mentioner: {
-            select: {
-              username: true,
-              displayName: true,
-              channel: { select: { slug: true } },
-            },
-          },
-        },
+        select: mentionSourceSelect,
       })
 
-      // Batch-resolve TRACKLIST (Sound) and CHAT (Channel, from a composite
-      // `chat:${channelId}:${ts}:${mentionerId}` sourceId) — BIO and
-      // ANNOUNCEMENT resolve from `mentioner` alone, already loaded above.
-      const soundIds = mentions.filter((m) => m.surface === 'TRACKLIST').map((m) => m.sourceId)
-      const chatChannelIds = mentions
-        .filter((m) => m.surface === 'CHAT')
-        .map((m) => m.sourceId.split(':')[1])
-        .filter((id): id is string => Boolean(id))
-
-      const [sounds, chatChannels] = await Promise.all([
-        soundIds.length > 0
-          ? fastify.prisma.sound.findMany({
-              where: { id: { in: soundIds }, isPublic: true, status: 'READY' },
-              select: { id: true, title: true },
-            })
-          : Promise.resolve([]),
-        chatChannelIds.length > 0
-          ? fastify.prisma.channel.findMany({
-              where: { id: { in: chatChannelIds } },
-              select: { id: true, slug: true },
-            })
-          : Promise.resolve([]),
-      ])
-      const soundById = new Map(sounds.map((s) => [s.id, s]))
-      const chatChannelById = new Map(chatChannels.map((c) => [c.id, c]))
-
-      const resolved = mentions.map((m) => {
-        switch (m.surface) {
-          case 'BIO':
-            return {
-              ...m,
-              sourceTitle: userName(m.mentioner),
-              sourceUrl: `/u/${m.mentioner.username}`,
-            }
-          case 'TRACKLIST': {
-            const sound = soundById.get(m.sourceId)
-            return {
-              ...m,
-              sourceTitle: sound?.title ?? null,
-              sourceUrl: sound ? `/t/${sound.id}` : null,
-            }
-          }
-          case 'ANNOUNCEMENT': {
-            const slug = m.mentioner.channel?.slug
-            return {
-              ...m,
-              sourceTitle: userName(m.mentioner),
-              sourceUrl: slug ? `/channel/${slug}` : null,
-            }
-          }
-          case 'CHAT': {
-            const channelId = m.sourceId.split(':')[1]
-            const channel = channelId ? chatChannelById.get(channelId) : undefined
-            return {
-              ...m,
-              sourceTitle: userName(m.mentioner),
-              sourceUrl: channel ? `/chat/${channel.slug}` : null,
-            }
-          }
-          default:
-            return { ...m, sourceTitle: null, sourceUrl: null }
-        }
-      })
-
-      return reply.send(resolved)
+      return reply.send(await resolveMentionSources(fastify.prisma, mentions))
     },
   )
 }
