@@ -18,7 +18,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
-import { linkReachableCollectionWhere } from '../collections/helpers.js'
+import { linkReachableCollectionWhere, publicCollectionSoundWhere } from '../collections/helpers.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
@@ -234,7 +234,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           coverKey: true,
           user: { select: { username: true, displayName: true } },
           items: {
-            where: { sound: { isPublic: true, status: 'READY' } },
+            where: { sound: publicCollectionSoundWhere },
             orderBy: { position: 'asc' },
             select: {
               sound: {
@@ -304,7 +304,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         where: {
           collectionId: collection.id,
           soundId: trackId,
-          sound: { isPublic: true, status: 'READY' },
+          sound: publicCollectionSoundWhere,
         },
         select: {
           sound: {

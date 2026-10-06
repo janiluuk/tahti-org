@@ -18,9 +18,11 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { trackArtistName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import {
   collectionItemInclude,
   safeUser,
@@ -28,6 +30,7 @@ import {
   linkReachableCollectionWhere,
   nextCollectionPosition,
   publicCollectionItemWhere,
+  publicCollectionSoundWhere,
   sortCollectionItems,
   soundArtist,
   zodError,
@@ -132,15 +135,24 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
 
       const col = await fastify.prisma.collection.findFirst({
-        where: { slug, isPublic: true, collaborative: true },
+        where: { slug, isPublic: true, collaborative: true, user: availableUserWhere },
         include: {
           user: { select: { id: true, username: true } },
         },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      // A block between the guest and the playlist's owner closes the
+      // playlist to the guest. It reads as a missing playlist, so a block is
+      // not announced.
+      if (
+        col.user.id !== user.id &&
+        (await isBlockedEitherWay(fastify.prisma, col.user.id, user.id))
+      ) {
+        return reply.status(404).send({ error: 'Collection not found' })
+      }
 
       const sound = await fastify.prisma.sound.findFirst({
-        where: { id: soundId, status: 'READY', isPublic: true },
+        where: { id: soundId, ...publicCollectionSoundWhere },
         select: { id: true, title: true },
       })
       if (!sound) return reply.status(400).send({ error: 'Track not found' })
@@ -294,8 +306,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const items = await fastify.prisma.sound.findMany({
         where: {
-          isPublic: true,
-          status: 'READY',
+          ...publicCollectionSoundWhere,
           ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
         },
         orderBy: { createdAt: 'desc' },
