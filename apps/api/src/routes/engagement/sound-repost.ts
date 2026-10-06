@@ -10,6 +10,7 @@ import {
 } from '@tahti/shared'
 import { availableUserWhere, notifyArtistOfNewRepost } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 // Distinct from routes/engagement/sound-repost-ack.ts (SoundRepostAck — an
 // acknowledgment gating a download, unrelated to sharing) — this is a real
@@ -51,6 +52,10 @@ const soundRepostRoutes: FastifyPluginAsync = async (fastify) => {
           select: { id: true, title: true, channel: { select: { slug: true, userId: true } } },
         })
         if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+        // A block either way stops a new repost; it answers like a missing track.
+        if (await isBlockedEitherWay(fastify.prisma, item.channel.userId, user.id)) {
+          return reply.status(404).send({ error: 'Sound item not found' })
+        }
 
         const { didCreate } = await fastify.prisma.$transaction(async (tx) => {
           const existing = await tx.soundRepost.findUnique({

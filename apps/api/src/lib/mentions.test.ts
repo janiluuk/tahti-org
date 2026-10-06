@@ -99,6 +99,69 @@ describe('mentions lib', () => {
     expect(targetIds).toEqual([target.id])
   })
 
+  it('recordMentions skips accounts with a block in either direction', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}blk-from@example.com`,
+      username: 'mention-blk-from',
+    })
+    const blocker = await createTestArtist(prisma, {
+      email: `${PREFIX}blk-er@example.com`,
+      username: 'mention-blk-er',
+    })
+    const blocked = await createTestArtist(prisma, {
+      email: `${PREFIX}blk-ed@example.com`,
+      username: 'mention-blk-ed',
+    })
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}blk-other@example.com`,
+      username: 'mention-blk-other',
+    })
+
+    await prisma.userBlock.createMany({
+      data: [
+        { blockerUserId: blocker.id, blockedUserId: mentioner.id },
+        { blockerUserId: mentioner.id, blockedUserId: blocked.id },
+      ],
+    })
+
+    const targetIds = await recordMentions(
+      prisma,
+      mentioner.id,
+      '@mention-blk-er @mention-blk-ed @mention-blk-other',
+      'ANNOUNCEMENT',
+      'ann-3',
+    )
+
+    expect(targetIds).toEqual([other.id])
+  })
+
+  it('recordMentions skips suspended and deleted accounts', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}gone-from@example.com`,
+      username: 'mention-gone-from',
+    })
+    const suspended = await createTestArtist(prisma, {
+      email: `${PREFIX}gone-susp@example.com`,
+      username: 'mention-gone-susp',
+    })
+    const deleted = await createTestArtist(prisma, {
+      email: `${PREFIX}gone-del@example.com`,
+      username: 'mention-gone-del',
+    })
+    await prisma.user.update({ where: { id: suspended.id }, data: { suspendedAt: new Date() } })
+    await prisma.user.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } })
+
+    const targetIds = await recordMentions(
+      prisma,
+      mentioner.id,
+      '@mention-gone-susp @mention-gone-del',
+      'ANNOUNCEMENT',
+      'ann-4',
+    )
+
+    expect(targetIds).toEqual([])
+  })
+
   it('recordMentions respects the daily limit of 20', async () => {
     const mentioner = await createTestArtist(prisma, {
       email: `${PREFIX}limit@example.com`,
