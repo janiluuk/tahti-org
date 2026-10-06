@@ -356,6 +356,22 @@ export async function notifyPlaylistOfNewTrack(
   }
   if (recipients.size === 0) return
 
+  // Nobody hears about an add from an account they blocked, or that blocked them.
+  const blocks = await prisma.userBlock.findMany({
+    where: {
+      OR: [
+        { blockerUserId: adder.id, blockedUserId: { in: [...recipients] } },
+        { blockerUserId: { in: [...recipients] }, blockedUserId: adder.id },
+      ],
+    },
+    select: { blockerUserId: true, blockedUserId: true },
+  })
+  for (const block of blocks) {
+    recipients.delete(block.blockerUserId)
+    recipients.delete(block.blockedUserId)
+  }
+  if (recipients.size === 0) return
+
   const title = `${actorDisplayName(adder)} added "${item.title}" to ${collection.name}`
   const url = `/u/${collection.ownerUsername}/c/${collection.slug}`
 

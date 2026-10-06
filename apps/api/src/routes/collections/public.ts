@@ -21,6 +21,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { trackArtistName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import {
   collectionItemInclude,
   safeUser,
@@ -138,6 +139,15 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      // A block between the guest and the playlist's owner closes the
+      // playlist to the guest. It reads as a missing playlist, so a block is
+      // not announced.
+      if (
+        col.user.id !== user.id &&
+        (await isBlockedEitherWay(fastify.prisma, col.user.id, user.id))
+      ) {
+        return reply.status(404).send({ error: 'Collection not found' })
+      }
 
       const sound = await fastify.prisma.sound.findFirst({
         where: { id: soundId, status: 'READY', isPublic: true },
