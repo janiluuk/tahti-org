@@ -77,7 +77,7 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       payload: { channel: `channel:${slug}`, data: { text: 'hello chat' } },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ result: {} })
+    expect(res.json()).toEqual({ result: { data: { text: 'hello chat', handle: 'anon' } } })
   })
 
   it('persists the message to ChatMessage', async () => {
@@ -87,7 +87,9 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       url: '/api/chat/message',
       payload: {
         channel: `channel:${slug}`,
-        data: { text: 'a message worth keeping', handle: 'Listener42', countryCode: 'FI' },
+        user: 'Listener42#persisted-fingerprint',
+        meta: { countryCode: 'FI' },
+        data: { text: 'a message worth keeping', handle: 'Listener42' },
       },
     })
     expect(res.statusCode).toBe(200)
@@ -99,6 +101,119 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(row?.handle).toBe('Listener42')
     expect(row?.countryCode).toBe('FI')
     expect(row?.fanOnly).toBe(false)
+  })
+
+  it('takes the handle and badges from the token, not from the message', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        user: 'Plain Listener#spoof-fingerprint',
+        meta: { channelId: channel.id, supporter: false, channelRole: null, countryCode: 'SE' },
+        data: {
+          text: 'trust me, I run this channel',
+          handle: slug,
+          ts: 1700000000000,
+          supporter: true,
+          channelRole: 'owner',
+          countryCode: 'FI',
+          system: true,
+        },
+      },
+    })
+
+    expect(res.json()).toEqual({
+      result: {
+        data: {
+          text: 'trust me, I run this channel',
+          handle: 'Plain Listener',
+          ts: 1700000000000,
+          countryCode: 'SE',
+        },
+      },
+    })
+    const row = await prisma.chatMessage.findFirstOrThrow({
+      where: { channelId: channel.id, text: 'trust me, I run this channel' },
+    })
+    expect(row).toMatchObject({
+      handle: 'Plain Listener',
+      supporter: false,
+      channelRole: null,
+      countryCode: 'SE',
+    })
+  })
+
+  it('keeps the badges the token carries', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        user: 'The Artist#owner-fingerprint',
+        meta: { userId: artistId, channelId: channel.id, supporter: true, channelRole: 'owner' },
+        data: { text: 'hello from the booth', handle: 'The Artist' },
+      },
+    })
+
+    expect(res.json()).toEqual({
+      result: {
+        data: {
+          text: 'hello from the booth',
+          handle: 'The Artist',
+          supporter: true,
+          channelRole: 'owner',
+        },
+      },
+    })
+  })
+
+  it('reads the fingerprint after the last # so a handle with a # stays banned', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    await prisma.chatBan.create({
+      data: { channelId: channel.id, fingerprintHash: 'banned-fingerprint' },
+    })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        user: 'dodge#1#banned-fingerprint',
+        meta: { userId: fanId },
+        data: { text: 'still here' },
+      },
+    })
+    expect(res.json()).toEqual(refusal('banned'))
+  })
+
+  it('refuses a token that was issued for another channel', async () => {
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: 'chat-message-other',
+    })
+    const post = (channelId: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/chat/message',
+        payload: {
+          channel: `channel:${slug}`,
+          user: 'Visitor#other-channel-fingerprint',
+          meta: { userId: fanId, channelId, channelRole: 'owner' },
+          data: { text: 'posted with a borrowed token' },
+        },
+      })
+
+    const res = await post(other.channel!.id)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(refusal('wrong_channel'))
+    expect(
+      await prisma.chatMessage.count({ where: { text: 'posted with a borrowed token' } }),
+    ).toBe(0)
+
+    const own = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    expect((await post(own.id)).json()).toHaveProperty('result')
   })
 
   it('marks messages on the :fans sub-channel as fanOnly', async () => {
@@ -397,8 +512,14 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       expect(res.statusCode).toBe(200)
       expect(res.json()).toEqual(refusal('banned'))
     }
-    expect((await post(bystander!.id, 'hello from a bystander')).json()).toEqual({ result: {} })
-    expect((await post(artistId, 'hello from the owner')).json()).toEqual({ result: {} })
+    for (const [userId, text] of [
+      [bystander!.id, 'hello from a bystander'],
+      [artistId, 'hello from the owner'],
+    ] as const) {
+      expect((await post(userId, text)).json()).toEqual({
+        result: { data: { text, handle: 'anon' } },
+      })
+    }
 
     const stored = await prisma.chatMessage.findMany({
       where: { channelId: channel.id, userId: { in: [blockedByOwner!.id, blockedOwner!.id] } },
@@ -406,6 +527,8 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(stored).toEqual([])
 
     await prisma.userBlock.deleteMany({ where: { blockerUserId: artistId } })
-    expect((await post(blockedByOwner!.id, 'unblocked')).json()).toEqual({ result: {} })
+    expect((await post(blockedByOwner!.id, 'unblocked')).json()).toEqual({
+      result: { data: { text: 'unblocked', handle: 'anon' } },
+    })
   })
 })
