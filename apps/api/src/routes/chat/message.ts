@@ -62,6 +62,15 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       // an hour, so the toggle has to be enforced at publish time as well.
       if (!channel.user.chatEnabled) return refusePublish(reply, 403, 'chat_disabled')
 
+      // A connection token opens every chat Centrifugo lets a client
+      // subscribe to, but the join checks behind it (ban, captcha,
+      // subscribers-only, badges) were made for one channel only. The
+      // fingerprint in it is per channel too, so on another channel the ban
+      // lookup below would never match.
+      if (tokenMeta.channelId && tokenMeta.channelId !== channel.id) {
+        return refusePublish(reply, 403, 'wrong_channel')
+      }
+
       // Any client may subscribe in the `channel` namespace, so the fan room is
       // only kept to fans by refusing posts from anyone else here.
       if (
