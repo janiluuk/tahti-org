@@ -193,7 +193,7 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
           where: { sessionId_userId: { sessionId: session.id, userId: user.id } },
           create: { sessionId: session.id, userId: user.id, role: 'GUEST', canControl: false },
           // Rejoining after having left earlier: welcome back, same seat.
-          update: { leftAt: null },
+          update: { leftAt: null, canControl: false },
         })
       }
 
@@ -402,9 +402,10 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       if (!participant || participant.leftAt)
         return reply.status(404).send({ error: 'Not in this jam' })
 
+      // Control is given to someone who is there. It does not wait for them.
       await fastify.prisma.jamParticipant.update({
         where: { id: participant.id },
-        data: { leftAt: new Date() },
+        data: { leftAt: new Date(), ...(participant.role === 'HOST' ? {} : { canControl: false }) },
       })
 
       // Nobody else can end a jam or hand out control, so a jam the host
