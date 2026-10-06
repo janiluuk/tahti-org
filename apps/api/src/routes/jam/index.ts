@@ -124,6 +124,20 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
         code = generateJamCode()
       }
 
+      // A host who closed the tab never ended their last jam. Starting a new
+      // one closes those, so old links stop working and guests are told.
+      const stale = await fastify.prisma.jamSession.findMany({
+        where: { hostUserId: user.id, endedAt: null },
+        select: { id: true },
+      })
+      if (stale.length > 0) {
+        await fastify.prisma.jamSession.updateMany({
+          where: { id: { in: stale.map((s) => s.id) }, endedAt: null },
+          data: { endedAt: new Date(), isPlaying: false },
+        })
+        for (const old of stale) void publishToJam(old.id, { type: 'ended' })
+      }
+
       const session = await fastify.prisma.jamSession.create({
         data: {
           hostUserId: user.id,
