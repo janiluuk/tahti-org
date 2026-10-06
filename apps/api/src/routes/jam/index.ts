@@ -18,6 +18,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { generateJamCode } from '../../lib/jam-code.js'
 import { publishToJam, subscribeToJam } from '../../lib/jam-broadcast.js'
 import { userName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 const sessionWithParticipants = {
   include: {
@@ -156,6 +157,14 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
         ...sessionWithParticipants,
       })
       if (!session) return reply.status(404).send({ error: 'Jam not found' })
+      // A block either way keeps the two out of each other's jams; it answers
+      // like a wrong code so the block is not announced.
+      if (
+        session.hostUserId !== user.id &&
+        (await isBlockedEitherWay(fastify.prisma, session.hostUserId, user.id))
+      ) {
+        return reply.status(404).send({ error: 'Jam not found' })
+      }
 
       const already = session.participants.some((p) => p.userId === user.id)
       if (!already) {
