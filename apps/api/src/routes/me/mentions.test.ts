@@ -141,4 +141,59 @@ describe('M15 — mention settings API', () => {
       displayName: 'mention-email-name',
     })
   })
+
+  it('says where each mention happened', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}source@example.com`,
+      username: 'mention-source',
+    })
+    const user = await prisma.user.findUniqueOrThrow({ where: { username: 'mention-api-user' } })
+    const sound = await prisma.sound.create({
+      data: {
+        channelId: mentioner.channel!.id,
+        title: 'Source Track',
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+    const release = await prisma.release.create({
+      data: {
+        userId: mentioner.id,
+        title: 'Source Release',
+        type: 'EP',
+        releaseDate: new Date(),
+        smartLinkSlug: `${PREFIX}source-release`,
+        state: 'PUBLISHED',
+      },
+    })
+    await prisma.mention.createMany({
+      data: [
+        { surface: 'TRACKLIST' as const, sourceId: sound.id },
+        { surface: 'RELEASE' as const, sourceId: release.id },
+      ].map((row) => ({ ...row, mentionerUserId: mentioner.id, targetUserId: user.id })),
+    })
+
+    const res = await app.inject({ method: 'GET', url: '/api/me/mentions', headers: { cookie } })
+    expect(res.statusCode).toBe(200)
+    const { mentions } = res.json() as {
+      mentions: Array<{ surface: string; sourceTitle: string | null; sourceUrl: string | null }>
+    }
+    expect(mentions.find((m) => m.surface === 'TRACKLIST')).toMatchObject({
+      sourceTitle: 'Source Track',
+      sourceUrl: `/t/${sound.id}`,
+    })
+    expect(mentions.find((m) => m.surface === 'RELEASE')).toMatchObject({
+      sourceTitle: 'Source Release',
+      sourceUrl: `/r/${PREFIX}source-release`,
+    })
+  })
+
+  it('falls back to 20 mentions when limit is not a number', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/mentions?limit=abc',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+  })
 })
