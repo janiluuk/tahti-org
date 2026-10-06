@@ -239,9 +239,17 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug: routeParams.slug, ...linkReachableCollectionWhere },
-        select: { id: true },
+        select: { id: true, userId: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      // A block either way stops a new subscription; it answers like a
+      // missing collection so the block is not announced.
+      if (
+        col.userId !== request.sessionUser!.id &&
+        (await isBlockedEitherWay(fastify.prisma, col.userId, request.sessionUser!.id))
+      ) {
+        return reply.status(404).send({ error: 'Collection not found' })
+      }
 
       await fastify.prisma.collectionSubscription.upsert({
         where: {

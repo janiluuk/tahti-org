@@ -102,6 +102,16 @@ const meBlocksRoutes: FastifyPluginAsync = async (fastify) => {
       await fastify.prisma.soundLike.deleteMany({ where: betweenTheTwo })
       await fastify.prisma.soundRepost.deleteMany({ where: betweenTheTwo })
 
+      // Nor does either stay subscribed to the other's collections.
+      await fastify.prisma.collectionSubscription.deleteMany({
+        where: {
+          OR: [
+            { userId: target.id, collection: { userId: user.id } },
+            { userId: user.id, collection: { userId: target.id } },
+          ],
+        },
+      })
+
       // Neither stays a moderator of the other's channel.
       await fastify.prisma.channelModerator.deleteMany({
         where: {
