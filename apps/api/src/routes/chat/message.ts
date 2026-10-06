@@ -13,6 +13,7 @@ import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 import { extractHandles, recordMentions } from '../../lib/mentions.js'
 import { auditLog } from '../../lib/audit.js'
 import { canUseFanChat } from '../../lib/fan-perks.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -65,6 +66,17 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         !(mentionerUserId && (await canUseFanChat(fastify.prisma, channel.userId, mentionerUserId)))
       ) {
         return refusePublish(reply, 403, 'fan_chat_required')
+      }
+
+      // A block between the sender and the channel's owner, in either
+      // direction, closes the owner's chat to the sender. It reads as a ban,
+      // so a block is not announced.
+      if (
+        mentionerUserId &&
+        mentionerUserId !== channel.userId &&
+        (await isBlockedEitherWay(fastify.prisma, channel.userId, mentionerUserId))
+      ) {
+        return refusePublish(reply, 403, 'banned')
       }
 
       if (fingerprint) {
