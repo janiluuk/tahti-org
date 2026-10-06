@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyInstance } from 'fastify'
+import type { Prisma, PrismaClient } from '@tahti/db'
 import { safeDisplayName, soundPlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
@@ -191,4 +192,37 @@ export function sortCollectionItems<T extends SortableItem>(items: T[], mode: st
     return [...items].sort((a, b) => itemTime(a).getTime() - itemTime(b).getTime())
   }
   return items
+}
+
+/** Position for a track added at the end. Removing a track leaves a gap in
+ * the numbering, so the item count is not the last position. */
+export async function nextCollectionPosition(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  collectionId: string,
+): Promise<number> {
+  const last = await prisma.collectionItem.aggregate({
+    where: { collectionId },
+    _max: { position: true },
+  })
+  return (last._max.position ?? 0) + 1
+}
+
+/** Move every item from `position` onwards one place down, last one first so
+ * no two items share a position on the way. */
+export async function makeRoomAtPosition(
+  tx: Prisma.TransactionClient,
+  collectionId: string,
+  position: number,
+): Promise<void> {
+  const later = await tx.collectionItem.findMany({
+    where: { collectionId, position: { gte: position } },
+    orderBy: { position: 'desc' },
+    select: { id: true, position: true },
+  })
+  for (const item of later) {
+    await tx.collectionItem.update({
+      where: { id: item.id },
+      data: { position: item.position + 1 },
+    })
+  }
 }

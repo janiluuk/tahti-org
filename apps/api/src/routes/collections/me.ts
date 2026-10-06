@@ -20,7 +20,14 @@ import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
-import { addManagementPlayback, collectionItemInclude, withSafeNames, zodError } from './helpers.js'
+import {
+  addManagementPlayback,
+  collectionItemInclude,
+  makeRoomAtPosition,
+  nextCollectionPosition,
+  withSafeNames,
+  zodError,
+} from './helpers.js'
 
 /** `releaseDate` is a calendar date: send it as `YYYY-MM-DD`, not a
  * midnight-UTC timestamp the editor's date input can't show. */
@@ -293,7 +300,6 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
-        include: { _count: { select: { items: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
@@ -335,15 +341,10 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         if (existing) return reply.status(409).send({ error: 'Already in this playlist' })
       }
 
-      const position = body.position ?? col._count.items + 1
-
       try {
         const item = await fastify.prisma.$transaction(async (tx) => {
-          // Shift existing items to make room
-          await tx.collectionItem.updateMany({
-            where: { collectionId: col.id, position: { gte: position } },
-            data: { position: { increment: 1 } },
-          })
+          const position = body.position ?? (await nextCollectionPosition(tx, col.id))
+          if (body.position !== undefined) await makeRoomAtPosition(tx, col.id, position)
           return tx.collectionItem.create({
             data: {
               collectionId: col.id,

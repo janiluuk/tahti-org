@@ -26,6 +26,7 @@ import {
   safeUser,
   withSafeNames,
   linkReachableCollectionWhere,
+  nextCollectionPosition,
   publicCollectionItemWhere,
   sortCollectionItems,
   soundArtist,
@@ -133,7 +134,6 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, isPublic: true, collaborative: true },
         include: {
-          _count: { select: { items: true } },
           user: { select: { id: true, username: true } },
         },
       })
@@ -156,7 +156,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           data: {
             collectionId: col.id,
             soundId,
-            position: col._count.items + 1,
+            position: await nextCollectionPosition(fastify.prisma, col.id),
             addedByUserId: user.id,
             addNote: note || null,
           },
