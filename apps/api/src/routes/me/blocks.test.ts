@@ -225,7 +225,7 @@ describe('/api/me/blocks', () => {
     })
   })
 
-  it('does not notify the blocker when the blocked account loves their track', async () => {
+  it('refuses a love from the blocked account and does not notify the blocker', async () => {
     const a = await prisma.user.findUniqueOrThrow({
       where: { username: `${PREFIX}a` },
       select: { id: true, channel: { select: { id: true, slug: true } } },
@@ -239,8 +239,8 @@ describe('/api/me/blocks', () => {
       url: `/api/v1/c/${a.channel!.slug}/sounds/${track.id}/like`,
       headers: { cookie: cookieB },
     })
-    expect(res.statusCode).toBe(200)
-    expect(res.json().liked).toBe(true)
+    expect(res.statusCode).toBe(404)
+    expect(await prisma.soundLike.count({ where: { userId: b.id, soundId: track.id } })).toBe(0)
     expect(
       await prisma.notification.count({
         where: { userId: a.id, actorUserId: b.id, type: 'NEW_LIKE' },
