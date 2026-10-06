@@ -32,7 +32,18 @@ export const collectionSubscriptionRoutes: FastifyPluginAsync = async (fastify) 
     async (request, reply) => {
       const user = request.sessionUser!
       const rows = await fastify.prisma.collectionSubscription.findMany({
-        where: { userId: user.id, collection: linkReachableCollectionWhere },
+        where: {
+          userId: user.id,
+          collection: {
+            ...linkReachableCollectionWhere,
+            // Not the collections of someone on either side of a block.
+            user: {
+              ...linkReachableCollectionWhere.user,
+              blocksMade: { none: { blockedUserId: user.id } },
+              blocksReceived: { none: { blockerUserId: user.id } },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         take: SUBSCRIPTIONS_LIMIT,
         select: {
