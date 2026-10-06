@@ -20,6 +20,7 @@ import {
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { getSpotifyAppToken, spotifyConfigured } from '../../lib/spotify-session.js'
+import { nextCollectionPosition } from '../collections/helpers.js'
 
 /** The caller's installed Spotify credential, if any — else null to fall back to global config. */
 async function resolveSpotifyCredential(
@@ -162,7 +163,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.prisma.channel.findUnique({ where: { userId: user.id }, select: { id: true } }),
         fastify.prisma.collection.findFirst({
           where: { id: collectionId, userId: user.id },
-          include: { _count: { select: { items: true } } },
+          select: { id: true },
         }),
       ])
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -204,7 +205,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           collectionId: collection.id,
           soundId: sound.id,
-          position: collection._count.items + 1,
+          position: await nextCollectionPosition(fastify.prisma, collection.id),
         },
         select: { id: true },
       })

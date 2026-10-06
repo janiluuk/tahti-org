@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
+import { nextCollectionPosition } from '../collections/helpers.js'
 
 // Mixcloud's read API (search, a user's cloudcasts) is public — no client ID, no OAuth.
 // That's distinct from the existing @tahti/mixcloud upload client used by mixcloud rescue-import.
@@ -142,7 +143,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.prisma.channel.findUnique({ where: { userId: user.id }, select: { id: true } }),
         fastify.prisma.collection.findFirst({
           where: { id: collectionId, userId: user.id },
-          include: { _count: { select: { items: true } } },
+          select: { id: true },
         }),
       ])
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -178,7 +179,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           collectionId: collection.id,
           soundId: sound.id,
-          position: collection._count.items + 1,
+          position: await nextCollectionPosition(fastify.prisma, collection.id),
         },
         select: { id: true },
       })

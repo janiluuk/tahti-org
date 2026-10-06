@@ -22,6 +22,7 @@ import {
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
+import { nextCollectionPosition } from '../collections/helpers.js'
 
 // hearthis.at's read API (search, feed, profiles, tracks) is public — no key/secret required.
 // Mirrors imports/mixcloud-embed.ts: embed-only, we never fetch or re-host hearthis.at audio.
@@ -277,7 +278,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.prisma.channel.findUnique({ where: { userId: user.id }, select: { id: true } }),
         fastify.prisma.collection.findFirst({
           where: { id: collectionId, userId: user.id },
-          include: { _count: { select: { items: true } } },
+          select: { id: true },
         }),
       ])
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -315,7 +316,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           collectionId: collection.id,
           soundId: sound.id,
-          position: collection._count.items + 1,
+          position: await nextCollectionPosition(fastify.prisma, collection.id),
         },
         select: { id: true },
       })
