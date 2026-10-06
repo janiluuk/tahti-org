@@ -3,7 +3,6 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import type { PrismaClient } from '@tahti/db'
 import {
   ChatTokenResponseSchema,
   ChatTokenSchema,
@@ -11,6 +10,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { resolveChatChannelRole } from '../../lib/chat-role.js'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
@@ -134,7 +134,9 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       const countryCode = sessionUserCountry ?? countryFromIp(ip)
 
-      if (channel.chatSubscribersOnly && !supporter) {
+      // The owner and their moderators run the room; they are never asked to
+      // subscribe to it.
+      if (channel.chatSubscribersOnly && !supporter && !channelRole) {
         return reply.status(403).send({ error: 'subscribers_only' })
       }
 
@@ -180,20 +182,6 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
       })
     },
   )
-}
-
-async function resolveChatChannelRole(
-  prisma: PrismaClient,
-  channelId: string,
-  ownerUserId: string,
-  userId: string,
-): Promise<'owner' | 'moderator' | null> {
-  if (userId === ownerUserId) return 'owner'
-  const mod = await prisma.channelModerator.findUnique({
-    where: { channelId_userId: { channelId, userId } },
-    select: { id: true },
-  })
-  return mod ? 'moderator' : null
 }
 
 export default chatTokenRoute
