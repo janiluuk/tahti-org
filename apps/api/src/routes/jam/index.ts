@@ -341,6 +341,17 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
         data: { leftAt: new Date() },
       })
 
+      // Nobody else can end a jam or hand out control, so a jam the host
+      // walks out of would stay open with no one in charge. It ends instead.
+      if (participant.role === 'HOST') {
+        const ended = await fastify.prisma.jamSession.updateMany({
+          where: { id, endedAt: null },
+          data: { endedAt: new Date(), isPlaying: false },
+        })
+        if (ended.count > 0) void publishToJam(id, { type: 'ended' })
+        return reply.status(204).send()
+      }
+
       const fresh = await loadActiveSession(id)
       if (fresh) void publishToJam(id, { type: 'state', session: serialize(fresh) })
       return reply.status(204).send()
