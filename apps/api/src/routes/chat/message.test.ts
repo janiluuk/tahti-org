@@ -188,6 +188,34 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.json()).toEqual(refusal('banned'))
   })
 
+  it('refuses a token that was issued for another channel', async () => {
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: 'chat-message-other',
+    })
+    const post = (channelId: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/chat/message',
+        payload: {
+          channel: `channel:${slug}`,
+          user: 'Visitor#other-channel-fingerprint',
+          meta: { userId: fanId, channelId, channelRole: 'owner' },
+          data: { text: 'posted with a borrowed token' },
+        },
+      })
+
+    const res = await post(other.channel!.id)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(refusal('wrong_channel'))
+    expect(
+      await prisma.chatMessage.count({ where: { text: 'posted with a borrowed token' } }),
+    ).toBe(0)
+
+    const own = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    expect((await post(own.id)).json()).toHaveProperty('result')
+  })
+
   it('marks messages on the :fans sub-channel as fanOnly', async () => {
     const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
     await app.inject({
