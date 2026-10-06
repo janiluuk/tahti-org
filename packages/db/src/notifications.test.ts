@@ -80,7 +80,10 @@ describe('notification titles never carry an email address', () => {
       artistFollow: { findMany: vi.fn().mockResolvedValue([{ followerUserId: 'follower-1' }]) },
       collectionItem: { findMany: vi.fn().mockResolvedValue([]) },
       collectionSubscription: { findMany: vi.fn().mockResolvedValue([]) },
-      userBlock: { findFirst: vi.fn().mockResolvedValue(null) },
+      userBlock: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
     } as unknown as PrismaClient
     const titles = () =>
       [
