@@ -182,6 +182,11 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
 
       const already = session.participants.some((p) => p.userId === user.id)
       if (!already) {
+        const earlier = await fastify.prisma.jamParticipant.findUnique({
+          where: { sessionId_userId: { sessionId: session.id, userId: user.id } },
+          select: { removedAt: true },
+        })
+        if (earlier?.removedAt) return reply.status(404).send({ error: 'Jam not found' })
         await fastify.prisma.jamParticipant.upsert({
           where: { sessionId_userId: { sessionId: session.id, userId: user.id } },
           create: { sessionId: session.id, userId: user.id, role: 'GUEST', canControl: false },
@@ -337,6 +342,44 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/v1/jam/:id/leave — self-removal; the host leaving does not end
   // the session (use DELETE for that) so a flaky connection doesn't kill a
   // jam everyone else is still enjoying.
+  fastify.delete(
+    '/api/v1/jam/:id/participants/:userId',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'Remove a guest from a Tahti Jam',
+        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id, userId } = request.params as { id: string; userId: string }
+
+      const session = await requireParticipant(request, id)
+      if (!session) return reply.status(404).send({ error: 'Jam not found' })
+      if (session.hostUserId !== user.id) {
+        return reply.status(403).send({ error: 'Only the host can remove someone from this jam' })
+      }
+      if (userId === session.hostUserId) {
+        return reply.status(400).send({ error: 'The host cannot be removed from the jam' })
+      }
+      const target = session.participants.find((p) => p.userId === userId)
+      if (!target) return reply.status(404).send({ error: 'Not in this jam' })
+
+      const now = new Date()
+      await fastify.prisma.jamParticipant.update({
+        where: { id: target.id },
+        data: { leftAt: now, removedAt: now, canControl: false },
+      })
+
+      const fresh = await loadActiveSession(id)
+      const view = serialize(fresh!)
+      void publishToJam(id, { type: 'state', session: view })
+      return reply.send(view)
+    },
+  )
+
   fastify.post(
     '/api/v1/jam/:id/leave',
     { preHandler: requireAuth, schema: { tags: ['jam'] } },
