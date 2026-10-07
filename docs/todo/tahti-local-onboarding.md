@@ -292,18 +292,20 @@ the remote host that the main Dozzle instance connects to over
 `DOZZLE_REMOTE_AGENT`) — that's the mechanism to use here, not a shared/
 exposed Docker socket over the network.
 
-- [ ] Run a `dozzle agent` container on tahti.local (same image/version
+- [x] Run a `dozzle agent` container on tahti.local (same image/version
       pinned as vimage's `dozzle` service, `amir20/dozzle:v11.0.0`) —
       likely belongs in `infra/docker-compose.minio-remote.yml` itself so it
       starts/stops with the rest of that host's stack, or vimage7's
       `docker-compose.worker-remote.yml` gets the same treatment first if
       this is being done as a general pattern rather than a one-off.
-- [ ] On vimage: add `DOZZLE_REMOTE_AGENT=192.168.2.107:7007` (default
+- [x] On vimage: add `DOZZLE_REMOTE_AGENT=192.168.2.107:7007` (default
       agent port) to the `dozzle` service's environment in
       `infra/docker-compose.stack.yml`, restart it.
+- [ ] Deploy: `up -d dozzle-agent` on tahti.local and vimage7, recreate
+      `dozzle` on vimage (compose changes are merged, hosts not yet touched).
 - [ ] Verify in the Dozzle UI (`http://192.168.2.100:18090` or wherever it's
       published) that tahti.local's `minio` container's logs show up
       alongside the main stack's containers.
-- [ ] Since this closes a real existing gap, do the same for vimage7's
+- [x] Since this closes a real existing gap, do the same for vimage7's
       `worker-transcode`/`stem-separator` while in this code, not just
       tahti.local — otherwise this ships as another one-host-only fix.
