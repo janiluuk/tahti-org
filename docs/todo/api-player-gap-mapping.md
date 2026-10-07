@@ -47,18 +47,33 @@
 
 ## Batch 4 (2026-10-06) — honesty residuals + docs/OpenAPI
 
-| #   | Slice                                                                 | Status |
-| --- | --------------------------------------------------------------------- | ------ |
-| 31  | Bandcamp `fileList: false` / `listPath: null` residual                | done   |
-| 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)          | done   |
-| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)   | done   |
-| 34  | OpenAPI swagger tag catalog expanded for used route tags              | done   |
-| 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done |
-| 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log             | done   |
-| 37  | `remaining-work` Discord/Revelator/hearthis rows aligned to code      | done   |
-| 38  | Drop “Nuclear clients” wording in shared import/export contracts      | done   |
-| 39  | Plugin vocabulary cheat-sheet in import/export contracts              | done   |
-| 40  | Discord prod HLS cutover checklist (ops; not `/api/v1/radio`)         | done   |
+| #   | Slice                                                                    | Status |
+| --- | ------------------------------------------------------------------------ | ------ |
+| 31  | Bandcamp `fileList: false` / `listPath: null` residual                   | done   |
+| 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)             | done   |
+| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)      | done   |
+| 34  | OpenAPI swagger tag catalog expanded for used route tags                 | done   |
+| 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done   |
+| 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log                | done   |
+| 37  | `remaining-work` Discord/Revelator/hearthis rows aligned to code         | done   |
+| 38  | Drop “Nuclear clients” wording in shared import/export contracts         | done   |
+| 39  | Plugin vocabulary cheat-sheet in import/export contracts                 | done   |
+| 40  | Discord prod HLS cutover checklist (ops; not `/api/v1/radio`)            | done   |
+
+## Batch 5 (2026-10-08) — OAuth import routes: OpenAPI + `configured` honesty
+
+| #   | Slice                                                                                      | Status |
+| --- | ------------------------------------------------------------------------------------------ | ------ |
+| 41  | Bandcamp status + disconnect in OpenAPI; shared `ImportOAuthConnectStatus` body            | done   |
+| 42  | SoundCloud status + disconnect in OpenAPI                                                  | done   |
+| 43  | SoundCloud track list (`listPath`) response schema `SoundcloudTrackList`                   | done   |
+| 44  | OAuth start routes documented as 302 (Bandcamp, SoundCloud, Google Drive, Mixcloud)        | done   |
+| 45  | OAuth callback routes documented with their `?bc=` / `?sc=` / `?gd=` / `?mixcloud=` result | done   |
+| 46  | `configured` needs client id **and** secret; status, connect (503) and disconnect agree    | done   |
+| 47  | Bandcamp albums + SoundCloud import moved to the `imports` tag; cover proxies documented   | done   |
+| 48  | Email bounce webhook documented under `webhooks`                                           | done   |
+| 49  | Guard test: every path in the import/export catalogs is a registered, documented route     | done   |
+| 50  | Contracts doc + ledger + INDEX refresh                                                     | done   |
 
 ---
 
@@ -67,7 +82,7 @@
 | Level | Item                                                               |
 | ----- | ------------------------------------------------------------------ |
 | P1    | Bandcamp albums + import route (real Bandcamp API v1 — needs keys) |
-| P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops   |
+| P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops  |
 | P2    | Large god modules / further radio-plugin merge (player todos)      |
 | P3    | Account-backed favorites/history; FORCE_MOCK demos                 |
 

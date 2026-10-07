@@ -10,6 +10,7 @@ import {
   MixcloudOAuthCallbackQuerySchema,
   MixcloudUploadQueuedSchema,
   MixcloudUploadStatusSchema,
+  openApiRedirectResponse,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -20,6 +21,11 @@ import { mediaQueue } from '../../lib/queue.js'
 import { encryptStreamKey } from '../../lib/stream-key-enc.js'
 
 const OAUTH_STATE_MAX_AGE_SEC = 600
+
+/** The token exchange needs the secret too, so a client id alone is not "configured". */
+function mixcloudConfigured(): boolean {
+  return Boolean(config.mixcloud.clientId && config.mixcloud.clientSecret)
+}
 
 // M7 — Mixcloud OAuth + sound mix upload
 const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
@@ -39,19 +45,27 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: user.id },
         select: { mixcloudAccessTokenEnc: true },
       })
-      const configured = Boolean(config.mixcloud.clientId && config.mixcloud.clientSecret)
       return reply.send({
         connected: Boolean(row?.mixcloudAccessTokenEnc),
-        configured,
+        configured: mixcloudConfigured(),
       })
     },
   )
 
   fastify.get(
     '/api/me/mixcloud/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Start Mixcloud OAuth',
+        description:
+          'Browser navigation, not a fetch: sets a short-lived state cookie and redirects to Mixcloud. Answers 503 when Mixcloud OAuth is not configured.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
-      if (!config.mixcloud.clientId) {
+      if (!mixcloudConfigured()) {
         return reply.status(503).send({ error: 'Mixcloud OAuth is not configured' })
       }
 
@@ -73,48 +87,60 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/mixcloud/oauth/callback', async (request, reply) => {
-    const parsedQuery = MixcloudOAuthCallbackQuerySchema.safeParse(request.query)
-    if (!parsedQuery.success) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
-    }
-    const code = parsedQuery.data.code
-    const state = parsedQuery.data.state
-    if (!code) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
-    }
+  fastify.get(
+    '/api/me/mixcloud/oauth/callback',
+    {
+      schema: {
+        tags: ['releases'],
+        summary: 'Mixcloud OAuth callback',
+        description:
+          'Mixcloud redirects the browser here with `code` and `state`. Always redirects to the dashboard with `?mixcloud=connected`, `?mixcloud=error` or `?mixcloud=login`.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const parsedQuery = MixcloudOAuthCallbackQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+      }
+      const code = parsedQuery.data.code
+      const state = parsedQuery.data.state
+      if (!code) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+      }
 
-    const cookieState = request.cookies[config.mixcloud.oauthStateCookie]
-    if (!state || !cookieState || state !== cookieState) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
-    }
+      const cookieState = request.cookies[config.mixcloud.oauthStateCookie]
+      if (!state || !cookieState || state !== cookieState) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+      }
 
-    // SEC-014: use the same request.sessionUser every other route relies on
-    // (populated by the global auth preHandler via lib/session.ts's
-    // validateSession) rather than re-deriving it from the raw cookie here —
-    // the manual version below used to skip validateSession's
-    // session.user.deletedAt check, so a soft-deleted account's still-live
-    // session cookie could complete this OAuth link when it shouldn't.
-    if (!request.sessionUser) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=login`)
-    }
-    const sessionUserId = request.sessionUser.id
+      // SEC-014: use the same request.sessionUser every other route relies on
+      // (populated by the global auth preHandler via lib/session.ts's
+      // validateSession) rather than re-deriving it from the raw cookie here —
+      // the manual version below used to skip validateSession's
+      // session.user.deletedAt check, so a soft-deleted account's still-live
+      // session cookie could complete this OAuth link when it shouldn't.
+      if (!request.sessionUser) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=login`)
+      }
+      const sessionUserId = request.sessionUser.id
 
-    try {
-      const { accessToken } = await exchangeMixcloudCode({
-        code,
-        redirectUri: config.mixcloud.redirectUri,
-      })
-      await fastify.prisma.user.update({
-        where: { id: sessionUserId },
-        data: { mixcloudAccessTokenEnc: encryptStreamKey(accessToken) },
-      })
-      reply.clearCookie(config.mixcloud.oauthStateCookie, { path: '/' })
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=connected`)
-    } catch {
-      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
-    }
-  })
+      try {
+        const { accessToken } = await exchangeMixcloudCode({
+          code,
+          redirectUri: config.mixcloud.redirectUri,
+        })
+        await fastify.prisma.user.update({
+          where: { id: sessionUserId },
+          data: { mixcloudAccessTokenEnc: encryptStreamKey(accessToken) },
+        })
+        reply.clearCookie(config.mixcloud.oauthStateCookie, { path: '/' })
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=connected`)
+      } catch {
+        return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+      }
+    },
+  )
 
   fastify.delete(
     '/api/me/mixcloud',
@@ -131,7 +157,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: user.id },
         data: { mixcloudAccessTokenEnc: null },
       })
-      return reply.send({ connected: false, configured: Boolean(config.mixcloud.clientId) })
+      return reply.send({ connected: false, configured: mixcloudConfigured() })
     },
   )
 
