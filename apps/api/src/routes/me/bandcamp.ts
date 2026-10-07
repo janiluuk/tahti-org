@@ -6,6 +6,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
 import {
   ImportOAuthConnectStatusSchema,
+  PROVIDER_NOT_CONNECTED,
   openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
@@ -194,7 +195,9 @@ const bandcampRoutes: FastifyPluginAsync = async (fastify) => {
         select: { bandcampAccessTokenEnc: true },
       })
       if (!row?.bandcampAccessTokenEnc) {
-        return reply.status(403).send({ error: 'Bandcamp account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'Bandcamp account not connected', code: PROVIDER_NOT_CONNECTED })
       }
       // Decrypt token (kept for future Bandcamp API calls)
       void decryptStreamKey(row.bandcampAccessTokenEnc)

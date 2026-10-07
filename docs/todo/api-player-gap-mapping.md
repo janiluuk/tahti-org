@@ -88,6 +88,21 @@ Notes for whoever picks this up:
 - `defaultRegisterToMusicbrainz` (slice 44) is stored and returned but no client
   reads it yet.
 
+## Batch 6 (2026-10-08) — MusicBrainz parity, provider error codes, player honours them
+
+| #   | Slice                                                                                         | Status             |
+| --- | --------------------------------------------------------------------------------------------- | ------------------ |
+| 51  | MusicBrainz status + disconnect in OpenAPI (`MusicbrainzConnectStatus`)                       | done               |
+| 52  | MusicBrainz connect, both callback paths and the remembered default documented                | done               |
+| 53  | MusicBrainz `configured` needs client id **and** secret; connect answers 503 otherwise        | done               |
+| 54  | MusicBrainz callback takes the account from `request.sessionUser` like the other providers    | done               |
+| 55  | `PROVIDER_NOT_CONNECTED` / `PROVIDER_TOKEN_EXPIRED` codes on SoundCloud, Bandcamp and Drive   | done               |
+| 56  | Player: expired or missing SoundCloud link falls back to Connect, not an empty track list     | done (player #562) |
+| 57  | Player: service card does not send the artist to a provider the server has not set up         | done (player #562) |
+| 58  | Player: Import sources dialog disables Connect when not set up; failed status ≠ "needs setup" | done (player #562) |
+| 59  | Player `API-REFERENCE` hash regen + OAuth provider section                                    | done (player #562) |
+| 60  | Contracts doc + ledger + INDEX refresh                                                        | done               |
+
 ---
 
 ## Remaining open

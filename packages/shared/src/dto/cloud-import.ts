@@ -19,6 +19,22 @@ export const ImportOAuthConnectStatusSchema = z.object({
   configured: z.boolean(),
 })
 
+/** MusicBrainz status also names the connected editor; disconnect omits it. */
+export const MusicbrainzConnectStatusSchema = ImportOAuthConnectStatusSchema.extend({
+  username: z.string().nullable().optional(),
+})
+
+export const MusicbrainzDefaultSchema = z.object({
+  defaultRegisterToMusicbrainz: z.boolean().nullable(),
+})
+
+/**
+ * Machine-readable `code` on a provider route's error body, so a client can
+ * tell "connect first" and "connect again" apart from an empty result.
+ */
+export const PROVIDER_NOT_CONNECTED = 'PROVIDER_NOT_CONNECTED'
+export const PROVIDER_TOKEN_EXPIRED = 'PROVIDER_TOKEN_EXPIRED'
+
 export const GoogleDrivePickerConfigSchema = z.object({
   clientId: z.string(),
   developerKey: z.string(),
