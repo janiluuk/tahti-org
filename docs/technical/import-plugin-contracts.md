@@ -107,6 +107,22 @@ browser to `…/oauth/callback`, which redirects to the dashboard with a result
 flag (`?bc=`, `?sc=`, `?gd=` or `?mixcloud=` set to `connected`, `error` or
 `login`).
 
+MusicBrainz (`/api/me/musicbrainz`, an integration, not an import provider)
+follows the same rules and adds `username` to the status body; its callback
+flag is `?mb=`.
+
+### Error codes
+
+Provider routes put a machine-readable `code` on the error body so a client can
+tell these apart from an empty result:
+
+| Code                     | Status | Meaning                                                                  |
+| ------------------------ | ------ | ------------------------------------------------------------------------ |
+| `PROVIDER_NOT_CONNECTED` | 403    | The caller never connected this provider.                                |
+| `PROVIDER_TOKEN_EXPIRED` | 401    | The stored token no longer works. The API has cleared it; connect again. |
+
+A 401 without `PROVIDER_TOKEN_EXPIRED` is the Tahti session, not the provider.
+
 ## Parity checklist for new providers
 
 1. Add a row to `IMPORT_PLUGIN_PROVIDERS` with the correct `kind`.

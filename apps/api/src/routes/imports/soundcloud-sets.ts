@@ -13,6 +13,8 @@ import {
   SoundcloudPlaylistsResponseSchema,
   SoundcloudResolvePlaylistResponseSchema,
   openApiResponse,
+  PROVIDER_NOT_CONNECTED,
+  PROVIDER_TOKEN_EXPIRED,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { decryptStreamKey } from '../../lib/stream-key-enc.js'
@@ -51,7 +53,15 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
         data: { soundcloudAccessTokenEnc: null },
       })
     }
-    return reply.status(err.status).send({ error: err.message })
+    return reply
+      .status(err.status)
+      .send({ error: err.message, ...(err.status === 401 ? { code: PROVIDER_TOKEN_EXPIRED } : {}) })
+  }
+
+  function sendNotConnected(reply: FastifyReply) {
+    return reply
+      .status(403)
+      .send({ error: 'SoundCloud account not connected', code: PROVIDER_NOT_CONNECTED })
   }
 
   fastify.get(
@@ -67,7 +77,7 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const userId = request.sessionUser!.id
       const token = await tokenFor(userId)
-      if (!token) return reply.status(403).send({ error: 'SoundCloud account not connected' })
+      if (!token) return sendNotConnected(reply)
       try {
         const playlists = await soundcloudCollect<ScPlaylist>(
           token,
@@ -100,7 +110,7 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
       if (!/^\d+$/.test(id)) return reply.status(400).send({ error: 'Invalid playlist id' })
       const userId = request.sessionUser!.id
       const token = await tokenFor(userId)
-      if (!token) return reply.status(403).send({ error: 'SoundCloud account not connected' })
+      if (!token) return sendNotConnected(reply)
       try {
         const tracks = await soundcloudCollect<ScTrack>(
           token,
@@ -140,7 +150,7 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const userId = request.sessionUser!.id
       const token = await tokenFor(userId)
-      if (!token) return reply.status(403).send({ error: 'SoundCloud account not connected' })
+      if (!token) return sendNotConnected(reply)
       try {
         const resource = await soundcloudGet<ScPlaylist>(
           token,
@@ -172,7 +182,7 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
           : reply.status(404).send({ error: 'Unknown download link' })
       }
       const token = await tokenFor(check.userId)
-      if (!token) return reply.status(403).send({ error: 'SoundCloud account not connected' })
+      if (!token) return sendNotConnected(reply)
 
       try {
         // Re-check on every use: the uploader can turn downloads off at any time.

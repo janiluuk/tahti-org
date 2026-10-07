@@ -12,6 +12,7 @@ import {
   GoogleDrivePickerConfigSchema,
   exchangeGoogleDriveCode,
   titleFromDriveFileName,
+  PROVIDER_NOT_CONNECTED,
   openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
@@ -185,7 +186,9 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         accessToken = await getValidGoogleDriveAccessToken(fastify.prisma, user.id)
       } catch {
-        return reply.status(403).send({ error: 'Google Drive account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'Google Drive account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       return reply.send({
@@ -229,7 +232,9 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
         select: { googleDriveAccessTokenEnc: true },
       })
       if (!row?.googleDriveAccessTokenEnc) {
-        return reply.status(403).send({ error: 'Google Drive account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'Google Drive account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       const imports = []
