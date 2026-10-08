@@ -31,6 +31,8 @@ Uniform ExportProvider aliases (same handlers):
 
 The registry lists the **canonical** Revelator paths above. Billing /
 checkout remain Revelator-specific (`…/revelator/billing`, `…/checkout`).
+Canonical submit documents 202. `GET /api/me/export-plugins` is tagged
+`releases` (not `channel`).
 
 ### Webhook auth and payload
 

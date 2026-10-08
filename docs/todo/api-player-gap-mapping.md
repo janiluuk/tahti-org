@@ -118,6 +118,21 @@ Notes for whoever picks this up:
 | 69  | Reverse capability flags (path set iff matching import/search/fileList or export flag)        | done   |
 | 70  | Contracts doc + ledger + INDEX refresh                                                        | done   |
 
+## Batch 8 (2026-10-08) — catalog tags, Mixcloud/Revelator/integrations OpenAPI
+
+| #   | Slice                                                                                      | Status |
+| --- | ------------------------------------------------------------------------------------------ | ------ |
+| 71  | `GET /api/me/import-plugins` tagged `imports`                                              | done   |
+| 72  | `GET /api/me/export-plugins` tagged `releases`                                             | done   |
+| 73  | Mixcloud OAuth status / start / callback / disconnect tagged `imports`                     | done   |
+| 74  | Mixcloud disconnect + upload + upload-status summaries                                     | done   |
+| 75  | Mixcloud upload 403 carries `PROVIDER_NOT_CONNECTED`                                       | done   |
+| 76  | Canonical Revelator status / submit / billing summaries                                    | done   |
+| 77  | ExportProvider alias summaries                                                             | done   |
+| 78  | Spotify profile unlink documented as 204 (`openApiNoContentResponse`)                      | done   |
+| 79  | Integrations list / install / uninstall in OpenAPI (204)                                   | done   |
+| 80  | Contracts + ledger + INDEX refresh                                                         | done   |
+
 ---
 
 ## Remaining open
