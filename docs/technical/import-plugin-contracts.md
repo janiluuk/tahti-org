@@ -19,13 +19,13 @@ Do not force search or paste-a-link tools through an OAuth connect modal.
 
 ## Vocabulary map (do not conflate)
 
-| Name | Backend | Player surface | Notes |
-| ---- | ------- | -------------- | ----- |
-| `GET /api/me/import-plugins` | Capability catalog (`import-plugin-providers.ts`) | Add-ons → Import | Route + capability discovery only |
-| `GET /api/me/export-plugins` | Capability catalog (`export-plugin-providers.ts`) | Add-ons → Export | Revelator submit/status/webhook; storefront IDs are **deep-links**, not submit providers |
-| `/api/me/integrations` | Per-user credentials | Configure / Connections | Install/uninstall secrets; not the Store |
-| Add-ons | Channel/homepage widgets | Channel designer / store | Distinct from import/export catalogs |
-| Store / `tahti-registry` | Marketplace JSON | Plugin/theme Store | Sibling repo; not `GET /api/me/import-plugins` |
+| Name                         | Backend                                           | Player surface           | Notes                                                                                    |
+| ---------------------------- | ------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
+| `GET /api/me/import-plugins` | Capability catalog (`import-plugin-providers.ts`) | Add-ons → Import         | Route + capability discovery only                                                        |
+| `GET /api/me/export-plugins` | Capability catalog (`export-plugin-providers.ts`) | Add-ons → Export         | Revelator submit/status/webhook; storefront IDs are **deep-links**, not submit providers |
+| `/api/me/integrations`       | Per-user credentials                              | Configure / Connections  | Install/uninstall secrets; not the Store                                                 |
+| Add-ons                      | Channel/homepage widgets                          | Channel designer / store | Distinct from import/export catalogs                                                     |
+| Store / `tahti-registry`     | Marketplace JSON                                  | Plugin/theme Store       | Sibling repo; not `GET /api/me/import-plugins`                                           |
 
 Slug collisions to watch: import `hearthis` vs integration `hearthis-import` /
 `hearthis-export`; import `mixcloud` (OAuth upload) vs `mixcloud-embed` (search);
@@ -84,6 +84,28 @@ status / webhook shapes.
   not catalog import. Catalog embed search is a separate search provider
   (`id: mixcloud-embed`) pointing at `/api/v1/imports/mixcloud/search` and
   `/api/v1/imports/mixcloud/add`.
+- Every non-null path in the import and export catalogs must be a registered
+  route with an OpenAPI tag and summary. `plugin-provider-routes.test.ts` in
+  `apps/api/src/lib/` fails when a catalog row points at a missing or
+  undocumented route.
+
+## OAuth provider status (`statusPath`)
+
+`GET` and `DELETE` on an OAuth provider's `statusPath` (`/api/me/bandcamp`,
+`/api/me/soundcloud`, `/api/me/google-drive`, `/api/me/mixcloud`) answer
+`{ connected, configured }`:
+
+- `connected` — the caller has a stored token for the provider.
+- `configured` — this server has **both** the provider's client id and client
+  secret. With only the id set the token exchange can never succeed, so
+  `configured` is false and `oauthStartPath` answers 503 instead of redirecting.
+  Hide or disable the connect button when `configured` is false.
+
+`oauthStartPath` is a browser navigation, not a fetch: it sets a short-lived
+state cookie and redirects (302) to the provider. The provider then returns the
+browser to `…/oauth/callback`, which redirects to the dashboard with a result
+flag (`?bc=`, `?sc=`, `?gd=` or `?mixcloud=` set to `connected`, `error` or
+`login`).
 
 ## Parity checklist for new providers
 

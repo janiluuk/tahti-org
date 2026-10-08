@@ -76,3 +76,16 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  # Lets vimage's main Dozzle instance (infra/docker-compose.stack.yml,
+  # DOZZLE_REMOTE_AGENT) show this host's container logs — worker-transcode
+  # and stem-separator were previously invisible to Dozzle entirely (it
+  # only reads the local Docker socket).
+  dozzle-agent:
+    restart: unless-stopped
+    image: amir20/dozzle:v11.0.0
+    command: agent
+    ports:
+      - '7007:7007'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

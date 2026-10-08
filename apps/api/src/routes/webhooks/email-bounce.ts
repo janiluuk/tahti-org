@@ -21,48 +21,59 @@ function webhookAuthorized(request: { headers: Record<string, unknown> }): boole
 }
 
 const emailBounceWebhookRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post('/api/webhooks/email/bounce', async (request, reply) => {
-    if (!webhookAuthorized(request)) {
-      return reply.status(401).send({ error: 'Unauthorized' })
-    }
-
-    const parsed = parseEmailBouncePayload(request.body)
-    if (!parsed) {
-      return reply.status(400).send({ error: 'Unrecognized bounce payload' })
-    }
-
-    if ('subscribeUrl' in parsed) {
-      try {
-        const res = await fetch(parsed.subscribeUrl, { method: 'GET' })
-        request.log.info({ status: res.status }, 'sns subscription confirmed')
-      } catch (err) {
-        request.log.warn({ err }, 'sns subscription confirm failed')
-        return reply.status(502).send({ error: 'SNS confirm failed' })
+  fastify.post(
+    '/api/webhooks/email/bounce',
+    {
+      schema: {
+        tags: ['webhooks'],
+        summary: 'Email bounce callback',
+        description:
+          'Mail-provider bounce notification (EMAIL_BOUNCE_WEBHOOK_SECRET as Bearer or X-Tahti-Webhook-Secret). Hard bounces unsubscribe the address from newsletters; every bounce is recorded against governance notice deliveries. Also confirms an SNS subscription handshake.',
+      },
+    },
+    async (request, reply) => {
+      if (!webhookAuthorized(request)) {
+        return reply.status(401).send({ error: 'Unauthorized' })
       }
-      return reply.send({ ok: true, action: 'sns_subscribed' })
-    }
 
-    // Any bounce is real evidence a governance notice may not have landed —
-    // unlike the newsletter unsubscribe policy below, this isn't gated on
-    // hard-vs-soft: record it regardless of what happens next.
-    const governanceResult = await recordGovernanceNoticeBounce(fastify.prisma, parsed.email)
+      const parsed = parseEmailBouncePayload(request.body)
+      if (!parsed) {
+        return reply.status(400).send({ error: 'Unrecognized bounce payload' })
+      }
 
-    if (!shouldUnsubscribeForBounce(parsed.kind)) {
+      if ('subscribeUrl' in parsed) {
+        try {
+          const res = await fetch(parsed.subscribeUrl, { method: 'GET' })
+          request.log.info({ status: res.status }, 'sns subscription confirmed')
+        } catch (err) {
+          request.log.warn({ err }, 'sns subscription confirm failed')
+          return reply.status(502).send({ error: 'SNS confirm failed' })
+        }
+        return reply.send({ ok: true, action: 'sns_subscribed' })
+      }
+
+      // Any bounce is real evidence a governance notice may not have landed —
+      // unlike the newsletter unsubscribe policy below, this isn't gated on
+      // hard-vs-soft: record it regardless of what happens next.
+      const governanceResult = await recordGovernanceNoticeBounce(fastify.prisma, parsed.email)
+
+      if (!shouldUnsubscribeForBounce(parsed.kind)) {
+        request.log.info(
+          { email: parsed.email, kind: parsed.kind, ...governanceResult },
+          'soft bounce ignored (newsletter); governance notice deliveries updated',
+        )
+        return reply.send({ ok: true, action: 'ignored', kind: parsed.kind, ...governanceResult })
+      }
+
+      const result = await recordNewsletterBounce(fastify.prisma, parsed.email)
       request.log.info(
-        { email: parsed.email, kind: parsed.kind, ...governanceResult },
-        'soft bounce ignored (newsletter); governance notice deliveries updated',
+        { email: parsed.email, kind: parsed.kind, ...result, ...governanceResult },
+        'newsletter bounce processed',
       )
-      return reply.send({ ok: true, action: 'ignored', kind: parsed.kind, ...governanceResult })
-    }
 
-    const result = await recordNewsletterBounce(fastify.prisma, parsed.email)
-    request.log.info(
-      { email: parsed.email, kind: parsed.kind, ...result, ...governanceResult },
-      'newsletter bounce processed',
-    )
-
-    return reply.send({ ok: true, action: 'unsubscribed', ...result, ...governanceResult })
-  })
+      return reply.send({ ok: true, action: 'unsubscribed', ...result, ...governanceResult })
+    },
+  )
 }
 
 export default emailBounceWebhookRoutes

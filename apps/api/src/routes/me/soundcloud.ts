@@ -6,6 +6,9 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   SoundcloudImportRequestSchema,
   SoundcloudImportResponseSchema,
+  SoundcloudTrackListSchema,
+  ImportOAuthConnectStatusSchema,
+  openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -17,26 +20,53 @@ const OAUTH_STATE_MAX_AGE_SEC = 600
 const SOUNDCLOUD_AUTHORIZE_URL = 'https://soundcloud.com/connect'
 const SOUNDCLOUD_TOKEN_URL = 'https://api.soundcloud.com/oauth2/token'
 
+/** The token exchange needs the secret too, so a client id alone is not "configured". */
+function soundcloudConfigured(): boolean {
+  return Boolean(config.soundcloud.clientId && config.soundcloud.clientSecret)
+}
+
 const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/soundcloud — connection status
-  fastify.get('/api/me/soundcloud', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { soundcloudAccessTokenEnc: true },
-    })
-    return reply.send({
-      connected: Boolean(row?.soundcloudAccessTokenEnc),
-      configured: Boolean(config.soundcloud.clientId),
-    })
-  })
+  fastify.get(
+    '/api/me/soundcloud',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'SoundCloud connection status',
+        description:
+          'Whether the caller has connected SoundCloud, and whether this server has SoundCloud OAuth configured at all.',
+        response: openApiResponse(ImportOAuthConnectStatusSchema, 'ImportOAuthConnectStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { soundcloudAccessTokenEnc: true },
+      })
+      return reply.send({
+        connected: Boolean(row?.soundcloudAccessTokenEnc),
+        configured: soundcloudConfigured(),
+      })
+    },
+  )
 
   // GET /api/me/soundcloud/oauth/start — redirect to SoundCloud authorize
   fastify.get(
     '/api/me/soundcloud/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Start SoundCloud OAuth',
+        description:
+          'Browser navigation, not a fetch: sets a short-lived state cookie and redirects to SoundCloud. Answers 503 when SoundCloud OAuth is not configured.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
-      if (!config.soundcloud.clientId) {
+      if (!soundcloudConfigured()) {
         return reply.status(503).send({ error: 'SoundCloud OAuth is not configured' })
       }
 
@@ -60,121 +90,160 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/me/soundcloud/oauth/callback — exchange code for token
-  fastify.get('/api/me/soundcloud/oauth/callback', async (request, reply) => {
-    const query = request.query as Record<string, string>
-    const code = query.code
-    const state = query.state
+  fastify.get(
+    '/api/me/soundcloud/oauth/callback',
+    {
+      schema: {
+        tags: ['imports'],
+        summary: 'SoundCloud OAuth callback',
+        description:
+          'SoundCloud redirects the browser here with `code` and `state`. Always redirects to the dashboard import page with `?sc=connected`, `?sc=error` or `?sc=login`.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as Record<string, string>
+      const code = query.code
+      const state = query.state
 
-    const cookieState = request.cookies[config.soundcloud.oauthStateCookie]
-    if (!code || !state || state !== cookieState) {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=error`)
-    }
+      const cookieState = request.cookies[config.soundcloud.oauthStateCookie]
+      if (!code || !state || state !== cookieState) {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=error`)
+      }
 
-    // SEC-014: use request.sessionUser (populated by the global auth
-    // preHandler via lib/session.ts's validateSession) instead of
-    // re-deriving it from the raw cookie — the manual version below skipped
-    // validateSession's session.user.deletedAt check.
-    if (!request.sessionUser) {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=login`)
-    }
-    const sessionUserId = request.sessionUser.id
+      // SEC-014: use request.sessionUser (populated by the global auth
+      // preHandler via lib/session.ts's validateSession) instead of
+      // re-deriving it from the raw cookie — the manual version below skipped
+      // validateSession's session.user.deletedAt check.
+      if (!request.sessionUser) {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=login`)
+      }
+      const sessionUserId = request.sessionUser.id
 
-    try {
-      const tokenRes = await fetch(SOUNDCLOUD_TOKEN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          client_id: config.soundcloud.clientId,
-          client_secret: config.soundcloud.clientSecret,
-          redirect_uri: config.soundcloud.redirectUri,
-          code,
-        }),
-      })
+      try {
+        const tokenRes = await fetch(SOUNDCLOUD_TOKEN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: config.soundcloud.clientId,
+            client_secret: config.soundcloud.clientSecret,
+            redirect_uri: config.soundcloud.redirectUri,
+            code,
+          }),
+        })
 
-      if (!tokenRes.ok) throw new Error('Token exchange failed')
+        if (!tokenRes.ok) throw new Error('Token exchange failed')
 
-      const tokenData = (await tokenRes.json()) as { access_token?: string }
-      if (!tokenData.access_token) throw new Error('No access token in response')
+        const tokenData = (await tokenRes.json()) as { access_token?: string }
+        if (!tokenData.access_token) throw new Error('No access token in response')
 
-      await fastify.prisma.user.update({
-        where: { id: sessionUserId },
-        data: { soundcloudAccessTokenEnc: encryptStreamKey(tokenData.access_token) },
-      })
+        await fastify.prisma.user.update({
+          where: { id: sessionUserId },
+          data: { soundcloudAccessTokenEnc: encryptStreamKey(tokenData.access_token) },
+        })
 
-      reply.clearCookie(config.soundcloud.oauthStateCookie, { path: '/' })
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=connected`)
-    } catch {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=error`)
-    }
-  })
+        reply.clearCookie(config.soundcloud.oauthStateCookie, { path: '/' })
+        return reply.redirect(
+          302,
+          `${config.appUrl}/dashboard/upload/import/soundcloud?sc=connected`,
+        )
+      } catch {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/soundcloud?sc=error`)
+      }
+    },
+  )
 
   // DELETE /api/me/soundcloud — disconnect
-  fastify.delete('/api/me/soundcloud', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    await fastify.prisma.user.update({
-      where: { id: user.id },
-      data: { soundcloudAccessTokenEnc: null },
-    })
-    return reply.send({ connected: false, configured: Boolean(config.soundcloud.clientId) })
-  })
+  fastify.delete(
+    '/api/me/soundcloud',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Disconnect SoundCloud',
+        response: openApiResponse(ImportOAuthConnectStatusSchema, 'ImportOAuthConnectStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: { soundcloudAccessTokenEnc: null },
+      })
+      return reply.send({ connected: false, configured: soundcloudConfigured() })
+    },
+  )
 
   // GET /api/me/soundcloud/tracks — list connected user's downloadable tracks
-  fastify.get('/api/me/soundcloud/tracks', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { soundcloudAccessTokenEnc: true },
-    })
-    if (!row?.soundcloudAccessTokenEnc) {
-      return reply.status(403).send({ error: 'SoundCloud account not connected' })
-    }
-
-    const token = decryptStreamKey(row.soundcloudAccessTokenEnc)
-
-    // Fetch user's own tracks from SoundCloud API v2
-    const scRes = await fetch(
-      'https://api.soundcloud.com/me/tracks?limit=50&access=playable,preview,blocked&linked_partitioning=true',
-      { headers: { Authorization: `OAuth ${token}`, Accept: 'application/json; charset=utf-8' } },
-    )
-
-    if (!scRes.ok) {
-      if (scRes.status === 401) {
-        // Token expired — clear it
-        await fastify.prisma.user.update({
-          where: { id: user.id },
-          data: { soundcloudAccessTokenEnc: null },
-        })
-        return reply.status(401).send({ error: 'SoundCloud token expired — reconnect' })
+  fastify.get(
+    '/api/me/soundcloud/tracks',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: "List the caller's downloadable SoundCloud tracks",
+        description:
+          "Up to 50 of the connected account's own tracks, only those SoundCloud lets us download. 403 when not connected; 401 when the stored token has expired (the connection is cleared, reconnect).",
+        response: openApiResponse(SoundcloudTrackListSchema, 'SoundcloudTrackList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { soundcloudAccessTokenEnc: true },
+      })
+      if (!row?.soundcloudAccessTokenEnc) {
+        return reply.status(403).send({ error: 'SoundCloud account not connected' })
       }
-      return reply.status(502).send({ error: 'SoundCloud API unavailable' })
-    }
 
-    const data = (await scRes.json()) as {
-      collection?: Array<{
-        id: number
-        title: string
-        duration: number
-        download_url?: string
-        downloadable?: boolean
-        artwork_url?: string
-        created_at: string
-      }>
-    }
+      const token = decryptStreamKey(row.soundcloudAccessTokenEnc)
 
-    const tracks = (data.collection ?? [])
-      .filter((t) => t.downloadable && t.download_url)
-      .map((t) => ({
-        id: String(t.id),
-        title: t.title,
-        durationMs: t.duration,
-        artworkUrl: t.artwork_url ?? null,
-        downloadable: Boolean(t.downloadable),
-        createdAt: t.created_at,
-      }))
+      // Fetch user's own tracks from SoundCloud API v2
+      const scRes = await fetch(
+        'https://api.soundcloud.com/me/tracks?limit=50&access=playable,preview,blocked&linked_partitioning=true',
+        { headers: { Authorization: `OAuth ${token}`, Accept: 'application/json; charset=utf-8' } },
+      )
 
-    return reply.send({ tracks })
-  })
+      if (!scRes.ok) {
+        if (scRes.status === 401) {
+          // Token expired — clear it
+          await fastify.prisma.user.update({
+            where: { id: user.id },
+            data: { soundcloudAccessTokenEnc: null },
+          })
+          return reply.status(401).send({ error: 'SoundCloud token expired — reconnect' })
+        }
+        return reply.status(502).send({ error: 'SoundCloud API unavailable' })
+      }
+
+      const data = (await scRes.json()) as {
+        collection?: Array<{
+          id: number
+          title: string
+          duration: number
+          download_url?: string
+          downloadable?: boolean
+          artwork_url?: string
+          created_at: string
+        }>
+      }
+
+      const tracks = (data.collection ?? [])
+        .filter((t) => t.downloadable && t.download_url)
+        .map((t) => ({
+          id: String(t.id),
+          title: t.title,
+          durationMs: t.duration,
+          artworkUrl: t.artwork_url ?? null,
+          downloadable: Boolean(t.downloadable),
+          createdAt: t.created_at,
+        }))
+
+      return reply.send({ tracks })
+    },
+  )
 
   // POST /api/me/soundcloud/import — queue selected tracks for server-side download + transcode
   fastify.post(
@@ -182,8 +251,10 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Queue SoundCloud tracks for server-side import to sound',
+        tags: ['imports'],
+        summary: 'Queue SoundCloud tracks for import',
+        description:
+          "Queue up to 20 of the caller's SoundCloud tracks for server-side download into the archive. Answers 202 with one cloud-import job per track; poll GET /api/me/cloud-import/jobs.",
         response: openApiResponse(SoundcloudImportResponseSchema, 'SoundcloudImportResponse'),
       },
     },

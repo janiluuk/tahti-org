@@ -12,6 +12,7 @@ import {
   GoogleDrivePickerConfigSchema,
   exchangeGoogleDriveCode,
   titleFromDriveFileName,
+  openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -55,7 +56,16 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/google-drive/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Start Google Drive OAuth',
+        description:
+          'Browser navigation, not a fetch: sets a short-lived state cookie and redirects to Google. Answers 503 when Google Drive OAuth is not configured.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
       if (!googleDriveConfigured()) {
         return reply.status(503).send({ error: 'Google Drive OAuth is not configured' })
@@ -74,54 +84,66 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/google-drive/oauth/callback', async (request, reply) => {
-    const query = request.query as Record<string, string>
-    const code = query.code
-    const state = query.state
+  fastify.get(
+    '/api/me/google-drive/oauth/callback',
+    {
+      schema: {
+        tags: ['imports'],
+        summary: 'Google Drive OAuth callback',
+        description:
+          'Google redirects the browser here with `code` and `state`. Always redirects to the dashboard import page with `?gd=connected`, `?gd=error` or `?gd=login`.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as Record<string, string>
+      const code = query.code
+      const state = query.state
 
-    const cookieState = request.cookies[config.googleDrive.oauthStateCookie]
-    if (!code || !state || state !== cookieState) {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=error`)
-    }
+      const cookieState = request.cookies[config.googleDrive.oauthStateCookie]
+      if (!code || !state || state !== cookieState) {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=error`)
+      }
 
-    // SEC-014: use request.sessionUser (populated by the global auth
-    // preHandler via lib/session.ts's validateSession) instead of
-    // re-deriving it from the raw cookie — the manual version below skipped
-    // validateSession's session.user.deletedAt check.
-    if (!request.sessionUser) {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=login`)
-    }
-    const sessionUserId = request.sessionUser.id
+      // SEC-014: use request.sessionUser (populated by the global auth
+      // preHandler via lib/session.ts's validateSession) instead of
+      // re-deriving it from the raw cookie — the manual version below skipped
+      // validateSession's session.user.deletedAt check.
+      if (!request.sessionUser) {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=login`)
+      }
+      const sessionUserId = request.sessionUser.id
 
-    try {
-      const tokenData = await exchangeGoogleDriveCode(
-        {
-          clientId: config.googleDrive.clientId,
-          clientSecret: config.googleDrive.clientSecret,
-        },
-        code,
-        config.googleDrive.redirectUri,
-      )
+      try {
+        const tokenData = await exchangeGoogleDriveCode(
+          {
+            clientId: config.googleDrive.clientId,
+            clientSecret: config.googleDrive.clientSecret,
+          },
+          code,
+          config.googleDrive.redirectUri,
+        )
 
-      await fastify.prisma.user.update({
-        where: { id: sessionUserId },
-        data: {
-          googleDriveAccessTokenEnc: encryptStreamKey(tokenData.access_token),
-          ...(tokenData.refresh_token
-            ? { googleDriveRefreshTokenEnc: encryptStreamKey(tokenData.refresh_token) }
-            : {}),
-        },
-      })
+        await fastify.prisma.user.update({
+          where: { id: sessionUserId },
+          data: {
+            googleDriveAccessTokenEnc: encryptStreamKey(tokenData.access_token),
+            ...(tokenData.refresh_token
+              ? { googleDriveRefreshTokenEnc: encryptStreamKey(tokenData.refresh_token) }
+              : {}),
+          },
+        })
 
-      reply.clearCookie(config.googleDrive.oauthStateCookie, { path: '/' })
-      return reply.redirect(
-        302,
-        `${config.appUrl}/dashboard/upload/import/google-drive?gd=connected`,
-      )
-    } catch {
-      return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=error`)
-    }
-  })
+        reply.clearCookie(config.googleDrive.oauthStateCookie, { path: '/' })
+        return reply.redirect(
+          302,
+          `${config.appUrl}/dashboard/upload/import/google-drive?gd=connected`,
+        )
+      } catch {
+        return reply.redirect(302, `${config.appUrl}/dashboard/upload/import/google-drive?gd=error`)
+      }
+    },
+  )
 
   fastify.delete(
     '/api/me/google-drive',
