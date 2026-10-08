@@ -58,6 +58,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's Mixcloud cloudcasts",
         description: "Mixed-source collections: the connected artist's own Mixcloud cloudcasts",
         response: openApiResponse(MixcloudMeTracksResponseSchema, 'MixcloudMeTracksResponse'),
       },
@@ -88,6 +89,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List Mixcloud cloudcasts by profile URL',
         description: 'Mixed-source collections: list a Mixcloud profile by URL or handle',
         response: openApiResponse(MixcloudSearchResponseSchema, 'MixcloudSearchResponse'),
       },

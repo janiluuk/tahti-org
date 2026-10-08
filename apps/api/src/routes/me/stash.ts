@@ -5,9 +5,14 @@ import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import {
   CreateStashShareSchema,
+  StashCreatedSchema,
+  StashDownloadSchema,
   StashListQuerySchema,
   StashPagedListSchema,
+  StashPrepareResponseSchema,
+  StashShareCreatedSchema,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -80,75 +85,103 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/me/stash/prepare — presigned PUT URL for uploading to stash
-  fastify.post('/api/me/stash/prepare', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
+  fastify.post(
+    '/api/me/stash/prepare',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Prepare a stash file upload',
+        description:
+          'Presigned PUT URL for the private file locker. JSON body `{ filename, contentType }` is validated in the handler, not by Fastify AJV.',
+        response: openApiResponse(StashPrepareResponseSchema, 'StashPrepareResponse'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
-    if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
 
-    const body = request.body as {
-      filename?: string
-      contentType?: string
-      sizeBytes?: number
-      format?: string
-    }
+      const body = request.body as {
+        filename?: string
+        contentType?: string
+        sizeBytes?: number
+        format?: string
+      }
 
-    if (!body.filename || !body.contentType) {
-      return reply.status(400).send({ error: 'filename and contentType required' })
-    }
+      if (!body.filename || !body.contentType) {
+        return reply.status(400).send({ error: 'filename and contentType required' })
+      }
 
-    const ext = body.filename.includes('.') ? body.filename.split('.').pop() : 'bin'
-    const objectKey = `stash/${user.id}/${nanoid(16)}.${ext}`
+      const ext = body.filename.includes('.') ? body.filename.split('.').pop() : 'bin'
+      const objectKey = `stash/${user.id}/${nanoid(16)}.${ext}`
 
-    const uploadUrl = await presignedPutUrl(objectKey, body.contentType, PRESIGN_TTL_SEC)
-    const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+      const uploadUrl = await presignedPutUrl(objectKey, body.contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
 
-    return reply.send({ objectKey, uploadUrl, expiresAt })
-  })
+      return reply.send({ objectKey, uploadUrl, expiresAt })
+    },
+  )
 
   // POST /api/me/stash — register a completed stash upload
-  fastify.post('/api/me/stash', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const body = request.body as {
-      objectKey?: string
-      filename?: string
-      contentType?: string
-      sizeBytes?: number
-      format?: string
-      bitDepth?: number
-      sampleRate?: number
-    }
-
-    if (!body.objectKey || !body.filename || !body.contentType || body.sizeBytes == null) {
-      return reply
-        .status(400)
-        .send({ error: 'objectKey, filename, contentType, sizeBytes required' })
-    }
-
-    const expectedPrefix = `stash/${user.id}/`
-    if (!body.objectKey.startsWith(expectedPrefix)) {
-      return reply.status(403).send({ error: 'Object does not belong to your stash' })
-    }
-
-    const file = await fastify.prisma.stashFile.create({
-      data: {
-        userId: user.id,
-        filename: body.filename,
-        objectKey: body.objectKey,
-        contentType: body.contentType,
-        sizeBytes: BigInt(body.sizeBytes),
-        format: body.format ?? null,
-        bitDepth: body.bitDepth ?? null,
-        sampleRate: body.sampleRate ?? null,
+  fastify.post(
+    '/api/me/stash',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Register a completed stash upload',
+        description:
+          'Creates the stash file row after the presigned PUT. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: StashCreatedSchema, name: 'StashCreated' },
+        ]),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const body = request.body as {
+        objectKey?: string
+        filename?: string
+        contentType?: string
+        sizeBytes?: number
+        format?: string
+        bitDepth?: number
+        sampleRate?: number
+      }
 
-    return reply.status(201).send({
-      id: file.id,
-      filename: file.filename,
-      createdAt: file.createdAt,
-    })
-  })
+      if (!body.objectKey || !body.filename || !body.contentType || body.sizeBytes == null) {
+        return reply
+          .status(400)
+          .send({ error: 'objectKey, filename, contentType, sizeBytes required' })
+      }
+
+      const expectedPrefix = `stash/${user.id}/`
+      if (!body.objectKey.startsWith(expectedPrefix)) {
+        return reply.status(403).send({ error: 'Object does not belong to your stash' })
+      }
+
+      const file = await fastify.prisma.stashFile.create({
+        data: {
+          userId: user.id,
+          filename: body.filename,
+          objectKey: body.objectKey,
+          contentType: body.contentType,
+          sizeBytes: BigInt(body.sizeBytes),
+          format: body.format ?? null,
+          bitDepth: body.bitDepth ?? null,
+          sampleRate: body.sampleRate ?? null,
+        },
+      })
+
+      return reply.status(201).send({
+        id: file.id,
+        filename: file.filename,
+        createdAt: file.createdAt,
+      })
+    },
+  )
 
   // DELETE /api/me/stash/:id — delete a stash file
   fastify.delete('/api/me/stash/:id', { preHandler: requireAuth }, async (request, reply) => {
@@ -169,64 +202,91 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   // GET /api/me/stash/:id/download — presigned GET URL for downloading
-  fastify.get('/api/me/stash/:id/download', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+  fastify.get(
+    '/api/me/stash/:id/download',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Download URL for a stash file',
+        description: "Short-lived presigned GET URL for a file in the caller's stash locker.",
+        response: openApiResponse(StashDownloadSchema, 'StashDownload'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
 
-    const file = await fastify.prisma.stashFile.findUnique({
-      where: { id },
-      select: { id: true, userId: true, objectKey: true, filename: true },
-    })
+      const file = await fastify.prisma.stashFile.findUnique({
+        where: { id },
+        select: { id: true, userId: true, objectKey: true, filename: true },
+      })
 
-    if (!file || file.userId !== user.id) {
-      return reply.status(404).send({ error: 'Not found' })
-    }
+      if (!file || file.userId !== user.id) {
+        return reply.status(404).send({ error: 'Not found' })
+      }
 
-    const url = await presignedGetUrl(file.objectKey, 300)
-    return reply.send({ url, filename: file.filename })
-  })
+      const url = await presignedGetUrl(file.objectKey, 300)
+      return reply.send({ url, filename: file.filename })
+    },
+  )
 
   // POST /api/me/stash/:id/share — create a share link
-  fastify.post('/api/me/stash/:id/share', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { id } = request.params as { id: string }
-    const parsed = CreateStashShareSchema.safeParse(request.body ?? {})
-    if (!parsed.success) {
-      return reply
-        .status(400)
-        .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
-    }
-    const body = parsed.data
-
-    const file = await fastify.prisma.stashFile.findUnique({
-      where: { id },
-      select: { id: true, userId: true },
-    })
-
-    if (!file || file.userId !== user.id) {
-      return reply.status(404).send({ error: 'Not found' })
-    }
-
-    const expiresAt = body.expiresInDays
-      ? new Date(Date.now() + body.expiresInDays * 86400_000)
-      : null
-
-    const share = await fastify.prisma.stashShare.create({
-      data: {
-        fileId: id,
-        granteeUsername: body.granteeUsername ?? null,
-        permission: body.permission,
-        expiresAt,
+  fastify.post(
+    '/api/me/stash/:id/share',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Create a stash share link',
+        description:
+          'Keyed share for one stash file. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: StashShareCreatedSchema, name: 'StashShareCreated' },
+        ]),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+      const parsed = CreateStashShareSchema.safeParse(request.body ?? {})
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+      const body = parsed.data
 
-    return reply.status(201).send({
-      id: share.id,
-      token: share.token,
-      permission: share.permission,
-      expiresAt: share.expiresAt,
-    })
-  })
+      const file = await fastify.prisma.stashFile.findUnique({
+        where: { id },
+        select: { id: true, userId: true },
+      })
+
+      if (!file || file.userId !== user.id) {
+        return reply.status(404).send({ error: 'Not found' })
+      }
+
+      const expiresAt = body.expiresInDays
+        ? new Date(Date.now() + body.expiresInDays * 86400_000)
+        : null
+
+      const share = await fastify.prisma.stashShare.create({
+        data: {
+          fileId: id,
+          granteeUsername: body.granteeUsername ?? null,
+          permission: body.permission,
+          expiresAt,
+        },
+      })
+
+      return reply.status(201).send({
+        id: share.id,
+        token: share.token,
+        permission: share.permission,
+        expiresAt: share.expiresAt,
+      })
+    },
+  )
 
   // DELETE /api/me/stash/shares/:shareId — revoke a share
   fastify.delete(

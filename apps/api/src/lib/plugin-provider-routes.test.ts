@@ -118,6 +118,16 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['POST', '/api/me/integrations/:slug/install', '204', 'integrations'] as const,
     ['DELETE', '/api/me/integrations/:slug', '204', 'integrations'] as const,
     ['POST', '/api/me/sound/:id/export/hearthis', '202', 'releases'] as const,
+    ['POST', '/api/uploads/complete', '201', 'imports'] as const,
+    ['POST', '/api/me/stash', '201', 'imports'] as const,
+    ['POST', '/api/me/stash/prepare', '200', 'imports'] as const,
+    ['GET', '/api/me/stash/:id/download', '200', 'imports'] as const,
+    ['POST', '/api/me/stash/:id/share', '201', 'imports'] as const,
+    ['GET', '/api/v1/imports/spotify/me-tracks', '200', 'imports'] as const,
+    ['GET', '/api/v1/imports/mixcloud/me-tracks', '200', 'imports'] as const,
+    ['GET', '/api/v1/imports/hearthis/me-tracks', '200', 'imports'] as const,
+    ['POST', '/api/me/integrations/lastfm/prepare', '200', 'integrations'] as const,
+    ['GET', '/api/me/integrations/lastfm/oauth/start', '302', 'integrations'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)
     expect(operation, `${method} ${path} is not documented`).toBeDefined()

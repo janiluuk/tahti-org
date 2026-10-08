@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { soundDefaultsFromOwner } from '@tahti/db'
-import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } from '@tahti/shared'
+import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponses } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/sound-metadata.js'
@@ -18,9 +18,13 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Finalize upload and enqueue transcode',
-        response: openApiResponse(CompleteUploadResponseSchema, 'CompleteUpload'),
+        tags: ['imports'],
+        summary: 'Complete a local audio upload',
+        description:
+          'Creates the Sound and enqueues transcode after the presigned PUT. Answers 201. Follows POST /api/uploads/prepare.',
+        response: openApiResponses([
+          { status: 201, schema: CompleteUploadResponseSchema, name: 'CompleteUpload' },
+        ]),
       },
     },
     async (request, reply) => {
