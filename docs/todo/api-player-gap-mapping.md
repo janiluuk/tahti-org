@@ -47,28 +47,58 @@
 
 ## Batch 4 (2026-10-06) — honesty residuals + docs/OpenAPI
 
-| #   | Slice                                                                 | Status |
-| --- | --------------------------------------------------------------------- | ------ |
-| 31  | Bandcamp `fileList: false` / `listPath: null` residual                | done   |
-| 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)          | done   |
-| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)   | done   |
-| 34  | OpenAPI swagger tag catalog expanded for used route tags              | done   |
-| 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done |
-| 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log             | done   |
-| 37  | `remaining-work` Discord/Revelator/hearthis rows aligned to code      | done   |
-| 38  | Drop “Nuclear clients” wording in shared import/export contracts      | done   |
-| 39  | Plugin vocabulary cheat-sheet in import/export contracts              | done   |
-| 40  | Discord prod HLS cutover checklist (ops; not `/api/v1/radio`)         | done   |
+| #   | Slice                                                                    | Status |
+| --- | ------------------------------------------------------------------------ | ------ |
+| 31  | Bandcamp `fileList: false` / `listPath: null` residual                   | done   |
+| 32  | Fail-closed `fetchUserMedia` mock catch (`withMockFallback`)             | done   |
+| 33  | Player `check:api-docs` hash regen (follow-up after OpenAPI export)      | done   |
+| 34  | OpenAPI swagger tag catalog expanded for used route tags                 | done   |
+| 35  | Studio Distribution stub-mode banner + `GET /api/me/distribution/status` | done   |
+| 36  | Sound-share keyed access → `SOUND_SHARE_ACCESS` audit log                | done   |
+| 37  | `remaining-work` Discord/Revelator/hearthis rows aligned to code         | done   |
+| 38  | Drop “Nuclear clients” wording in shared import/export contracts         | done   |
+| 39  | Plugin vocabulary cheat-sheet in import/export contracts                 | done   |
+| 40  | Discord prod HLS cutover checklist (ops; not `/api/v1/radio`)            | done   |
+
+## Batch 5 (2026-10-08) — route diff: theme catalog, admin files, drift guard
+
+Found by diffing every `/api/...` path in `tahti-web/src` against the route
+table, in both directions.
+
+| #   | Slice                                                                                                                 | Status |
+| --- | --------------------------------------------------------------------------------------------------------------------- | ------ |
+| 41  | Approved themes open their pull request in `tahti-registry` (schema-valid `themes/<slug>.json`), not in this repo     | done   |
+| 42  | `GET /api/v1/themes/gallery` reads the `tahti-registry` `themes.json` catalog (was a file that never existed → `[]`)  | done   |
+| 43  | `POST /api/admin/files/bulk-delete` (per-item result, one audit row)                                                  | done   |
+| 44  | `GET/PATCH /api/me/musicbrainz/default` in OpenAPI; PATCH without a body answers 400 instead of 500                   | done   |
+| 45  | Player: Admin → Storage bulk delete with confirmation; a failed single delete is now shown                            | done   |
+| 46  | Player: Admin → Languages says "Not available yet" on a 404 (the API has no `/api/admin/i18n/*`) instead of mock rows | done   |
+| 47  | Player: `pnpm check:api-routes` fails on a called path the API does not serve; `TAHTI_OPENAPI` override               | done   |
+| 48  | Player: API reference rows for the new routes + `API_PATHS_SHA256` regenerated                                        | done   |
+| 49  | Docs: theme catalog source in `docs/api/README.md`, shared DTO comment and the worker's token note                    | done   |
+| 50  | Gap ledger + INDEX refresh; player `GAP-MAPPING.md` rows                                                              | done   |
+
+Notes for whoever picks this up:
+
+- Slice 41 needs `GITHUB_PR_TOKEN` on the worker with `contents:write` and
+  `pull_requests:write` on **`janiluuk/tahti-registry`**. The token is still not
+  provisioned anywhere, so no theme pull request has ever been opened.
+- The registry's "Build Theme Index" workflow regenerates `themes.json` after a
+  merge; the worker only adds the theme file.
+- `defaultRegisterToMusicbrainz` (slice 44) is stored and returned but no client
+  reads it yet.
 
 ---
 
 ## Remaining open
 
-| Level | Item                                                               |
-| ----- | ------------------------------------------------------------------ |
-| P1    | Bandcamp albums + import route (real Bandcamp API v1 — needs keys) |
-| P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops   |
-| P2    | Large god modules / further radio-plugin merge (player todos)      |
-| P3    | Account-backed favorites/history; FORCE_MOCK demos                 |
+| Level | Item                                                                                                            |
+| ----- | --------------------------------------------------------------------------------------------------------------- |
+| P1    | Bandcamp albums + import route (real Bandcamp API v1 — needs keys)                                              |
+| P2    | Full Discord cutover: set `TAHTI_RADIO_AUDIO_URL` in **prod** ops                                               |
+| P2    | Large god modules / further radio-plugin merge (player todos)                                                   |
+| P3    | Account-backed favorites/history; FORCE_MOCK demos                                                              |
+| P3    | Admin translation management (`/api/admin/i18n/*`) — no API; decide whether to build it or drop the player page |
+| P3    | Provision `GITHUB_PR_TOKEN` for `tahti-registry` so approved themes actually open a pull request (ops)          |
 
 When fully done: fold into `docs/todo/HISTORY.md` and delete.
