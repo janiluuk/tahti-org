@@ -6,7 +6,7 @@ import { buildApp } from '../server.js'
 import { IMPORT_PLUGIN_PROVIDERS } from './import-plugin-providers.js'
 import { EXPORT_PLUGIN_PROVIDERS } from './export-plugin-providers.js'
 
-type Method = 'get' | 'post'
+type Method = 'get' | 'post' | 'delete'
 type OpenApiOperation = {
   tags?: string[]
   summary?: string
@@ -108,6 +108,15 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['POST', '/api/uploads/prepare', '200', 'imports'] as const,
     ['GET', '/api/me/stash', '200', 'imports'] as const,
     ['GET', '/api/me/spotify-profile', '200', 'imports'] as const,
+    ['DELETE', '/api/me/spotify-profile', '204', 'imports'] as const,
+    ['GET', '/api/me/import-plugins', '200', 'imports'] as const,
+    ['GET', '/api/me/export-plugins', '200', 'releases'] as const,
+    ['GET', '/api/me/mixcloud', '200', 'imports'] as const,
+    ['POST', '/api/me/sound/:itemId/mixcloud', '202', 'releases'] as const,
+    ['POST', '/api/me/releases/:id/revelator/submit', '202', 'releases'] as const,
+    ['GET', '/api/me/integrations', '200', 'integrations'] as const,
+    ['POST', '/api/me/integrations/:slug/install', '204', 'integrations'] as const,
+    ['DELETE', '/api/me/integrations/:slug', '204', 'integrations'] as const,
     ['POST', '/api/me/sound/:id/export/hearthis', '202', 'releases'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)

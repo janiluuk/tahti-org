@@ -104,8 +104,11 @@ default 200:
 | `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created |
 | `POST /api/uploads/prepare` | 200 — presigned PUT (not a created Sound) |
 
-Drive status/picker/import/jobs, Spotify profile, stash list, and
-uploads/prepare are tagged `imports` (not `channel`).
+Drive status/picker/import/jobs, Spotify profile (including 204 unlink),
+stash list, uploads/prepare, Mixcloud OAuth status/connect/disconnect, and
+`GET /api/me/import-plugins` are tagged `imports` (not `channel`). Mixcloud
+**upload** of an archive mix (`POST /api/me/sound/:id/mixcloud`) stays under
+`releases` — it is rescue-to-Mixcloud, not catalog import.
 
 The desktop SoundCloud download
 (`GET`/`HEAD /api/v1/imports/soundcloud/tracks/:id/download?ticket=`) is in
@@ -140,7 +143,7 @@ tell these apart from an empty result:
 
 | Code                     | Status | Meaning                                                                  |
 | ------------------------ | ------ | ------------------------------------------------------------------------ |
-| `PROVIDER_NOT_CONNECTED` | 403    | The caller never connected this provider.                                |
+| `PROVIDER_NOT_CONNECTED` | 403    | The caller never connected this provider. Mixcloud upload includes `connectPath`. |
 | `PROVIDER_TOKEN_EXPIRED` | 401    | The stored token no longer works. The API has cleared it; connect again. |
 
 A 401 without `PROVIDER_TOKEN_EXPIRED` is the Tahti session, not the provider.
