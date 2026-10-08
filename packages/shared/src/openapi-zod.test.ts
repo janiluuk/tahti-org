@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
 import {
+  openApiNoContentResponse,
   openApiRedirectResponse,
   openApiResponse,
   openApiResponses,
@@ -14,6 +15,13 @@ describe('openApiRedirectResponse', () => {
   it('returns null body schema for redirect status codes', () => {
     expect(openApiRedirectResponse(302)).toEqual({ 302: { type: 'null' } })
     expect(openApiRedirectResponse(301)).toEqual({ 301: { type: 'null' } })
+  })
+})
+
+describe('openApiNoContentResponse', () => {
+  it('returns null body schema for 204', () => {
+    expect(openApiNoContentResponse()).toEqual({ 204: { type: 'null' } })
+    expect(openApiNoContentResponse(204)).toEqual({ 204: { type: 'null' } })
   })
 })
 

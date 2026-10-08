@@ -7,6 +7,7 @@ import {
   SpotifyProfileStatusResponseSchema,
   getSpotifyArtist,
   parseSpotifyArtistId,
+  openApiNoContentResponse,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -116,6 +117,7 @@ const spotifyProfileRoute: FastifyPluginAsync = async (fastify) => {
         tags: ['imports'],
         summary: 'Unlink the Spotify artist profile',
         description: 'Clears the stored Spotify artist id. Answers 204.',
+        response: openApiNoContentResponse(),
       },
     },
     async (request, reply) => {
