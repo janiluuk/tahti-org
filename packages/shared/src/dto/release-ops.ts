@@ -184,6 +184,12 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
   ]
 }
 
+/** Remembered answer to "register this release on MusicBrainz?" (null = ask every time). */
+export const MusicbrainzDefaultSchema = z.object({
+  defaultRegisterToMusicbrainz: z.boolean().nullable(),
+})
+export type MusicbrainzDefault = z.infer<typeof MusicbrainzDefaultSchema>
+
 export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'
 
 export interface MusicBrainzPrefillRelease {

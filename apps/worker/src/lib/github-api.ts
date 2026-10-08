@@ -7,16 +7,17 @@
 // without ever making a real network call in tests.
 //
 // Requires GITHUB_PR_TOKEN (a PAT or GitHub App installation token with
-// contents:write + pull_requests:write on the target repo) — not provisioned
+// contents:write + pull_requests:write on janiluuk/tahti-registry) — not provisioned
 // anywhere yet; this must be added to the worker's environment in ops before
 // this job can run for real. Every function throws if it's unset, so a
 // missing token fails the job loudly (worker's PROCESSING/ERROR convention)
 // rather than silently no-op-ing.
 
 const GITHUB_API = 'https://api.github.com'
+// The catalog Tahti Player's Store reads (see AGENTS.md → tahti-registry).
 const OWNER = 'janiluuk'
-const REPO = 'tahti-org'
-const DEFAULT_BRANCH = 'main'
+const REPO = 'tahti-registry'
+const DEFAULT_BRANCH = 'master'
 
 function requireToken(): string {
   const token = process.env.GITHUB_PR_TOKEN
@@ -56,8 +57,7 @@ export async function createBranch(branchName: string, fromSha: string): Promise
   })
 }
 
-/** Returns null if the file doesn't exist on that branch yet (e.g. the
- * registry hasn't been created by any prior submission). */
+/** Returns null if the file doesn't exist on that branch yet. */
 export async function getFileContent(
   path: string,
   branch: string,

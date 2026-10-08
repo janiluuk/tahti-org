@@ -3,8 +3,8 @@
 
 import { z } from 'zod'
 
-// "Public" isn't a DB state — once a PR merges, a theme lives only in
-// themes/registry.json + themes/<slug>.json in the tahti-org repo (see
+// "Public" isn't a DB state — once a PR merges, a theme lives only in the
+// tahti-registry catalog (themes/<slug>.json, indexed in themes.json; see
 // GET /api/v1/themes/gallery). This tracks the pre-ship pipeline only.
 export const THEME_VISIBILITIES = ['PRIVATE', 'PENDING_REVIEW', 'REJECTED'] as const
 export type ThemeVisibilityInput = (typeof THEME_VISIBILITIES)[number]
@@ -68,13 +68,19 @@ export const AdminThemeListQuerySchema = z.object({
   visibility: z.enum(THEME_VISIBILITIES).optional(),
 })
 
-// ── Public gallery (registry-file backed, not the DB) ───────────────────────
+// ── Public gallery (tahti-registry catalog backed, not the DB) ──────────────
 
 export const ThemeGalleryEntrySchema = z.object({
+  id: z.string().optional(),
   name: z.string(),
+  /** Path of the theme file inside the tahti-registry repository. */
   file: z.string(),
   author: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  palette: z.array(z.string()).optional(),
 })
+export type ThemeGalleryEntry = z.infer<typeof ThemeGalleryEntrySchema>
 export const ThemeGalleryResponseSchema = z.object({
   themes: z.array(ThemeGalleryEntrySchema),
 })

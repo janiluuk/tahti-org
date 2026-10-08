@@ -76,6 +76,17 @@ export const AdminFilesBulkPatchResponseSchema = z.object({
   updated: z.number().int(),
 })
 
+export const AdminFilesBulkDeleteSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(200),
+})
+export type AdminFilesBulkDelete = z.infer<typeof AdminFilesBulkDeleteSchema>
+
+export const AdminFilesBulkDeleteResponseSchema = z.object({
+  deleted: z.number().int(),
+  /** Ids that were not deleted, each with the reason shown to the board. */
+  failed: z.array(z.object({ id: z.string(), error: z.string() })),
+})
+
 export const AdminFileAudioResponseSchema = z.object({
   audioUrl: z.string().nullable(),
   title: z.string(),

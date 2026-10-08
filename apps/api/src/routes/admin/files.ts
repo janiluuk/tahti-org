@@ -7,6 +7,8 @@ import { Prisma as PrismaNS } from '@tahti/db'
 import {
   SOUND_CONTENT_TYPES,
   AdminFileAudioResponseSchema,
+  AdminFilesBulkDeleteResponseSchema,
+  AdminFilesBulkDeleteSchema,
   AdminFilesBulkPatchResponseSchema,
   AdminFilesBulkPatchSchema,
   AdminFilesFacetsResponseSchema,
@@ -321,6 +323,75 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send({ updated: result.count })
+    },
+  )
+
+  // Bulk delete of selected ids. POST, not DELETE: the ids travel in the body.
+  fastify.post(
+    '/api/admin/files/bulk-delete',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Delete selected sound files; reports the ids that could not be deleted',
+        response: openApiResponse(AdminFilesBulkDeleteResponseSchema, 'AdminFilesBulkDelete'),
+      },
+    },
+    async (request, reply) => {
+      const actor = request.sessionUser!
+      const parsed = AdminFilesBulkDeleteSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      }
+      const ids = [...new Set(parsed.data.ids)]
+
+      const found = await fastify.prisma.sound.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, channel: { select: { slug: true } } },
+      })
+      const byId = new Map(found.map((item) => [item.id, item]))
+
+      const deleted: Array<{ id: string; title: string; slug: string }> = []
+      const failed: Array<{ id: string; error: string }> = []
+      // One at a time, like the single delete: a linked Mixcloud upload blocks
+      // that one item and must not roll back the rest.
+      for (const id of ids) {
+        const item = byId.get(id)
+        if (!item) {
+          failed.push({ id, error: 'Sound item not found' })
+          continue
+        }
+        try {
+          await fastify.prisma.sound.delete({ where: { id } })
+          deleted.push({ id, title: item.title, slug: item.channel.slug })
+        } catch (err) {
+          if (err instanceof PrismaNS.PrismaClientKnownRequestError && err.code === 'P2003') {
+            failed.push({
+              id,
+              error: 'This item has a linked Mixcloud upload — disconnect that first, then delete.',
+            })
+            continue
+          }
+          if (err instanceof PrismaNS.PrismaClientKnownRequestError && err.code === 'P2025') {
+            failed.push({ id, error: 'Sound item not found' })
+            continue
+          }
+          throw err
+        }
+      }
+
+      if (deleted.length > 0) {
+        await auditLog(fastify.prisma, {
+          action: 'SOUND_METADATA_ADMIN_EDIT',
+          actorId: actor.id,
+          targetId: deleted[0]!.id,
+          meta: { deleted, via: 'files-browser-bulk-delete' },
+        })
+      }
+
+      return reply.send({ deleted: deleted.length, failed })
     },
   )
 
