@@ -11,6 +11,7 @@ import {
   HearthisUserTracksResponseSchema,
   mapGenre,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import {
   createHearthisClient,
@@ -87,6 +88,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'Search hearthis.at tracks',
         description:
           'Mixed-source collections: hearthis.at track search (embed-only, no audio fetch)',
         response: openApiResponse(HearthisSearchResponseSchema, 'HearthisSearchResponse'),
@@ -250,8 +252,12 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Mixed-source collections: add a hearthis.at track reference to a collection',
-        response: openApiResponse(HearthisAddTrackResponseSchema, 'HearthisAddTrackResponse'),
+        summary: 'Add a hearthis.at track to a collection',
+        description:
+          'Creates a hearthis_embed Sound and appends it to the collection. Answers 201. Embed-only unless the uploader marked the track downloadable.',
+        response: openApiResponses([
+          { status: 201, schema: HearthisAddTrackResponseSchema, name: 'HearthisAddTrackResponse' },
+        ]),
       },
     },
     async (request, reply) => {

@@ -76,7 +76,9 @@ status / webhook shapes.
 ## Honesty rules
 
 - If `capabilities.import` / `fileList` / `search` is true, the matching
-  `importPath` / `listPath` / `searchPath` must be a real route.
+  `importPath` / `listPath` / `searchPath` must be a real route. The reverse
+  also holds: a non-null path means the matching flag is true. A live route
+  with `import: false` (or a true flag with a null path) is a catalog lie.
 - Never advertise a phantom path (e.g. Bandcamp import was wrongly
   `/api/v1/imports/bandcamp/add` with no handler — keep `import: false` until
   Bandcamp API v1 lands).
@@ -87,7 +89,27 @@ status / webhook shapes.
 - Every non-null path in the import and export catalogs must be a registered
   route with an OpenAPI tag and summary. `plugin-provider-routes.test.ts` in
   `apps/api/src/lib/` fails when a catalog row points at a missing or
-  undocumented route.
+  undocumented route, or when the documented success status is not the one
+  the handler sends.
+
+## OpenAPI status honesty
+
+These routes send a non-200 success; OpenAPI documents that status, not a
+default 200:
+
+| Route | Success |
+| ----- | ------- |
+| `POST /api/me/google-drive/import` | 202 — poll `GET /api/me/cloud-import/jobs` |
+| `POST /api/me/soundcloud/import` | 202 — same job list |
+| `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created |
+| `POST /api/uploads/prepare` | 200 — presigned PUT (not a created Sound) |
+
+Drive status/picker/import/jobs, Spotify profile, stash list, and
+uploads/prepare are tagged `imports` (not `channel`).
+
+The desktop SoundCloud download
+(`GET`/`HEAD /api/v1/imports/soundcloud/tracks/:id/download?ticket=`) is in
+OpenAPI as a 302. It is ticket-auth, not session-auth; do not `hide` it.
 
 ## OAuth provider status (`statusPath`)
 

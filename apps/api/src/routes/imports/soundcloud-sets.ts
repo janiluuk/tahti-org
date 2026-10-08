@@ -12,6 +12,7 @@ import {
   SoundcloudPlaylistTracksResponseSchema,
   SoundcloudPlaylistsResponseSchema,
   SoundcloudResolvePlaylistResponseSchema,
+  openApiRedirectResponse,
   openApiResponse,
   PROVIDER_NOT_CONNECTED,
   PROVIDER_TOKEN_EXPIRED,
@@ -70,7 +71,9 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: "The connected user's SoundCloud playlists/sets, without tracks",
+        summary: 'List SoundCloud playlists',
+        description:
+          "The connected user's SoundCloud playlists/sets, without tracks. Desktop set-download flow; 403 PROVIDER_NOT_CONNECTED when not linked.",
         response: openApiResponse(SoundcloudPlaylistsResponseSchema, 'SoundcloudPlaylistsResponse'),
       },
     },
@@ -97,8 +100,9 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List tracks in a SoundCloud playlist',
         description:
-          'Tracks of one SoundCloud playlist in order; downloadable ones carry a short-lived download link',
+          'Tracks of one SoundCloud playlist in order; downloadable ones carry a short-lived ticketed download link. Stream-only tracks have download: null.',
         response: openApiResponse(
           SoundcloudPlaylistTracksResponseSchema,
           'SoundcloudPlaylistTracksResponse',
@@ -131,7 +135,9 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Resolve a pasted SoundCloud set link to a playlist',
+        summary: 'Resolve a pasted SoundCloud set link',
+        description:
+          'Turns a soundcloud.com set URL into a playlist id for the desktop downloader. 422 when the link is a track, not a set.',
         response: openApiResponse(
           SoundcloudResolvePlaylistResponseSchema,
           'SoundcloudResolvePlaylistResponse',
@@ -171,7 +177,15 @@ const soundcloudSetRoutes: FastifyPluginAsync = async (fastify) => {
   // answers it with this handler), which the desktop app uses to size a set.
   fastify.get<{ Params: { trackId: string }; Querystring: { ticket?: string } }>(
     '/api/v1/imports/soundcloud/tracks/:trackId/download',
-    { schema: { hide: true } },
+    {
+      schema: {
+        tags: ['imports'],
+        summary: 'Download a SoundCloud track (desktop)',
+        description:
+          "Ticket-auth (no session). Redirects 302 to SoundCloud's file. Query `ticket` is a signed 12-hour token naming one user and one track. HEAD works too (Fastify answers it with this handler) so the desktop app can size a set. 410 expired, 403 no longer downloadable or SoundCloud disconnected, 401 token expired (connection cleared).",
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
       reply.header('Cache-Control', 'no-store')
       reply.header('Referrer-Policy', 'no-referrer')

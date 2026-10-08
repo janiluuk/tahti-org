@@ -15,6 +15,7 @@ import {
   PROVIDER_NOT_CONNECTED,
   openApiRedirectResponse,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -37,8 +38,10 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'PLAT-080: Google Drive import connection status',
+        tags: ['imports'],
+        summary: 'Google Drive connection status',
+        description:
+          'Whether the caller has connected Google Drive, and whether this server has Google Drive OAuth configured (client id and secret).',
         response: openApiResponse(GoogleDriveConnectStatusSchema, 'GoogleDriveConnectStatus'),
       },
     },
@@ -151,8 +154,10 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'PLAT-083: disconnect Google Drive import',
+        tags: ['imports'],
+        summary: 'Disconnect Google Drive',
+        description:
+          'Clears the stored Google Drive tokens. Same `{ connected, configured }` body as status.',
         response: openApiResponse(GoogleDriveConnectStatusSchema, 'GoogleDriveConnectStatus'),
       },
     },
@@ -171,8 +176,10 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Short-lived access token + Picker API keys for the import UI',
+        tags: ['imports'],
+        summary: 'Google Picker config for Drive import',
+        description:
+          'Short-lived access token plus Picker API keys. Answers 503 when Picker is not configured, 403 `PROVIDER_NOT_CONNECTED` when the caller has not connected Drive. File picking is Picker, not a REST listPath.',
         response: openApiResponse(GoogleDrivePickerConfigSchema, 'GoogleDrivePickerConfig'),
       },
     },
@@ -204,9 +211,17 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Queue Google Drive files for server-side import to sound',
-        response: openApiResponse(GoogleDriveImportResponseSchema, 'GoogleDriveImportResponse'),
+        tags: ['imports'],
+        summary: 'Queue Google Drive files for import',
+        description:
+          'JSON body `{ files: [{ fileId, name, mimeType? }] }` (1–20). Answers 202 with one cloud-import job per file; poll GET /api/me/cloud-import/jobs.',
+        response: openApiResponses([
+          {
+            status: 202,
+            schema: GoogleDriveImportResponseSchema,
+            name: 'GoogleDriveImportResponse',
+          },
+        ]),
       },
     },
     async (request, reply) => {
@@ -276,8 +291,10 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Recent cloud import jobs for progress UI',
+        tags: ['imports'],
+        summary: 'Recent cloud import jobs',
+        description:
+          'Progress UI for Google Drive and SoundCloud queued imports. Poll after a 202 from those import routes.',
         response: openApiResponse(CloudImportJobListSchema, 'CloudImportJobList'),
       },
     },
@@ -321,8 +338,10 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Single cloud import job status',
+        tags: ['imports'],
+        summary: 'One cloud import job',
+        description:
+          'Status of a single Google Drive or SoundCloud cloud-import job owned by the caller.',
         response: openApiResponse(CloudImportJobStatusSchema, 'CloudImportJobStatus'),
       },
     },
