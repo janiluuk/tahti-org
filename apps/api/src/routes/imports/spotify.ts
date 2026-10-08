@@ -222,31 +222,42 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
   // Spotify's CDN directly from the dashboard search modal.
   // No requireAuth here — <img src> can't carry session cookies. The real safeguard is the
   // i.scdn.co host allowlist below, not an auth check on a public-image relay.
-  fastify.get('/api/v1/imports/spotify/cover', async (request, reply) => {
-    const query = request.query as Record<string, string>
-    const raw = query.url
-    if (!raw) return reply.status(400).send({ error: 'url is required' })
+  fastify.get(
+    '/api/v1/imports/spotify/cover',
+    {
+      schema: {
+        tags: ['imports'],
+        summary: 'Proxy a provider cover image',
+        description:
+          'Public same-origin proxy for a Spotify (`i.scdn.co`) cover (`?url=`), so the client never loads the provider host directly. Answers the image bytes; 400 for any other host.',
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as Record<string, string>
+      const raw = query.url
+      if (!raw) return reply.status(400).send({ error: 'url is required' })
 
-    let parsed: URL
-    try {
-      parsed = new URL(raw)
-    } catch {
-      return reply.status(400).send({ error: 'Invalid url' })
-    }
-    if (parsed.protocol !== 'https:' || parsed.hostname !== 'i.scdn.co') {
-      return reply.status(400).send({ error: 'url must be an i.scdn.co cover image' })
-    }
+      let parsed: URL
+      try {
+        parsed = new URL(raw)
+      } catch {
+        return reply.status(400).send({ error: 'Invalid url' })
+      }
+      if (parsed.protocol !== 'https:' || parsed.hostname !== 'i.scdn.co') {
+        return reply.status(400).send({ error: 'url must be an i.scdn.co cover image' })
+      }
 
-    const upstream = await fetch(parsed.toString())
-    if (!upstream.ok || !upstream.body) {
-      return reply.status(502).send({ error: 'Could not fetch cover image' })
-    }
-    reply.header('Content-Type', upstream.headers.get('content-type') ?? 'image/jpeg')
-    reply.header('Cache-Control', 'public, max-age=86400, immutable')
-    return reply.send(
-      Readable.fromWeb(upstream.body as import('node:stream/web').ReadableStream<Uint8Array>),
-    )
-  })
+      const upstream = await fetch(parsed.toString())
+      if (!upstream.ok || !upstream.body) {
+        return reply.status(502).send({ error: 'Could not fetch cover image' })
+      }
+      reply.header('Content-Type', upstream.headers.get('content-type') ?? 'image/jpeg')
+      reply.header('Cache-Control', 'public, max-age=86400, immutable')
+      return reply.send(
+        Readable.fromWeb(upstream.body as import('node:stream/web').ReadableStream<Uint8Array>),
+      )
+    },
+  )
 }
 
 export default spotifyImportRoutes

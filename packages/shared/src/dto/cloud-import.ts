@@ -8,6 +8,17 @@ export const GoogleDriveConnectStatusSchema = z.object({
   configured: z.boolean(),
 })
 
+/**
+ * `{ connected, configured }` body shared by the OAuth import providers'
+ * status and disconnect routes (the `statusPath` in `GET /api/me/import-plugins`).
+ * `configured` is false when the server has no client id + secret for the
+ * provider, so the connect button can never work.
+ */
+export const ImportOAuthConnectStatusSchema = z.object({
+  connected: z.boolean(),
+  configured: z.boolean(),
+})
+
 export const GoogleDrivePickerConfigSchema = z.object({
   clientId: z.string(),
   developerKey: z.string(),
@@ -32,6 +43,19 @@ export const GoogleDriveImportQueuedItemSchema = z.object({
 
 export const GoogleDriveImportResponseSchema = z.object({
   imports: z.array(GoogleDriveImportQueuedItemSchema),
+})
+
+export const SoundcloudTrackSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  durationMs: z.number(),
+  artworkUrl: z.string().nullable(),
+  downloadable: z.boolean(),
+  createdAt: z.string(),
+})
+
+export const SoundcloudTrackListSchema = z.object({
+  tracks: z.array(SoundcloudTrackSchema),
 })
 
 export const SoundcloudImportTrackSchema = z.object({
