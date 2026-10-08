@@ -7,7 +7,12 @@ import { IMPORT_PLUGIN_PROVIDERS } from './import-plugin-providers.js'
 import { EXPORT_PLUGIN_PROVIDERS } from './export-plugin-providers.js'
 
 type Method = 'get' | 'post'
-type OpenApiOperation = { tags?: string[]; summary?: string; description?: string }
+type OpenApiOperation = {
+  tags?: string[]
+  summary?: string
+  description?: string
+  responses?: Record<string, unknown>
+}
 type OpenApiPaths = Record<string, Partial<Record<Method, OpenApiOperation>>>
 
 const isParam = (segment: string) => segment.startsWith(':') || segment.startsWith('{')
@@ -72,16 +77,52 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     expect(advertised.length).toBeGreaterThan(20)
   })
 
-  it.each(advertised)('$provider $field → $method $path', ({ method, path }) => {
+  function operationFor(method: Method, path: string): OpenApiOperation | undefined {
     const documented = Object.keys(paths).find(
       (candidate) => samePath(path, candidate) && paths[candidate]?.[method],
     )
-    const operation = documented ? paths[documented]?.[method] : undefined
+    return documented ? paths[documented]?.[method] : undefined
+  }
+
+  it.each(advertised)('$provider $field → $method $path', ({ method, path }) => {
+    const operation = operationFor(method, path)
     expect(operation, `${method.toUpperCase()} ${path} is not a documented route`).toBeDefined()
     expect(operation?.tags?.length, `${path} has no OpenAPI tag`).toBeGreaterThan(0)
     expect(
       operation?.summary ?? operation?.description,
       `${path} has no OpenAPI summary or description`,
     ).toBeTruthy()
+  })
+
+  /**
+   * Queued Drive/SoundCloud import and hearthis-export send 202; search/add
+   * sends 201; prepare-upload sends 200. OpenAPI must document that status,
+   * not a default 200 that clients then treat as the success body.
+   */
+  it.each([
+    ['POST', '/api/me/google-drive/import', '202', 'imports'] as const,
+    ['POST', '/api/me/soundcloud/import', '202', 'imports'] as const,
+    ['POST', '/api/v1/imports/spotify/add', '201', 'imports'] as const,
+    ['POST', '/api/v1/imports/mixcloud/add', '201', 'imports'] as const,
+    ['POST', '/api/v1/imports/hearthis/add', '201', 'imports'] as const,
+    ['POST', '/api/uploads/prepare', '200', 'imports'] as const,
+    ['GET', '/api/me/stash', '200', 'imports'] as const,
+    ['GET', '/api/me/spotify-profile', '200', 'imports'] as const,
+    ['POST', '/api/me/sound/:id/export/hearthis', '202', 'releases'] as const,
+  ])('%s %s documents %s under %s', (method, path, status, tag) => {
+    const operation = operationFor(method.toLowerCase() as Method, path)
+    expect(operation, `${method} ${path} is not documented`).toBeDefined()
+    expect(operation?.tags).toContain(tag)
+    expect(
+      operation?.responses?.[status],
+      `${method} ${path} should document ${status}`,
+    ).toBeDefined()
+  })
+
+  it('documents the SoundCloud desktop download as a 302 (not hidden)', () => {
+    const operation = operationFor('get', '/api/v1/imports/soundcloud/tracks/:trackId/download')
+    expect(operation, 'SoundCloud download route is hidden or missing from OpenAPI').toBeDefined()
+    expect(operation?.tags).toContain('imports')
+    expect(operation?.responses?.['302']).toBeDefined()
   })
 })

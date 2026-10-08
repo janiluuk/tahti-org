@@ -22,8 +22,10 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'PERF-008: paginated stash file list',
+        tags: ['imports'],
+        summary: 'List stash files',
+        description:
+          'Paginated private file locker (stems/masters). Catalog statusPath and listPath for the stash upload provider.',
         response: openApiResponse(StashPagedListSchema, 'StashPagedList'),
       },
     },
