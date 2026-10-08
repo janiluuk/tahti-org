@@ -156,4 +156,54 @@ describe('/api/admin/files', () => {
     expect(res.statusCode).toBe(204)
     expect(await prisma.sound.findUnique({ where: { id: folkId } })).toBeNull()
   })
+
+  it('bulk-deletes the selected files and reports the ones it could not find', async () => {
+    const source = await prisma.sound.findUniqueOrThrow({ where: { id: technoId } })
+    const extra = await Promise.all(
+      ['one', 'two'].map((name) =>
+        prisma.sound.create({
+          data: {
+            channelId: source.channelId,
+            title: `${PREFIX} bulk ${name}`,
+            status: 'READY',
+            mp3Key: `${PREFIX}bulk-${name}.mp3`,
+          },
+        }),
+      ),
+    )
+    const ids = extra.map((row) => row.id)
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/files/bulk-delete',
+      headers: { cookie: boardCookie },
+      payload: { ids: [...ids, 'missing-id'] },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({
+      deleted: 2,
+      failed: [{ id: 'missing-id', error: 'Sound item not found' }],
+    })
+    expect(await prisma.sound.count({ where: { id: { in: ids } } })).toBe(0)
+    expect(await prisma.sound.findUnique({ where: { id: technoId } })).not.toBeNull()
+  })
+
+  it('refuses a bulk delete from a non-board account or with no ids', async () => {
+    const forbidden = await app.inject({
+      method: 'POST',
+      url: '/api/admin/files/bulk-delete',
+      headers: { cookie: artistCookie },
+      payload: { ids: [technoId] },
+    })
+    expect(forbidden.statusCode).toBe(403)
+
+    const empty = await app.inject({
+      method: 'POST',
+      url: '/api/admin/files/bulk-delete',
+      headers: { cookie: boardCookie },
+      payload: { ids: [] },
+    })
+    expect(empty.statusCode).toBe(400)
+    expect(await prisma.sound.findUnique({ where: { id: technoId } })).not.toBeNull()
+  })
 })
