@@ -115,6 +115,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's hearthis.at tracks",
         description: "Mixed-source collections: the connected artist's own hearthis.at tracks",
         response: openApiResponse(HearthisUserTracksResponseSchema, 'HearthisUserTracksResponse'),
       },
@@ -145,6 +146,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List hearthis.at tracks by profile URL',
         description: 'Mixed-source collections: list a hearthis.at profile by URL or handle',
         response: openApiResponse(HearthisUserTracksResponseSchema, 'HearthisUserTracksResponse'),
       },
@@ -175,6 +177,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's hearthis.at Sets",
         description:
           "List the connected artist's hearthis.at Sets (playlists). Requires hearthisUsername on the profile.",
         response: openApiResponse(HearthisUserSetsResponseSchema, 'HearthisUserSetsResponse'),
@@ -206,6 +209,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List tracks in a hearthis.at Set',
         description:
           'List tracks in a hearthis.at Set (playlist). Permalink from GET …/me-sets or a set URL.',
         response: openApiResponse(HearthisSetTracksResponseSchema, 'HearthisSetTracksResponse'),
