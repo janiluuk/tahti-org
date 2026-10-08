@@ -133,6 +133,21 @@ Notes for whoever picks this up:
 | 79  | Integrations list / install / uninstall in OpenAPI (204)                                   | done   |
 | 80  | Contracts + ledger + INDEX refresh                                                         | done   |
 
+## Batch 9 (2026-10-08) — search satellites, stash, complete upload, Last.fm OpenAPI
+
+| #   | Slice                                                                                      | Status |
+| --- | ------------------------------------------------------------------------------------------ | ------ |
+| 81  | Last.fm prepare / oauth start / callback in OpenAPI (200 / 302)                            | done   |
+| 82  | Spotify me-tracks + by-artist-url summaries                                                | done   |
+| 83  | Mixcloud-embed me-tracks + by-username summaries                                           | done   |
+| 84  | Hearthis me-tracks / by-username / me-sets / set-tracks summaries                          | done   |
+| 85  | Stash prepare + register (201) + download in OpenAPI                                       | done   |
+| 86  | `POST /api/uploads/complete` tagged `imports`, documented as 201                           | done   |
+| 87  | Guard: satellite search GETs tagged `imports`                                              | done   |
+| 88  | Guard: Last.fm start 302, complete 201, stash 201                                          | done   |
+| 89  | Stash share documented as 201                                                              | done   |
+| 90  | Contracts + ledger + INDEX refresh                                                         | done   |
+
 ---
 
 ## Remaining open

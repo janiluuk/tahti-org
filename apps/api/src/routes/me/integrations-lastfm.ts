@@ -2,10 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+import { openApiRedirectResponse, openApiResponse } from '@tahti/shared'
 import { upsertUserIntegrationCredential } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getLastFmAuthToken, getLastFmSession, lastFmAuthUrl } from '../../lib/lastfm.js'
+
+const LastFmPrepareResponseSchema = z.object({
+  authUrl: z.string(),
+})
 
 const OAUTH_TOKEN_MAX_AGE_SEC = 600
 const RETURN_COOKIE = 'tahti_lastfm_return'
@@ -116,7 +122,16 @@ const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
   /** Collect the user's Last.fm API key/secret, then return the Last.fm auth URL. */
   fastify.post(
     '/api/me/integrations/lastfm/prepare',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: "Start Last.fm auth with the caller's API key",
+        description:
+          'Holds the Last.fm API key/secret in short-lived cookies and returns `{ authUrl }` for Last.fm desktop auth. JSON body `{ apiKey, apiSecret, returnTo? }` is validated in the handler, not by Fastify AJV.',
+        response: openApiResponse(LastFmPrepareResponseSchema, 'LastFmPrepareResponse'),
+      },
+    },
     async (request, reply) => {
       const body = (request.body ?? {}) as {
         apiKey?: string
@@ -141,7 +156,16 @@ const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/integrations/lastfm/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Start Last.fm OAuth',
+        description:
+          'Browser navigation: redirects 302 to Last.fm. Uses cookies from prepare, or platform LASTFM_API_KEY / LASTFM_API_SECRET. Answers 503 when neither is set.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
       const query = request.query as Record<string, string>
       setReturnCookie(reply, query.returnTo?.trim())
@@ -162,48 +186,65 @@ const lastfmIntegrationRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/integrations/lastfm/oauth/callback', async (request, reply) => {
-    const returnCookie = request.cookies[RETURN_COOKIE]
-    const returnBase =
-      returnCookie && isAllowedReturnUrl(returnCookie) ? returnCookie : defaultReturnUrl()
+  fastify.get(
+    '/api/me/integrations/lastfm/oauth/callback',
+    {
+      schema: {
+        tags: ['integrations'],
+        summary: 'Last.fm OAuth callback',
+        description:
+          'Last.fm redirects here after auth.getToken. Always redirects with `?lastfm=ok`, `?lastfm=error`, `?lastfm=login` or `?lastfm=unconfigured`. Stores the session in IntegrationCredential.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const returnCookie = request.cookies[RETURN_COOKIE]
+      const returnBase =
+        returnCookie && isAllowedReturnUrl(returnCookie) ? returnCookie : defaultReturnUrl()
 
-    const query = request.query as Record<string, string>
-    const tokenFromQuery = query.token?.trim()
-    const tokenFromCookie = request.cookies[config.lastfm.oauthTokenCookie]
-    const token = tokenFromQuery || tokenFromCookie
-    const credentials = resolveLastFmCredentials(request)
+      const query = request.query as Record<string, string>
+      const tokenFromQuery = query.token?.trim()
+      const tokenFromCookie = request.cookies[config.lastfm.oauthTokenCookie]
+      const token = tokenFromQuery || tokenFromCookie
+      const credentials = resolveLastFmCredentials(request)
 
-    clearPendingLastFmCookies(reply)
+      clearPendingLastFmCookies(reply)
 
-    if (!token) {
-      return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
-    }
-    if (!request.sessionUser) {
-      return reply.redirect(302, withLastFmQuery(returnBase, 'login'))
-    }
-    if (!credentials) {
-      return reply.redirect(302, withLastFmQuery(returnBase, 'unconfigured'))
-    }
+      if (!token) {
+        return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
+      }
+      if (!request.sessionUser) {
+        return reply.redirect(302, withLastFmQuery(returnBase, 'login'))
+      }
+      if (!credentials) {
+        return reply.redirect(302, withLastFmQuery(returnBase, 'unconfigured'))
+      }
 
-    const session = await getLastFmSession(credentials, token)
-    if (!session.ok) {
-      request.log.warn({ error: session.error }, 'Last.fm getSession failed')
-      return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
-    }
+      const session = await getLastFmSession(credentials, token)
+      if (!session.ok) {
+        request.log.warn({ error: session.error }, 'Last.fm getSession failed')
+        return reply.redirect(302, withLastFmQuery(returnBase, 'error'))
+      }
 
-    const fields: Record<string, string> = {
-      sessionKey: session.sessionKey,
-      username: session.username,
-    }
-    if (credentials.fromUser) {
-      fields.apiKey = credentials.apiKey
-      fields.apiSecret = credentials.apiSecret
-    }
+      const fields: Record<string, string> = {
+        sessionKey: session.sessionKey,
+        username: session.username,
+      }
+      if (credentials.fromUser) {
+        fields.apiKey = credentials.apiKey
+        fields.apiSecret = credentials.apiSecret
+      }
 
-    await upsertUserIntegrationCredential(fastify.prisma, request.sessionUser.id, 'lastfm', fields)
+      await upsertUserIntegrationCredential(
+        fastify.prisma,
+        request.sessionUser.id,
+        'lastfm',
+        fields,
+      )
 
-    return reply.redirect(302, withLastFmQuery(returnBase, 'ok'))
-  })
+      return reply.redirect(302, withLastFmQuery(returnBase, 'ok'))
+    },
+  )
 }
 
 export default lastfmIntegrationRoutes

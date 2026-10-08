@@ -103,6 +103,9 @@ default 200:
 | `POST /api/me/soundcloud/import` | 202 — same job list |
 | `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created |
 | `POST /api/uploads/prepare` | 200 — presigned PUT (not a created Sound) |
+| `POST /api/uploads/complete` | 201 — Sound created, transcode queued |
+| `POST /api/me/stash` | 201 — stash file row after the PUT |
+| `POST /api/me/stash/:id/share` | 201 — keyed share |
 
 Drive status/picker/import/jobs, Spotify profile (including 204 unlink),
 stash list, uploads/prepare, Mixcloud OAuth status/connect/disconnect, and

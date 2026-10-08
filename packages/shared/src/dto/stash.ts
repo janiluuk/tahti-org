@@ -48,3 +48,27 @@ export const StashPagedListSchema = z.object({
   total: z.number().int(),
   files: z.array(StashFileViewSchema),
 })
+
+export const StashPrepareResponseSchema = z.object({
+  objectKey: z.string(),
+  uploadUrl: z.string(),
+  expiresAt: z.string(),
+})
+
+export const StashCreatedSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  createdAt: z.coerce.date(),
+})
+
+export const StashDownloadSchema = z.object({
+  url: z.string(),
+  filename: z.string(),
+})
+
+export const StashShareCreatedSchema = z.object({
+  id: z.string(),
+  token: z.string(),
+  permission: z.string(),
+  expiresAt: z.coerce.date().nullable(),
+})

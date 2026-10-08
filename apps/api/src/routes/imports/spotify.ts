@@ -72,6 +72,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's Spotify catalogue",
         description: "Mixed-source collections: the connected artist's own Spotify catalogue",
         response: openApiResponse(SpotifyMeTracksResponseSchema, 'SpotifyMeTracksResponse'),
       },
@@ -107,6 +108,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List a Spotify artist catalogue by URL',
         description: 'Mixed-source collections: list a Spotify artist catalogue by profile URL',
         response: openApiResponse(SpotifySearchResponseSchema, 'SpotifySearchResponse'),
       },
