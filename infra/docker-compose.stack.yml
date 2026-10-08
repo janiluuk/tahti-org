@@ -318,6 +318,12 @@ services:
       DOZZLE_AUTH_PROVIDER: simple
       DOZZLE_FILTER: label=com.docker.compose.project=tahti-stack
       DOZZLE_NO_ANALYTICS: '1'
+      # Remote hosts run their own `dozzle agent` container (see
+      # infra/docker-compose.worker-remote.yml, infra/docker-compose.minio-remote.yml)
+      # so their containers' logs show up here too — vimage7's
+      # worker-transcode/stem-separator and tahti.local's minio were
+      # previously invisible to this Dozzle entirely.
+      DOZZLE_REMOTE_AGENT: 192.168.2.187:7007,192.168.2.107:7007
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./stack/dozzle-users.yml:/data/users.yml:ro
