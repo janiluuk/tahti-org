@@ -103,6 +103,21 @@ Notes for whoever picks this up:
 | 59  | Player `API-REFERENCE` hash regen + OAuth provider section                                    | done (player #562) |
 | 60  | Contracts doc + ledger + INDEX refresh                                                        | done               |
 
+## Batch 7 (2026-10-08) — OpenAPI honesty for remaining import/export routes
+
+| #   | Slice                                                                                         | Status |
+| --- | --------------------------------------------------------------------------------------------- | ------ |
+| 61  | Google Drive status / picker / import / jobs retagged to `imports`                            | done   |
+| 62  | Drive + SoundCloud queued import documented as 202                                            | done   |
+| 63  | Canonical hearthis-export (`POST /api/me/sound/:id/export/hearthis`) documented as 202        | done   |
+| 64  | Spotify profile status / link / unlink tagged `imports`                                       | done   |
+| 65  | Stash list + `POST /api/uploads/prepare` tagged `imports`                                     | done   |
+| 66  | Search/add summaries; Spotify / Mixcloud / hearthis add documented as 201                     | done   |
+| 67  | SoundCloud desktop download unhidden in OpenAPI as 302                                        | done   |
+| 68  | SoundCloud playlists / tracks / resolve summaries                                             | done   |
+| 69  | Reverse capability flags (path set iff matching import/search/fileList or export flag)        | done   |
+| 70  | Contracts doc + ledger + INDEX refresh                                                        | done   |
+
 ---
 
 ## Remaining open

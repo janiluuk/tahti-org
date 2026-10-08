@@ -12,6 +12,7 @@ import {
   PROVIDER_TOKEN_EXPIRED,
   openApiRedirectResponse,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -261,7 +262,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         summary: 'Queue SoundCloud tracks for import',
         description:
           "Queue up to 20 of the caller's SoundCloud tracks for server-side download into the archive. Answers 202 with one cloud-import job per track; poll GET /api/me/cloud-import/jobs.",
-        response: openApiResponse(SoundcloudImportResponseSchema, 'SoundcloudImportResponse'),
+        response: openApiResponses([
+          { status: 202, schema: SoundcloudImportResponseSchema, name: 'SoundcloudImportResponse' },
+        ]),
       },
     },
     async (request, reply) => {

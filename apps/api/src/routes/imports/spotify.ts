@@ -16,6 +16,7 @@ import {
   searchSpotifyTracks,
   trackIdFromSpotifyUri,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -40,6 +41,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'Search Spotify tracks',
         description: 'Mixed-source collections: Spotify track search (embed-only, no audio fetch)',
         response: openApiResponse(SpotifySearchResponseSchema, 'SpotifySearchResponse'),
       },
@@ -137,8 +139,12 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Mixed-source collections: add a Spotify track reference to a collection',
-        response: openApiResponse(SpotifyAddTrackResponseSchema, 'SpotifyAddTrackResponse'),
+        summary: 'Add a Spotify track to a collection',
+        description:
+          'Creates a spotify_embed Sound and appends it to the collection. Answers 201. Embed-only — no audio is fetched.',
+        response: openApiResponses([
+          { status: 201, schema: SpotifyAddTrackResponseSchema, name: 'SpotifyAddTrackResponse' },
+        ]),
       },
     },
     async (request, reply) => {
