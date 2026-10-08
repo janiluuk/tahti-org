@@ -3,6 +3,7 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync, RouteHandlerMethod } from 'fastify'
+import { MusicbrainzDefaultSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { encryptStreamKey } from '../../lib/stream-key-enc.js'
@@ -154,7 +155,14 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
   // GET/PATCH /api/me/musicbrainz/default — remembered publish-time preference
   fastify.get(
     '/api/me/musicbrainz/default',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'Remembered "register on MusicBrainz" answer (null = not chosen yet)',
+        response: openApiResponse(MusicbrainzDefaultSchema, 'MusicbrainzDefault'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const row = await fastify.prisma.user.findUnique({
@@ -167,13 +175,18 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch(
     '/api/me/musicbrainz/default',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'Save or clear (null) the remembered "register on MusicBrainz" answer',
+        response: openApiResponse(MusicbrainzDefaultSchema, 'MusicbrainzDefault'),
+      },
+    },
     async (request, reply) => {
-      const body = request.body as { defaultRegisterToMusicbrainz?: boolean | null }
-      if (
-        body.defaultRegisterToMusicbrainz !== null &&
-        typeof body.defaultRegisterToMusicbrainz !== 'boolean'
-      ) {
+      // safeParse also covers a request with no body, which used to throw a 500.
+      const parsed = MusicbrainzDefaultSchema.safeParse(request.body)
+      if (!parsed.success) {
         return reply
           .status(400)
           .send({ error: 'defaultRegisterToMusicbrainz must be boolean or null' })
@@ -181,7 +194,7 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const updated = await fastify.prisma.user.update({
         where: { id: user.id },
-        data: { defaultRegisterToMusicbrainz: body.defaultRegisterToMusicbrainz ?? null },
+        data: { defaultRegisterToMusicbrainz: parsed.data.defaultRegisterToMusicbrainz },
         select: { defaultRegisterToMusicbrainz: true },
       })
       return reply.send(updated)
