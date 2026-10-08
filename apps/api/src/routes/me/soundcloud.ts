@@ -8,6 +8,8 @@ import {
   SoundcloudImportResponseSchema,
   SoundcloudTrackListSchema,
   ImportOAuthConnectStatusSchema,
+  PROVIDER_NOT_CONNECTED,
+  PROVIDER_TOKEN_EXPIRED,
   openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
@@ -195,7 +197,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { soundcloudAccessTokenEnc: true },
       })
       if (!row?.soundcloudAccessTokenEnc) {
-        return reply.status(403).send({ error: 'SoundCloud account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'SoundCloud account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       const token = decryptStreamKey(row.soundcloudAccessTokenEnc)
@@ -213,7 +217,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
             where: { id: user.id },
             data: { soundcloudAccessTokenEnc: null },
           })
-          return reply.status(401).send({ error: 'SoundCloud token expired — reconnect' })
+          return reply
+            .status(401)
+            .send({ error: 'SoundCloud token expired — reconnect', code: PROVIDER_TOKEN_EXPIRED })
         }
         return reply.status(502).send({ error: 'SoundCloud API unavailable' })
       }
@@ -273,7 +279,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { soundcloudAccessTokenEnc: true },
       })
       if (!row?.soundcloudAccessTokenEnc) {
-        return reply.status(403).send({ error: 'SoundCloud account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'SoundCloud account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       const imports = []

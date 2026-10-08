@@ -3,6 +3,12 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync, RouteHandlerMethod } from 'fastify'
+import {
+  MusicbrainzConnectStatusSchema,
+  MusicbrainzDefaultSchema,
+  openApiRedirectResponse,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { encryptStreamKey } from '../../lib/stream-key-enc.js'
@@ -12,27 +18,62 @@ const MUSICBRAINZ_AUTHORIZE_URL = 'https://musicbrainz.org/oauth2/authorize'
 const MUSICBRAINZ_TOKEN_URL = 'https://musicbrainz.org/oauth2/token'
 const MUSICBRAINZ_USERINFO_URL = 'https://musicbrainz.org/oauth2/userinfo'
 
+/** The token exchange needs the secret too, so a client id alone is not "configured". */
+function musicbrainzConfigured(): boolean {
+  return Boolean(config.musicbrainz.clientId && config.musicbrainz.clientSecret)
+}
+
+const CALLBACK_SCHEMA = {
+  tags: ['integrations'],
+  summary: 'MusicBrainz OAuth callback',
+  description:
+    'MusicBrainz redirects the browser here with `code` and `state`. Always redirects to the notification settings page with `?mb=connected`, `?mb=error` or `?mb=login`.',
+  response: openApiRedirectResponse(302),
+}
+
 const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/musicbrainz — connection status
-  fastify.get('/api/me/musicbrainz', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { musicbrainzAccessTokenEnc: true, musicbrainzUsername: true },
-    })
-    return reply.send({
-      connected: Boolean(row?.musicbrainzAccessTokenEnc),
-      username: row?.musicbrainzUsername ?? null,
-      configured: Boolean(config.musicbrainz.clientId),
-    })
-  })
+  fastify.get(
+    '/api/me/musicbrainz',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'MusicBrainz connection status',
+        description:
+          'Whether the caller has connected a MusicBrainz editor account (and its username), and whether this server has MusicBrainz OAuth configured at all.',
+        response: openApiResponse(MusicbrainzConnectStatusSchema, 'MusicbrainzConnectStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { musicbrainzAccessTokenEnc: true, musicbrainzUsername: true },
+      })
+      return reply.send({
+        connected: Boolean(row?.musicbrainzAccessTokenEnc),
+        username: row?.musicbrainzUsername ?? null,
+        configured: musicbrainzConfigured(),
+      })
+    },
+  )
 
   // GET /api/me/musicbrainz/oauth/start — redirect to MusicBrainz authorize
   fastify.get(
     '/api/me/musicbrainz/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Start MusicBrainz OAuth',
+        description:
+          'Browser navigation, not a fetch: sets a short-lived state cookie and redirects to MusicBrainz. Answers 503 when MusicBrainz OAuth is not configured.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
-      if (!config.musicbrainz.clientId) {
+      if (!musicbrainzConfigured()) {
         return reply.status(503).send({ error: 'MusicBrainz OAuth is not configured' })
       }
 
@@ -71,18 +112,13 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${dest}?mb=error#musicbrainz`)
     }
 
-    const sessionId = request.cookies[config.sessionCookieName]
-    if (!sessionId) {
+    // request.sessionUser comes from the global auth preHandler (validateSession),
+    // the same source every other provider callback uses — no second, manual
+    // session lookup here.
+    if (!request.sessionUser) {
       return reply.redirect(302, `${dest}?mb=login#musicbrainz`)
     }
-
-    const session = await fastify.prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { user: { select: { id: true } } },
-    })
-    if (!session || session.expiresAt < new Date()) {
-      return reply.redirect(302, `${dest}?mb=login#musicbrainz`)
-    }
+    const sessionUserId = request.sessionUser.id
 
     try {
       const tokenRes = await fetch(MUSICBRAINZ_TOKEN_URL, {
@@ -118,7 +154,7 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       await fastify.prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: sessionUserId },
         data: {
           musicbrainzAccessTokenEnc: encryptStreamKey(tokenData.access_token),
           ...(tokenData.refresh_token
@@ -134,27 +170,61 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${dest}?mb=error#musicbrainz`)
     }
   }
-  fastify.get('/api/me/musicbrainz/oauth/callback', musicbrainzCallback)
-  fastify.get('/api/musicbrainz/oauth/callback', musicbrainzCallback)
+  fastify.get(
+    '/api/me/musicbrainz/oauth/callback',
+    { schema: CALLBACK_SCHEMA },
+    musicbrainzCallback,
+  )
+  fastify.get(
+    '/api/musicbrainz/oauth/callback',
+    {
+      schema: {
+        ...CALLBACK_SCHEMA,
+        summary: 'MusicBrainz OAuth callback (old path)',
+        deprecated: true,
+      },
+    },
+    musicbrainzCallback,
+  )
 
   // DELETE /api/me/musicbrainz — disconnect
-  fastify.delete('/api/me/musicbrainz', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    await fastify.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        musicbrainzAccessTokenEnc: null,
-        musicbrainzRefreshTokenEnc: null,
-        musicbrainzUsername: null,
+  fastify.delete(
+    '/api/me/musicbrainz',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Disconnect MusicBrainz',
+        response: openApiResponse(MusicbrainzConnectStatusSchema, 'MusicbrainzConnectStatus'),
       },
-    })
-    return reply.send({ connected: false, configured: Boolean(config.musicbrainz.clientId) })
-  })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          musicbrainzAccessTokenEnc: null,
+          musicbrainzRefreshTokenEnc: null,
+          musicbrainzUsername: null,
+        },
+      })
+      return reply.send({ connected: false, configured: musicbrainzConfigured() })
+    },
+  )
 
   // GET/PATCH /api/me/musicbrainz/default — remembered publish-time preference
   fastify.get(
     '/api/me/musicbrainz/default',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Remembered "register on MusicBrainz" choice',
+        description:
+          'The publish-time preference: true or false once the artist has chosen, null while they have not.',
+        response: openApiResponse(MusicbrainzDefaultSchema, 'MusicbrainzDefault'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const row = await fastify.prisma.user.findUnique({
@@ -167,7 +237,16 @@ const musicbrainzRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch(
     '/api/me/musicbrainz/default',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Set the remembered "register on MusicBrainz" choice',
+        description:
+          'Body `{ defaultRegisterToMusicbrainz: true | false | null }`; null forgets it.',
+        response: openApiResponse(MusicbrainzDefaultSchema, 'MusicbrainzDefault'),
+      },
+    },
     async (request, reply) => {
       const body = request.body as { defaultRegisterToMusicbrainz?: boolean | null }
       if (
