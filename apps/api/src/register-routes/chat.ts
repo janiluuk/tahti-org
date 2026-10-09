@@ -24,6 +24,7 @@ import meModerators from '../routes/me/moderators.js'
 import rtmpTargetRoutes from '../routes/me/rtmp-targets.js'
 import apiTokenRoutes from '../routes/me/api-tokens.js'
 import obsPresetRoutes from '../routes/me/obs-preset.js'
+import meModerateLeave from '../routes/me/moderate-leave.js'
 
 export async function registerChatRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(chatTokenRoute)
@@ -49,4 +50,5 @@ export async function registerChatRoutes(fastify: FastifyInstance): Promise<void
   await fastify.register(rtmpTargetRoutes, { scope: 'radio' })
   await fastify.register(obsPresetRoutes)
   await fastify.register(apiTokenRoutes)
+  await fastify.register(meModerateLeave)
 }
