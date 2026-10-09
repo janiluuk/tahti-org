@@ -34,7 +34,7 @@ const meModerateMessages: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const rows = await fastify.prisma.chatMessage.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, removedAt: null },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         take: MESSAGE_LIMIT,
         select: {
