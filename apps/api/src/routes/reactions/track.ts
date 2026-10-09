@@ -6,7 +6,9 @@ import {
   IdParamSchema,
   TrackPlaybackDetailsSchema,
   TrackReactionCreateSchema,
+  TrackReactionItemSchema,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -90,7 +92,15 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
   // identity/tracklist info the full player's fullscreen mode shows.
   fastify.get(
     '/api/reactions/track/:id',
-    { schema: { response: openApiResponse(TrackPlaybackDetailsSchema, 'TrackPlaybackDetails') } },
+    {
+      schema: {
+        tags: ['engagement'],
+        summary: 'Track playback details and reaction markers',
+        description:
+          'Waveform peaks, reaction markers, and identity/tracklist for the full player. Public tracks only.',
+        response: openApiResponse(TrackPlaybackDetailsSchema, 'TrackPlaybackDetails'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -143,56 +153,73 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/reactions/track/:id { type, positionSec }
-  fastify.post('/api/reactions/track/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const parsed = TrackReactionCreateSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
-    }
-
-    const user = request.sessionUser!
-    if (!checkReactionLimit(user.id)) {
-      return reply.status(429).send({ error: 'Slow down' })
-    }
-
-    const item = await fastify.prisma.sound.findUnique({
-      where: { id: routeParams.id },
-      select: {
-        id: true,
-        title: true,
-        isPublic: true,
-        durationSec: true,
-        channel: { select: { slug: true } },
+  fastify.post(
+    '/api/reactions/track/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        summary: 'Drop a reaction on a track',
+        description:
+          'Answers 201. JSON body `{ type, positionSec }` is validated in the handler, not by Fastify AJV. Rate-limited to 20/min.',
+        response: openApiResponses([
+          { status: 201, schema: TrackReactionItemSchema, name: 'TrackReactionItem' },
+        ]),
       },
-    })
-    if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = TrackReactionCreateSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      }
 
-    const positionSec = item.durationSec
-      ? Math.min(parsed.data.positionSec, item.durationSec)
-      : parsed.data.positionSec
+      const user = request.sessionUser!
+      if (!checkReactionLimit(user.id)) {
+        return reply.status(429).send({ error: 'Slow down' })
+      }
 
-    const reaction = await fastify.prisma.trackReaction.create({
-      data: {
-        soundId: item.id,
-        userId: user.id,
-        type: parsed.data.type,
-        positionSec,
-      },
-      select: { id: true, type: true, positionSec: true, createdAt: true },
-    })
+      const item = await fastify.prisma.sound.findUnique({
+        where: { id: routeParams.id },
+        select: {
+          id: true,
+          title: true,
+          isPublic: true,
+          durationSec: true,
+          channel: { select: { slug: true } },
+        },
+      })
+      if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
 
-    if (parsed.data.type === 'LOVE') {
-      publishLovedMessage({
-        slug: item.channel.slug,
-        actorDisplayName: userName(user),
-        trackTitle: item.title,
-        trackId: item.id,
-      }).catch((err: unknown) => fastify.log.warn({ err }, 'centrifugo publish failed'))
-    }
+      const positionSec = item.durationSec
+        ? Math.min(parsed.data.positionSec, item.durationSec)
+        : parsed.data.positionSec
 
-    return reply.status(201).send(reaction)
-  })
+      const reaction = await fastify.prisma.trackReaction.create({
+        data: {
+          soundId: item.id,
+          userId: user.id,
+          type: parsed.data.type,
+          positionSec,
+        },
+        select: { id: true, type: true, positionSec: true, createdAt: true },
+      })
+
+      if (parsed.data.type === 'LOVE') {
+        publishLovedMessage({
+          slug: item.channel.slug,
+          actorDisplayName: userName(user),
+          trackTitle: item.title,
+          trackId: item.id,
+        }).catch((err: unknown) => fastify.log.warn({ err }, 'centrifugo publish failed'))
+      }
+
+      return reply.status(201).send(reaction)
+    },
+  )
 }
 
 export default trackReactionsRoutes

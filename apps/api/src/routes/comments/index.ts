@@ -5,10 +5,13 @@ import type { FastifyPluginAsync } from 'fastify'
 import { availableUserWhere, notifyArtistOfNewComment, type PrismaClient } from '@tahti/db'
 import {
   CommentBodySchema,
+  CommentItemSchema,
   CommentsListSchema,
   IdParamSchema,
   SlugParamSchema,
+  openApiNoContentResponse,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -77,7 +80,15 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/comments/track/:id
   fastify.get(
     '/api/comments/track/:id',
-    { schema: { response: openApiResponse(CommentsListSchema, 'CommentsList') } },
+    {
+      schema: {
+        tags: ['comments'],
+        summary: 'List comments on a track',
+        description:
+          'Newest comments on a public track, or a keyed share (`?key=`). Includes `commentsEnabled`.',
+        response: openApiResponse(CommentsListSchema, 'CommentsList'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -115,74 +126,96 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/comments/track/:id { body }
-  fastify.post('/api/comments/track/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const parsed = CommentBodySchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-
-    const item = await fastify.prisma.sound.findUnique({
-      where: { id: routeParams.id },
-      select: {
-        commentsEnabled: true,
-        isPublic: true,
-        title: true,
-        channel: { select: { slug: true, userId: true } },
+  fastify.post(
+    '/api/comments/track/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['comments'],
+        summary: 'Post a comment on a track',
+        description:
+          'Answers 201. JSON body is validated in the handler, not by Fastify AJV. Keyed share access uses `?key=`.',
+        response: openApiResponses([
+          { status: 201, schema: CommentItemSchema, name: 'CommentItem' },
+        ]),
       },
-    })
-    const visible =
-      item?.isPublic ||
-      (item &&
-        (await soundShareGrantsAccess(
-          fastify.prisma,
-          routeParams.id,
-          shareKeyFromQuery(request.query),
-          request.sessionUser!.username,
-        )))
-    if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
-    if (!item.commentsEnabled) {
-      return reply.status(403).send({ error: 'Comments are off for this track' })
-    }
-    if (await isBlockedEitherWay(fastify.prisma, item.channel.userId, request.sessionUser!.id)) {
-      return reply.status(403).send(BLOCKED_COMMENT_BODY)
-    }
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = CommentBodySchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
 
-    const comment = await fastify.prisma.comment.create({
-      data: {
-        body: parsed.data.body,
-        authorId: request.sessionUser!.id,
-        soundId: routeParams.id,
-      },
-      select: {
-        id: true,
-        body: true,
-        createdAt: true,
-        author: { select: { username: true, displayName: true, avatarUrl: true } },
-      },
-    })
+      const item = await fastify.prisma.sound.findUnique({
+        where: { id: routeParams.id },
+        select: {
+          commentsEnabled: true,
+          isPublic: true,
+          title: true,
+          channel: { select: { slug: true, userId: true } },
+        },
+      })
+      const visible =
+        item?.isPublic ||
+        (item &&
+          (await soundShareGrantsAccess(
+            fastify.prisma,
+            routeParams.id,
+            shareKeyFromQuery(request.query),
+            request.sessionUser!.username,
+          )))
+      if (!item || !visible) return reply.status(404).send({ error: 'Track not found' })
+      if (!item.commentsEnabled) {
+        return reply.status(403).send({ error: 'Comments are off for this track' })
+      }
+      if (await isBlockedEitherWay(fastify.prisma, item.channel.userId, request.sessionUser!.id)) {
+        return reply.status(403).send(BLOCKED_COMMENT_BODY)
+      }
 
-    await notifyArtistOfNewComment(
-      fastify.prisma,
-      item.channel.userId,
-      commenterOf(request.sessionUser!),
-      comment,
-      { channelSlug: item.channel.slug, item: { id: routeParams.id, title: item.title } },
-    ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
+      const comment = await fastify.prisma.comment.create({
+        data: {
+          body: parsed.data.body,
+          authorId: request.sessionUser!.id,
+          soundId: routeParams.id,
+        },
+        select: {
+          id: true,
+          body: true,
+          createdAt: true,
+          author: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      })
 
-    return reply.status(201).send({
-      id: comment.id,
-      body: comment.body,
-      createdAt: comment.createdAt,
-      authorUsername: comment.author.username,
-      authorDisplayName: userName(comment.author),
-      authorAvatarUrl: comment.author.avatarUrl,
-    })
-  })
+      await notifyArtistOfNewComment(
+        fastify.prisma,
+        item.channel.userId,
+        commenterOf(request.sessionUser!),
+        comment,
+        { channelSlug: item.channel.slug, item: { id: routeParams.id, title: item.title } },
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
+
+      return reply.status(201).send({
+        id: comment.id,
+        body: comment.body,
+        createdAt: comment.createdAt,
+        authorUsername: comment.author.username,
+        authorDisplayName: userName(comment.author),
+        authorAvatarUrl: comment.author.avatarUrl,
+      })
+    },
+  )
 
   // GET /api/comments/channel/:slug
   fastify.get(
     '/api/comments/channel/:slug',
-    { schema: { response: openApiResponse(CommentsListSchema, 'CommentsList') } },
+    {
+      schema: {
+        tags: ['comments'],
+        summary: 'List comments on a channel',
+        description: 'Newest comments on the public channel page. Includes `commentsEnabled`.',
+        response: openApiResponse(CommentsListSchema, 'CommentsList'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -201,7 +234,17 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/comments/channel/:slug { body }
   fastify.post(
     '/api/comments/channel/:slug',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['comments'],
+        summary: 'Post a comment on a channel',
+        description: 'Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: CommentItemSchema, name: 'CommentItem' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -254,29 +297,41 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // DELETE /api/comments/:id — the comment's own author, the channel/track owner, or the board
-  fastify.delete('/api/comments/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-
-    const comment = await fastify.prisma.comment.findUnique({
-      where: { id: routeParams.id },
-      select: {
-        authorId: true,
-        sound: { select: { channel: { select: { userId: true } } } },
-        channel: { select: { userId: true } },
+  fastify.delete(
+    '/api/comments/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['comments'],
+        summary: 'Delete a comment',
+        description: 'Author, channel/track owner, or board. Answers 204.',
+        response: openApiNoContentResponse(),
       },
-    })
-    if (!comment) return reply.status(404).send({ error: 'Comment not found' })
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-    const ownerId = comment.sound?.channel.userId ?? comment.channel?.userId
-    const user = request.sessionUser!
-    if (comment.authorId !== user.id && ownerId !== user.id && !user.isBoard) {
-      return reply.status(403).send({ error: 'Not allowed to delete this comment' })
-    }
+      const comment = await fastify.prisma.comment.findUnique({
+        where: { id: routeParams.id },
+        select: {
+          authorId: true,
+          sound: { select: { channel: { select: { userId: true } } } },
+          channel: { select: { userId: true } },
+        },
+      })
+      if (!comment) return reply.status(404).send({ error: 'Comment not found' })
 
-    await fastify.prisma.comment.delete({ where: { id: routeParams.id } })
-    return reply.status(204).send()
-  })
+      const ownerId = comment.sound?.channel.userId ?? comment.channel?.userId
+      const user = request.sessionUser!
+      if (comment.authorId !== user.id && ownerId !== user.id && !user.isBoard) {
+        return reply.status(403).send({ error: 'Not allowed to delete this comment' })
+      }
+
+      await fastify.prisma.comment.delete({ where: { id: routeParams.id } })
+      return reply.status(204).send()
+    },
+  )
 }
 
 export default commentsRoutes

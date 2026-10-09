@@ -193,6 +193,21 @@ Notes for whoever picks this up:
 | 119 | Guard: jam create/join/events/leave/end + add-on Store CRUD        | done   |
 | 120 | Docs + ledger + INDEX refresh                                      | done   |
 
+## Batch 13 (2026-10-09) — comments, reactions, listen-heartbeat OpenAPI
+
+| #   | Slice                                                                  | Status |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 121 | `GET /api/comments/track/:id` tagged `comments` + summary              | done   |
+| 122 | `POST /api/comments/track/:id` documented as 201 `CommentItem`         | done   |
+| 123 | `GET /api/comments/channel/:slug` tagged `comments` + summary          | done   |
+| 124 | `POST /api/comments/channel/:slug` documented as 201 `CommentItem`     | done   |
+| 125 | `DELETE /api/comments/:id` documented as 204                           | done   |
+| 126 | `GET /api/reactions/track/:id` tagged `engagement` + summary           | done   |
+| 127 | `POST /api/reactions/track/:id` documented as 201 `TrackReactionItem`  | done   |
+| 128 | `POST /api/v1/listen/heartbeat` tagged `engagement`, documented as 204 | done   |
+| 129 | Guard: comments CRUD, reactions, listen-heartbeat                      | done   |
+| 130 | Docs + ledger + INDEX refresh                                          | done   |
+
 ---
 
 ## Remaining open
