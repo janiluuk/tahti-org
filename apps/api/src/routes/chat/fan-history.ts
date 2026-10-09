@@ -33,9 +33,10 @@ const chatFanHistoryRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, user: { select: { chatEnabled: true } } },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      if (!channel.user.chatEnabled) return reply.send({ messages: [] })
 
       if (!(await canUseFanChat(fastify.prisma, channel.userId, request.sessionUser!.id))) {
         return reply.status(403).send({ error: 'fan_chat_required' })

@@ -33,9 +33,12 @@ const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, user: { select: { chatEnabled: true } } },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      // Switching chat off closes the room: no tokens, no posts. What was
+      // said in it before is not handed out either while it is off.
+      if (!channel.user.chatEnabled) return reply.send({ messages: [] })
 
       const result = await getCachedJson(`chat-history:${slug}`, 5, async () => {
         const rows = await fastify.prisma.chatMessage.findMany({
