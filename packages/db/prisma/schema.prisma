@@ -2245,18 +2245,22 @@ model ChatBan {
 /// announcements) are published straight to Centrifugo by the API and don't
 /// go through that proxy, so they aren't captured here.
 model ChatMessage {
-  id          String   @id @default(cuid())
-  channelId   String
-  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
   /// True for the subscriber-only ":fans" sub-channel, false for the main chat.
-  fanOnly     Boolean  @default(false)
-  handle      String
-  text        String
-  userId      String?
-  supporter   Boolean  @default(false)
-  channelRole String?
-  countryCode String?
-  createdAt   DateTime @default(now())
+  fanOnly         Boolean  @default(false)
+  handle          String
+  text            String
+  userId          String?
+  /// The sender's per-channel chat fingerprint (the part of the token's
+  /// `sub` after the last `#`). Moderators ban by message, and a ban is a
+  /// fingerprint, so the message has to remember it. Never sent to clients.
+  fingerprintHash String?
+  supporter       Boolean  @default(false)
+  channelRole     String?
+  countryCode     String?
+  createdAt       DateTime @default(now())
 
   @@index([channelId, fanOnly, createdAt])
   @@schema("chat")

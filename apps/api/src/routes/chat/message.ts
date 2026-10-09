@@ -159,6 +159,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
             handle,
             text,
             userId: mentionerUserId,
+            fingerprintHash: fingerprint || null,
             supporter,
             channelRole,
             countryCode,
