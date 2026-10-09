@@ -7,6 +7,7 @@ import {
   DEFAULT_SOCIAL_TEMPLATE,
   MastodonConnectSchema,
   SocialManualPostSchema,
+  SocialOkSchema,
   SocialPostLogSchema,
   SocialSettingsViewSchema,
   openApiResponse,
@@ -30,6 +31,9 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Social auto-post connections',
+        description:
+          'Mastodon, Bluesky, Twitter, and Instagram connection status and auto-post toggles. Never returns tokens.',
         response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
@@ -45,6 +49,9 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Connect or update Mastodon auto-post',
+        description:
+          'Verifies credentials with a test post, then upserts the connection. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
@@ -113,6 +120,9 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Connect or update Bluesky auto-post',
+        description:
+          'Verifies credentials with a test post, then upserts the connection. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
@@ -193,7 +203,16 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/social/mastodon',
-    { preHandler: requireAuth, schema: { tags: ['releases'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Disconnect Mastodon auto-post',
+        description:
+          "Removes the caller's Mastodon connection. Answers 200 `{ ok: true }` (not 204).",
+        response: openApiResponse(SocialOkSchema, 'SocialOk'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.socialConnection.deleteMany({
@@ -205,7 +224,16 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/social/bluesky',
-    { preHandler: requireAuth, schema: { tags: ['releases'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Disconnect Bluesky auto-post',
+        description:
+          "Removes the caller's Bluesky connection. Answers 200 `{ ok: true }` (not 204).",
+        response: openApiResponse(SocialOkSchema, 'SocialOk'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.socialConnection.deleteMany({
@@ -221,6 +249,9 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Queue a manual social post',
+        description:
+          'Enqueues one post on a connected platform. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponses([
           { status: 201, schema: SocialPostLogSchema, name: 'SocialPostLog' },
         ]),
@@ -272,6 +303,8 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Recent social auto-post log',
+        description: 'Last 20 social posts for the signed-in artist.',
         response: openApiResponses([
           { status: 200, schema: SocialPostLogSchema.array(), name: 'SocialPostLogList' },
         ]),

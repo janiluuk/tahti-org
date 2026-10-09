@@ -176,6 +176,23 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['GET', '/api/reactions/track/:id', '200', 'engagement'] as const,
     ['POST', '/api/reactions/track/:id', '201', 'engagement'] as const,
     ['POST', '/api/v1/listen/heartbeat', '204', 'engagement'] as const,
+    ['GET', '/api/me/mentions/settings', '200', 'mentions'] as const,
+    ['GET', '/api/me/mentions', '200', 'mentions'] as const,
+    ['PATCH', '/api/me/mentions/settings', '200', 'mentions'] as const,
+    ['POST', '/api/me/mentions/mute/:handle', '201', 'mentions'] as const,
+    ['DELETE', '/api/me/mentions/mute/:handle', '200', 'mentions'] as const,
+    ['GET', '/api/me/social', '200', 'releases'] as const,
+    ['PUT', '/api/me/social/mastodon', '200', 'releases'] as const,
+    ['PUT', '/api/me/social/bluesky', '200', 'releases'] as const,
+    ['POST', '/api/me/social/post', '201', 'releases'] as const,
+    ['DELETE', '/api/me/social/mastodon', '200', 'releases'] as const,
+    ['DELETE', '/api/me/social/bluesky', '200', 'releases'] as const,
+    ['GET', '/api/me/social/twitter/oauth/start', '302', 'releases'] as const,
+    ['GET', '/api/me/social/twitter/oauth/callback', '302', 'releases'] as const,
+    ['DELETE', '/api/me/social/twitter', '200', 'releases'] as const,
+    ['GET', '/api/me/social/instagram/oauth/start', '302', 'releases'] as const,
+    ['GET', '/api/me/social/instagram/oauth/callback', '302', 'releases'] as const,
+    ['DELETE', '/api/me/social/instagram', '200', 'releases'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)
     expect(operation, `${method} ${path} is not documented`).toBeDefined()
