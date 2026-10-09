@@ -71,7 +71,9 @@ export const ModeratedChannelViewSchema = z.object({
 export const ModeratedChannelListSchema = z.array(ModeratedChannelViewSchema)
 
 export const ChatBanViewSchema = z.object({
+  id: z.string(),
   fingerprintHash: z.string(),
+  handle: z.string().nullable(),
   bannedAt: z.coerce.date(),
 })
 

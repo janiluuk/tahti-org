@@ -2230,6 +2230,10 @@ model ChatBan {
   channelId       String
   channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
   fingerprintHash String
+  /// The name the sender posted under when they were banned, so the ban list
+  /// reads as people and not as hashes. Null for a ban typed in by hash.
+  handle          String?
+  bannedByUserId  String?
   bannedAt        DateTime @default(now())
 
   @@unique([channelId, fingerprintHash])

@@ -224,7 +224,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       const bans = await fastify.prisma.chatBan.findMany({
         where: { channelId: channel.id },
         orderBy: { bannedAt: 'desc' },
-        select: { fingerprintHash: true, bannedAt: true },
+        select: { id: true, fingerprintHash: true, handle: true, bannedAt: true },
       })
 
       return reply.send(bans)
@@ -256,7 +256,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
 
       await fastify.prisma.chatBan.upsert({
         where: { channelId_fingerprintHash: { channelId: channel.id, fingerprintHash } },
-        create: { channelId: channel.id, fingerprintHash },
+        create: { channelId: channel.id, fingerprintHash, bannedByUserId: user.id },
         update: { bannedAt: new Date() },
       })
 
