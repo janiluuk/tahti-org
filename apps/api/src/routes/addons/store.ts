@@ -27,6 +27,9 @@ const addonStoreRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['addons'],
+        summary: 'Browse approved add-on widgets',
+        description:
+          'Self-service Store for LISTENER or ARTIST scope. ADMIN widgets are not listed here — those live on GET /api/admin/addons.',
         response: openApiResponse(AddonStoreListSchema, 'AddonStoreList'),
       },
     },
