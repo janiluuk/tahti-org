@@ -24,10 +24,6 @@ export const MusicbrainzConnectStatusSchema = ImportOAuthConnectStatusSchema.ext
   username: z.string().nullable().optional(),
 })
 
-export const MusicbrainzDefaultSchema = z.object({
-  defaultRegisterToMusicbrainz: z.boolean().nullable(),
-})
-
 /**
  * Machine-readable `code` on a provider route's error body, so a client can
  * tell "connect first" and "connect again" apart from an empty result.
