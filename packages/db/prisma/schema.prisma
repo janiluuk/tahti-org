@@ -1344,6 +1344,9 @@ model Channel {
   // M35: whether a finished broadcast is auto-recorded to the sound library. Defaults
   // to true (today's unconditional behavior) — artists opt out per-channel.
   autoRecordEnabled             Boolean               @default(true)
+  /// PLAT-086: whether the channel page starts playing on its own when a
+  /// listener opens it. On unless the artist switches it off.
+  autoplayEnabled               Boolean               @default(true)
   // Persistent per-channel default for a new broadcast's `autoPublish` (whether
   // the recorded sound is public once it's created) — the artist can
   // still override per-session in preflight; this just sets the starting value
