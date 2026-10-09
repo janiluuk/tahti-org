@@ -105,48 +105,63 @@ Notes for whoever picks this up:
 
 ## Batch 7 (2026-10-08) — OpenAPI honesty for remaining import/export routes
 
-| #   | Slice                                                                                         | Status |
-| --- | --------------------------------------------------------------------------------------------- | ------ |
-| 61  | Google Drive status / picker / import / jobs retagged to `imports`                            | done   |
-| 62  | Drive + SoundCloud queued import documented as 202                                            | done   |
-| 63  | Canonical hearthis-export (`POST /api/me/sound/:id/export/hearthis`) documented as 202        | done   |
-| 64  | Spotify profile status / link / unlink tagged `imports`                                       | done   |
-| 65  | Stash list + `POST /api/uploads/prepare` tagged `imports`                                     | done   |
-| 66  | Search/add summaries; Spotify / Mixcloud / hearthis add documented as 201                     | done   |
-| 67  | SoundCloud desktop download unhidden in OpenAPI as 302                                        | done   |
-| 68  | SoundCloud playlists / tracks / resolve summaries                                             | done   |
-| 69  | Reverse capability flags (path set iff matching import/search/fileList or export flag)        | done   |
-| 70  | Contracts doc + ledger + INDEX refresh                                                        | done   |
+| #   | Slice                                                                                  | Status |
+| --- | -------------------------------------------------------------------------------------- | ------ |
+| 61  | Google Drive status / picker / import / jobs retagged to `imports`                     | done   |
+| 62  | Drive + SoundCloud queued import documented as 202                                     | done   |
+| 63  | Canonical hearthis-export (`POST /api/me/sound/:id/export/hearthis`) documented as 202 | done   |
+| 64  | Spotify profile status / link / unlink tagged `imports`                                | done   |
+| 65  | Stash list + `POST /api/uploads/prepare` tagged `imports`                              | done   |
+| 66  | Search/add summaries; Spotify / Mixcloud / hearthis add documented as 201              | done   |
+| 67  | SoundCloud desktop download unhidden in OpenAPI as 302                                 | done   |
+| 68  | SoundCloud playlists / tracks / resolve summaries                                      | done   |
+| 69  | Reverse capability flags (path set iff matching import/search/fileList or export flag) | done   |
+| 70  | Contracts doc + ledger + INDEX refresh                                                 | done   |
 
 ## Batch 8 (2026-10-08) — catalog tags, Mixcloud/Revelator/integrations OpenAPI
 
-| #   | Slice                                                                                      | Status |
-| --- | ------------------------------------------------------------------------------------------ | ------ |
-| 71  | `GET /api/me/import-plugins` tagged `imports`                                              | done   |
-| 72  | `GET /api/me/export-plugins` tagged `releases`                                             | done   |
-| 73  | Mixcloud OAuth status / start / callback / disconnect tagged `imports`                     | done   |
-| 74  | Mixcloud disconnect + upload + upload-status summaries                                     | done   |
-| 75  | Mixcloud upload 403 carries `PROVIDER_NOT_CONNECTED`                                       | done   |
-| 76  | Canonical Revelator status / submit / billing summaries                                    | done   |
-| 77  | ExportProvider alias summaries                                                             | done   |
-| 78  | Spotify profile unlink documented as 204 (`openApiNoContentResponse`)                      | done   |
-| 79  | Integrations list / install / uninstall in OpenAPI (204)                                   | done   |
-| 80  | Contracts + ledger + INDEX refresh                                                         | done   |
+| #   | Slice                                                                  | Status |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 71  | `GET /api/me/import-plugins` tagged `imports`                          | done   |
+| 72  | `GET /api/me/export-plugins` tagged `releases`                         | done   |
+| 73  | Mixcloud OAuth status / start / callback / disconnect tagged `imports` | done   |
+| 74  | Mixcloud disconnect + upload + upload-status summaries                 | done   |
+| 75  | Mixcloud upload 403 carries `PROVIDER_NOT_CONNECTED`                   | done   |
+| 76  | Canonical Revelator status / submit / billing summaries                | done   |
+| 77  | ExportProvider alias summaries                                         | done   |
+| 78  | Spotify profile unlink documented as 204 (`openApiNoContentResponse`)  | done   |
+| 79  | Integrations list / install / uninstall in OpenAPI (204)               | done   |
+| 80  | Contracts + ledger + INDEX refresh                                     | done   |
 
 ## Batch 9 (2026-10-08) — search satellites, stash, complete upload, Last.fm OpenAPI
 
+| #   | Slice                                                             | Status |
+| --- | ----------------------------------------------------------------- | ------ |
+| 81  | Last.fm prepare / oauth start / callback in OpenAPI (200 / 302)   | done   |
+| 82  | Spotify me-tracks + by-artist-url summaries                       | done   |
+| 83  | Mixcloud-embed me-tracks + by-username summaries                  | done   |
+| 84  | Hearthis me-tracks / by-username / me-sets / set-tracks summaries | done   |
+| 85  | Stash prepare + register (201) + download in OpenAPI              | done   |
+| 86  | `POST /api/uploads/complete` tagged `imports`, documented as 201  | done   |
+| 87  | Guard: satellite search GETs tagged `imports`                     | done   |
+| 88  | Guard: Last.fm start 302, complete 201, stash 201                 | done   |
+| 89  | Stash share documented as 201                                     | done   |
+| 90  | Contracts + ledger + INDEX refresh                                | done   |
+
+## Batch 10 (2026-10-09) — stash deletes, royalties, shares, listen-events, Discord OpenAPI
+
 | #   | Slice                                                                                      | Status |
 | --- | ------------------------------------------------------------------------------------------ | ------ |
-| 81  | Last.fm prepare / oauth start / callback in OpenAPI (200 / 302)                            | done   |
-| 82  | Spotify me-tracks + by-artist-url summaries                                                | done   |
-| 83  | Mixcloud-embed me-tracks + by-username summaries                                           | done   |
-| 84  | Hearthis me-tracks / by-username / me-sets / set-tracks summaries                          | done   |
-| 85  | Stash prepare + register (201) + download in OpenAPI                                       | done   |
-| 86  | `POST /api/uploads/complete` tagged `imports`, documented as 201                           | done   |
-| 87  | Guard: satellite search GETs tagged `imports`                                              | done   |
-| 88  | Guard: Last.fm start 302, complete 201, stash 201                                          | done   |
-| 89  | Stash share documented as 201                                                              | done   |
-| 90  | Contracts + ledger + INDEX refresh                                                         | done   |
+| 91  | Stash file DELETE documented as 200 `{ ok: true }` under `imports`                         | done   |
+| 92  | Stash share revoke DELETE documented as 200 `{ ok: true }` under `imports`                 | done   |
+| 93  | Revelator royalty list summaries (per-release + all)                                       | done   |
+| 94  | Distribution status summary (Mixcloud/Revelator live vs stub)                              | done   |
+| 95  | Export webhook summary; documents 200 `{ ok, provider, accepted }`                         | done   |
+| 96  | Sound shares: list 200, create 201, revoke 204 with summaries + response schemas           | done   |
+| 97  | `POST /api/listen-events` tagged `engagement`; scrobble fire-and-forget in the description | done   |
+| 98  | Discord bot admin + internal routes have OpenAPI summaries                                 | done   |
+| 99  | Guard: stash deletes, royalties, webhook, shares, listen-events, Discord bot               | done   |
+| 100 | Contracts + ledger + INDEX refresh                                                         | done   |
 
 ---
 

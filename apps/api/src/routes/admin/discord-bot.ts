@@ -24,6 +24,7 @@ const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
+        summary: 'Discord bot Client ID and token status',
         description:
           'Tahti Radio Discord bot application ID and whether a bot token is stored. Never returns the token.',
         response: openApiResponse(AdminDiscordBotSettingsSchema, 'AdminDiscordBotSettings'),
@@ -41,6 +42,7 @@ const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
+        summary: 'Save Discord bot Client ID and token',
         description:
           'Save Discord application ID and optional bot token. Omit token to keep the current secret.',
         body: {
@@ -94,6 +96,7 @@ const adminDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
+        summary: 'Restart the Discord radio bot',
         description: 'Restart the radio-discord-bot container via the orchestrator',
         response: openApiResponse(AdminDiscordBotRestartResponseSchema, 'AdminDiscordBotRestart'),
       },

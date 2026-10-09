@@ -7,7 +7,9 @@ baking secrets into the bot image.
 
 These routes are **not** in the public OpenAPI document (`/api/openapi.json`).
 They appear in the authenticated full reference (`GET /docs`) and in the
-generated client under `packages/api-client`.
+generated client under `packages/api-client`. Board routes are tagged
+`admin`; the bot process routes are tagged `internal`. Each has an OpenAPI
+summary (GET/PUT/restart; credentials; heartbeat).
 
 ## Schemas (`@tahti/shared`)
 
