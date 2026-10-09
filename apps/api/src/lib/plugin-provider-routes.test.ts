@@ -168,6 +168,14 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['POST', '/api/me/channel/addons/installs', '201', 'addons'] as const,
     ['PATCH', '/api/me/channel/addons/installs/:id', '200', 'addons'] as const,
     ['DELETE', '/api/me/channel/addons/installs/:id', '204', 'addons'] as const,
+    ['GET', '/api/comments/track/:id', '200', 'comments'] as const,
+    ['POST', '/api/comments/track/:id', '201', 'comments'] as const,
+    ['GET', '/api/comments/channel/:slug', '200', 'comments'] as const,
+    ['POST', '/api/comments/channel/:slug', '201', 'comments'] as const,
+    ['DELETE', '/api/comments/:id', '204', 'comments'] as const,
+    ['GET', '/api/reactions/track/:id', '200', 'engagement'] as const,
+    ['POST', '/api/reactions/track/:id', '201', 'engagement'] as const,
+    ['POST', '/api/v1/listen/heartbeat', '204', 'engagement'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)
     expect(operation, `${method} ${path} is not documented`).toBeDefined()

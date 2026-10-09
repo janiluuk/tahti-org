@@ -83,9 +83,9 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 | Artist follows     | `POST`/`DELETE`/`GET /api/v1/artists/:username/follow` (note: singular `follow`, not `followers` — the endpoint returns the resulting `followerCount`) |
 | Track likes        | `POST /api/v1/c/:slug/archive/:itemId/like`                                                                                                            |
 | Reposts            | `POST /api/v1/c/:slug/archive/:itemId/repost`, `POST /api/v1/c/:slug/archive/:itemId/repost-ack`                                                       |
-| Comments           | `GET/POST /api/comments/track/:id`, `GET/POST /api/comments/channel/:slug`, `DELETE /api/comments/:id`                                                 |
-| Track reactions    | `GET/POST /api/reactions/track/:id`                                                                                                                    |
-| Listen measurement | `POST /api/listen-events`, `POST /api/v1/listen/heartbeat`                                                                                             |
+| Comments           | `GET/POST /api/comments/track/:id` (POST 201), `GET/POST /api/comments/channel/:slug` (POST 201), `DELETE /api/comments/:id` (204)                     |
+| Track reactions    | `GET/POST /api/reactions/track/:id` (POST 201)                                                                                                         |
+| Listen measurement | `POST /api/listen-events`, `POST /api/v1/listen/heartbeat` (204)                                                                                       |
 | Abuse reports      | `POST /api/v1/reports`                                                                                                                                 |
 
 ### Governance and transparency
