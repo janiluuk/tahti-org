@@ -91,5 +91,10 @@ export const LegacySubscriptionMemberSchema = z.object({
 
 export const LegacySubscriptionMemberListSchema = z.array(LegacySubscriptionMemberSchema)
 
+/** Social disconnect answers 200 `{ ok: true }`, not 204. */
+export const SocialOkSchema = z.object({
+  ok: z.literal(true),
+})
+
 export type MastodonConnectInput = z.infer<typeof MastodonConnectSchema>
 export type BlueskyConnectInput = z.infer<typeof BlueskyConnectSchema>

@@ -3,7 +3,13 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { SocialSettingsViewSchema, TwitterSocialPatchSchema, openApiResponse } from '@tahti/shared'
+import {
+  SocialOkSchema,
+  SocialSettingsViewSchema,
+  TwitterSocialPatchSchema,
+  openApiRedirectResponse,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getRedisClient } from '../../lib/redis.js'
@@ -22,7 +28,16 @@ const OAUTH_STATE_TTL_SEC = 600
 const socialTwitterRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/social/twitter/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Start Twitter OAuth',
+        description:
+          'Browser navigation: redirects 302 to Twitter. Answers 503 when Twitter OAuth is not configured or Redis is down.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
       if (!config.twitter.clientId) {
         return reply.status(503).send({ error: 'Twitter OAuth is not configured' })
@@ -47,57 +62,69 @@ const socialTwitterRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/social/twitter/oauth/callback', async (request, reply) => {
-    const query = request.query as { code?: string; state?: string; error?: string }
-    if (query.error || !query.code || !query.state) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
-    }
+  fastify.get(
+    '/api/me/social/twitter/oauth/callback',
+    {
+      schema: {
+        tags: ['releases'],
+        summary: 'Twitter OAuth callback',
+        description:
+          'Twitter redirects here after auth. Always redirects to the dashboard with `?social=twitter_connected` or `?social=twitter_error`.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as { code?: string; state?: string; error?: string }
+      if (query.error || !query.code || !query.state) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
+      }
 
-    const redis = await getRedisClient()
-    if (!redis) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
-    }
+      const redis = await getRedisClient()
+      if (!redis) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
+      }
 
-    const raw = await redis.get(`twitter:oauth:${query.state}`)
-    await redis.del(`twitter:oauth:${query.state}`)
-    if (!raw) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
-    }
+      const raw = await redis.get(`twitter:oauth:${query.state}`)
+      await redis.del(`twitter:oauth:${query.state}`)
+      if (!raw) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
+      }
 
-    const { userId, codeVerifier } = JSON.parse(raw) as {
-      userId: string
-      codeVerifier: string
-    }
+      const { userId, codeVerifier } = JSON.parse(raw) as {
+        userId: string
+        codeVerifier: string
+      }
 
-    try {
-      const tokens = await exchangeTwitterCode(query.code, codeVerifier)
-      const profile = await fetchTwitterUser(tokens.accessToken)
-      await postToTwitter(
-        tokens.accessToken,
-        'Tahti social auto-post connected — test post (you can delete this).',
-      )
+      try {
+        const tokens = await exchangeTwitterCode(query.code, codeVerifier)
+        const profile = await fetchTwitterUser(tokens.accessToken)
+        await postToTwitter(
+          tokens.accessToken,
+          'Tahti social auto-post connected — test post (you can delete this).',
+        )
 
-      await fastify.prisma.socialConnection.upsert({
-        where: { userId_platform: { userId, platform: 'TWITTER' } },
-        create: {
-          userId,
-          platform: 'TWITTER',
-          instanceUrl: `@${profile.username}`,
-          externalAccountId: profile.id,
-          accessTokenEnc: encodeTwitterTokens(tokens),
-        },
-        update: {
-          instanceUrl: `@${profile.username}`,
-          externalAccountId: profile.id,
-          accessTokenEnc: encodeTwitterTokens(tokens),
-        },
-      })
+        await fastify.prisma.socialConnection.upsert({
+          where: { userId_platform: { userId, platform: 'TWITTER' } },
+          create: {
+            userId,
+            platform: 'TWITTER',
+            instanceUrl: `@${profile.username}`,
+            externalAccountId: profile.id,
+            accessTokenEnc: encodeTwitterTokens(tokens),
+          },
+          update: {
+            instanceUrl: `@${profile.username}`,
+            externalAccountId: profile.id,
+            accessTokenEnc: encodeTwitterTokens(tokens),
+          },
+        })
 
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_connected`)
-    } catch {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
-    }
-  })
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_connected`)
+      } catch {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=twitter_error`)
+      }
+    },
+  )
 
   fastify.patch(
     '/api/me/social/twitter',
@@ -105,6 +132,9 @@ const socialTwitterRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Update Twitter auto-post settings',
+        description:
+          'Toggles and template for an already-connected Twitter account. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
@@ -142,7 +172,16 @@ const socialTwitterRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/social/twitter',
-    { preHandler: requireAuth, schema: { tags: ['releases'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Disconnect Twitter auto-post',
+        description:
+          "Removes the caller's Twitter connection. Answers 200 `{ ok: true }` (not 204).",
+        response: openApiResponse(SocialOkSchema, 'SocialOk'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.socialConnection.deleteMany({
