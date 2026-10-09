@@ -36,7 +36,13 @@ const meModerateMessageBan: FastifyPluginAsync = async (fastify) => {
 
       const message = await fastify.prisma.chatMessage.findFirst({
         where: { id: routeParams.id, channelId: channel.id },
-        select: { id: true, handle: true, fingerprintHash: true, channelRole: true },
+        select: {
+          id: true,
+          handle: true,
+          fingerprintHash: true,
+          channelRole: true,
+          userId: true,
+        },
       })
       if (!message) return reply.status(404).send({ error: 'Message not found' })
       if (message.channelRole === 'owner' || message.channelRole === 'moderator') {
@@ -59,9 +65,10 @@ const meModerateMessageBan: FastifyPluginAsync = async (fastify) => {
           channelId: channel.id,
           fingerprintHash: message.fingerprintHash,
           handle: message.handle,
+          userId: message.userId,
           bannedByUserId: user.id,
         },
-        update: { handle: message.handle },
+        update: { handle: message.handle, ...(message.userId ? { userId: message.userId } : {}) },
       })
       void auditLog(fastify.prisma, {
         action: 'CHAT_BAN',
