@@ -38,18 +38,19 @@ tokens, stream keys, or signed upload URLs in logs or client telemetry.
 
 ### Listening, channels, and radio
 
-| Purpose                            | Endpoints                                                                                                                                                           |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Channel and now-playing data       | `GET /api/channels/:slug`, `GET /api/channels/:slug/presence`                                                                                                       |
-| Channel archive                    | `GET /api/channels/:slug/items`                                                                                                                                     |
-| Channel archive downloads          | `GET /api/v1/c/:slug/archive/:itemId/download`                                                                                                                      |
-| Tahti Radio now playing            | `GET /api/v1/radio`                                                                                                                                                 |
-| Radio history, schedule, and slots | `GET /api/v1/radio/history`, `GET /api/v1/radio/recently-played`, `GET /api/v1/radio/rotation`, `GET /api/v1/radio/slots`                                           |
-| Internet-radio presets             | `GET /api/v1/internet-radio/presets/enabled` (public); `GET /api/internet-radio/presets` (artist, requires auth — do not confuse the two, paths are easy to mix up) |
-| Live chat                          | `POST /api/chat/message`, `GET /api/chat/:slug/{access,history,token,viewer-token,announcements}`, `POST /api/chat/:slug/react`                                     |
-| Addons                             | `GET /api/v1/channels/:slug/addons`, `GET /api/v1/addons/{homepage,discover,bundle/:bundleHash}`, `GET /api/addons/store`                                           |
-| Theme gallery                      | `GET /api/v1/themes/gallery` (the tahti-registry `themes.json` catalog, cached 5 min)                                                                               |
-| Embeds                             | `GET /api/v1/embed/c/:slug` (channel), `GET /api/v1/embed/r/:id` (release), `GET /api/v1/embed/col/:slug` (collection) — each has its own play-tracking sub-routes  |
+| Purpose                            | Endpoints                                                                                                                                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Channel and now-playing data       | `GET /api/channels/:slug`, `GET /api/channels/:slug/presence`                                                                                                          |
+| Channel archive                    | `GET /api/channels/:slug/items`                                                                                                                                        |
+| Channel archive downloads          | `GET /api/v1/c/:slug/archive/:itemId/download`                                                                                                                         |
+| Tahti Radio now playing            | `GET /api/v1/radio`                                                                                                                                                    |
+| Radio history, schedule, and slots | `GET /api/v1/radio/history`, `GET /api/v1/radio/recently-played`, `GET /api/v1/radio/rotation`, `GET /api/v1/radio/slots`                                              |
+| Internet-radio presets             | `GET /api/v1/internet-radio/presets/enabled` (public); `GET /api/internet-radio/presets` (artist, requires auth — do not confuse the two, paths are easy to mix up)    |
+| Live chat                          | `POST /api/chat/message`, `GET /api/chat/:slug/{access,history,token,viewer-token,announcements}`, `POST /api/chat/:slug/react`                                        |
+| Addons                             | `GET /api/v1/channels/:slug/addons`, `GET /api/v1/addons/{homepage,discover,bundle/:bundleHash}`, `GET /api/addons/store`                                              |
+| Theme gallery                      | `GET /api/v1/themes/gallery` (the tahti-registry `themes.json` catalog, cached 5 min)                                                                                  |
+| Own themes                         | `GET/POST /api/me/themes` (POST 201), `PATCH/DELETE /api/me/themes/:id` (DELETE 204), `POST …/submit-public`; board `GET /api/admin/themes`, `POST …/{approve,reject}` |
+| Embeds                             | `GET /api/v1/embed/c/:slug` (channel), `GET /api/v1/embed/r/:id` (release), `GET /api/v1/embed/col/:slug` (collection) — each has its own play-tracking sub-routes     |
 
 ### Artists, profiles, catalog, and collections
 

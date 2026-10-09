@@ -163,6 +163,21 @@ Notes for whoever picks this up:
 | 99  | Guard: stash deletes, royalties, webhook, shares, listen-events, Discord bot               | done   |
 | 100 | Contracts + ledger + INDEX refresh                                                         | done   |
 
+## Batch 11 (2026-10-09) — theme CRUD + gallery OpenAPI honesty
+
+| #   | Slice                                                         | Status |
+| --- | ------------------------------------------------------------- | ------ |
+| 101 | `GET /api/v1/themes/gallery` summary (tahti-registry catalog) | done   |
+| 102 | `GET /api/me/themes` summary                                  | done   |
+| 103 | `POST /api/me/themes` documented as 201                       | done   |
+| 104 | `PATCH /api/me/themes/:id` in OpenAPI                         | done   |
+| 105 | `DELETE /api/me/themes/:id` documented as 204                 | done   |
+| 106 | `POST /api/me/themes/:id/submit-public` summary               | done   |
+| 107 | `GET /api/admin/themes` summary                               | done   |
+| 108 | Admin approve / reject summaries                              | done   |
+| 109 | Guard: theme gallery, CRUD, submit, board review              | done   |
+| 110 | Docs + ledger + INDEX refresh                                 | done   |
+
 ---
 
 ## Remaining open
