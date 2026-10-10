@@ -12,7 +12,9 @@ import {
   type JamEvent,
   type JamSessionView,
   type JamTrack,
+  openApiNoContentResponse,
   openApiResponse,
+  openApiResponses,
   JamSessionViewSchema,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -101,7 +103,11 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['jam'],
         summary: 'Start a Tahti Jam session from a playlist',
-        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+        description:
+          'Creates a jam from one of your own or a public playlist. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: JamSessionViewSchema, name: 'JamSessionView' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -162,7 +168,13 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
     '/api/v1/jam/:code/join',
     {
       preHandler: requireAuth,
-      schema: { tags: ['jam'], summary: 'Join a Tahti Jam session by its code' },
+      schema: {
+        tags: ['jam'],
+        summary: 'Join a Tahti Jam session by its code',
+        description:
+          'Idempotent: revisiting your own join link (or the host opening it) returns the current session as 200.',
+        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!
@@ -210,7 +222,13 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
     '/api/v1/jam/:id',
     {
       preHandler: requireAuth,
-      schema: { tags: ['jam'], response: openApiResponse(JamSessionViewSchema, 'JamSessionView') },
+      schema: {
+        tags: ['jam'],
+        summary: 'Jam session snapshot',
+        description:
+          'Current session for the initial page load before the SSE connection opens, and for reconnects.',
+        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+      },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string }
@@ -224,7 +242,18 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
   // whenever playback or the participant list changes.
   fastify.get(
     '/api/v1/jam/:id/events',
-    { preHandler: requireAuth, schema: { tags: ['jam'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'Jam session event stream',
+        description:
+          'SSE (`text/event-stream`) of `{ type: "state", session }` and `{ type: "ended" }`. Answers 200. The stream closes after ended, leave, or remove.',
+        response: {
+          200: { type: 'string', description: 'text/event-stream' },
+        },
+      },
+    },
     async (request, reply) => {
       const { id } = request.params as { id: string }
       const session = await requireParticipant(request, id)
@@ -272,7 +301,16 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
   // control, reports current playback.
   fastify.post(
     '/api/v1/jam/:id/state',
-    { preHandler: requireAuth, schema: { tags: ['jam'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'Report jam playback state',
+        description:
+          'The host, or a guest the host has given control, reports current playback. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponse(JamSessionViewSchema, 'JamSessionView'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
@@ -391,7 +429,16 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/v1/jam/:id/leave',
-    { preHandler: requireAuth, schema: { tags: ['jam'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'Leave a Tahti Jam',
+        description:
+          'Self-removal. Answers 204. The host leaving ends the session so it is not left with nobody in charge.',
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
@@ -428,7 +475,15 @@ const jamRoute: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/v1/jam/:id — host-only: ends the session for everyone.
   fastify.delete(
     '/api/v1/jam/:id',
-    { preHandler: requireAuth, schema: { tags: ['jam'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['jam'],
+        summary: 'End a Tahti Jam',
+        description: 'Host-only: ends the session for everyone. Answers 204.',
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
