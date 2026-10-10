@@ -98,3 +98,33 @@ export async function notifyProposerOfSecond(
   })
   return true
 }
+
+/**
+ * Tells the proposer that someone commented on their motion. The discussion
+ * thread is where members ask the proposer to clarify or change a draft, and
+ * nothing told the proposer a question was waiting. Returns whether they
+ * were told (never for their own comment).
+ */
+export async function notifyProposerOfComment(
+  prisma: PrismaClient,
+  motion: { id: string; title: string; proposedBy: string },
+  actorUserId: string,
+): Promise<boolean> {
+  if (motion.proposedBy === actorUserId) return false
+  const proposer = await prisma.user.findFirst({
+    where: { id: motion.proposedBy, isMember: true, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!proposer) return false
+  await prisma.notification.create({
+    data: {
+      userId: proposer.id,
+      type: 'MOTION_COMMENT',
+      actorUserId,
+      title: 'New comment on your motion',
+      body: `A member commented on "${motion.title}".`,
+      url: `/governance/motions/${motion.id}`,
+    },
+  })
+  return true
+}
