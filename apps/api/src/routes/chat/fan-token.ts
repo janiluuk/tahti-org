@@ -12,6 +12,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { canUseFanChat } from '../../lib/fan-perks.js'
 import { userName } from '../../lib/safe-names.js'
+import { isAccountChatBanned } from '../../lib/chat-ban.js'
 
 const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/fan-token — fan-only chat (logged-in active subscribers)
@@ -38,6 +39,10 @@ const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({
           error: 'Active fan subscription with FAN_CHAT perk required',
         })
+      }
+
+      if (await isAccountChatBanned(fastify.prisma, channel.id, user.id)) {
+        return reply.status(403).send({ error: 'banned' })
       }
 
       const handle = userName(user).slice(0, 32)
