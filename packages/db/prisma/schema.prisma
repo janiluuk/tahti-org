@@ -383,6 +383,7 @@ enum AuditAction {
   MOTION_WITHDRAW
   MOTION_EDIT
   MOTION_COMMENT_REMOVE
+  MOTION_MEETING_LINK
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -2366,27 +2367,32 @@ model AuditLog {
 // electronic voting; `advisory` flips to false once that clause is filed.
 
 model Motion {
-  id                  String      @id @default(cuid())
+  id                  String             @id @default(cuid())
   title               String
   description         String
   proposedBy          String
-  proposer            User        @relation(fields: [proposedBy], references: [id])
-  advisory            Boolean     @default(true)
+  proposer            User               @relation(fields: [proposedBy], references: [id])
+  advisory            Boolean            @default(true)
   openAt              DateTime
   closeAt             DateTime
-  state               MotionState @default(DRAFT)
+  state               MotionState        @default(DRAFT)
   /// Count of `isMember` users at the moment voting opened — the turnout
   /// denominator, frozen so it doesn't drift as membership changes after the
   /// fact. Null for motions opened before this field existed.
   eligibleMemberCount Int?
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  /// The meeting that takes this motion up, when the board has put it on an
+  /// agenda. Advisory motions and meetings were unconnected records before.
+  meetingId           String?
+  meeting             GovernanceMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   votes    Vote[]
   comments MotionComment[]
   seconds  MotionSecond[]
 
   @@index([state, closeAt])
+  @@index([meetingId])
   @@schema("governance")
 }
 
@@ -2425,6 +2431,7 @@ model GovernanceMeeting {
   noticeDeliveries     GovernanceNoticeDelivery[]
   conflictDeclarations GovernanceConflictDeclaration[]
   boardResolutions     BoardResolution[]
+  motions              Motion[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])

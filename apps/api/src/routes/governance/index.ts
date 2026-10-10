@@ -271,6 +271,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           proposer: { select: { displayName: true, username: true } },
           votes: { select: { userId: true, choice: true } },
           seconds: { select: { userId: true } },
+          meeting: { select: { id: true, title: true, scheduledAt: true, state: true } },
           _count: { select: { comments: true } },
         },
       })
@@ -294,6 +295,16 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         eligibleMemberCount: motion.eligibleMemberCount,
         secondCount: motion.seconds.length,
         youSeconded: motion.seconds.some((s) => s.userId === user.id),
+        // Members only see meetings that have left DRAFT (same rule as
+        // GET /api/v1/governance/meetings).
+        meeting:
+          motion.meeting && (user.isBoard || motion.meeting.state !== 'DRAFT')
+            ? {
+                id: motion.meeting.id,
+                title: motion.meeting.title,
+                scheduledAt: motion.meeting.scheduledAt,
+              }
+            : null,
       }
 
       // Per-choice tally is published only once voting has closed.
