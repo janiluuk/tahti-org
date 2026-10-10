@@ -24,6 +24,7 @@ import adminMissedLiveShowRoutes from '../routes/admin/missed-live-shows.js'
 import adminAccountRestrictionRoutes from '../routes/admin/account-restrictions.js'
 import adminResolutionsRoutes from '../routes/admin/resolutions.js'
 import governanceRecordsRoutes from '../routes/admin/governance-records.js'
+import adminGovernanceCorrectionRoutes from '../routes/admin/governance-corrections.js'
 import adminGovernanceOverviewRoutes from '../routes/admin/governance-overview.js'
 import adminReportsRoutes from '../routes/admin/reports.js'
 import adminContentReportRoutes from '../routes/admin/content-reports.js'
@@ -63,6 +64,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminAccountRestrictionRoutes)
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(governanceRecordsRoutes)
+  await fastify.register(adminGovernanceCorrectionRoutes)
   await fastify.register(adminGovernanceOverviewRoutes)
   await fastify.register(adminReportsRoutes)
   await fastify.register(adminContentReportRoutes)
