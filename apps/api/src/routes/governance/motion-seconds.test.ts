@@ -170,6 +170,30 @@ describe('seconding a motion draft', () => {
     expect((await detail(memberCookie)).secondCount).toBe(1)
   })
 
+  it('lists who seconded, for members only', async () => {
+    const url = `/api/v1/governance/motions/${motionId}/seconds`
+    const res = await app.inject({ method: 'GET', url, headers: { cookie: memberCookie } })
+    expect(res.statusCode).toBe(200)
+    const rows = res.json() as Array<{ displayName: string; username: string; secondedAt: string }>
+    // The member withdrew; the board member seconded before the motion opened.
+    expect(rows.map((r) => r.username)).toEqual(['gov-second-board'])
+    expect(rows[0]!.displayName).toBe('Second board')
+    expect(Number.isNaN(Date.parse(rows[0]!.secondedAt))).toBe(false)
+
+    expect(
+      (await app.inject({ method: 'GET', url, headers: { cookie: freeCookie } })).statusCode,
+    ).toBe(403)
+    expect(
+      (
+        await app.inject({
+          method: 'GET',
+          url: '/api/v1/governance/motions/missing-motion/seconds',
+          headers: { cookie: memberCookie },
+        })
+      ).statusCode,
+    ).toBe(404)
+  })
+
   it('answers 404 for a motion that does not exist', async () => {
     expect((await second('POST', memberCookie, 'missing-motion')).statusCode).toBe(404)
   })

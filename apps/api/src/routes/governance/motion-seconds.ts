@@ -5,12 +5,14 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   MotionSecondResponseSchema,
+  MotionSeconderListSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { userName } from '../../lib/safe-names.js'
 import { notifyProposerOfSecond } from '../../lib/motion-notifications.js'
 
 // Seconding a motion draft. A member-submitted draft sat in the list with no
@@ -20,6 +22,42 @@ import { notifyProposerOfSecond } from '../../lib/motion-notifications.js'
 // is a DRAFT, and never from the proposer.
 
 const motionSecondsRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /api/v1/governance/motions/:id/seconds — who backed the motion. A
+  // second is a public statement among members, and the count alone did not
+  // let the board (or anyone) see whose support a draft has. Kept after the
+  // motion opens and closes, as the record of who put it forward.
+  fastify.get(
+    '/api/v1/governance/motions/:id/seconds',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionSeconderListSchema, 'MotionSeconderList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const motion = await fastify.prisma.motion.findUnique({ where: { id }, select: { id: true } })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+
+      const seconds = await fastify.prisma.motionSecond.findMany({
+        where: { motionId: id },
+        orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }],
+        include: { user: { select: { username: true, displayName: true } } },
+      })
+      return reply.send(
+        seconds.map((s) => ({
+          displayName: userName(s.user),
+          username: s.user.username,
+          secondedAt: s.createdAt,
+        })),
+      )
+    },
+  )
+
   fastify.post(
     '/api/v1/governance/motions/:id/second',
     {
