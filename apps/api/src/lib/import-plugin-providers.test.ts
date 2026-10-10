@@ -44,15 +44,17 @@ describe('IMPORT_PLUGIN_PROVIDERS', () => {
       } else {
         expect(provider.oauthStartPath).toBeNull()
       }
-      if (provider.capabilities.import) {
-        expect(provider.importPath).toBeTruthy()
-      }
-      if (provider.capabilities.search) {
-        expect(provider.searchPath).toBeTruthy()
-      }
-      if (provider.capabilities.fileList) {
-        expect(provider.listPath).toBeTruthy()
-      }
+      // Capability flags and paths must agree both ways: a true flag without a
+      // path is a broken button, a path with a false flag hides a live route.
+      expect(Boolean(provider.importPath), `${provider.id} import`).toBe(
+        provider.capabilities.import,
+      )
+      expect(Boolean(provider.searchPath), `${provider.id} search`).toBe(
+        provider.capabilities.search,
+      )
+      expect(Boolean(provider.listPath), `${provider.id} fileList`).toBe(
+        provider.capabilities.fileList,
+      )
     }
 
     const bandcamp = body.providers.find((provider) => provider.id === 'bandcamp')

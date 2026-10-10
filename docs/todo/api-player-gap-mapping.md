@@ -88,6 +88,111 @@ Notes for whoever picks this up:
 - `defaultRegisterToMusicbrainz` (slice 44) is stored and returned but no client
   reads it yet.
 
+## Batch 6 (2026-10-08) — MusicBrainz parity, provider error codes, player honours them
+
+| #   | Slice                                                                                         | Status             |
+| --- | --------------------------------------------------------------------------------------------- | ------------------ |
+| 51  | MusicBrainz status + disconnect in OpenAPI (`MusicbrainzConnectStatus`)                       | done               |
+| 52  | MusicBrainz connect, both callback paths and the remembered default documented                | done               |
+| 53  | MusicBrainz `configured` needs client id **and** secret; connect answers 503 otherwise        | done               |
+| 54  | MusicBrainz callback takes the account from `request.sessionUser` like the other providers    | done               |
+| 55  | `PROVIDER_NOT_CONNECTED` / `PROVIDER_TOKEN_EXPIRED` codes on SoundCloud, Bandcamp and Drive   | done               |
+| 56  | Player: expired or missing SoundCloud link falls back to Connect, not an empty track list     | done (player #562) |
+| 57  | Player: service card does not send the artist to a provider the server has not set up         | done (player #562) |
+| 58  | Player: Import sources dialog disables Connect when not set up; failed status ≠ "needs setup" | done (player #562) |
+| 59  | Player `API-REFERENCE` hash regen + OAuth provider section                                    | done (player #562) |
+| 60  | Contracts doc + ledger + INDEX refresh                                                        | done               |
+
+## Batch 7 (2026-10-08) — OpenAPI honesty for remaining import/export routes
+
+| #   | Slice                                                                                  | Status |
+| --- | -------------------------------------------------------------------------------------- | ------ |
+| 61  | Google Drive status / picker / import / jobs retagged to `imports`                     | done   |
+| 62  | Drive + SoundCloud queued import documented as 202                                     | done   |
+| 63  | Canonical hearthis-export (`POST /api/me/sound/:id/export/hearthis`) documented as 202 | done   |
+| 64  | Spotify profile status / link / unlink tagged `imports`                                | done   |
+| 65  | Stash list + `POST /api/uploads/prepare` tagged `imports`                              | done   |
+| 66  | Search/add summaries; Spotify / Mixcloud / hearthis add documented as 201              | done   |
+| 67  | SoundCloud desktop download unhidden in OpenAPI as 302                                 | done   |
+| 68  | SoundCloud playlists / tracks / resolve summaries                                      | done   |
+| 69  | Reverse capability flags (path set iff matching import/search/fileList or export flag) | done   |
+| 70  | Contracts doc + ledger + INDEX refresh                                                 | done   |
+
+## Batch 8 (2026-10-08) — catalog tags, Mixcloud/Revelator/integrations OpenAPI
+
+| #   | Slice                                                                  | Status |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 71  | `GET /api/me/import-plugins` tagged `imports`                          | done   |
+| 72  | `GET /api/me/export-plugins` tagged `releases`                         | done   |
+| 73  | Mixcloud OAuth status / start / callback / disconnect tagged `imports` | done   |
+| 74  | Mixcloud disconnect + upload + upload-status summaries                 | done   |
+| 75  | Mixcloud upload 403 carries `PROVIDER_NOT_CONNECTED`                   | done   |
+| 76  | Canonical Revelator status / submit / billing summaries                | done   |
+| 77  | ExportProvider alias summaries                                         | done   |
+| 78  | Spotify profile unlink documented as 204 (`openApiNoContentResponse`)  | done   |
+| 79  | Integrations list / install / uninstall in OpenAPI (204)               | done   |
+| 80  | Contracts + ledger + INDEX refresh                                     | done   |
+
+## Batch 9 (2026-10-08) — search satellites, stash, complete upload, Last.fm OpenAPI
+
+| #   | Slice                                                             | Status |
+| --- | ----------------------------------------------------------------- | ------ |
+| 81  | Last.fm prepare / oauth start / callback in OpenAPI (200 / 302)   | done   |
+| 82  | Spotify me-tracks + by-artist-url summaries                       | done   |
+| 83  | Mixcloud-embed me-tracks + by-username summaries                  | done   |
+| 84  | Hearthis me-tracks / by-username / me-sets / set-tracks summaries | done   |
+| 85  | Stash prepare + register (201) + download in OpenAPI              | done   |
+| 86  | `POST /api/uploads/complete` tagged `imports`, documented as 201  | done   |
+| 87  | Guard: satellite search GETs tagged `imports`                     | done   |
+| 88  | Guard: Last.fm start 302, complete 201, stash 201                 | done   |
+| 89  | Stash share documented as 201                                     | done   |
+| 90  | Contracts + ledger + INDEX refresh                                | done   |
+
+## Batch 10 (2026-10-09) — stash deletes, royalties, shares, listen-events, Discord OpenAPI
+
+| #   | Slice                                                                                      | Status |
+| --- | ------------------------------------------------------------------------------------------ | ------ |
+| 91  | Stash file DELETE documented as 200 `{ ok: true }` under `imports`                         | done   |
+| 92  | Stash share revoke DELETE documented as 200 `{ ok: true }` under `imports`                 | done   |
+| 93  | Revelator royalty list summaries (per-release + all)                                       | done   |
+| 94  | Distribution status summary (Mixcloud/Revelator live vs stub)                              | done   |
+| 95  | Export webhook summary; documents 200 `{ ok, provider, accepted }`                         | done   |
+| 96  | Sound shares: list 200, create 201, revoke 204 with summaries + response schemas           | done   |
+| 97  | `POST /api/listen-events` tagged `engagement`; scrobble fire-and-forget in the description | done   |
+| 98  | Discord bot admin + internal routes have OpenAPI summaries                                 | done   |
+| 99  | Guard: stash deletes, royalties, webhook, shares, listen-events, Discord bot               | done   |
+| 100 | Contracts + ledger + INDEX refresh                                                         | done   |
+
+## Batch 11 (2026-10-09) — theme CRUD + gallery OpenAPI honesty
+
+| #   | Slice                                                         | Status |
+| --- | ------------------------------------------------------------- | ------ |
+| 101 | `GET /api/v1/themes/gallery` summary (tahti-registry catalog) | done   |
+| 102 | `GET /api/me/themes` summary                                  | done   |
+| 103 | `POST /api/me/themes` documented as 201                       | done   |
+| 104 | `PATCH /api/me/themes/:id` in OpenAPI                         | done   |
+| 105 | `DELETE /api/me/themes/:id` documented as 204                 | done   |
+| 106 | `POST /api/me/themes/:id/submit-public` summary               | done   |
+| 107 | `GET /api/admin/themes` summary                               | done   |
+| 108 | Admin approve / reject summaries                              | done   |
+| 109 | Guard: theme gallery, CRUD, submit, board review              | done   |
+| 110 | Docs + ledger + INDEX refresh                                 | done   |
+
+## Batch 12 (2026-10-09) — jam leftover statuses, add-on Store OpenAPI
+
+| #   | Slice                                                              | Status |
+| --- | ------------------------------------------------------------------ | ------ |
+| 111 | `POST /api/v1/jam` documented as 201                               | done   |
+| 112 | `POST /api/v1/jam/:code/join` response schema (200)                | done   |
+| 113 | `GET /api/v1/jam/:id` summary                                      | done   |
+| 114 | `GET /api/v1/jam/:id/events` SSE summary (200 `text/event-stream`) | done   |
+| 115 | `POST /api/v1/jam/:id/state` summary + response                    | done   |
+| 116 | Leave + host end documented as 204                                 | done   |
+| 117 | `GET /api/addons/store` + install list summaries                   | done   |
+| 118 | Addon install POST 201 / PATCH / DELETE 204 (listener and channel) | done   |
+| 119 | Guard: jam create/join/events/leave/end + add-on Store CRUD        | done   |
+| 120 | Docs + ledger + INDEX refresh                                      | done   |
+
 ---
 
 ## Remaining open

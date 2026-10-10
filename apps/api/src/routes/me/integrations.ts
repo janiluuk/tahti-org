@@ -14,6 +14,7 @@ import {
   IntegrationListResponseSchema,
   IntegrationSlugParamSchema,
   findIntegrationProvider,
+  openApiNoContentResponse,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -42,6 +43,9 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['integrations'],
+        summary: 'List integration install/connect state',
+        description:
+          'Marketplace install/connect flags for import, export, fingerprint and scrobble providers. Secrets are never returned. OAuth providers (SoundCloud, Drive, …) still connect on their own routes.',
         response: openApiResponse(IntegrationListResponseSchema, 'IntegrationList'),
       },
     },
@@ -78,7 +82,16 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/integrations/:slug/install',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Install or update API-key integration credentials',
+        description:
+          'Saves encrypted field map for an API_KEY provider. Answers 204. OAuth providers (with a User token column) 400 — use their connect flow instead. JSON body `{ fields: { … } }` is validated in the handler, not by Fastify AJV.',
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(IntegrationSlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -125,7 +138,16 @@ const meIntegrationsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/integrations/:slug',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['integrations'],
+        summary: 'Uninstall integration credentials',
+        description:
+          'Removes the stored credential row. Answers 204. OAuth providers that store a User column 400 — use their disconnect flow. Last.fm uninstalls here (credential-store OAuth).',
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(IntegrationSlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })

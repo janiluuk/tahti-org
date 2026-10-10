@@ -8,8 +8,11 @@ import {
   SoundcloudImportResponseSchema,
   SoundcloudTrackListSchema,
   ImportOAuthConnectStatusSchema,
+  PROVIDER_NOT_CONNECTED,
+  PROVIDER_TOKEN_EXPIRED,
   openApiRedirectResponse,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -195,7 +198,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { soundcloudAccessTokenEnc: true },
       })
       if (!row?.soundcloudAccessTokenEnc) {
-        return reply.status(403).send({ error: 'SoundCloud account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'SoundCloud account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       const token = decryptStreamKey(row.soundcloudAccessTokenEnc)
@@ -213,7 +218,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
             where: { id: user.id },
             data: { soundcloudAccessTokenEnc: null },
           })
-          return reply.status(401).send({ error: 'SoundCloud token expired — reconnect' })
+          return reply
+            .status(401)
+            .send({ error: 'SoundCloud token expired — reconnect', code: PROVIDER_TOKEN_EXPIRED })
         }
         return reply.status(502).send({ error: 'SoundCloud API unavailable' })
       }
@@ -255,7 +262,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         summary: 'Queue SoundCloud tracks for import',
         description:
           "Queue up to 20 of the caller's SoundCloud tracks for server-side download into the archive. Answers 202 with one cloud-import job per track; poll GET /api/me/cloud-import/jobs.",
-        response: openApiResponse(SoundcloudImportResponseSchema, 'SoundcloudImportResponse'),
+        response: openApiResponses([
+          { status: 202, schema: SoundcloudImportResponseSchema, name: 'SoundcloudImportResponse' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -273,7 +282,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { soundcloudAccessTokenEnc: true },
       })
       if (!row?.soundcloudAccessTokenEnc) {
-        return reply.status(403).send({ error: 'SoundCloud account not connected' })
+        return reply
+          .status(403)
+          .send({ error: 'SoundCloud account not connected', code: PROVIDER_NOT_CONNECTED })
       }
 
       const imports = []

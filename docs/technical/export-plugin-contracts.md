@@ -31,6 +31,12 @@ Uniform ExportProvider aliases (same handlers):
 
 The registry lists the **canonical** Revelator paths above. Billing /
 checkout remain Revelator-specific (`…/revelator/billing`, `…/checkout`).
+Royalty list routes (`GET /api/me/releases/:id/revelator/royalties` and
+`GET /api/me/revelator/royalties`) and Studio Distribution
+`GET /api/me/distribution/status` (live vs stub) are tagged `releases` with
+summaries. Canonical submit documents 202. `GET /api/me/export-plugins` is
+tagged `releases` (not `channel`). The webhook is tagged `webhooks` and
+documents 200 `{ ok, provider, accepted }`.
 
 ### Webhook auth and payload
 
@@ -53,16 +59,19 @@ Production refuses stub DSP submit when `REVELATOR_API_KEY` is unset
 
 ## Live provider: hearthis-export (sound-scoped)
 
-| Capability | Route                                    |
-| ---------- | ---------------------------------------- |
-| Submit     | `POST /api/me/sound/:id/export/hearthis` |
+| Capability | Route                                    | Success |
+| ---------- | ---------------------------------------- | ------- |
+| Submit     | `POST /api/me/sound/:id/export/hearthis` | 202     |
 
-Uniform ExportProvider alias (same handler):
+Uniform ExportProvider alias (same handler, also 202):
 
 - `POST /api/me/export-plugins/hearthis-export/sounds/:id/submit`
 
 Do **not** call the release-scoped `/export-plugins/:provider/releases/...`
 aliases for hearthis — those only accept `revelator`.
+
+Capability flags and paths agree both ways (`submit`/`status`/`webhook` iff
+the matching path is non-null), same honesty rule as the import catalog.
 
 Credentials via `/api/me/integrations` (`hearthis-export`). Status is stored
 on the sound (`hearthisExportStatus`); there is no separate statusPath yet.

@@ -2,7 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  IdParamSchema,
+  SoundShareListSchema,
+  SoundShareViewSchema,
+  openApiNoContentResponse,
+  openApiResponse,
+  openApiResponses,
+  parseRouteParams,
+} from '@tahti/shared'
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { requireAuth } from '../../plugins/auth.js'
@@ -48,7 +56,12 @@ const meSoundShareRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/sound/:id/shares',
     {
       preHandler: requireAuth,
-      schema: { tags: ['channel'], description: "List a sound's keyed share links" },
+      schema: {
+        tags: ['channel'],
+        summary: "List a sound's keyed share links",
+        description: "Active keyed share links (`/t/:id?key=`) for one of the caller's sounds.",
+        response: openApiResponse(SoundShareListSchema, 'SoundShareList'),
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!
@@ -77,7 +90,15 @@ const meSoundShareRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/sound/:id/share',
     {
       preHandler: requireAuth,
-      schema: { tags: ['channel'], description: 'Create a keyed share link for a sound' },
+      schema: {
+        tags: ['channel'],
+        summary: 'Create a keyed share link for a sound',
+        description:
+          "Mints `/t/:id?key=` for one of the caller's sounds. Answers 201. JSON body is validated in the handler, not by Fastify AJV.",
+        response: openApiResponses([
+          { status: 201, schema: SoundShareViewSchema, name: 'SoundShareView' },
+        ]),
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!
@@ -126,7 +147,12 @@ const meSoundShareRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/sound/shares/:shareId',
     {
       preHandler: requireAuth,
-      schema: { tags: ['channel'], description: 'Revoke a sound share link' },
+      schema: {
+        tags: ['channel'],
+        summary: 'Revoke a sound share link',
+        description: 'Deletes one keyed share the caller owns. Answers 204.',
+        response: openApiNoContentResponse(),
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!

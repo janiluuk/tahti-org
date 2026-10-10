@@ -48,6 +48,7 @@ Shipped (do not re-open as missing):
   `?key=` on public track/comments (#568).
 - Jam host participant control —
   `PATCH /api/v1/jam/:id/participants/:userId`.
+- Jam create answers 201; leave and host-end answer 204; events is SSE 200.
 
 No new endpoint is needed for Reference mastering. The existing archive editor
 source endpoint supplies the hosted source audio; browser decoding supplies
