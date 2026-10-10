@@ -2509,21 +2509,26 @@ model GovernanceConflictDeclaration {
 }
 
 model GovernanceDocument {
-  id          String                 @id @default(cuid())
-  title       String
-  type        GovernanceDocumentType
-  description String?
-  storageKey  String?
-  externalUrl String?
-  version     Int                    @default(1)
-  effectiveAt DateTime?
-  publishedAt DateTime?
-  meetingId   String?
-  meeting     GovernanceMeeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
-  createdById String
-  createdBy   User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
+  id           String                 @id @default(cuid())
+  title        String
+  type         GovernanceDocumentType
+  description  String?
+  storageKey   String?
+  externalUrl  String?
+  version      Int                    @default(1)
+  effectiveAt  DateTime?
+  publishedAt  DateTime?
+  meetingId    String?
+  meeting      GovernanceMeeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// The earlier version this document replaces. Unique: a version has at
+  /// most one successor, so the versions of a document form a single chain.
+  supersedesId String?                @unique
+  supersedes   GovernanceDocument?    @relation("DocumentSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy GovernanceDocument?    @relation("DocumentSupersedes")
+  createdById  String
+  createdBy    User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
 
   @@index([type, publishedAt])
   @@index([meetingId])
