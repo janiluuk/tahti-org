@@ -304,3 +304,19 @@ export const GovernanceCorrectionItemSchema = z.object({
 })
 
 export const GovernanceCorrectionListSchema = z.array(GovernanceCorrectionItemSchema)
+
+/** PATCH /api/admin/governance/corrections/:id — the board's answer. */
+export const ResolveGovernanceCorrectionSchema = z.object({
+  state: z.enum(['ACCEPTED', 'REJECTED']),
+  resolutionNote: z.string().trim().min(1, 'Tell the member what was decided').max(2000),
+})
+
+export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchema.extend({
+  requester: z.object({
+    displayName: z.string(),
+    username: z.string(),
+    memberNumber: z.number().int().nullable(),
+  }),
+})
+
+export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)

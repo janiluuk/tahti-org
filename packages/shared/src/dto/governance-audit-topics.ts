@@ -68,6 +68,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'ACCOUNT_DELETE',
       'USER_TIER_CHANGE',
       'CORRECTION_REQUEST',
+      'CORRECTION_RESOLVE',
     ],
   },
   {
@@ -190,6 +191,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MOTION_EDIT: 'Motion draft edited by proposer',
   MOTION_MEETING_LINK: 'Motion linked to a meeting',
   CORRECTION_REQUEST: 'Correction requested by a member',
+  CORRECTION_RESOLVE: 'Correction request answered by the board',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',
