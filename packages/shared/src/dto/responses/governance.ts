@@ -97,3 +97,12 @@ export const MotionSecondResponseSchema = z.object({
   ok: z.literal(true),
   secondCount: z.number().int(),
 })
+
+/** Who seconded a motion, oldest first. Members only, like the motion itself. */
+export const MotionSeconderSchema = z.object({
+  displayName: z.string(),
+  username: z.string(),
+  secondedAt: z.coerce.date(),
+})
+
+export const MotionSeconderListSchema = z.array(MotionSeconderSchema)
