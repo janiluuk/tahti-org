@@ -178,6 +178,21 @@ Notes for whoever picks this up:
 | 109 | Guard: theme gallery, CRUD, submit, board review              | done   |
 | 110 | Docs + ledger + INDEX refresh                                 | done   |
 
+## Batch 12 (2026-10-09) — jam leftover statuses, add-on Store OpenAPI
+
+| #   | Slice                                                              | Status |
+| --- | ------------------------------------------------------------------ | ------ |
+| 111 | `POST /api/v1/jam` documented as 201                               | done   |
+| 112 | `POST /api/v1/jam/:code/join` response schema (200)                | done   |
+| 113 | `GET /api/v1/jam/:id` summary                                      | done   |
+| 114 | `GET /api/v1/jam/:id/events` SSE summary (200 `text/event-stream`) | done   |
+| 115 | `POST /api/v1/jam/:id/state` summary + response                    | done   |
+| 116 | Leave + host end documented as 204                                 | done   |
+| 117 | `GET /api/addons/store` + install list summaries                   | done   |
+| 118 | Addon install POST 201 / PATCH / DELETE 204 (listener and channel) | done   |
+| 119 | Guard: jam create/join/events/leave/end + add-on Store CRUD        | done   |
+| 120 | Docs + ledger + INDEX refresh                                      | done   |
+
 ---
 
 ## Remaining open

@@ -152,6 +152,22 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['GET', '/api/admin/themes', '200', 'admin'] as const,
     ['POST', '/api/admin/themes/:id/approve', '200', 'admin'] as const,
     ['POST', '/api/admin/themes/:id/reject', '200', 'admin'] as const,
+    ['POST', '/api/v1/jam', '201', 'jam'] as const,
+    ['POST', '/api/v1/jam/:code/join', '200', 'jam'] as const,
+    ['GET', '/api/v1/jam/:id', '200', 'jam'] as const,
+    ['GET', '/api/v1/jam/:id/events', '200', 'jam'] as const,
+    ['POST', '/api/v1/jam/:id/state', '200', 'jam'] as const,
+    ['POST', '/api/v1/jam/:id/leave', '204', 'jam'] as const,
+    ['DELETE', '/api/v1/jam/:id', '204', 'jam'] as const,
+    ['GET', '/api/addons/store', '200', 'addons'] as const,
+    ['GET', '/api/me/addons/installs', '200', 'addons'] as const,
+    ['POST', '/api/me/addons/installs', '201', 'addons'] as const,
+    ['PATCH', '/api/me/addons/installs/:id', '200', 'addons'] as const,
+    ['DELETE', '/api/me/addons/installs/:id', '204', 'addons'] as const,
+    ['GET', '/api/me/channel/addons/installs', '200', 'addons'] as const,
+    ['POST', '/api/me/channel/addons/installs', '201', 'addons'] as const,
+    ['PATCH', '/api/me/channel/addons/installs/:id', '200', 'addons'] as const,
+    ['DELETE', '/api/me/channel/addons/installs/:id', '204', 'addons'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)
     expect(operation, `${method} ${path} is not documented`).toBeDefined()
