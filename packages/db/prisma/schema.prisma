@@ -632,6 +632,8 @@ enum NotificationType {
   MOTION_OPENED
   /// A motion closed; sent to every other member with the published tally.
   MOTION_RESULT
+  /// A member seconded your motion draft.
+  MOTION_SECONDED
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
@@ -997,9 +999,9 @@ model User {
 // deliberately not linked to the structured Venue directory (that's a heavier, board-
 // reviewed system; this is just the artist's own show calendar).
 model ArtistEvent {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   description String?
   place       String

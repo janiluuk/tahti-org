@@ -70,3 +70,31 @@ export async function notifyMembersOfMotionResult(
   })
   return ids.length
 }
+
+/**
+ * Tells the proposer that a member seconded their draft. A second was only
+ * visible as a count on the governance page, so a proposer had to keep
+ * checking back to learn the draft had support. Returns whether they were told.
+ */
+export async function notifyProposerOfSecond(
+  prisma: PrismaClient,
+  motion: { id: string; title: string; proposedBy: string },
+  actorUserId: string,
+): Promise<boolean> {
+  const proposer = await prisma.user.findFirst({
+    where: { id: motion.proposedBy, isMember: true, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!proposer || proposer.id === actorUserId) return false
+  await prisma.notification.create({
+    data: {
+      userId: proposer.id,
+      type: 'MOTION_SECONDED',
+      actorUserId,
+      title: 'Your motion was seconded',
+      body: `A member seconded "${motion.title}".`,
+      url: `/governance/motions/${motion.id}`,
+    },
+  })
+  return true
+}

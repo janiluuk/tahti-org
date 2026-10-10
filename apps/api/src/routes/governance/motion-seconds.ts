@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { notifyProposerOfSecond } from '../../lib/motion-notifications.js'
 
 // Seconding a motion draft. A member-submitted draft sat in the list with no
 // way for other members to show the board it has support; the board decided
@@ -39,7 +40,7 @@ const motionSecondsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const motion = await fastify.prisma.motion.findUnique({
         where: { id },
-        select: { state: true, proposedBy: true },
+        select: { id: true, title: true, state: true, proposedBy: true },
       })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
       if (motion.state !== 'DRAFT') {
@@ -57,6 +58,9 @@ const motionSecondsRoutes: FastifyPluginAsync = async (fastify) => {
           action: 'MOTION_SECOND',
           actorId: user.id,
           targetId: id,
+        })
+        await notifyProposerOfSecond(fastify.prisma, motion, user.id).catch((err: unknown) => {
+          request.log.error({ err, motionId: id }, 'motion-seconded notification failed')
         })
       }
       const secondCount = await fastify.prisma.motionSecond.count({ where: { motionId: id } })
