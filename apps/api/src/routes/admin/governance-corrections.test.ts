@@ -165,6 +165,25 @@ describe('the board answers correction requests', () => {
     expect(memberId).not.toBe(boardId)
   })
 
+  it('tells the member once that the board answered, without repeating the note', async () => {
+    await prisma.notification.deleteMany({ where: { userId: memberId } })
+    const id = await file(memberCookie)
+    const body = { state: 'REJECTED', resolutionNote: 'The register matches your application.' }
+    await answer(boardCookie, id, body)
+    // A second answer is refused and tells nobody anything.
+    await answer(secondBoardCookie, id, body)
+
+    const notes = await prisma.notification.findMany({ where: { userId: memberId } })
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatchObject({
+      type: 'CORRECTION_RESOLVED',
+      title: 'Your correction request was declined',
+      url: '/governance/corrections',
+      actorUserId: boardId,
+    })
+    expect(notes[0]!.body).not.toContain('application')
+  })
+
   it('needs a note, a valid outcome and an existing request', async () => {
     const id = await file(memberCookie)
     expect((await answer(boardCookie, id, { state: 'ACCEPTED' })).statusCode).toBe(400)
