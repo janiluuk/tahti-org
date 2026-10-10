@@ -117,7 +117,10 @@ describe('banning the sender of a chat message', () => {
   })
 
   it('refuses a message of the owner or a moderator, and one with no fingerprint', async () => {
-    await post('hello from the artist', 'The Artist#aaaabbbbccccdddd', { channelRole: 'owner' })
+    await post('hello from the artist', 'The Artist#aaaabbbbccccdddd', {
+      channelRole: 'owner',
+      userId: 'the-artist',
+    })
     const staff = await ban(await messageId('hello from the artist'), modCookie)
     expect(staff.statusCode).toBe(400)
 
