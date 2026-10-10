@@ -132,6 +132,22 @@ describe('seconding a motion draft', () => {
     expect(row).toMatchObject({ secondCount: 1, youSeconded: true })
   })
 
+  it('tells the proposer once when their draft is seconded', async () => {
+    const proposer = await prisma.user.findUniqueOrThrow({
+      where: { email: `${PREFIX}proposer@example.com` },
+    })
+    const notes = await prisma.notification.findMany({
+      where: { userId: proposer.id, type: 'MOTION_SECONDED' },
+    })
+    // The member seconded twice above; only the first one is news.
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatchObject({
+      title: 'Your motion was seconded',
+      url: `/governance/motions/${motionId}`,
+    })
+    expect(notes[0]!.body).toContain('Seconded proposal')
+  })
+
   it('lets a member withdraw their second while the motion is a draft', async () => {
     const res = await second('DELETE', memberCookie)
     expect(res.statusCode).toBe(200)
