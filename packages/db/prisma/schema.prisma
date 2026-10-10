@@ -626,6 +626,10 @@ enum NotificationType {
   /// Sent to every board member when the missed-live-show-scan cron flags a
   /// ScheduledLiveShow whose start time passed with no Broadcast against it.
   MISSED_LIVE_SHOW_FLAGGED
+  /// The board opened a motion for voting; sent to every other member.
+  MOTION_OPENED
+  /// A motion closed; sent to every other member with the published tally.
+  MOTION_RESULT
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
