@@ -96,6 +96,8 @@ export const PublicChannelViewSchema = z.object({
   slideshowIntervalSeconds: z.number().int(),
   slideshowTransitionMs: z.number().int(),
   slideshowAutoplay: z.boolean(),
+  /** PLAT-086: the artist lets the channel page start playing on its own. */
+  autoplayEnabled: z.boolean().optional(),
   // Channel Designer look extras
   usePlayerGradient: z.boolean().optional(),
   playerColorSchemeJson: z.string().nullable().optional(),
