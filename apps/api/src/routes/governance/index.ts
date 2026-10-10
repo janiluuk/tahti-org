@@ -33,6 +33,7 @@ import { motionCommentView } from '../../lib/motion-comments.js'
 import {
   notifyMembersOfMotionOpened,
   notifyMembersOfMotionResult,
+  notifyProposerOfComment,
 } from '../../lib/motion-notifications.js'
 
 const MOTION_STATE_SET = new Set<string>(MOTION_LIST_STATES)
@@ -610,7 +611,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
 
       const motion = await fastify.prisma.motion.findUnique({
         where: { id },
-        select: { state: true },
+        select: { id: true, title: true, proposedBy: true, state: true },
       })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
       if (motion.state === 'CLOSED') {
@@ -626,6 +627,9 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         action: 'MOTION_COMMENT_CREATE',
         actorId: user.id,
         targetId: id,
+      })
+      await notifyProposerOfComment(fastify.prisma, motion, user.id).catch((err: unknown) => {
+        request.log.error({ err, motionId: id }, 'motion-comment notification failed')
       })
 
       return reply.status(201).send(motionCommentView(comment))

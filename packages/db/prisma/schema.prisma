@@ -637,6 +637,8 @@ enum NotificationType {
   MOTION_RESULT
   /// A member seconded your motion draft.
   MOTION_SECONDED
+  /// A member commented on a motion you proposed.
+  MOTION_COMMENT
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
