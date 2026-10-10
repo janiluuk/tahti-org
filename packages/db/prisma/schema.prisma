@@ -2384,6 +2384,14 @@ model Motion {
   /// agenda. Advisory motions and meetings were unconnected records before.
   meetingId           String?
   meeting             GovernanceMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// When the board closed the motion, and the result as it stood then.
+  /// Written once at close and never updated: the vote rows can still change
+  /// afterwards (a deleted account takes its vote with it), the certificate
+  /// does not. Null for motions closed before these fields existed.
+  closedAt            DateTime?
+  resultTally         Json?
+  /// sha256 over the motion's text, window, denominator and resultTally.
+  resultDigest        String?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
