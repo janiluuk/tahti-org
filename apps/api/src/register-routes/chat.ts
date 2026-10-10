@@ -23,6 +23,7 @@ import meNotificationPreferencesRoutes from '../routes/me/notification-preferenc
 import meModerators from '../routes/me/moderators.js'
 import meModerateMessages from '../routes/me/moderate-messages.js'
 import meModerateMessageBan from '../routes/me/moderate-message-ban.js'
+import meModerateMessageRemove from '../routes/me/moderate-message-remove.js'
 import rtmpTargetRoutes from '../routes/me/rtmp-targets.js'
 import apiTokenRoutes from '../routes/me/api-tokens.js'
 import obsPresetRoutes from '../routes/me/obs-preset.js'
@@ -49,6 +50,7 @@ export async function registerChatRoutes(fastify: FastifyInstance): Promise<void
   await fastify.register(meModerators)
   await fastify.register(meModerateMessages)
   await fastify.register(meModerateMessageBan)
+  await fastify.register(meModerateMessageRemove)
   await fastify.register(rtmpTargetRoutes)
   await fastify.register(rtmpTargetRoutes, { scope: 'radio' })
   await fastify.register(obsPresetRoutes)
