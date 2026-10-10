@@ -237,6 +237,7 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Revelator royalty reports for a release',
         description: 'M7: Revelator royalty reports synced for a release',
         response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
       },
@@ -291,6 +292,7 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'All Revelator royalty reports',
         description: 'M7: all Revelator royalty reports for the signed-in artist',
         response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
       },

@@ -6,7 +6,7 @@ import { buildApp } from '../server.js'
 import { IMPORT_PLUGIN_PROVIDERS } from './import-plugin-providers.js'
 import { EXPORT_PLUGIN_PROVIDERS } from './export-plugin-providers.js'
 
-type Method = 'get' | 'post' | 'delete'
+type Method = 'get' | 'post' | 'put' | 'patch' | 'delete'
 type OpenApiOperation = {
   tags?: string[]
   summary?: string
@@ -128,6 +128,46 @@ describe('plugin provider catalogs point at real, documented routes', () => {
     ['GET', '/api/v1/imports/hearthis/me-tracks', '200', 'imports'] as const,
     ['POST', '/api/me/integrations/lastfm/prepare', '200', 'integrations'] as const,
     ['GET', '/api/me/integrations/lastfm/oauth/start', '302', 'integrations'] as const,
+    ['DELETE', '/api/me/stash/:id', '200', 'imports'] as const,
+    ['DELETE', '/api/me/stash/shares/:shareId', '200', 'imports'] as const,
+    ['GET', '/api/me/releases/:id/revelator/royalties', '200', 'releases'] as const,
+    ['GET', '/api/me/revelator/royalties', '200', 'releases'] as const,
+    ['GET', '/api/me/distribution/status', '200', 'releases'] as const,
+    ['POST', '/api/webhooks/export/:provider', '200', 'webhooks'] as const,
+    ['GET', '/api/me/sound/:id/shares', '200', 'channel'] as const,
+    ['POST', '/api/me/sound/:id/share', '201', 'channel'] as const,
+    ['DELETE', '/api/me/sound/shares/:shareId', '204', 'channel'] as const,
+    ['POST', '/api/listen-events', '200', 'engagement'] as const,
+    ['GET', '/api/admin/discord-bot', '200', 'admin'] as const,
+    ['PUT', '/api/admin/discord-bot', '200', 'admin'] as const,
+    ['POST', '/api/admin/discord-bot/restart', '200', 'admin'] as const,
+    ['GET', '/api/v1/internal/discord-bot/credentials', '200', 'internal'] as const,
+    ['POST', '/api/v1/internal/discord-bot/heartbeat', '200', 'internal'] as const,
+    ['GET', '/api/v1/themes/gallery', '200', 'themes'] as const,
+    ['GET', '/api/me/themes', '200', 'themes'] as const,
+    ['POST', '/api/me/themes', '201', 'themes'] as const,
+    ['PATCH', '/api/me/themes/:id', '200', 'themes'] as const,
+    ['DELETE', '/api/me/themes/:id', '204', 'themes'] as const,
+    ['POST', '/api/me/themes/:id/submit-public', '200', 'themes'] as const,
+    ['GET', '/api/admin/themes', '200', 'admin'] as const,
+    ['POST', '/api/admin/themes/:id/approve', '200', 'admin'] as const,
+    ['POST', '/api/admin/themes/:id/reject', '200', 'admin'] as const,
+    ['POST', '/api/v1/jam', '201', 'jam'] as const,
+    ['POST', '/api/v1/jam/:code/join', '200', 'jam'] as const,
+    ['GET', '/api/v1/jam/:id', '200', 'jam'] as const,
+    ['GET', '/api/v1/jam/:id/events', '200', 'jam'] as const,
+    ['POST', '/api/v1/jam/:id/state', '200', 'jam'] as const,
+    ['POST', '/api/v1/jam/:id/leave', '204', 'jam'] as const,
+    ['DELETE', '/api/v1/jam/:id', '204', 'jam'] as const,
+    ['GET', '/api/addons/store', '200', 'addons'] as const,
+    ['GET', '/api/me/addons/installs', '200', 'addons'] as const,
+    ['POST', '/api/me/addons/installs', '201', 'addons'] as const,
+    ['PATCH', '/api/me/addons/installs/:id', '200', 'addons'] as const,
+    ['DELETE', '/api/me/addons/installs/:id', '204', 'addons'] as const,
+    ['GET', '/api/me/channel/addons/installs', '200', 'addons'] as const,
+    ['POST', '/api/me/channel/addons/installs', '201', 'addons'] as const,
+    ['PATCH', '/api/me/channel/addons/installs/:id', '200', 'addons'] as const,
+    ['DELETE', '/api/me/channel/addons/installs/:id', '204', 'addons'] as const,
   ])('%s %s documents %s under %s', (method, path, status, tag) => {
     const operation = operationFor(method.toLowerCase() as Method, path)
     expect(operation, `${method} ${path} is not documented`).toBeDefined()

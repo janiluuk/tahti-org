@@ -8,6 +8,7 @@ import {
   StashCreatedSchema,
   StashDownloadSchema,
   StashListQuerySchema,
+  StashOkSchema,
   StashPagedListSchema,
   StashPrepareResponseSchema,
   StashShareCreatedSchema,
@@ -184,22 +185,35 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // DELETE /api/me/stash/:id — delete a stash file
-  fastify.delete('/api/me/stash/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+  fastify.delete(
+    '/api/me/stash/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Delete a stash file',
+        description:
+          "Removes one file from the caller's stash locker. Answers 200 `{ ok: true }` (not 204).",
+        response: openApiResponse(StashOkSchema, 'StashOk'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
 
-    const file = await fastify.prisma.stashFile.findUnique({
-      where: { id },
-      select: { id: true, userId: true },
-    })
+      const file = await fastify.prisma.stashFile.findUnique({
+        where: { id },
+        select: { id: true, userId: true },
+      })
 
-    if (!file || file.userId !== user.id) {
-      return reply.status(404).send({ error: 'Not found' })
-    }
+      if (!file || file.userId !== user.id) {
+        return reply.status(404).send({ error: 'Not found' })
+      }
 
-    await fastify.prisma.stashFile.delete({ where: { id } })
-    return reply.send({ ok: true })
-  })
+      await fastify.prisma.stashFile.delete({ where: { id } })
+      return reply.send({ ok: true })
+    },
+  )
 
   // GET /api/me/stash/:id/download — presigned GET URL for downloading
   fastify.get(
@@ -291,7 +305,16 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/me/stash/shares/:shareId — revoke a share
   fastify.delete(
     '/api/me/stash/shares/:shareId',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'Revoke a stash share link',
+        description:
+          'Removes one stash share the caller owns. Answers 200 `{ ok: true }` (not 204).',
+        response: openApiResponse(StashOkSchema, 'StashOk'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const { shareId } = request.params as { shareId: string }

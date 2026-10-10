@@ -72,3 +72,8 @@ export const StashShareCreatedSchema = z.object({
   permission: z.string(),
   expiresAt: z.coerce.date().nullable(),
 })
+
+/** Stash file delete and share revoke answer 200 `{ ok: true }`, not 204. */
+export const StashOkSchema = z.object({
+  ok: z.literal(true),
+})

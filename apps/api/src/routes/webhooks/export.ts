@@ -42,8 +42,9 @@ const exportWebhookRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['webhooks'],
+        summary: 'Export provider delivery webhook',
         description:
-          'Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Revelator updates release delivery status.',
+          'Export provider callback (INTERNAL_SECRET Bearer or X-Tahti-Webhook-Secret). Revelator updates release delivery status. Answers 200 `{ ok, provider, accepted }`.',
         response: openApiResponse(ExportWebhookAcceptedSchema, 'ExportWebhookAccepted'),
       },
     },

@@ -97,15 +97,17 @@ status / webhook shapes.
 These routes send a non-200 success; OpenAPI documents that status, not a
 default 200:
 
-| Route | Success |
-| ----- | ------- |
-| `POST /api/me/google-drive/import` | 202 — poll `GET /api/me/cloud-import/jobs` |
-| `POST /api/me/soundcloud/import` | 202 — same job list |
-| `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created |
-| `POST /api/uploads/prepare` | 200 — presigned PUT (not a created Sound) |
-| `POST /api/uploads/complete` | 201 — Sound created, transcode queued |
-| `POST /api/me/stash` | 201 — stash file row after the PUT |
-| `POST /api/me/stash/:id/share` | 201 — keyed share |
+| Route                                                  | Success                                    |
+| ------------------------------------------------------ | ------------------------------------------ |
+| `POST /api/me/google-drive/import`                     | 202 — poll `GET /api/me/cloud-import/jobs` |
+| `POST /api/me/soundcloud/import`                       | 202 — same job list                        |
+| `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created                  |
+| `POST /api/uploads/prepare`                            | 200 — presigned PUT (not a created Sound)  |
+| `POST /api/uploads/complete`                           | 201 — Sound created, transcode queued      |
+| `POST /api/me/stash`                                   | 201 — stash file row after the PUT         |
+| `POST /api/me/stash/:id/share`                         | 201 — keyed share                          |
+| `DELETE /api/me/stash/:id`                             | 200 `{ ok: true }` — not 204               |
+| `DELETE /api/me/stash/shares/:shareId`                 | 200 `{ ok: true }` — not 204               |
 
 Drive status/picker/import/jobs, Spotify profile (including 204 unlink),
 stash list, uploads/prepare, Mixcloud OAuth status/connect/disconnect, and
@@ -144,10 +146,10 @@ flag is `?mb=`.
 Provider routes put a machine-readable `code` on the error body so a client can
 tell these apart from an empty result:
 
-| Code                     | Status | Meaning                                                                  |
-| ------------------------ | ------ | ------------------------------------------------------------------------ |
+| Code                     | Status | Meaning                                                                           |
+| ------------------------ | ------ | --------------------------------------------------------------------------------- |
 | `PROVIDER_NOT_CONNECTED` | 403    | The caller never connected this provider. Mixcloud upload includes `connectPath`. |
-| `PROVIDER_TOKEN_EXPIRED` | 401    | The stored token no longer works. The API has cleared it; connect again. |
+| `PROVIDER_TOKEN_EXPIRED` | 401    | The stored token no longer works. The API has cleared it; connect again.          |
 
 A 401 without `PROVIDER_TOKEN_EXPIRED` is the Tahti session, not the provider.
 
