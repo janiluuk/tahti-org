@@ -3,7 +3,9 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  EditMotionDraftSchema,
   IdParamSchema,
+  MotionDraftEditedResponseSchema,
   MotionWithdrawnResponseSchema,
   openApiResponse,
   parseRouteParams,
@@ -59,6 +61,68 @@ const motionDraftRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { title: motion.title },
       })
       return reply.send({ ok: true })
+    },
+  )
+
+  // PUT /api/v1/governance/motions/:id/draft — the proposer rewrites their
+  // draft's title or description. Seconds are cleared when the text changes:
+  // a second backs the wording a member read, not whatever it becomes later.
+  fastify.put(
+    '/api/v1/governance/motions/:id/draft',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionDraftEditedResponseSchema, 'MotionDraftEdited'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = EditMotionDraftSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const motion = await fastify.prisma.motion.findUnique({
+        where: { id },
+        select: { title: true, description: true, state: true, proposedBy: true },
+      })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+      if (motion.proposedBy !== user.id) {
+        return reply.status(403).send({ error: 'Only the proposer can edit a motion draft' })
+      }
+      if (motion.state !== 'DRAFT') {
+        return reply.status(409).send({ error: 'Can only edit a motion while it is a draft' })
+      }
+
+      const title = parsed.data.title ?? motion.title
+      const description = parsed.data.description ?? motion.description
+      if (title === motion.title && description === motion.description) {
+        return reply.send({ id, state: motion.state, secondsCleared: 0 })
+      }
+
+      const [updated, cleared] = await fastify.prisma.$transaction([
+        fastify.prisma.motion.updateMany({
+          where: { id, state: 'DRAFT' },
+          data: { title, description },
+        }),
+        fastify.prisma.motionSecond.deleteMany({
+          where: { motionId: id, motion: { state: 'DRAFT' } },
+        }),
+      ])
+      if (updated.count === 0) {
+        return reply.status(409).send({ error: 'Can only edit a motion while it is a draft' })
+      }
+      await auditLog(fastify.prisma, {
+        action: 'MOTION_EDIT',
+        actorId: user.id,
+        targetId: id,
+        meta: { previousTitle: motion.title, title, secondsCleared: cleared.count },
+      })
+      return reply.send({ id, state: 'DRAFT', secondsCleared: cleared.count })
     },
   )
 }
