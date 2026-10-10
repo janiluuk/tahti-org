@@ -137,3 +137,19 @@ export const MotionMeetingLinkResponseSchema = z.object({
   id: z.string(),
   meeting: MotionMeetingRefSchema.nullable(),
 })
+
+/** The fixed result of a closed motion (GET .../motions/:id/certificate). */
+export const MotionCertificateSchema = z.object({
+  motionId: z.string(),
+  title: z.string(),
+  advisory: z.boolean(),
+  closedAt: z.coerce.date(),
+  eligibleMemberCount: z.number().int().nullable(),
+  tally: MotionVoteTallySchema,
+  totalVotes: z.number().int(),
+  algorithm: z.literal('sha256'),
+  digest: z.string(),
+  // False when the motion's text or the stored tally no longer produce the
+  // digest, or the vote rows no longer add up to the stored tally.
+  matchesRecord: z.boolean(),
+})
