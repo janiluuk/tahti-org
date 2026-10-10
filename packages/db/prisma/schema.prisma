@@ -428,6 +428,7 @@ enum AuditAction {
   MEETING_UPDATE
   MEETING_ATTENDANCE_UPSERT
   DOCUMENT_CREATE
+  DOCUMENT_ARCHIVE
   RESOLUTION_CREATE
   RESOLUTION_UPDATE
   ANNUAL_REPORT_GENERATE
@@ -2525,6 +2526,9 @@ model GovernanceDocument {
   supersedesId String?                @unique
   supersedes   GovernanceDocument?    @relation("DocumentSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
   supersededBy GovernanceDocument?    @relation("DocumentSupersedes")
+  /// Set when the board takes the document out of the member list (posted by
+  /// mistake, or no longer in force). The row and its file stay.
+  archivedAt   DateTime?
   createdById  String
   createdBy    User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt    DateTime               @default(now())

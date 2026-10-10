@@ -7,6 +7,9 @@ import {
   CreateGovernanceConflictDeclarationSchema,
   CreateGovernanceDocumentSchema,
   CreateGovernanceMeetingSchema,
+  ArchiveGovernanceDocumentSchema,
+  IdParamSchema,
+  parseRouteParams,
   GovernanceAttendanceListSchema,
   GovernanceConflictDeclarationListSchema,
   GovernanceDocumentListSchema,
@@ -39,6 +42,7 @@ async function documentResponse(document: {
   externalUrl: string | null
   supersedesId: string | null
   supersededBy?: { id: string } | null
+  archivedAt: Date | null
   createdAt: Date
   updatedAt: Date
 }) {
@@ -57,6 +61,7 @@ async function documentResponse(document: {
     externalUrl: document.externalUrl,
     supersedesId: document.supersedesId,
     supersededById: document.supersededBy?.id ?? null,
+    archivedAt: document.archivedAt,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
   }
@@ -156,11 +161,11 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const { cursor, limit } = pagination(request)
       const documents = await fastify.prisma.governanceDocument.findMany({
-        where: { publishedAt: { not: null } },
+        where: { publishedAt: { not: null }, archivedAt: null },
         orderBy: [{ type: 'asc' }, { effectiveAt: 'desc' }, { version: 'desc' }],
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         take: limit + 1,
-        include: { supersededBy: { select: { id: true, publishedAt: true } } },
+        include: { supersededBy: { select: { id: true, publishedAt: true, archivedAt: true } } },
       })
       const rows = await Promise.all(
         documents.map((document) =>
@@ -168,7 +173,10 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             ...document,
             // A successor the board has not published yet is not shown, and
             // neither is a link back to a version members cannot see.
-            supersededBy: document.supersededBy?.publishedAt ? document.supersededBy : null,
+            supersededBy:
+              document.supersededBy?.publishedAt && !document.supersededBy.archivedAt
+                ? document.supersededBy
+                : null,
           }),
         ),
       )
@@ -644,6 +652,55 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       return reply.status(201).send(await documentResponse(document))
+    },
+  )
+
+  // PATCH /api/admin/governance/documents/:id — archive or restore. There
+  // was no way to take a document back out of the member list: a file posted
+  // by mistake stayed published for good.
+  fastify.patch(
+    '/api/admin/governance/documents/:id',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceDocumentListSchema.element, 'GovernanceDocument'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = ArchiveGovernanceDocumentSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+
+      const existing = await fastify.prisma.governanceDocument.findUnique({
+        where: { id },
+        select: { archivedAt: true, title: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Document not found' })
+
+      const { archived } = parsed.data
+      if (archived !== (existing.archivedAt !== null)) {
+        await fastify.prisma.governanceDocument.update({
+          where: { id },
+          data: { archivedAt: archived ? new Date() : null },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'DOCUMENT_ARCHIVE',
+          actorId: request.sessionUser!.id,
+          targetId: id,
+          meta: { title: existing.title, archived },
+        })
+      }
+      const document = await fastify.prisma.governanceDocument.findUniqueOrThrow({
+        where: { id },
+        include: { supersededBy: { select: { id: true } } },
+      })
+      return reply.send(await documentResponse(document))
     },
   )
 }

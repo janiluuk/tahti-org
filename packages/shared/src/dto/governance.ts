@@ -285,6 +285,8 @@ export const GovernanceDocumentItemSchema = z.object({
   // member list a successor counts only once it is published.
   supersedesId: z.string().nullable(),
   supersededById: z.string().nullable(),
+  // Archived documents are left out of the member list; the board still sees them.
+  archivedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -327,3 +329,8 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 })
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
+
+/** PATCH /api/admin/governance/documents/:id */
+export const ArchiveGovernanceDocumentSchema = z.object({
+  archived: z.boolean(),
+})
