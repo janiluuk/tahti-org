@@ -384,6 +384,7 @@ enum AuditAction {
   MOTION_EDIT
   MOTION_COMMENT_REMOVE
   MOTION_MEETING_LINK
+  CORRECTION_REQUEST
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -922,6 +923,7 @@ model User {
   votes                          Vote[]
   motionComments                 MotionComment[]
   motionSeconds                  MotionSecond[]
+  correctionRequests             GovernanceCorrectionRequest[]
   grants                         GrantDisbursement[]
   fanTiers                       FanTier[]
   fanSubsAsArtist                FanSubscription[]               @relation("ArtistFanSubs")
@@ -2535,6 +2537,43 @@ model Vote {
 
   @@id([motionId, userId])
   @@index([motionId])
+  @@schema("governance")
+}
+
+enum GovernanceCorrectionSubject {
+  MEMBER_REGISTER
+  GOVERNANCE_RECORD
+
+  @@schema("governance")
+}
+
+enum GovernanceCorrectionState {
+  OPEN
+  ACCEPTED
+  REJECTED
+
+  @@schema("governance")
+}
+
+/// A member's request to have their member-register data or a governance
+/// record corrected. The board answers it; the request itself changes
+/// nothing, the board makes the correction by hand.
+model GovernanceCorrectionRequest {
+  id             String                      @id @default(cuid())
+  requesterId    String
+  requester      User                        @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  subject        GovernanceCorrectionSubject
+  details        String
+  state          GovernanceCorrectionState   @default(OPEN)
+  resolutionNote String?
+  /// The board member who answered. Not a relation: the audit log is the record.
+  resolvedById   String?
+  resolvedAt     DateTime?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+
+  @@index([requesterId, createdAt])
+  @@index([state, createdAt])
   @@schema("governance")
 }
 
