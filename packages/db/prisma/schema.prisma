@@ -378,6 +378,8 @@ enum AuditAction {
   VOTE_CAST
   VOTE_CHANGE
   VOTE_RETRACT
+  MOTION_SECOND
+  MOTION_SECOND_WITHDRAW
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -911,6 +913,7 @@ model User {
   motionsProposed                Motion[]
   votes                          Vote[]
   motionComments                 MotionComment[]
+  motionSeconds                  MotionSecond[]
   grants                         GrantDisbursement[]
   fanTiers                       FanTier[]
   fanSubsAsArtist                FanSubscription[]               @relation("ArtistFanSubs")
@@ -2374,6 +2377,7 @@ model Motion {
 
   votes    Vote[]
   comments MotionComment[]
+  seconds  MotionSecond[]
 
   @@index([state, closeAt])
   @@schema("governance")
@@ -2506,6 +2510,22 @@ model Vote {
   user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   choice   VoteChoice
   castAt   DateTime   @default(now())
+
+  @@id([motionId, userId])
+  @@index([motionId])
+  @@schema("governance")
+}
+
+/// A member's support for a motion draft being put to a vote. The proposer
+/// cannot second their own motion, and seconds are only taken while the
+/// motion is a DRAFT: once the board opens it, the list is the record of who
+/// backed it. One row per member and motion.
+model MotionSecond {
+  motionId  String
+  motion    Motion   @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
   @@id([motionId, userId])
   @@index([motionId])
