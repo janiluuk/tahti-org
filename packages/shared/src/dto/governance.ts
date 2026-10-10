@@ -33,6 +33,11 @@ export const PatchMotionSchema = z.object({
 
 export type PatchMotionInput = z.infer<typeof PatchMotionSchema>
 
+/** PUT /api/v1/governance/motions/:id/meeting — null removes the link. */
+export const LinkMotionMeetingSchema = z.object({
+  meetingId: z.string().trim().min(1).max(64).nullable(),
+})
+
 /** A proposer's edit of their own draft (PUT /api/v1/governance/motions/:id/draft). */
 export const EditMotionDraftSchema = z
   .object({
