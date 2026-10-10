@@ -33,6 +33,16 @@ export const PatchMotionSchema = z.object({
 
 export type PatchMotionInput = z.infer<typeof PatchMotionSchema>
 
+/** A proposer's edit of their own draft (PUT /api/v1/governance/motions/:id/draft). */
+export const EditMotionDraftSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    description: z.string().trim().min(1).max(10_000).optional(),
+  })
+  .refine((d) => d.title !== undefined || d.description !== undefined, {
+    message: 'Nothing to update',
+  })
+
 export const VoteMotionSchema = z.object({
   choice: z.preprocess((v) => (typeof v === 'string' ? v.toUpperCase() : v), MotionChoiceSchema),
 })

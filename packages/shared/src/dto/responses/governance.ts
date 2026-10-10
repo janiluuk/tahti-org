@@ -110,3 +110,10 @@ export const MotionSeconderListSchema = z.array(MotionSeconderSchema)
 export const MotionWithdrawnResponseSchema = z.object({
   ok: z.literal(true),
 })
+
+export const MotionDraftEditedResponseSchema = z.object({
+  id: z.string(),
+  state: z.string(),
+  // Seconds removed because the text they backed has changed.
+  secondsCleared: z.number().int(),
+})
