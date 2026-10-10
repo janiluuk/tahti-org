@@ -47,6 +47,9 @@ export const MotionSummarySchema = z.object({
   // Eligible-voter count frozen when voting opened (null for motions opened
   // before this field existed, and for motions still in DRAFT).
   eligibleMemberCount: z.number().int().nullable(),
+  // Members who back this draft being put to a vote (never the proposer).
+  secondCount: z.number().int(),
+  youSeconded: z.boolean(),
   // Only present once CLOSED (hidden while OPEN to avoid a bandwagon effect —
   // see comment in apps/api/src/routes/governance/index.ts). Included in the
   // list response, not just the detail one, since the governance page has no
@@ -88,4 +91,9 @@ export const VoteCastResponseSchema = z.object({
 
 export const VoteRetractResponseSchema = z.object({
   ok: z.literal(true),
+})
+
+export const MotionSecondResponseSchema = z.object({
+  ok: z.literal(true),
+  secondCount: z.number().int(),
 })

@@ -73,7 +73,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'decisions',
     label: 'Motions & advisory votes',
     description:
-      'Advisory motion lifecycle, comments, vote records (ballot choices redacted), and quarterly feature reports. Board-recorded resolutions live under Official meeting votes.',
+      'Advisory motion lifecycle, seconds, comments, vote records (ballot choices redacted), and quarterly feature reports. Board-recorded resolutions live under Official meeting votes.',
     actions: [
       'MOTION_CREATE',
       'MOTION_OPEN',
@@ -82,6 +82,8 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'VOTE_CAST',
       'VOTE_CHANGE',
       'VOTE_RETRACT',
+      'MOTION_SECOND',
+      'MOTION_SECOND_WITHDRAW',
       'FEATURE_REQUEST_QUARTERLY_REPORT',
     ],
   },
@@ -176,6 +178,8 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   VOTE_CAST: 'Vote recorded',
   VOTE_CHANGE: 'Vote changed',
   VOTE_RETRACT: 'Vote retracted',
+  MOTION_SECOND: 'Motion seconded',
+  MOTION_SECOND_WITHDRAW: 'Second withdrawn',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',
