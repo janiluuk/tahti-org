@@ -130,6 +130,28 @@ describe('motion notifications', () => {
     expect(rows[0]!.actorUserId).toBe(boardId)
   })
 
+  it('tells the other members the tally when a motion closes', async () => {
+    const id = await draftMotion('Keep the night rotation')
+    await setState(id, 'OPEN')
+    await prisma.vote.createMany({
+      data: [
+        { motionId: id, userId: memberId, choice: 'YES' },
+        { motionId: id, userId: boardId, choice: 'NO' },
+        { motionId: id, userId: suspendedId, choice: 'YES' },
+      ],
+    })
+
+    await setState(id, 'CLOSED')
+
+    const rows = await prisma.notification.findMany({
+      where: { userId: memberId, type: 'MOTION_RESULT', url: `/governance/motions/${id}` },
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.body).toBe('"Keep the night rotation": 2 yes, 1 no, 0 abstained.')
+    expect(await prisma.notification.count({ where: { userId: boardId } })).toBe(0)
+    expect(await prisma.notification.count({ where: { userId: freeId } })).toBe(0)
+  })
+
   it('does not tell the board member who opened it, a suspended member or a non-member', async () => {
     const id = await draftMotion('Second proposal')
     await setState(id, 'OPEN')

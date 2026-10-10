@@ -29,7 +29,10 @@ import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import type { MotionState, Prisma } from '@tahti/db'
 import { userName } from '../../lib/safe-names.js'
-import { notifyMembersOfMotionOpened } from '../../lib/motion-notifications.js'
+import {
+  notifyMembersOfMotionOpened,
+  notifyMembersOfMotionResult,
+} from '../../lib/motion-notifications.js'
 
 const MOTION_STATE_SET = new Set<string>(MOTION_LIST_STATES)
 
@@ -372,6 +375,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         await notifyMembersOfMotionOpened(fastify.prisma, updated, user.id).catch(
           (err: unknown) => {
             request.log.error({ err, motionId: updated.id }, 'motion-opened notification failed')
+          },
+        )
+      }
+      if (body.state === 'CLOSED') {
+        await notifyMembersOfMotionResult(fastify.prisma, updated, user.id).catch(
+          (err: unknown) => {
+            request.log.error({ err, motionId: updated.id }, 'motion-result notification failed')
           },
         )
       }
