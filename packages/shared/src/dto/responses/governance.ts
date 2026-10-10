@@ -70,6 +70,8 @@ export const MotionCommentSchema = z.object({
   authorId: z.string().nullable(),
   authorDisplayName: z.string().nullable(),
   createdAt: z.coerce.date(),
+  // A removed comment keeps its place in the thread with an empty body.
+  removed: z.boolean(),
 })
 
 export const MotionCommentListSchema = z.array(MotionCommentSchema)
@@ -116,4 +118,8 @@ export const MotionDraftEditedResponseSchema = z.object({
   state: z.string(),
   // Seconds removed because the text they backed has changed.
   secondsCleared: z.number().int(),
+})
+
+export const MotionCommentRemovedResponseSchema = z.object({
+  ok: z.literal(true),
 })

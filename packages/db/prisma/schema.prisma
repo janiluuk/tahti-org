@@ -382,6 +382,7 @@ enum AuditAction {
   MOTION_SECOND_WITHDRAW
   MOTION_WITHDRAW
   MOTION_EDIT
+  MOTION_COMMENT_REMOVE
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -2542,13 +2543,19 @@ model MotionSecond {
 /// edit/soft-delete, author kept nullable so deleting a user doesn't cascade-delete
 /// their comments (their contribution to the discussion record persists).
 model MotionComment {
-  id        BigInt   @id @default(autoincrement())
-  motionId  String
-  motion    Motion   @relation(fields: [motionId], references: [id], onDelete: Cascade)
-  body      String
-  authorId  String?
-  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
+  id          BigInt    @id @default(autoincrement())
+  motionId    String
+  motion      Motion    @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  body        String
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  /// Set when the comment was removed. The row stays so the thread keeps its
+  /// order and count; the body is no longer served.
+  removedAt   DateTime?
+  /// Who removed it (the author, or a board member). Not a relation: the
+  /// audit log holds the record, this only tells the two cases apart.
+  removedById String?
 
   @@index([motionId, createdAt(sort: Asc)])
   @@schema("governance")
