@@ -106,3 +106,7 @@ export const MotionSeconderSchema = z.object({
 })
 
 export const MotionSeconderListSchema = z.array(MotionSeconderSchema)
+
+export const MotionWithdrawnResponseSchema = z.object({
+  ok: z.literal(true),
+})
