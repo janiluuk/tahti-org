@@ -140,6 +140,26 @@ describe('board terms', () => {
     ])
   })
 
+  it('shows the board as it stood or will stand on another day', async () => {
+    const on = async (query: string) => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/governance/board${query}`,
+        headers: { cookie: memberCookie },
+      })
+      if (res.statusCode !== 200) return res.statusCode
+      return (res.json() as Array<{ displayName: string; role: string }>)
+        .filter((t) => t.displayName.startsWith('Term '))
+        .map((t) => [t.role, t.displayName])
+    }
+    expect(await on(`?on=${iso(-7)}`)).toEqual([['TREASURER', 'Term member']])
+    expect(await on(`?on=${iso(400).slice(0, 10)}`)).toEqual([
+      ['CHAIR', 'Term other'],
+      ['TREASURER', 'Term member'],
+    ])
+    expect(await on('?on=not-a-date')).toBe(400)
+  })
+
   describe('ending a term early', () => {
     function end(id: string, payload: Record<string, unknown>) {
       return app.inject({
