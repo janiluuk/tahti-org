@@ -2620,6 +2620,8 @@ model GovernanceAgendaItem {
   position    Int
   title       String
   description String?
+  /// What the meeting decided on the item, as it goes into the minutes.
+  outcome     String?
   createdById String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
