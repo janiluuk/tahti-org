@@ -27,6 +27,9 @@ export const AdminResolutionRowSchema = z.object({
   meetingId: z.string().nullable(),
   agendaItemId: z.string().nullable(),
   binding: z.boolean(),
+  // A resolution under a legal hold cannot be edited until the hold is lifted.
+  legalHoldAt: z.coerce.date().nullable(),
+  legalHoldReason: z.string().nullable(),
 })
 
 export const AdminResolutionListSchema = z.array(AdminResolutionRowSchema)
@@ -76,6 +79,11 @@ export const AdminResolutionPatchSchema = z
     binding: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
+
+/** PUT /api/admin/resolutions/:id/legal-hold */
+export const ResolutionLegalHoldSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+})
 
 export const ResolutionIdParamSchema = z.object({
   id: z.coerce.bigint().positive(),
