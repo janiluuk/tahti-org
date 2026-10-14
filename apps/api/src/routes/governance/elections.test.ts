@@ -122,6 +122,46 @@ describe('board elections', () => {
           .statusCode,
       ).toBe(403)
     })
+
+    it('edits the details until the result is recorded, and audits what changed', async () => {
+      const edit = (id: string, payload: Record<string, unknown>) =>
+        app.inject({
+          method: 'PATCH',
+          url: `/api/admin/governance/elections/${id}`,
+          headers: { cookie: boardCookie },
+          payload,
+        })
+      const id = (
+        await setUp({ title: 'Election to be edited', role: 'VICE_CHAIR', seats: 1, meetingId })
+      ).json().id
+      const res = await edit(id, {
+        title: 'Election of the vice chair',
+        seats: 2,
+        meetingId: null,
+        nominationsCloseAt: iso(5),
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({ title: 'Election of the vice chair', seats: 2 })
+      expect(res.json().meetingId).toBeNull()
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'ELECTION_UPDATE', targetId: id },
+      })
+      expect((audit?.meta as { changed: string[] }).changed.sort()).toEqual([
+        'meetingId',
+        'nominationsCloseAt',
+        'seats',
+        'title',
+      ])
+
+      expect((await edit(id, {})).statusCode).toBe(400)
+      expect((await edit(id, { meetingId: 'cmissingmeeting00000000000' })).statusCode).toBe(400)
+      const chair = (await setUp({ title: 'Election chair edit', role: 'CHAIR', seats: 1 })).json()
+      expect((await edit(chair.id, { seats: 2 })).statusCode).toBe(400)
+
+      await prisma.governanceElection.update({ where: { id }, data: { decidedAt: new Date() } })
+      expect((await edit(id, { title: 'Election rewritten' })).statusCode).toBe(409)
+      expect((await edit('cmissingelection0000000000', { seats: 1 })).statusCode).toBe(404)
+    })
   })
   describe('candidates', () => {
     let electionId: string
