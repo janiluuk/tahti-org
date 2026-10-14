@@ -280,6 +280,12 @@ export const GovernanceConflictDeclarationListSchema = z.array(
   GovernanceConflictDeclarationItemSchema,
 )
 
+/** GET /api/v1/governance/meetings/:id/conflicts — the declarations as the
+ * published minutes record them; empty until the minutes are published. */
+export const MemberGovernanceConflictListSchema = z.array(
+  GovernanceConflictDeclarationItemSchema.omit({ memberId: true }),
+)
+
 export const GovernanceNoticeDeliveryItemSchema = z.object({
   id: z.string(),
   memberId: z.string(),

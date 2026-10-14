@@ -120,4 +120,38 @@ describe('conflict-of-interest declarations', () => {
     })
     expect((await remove(kept.id)).statusCode).toBe(409)
   })
+
+  it('shows members the declarations once the minutes are published', async () => {
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}member@example.com`,
+      username: 'governance-conflicts-member',
+      isMember: true,
+    })
+    const memberCookie = await sessionCookieFor(prisma, member.id)
+    const held = await meeting('Conflicts published meeting')
+    await declare(held.id, { memberId: boardId, displayName: 'Board member Z', matter: 'Grant' })
+    const read = (id = held.id, cookie = memberCookie) =>
+      app.inject({
+        method: 'GET',
+        url: `/api/v1/governance/meetings/${id}/conflicts`,
+        headers: { cookie },
+      })
+    expect((await read()).json()).toEqual([])
+    await prisma.governanceMeeting.update({
+      where: { id: held.id },
+      data: { minutesApprovedAt: new Date(), minutesPublishedAt: new Date() },
+    })
+    const res = await read()
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual([
+      expect.objectContaining({ displayName: 'Board member Z', matter: 'Grant', recused: true }),
+    ])
+    expect(res.json()[0]).not.toHaveProperty('memberId')
+
+    const draft = await prisma.governanceMeeting.create({
+      data: { title: 'Conflicts draft meeting', type: 'BOARD', createdById: boardId },
+    })
+    expect((await read(draft.id)).statusCode).toBe(404)
+    expect((await read(held.id, '')).statusCode).toBe(401)
+  })
 })
