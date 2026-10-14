@@ -9,6 +9,7 @@ import {
   GovernanceElectionListSchema,
   GovernanceElectionResultSchema,
   IdParamSchema,
+  MemberGovernanceElectionListSchema,
   NominateElectionCandidateSchema,
   RecordElectionResultSchema,
   StandForElectionSchema,
@@ -109,6 +110,55 @@ class ResultRefused extends Error {
 }
 
 const electionRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/v1/governance/elections',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(
+          MemberGovernanceElectionListSchema,
+          'MemberGovernanceElectionList',
+        ),
+      },
+    },
+    async (request, reply) => {
+      const userId = request.sessionUser!.id
+      const now = new Date()
+      const elections = await fastify.prisma.governanceElection.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          ...ELECTION_SELECT,
+          candidates: {
+            where: { withdrawnAt: null },
+            orderBy: [{ displayName: 'asc' }, { id: 'asc' }],
+            select: {
+              userId: true,
+              displayName: true,
+              statement: true,
+              elected: true,
+              user: { select: { username: true } },
+            },
+          },
+        },
+      })
+      return reply.send(
+        elections.map(({ candidates, ...election }) => ({
+          ...election,
+          nominationsOpen:
+            !election.decidedAt &&
+            (!election.nominationsCloseAt || election.nominationsCloseAt > now),
+          candidates: candidates.map(({ user, userId: _userId, ...candidate }) => ({
+            ...candidate,
+            username: user?.username ?? null,
+          })),
+          youAreCandidate: candidates.some((candidate) => candidate.userId === userId),
+        })),
+      )
+    },
+  )
+
   async function findElection(id: string) {
     return fastify.prisma.governanceElection.findUnique({
       where: { id },

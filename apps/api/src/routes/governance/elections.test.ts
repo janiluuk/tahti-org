@@ -321,4 +321,68 @@ describe('board elections', () => {
       )
     })
   })
+  describe('member view', () => {
+    it('lists elections with the candidates standing and the result', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/elections',
+        headers: { cookie: memberCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      type Row = {
+        title: string
+        nominationsOpen: boolean
+        youAreCandidate: boolean
+        candidates: Array<{ displayName: string; username: string | null; elected: boolean }>
+      }
+      const rows = res.json() as Row[]
+      const decided = rows.find((row) => row.title === 'Election of two members')!
+      expect(decided.nominationsOpen).toBe(false)
+      expect(decided.youAreCandidate).toBe(true)
+      expect(decided.candidates).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            displayName: 'Election member',
+            username: 'governance-election-member',
+            elected: true,
+          }),
+          expect.objectContaining({ displayName: 'Election board', elected: false }),
+        ]),
+      )
+      expect(rows.find((row) => row.title === 'Election of board members 2027')).toMatchObject({
+        nominationsOpen: true,
+        youAreCandidate: false,
+        candidates: [],
+      })
+    })
+
+    it('leaves out withdrawn candidacies and is for members only', async () => {
+      const electionId = (
+        await setUp({ title: 'Election with a withdrawal', role: 'DEPUTY', seats: 1 })
+      ).json().id
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/elections/${electionId}/candidacy`,
+        headers: { cookie: memberCookie },
+        payload: {},
+      })
+      await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/governance/elections/${electionId}/candidacy`,
+        headers: { cookie: memberCookie },
+      })
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/elections',
+        headers: { cookie: memberCookie },
+      })
+      const row = (
+        res.json() as Array<{ id: string; candidates: unknown[]; youAreCandidate: boolean }>
+      ).find((election) => election.id === electionId)
+      expect(row).toMatchObject({ candidates: [], youAreCandidate: false })
+
+      const outsider = await app.inject({ method: 'GET', url: '/api/v1/governance/elections' })
+      expect(outsider.statusCode).toBe(401)
+    })
+  })
 })
