@@ -453,6 +453,8 @@ enum AuditAction {
   MEETING_NOTICE_PUBLISH
   MEETING_NOTICE_SEND
   CONFLICT_DECLARE
+  AGENDA_ITEM_CREATE
+  AGENDA_ITEM_UPDATE
   SOUND_SHARE_ACCESS
 
   @@schema("governance")
@@ -2484,6 +2486,7 @@ model GovernanceMeeting {
   auditors              GovernanceAuditor[]
   boardTerms            GovernanceBoardTerm[]
   annualReportsApproved AnnualReport[]
+  agendaItems           GovernanceAgendaItem[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -2581,6 +2584,24 @@ enum GovernanceBoardRole {
 /// A board member's elected role and term. Separate from `User.isBoard`, which
 /// grants access to board tools: recording a term changes no one's access.
 /// The name is kept as it was, so the history survives a deleted account.
+/// One item on a meeting's agenda. `GovernanceMeeting.agenda` stays as the
+/// free-form notice text; these rows are what decisions can point at.
+model GovernanceAgendaItem {
+  id          String            @id @default(cuid())
+  meetingId   String
+  meeting     GovernanceMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  /// 1-based order on the agenda.
+  position    Int
+  title       String
+  description String?
+  createdById String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([meetingId, position])
+  @@schema("governance")
+}
+
 model GovernanceBoardTerm {
   id          String              @id @default(cuid())
   userId      String?

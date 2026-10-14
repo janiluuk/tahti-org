@@ -114,10 +114,12 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'meetings',
     label: 'Meetings & documents',
     description:
-      'AGM/board meeting create/update, attendance, official document archive writes, and yearly report generation.',
+      'AGM/board meeting create/update, agenda items, attendance, official document archive writes, and yearly report generation.',
     actions: [
       'MEETING_CREATE',
       'MEETING_UPDATE',
+      'AGENDA_ITEM_CREATE',
+      'AGENDA_ITEM_UPDATE',
       'MEETING_ATTENDANCE_UPSERT',
       'DOCUMENT_CREATE',
       'DOCUMENT_UPDATE',
@@ -225,6 +227,8 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',
   MEETING_UPDATE: 'Meeting updated',
+  AGENDA_ITEM_CREATE: 'Agenda item added',
+  AGENDA_ITEM_UPDATE: 'Agenda item edited',
   MEETING_ATTENDANCE_UPSERT: 'Meeting attendance updated',
   DOCUMENT_CREATE: 'Governance document created',
   DOCUMENT_UPDATE: 'Governance document edited',
