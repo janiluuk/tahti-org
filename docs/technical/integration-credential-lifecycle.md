@@ -7,11 +7,16 @@ ExportProvider / ImportPlugin Configure flows or ListenBrainz scrobble.
 
 ## Routes
 
-| Action                          | Method   | Path                                 |
-| ------------------------------- | -------- | ------------------------------------ |
-| List install/connect state      | `GET`    | `/api/me/integrations`               |
-| Install / update API-key fields | `POST`   | `/api/me/integrations/:slug/install` |
-| Uninstall                       | `DELETE` | `/api/me/integrations/:slug`         |
+| Action                          | Method   | Path                                 | Success |
+| ------------------------------- | -------- | ------------------------------------ | ------- |
+| List install/connect state      | `GET`    | `/api/me/integrations`               | 200     |
+| Install / update API-key fields | `POST`   | `/api/me/integrations/:slug/install` | 204     |
+| Uninstall                       | `DELETE` | `/api/me/integrations/:slug`         | 204     |
+
+These three routes are tagged `integrations` and appear in OpenAPI. Install
+and uninstall have no response body. Request bodies are validated in the
+handler (not Fastify AJV), so a bad payload still returns the existing 400
+shape.
 
 Registry metadata (slug, fields, OAuth connect path, scope) lives in
 `packages/shared/src/integration-providers.ts`. Scopes include `IMPORT`,

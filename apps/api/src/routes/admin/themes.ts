@@ -45,6 +45,9 @@ const adminThemesRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
+        summary: 'List themes for board review',
+        description:
+          'All theme rows (optional `visibility` query). Approve opens a tahti-registry pull request; it does not flip a PUBLIC flag in this database.',
         response: openApiResponse(AdminThemeListSchema, 'AdminThemeList'),
       },
     },
@@ -67,7 +70,13 @@ const adminThemesRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/themes/:id/approve',
     {
       preHandler: requireBoard,
-      schema: { tags: ['admin'], response: openApiResponse(ThemeViewSchema, 'ThemeView') },
+      schema: {
+        tags: ['admin'],
+        summary: 'Approve a theme (queue tahti-registry PR)',
+        description:
+          'Marks the theme `prStatus: PENDING` and enqueues opening a pull request in tahti-registry. Does not publish locally. Needs GITHUB_PR_TOKEN (ops leftover).',
+        response: openApiResponse(ThemeViewSchema, 'ThemeView'),
+      },
     },
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -95,7 +104,13 @@ const adminThemesRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/themes/:id/reject',
     {
       preHandler: requireBoard,
-      schema: { tags: ['admin'], response: openApiResponse(ThemeViewSchema, 'ThemeView') },
+      schema: {
+        tags: ['admin'],
+        summary: 'Reject a theme under review',
+        description:
+          'Sets visibility REJECTED with a moderation note. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponse(ThemeViewSchema, 'ThemeView'),
+      },
     },
     async (request, reply) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)

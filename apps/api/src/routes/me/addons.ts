@@ -15,7 +15,9 @@ import {
   AddonInstallListSchema,
   AddonInstallViewSchema,
   PatchAddonInstallSchema,
+  openApiNoContentResponse,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireArtist, requireAuth } from '../../plugins/auth.js'
@@ -48,6 +50,8 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['addons'],
+        summary: "List the caller's listener add-on installs",
+        description: 'Discover-page widgets installed for the signed-in listener.',
         response: openApiResponse(AddonInstallListSchema, 'AddonInstallList'),
       },
     },
@@ -67,7 +71,12 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['addons'],
-        response: openApiResponse(AddonInstallViewSchema, 'AddonInstallView'),
+        summary: 'Install a listener add-on',
+        description:
+          'Installs an APPROVED LISTENER widget. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: AddonInstallViewSchema, name: 'AddonInstallView' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -107,7 +116,16 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch(
     '/api/me/addons/installs/:id',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['addons'],
+        summary: 'Patch a listener add-on install',
+        description:
+          "Updates config/position for one of the caller's listener installs. JSON body is validated in the handler, not by Fastify AJV.",
+        response: openApiResponse(AddonInstallViewSchema, 'AddonInstallView'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -130,7 +148,15 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/addons/installs/:id',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['addons'],
+        summary: 'Uninstall a listener add-on',
+        description: "Removes one of the caller's listener installs. Answers 204.",
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -151,6 +177,8 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireArtist,
       schema: {
         tags: ['addons'],
+        summary: "List the channel's artist add-on installs",
+        description: 'Public-page widgets installed on the signed-in artist channel.',
         response: openApiResponse(AddonInstallListSchema, 'AddonChannelInstallList'),
       },
     },
@@ -170,7 +198,12 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireArtist,
       schema: {
         tags: ['addons'],
-        response: openApiResponse(AddonInstallViewSchema, 'AddonChannelInstallView'),
+        summary: 'Install an artist add-on on the channel',
+        description:
+          'Installs an APPROVED ARTIST widget. Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: AddonInstallViewSchema, name: 'AddonChannelInstallView' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -208,7 +241,16 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch(
     '/api/me/channel/addons/installs/:id',
-    { preHandler: requireArtist },
+    {
+      preHandler: requireArtist,
+      schema: {
+        tags: ['addons'],
+        summary: 'Patch a channel add-on install',
+        description:
+          "Updates config/position for one artist-scope install on the caller's channel. JSON body is validated in the handler, not by Fastify AJV.",
+        response: openApiResponse(AddonInstallViewSchema, 'AddonChannelInstallView'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -231,7 +273,15 @@ const meAddonsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/channel/addons/installs/:id',
-    { preHandler: requireArtist },
+    {
+      preHandler: requireArtist,
+      schema: {
+        tags: ['addons'],
+        summary: 'Uninstall a channel add-on',
+        description: "Removes one artist-scope install from the caller's channel. Answers 204.",
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(AddonIdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })

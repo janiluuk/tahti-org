@@ -1362,6 +1362,9 @@ model Channel {
   // M35: whether a finished broadcast is auto-recorded to the sound library. Defaults
   // to true (today's unconditional behavior) — artists opt out per-channel.
   autoRecordEnabled             Boolean               @default(true)
+  /// PLAT-086: whether the channel page starts playing on its own when a
+  /// listener opens it. On unless the artist switches it off.
+  autoplayEnabled               Boolean               @default(true)
   // Persistent per-channel default for a new broadcast's `autoPublish` (whether
   // the recorded sound is public once it's created) — the artist can
   // still override per-session in preflight; this just sets the starting value
@@ -2248,10 +2251,18 @@ model ChatBan {
   channelId       String
   channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
   fingerprintHash String
+  /// The name the sender posted under when they were banned, so the ban list
+  /// reads as people and not as hashes. Null for a ban typed in by hash.
+  handle          String?
+  /// The banned sender's account, when they were signed in. The fingerprint
+  /// changes with the network and the browser; the account does not.
+  userId          String?
+  bannedByUserId  String?
   bannedAt        DateTime @default(now())
 
   @@unique([channelId, fingerprintHash])
   @@index([channelId, bannedAt])
+  @@index([channelId, userId])
   @@schema("chat")
 }
 
@@ -2263,18 +2274,26 @@ model ChatBan {
 /// announcements) are published straight to Centrifugo by the API and don't
 /// go through that proxy, so they aren't captured here.
 model ChatMessage {
-  id          String   @id @default(cuid())
-  channelId   String
-  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  channelId       String
+  channel         Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
   /// True for the subscriber-only ":fans" sub-channel, false for the main chat.
-  fanOnly     Boolean  @default(false)
-  handle      String
-  text        String
-  userId      String?
-  supporter   Boolean  @default(false)
-  channelRole String?
-  countryCode String?
-  createdAt   DateTime @default(now())
+  fanOnly         Boolean   @default(false)
+  handle          String
+  text            String
+  userId          String?
+  /// The sender's per-channel chat fingerprint (the part of the token's
+  /// `sub` after the last `#`). Moderators ban by message, and a ban is a
+  /// fingerprint, so the message has to remember it. Never sent to clients.
+  fingerprintHash String?
+  supporter       Boolean   @default(false)
+  channelRole     String?
+  countryCode     String?
+  createdAt       DateTime  @default(now())
+  /// Set when the owner or a moderator removes the message. The row stays as
+  /// the record of what was said; histories leave it out.
+  removedAt       DateTime?
+  removedByUserId String?
 
   @@index([channelId, fanOnly, createdAt])
   @@schema("chat")

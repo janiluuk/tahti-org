@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
+import { PROVIDER_NOT_CONNECTED } from '@tahti/shared'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
+import { config } from '../../config.js'
 import {
   cleanupUsersByEmailPrefix,
   createReadySound,
@@ -85,5 +87,25 @@ describe('M7 — Mixcloud upload routes', () => {
       headers: { cookie },
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  describe('when Mixcloud OAuth is configured', () => {
+    const originalClientId = config.mixcloud.clientId
+
+    afterEach(() => {
+      config.mixcloud.clientId = originalClientId
+    })
+
+    it('answers 403 PROVIDER_NOT_CONNECTED when the caller has not linked Mixcloud', async () => {
+      config.mixcloud.clientId = 'mixcloud-client-id'
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/sound/${itemId}/mixcloud`,
+        headers: { cookie },
+      })
+      expect(res.statusCode).toBe(403)
+      expect(res.json().code).toBe(PROVIDER_NOT_CONNECTED)
+      expect(res.json().connectPath).toBe('/api/me/mixcloud/oauth/start')
+    })
   })
 })

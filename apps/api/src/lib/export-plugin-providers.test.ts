@@ -27,14 +27,15 @@ describe('EXPORT_PLUGIN_PROVIDERS', () => {
     expect(hearthis?.submitPath).toBe('/api/me/sound/:id/export/hearthis')
 
     for (const provider of body.providers) {
-      if (provider.capabilities.submit) {
-        expect(provider.submitPath).toBeTruthy()
-      } else {
-        expect(provider.submitPath).toBeNull()
-      }
-      if (provider.capabilities.webhook) {
-        expect(provider.webhookPath).toBeTruthy()
-      }
+      expect(Boolean(provider.submitPath), `${provider.id} submit`).toBe(
+        provider.capabilities.submit,
+      )
+      expect(Boolean(provider.statusPath), `${provider.id} status`).toBe(
+        provider.capabilities.status,
+      )
+      expect(Boolean(provider.webhookPath), `${provider.id} webhook`).toBe(
+        provider.capabilities.webhook,
+      )
     }
   })
 })

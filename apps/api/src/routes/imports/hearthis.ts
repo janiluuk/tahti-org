@@ -11,6 +11,7 @@ import {
   HearthisUserTracksResponseSchema,
   mapGenre,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import {
   createHearthisClient,
@@ -87,6 +88,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'Search hearthis.at tracks',
         description:
           'Mixed-source collections: hearthis.at track search (embed-only, no audio fetch)',
         response: openApiResponse(HearthisSearchResponseSchema, 'HearthisSearchResponse'),
@@ -113,6 +115,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's hearthis.at tracks",
         description: "Mixed-source collections: the connected artist's own hearthis.at tracks",
         response: openApiResponse(HearthisUserTracksResponseSchema, 'HearthisUserTracksResponse'),
       },
@@ -143,6 +146,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List hearthis.at tracks by profile URL',
         description: 'Mixed-source collections: list a hearthis.at profile by URL or handle',
         response: openApiResponse(HearthisUserTracksResponseSchema, 'HearthisUserTracksResponse'),
       },
@@ -173,6 +177,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's hearthis.at Sets",
         description:
           "List the connected artist's hearthis.at Sets (playlists). Requires hearthisUsername on the profile.",
         response: openApiResponse(HearthisUserSetsResponseSchema, 'HearthisUserSetsResponse'),
@@ -204,6 +209,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List tracks in a hearthis.at Set',
         description:
           'List tracks in a hearthis.at Set (playlist). Permalink from GET …/me-sets or a set URL.',
         response: openApiResponse(HearthisSetTracksResponseSchema, 'HearthisSetTracksResponse'),
@@ -250,8 +256,12 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Mixed-source collections: add a hearthis.at track reference to a collection',
-        response: openApiResponse(HearthisAddTrackResponseSchema, 'HearthisAddTrackResponse'),
+        summary: 'Add a hearthis.at track to a collection',
+        description:
+          'Creates a hearthis_embed Sound and appends it to the collection. Answers 201. Embed-only unless the uploader marked the track downloadable.',
+        response: openApiResponses([
+          { status: 201, schema: HearthisAddTrackResponseSchema, name: 'HearthisAddTrackResponse' },
+        ]),
       },
     },
     async (request, reply) => {
