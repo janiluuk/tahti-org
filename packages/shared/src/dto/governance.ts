@@ -339,6 +339,42 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
 
+export const GovernanceBoardRoleSchema = z.enum([
+  'CHAIR',
+  'VICE_CHAIR',
+  'SECRETARY',
+  'TREASURER',
+  'MEMBER',
+  'DEPUTY',
+])
+
+export const GovernanceBoardTermSchema = z.object({
+  id: z.string(),
+  userId: z.string().nullable(),
+  displayName: z.string(),
+  role: GovernanceBoardRoleSchema,
+  termStart: z.coerce.date(),
+  termEnd: z.coerce.date().nullable(),
+  endReason: z.string().nullable(),
+  meetingId: z.string().nullable(),
+})
+
+export const GovernanceBoardTermListSchema = z.array(GovernanceBoardTermSchema)
+
+/** POST /api/admin/governance/board-terms */
+export const CreateGovernanceBoardTermSchema = z
+  .object({
+    userId: z.string().trim().min(1).max(64),
+    role: GovernanceBoardRoleSchema,
+    termStart: z.coerce.date(),
+    termEnd: z.coerce.date().optional(),
+    meetingId: z.string().cuid().optional(),
+  })
+  .refine((body) => !body.termEnd || body.termEnd > body.termStart, {
+    message: 'The term must end after it starts',
+    path: ['termEnd'],
+  })
+
 export const GovernanceAuditorKindSchema = z.enum(['AUDITOR', 'OPERATIONS_INSPECTOR'])
 
 export const GovernanceAuditorSchema = z.object({
