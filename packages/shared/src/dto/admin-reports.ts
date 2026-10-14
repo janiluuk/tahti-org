@@ -17,6 +17,14 @@ export const AdminAnnualReportRowSchema = z.object({
   filingReference: z.string().nullable(),
   correctedAt: z.coerce.date().nullable(),
   archivedAt: z.coerce.date().nullable(),
+  // While held the report is not regenerated, corrected or archived.
+  legalHoldAt: z.coerce.date().nullable(),
+  legalHoldReason: z.string().nullable(),
+})
+
+/** PUT /api/admin/reports/annual/:year/legal-hold */
+export const AnnualReportLegalHoldSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
 })
 
 /** PATCH /api/admin/reports/annual/:year */

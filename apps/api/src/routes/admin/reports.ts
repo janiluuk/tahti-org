@@ -9,6 +9,7 @@ import {
   AnnualReportFilingSchema,
   AnnualReportRevisionListSchema,
   ApproveAnnualReportSchema,
+  AnnualReportLegalHoldSchema,
   ArchiveAnnualReportSchema,
   CorrectAnnualReportSchema,
   PublishedAnnualReportListSchema,
@@ -38,6 +39,8 @@ function reportRow(report: {
   filingReference: string | null
   correctedAt: Date | null
   archivedAt: Date | null
+  legalHoldAt: Date | null
+  legalHoldReason: string | null
 }) {
   return presignedGetUrl(report.storageKey, 3600)
     .catch(() => null)
@@ -55,8 +58,12 @@ function reportRow(report: {
       filingReference: report.filingReference,
       correctedAt: report.correctedAt,
       archivedAt: report.archivedAt,
+      legalHoldAt: report.legalHoldAt,
+      legalHoldReason: report.legalHoldReason,
     }))
 }
+
+const HELD = 'The report is under a legal hold and cannot be changed'
 
 const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -102,8 +109,9 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.annualReport.findUnique({
         where: { year },
-        select: { approvedAt: true },
+        select: { approvedAt: true, legalHoldAt: true },
       })
+      if (existing?.legalHoldAt) return reply.status(409).send({ error: HELD })
       if (existing?.approvedAt) {
         return reply
           .status(409)
@@ -313,6 +321,7 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
       const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
       if (!report)
         return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (report.legalHoldAt) return reply.status(409).send({ error: HELD })
       if (!report.approvedAt) {
         return reply
           .status(409)
@@ -410,6 +419,10 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(404).send({ error: 'No report has been generated for that year' })
 
       const { archived } = parsed.data
+      // Restoring a held report is still allowed: it only shows it again.
+      if (report.legalHoldAt && archived && !report.archivedAt) {
+        return reply.status(409).send({ error: HELD })
+      }
       if (archived !== (report.archivedAt !== null)) {
         await fastify.prisma.annualReport.update({
           where: { year },
@@ -420,6 +433,86 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
           actorId: request.sessionUser!.id,
           targetId: String(year),
           meta: { year, archived },
+        })
+      }
+      const updated = await fastify.prisma.annualReport.findUniqueOrThrow({
+        where: { year },
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+      return reply.send(await reportRow(updated))
+    },
+  )
+
+  // A legal hold keeps the report as it is while a dispute, an audit or an
+  // authority's request is pending.
+  fastify.put(
+    '/api/admin/reports/annual/:year/legal-hold',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const parsed = AnnualReportLegalHoldSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (report.legalHoldReason !== parsed.data.reason) {
+        await fastify.prisma.annualReport.update({
+          where: { year },
+          data: {
+            legalHoldAt: report.legalHoldAt ?? new Date(),
+            legalHoldReason: parsed.data.reason,
+          },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'ANNUAL_REPORT_LEGAL_HOLD',
+          actorId: request.sessionUser!.id,
+          targetId: String(year),
+          meta: { year, held: true, reason: parsed.data.reason },
+        })
+      }
+      const updated = await fastify.prisma.annualReport.findUniqueOrThrow({
+        where: { year },
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+      return reply.send(await reportRow(updated))
+    },
+  )
+
+  fastify.delete(
+    '/api/admin/reports/annual/:year/legal-hold',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (report.legalHoldAt) {
+        await fastify.prisma.annualReport.update({
+          where: { year },
+          data: { legalHoldAt: null, legalHoldReason: null },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'ANNUAL_REPORT_LEGAL_HOLD',
+          actorId: request.sessionUser!.id,
+          targetId: String(year),
+          meta: { year, held: false },
         })
       }
       const updated = await fastify.prisma.annualReport.findUniqueOrThrow({
