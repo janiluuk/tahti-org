@@ -15,6 +15,7 @@ import {
   parseMixcloudUsername,
   searchMixcloudCloudcasts,
   openApiResponse,
+  openApiResponses,
 } from '@tahti/shared'
 import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -30,6 +31,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'Search Mixcloud cloudcasts',
         description:
           'Mixed-source collections: Mixcloud cloudcast search (embed-only, no audio fetch)',
         response: openApiResponse(MixcloudSearchResponseSchema, 'MixcloudSearchResponse'),
@@ -56,6 +58,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: "List the caller's Mixcloud cloudcasts",
         description: "Mixed-source collections: the connected artist's own Mixcloud cloudcasts",
         response: openApiResponse(MixcloudMeTracksResponseSchema, 'MixcloudMeTracksResponse'),
       },
@@ -86,6 +89,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
+        summary: 'List Mixcloud cloudcasts by profile URL',
         description: 'Mixed-source collections: list a Mixcloud profile by URL or handle',
         response: openApiResponse(MixcloudSearchResponseSchema, 'MixcloudSearchResponse'),
       },
@@ -115,8 +119,12 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Mixed-source collections: add a Mixcloud cloudcast reference to a collection',
-        response: openApiResponse(MixcloudAddTrackResponseSchema, 'MixcloudAddTrackResponse'),
+        summary: 'Add a Mixcloud cloudcast to a collection',
+        description:
+          'Creates a mixcloud_embed Sound and appends it to the collection. Answers 201. Embed-only — no audio is fetched.',
+        response: openApiResponses([
+          { status: 201, schema: MixcloudAddTrackResponseSchema, name: 'MixcloudAddTrackResponse' },
+        ]),
       },
     },
     async (request, reply) => {
