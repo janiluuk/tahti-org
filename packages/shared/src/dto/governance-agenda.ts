@@ -44,7 +44,8 @@ export const ReorderGovernanceAgendaItemsSchema = z.object({
 
 /** GET /api/v1/governance/meetings/:id/agenda-items — each item with the
  * records filed under it that members can see: motions past DRAFT, published
- * resolutions, and published documents that are not archived. */
+ * resolutions, and published documents that are not archived. `outcome` is
+ * null until the meeting's minutes are published. */
 export const MemberGovernanceAgendaItemListSchema = z.array(
   GovernanceAgendaItemSchema.extend({
     motions: z.array(

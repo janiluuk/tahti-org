@@ -54,7 +54,7 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const meeting = await fastify.prisma.governanceMeeting.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, state: true },
+        select: { id: true, state: true, minutesPublishedAt: true },
       })
       if (!meeting || meeting.state === 'DRAFT') {
         return reply.status(404).send({ error: 'Meeting not found' })
@@ -84,8 +84,8 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         items.map((item) => ({
           ...item,
-          // The board's working note on the decision; members read the minutes.
-          outcome: null,
+          // Until the minutes are published the outcome is the board's draft.
+          outcome: meeting.minutesPublishedAt ? item.outcome : null,
           resolutions: item.resolutions.map((r) => ({ ...r, id: r.id.toString() })),
         })),
       )

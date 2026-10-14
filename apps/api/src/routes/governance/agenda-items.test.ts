@@ -280,6 +280,39 @@ describe('meeting agenda items', () => {
     })
     expect(outsider.statusCode).toBe(401)
   })
+  it('shows members what was decided on an item once the minutes are published', async () => {
+    const meeting = await prisma.governanceMeeting.create({
+      data: {
+        title: 'Agenda test minuted meeting',
+        type: 'GENERAL',
+        state: 'HELD',
+        scheduledAt: new Date(),
+        createdById: boardId,
+      },
+    })
+    const item = (await add({ title: 'Budget' }, boardCookie, meeting.id)).json()
+    await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/agenda-items/${item.id}`,
+      headers: { cookie: boardCookie },
+      payload: { outcome: 'The budget was adopted as proposed.' },
+    })
+    const memberOutcome = async () =>
+      (
+        await app.inject({
+          method: 'GET',
+          url: `/api/v1/governance/meetings/${meeting.id}/agenda-items`,
+          headers: { cookie: memberCookie },
+        })
+      ).json()[0].outcome
+    expect(await memberOutcome()).toBeNull()
+    await prisma.governanceMeeting.update({
+      where: { id: meeting.id },
+      data: { minutesApprovedAt: new Date(), minutesPublishedAt: new Date() },
+    })
+    expect(await memberOutcome()).toBe('The budget was adopted as proposed.')
+  })
+
   it('shows members the records filed under each item that they may see', async () => {
     const [item] = await list()
     const motion = (title: string, state: 'DRAFT' | 'OPEN') =>
