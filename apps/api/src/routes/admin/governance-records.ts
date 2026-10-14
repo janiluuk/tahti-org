@@ -7,7 +7,6 @@ import {
   CreateGovernanceConflictDeclarationSchema,
   CreateGovernanceDocumentSchema,
   CreateGovernanceMeetingSchema,
-  ArchiveGovernanceDocumentSchema,
   IdParamSchema,
   parseRouteParams,
   GovernanceAttendanceListSchema,
@@ -15,6 +14,7 @@ import {
   GovernanceDocumentListSchema,
   GovernanceMeetingListSchema,
   GovernanceNoticeDeliveryListSchema,
+  PatchGovernanceDocumentSchema,
   PatchGovernanceMeetingSchema,
   PrepareMinutesUploadResponseSchema,
   PrepareMinutesUploadSchema,
@@ -655,9 +655,9 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // PATCH /api/admin/governance/documents/:id — archive or restore. There
-  // was no way to take a document back out of the member list: a file posted
-  // by mistake stayed published for good.
+  // PATCH /api/admin/governance/documents/:id — archive or restore, and edit
+  // the document's own fields. There was no way to take a document back out
+  // of the member list, or to fix a typo in a title, without a new version.
   fastify.patch(
     '/api/admin/governance/documents/:id',
     {
@@ -671,20 +671,44 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
-      const parsed = ArchiveGovernanceDocumentSchema.safeParse(request.body)
+      const parsed = PatchGovernanceDocumentSchema.safeParse(request.body)
       if (!parsed.success)
         return reply
           .status(400)
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
 
-      const existing = await fastify.prisma.governanceDocument.findUnique({
-        where: { id },
-        select: { archivedAt: true, title: true },
-      })
+      const existing = await fastify.prisma.governanceDocument.findUnique({ where: { id } })
       if (!existing) return reply.status(404).send({ error: 'Document not found' })
 
-      const { archived } = parsed.data
-      if (archived !== (existing.archivedAt !== null)) {
+      const { archived, ...fields } = parsed.data
+      if (fields.meetingId) {
+        const meeting = await fastify.prisma.governanceMeeting.findUnique({
+          where: { id: fields.meetingId },
+          select: { id: true },
+        })
+        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
+      }
+      const changed = (Object.keys(fields) as Array<keyof typeof fields>).filter((key) => {
+        const before = existing[key]
+        const after = fields[key]
+        return before instanceof Date || after instanceof Date
+          ? (before as Date | null)?.getTime() !== (after as Date | null)?.getTime()
+          : before !== after
+      })
+      if (changed.length > 0) {
+        await fastify.prisma.governanceDocument.update({
+          where: { id },
+          data: Object.fromEntries(changed.map((key) => [key, fields[key]])),
+        })
+        await auditLog(fastify.prisma, {
+          action: 'DOCUMENT_UPDATE',
+          actorId: request.sessionUser!.id,
+          targetId: id,
+          meta: { title: fields.title ?? existing.title, changed },
+        })
+      }
+
+      if (archived !== undefined && archived !== (existing.archivedAt !== null)) {
         await fastify.prisma.governanceDocument.update({
           where: { id },
           data: { archivedAt: archived ? new Date() : null },

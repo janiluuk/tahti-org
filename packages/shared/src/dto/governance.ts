@@ -330,7 +330,18 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
 
-/** PATCH /api/admin/governance/documents/:id */
-export const ArchiveGovernanceDocumentSchema = z.object({
-  archived: z.boolean(),
-})
+/** PATCH /api/admin/governance/documents/:id — archive/restore and edit the
+ * document's own fields. The type, version and file stay: a changed file is a
+ * new version. */
+export const PatchGovernanceDocumentSchema = z
+  .object({
+    archived: z.boolean(),
+    title: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(5000).nullable(),
+    externalUrl: z.string().url().max(1000).nullable(),
+    effectiveAt: z.coerce.date().nullable(),
+    publishedAt: z.coerce.date().nullable(),
+    meetingId: z.string().cuid().nullable(),
+  })
+  .partial()
+  .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
