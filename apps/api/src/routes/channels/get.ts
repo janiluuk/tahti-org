@@ -72,6 +72,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       slideshowIntervalSeconds: true,
       slideshowTransitionMs: true,
       slideshowAutoplay: true,
+      autoplayEnabled: true,
       usePlayerGradient: true,
       playerColorSchemeJson: true,
       useBackgroundGradient: true,
