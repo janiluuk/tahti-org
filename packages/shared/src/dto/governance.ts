@@ -339,6 +339,37 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
 
+/** GET /api/v1/governance/association — the association's registered
+ * identity and contacts. Every field is null until the board fills it in. */
+export const AssociationProfileSchema = z.object({
+  name: z.string().nullable(),
+  businessId: z.string().nullable(),
+  registerNumber: z.string().nullable(),
+  domicile: z.string().nullable(),
+  contactEmail: z.string().nullable(),
+  postalAddress: z.string().nullable(),
+  website: z.string().nullable(),
+  updatedAt: z.coerce.date().nullable(),
+})
+
+/** PATCH /api/admin/governance/association — null clears a field. */
+export const PatchAssociationProfileSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200).nullable(),
+    businessId: z
+      .string()
+      .trim()
+      .regex(/^\d{7}-\d$/, 'Business ID must look like 1234567-8')
+      .nullable(),
+    registerNumber: z.string().trim().min(1).max(40).nullable(),
+    domicile: z.string().trim().min(1).max(100).nullable(),
+    contactEmail: z.string().trim().email().max(200).nullable(),
+    postalAddress: z.string().trim().min(1).max(500).nullable(),
+    website: z.string().trim().url().max(500).nullable(),
+  })
+  .partial()
+  .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
+
 /** PUT /api/admin/governance/documents/:id/legal-hold */
 export const GovernanceDocumentLegalHoldSchema = z.object({
   reason: z.string().trim().min(1).max(500),

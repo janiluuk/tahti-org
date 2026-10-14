@@ -25,6 +25,7 @@ import adminAccountRestrictionRoutes from '../routes/admin/account-restrictions.
 import adminResolutionsRoutes from '../routes/admin/resolutions.js'
 import governanceRecordsRoutes from '../routes/admin/governance-records.js'
 import governanceDocumentHoldRoutes from '../routes/admin/governance-document-hold.js'
+import associationRoutes from '../routes/governance/association.js'
 import adminGovernanceCorrectionRoutes from '../routes/admin/governance-corrections.js'
 import adminGovernanceOverviewRoutes from '../routes/admin/governance-overview.js'
 import adminReportsRoutes from '../routes/admin/reports.js'
@@ -66,6 +67,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(governanceRecordsRoutes)
   await fastify.register(governanceDocumentHoldRoutes)
+  await fastify.register(associationRoutes)
   await fastify.register(adminGovernanceCorrectionRoutes)
   await fastify.register(adminGovernanceOverviewRoutes)
   await fastify.register(adminReportsRoutes)
