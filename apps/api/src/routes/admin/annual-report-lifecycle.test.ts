@@ -18,7 +18,7 @@ vi.mock('../../lib/minio.js', () => ({
 }))
 
 const PREFIX = 'annual-lifecycle-'
-const YEARS = { gte: 2090, lte: 2099 }
+const YEARS = { gte: 2089, lte: 2099 }
 // Audit entries cannot be removed, so only this run's count.
 const STARTED = new Date()
 
@@ -297,6 +297,65 @@ describe('annual report lifecycle', () => {
       expect((await archive(2099, true, memberCookie)).statusCode).toBe(403)
       expect((await archive(2099, 'yes')).statusCode).toBe(400)
       expect((await archive(2098, true)).statusCode).toBe(404)
+    })
+  })
+  describe('legal hold', () => {
+    function hold(method: 'PUT' | 'DELETE', payload?: Record<string, unknown>) {
+      return app.inject({
+        method,
+        url: '/api/admin/reports/annual/2089/legal-hold',
+        headers: { cookie: boardCookie },
+        ...(payload ? { payload } : {}),
+      })
+    }
+
+    it('keeps a held report from being regenerated, corrected or archived', async () => {
+      await generate(2089)
+      expect((await hold('PUT', { reason: 'Requested by the auditor' })).json()).toMatchObject({
+        legalHoldReason: 'Requested by the auditor',
+      })
+      expect((await generate(2089)).statusCode).toBe(409)
+      await post('/api/admin/reports/annual/2089/approve')
+      expect((await post('/api/admin/reports/annual/2089/correct', { note: 'x' })).statusCode).toBe(
+        409,
+      )
+      const archive = await app.inject({
+        method: 'PATCH',
+        url: '/api/admin/reports/annual/2089',
+        headers: { cookie: boardCookie },
+        payload: { archived: true },
+      })
+      expect(archive.statusCode).toBe(409)
+
+      const lifted = await hold('DELETE')
+      expect(lifted.json()).toMatchObject({ legalHoldAt: null, legalHoldReason: null })
+      expect((await post('/api/admin/reports/annual/2089/correct', { note: 'x' })).statusCode).toBe(
+        200,
+      )
+
+      const audits = await prisma.auditLog.findMany({
+        where: {
+          action: 'ANNUAL_REPORT_LEGAL_HOLD',
+          targetId: '2089',
+          createdAt: { gte: STARTED },
+        },
+        orderBy: { id: 'asc' },
+      })
+      expect(audits.map((a) => a.meta)).toEqual([
+        { year: 2089, held: true, reason: 'Requested by the auditor' },
+        { year: 2089, held: false },
+      ])
+    })
+
+    it('needs a reason and an existing report', async () => {
+      expect((await hold('PUT', { reason: '' })).statusCode).toBe(400)
+      const missing = await app.inject({
+        method: 'PUT',
+        url: '/api/admin/reports/annual/2098/legal-hold',
+        headers: { cookie: boardCookie },
+        payload: { reason: 'x' },
+      })
+      expect(missing.statusCode).toBe(404)
     })
   })
 })

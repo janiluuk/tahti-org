@@ -446,6 +446,7 @@ enum AuditAction {
   ANNUAL_REPORT_FILE
   ANNUAL_REPORT_CORRECT
   ANNUAL_REPORT_ARCHIVE
+  ANNUAL_REPORT_LEGAL_HOLD
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
@@ -3999,6 +4000,11 @@ model AnnualReport {
   /// Set when the board takes the report out of the member list. The row,
   /// its file and its revisions stay.
   archivedAt        DateTime?
+
+  /// Set while a legal hold keeps the report as it is: not regenerated,
+  /// corrected or archived.
+  legalHoldAt     DateTime?
+  legalHoldReason String?
 
   @@schema("admin")
 }
