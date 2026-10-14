@@ -78,3 +78,20 @@ export const GovernanceElectionResultSchema = z.object({
   candidates: GovernanceElectionCandidateListSchema,
   terms: GovernanceBoardTermListSchema,
 })
+
+/** GET /api/v1/governance/elections — elections with the candidates standing
+ * (withdrawn candidacies left out), newest first. */
+export const MemberGovernanceElectionListSchema = z.array(
+  GovernanceElectionSchema.extend({
+    nominationsOpen: z.boolean(),
+    candidates: z.array(
+      z.object({
+        displayName: z.string(),
+        username: z.string().nullable(),
+        statement: z.string().nullable(),
+        elected: z.boolean(),
+      }),
+    ),
+    youAreCandidate: z.boolean(),
+  }),
+)
