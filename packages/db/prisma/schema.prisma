@@ -433,6 +433,7 @@ enum AuditAction {
   MEETING_CREATE
   MEETING_UPDATE
   MEETING_ATTENDANCE_UPSERT
+  MEETING_LEGAL_HOLD
   DOCUMENT_CREATE
   DOCUMENT_UPDATE
   DOCUMENT_ARCHIVE
@@ -2481,6 +2482,10 @@ model GovernanceMeeting {
   /// Distinct from minutesSignedAt: minutes can be approved+signed
   /// internally well before the board chooses to publish them to members.
   minutesPublishedAt  DateTime?
+  /// Set while a legal hold keeps the meeting record (minutes, attendance,
+  /// conflicts, agenda) exactly as it is.
+  legalHoldAt         DateTime?
+  legalHoldReason     String?
   createdById         String
   createdBy           User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt           DateTime               @default(now())

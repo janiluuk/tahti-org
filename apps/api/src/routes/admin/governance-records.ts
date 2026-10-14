@@ -23,50 +23,14 @@ import {
   openApiResponses,
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
-import { presignedGetUrl, presignedPutUrl } from '../../lib/minio.js'
+import { presignedPutUrl } from '../../lib/minio.js'
 import { documentResponse } from '../../lib/governance-documents.js'
+import { MEETING_HELD, meetingResponse } from '../../lib/governance-meetings.js'
 import { auditLog } from '../../lib/audit.js'
 import { resolveAgendaLinks } from '../../lib/agenda-links.js'
 import { sendMeetingNoticeAndRecordDeliveries } from '../../lib/governance-notice.js'
 
 const MINUTES_PRESIGN_TTL_SEC = 900
-
-async function meetingResponse(meeting: {
-  id: string
-  title: string
-  type: string
-  state: string
-  scheduledAt: Date | null
-  location: string | null
-  remoteUrl: string | null
-  noticeAt: Date | null
-  agenda: unknown
-  minutesKey: string | null
-  minutesApprovedAt: Date | null
-  minutesRedacted: boolean
-  minutesPublishedAt: Date | null
-  minutesSignedByName: string | null
-  minutesSignedAt: Date | null
-  eligibleMemberCount: number | null
-  quorumRequired: number | null
-  chairName: string | null
-  secretaryName: string | null
-  createdAt: Date
-  updatedAt: Date
-  attendance: Array<{ status: string }>
-}) {
-  const presentCount = meeting.attendance.filter((record) => record.status === 'PRESENT').length
-  return {
-    ...meeting,
-    attendance: undefined,
-    minutesUrl: meeting.minutesKey
-      ? await presignedGetUrl(meeting.minutesKey, 3600, 'minutes.pdf').catch(() => null)
-      : null,
-    attendanceCount: meeting.attendance.length,
-    presentCount,
-    quorumMet: meeting.quorumRequired === null ? null : presentCount >= meeting.quorumRequired,
-  }
-}
 
 function pagination(request: { query?: unknown }) {
   const query = (request.query ?? {}) as { limit?: string; cursor?: string }
@@ -109,7 +73,10 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         take: limit + 1,
         include: { attendance: { select: { status: true } } },
       })
-      return reply.send(nextCursor(reply, await Promise.all(meetings.map(meetingResponse)), limit))
+      const rows = await Promise.all(
+        meetings.map((meeting) => meetingResponse({ ...meeting, legalHoldReason: null })),
+      )
+      return reply.send(nextCursor(reply, rows, limit))
     },
   )
 
@@ -245,6 +212,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       const meeting = await fastify.prisma.governanceMeeting.findUnique({ where: { id } })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
       const updated = await fastify.prisma.governanceMeeting.update({
         where: { id },
         data: {
@@ -360,6 +328,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const meeting = await fastify.prisma.governanceMeeting.findUnique({ where: { id } })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
 
       const minutesKey = `governance/meetings/${id}/minutes-${Date.now()}.pdf`
       const uploadUrl = await presignedPutUrl(
@@ -453,6 +422,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: meetingId },
       })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
       const existing = parsed.data.memberId
         ? await fastify.prisma.governanceAttendance.findFirst({
             where: { meetingId, memberId: parsed.data.memberId },
@@ -524,6 +494,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: meetingId },
       })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
       const record = await fastify.prisma.governanceConflictDeclaration.create({
         data: { meetingId, ...parsed.data },
       })
