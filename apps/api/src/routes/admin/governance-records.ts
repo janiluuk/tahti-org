@@ -24,48 +24,11 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { presignedGetUrl, presignedPutUrl } from '../../lib/minio.js'
+import { documentResponse } from '../../lib/governance-documents.js'
 import { auditLog } from '../../lib/audit.js'
 import { sendMeetingNoticeAndRecordDeliveries } from '../../lib/governance-notice.js'
 
 const MINUTES_PRESIGN_TTL_SEC = 900
-
-async function documentResponse(document: {
-  id: string
-  title: string
-  type: string
-  description: string | null
-  version: number
-  effectiveAt: Date | null
-  publishedAt: Date | null
-  meetingId: string | null
-  storageKey: string | null
-  externalUrl: string | null
-  supersedesId: string | null
-  supersededBy?: { id: string } | null
-  archivedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-}) {
-  return {
-    id: document.id,
-    title: document.title,
-    type: document.type,
-    description: document.description,
-    version: document.version,
-    effectiveAt: document.effectiveAt,
-    publishedAt: document.publishedAt,
-    meetingId: document.meetingId,
-    downloadUrl: document.storageKey
-      ? await presignedGetUrl(document.storageKey, 3600).catch(() => null)
-      : null,
-    externalUrl: document.externalUrl,
-    supersedesId: document.supersedesId,
-    supersededById: document.supersededBy?.id ?? null,
-    archivedAt: document.archivedAt,
-    createdAt: document.createdAt,
-    updatedAt: document.updatedAt,
-  }
-}
 
 async function meetingResponse(meeting: {
   id: string
@@ -171,6 +134,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         documents.map((document) =>
           documentResponse({
             ...document,
+            legalHoldReason: null,
             // A successor the board has not published yet is not shown, and
             // neither is a link back to a version members cannot see.
             supersededBy:
@@ -681,6 +645,11 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!existing) return reply.status(404).send({ error: 'Document not found' })
 
       const { archived, ...fields } = parsed.data
+      if (existing.legalHoldAt && (archived === true || Object.keys(fields).length > 0)) {
+        return reply
+          .status(409)
+          .send({ error: 'The document is under a legal hold and cannot be changed' })
+      }
       if (fields.meetingId) {
         const meeting = await fastify.prisma.governanceMeeting.findUnique({
           where: { id: fields.meetingId },
