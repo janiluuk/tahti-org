@@ -400,6 +400,7 @@ enum AuditAction {
   AUDITOR_TERM_END
   BOARD_TERM_RECORD
   BOARD_TERM_END
+  ELECTION_CREATE
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -2501,6 +2502,7 @@ model GovernanceMeeting {
   boardTerms            GovernanceBoardTerm[]
   annualReportsApproved AnnualReport[]
   agendaItems           GovernanceAgendaItem[]
+  elections             GovernanceElection[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -2617,6 +2619,27 @@ model GovernanceAgendaItem {
   documents   GovernanceDocument[]
 
   @@index([meetingId, position])
+  @@schema("governance")
+}
+
+/// A board election held at a meeting: which role, how many seats, and when
+/// nominations close. Ballots are not modeled: the meeting votes, and the
+/// board records who was elected.
+model GovernanceElection {
+  id                 String              @id @default(cuid())
+  title              String
+  role               GovernanceBoardRole
+  seats              Int
+  meetingId          String?
+  meeting            GovernanceMeeting?  @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  nominationsCloseAt DateTime?
+  /// Set once the board records the result.
+  decidedAt          DateTime?
+  createdById        String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([createdAt])
   @@schema("governance")
 }
 
