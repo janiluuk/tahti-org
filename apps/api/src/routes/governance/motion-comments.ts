@@ -22,8 +22,11 @@ const CommentParamsSchema = z.object({
 
 const motionCommentRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/v1/governance/motions/:id/comments/:commentId — the author
-  // removes their own comment. Only while the motion is not CLOSED: a closed
-  // motion's discussion is the record of how the decision was reached.
+  // removes their own comment, or a board member removes anyone's. An author
+  // can only do it while the motion is not CLOSED: a closed motion's
+  // discussion is the record of how the decision was reached. The board can
+  // remove a comment in any state, since something that must not stay up
+  // (personal data, abuse) can be noticed after voting has ended.
   fastify.delete(
     '/api/v1/governance/motions/:id/comments/:commentId',
     {
@@ -45,10 +48,11 @@ const motionCommentRoutes: FastifyPluginAsync = async (fastify) => {
         select: { authorId: true, removedAt: true, motion: { select: { state: true } } },
       })
       if (!comment) return reply.status(404).send({ error: 'Comment not found' })
-      if (comment.authorId !== user.id) {
+      const byAuthor = comment.authorId === user.id
+      if (!byAuthor && !user.isBoard) {
         return reply.status(403).send({ error: 'You can only remove your own comment' })
       }
-      if (comment.motion.state === 'CLOSED') {
+      if (comment.motion.state === 'CLOSED' && !user.isBoard) {
         return reply.status(409).send({ error: 'This motion is closed; its discussion is kept' })
       }
       if (comment.removedAt) return reply.send({ ok: true })
@@ -61,7 +65,7 @@ const motionCommentRoutes: FastifyPluginAsync = async (fastify) => {
         action: 'MOTION_COMMENT_REMOVE',
         actorId: user.id,
         targetId: id,
-        meta: { commentId: routeParams.commentId, byAuthor: true },
+        meta: { commentId: routeParams.commentId, byAuthor },
       })
       return reply.send({ ok: true })
     },

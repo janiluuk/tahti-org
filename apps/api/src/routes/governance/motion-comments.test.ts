@@ -164,6 +164,25 @@ describe('removing a motion comment', () => {
     expect((await thread(motionId))[0]).toMatchObject({ body: 'On the record', removed: false })
   })
 
+  it("lets the board remove a member's comment, even after the motion closed", async () => {
+    const motionId = await motion()
+    const posted = await comment(motionId, authorCookie, 'Something that must not stay up')
+    await setState(motionId, 'OPEN')
+    await setState(motionId, 'CLOSED')
+
+    const res = await remove(motionId, posted.id, boardCookie)
+    expect(res.statusCode).toBe(200)
+    expect((await thread(motionId))[0]).toMatchObject({
+      body: '',
+      removed: true,
+      authorDisplayName: 'Comment author',
+    })
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'MOTION_COMMENT_REMOVE', targetId: motionId },
+    })
+    expect(audit?.meta).toMatchObject({ commentId: posted.id, byAuthor: false })
+  })
+
   it('answers 404 for a comment that is not on that motion, and 400 for a bad id', async () => {
     const motionId = await motion()
     const elsewhere = await motion()
