@@ -398,6 +398,7 @@ enum AuditAction {
   ASSOCIATION_PROFILE_UPDATE
   AUDITOR_APPOINT
   AUDITOR_TERM_END
+  BOARD_TERM_RECORD
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -934,6 +935,7 @@ model User {
   motionComments                 MotionComment[]
   motionSeconds                  MotionSecond[]
   motionResultCorrections        MotionResultCorrection[]
+  governanceBoardTerms           GovernanceBoardTerm[]
   correctionRequests             GovernanceCorrectionRequest[]
   grants                         GrantDisbursement[]
   fanTiers                       FanTier[]
@@ -2474,6 +2476,7 @@ model GovernanceMeeting {
   boardResolutions     BoardResolution[]
   motions              Motion[]
   auditors             GovernanceAuditor[]
+  boardTerms           GovernanceBoardTerm[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -2554,6 +2557,42 @@ model AssociationProfile {
   updatedById    String?
   updatedAt      DateTime @updatedAt
 
+  @@schema("governance")
+}
+
+enum GovernanceBoardRole {
+  CHAIR
+  VICE_CHAIR
+  SECRETARY
+  TREASURER
+  MEMBER
+  DEPUTY
+
+  @@schema("governance")
+}
+
+/// A board member's elected role and term. Separate from `User.isBoard`, which
+/// grants access to board tools: recording a term changes no one's access.
+/// The name is kept as it was, so the history survives a deleted account.
+model GovernanceBoardTerm {
+  id          String              @id @default(cuid())
+  userId      String?
+  user        User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName String
+  role        GovernanceBoardRole
+  termStart   DateTime
+  termEnd     DateTime?
+  /// Why the term ended early (resignation, removal), when it did.
+  endReason   String?
+  /// The meeting that elected them, if recorded.
+  meetingId   String?
+  meeting     GovernanceMeeting?  @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([termStart])
+  @@index([userId])
   @@schema("governance")
 }
 
