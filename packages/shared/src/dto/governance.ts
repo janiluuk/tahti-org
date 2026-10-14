@@ -287,6 +287,10 @@ export const GovernanceDocumentItemSchema = z.object({
   supersededById: z.string().nullable(),
   // Archived documents are left out of the member list; the board still sees them.
   archivedAt: z.coerce.date().nullable(),
+  // A document under a legal hold cannot be edited or archived. The reason is
+  // shown to the board only.
+  legalHoldAt: z.coerce.date().nullable(),
+  legalHoldReason: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -329,6 +333,11 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 })
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
+
+/** PUT /api/admin/governance/documents/:id/legal-hold */
+export const GovernanceDocumentLegalHoldSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+})
 
 /** PATCH /api/admin/governance/documents/:id — archive/restore and edit the
  * document's own fields. The type, version and file stay: a changed file is a
