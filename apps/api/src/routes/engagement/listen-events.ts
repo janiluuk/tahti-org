@@ -46,7 +46,15 @@ const listenEventsRoutes: FastifyPluginAsync = async (fastify) => {
   // "not eligible"/"already counted" — those just return recorded: false.
   fastify.post(
     '/api/listen-events',
-    { schema: { response: openApiResponse(RecordListenResponseSchema, 'RecordListen') } },
+    {
+      schema: {
+        tags: ['engagement'],
+        summary: 'Record a counted listen',
+        description:
+          'Player fires once a track has played long enough to count. `{ recorded: false }` is success for ineligible/already-counted/own-track — never an error. Signed-in ListenBrainz/Last.fm scrobbles are fire-and-forget and never change this body.',
+        response: openApiResponse(RecordListenResponseSchema, 'RecordListen'),
+      },
+    },
     async (request, reply) => {
       const parsed = RecordListenSchema.safeParse(request.body)
       if (!parsed.success) {
