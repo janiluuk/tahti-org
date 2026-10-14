@@ -22,8 +22,9 @@ const internalDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['internal'],
+        summary: 'Discord bot credentials for the radio process',
         description:
-          'Plaintext Discord bot credentials for the Tahti Radio Discord bot process. INTERNAL_SECRET only.',
+          'Plaintext Discord bot credentials for the Tahti Radio Discord bot process. INTERNAL_SECRET only. Not in the public OpenAPI document.',
         response: openApiResponse(
           InternalDiscordBotCredentialsSchema,
           'InternalDiscordBotCredentials',
@@ -49,6 +50,7 @@ const internalDiscordBotRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['internal'],
+        summary: 'Discord bot liveness heartbeat',
         description: 'Discord bot self-reports liveness. INTERNAL_SECRET only.',
         body: {
           type: 'object',
