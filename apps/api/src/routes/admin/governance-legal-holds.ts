@@ -2,7 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { GovernanceLegalHoldListSchema, openApiResponse } from '@tahti/shared'
+import {
+  GovernanceLegalHoldListSchema,
+  GovernanceLegalHoldQuerySchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 
 // One place to see what is under a legal hold. Holds live on each record
@@ -19,23 +23,36 @@ const governanceLegalHoldRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(GovernanceLegalHoldListSchema, 'GovernanceLegalHoldList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const query = GovernanceLegalHoldQuerySchema.safeParse(request.query ?? {})
+      if (!query.success) return reply.status(400).send({ error: 'Invalid kind filter' })
+      const wanted = new Set(
+        query.data.kind ?? ['MEETING', 'DOCUMENT', 'RESOLUTION', 'ANNUAL_REPORT'],
+      )
       const held = { legalHoldAt: { not: null } } as const
       const hold = { legalHoldAt: true, legalHoldReason: true } as const
       const [meetings, documents, resolutions, reports] = await Promise.all([
-        fastify.prisma.governanceMeeting.findMany({
-          where: held,
-          select: { id: true, title: true, ...hold },
-        }),
-        fastify.prisma.governanceDocument.findMany({
-          where: held,
-          select: { id: true, title: true, version: true, ...hold },
-        }),
-        fastify.prisma.boardResolution.findMany({
-          where: held,
-          select: { id: true, title: true, ...hold },
-        }),
-        fastify.prisma.annualReport.findMany({ where: held, select: { year: true, ...hold } }),
+        wanted.has('MEETING')
+          ? fastify.prisma.governanceMeeting.findMany({
+              where: held,
+              select: { id: true, title: true, ...hold },
+            })
+          : [],
+        wanted.has('DOCUMENT')
+          ? fastify.prisma.governanceDocument.findMany({
+              where: held,
+              select: { id: true, title: true, version: true, ...hold },
+            })
+          : [],
+        wanted.has('RESOLUTION')
+          ? fastify.prisma.boardResolution.findMany({
+              where: held,
+              select: { id: true, title: true, ...hold },
+            })
+          : [],
+        wanted.has('ANNUAL_REPORT')
+          ? fastify.prisma.annualReport.findMany({ where: held, select: { year: true, ...hold } })
+          : [],
       ])
       const rows = [
         ...meetings.map((m) => ({ kind: 'MEETING' as const, ...m })),

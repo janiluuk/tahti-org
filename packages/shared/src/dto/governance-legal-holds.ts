@@ -21,3 +21,12 @@ export const GovernanceLegalHoldListSchema = z.array(
     legalHoldReason: z.string().nullable(),
   }),
 )
+
+/** ?kind=MEETING,DOCUMENT — only these kinds of record. */
+export const GovernanceLegalHoldQuerySchema = z.object({
+  kind: z
+    .string()
+    .transform((raw) => [...new Set(raw.split(',').map((value) => value.trim()))])
+    .pipe(z.array(GovernanceLegalHoldKindSchema).min(1))
+    .optional(),
+})
