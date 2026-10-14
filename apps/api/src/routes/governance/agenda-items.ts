@@ -27,6 +27,7 @@ const ITEM_SELECT = {
   position: true,
   title: true,
   description: true,
+  outcome: true,
 } as const
 
 // Once the minutes are approved the agenda is part of the record: the
@@ -83,6 +84,8 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         items.map((item) => ({
           ...item,
+          // The board's working note on the decision; members read the minutes.
+          outcome: null,
           resolutions: item.resolutions.map((r) => ({ ...r, id: r.id.toString() })),
         })),
       )

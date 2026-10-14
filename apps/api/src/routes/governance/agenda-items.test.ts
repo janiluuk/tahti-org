@@ -128,6 +128,29 @@ describe('meeting agenda items', () => {
     expect(cleared.json().description).toBeNull()
   })
 
+  it('records what the meeting decided on an item, and can clear it', async () => {
+    const [item] = await list()
+    const patch = (payload: Record<string, unknown>) =>
+      app.inject({
+        method: 'PATCH',
+        url: `/api/admin/governance/agenda-items/${item!.id}`,
+        headers: { cookie: boardCookie },
+        payload,
+      })
+    const res = await patch({ outcome: 'The meeting was declared open and quorate.' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ outcome: 'The meeting was declared open and quorate.' })
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'AGENDA_ITEM_UPDATE', targetId: item!.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(audit?.meta).toMatchObject({ changed: ['outcome'] })
+    expect((await list())[0]).toMatchObject({
+      outcome: 'The meeting was declared open and quorate.',
+    })
+    expect((await patch({ outcome: null })).json().outcome).toBeNull()
+  })
+
   it('rejects members, unknown meetings and empty edits', async () => {
     expect((await add({ title: 'Sneaky' }, memberCookie)).statusCode).toBe(403)
     expect(

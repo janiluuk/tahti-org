@@ -9,6 +9,8 @@ export const GovernanceAgendaItemSchema = z.object({
   position: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
+  // What the meeting decided on the item.
+  outcome: z.string().nullable(),
 })
 
 export const GovernanceAgendaItemListSchema = z.array(GovernanceAgendaItemSchema)
@@ -19,11 +21,13 @@ export const CreateGovernanceAgendaItemSchema = z.object({
   description: z.string().trim().min(1).max(5000).optional(),
 })
 
-/** PATCH /api/admin/governance/agenda-items/:id — null clears the description. */
+/** PATCH /api/admin/governance/agenda-items/:id — null clears the
+ * description or the outcome. */
 export const PatchGovernanceAgendaItemSchema = z
   .object({
     title: z.string().trim().min(1).max(300),
     description: z.string().trim().min(1).max(5000).nullable(),
+    outcome: z.string().trim().min(1).max(5000).nullable(),
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
