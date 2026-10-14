@@ -23,7 +23,10 @@ describe('board elections', () => {
 
   async function cleanup() {
     await prisma.notification.deleteMany({
-      where: { type: { in: ['ELECTION_OPENED'] }, body: { contains: '"Election ' } },
+      where: {
+        type: { in: ['ELECTION_OPENED', 'ELECTION_RESULT'] },
+        body: { contains: '"Election ' },
+      },
     })
     await prisma.governanceBoardTerm.deleteMany({
       where: { displayName: { startsWith: 'Election ' } },
@@ -390,6 +393,18 @@ describe('board elections', () => {
 
       expect((await record({ electedUserIds: [ids.member], termStart: iso(30) })).statusCode).toBe(
         409,
+      )
+
+      const told = await prisma.notification.findMany({
+        where: { type: 'ELECTION_RESULT', body: { contains: '"Election of two members"' } },
+        select: { userId: true, title: true },
+      })
+      expect(told.map((row) => [row.userId, row.title]).sort()).toEqual(
+        [
+          [ids.board, 'An election you stood in is decided'],
+          [ids.member, 'You were elected'],
+          [ids.other, 'You were elected'],
+        ].sort(),
       )
     })
   })

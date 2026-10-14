@@ -31,3 +31,34 @@ export async function notifyMembersOfElectionOpened(
   })
   return ids.length
 }
+
+/**
+ * Tells each standing candidate the result of their election, whether or not
+ * they were elected. The result was only on the governance page. Returns how
+ * many were told.
+ */
+export async function notifyCandidatesOfElectionResult(
+  prisma: PrismaClient,
+  election: { title: string },
+  candidates: Array<{ userId: string | null; elected: boolean; withdrawnAt: Date | null }>,
+  actorUserId: string,
+): Promise<number> {
+  const standing = candidates.filter(
+    (candidate): candidate is typeof candidate & { userId: string } =>
+      candidate.userId !== null && candidate.withdrawnAt === null,
+  )
+  if (standing.length === 0) return 0
+  await prisma.notification.createMany({
+    data: standing.map((candidate) => ({
+      userId: candidate.userId,
+      type: 'ELECTION_RESULT' as const,
+      actorUserId,
+      title: candidate.elected ? 'You were elected' : 'An election you stood in is decided',
+      body: candidate.elected
+        ? `The meeting elected you in "${election.title}".`
+        : `The result of "${election.title}" is recorded.`,
+      url: '/governance/elections',
+    })),
+  })
+  return standing.length
+}

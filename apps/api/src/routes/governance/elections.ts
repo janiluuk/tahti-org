@@ -22,7 +22,10 @@ import {
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { boardTermClash } from '../../lib/board-terms.js'
-import { notifyMembersOfElectionOpened } from '../../lib/election-notifications.js'
+import {
+  notifyCandidatesOfElectionResult,
+  notifyMembersOfElectionOpened,
+} from '../../lib/election-notifications.js'
 
 // Board elections. A term could name the meeting that elected it, but
 // nothing recorded the election itself: the role, the seats, and who stood.
@@ -672,6 +675,11 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       const { candidates, ...rest } = election
+      await notifyCandidatesOfElectionResult(fastify.prisma, election, candidates, actorId).catch(
+        (err: unknown) => {
+          request.log.error({ err, electionId: election.id }, 'election-result notification failed')
+        },
+      )
       return reply.send({
         election: rest,
         candidates: candidates.map(candidateRow),

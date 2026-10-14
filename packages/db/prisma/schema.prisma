@@ -674,6 +674,8 @@ enum NotificationType {
   CORRECTION_RESOLVED
   /// The board set up a board election that takes nominations; sent to every other member.
   ELECTION_OPENED
+  /// The board recorded the result of an election you stood in.
+  ELECTION_RESULT
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
