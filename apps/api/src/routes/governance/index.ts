@@ -162,6 +162,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           // lookup — this page has no per-motion detail fetch, so the list
           // response is the only place a CLOSED motion's tally is ever shown.
           votes: { select: { userId: true, choice: true } },
+          seconds: { select: { userId: true } },
         },
       })
 
@@ -192,6 +193,8 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             yourChoice: myVote?.choice ?? null,
             commentCount: m._count.comments,
             eligibleMemberCount: m.eligibleMemberCount,
+            secondCount: m.seconds.length,
+            youSeconded: m.seconds.some((s) => s.userId === user.id),
             tally,
           }
         }),
@@ -265,6 +268,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         include: {
           proposer: { select: { displayName: true, username: true } },
           votes: { select: { userId: true, choice: true } },
+          seconds: { select: { userId: true } },
           _count: { select: { comments: true } },
         },
       })
@@ -286,6 +290,8 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         yourChoice: myVote?.choice ?? null,
         commentCount: motion._count.comments,
         eligibleMemberCount: motion.eligibleMemberCount,
+        secondCount: motion.seconds.length,
+        youSeconded: motion.seconds.some((s) => s.userId === user.id),
       }
 
       // Per-choice tally is published only once voting has closed.
