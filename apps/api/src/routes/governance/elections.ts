@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { PrismaClient } from '@tahti/db'
 import {
+  CancelGovernanceElectionSchema,
   CreateGovernanceElectionSchema,
   GovernanceElectionCandidateListSchema,
   GovernanceElectionListSchema,
@@ -34,6 +35,8 @@ const ELECTION_SELECT = {
   meetingId: true,
   nominationsCloseAt: true,
   decidedAt: true,
+  cancelledAt: true,
+  cancelReason: true,
   createdAt: true,
 } as const
 
@@ -100,6 +103,13 @@ async function nominate(
   })
 }
 
+/** Why an election no longer takes changes, if it does not. */
+function closedError(election: { decidedAt: Date | null; cancelledAt: Date | null }) {
+  if (election.decidedAt) return 'The result of this election is recorded'
+  if (election.cancelledAt) return 'This election was cancelled'
+  return null
+}
+
 const same = (a: unknown, b: unknown) =>
   (a instanceof Date ? a.getTime() : a) === (b instanceof Date ? b.getTime() : b)
 
@@ -152,6 +162,7 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
           ...election,
           nominationsOpen:
             !election.decidedAt &&
+            !election.cancelledAt &&
             (!election.nominationsCloseAt || election.nominationsCloseAt > now),
           candidates: candidates.map(({ user, userId: _userId, ...candidate }) => ({
             ...candidate,
@@ -166,7 +177,13 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
   async function findElection(id: string) {
     return fastify.prisma.governanceElection.findUnique({
       where: { id },
-      select: { id: true, title: true, decidedAt: true, nominationsCloseAt: true },
+      select: {
+        id: true,
+        title: true,
+        decidedAt: true,
+        cancelledAt: true,
+        nominationsCloseAt: true,
+      },
     })
   }
 
@@ -255,9 +272,8 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
         select: ELECTION_SELECT,
       })
       if (!existing) return reply.status(404).send({ error: 'Election not found' })
-      if (existing.decidedAt) {
-        return reply.status(409).send({ error: 'The result of this election is recorded' })
-      }
+      const closed = closedError(existing)
+      if (closed) return reply.status(409).send({ error: closed })
       const { seats, meetingId } = parsed.data
       if (seats !== undefined && existing.role === 'CHAIR' && seats !== 1) {
         return reply.status(400).send({ error: 'There is one chair' })
@@ -273,9 +289,9 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
         (key) => parsed.data[key] !== undefined && !same(parsed.data[key], existing[key]),
       )
       if (changed.length === 0) return reply.send(existing)
-      // The result cannot be recorded in between: it also checks decidedAt.
+      // The result cannot be recorded (or the election called off) in between.
       const updated = await fastify.prisma.governanceElection.updateMany({
-        where: { id: existing.id, decidedAt: null },
+        where: { id: existing.id, decidedAt: null, cancelledAt: null },
         data: parsed.data,
       })
       if (updated.count === 0) {
@@ -290,6 +306,49 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         await fastify.prisma.governanceElection.findUniqueOrThrow({
           where: { id: existing.id },
+          select: ELECTION_SELECT,
+        }),
+      )
+    },
+  )
+
+  // Calling an election off (the role was dropped from the agenda, or it is
+  // run again from scratch). The candidacies stay as they were.
+  fastify.post(
+    '/api/admin/governance/elections/:id/cancel',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceElectionListSchema.element, 'GovernanceElection'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = CancelGovernanceElectionSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const election = await findElection(routeParams.id)
+      if (!election) return reply.status(404).send({ error: 'Election not found' })
+      const cancelled = await fastify.prisma.governanceElection.updateMany({
+        where: { id: election.id, decidedAt: null, cancelledAt: null },
+        data: { cancelledAt: new Date(), cancelReason: parsed.data.reason },
+      })
+      if (cancelled.count === 0) {
+        return reply.status(409).send({ error: closedError(election) ?? 'Election is closed' })
+      }
+      await auditLog(fastify.prisma, {
+        action: 'ELECTION_CANCEL',
+        actorId: request.sessionUser!.id,
+        targetId: election.id,
+        meta: { title: election.title, reason: parsed.data.reason },
+      })
+      return reply.send(
+        await fastify.prisma.governanceElection.findUniqueOrThrow({
+          where: { id: election.id },
           select: ELECTION_SELECT,
         }),
       )
@@ -350,9 +409,8 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       const election = await findElection(routeParams.id)
       if (!election) return reply.status(404).send({ error: 'Election not found' })
-      if (election.decidedAt) {
-        return reply.status(409).send({ error: 'The result of this election is recorded' })
-      }
+      const closed = closedError(election)
+      if (closed) return reply.status(409).send({ error: closed })
       const user = await fastify.prisma.user.findUnique({
         where: { id: parsed.data.userId },
         select: { id: true, displayName: true, isMember: true },
@@ -410,6 +468,7 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!election) return reply.status(404).send({ error: 'Election not found' })
       if (
         election.decidedAt ||
+        election.cancelledAt ||
         (election.nominationsCloseAt && election.nominationsCloseAt <= new Date())
       ) {
         return reply.status(409).send({ error: 'Nominations for this election are closed' })
@@ -452,9 +511,8 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const election = await findElection(routeParams.id)
       if (!election) return reply.status(404).send({ error: 'Election not found' })
-      if (election.decidedAt) {
-        return reply.status(409).send({ error: 'The result of this election is recorded' })
-      }
+      const closed = closedError(election)
+      if (closed) return reply.status(409).send({ error: closed })
       const userId = request.sessionUser!.id
       const candidate = await fastify.prisma.governanceElectionCandidate.findUnique({
         where: { electionId_userId: { electionId: election.id, userId } },
@@ -506,12 +564,18 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
           await tx.$queryRaw`SELECT id FROM "governance"."GovernanceElection" WHERE id = ${routeParams.id} FOR UPDATE`
           const election = await tx.governanceElection.findUnique({
             where: { id: routeParams.id },
-            select: { id: true, role: true, seats: true, meetingId: true, decidedAt: true },
+            select: {
+              id: true,
+              role: true,
+              seats: true,
+              meetingId: true,
+              decidedAt: true,
+              cancelledAt: true,
+            },
           })
           if (!election) throw new ResultRefused(404, 'Election not found')
-          if (election.decidedAt) {
-            throw new ResultRefused(409, 'The result of this election is already recorded')
-          }
+          const closed = closedError(election)
+          if (closed) throw new ResultRefused(409, closed)
           if (electedUserIds.length > election.seats) {
             throw new ResultRefused(400, `This election fills ${election.seats} seat(s)`)
           }
