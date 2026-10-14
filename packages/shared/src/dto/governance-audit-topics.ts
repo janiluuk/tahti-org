@@ -110,6 +110,8 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'BOARD_TERM_RECORD',
       'BOARD_TERM_END',
       'ELECTION_CREATE',
+      'ELECTION_NOMINATE',
+      'ELECTION_WITHDRAW',
     ],
   },
   {
@@ -232,6 +234,8 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   BOARD_TERM_RECORD: 'Board term recorded',
   BOARD_TERM_END: 'Board term ended early',
   ELECTION_CREATE: 'Board election set up',
+  ELECTION_NOMINATE: 'Candidate nominated in a board election',
+  ELECTION_WITHDRAW: 'Candidate withdrew from a board election',
   USER_SUSPEND: 'Account suspended',
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',

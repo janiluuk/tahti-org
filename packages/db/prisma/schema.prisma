@@ -401,6 +401,8 @@ enum AuditAction {
   BOARD_TERM_RECORD
   BOARD_TERM_END
   ELECTION_CREATE
+  ELECTION_NOMINATE
+  ELECTION_WITHDRAW
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -951,6 +953,7 @@ model User {
   motionSeconds                  MotionSecond[]
   motionResultCorrections        MotionResultCorrection[]
   governanceBoardTerms           GovernanceBoardTerm[]
+  electionCandidacies            GovernanceElectionCandidate[]
   correctionRequests             GovernanceCorrectionRequest[]
   grants                         GrantDisbursement[]
   fanTiers                       FanTier[]
@@ -2639,7 +2642,28 @@ model GovernanceElection {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
+  candidates GovernanceElectionCandidate[]
+
   @@index([createdAt])
+  @@schema("governance")
+}
+
+/// A member standing in an election, nominated by the board or by
+/// themselves. A withdrawn candidacy is kept, with when it was withdrawn.
+model GovernanceElectionCandidate {
+  id            String             @id @default(cuid())
+  electionId    String
+  election      GovernanceElection @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName   String
+  statement     String?
+  nominatedById String?
+  withdrawnAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([electionId, userId])
   @@schema("governance")
 }
 
