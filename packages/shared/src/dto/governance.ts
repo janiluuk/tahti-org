@@ -339,6 +339,42 @@ export const AdminGovernanceCorrectionItemSchema = GovernanceCorrectionItemSchem
 
 export const AdminGovernanceCorrectionListSchema = z.array(AdminGovernanceCorrectionItemSchema)
 
+export const GovernanceAuditorKindSchema = z.enum(['AUDITOR', 'OPERATIONS_INSPECTOR'])
+
+export const GovernanceAuditorSchema = z.object({
+  id: z.string(),
+  kind: GovernanceAuditorKindSchema,
+  deputy: z.boolean(),
+  name: z.string(),
+  firm: z.string().nullable(),
+  termStart: z.coerce.date(),
+  termEnd: z.coerce.date().nullable(),
+  meetingId: z.string().nullable(),
+})
+
+export const GovernanceAuditorListSchema = z.array(GovernanceAuditorSchema)
+
+/** POST /api/admin/governance/auditors */
+export const CreateGovernanceAuditorSchema = z
+  .object({
+    kind: GovernanceAuditorKindSchema,
+    deputy: z.boolean().optional(),
+    name: z.string().trim().min(1).max(200),
+    firm: z.string().trim().min(1).max(200).optional(),
+    termStart: z.coerce.date(),
+    termEnd: z.coerce.date().optional(),
+    meetingId: z.string().cuid().optional(),
+  })
+  .refine((body) => !body.termEnd || body.termEnd > body.termStart, {
+    message: 'The term must end after it starts',
+    path: ['termEnd'],
+  })
+
+/** PATCH /api/admin/governance/auditors/:id — end (or shorten) a term. */
+export const EndGovernanceAuditorTermSchema = z.object({
+  termEnd: z.coerce.date(),
+})
+
 /** GET /api/v1/governance/association — the association's registered
  * identity and contacts. Every field is null until the board fills it in. */
 export const AssociationProfileSchema = z.object({
@@ -350,6 +386,8 @@ export const AssociationProfileSchema = z.object({
   postalAddress: z.string().nullable(),
   website: z.string().nullable(),
   updatedAt: z.coerce.date().nullable(),
+  // Auditors and operations inspectors whose term covers today.
+  auditors: GovernanceAuditorListSchema,
 })
 
 /** PATCH /api/admin/governance/association — null clears a field. */
