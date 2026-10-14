@@ -12,8 +12,10 @@ const meImportPluginRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Versioned import-provider capabilities for external clients',
+        tags: ['imports'],
+        summary: 'Import-provider capability catalog',
+        description:
+          'Versioned import-provider capabilities for Tahti Player (`GET /api/me/import-plugins`). Route + capability discovery only — no credentials.',
         response: openApiResponse(ImportPluginProviderListSchema, 'ImportPluginProviderList'),
       },
     },

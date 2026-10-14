@@ -14,6 +14,7 @@ const meDistributionStatusRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Mixcloud and Revelator live vs stub mode',
         description:
           'Mixcloud + Revelator platform mode (live vs stub) for Studio Distribution banners',
         response: openApiResponse(AdminIntegrationsStatusSchema, 'MeDistributionStatus'),
