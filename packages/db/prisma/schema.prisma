@@ -439,6 +439,7 @@ enum AuditAction {
   DOCUMENT_LEGAL_HOLD
   RESOLUTION_CREATE
   RESOLUTION_UPDATE
+  RESOLUTION_LEGAL_HOLD
   ANNUAL_REPORT_GENERATE
   ANNUAL_REPORT_APPROVE
   ANNUAL_REPORT_PUBLISH
@@ -3941,27 +3942,30 @@ model SupportTicketNote {
 }
 
 model BoardResolution {
-  id           BigInt                @id @default(autoincrement())
-  title        String
-  body         String
-  votedAt      DateTime
-  outcome      ResolutionOutcome
-  voteFor      Int
-  voteAgainst  Int
-  voteAbstain  Int
-  createdById  String
-  createdBy    User                  @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  publishedAt  DateTime?
-  createdAt    DateTime              @default(now())
-  meetingId    String?
-  meeting      GovernanceMeeting?    @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  id              BigInt                @id @default(autoincrement())
+  title           String
+  body            String
+  votedAt         DateTime
+  outcome         ResolutionOutcome
+  voteFor         Int
+  voteAgainst     Int
+  voteAbstain     Int
+  createdById     String
+  createdBy       User                  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  publishedAt     DateTime?
+  createdAt       DateTime              @default(now())
+  meetingId       String?
+  meeting         GovernanceMeeting?    @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// Set while a legal hold keeps the resolution exactly as it is.
+  legalHoldAt     DateTime?
+  legalHoldReason String?
   /// The agenda item the resolution settles; always on `meeting`.
-  agendaItemId String?
-  agendaItem   GovernanceAgendaItem? @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
+  agendaItemId    String?
+  agendaItem      GovernanceAgendaItem? @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   /// A board resolution is a binding decision by default (that's what
   /// distinguishes it from an advisory Motion); false marks one recorded
   /// for the register without binding force (e.g. a formal statement).
-  binding      Boolean               @default(true)
+  binding         Boolean               @default(true)
 
   @@index([votedAt(sort: Desc)])
   @@index([meetingId])

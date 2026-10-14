@@ -171,7 +171,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     label: 'Official meeting votes',
     description:
       'Board-recorded resolutions and outcomes, distinct from advisory member motions. Optionally linked to a GovernanceMeeting record and flagged binding vs. non-binding at the schema level.',
-    actions: ['RESOLUTION_CREATE', 'RESOLUTION_UPDATE'],
+    actions: ['RESOLUTION_CREATE', 'RESOLUTION_UPDATE', 'RESOLUTION_LEGAL_HOLD'],
   },
   {
     id: 'conflicts',
@@ -220,6 +220,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   CORRECTION_RESOLVE: 'Correction request answered by the board',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
+  RESOLUTION_LEGAL_HOLD: 'Legal hold placed on or lifted from a resolution',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',
   BOARD_ROLE_CHANGE: 'Board role changed',
   ASSOCIATION_PROFILE_UPDATE: 'Association details updated',

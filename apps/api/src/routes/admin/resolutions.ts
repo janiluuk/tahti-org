@@ -10,6 +10,7 @@ import {
   AdminResolutionPatchSchema,
   AdminResolutionRowSchema,
   ResolutionIdParamSchema,
+  ResolutionLegalHoldSchema,
   openApiResponse,
   openApiResponses,
   outcomeMatchesVotes,
@@ -40,10 +41,18 @@ function resolutionRow(row: ResolutionWithCreator) {
     meetingId: row.meetingId,
     agendaItemId: row.agendaItemId,
     binding: row.binding,
+    legalHoldAt: row.legalHoldAt,
+    legalHoldReason: row.legalHoldReason,
   }
 }
 
 const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
+  const findRow = (id: bigint) =>
+    fastify.prisma.boardResolution.findUniqueOrThrow({
+      where: { id },
+      include: { createdBy: { select: { username: true, displayName: true } } },
+    })
+
   fastify.get(
     '/api/admin/resolutions',
     {
@@ -156,6 +165,11 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.boardResolution.findUnique({ where: { id } })
       if (!existing) return reply.status(404).send({ error: 'Resolution not found' })
+      if (existing.legalHoldAt) {
+        return reply
+          .status(409)
+          .send({ error: 'The resolution is under a legal hold and cannot be changed' })
+      }
 
       if (parsed.data.outcome) {
         const outcomeCheck = outcomeMatchesVotes({
@@ -194,6 +208,85 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send(resolutionRow(row))
+    },
+  )
+
+  // A legal hold keeps a resolution exactly as it is while a dispute, an
+  // audit or an authority's request is pending.
+  fastify.put(
+    '/api/admin/resolutions/:id/legal-hold',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminResolutionRowSchema, 'AdminResolutionRow'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(ResolutionIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = ResolutionLegalHoldSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+      const existing = await fastify.prisma.boardResolution.findUnique({
+        where: { id },
+        select: { title: true, legalHoldAt: true, legalHoldReason: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Resolution not found' })
+      if (existing.legalHoldReason !== parsed.data.reason) {
+        await fastify.prisma.boardResolution.update({
+          where: { id },
+          data: {
+            legalHoldAt: existing.legalHoldAt ?? new Date(),
+            legalHoldReason: parsed.data.reason,
+          },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'RESOLUTION_LEGAL_HOLD',
+          actorId: request.sessionUser!.id,
+          targetId: id.toString(),
+          meta: { title: existing.title, held: true, reason: parsed.data.reason },
+        })
+      }
+      return reply.send(resolutionRow(await findRow(id)))
+    },
+  )
+
+  fastify.delete(
+    '/api/admin/resolutions/:id/legal-hold',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminResolutionRowSchema, 'AdminResolutionRow'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(ResolutionIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const existing = await fastify.prisma.boardResolution.findUnique({
+        where: { id },
+        select: { title: true, legalHoldAt: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Resolution not found' })
+      if (existing.legalHoldAt) {
+        await fastify.prisma.boardResolution.update({
+          where: { id },
+          data: { legalHoldAt: null, legalHoldReason: null },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'RESOLUTION_LEGAL_HOLD',
+          actorId: request.sessionUser!.id,
+          targetId: id.toString(),
+          meta: { title: existing.title, held: false },
+        })
+      }
+      return reply.send(resolutionRow(await findRow(id)))
     },
   )
 }

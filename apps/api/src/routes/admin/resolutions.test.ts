@@ -250,4 +250,44 @@ describe('M21-G — board resolutions', () => {
     })
     expect(audit?.meta).toMatchObject({ meetingId: autumn.id, agendaItemId: null })
   })
+  it('keeps a resolution under a legal hold exactly as it is until the hold is lifted', async () => {
+    const hold = (method: 'PUT' | 'DELETE', payload?: Record<string, unknown>) =>
+      app.inject({
+        method,
+        url: `/api/admin/resolutions/${resolutionId}/legal-hold`,
+        headers: { cookie: boardCookie },
+        ...(payload ? { payload } : {}),
+      })
+    const patch = () =>
+      app.inject({
+        method: 'PATCH',
+        url: `/api/admin/resolutions/${resolutionId}`,
+        headers: { cookie: boardCookie },
+        payload: { title: 'Rewritten while held' },
+      })
+
+    expect((await hold('PUT', { reason: ' ' })).statusCode).toBe(400)
+    const held = await hold('PUT', { reason: 'Disputed by a member' })
+    expect(held.statusCode).toBe(200)
+    expect(held.json()).toMatchObject({ legalHoldReason: 'Disputed by a member' })
+    expect(held.json().legalHoldAt).toBeTruthy()
+    expect((await patch()).statusCode).toBe(409)
+
+    // Placing the same hold again is not a second audit entry.
+    await hold('PUT', { reason: 'Disputed by a member' })
+    expect(
+      await prisma.auditLog.count({
+        where: { action: 'RESOLUTION_LEGAL_HOLD', targetId: resolutionId },
+      }),
+    ).toBe(1)
+
+    const lifted = await hold('DELETE')
+    expect(lifted.json()).toMatchObject({ legalHoldAt: null, legalHoldReason: null })
+    expect((await patch()).statusCode).toBe(200)
+    const audits = await prisma.auditLog.findMany({
+      where: { action: 'RESOLUTION_LEGAL_HOLD', targetId: resolutionId },
+      orderBy: { createdAt: 'asc' },
+    })
+    expect(audits.map((audit) => (audit.meta as { held: boolean }).held)).toEqual([true, false])
+  })
 })
