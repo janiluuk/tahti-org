@@ -26,6 +26,7 @@ import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { presignedGetUrl, presignedPutUrl } from '../../lib/minio.js'
 import { documentResponse } from '../../lib/governance-documents.js'
 import { auditLog } from '../../lib/audit.js'
+import { resolveAgendaLinks } from '../../lib/agenda-links.js'
 import { sendMeetingNoticeAndRecordDeliveries } from '../../lib/governance-notice.js'
 
 const MINUTES_PRESIGN_TTL_SEC = 900
@@ -601,8 +602,13 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         }
         version ??= previous.version + 1
       }
+      const links = await resolveAgendaLinks(fastify.prisma, parsed.data, {
+        meetingId: null,
+        agendaItemId: null,
+      })
+      if ('error' in links) return reply.status(400).send({ error: links.error })
       const document = await fastify.prisma.governanceDocument.create({
-        data: { ...parsed.data, version, createdById: request.sessionUser!.id },
+        data: { ...parsed.data, ...links, version, createdById: request.sessionUser!.id },
       })
       await auditLog(fastify.prisma, {
         action: 'DOCUMENT_CREATE',
@@ -650,12 +656,10 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           .status(409)
           .send({ error: 'The document is under a legal hold and cannot be changed' })
       }
-      if (fields.meetingId) {
-        const meeting = await fastify.prisma.governanceMeeting.findUnique({
-          where: { id: fields.meetingId },
-          select: { id: true },
-        })
-        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
+      if ('meetingId' in fields || 'agendaItemId' in fields) {
+        const links = await resolveAgendaLinks(fastify.prisma, fields, existing)
+        if ('error' in links) return reply.status(400).send({ error: links.error })
+        Object.assign(fields, links)
       }
       const changed = (Object.keys(fields) as Array<keyof typeof fields>).filter((key) => {
         const before = existing[key]

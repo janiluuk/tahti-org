@@ -12,6 +12,7 @@ export async function documentResponse(document: {
   effectiveAt: Date | null
   publishedAt: Date | null
   meetingId: string | null
+  agendaItemId: string | null
   storageKey: string | null
   externalUrl: string | null
   supersedesId: string | null
@@ -31,6 +32,7 @@ export async function documentResponse(document: {
     effectiveAt: document.effectiveAt,
     publishedAt: document.publishedAt,
     meetingId: document.meetingId,
+    agendaItemId: document.agendaItemId,
     downloadUrl: document.storageKey
       ? await presignedGetUrl(document.storageKey, 3600).catch(() => null)
       : null,

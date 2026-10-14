@@ -203,6 +203,8 @@ export const CreateGovernanceDocumentSchema = z.object({
   effectiveAt: z.coerce.date().optional(),
   publishedAt: z.coerce.date().nullable().optional(),
   meetingId: z.string().cuid().nullable().optional(),
+  /** Implies the item's meeting; a meetingId given with it must match. */
+  agendaItemId: z.string().trim().min(1).max(64).optional(),
   /** The earlier version this one replaces (same type). When given, `version`
    * defaults to that document's version + 1. */
   supersedesId: z.string().trim().min(1).max(64).optional(),
@@ -290,6 +292,7 @@ export const GovernanceDocumentItemSchema = z.object({
   effectiveAt: z.coerce.date().nullable(),
   publishedAt: z.coerce.date().nullable(),
   meetingId: z.string().nullable(),
+  agendaItemId: z.string().nullable(),
   downloadUrl: z.string().nullable(),
   externalUrl: z.string().nullable(),
   // The version this document replaces, and the one that replaces it. In the
@@ -487,6 +490,7 @@ export const PatchGovernanceDocumentSchema = z
     effectiveAt: z.coerce.date().nullable(),
     publishedAt: z.coerce.date().nullable(),
     meetingId: z.string().cuid().nullable(),
+    agendaItemId: z.string().trim().min(1).max(64).nullable(),
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
