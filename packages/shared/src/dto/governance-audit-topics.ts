@@ -112,6 +112,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'ELECTION_CREATE',
       'ELECTION_NOMINATE',
       'ELECTION_WITHDRAW',
+      'ELECTION_DECIDE',
     ],
   },
   {
@@ -236,6 +237,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   ELECTION_CREATE: 'Board election set up',
   ELECTION_NOMINATE: 'Candidate nominated in a board election',
   ELECTION_WITHDRAW: 'Candidate withdrew from a board election',
+  ELECTION_DECIDE: 'Board election result recorded',
   USER_SUSPEND: 'Account suspended',
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',

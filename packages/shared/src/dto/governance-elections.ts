@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
-import { GovernanceBoardRoleSchema } from './governance.js'
+import { GovernanceBoardRoleSchema, GovernanceBoardTermListSchema } from './governance.js'
 
 export const GovernanceElectionSchema = z.object({
   id: z.string(),
@@ -39,6 +39,7 @@ export const GovernanceElectionCandidateSchema = z.object({
   // True when the member nominated themselves.
   selfNominated: z.boolean(),
   withdrawnAt: z.coerce.date().nullable(),
+  elected: z.boolean(),
   createdAt: z.coerce.date(),
 })
 
@@ -53,4 +54,27 @@ export const NominateElectionCandidateSchema = z.object({
 /** POST /api/v1/governance/elections/:id/candidacy — a member stands. */
 export const StandForElectionSchema = z.object({
   statement: z.string().trim().min(1).max(2000).optional(),
+})
+
+/** POST /api/admin/governance/elections/:id/result — who the meeting elected,
+ * and the term they start. Each gets a board term in the election's role. */
+export const RecordElectionResultSchema = z
+  .object({
+    electedUserIds: z
+      .array(z.string().trim().min(1).max(64))
+      .min(1)
+      .max(20)
+      .refine((ids) => new Set(ids).size === ids.length, 'A candidate is listed twice'),
+    termStart: z.coerce.date(),
+    termEnd: z.coerce.date().optional(),
+  })
+  .refine((body) => !body.termEnd || body.termEnd > body.termStart, {
+    message: 'The term must end after it starts',
+    path: ['termEnd'],
+  })
+
+export const GovernanceElectionResultSchema = z.object({
+  election: GovernanceElectionSchema,
+  candidates: GovernanceElectionCandidateListSchema,
+  terms: GovernanceBoardTermListSchema,
 })
