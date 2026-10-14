@@ -118,6 +118,26 @@ const adminGovernanceCorrectionRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { state: parsed.data.state },
       })
 
+      // The answer was only visible to a member who came back to look. The
+      // note itself stays on the request; the notification just points at it.
+      await fastify.prisma.notification
+        .create({
+          data: {
+            userId: existing.requesterId,
+            type: 'CORRECTION_RESOLVED',
+            actorUserId: user.id,
+            title:
+              parsed.data.state === 'ACCEPTED'
+                ? 'Your correction request was accepted'
+                : 'Your correction request was declined',
+            body: 'The board has answered your correction request.',
+            url: '/governance/corrections',
+          },
+        })
+        .catch((err: unknown) => {
+          request.log.error({ err, correctionId: id }, 'correction-resolved notification failed')
+        })
+
       const row = await fastify.prisma.governanceCorrectionRequest.findUniqueOrThrow({
         where: { id },
         include: { requester: requesterSelect },

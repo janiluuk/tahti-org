@@ -642,6 +642,8 @@ enum NotificationType {
   MOTION_SECONDED
   /// A member commented on a motion you proposed.
   MOTION_COMMENT
+  /// The board answered your governance correction request.
+  CORRECTION_RESOLVED
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
