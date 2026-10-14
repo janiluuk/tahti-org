@@ -282,12 +282,12 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           ...ITEM_SELECT,
           meeting: { select: { minutesApprovedAt: true } },
-          _count: { select: { motions: true } },
+          _count: { select: { motions: true, resolutions: true } },
         },
       })
       if (!item) return reply.status(404).send({ error: 'Agenda item not found' })
       if (item.meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
-      if (item._count.motions > 0) {
+      if (item._count.motions + item._count.resolutions > 0) {
         return reply
           .status(409)
           .send({ error: 'Records still point at this agenda item: unlink them first' })
