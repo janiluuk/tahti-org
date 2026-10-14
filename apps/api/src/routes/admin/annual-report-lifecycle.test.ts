@@ -98,4 +98,41 @@ describe('annual report lifecycle', () => {
       expect((await post('/api/admin/reports/annual/20x1/approve')).statusCode).toBe(400)
     })
   })
+
+  describe('publication', () => {
+    async function memberYears() {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/annual-reports',
+        headers: { cookie: memberCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      return (res.json() as Array<{ year: number }>).map((r) => r.year).filter((y) => y >= 2090)
+    }
+
+    it('shows members a report only once it is approved and published', async () => {
+      await generate(2092)
+      expect((await post('/api/admin/reports/annual/2092/publish')).statusCode).toBe(409)
+      expect(await memberYears()).not.toContain(2092)
+
+      await post('/api/admin/reports/annual/2092/approve')
+      const res = await post('/api/admin/reports/annual/2092/publish')
+      expect(res.statusCode).toBe(200)
+      expect(res.json().publishedAt).not.toBeNull()
+      expect((await post('/api/admin/reports/annual/2092/publish')).statusCode).toBe(409)
+      expect(await memberYears()).toContain(2092)
+
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'ANNUAL_REPORT_PUBLISH', targetId: '2092' },
+      })
+      expect(audit?.meta).toMatchObject({ year: 2092 })
+    })
+
+    it('is for the board only', async () => {
+      expect(
+        (await post('/api/admin/reports/annual/2092/publish', undefined, memberCookie)).statusCode,
+      ).toBe(403)
+      expect((await post('/api/admin/reports/annual/2093/publish')).statusCode).toBe(404)
+    })
+  })
 })

@@ -12,7 +12,18 @@ export const AdminAnnualReportRowSchema = z.object({
   downloadUrl: z.string().nullable(),
   approvedAt: z.coerce.date().nullable(),
   approvalMeetingId: z.string().nullable(),
+  publishedAt: z.coerce.date().nullable(),
 })
+
+/** GET /api/v1/governance/annual-reports — published reports, newest first. */
+export const PublishedAnnualReportListSchema = z.array(
+  z.object({
+    year: z.number().int(),
+    approvedAt: z.coerce.date(),
+    publishedAt: z.coerce.date(),
+    downloadUrl: z.string().nullable(),
+  }),
+)
 
 /** POST /api/admin/reports/annual/:year/approve */
 export const ApproveAnnualReportSchema = z.object({
