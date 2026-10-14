@@ -3,6 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { PrismaClient } from '@tahti/db'
+import { MotionVoteTallySchema } from '@tahti/shared'
 
 export type MotionTally = { YES: number; NO: number; ABSTAIN: number }
 
@@ -49,6 +50,28 @@ export function motionCorrectionDigest(
     correction.createdAt.toISOString(),
   ])
   return createHash('sha256').update(canonical).digest('hex')
+}
+
+export type MotionTallySource = 'CERTIFICATE' | 'CORRECTION' | 'LIVE'
+
+/** The tally to publish for a closed motion: the board's latest correction,
+ * else the certified result, else (closed before certificates existed) the
+ * live vote rows. `corrections` are in the order they were added. */
+export function closedMotionTally(
+  resultTally: unknown,
+  corrections: Array<{ tally: unknown }>,
+  live: MotionTally,
+): { tally: MotionTally; source: MotionTallySource } {
+  for (const correction of [...corrections].reverse()) {
+    if (correction.tally === null) continue
+    const parsed = MotionVoteTallySchema.safeParse(correction.tally)
+    if (parsed.success) return { tally: parsed.data, source: 'CORRECTION' }
+  }
+  const certified = MotionVoteTallySchema.safeParse(resultTally)
+  if (resultTally !== null && certified.success) {
+    return { tally: certified.data, source: 'CERTIFICATE' }
+  }
+  return { tally: live, source: 'LIVE' }
 }
 
 export async function countMotionVotes(

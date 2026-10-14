@@ -15,6 +15,7 @@ import {
   yearFromPathParams,
 } from '@tahti/shared'
 import { userName } from '../../lib/safe-names.js'
+import { closedMotionTally } from '../../lib/motion-certificate.js'
 
 // Public, CORS-open transparency endpoints.
 // These expose the nonprofit's financial data per AGPL principle 6.
@@ -294,20 +295,38 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
           closeAt: true,
           proposer: { select: { username: true, displayName: true } },
           votes: { select: { choice: true } },
+          resultTally: true,
+          resultCorrections: {
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+            select: { tally: true },
+          },
         },
       })
 
       return reply.send(
-        motions.map((motion) => ({
-          id: motion.id,
-          title: motion.title,
-          description: motion.description,
-          closedAt: motion.closeAt,
-          proposer: userName(motion.proposer),
-          voteFor: motion.votes.filter((vote) => vote.choice === 'YES').length,
-          voteAgainst: motion.votes.filter((vote) => vote.choice === 'NO').length,
-          voteAbstain: motion.votes.filter((vote) => vote.choice === 'ABSTAIN').length,
-        })),
+        motions.map((motion) => {
+          const live = {
+            YES: motion.votes.filter((vote) => vote.choice === 'YES').length,
+            NO: motion.votes.filter((vote) => vote.choice === 'NO').length,
+            ABSTAIN: motion.votes.filter((vote) => vote.choice === 'ABSTAIN').length,
+          }
+          const { tally, source } = closedMotionTally(
+            motion.resultTally,
+            motion.resultCorrections,
+            live,
+          )
+          return {
+            id: motion.id,
+            title: motion.title,
+            description: motion.description,
+            closedAt: motion.closeAt,
+            proposer: userName(motion.proposer),
+            voteFor: tally.YES,
+            voteAgainst: tally.NO,
+            voteAbstain: tally.ABSTAIN,
+            tallySource: source,
+          }
+        }),
       )
     },
   )

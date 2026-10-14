@@ -68,6 +68,8 @@ export const PostMotionCommentSchema = z.object({
 
 export type PostMotionCommentInput = z.infer<typeof PostMotionCommentSchema>
 
+export const MotionTallySourceSchema = z.enum(['CERTIFICATE', 'CORRECTION', 'LIVE'])
+
 export const TransparencyMotionItemSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -77,6 +79,10 @@ export const TransparencyMotionItemSchema = z.object({
   voteFor: z.number().int(),
   voteAgainst: z.number().int(),
   voteAbstain: z.number().int(),
+  // Where the numbers come from: the result certificate fixed at closing, the
+  // board's latest correction to it, or (for motions closed before
+  // certificates existed) the vote rows as they are now.
+  tallySource: MotionTallySourceSchema,
 })
 
 export const TransparencyMotionListSchema = z.array(TransparencyMotionItemSchema)
