@@ -22,6 +22,9 @@ describe('board elections', () => {
   const ids: Record<string, string> = {}
 
   async function cleanup() {
+    await prisma.notification.deleteMany({
+      where: { type: { in: ['ELECTION_OPENED'] }, body: { contains: '"Election ' } },
+    })
     await prisma.governanceBoardTerm.deleteMany({
       where: { displayName: { startsWith: 'Election ' } },
     })
@@ -101,6 +104,35 @@ describe('board elections', () => {
         headers: { cookie: boardCookie },
       })
       expect((list.json() as Array<{ id: string }>).map((e) => e.id)).toContain(res.json().id)
+    })
+
+    it('tells the other members when nominations open, and not for a closed deadline', async () => {
+      const told = (electionTitle: string) =>
+        prisma.notification.findMany({
+          where: { type: 'ELECTION_OPENED', body: { contains: electionTitle } },
+          select: { userId: true, body: true, url: true },
+        })
+      await setUp({
+        title: 'Election announced to members',
+        role: 'DEPUTY',
+        seats: 2,
+        nominationsCloseAt: '2099-01-31T00:00:00.000Z',
+      })
+      const rows = await told('Election announced to members')
+      const userIds = rows.map((row) => row.userId)
+      expect(userIds).toEqual(expect.arrayContaining([ids.member, ids.other]))
+      expect(userIds).not.toContain(ids.board)
+      expect(userIds).not.toContain(ids.free)
+      expect(rows[0]).toMatchObject({ url: '/governance/elections' })
+      expect(rows[0]!.body).toContain('until 2099-01-31')
+
+      await setUp({
+        title: 'Election past its deadline',
+        role: 'DEPUTY',
+        seats: 1,
+        nominationsCloseAt: iso(-1),
+      })
+      expect(await told('Election past its deadline')).toHaveLength(0)
     })
 
     it('elects one chair, and checks the meeting and who asks', async () => {

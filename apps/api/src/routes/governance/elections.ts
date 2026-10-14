@@ -22,6 +22,7 @@ import {
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { boardTermClash } from '../../lib/board-terms.js'
+import { notifyMembersOfElectionOpened } from '../../lib/election-notifications.js'
 
 // Board elections. A term could name the meeting that elected it, but
 // nothing recorded the election itself: the role, the seats, and who stood.
@@ -246,6 +247,15 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
           meetingId: election.meetingId,
         },
       })
+      if (!election.nominationsCloseAt || election.nominationsCloseAt > new Date()) {
+        await notifyMembersOfElectionOpened(
+          fastify.prisma,
+          election,
+          request.sessionUser!.id,
+        ).catch((err: unknown) => {
+          request.log.error({ err, electionId: election.id }, 'election-opened notification failed')
+        })
+      }
       return reply.status(201).send(election)
     },
   )
