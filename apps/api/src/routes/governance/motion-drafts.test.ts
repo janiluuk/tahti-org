@@ -136,4 +136,74 @@ describe("a proposer's own motion draft", () => {
       expect(res.statusCode).toBe(401)
     })
   })
+
+  describe('editing', () => {
+    function edit(id: string, who: string, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PUT',
+        url: `/api/v1/governance/motions/${id}/draft`,
+        headers: { cookie: who },
+        payload,
+      })
+    }
+
+    it('changes the text and clears the seconds that backed the old wording', async () => {
+      const id = await draft()
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/motions/${id}/second`,
+        headers: { cookie: memberCookie },
+      })
+
+      const res = await edit(id, proposerCookie, { title: 'Reworded proposal' })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ id, state: 'DRAFT', secondsCleared: 1 })
+
+      const row = await prisma.motion.findUniqueOrThrow({ where: { id } })
+      expect(row).toMatchObject({ title: 'Reworded proposal', description: 'Details' })
+      expect(await prisma.motionSecond.count({ where: { motionId: id } })).toBe(0)
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'MOTION_EDIT', targetId: id },
+      })
+      expect(audit?.meta).toMatchObject({
+        previousTitle: 'Draft proposal',
+        title: 'Reworded proposal',
+        secondsCleared: 1,
+      })
+    })
+
+    it('keeps the seconds when nothing actually changes', async () => {
+      const id = await draft()
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/motions/${id}/second`,
+        headers: { cookie: memberCookie },
+      })
+      const res = await edit(id, proposerCookie, { title: 'Draft proposal' })
+      expect(res.json()).toEqual({ id, state: 'DRAFT', secondsCleared: 0 })
+      expect(await prisma.motionSecond.count({ where: { motionId: id } })).toBe(1)
+      expect(await prisma.auditLog.count({ where: { action: 'MOTION_EDIT', targetId: id } })).toBe(
+        0,
+      )
+    })
+
+    it('is only for the proposer and only while a draft', async () => {
+      const id = await draft()
+      expect((await edit(id, memberCookie, { title: 'Hijacked' })).statusCode).toBe(403)
+      expect((await edit(id, boardCookie, { title: 'Hijacked' })).statusCode).toBe(403)
+      expect((await edit(id, proposerCookie, {})).statusCode).toBe(400)
+      expect((await edit('missing-motion', proposerCookie, { title: 'x' })).statusCode).toBe(404)
+
+      await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/governance/motions/${id}`,
+        headers: { cookie: boardCookie },
+        payload: { state: 'OPEN' },
+      })
+      expect((await edit(id, proposerCookie, { title: 'Too late' })).statusCode).toBe(409)
+      expect((await prisma.motion.findUniqueOrThrow({ where: { id } })).title).toBe(
+        'Draft proposal',
+      )
+    })
+  })
 })
