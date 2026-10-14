@@ -193,6 +193,36 @@ Notes for whoever picks this up:
 | 119 | Guard: jam create/join/events/leave/end + add-on Store CRUD        | done   |
 | 120 | Docs + ledger + INDEX refresh                                      | done   |
 
+## Batch 13 (2026-10-09) — comments, reactions, listen-heartbeat OpenAPI
+
+| #   | Slice                                                                  | Status |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 121 | `GET /api/comments/track/:id` tagged `comments` + summary              | done   |
+| 122 | `POST /api/comments/track/:id` documented as 201 `CommentItem`         | done   |
+| 123 | `GET /api/comments/channel/:slug` tagged `comments` + summary          | done   |
+| 124 | `POST /api/comments/channel/:slug` documented as 201 `CommentItem`     | done   |
+| 125 | `DELETE /api/comments/:id` documented as 204                           | done   |
+| 126 | `GET /api/reactions/track/:id` tagged `engagement` + summary           | done   |
+| 127 | `POST /api/reactions/track/:id` documented as 201 `TrackReactionItem`  | done   |
+| 128 | `POST /api/v1/listen/heartbeat` tagged `engagement`, documented as 204 | done   |
+| 129 | Guard: comments CRUD, reactions, listen-heartbeat                      | done   |
+| 130 | Docs + ledger + INDEX refresh                                          | done   |
+
+## Batch 14 (2026-10-09) — mentions inbox + social auto-post OpenAPI
+
+| #   | Slice                                                                 | Status |
+| --- | --------------------------------------------------------------------- | ------ |
+| 131 | `GET /api/me/mentions/settings` tagged `mentions` + `MentionSettings` | done   |
+| 132 | `GET /api/me/mentions` tagged `mentions` + `MentionsInbox`            | done   |
+| 133 | `PATCH /api/me/mentions/settings` tagged `mentions` + summary         | done   |
+| 134 | Mute 201 / unmute 200 tagged `mentions` + summaries                   | done   |
+| 135 | Social GET / PUT Mastodon+Bluesky / POST post summaries               | done   |
+| 136 | `DELETE /api/me/social/mastodon` documented as 200 `{ ok: true }`     | done   |
+| 137 | `DELETE /api/me/social/bluesky` documented as 200 `{ ok: true }`      | done   |
+| 138 | Twitter + Instagram OAuth start/callback documented as 302            | done   |
+| 139 | Twitter + Instagram DELETE documented as 200 `{ ok: true }`           | done   |
+| 140 | Guard + docs + ledger + INDEX refresh                                 | done   |
+
 ---
 
 ## Remaining open
