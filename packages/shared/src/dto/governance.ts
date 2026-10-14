@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { MotionTallySourceSchema } from './responses/governance.js'
 
 export const MotionChoiceSchema = z.enum(['YES', 'NO', 'ABSTAIN'])
 export type MotionChoice = z.infer<typeof MotionChoiceSchema>
@@ -67,8 +68,6 @@ export const PostMotionCommentSchema = z.object({
 })
 
 export type PostMotionCommentInput = z.infer<typeof PostMotionCommentSchema>
-
-export const MotionTallySourceSchema = z.enum(['CERTIFICATE', 'CORRECTION', 'LIVE'])
 
 export const TransparencyMotionItemSchema = z.object({
   id: z.string(),

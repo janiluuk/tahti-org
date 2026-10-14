@@ -32,6 +32,11 @@ export const MotionVoteTallySchema = z.object({
   ABSTAIN: z.number().int(),
 })
 
+/** Where a closed motion's published numbers come from: the result
+ * certificate fixed at closing, the board's latest correction to it, or (for
+ * motions closed before certificates existed) the vote rows as they are now. */
+export const MotionTallySourceSchema = z.enum(['CERTIFICATE', 'CORRECTION', 'LIVE'])
+
 export const MotionSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -56,6 +61,7 @@ export const MotionSummarySchema = z.object({
   // per-motion detail fetch and this is the only place a closed motion's
   // result is shown.
   tally: MotionVoteTallySchema.optional(),
+  tallySource: MotionTallySourceSchema.optional(),
 })
 
 export const MotionListSchema = z.array(MotionSummarySchema)
