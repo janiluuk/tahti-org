@@ -176,4 +176,61 @@ describe('governance document versions', () => {
       expect((await archive(boardCookie, 'missing-document', true)).statusCode).toBe(404)
     })
   })
+
+  describe('editing', () => {
+    function edit(who: string, id: string, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/admin/governance/documents/${id}`,
+        headers: { cookie: who },
+        payload,
+      })
+    }
+
+    it('changes the title and description and audits which fields changed', async () => {
+      const doc = (await create({ title: 'Tahti ry bylas', description: 'Old' })).json() as Doc
+      const res = await edit(boardCookie, doc.id, {
+        title: 'Tahti ry bylaws',
+        description: null,
+        effectiveAt: '2026-03-01T00:00:00.000Z',
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({
+        title: 'Tahti ry bylaws',
+        description: null,
+        effectiveAt: '2026-03-01T00:00:00.000Z',
+        version: 1,
+        type: 'BYLAWS',
+      })
+      // Sending the same values again changes nothing and is not audited.
+      await edit(boardCookie, doc.id, { title: 'Tahti ry bylaws', description: null })
+
+      const audits = await prisma.auditLog.findMany({
+        where: { action: 'DOCUMENT_UPDATE', targetId: doc.id },
+      })
+      expect(audits.map((a) => a.meta)).toEqual([
+        { title: 'Tahti ry bylaws', changed: ['title', 'description', 'effectiveAt'] },
+      ])
+    })
+
+    it('publishes a draft document to members', async () => {
+      const doc = (await create({ title: 'Privacy policy', type: 'POLICY' })).json() as Doc
+      let rows = await list('/api/v1/governance/documents', memberCookie)
+      expect(rows.find((d) => d.id === doc.id)).toBeUndefined()
+      await edit(boardCookie, doc.id, { publishedAt: '2026-04-01T00:00:00.000Z' })
+      rows = await list('/api/v1/governance/documents', memberCookie)
+      expect(rows.find((d) => d.id === doc.id)).toBeDefined()
+    })
+
+    it('refuses an empty body, a type change, an unknown meeting and non-board callers', async () => {
+      const doc = (await create({ type: 'OTHER' })).json() as Doc
+      expect((await edit(boardCookie, doc.id, {})).statusCode).toBe(400)
+      expect((await edit(boardCookie, doc.id, { type: 'BYLAWS' })).statusCode).toBe(400)
+      expect((await edit(boardCookie, doc.id, { title: '' })).statusCode).toBe(400)
+      expect(
+        (await edit(boardCookie, doc.id, { meetingId: 'cjld2cjxh0000qzrmn831i7rn' })).statusCode,
+      ).toBe(400)
+      expect((await edit(memberCookie, doc.id, { title: 'Mine now' })).statusCode).toBe(403)
+    })
+  })
 })
