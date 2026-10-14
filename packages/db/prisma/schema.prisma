@@ -387,6 +387,7 @@ enum AuditAction {
   MOTION_RESULT_CORRECT
   CORRECTION_REQUEST
   CORRECTION_RESOLVE
+  CORRECTION_WITHDRAW
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
   DOWNLOAD_FRAUD_ALERT
@@ -2810,6 +2811,8 @@ enum GovernanceCorrectionState {
   OPEN
   ACCEPTED
   REJECTED
+  /// The member took the request back before the board answered.
+  WITHDRAWN
 
   @@schema("governance")
 }

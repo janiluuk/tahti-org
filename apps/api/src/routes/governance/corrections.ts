@@ -6,8 +6,10 @@ import {
   CreateGovernanceCorrectionSchema,
   GovernanceCorrectionItemSchema,
   GovernanceCorrectionListSchema,
+  IdParamSchema,
   openApiResponse,
   openApiResponses,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -125,6 +127,40 @@ const correctionRoutes: FastifyPluginAsync = async (fastify) => {
         take: 100,
       })
       return reply.send(rows.map(correctionView))
+    },
+  )
+
+  // A member takes back their own request while it waits for an answer
+  // (filed twice, or sorted out another way). The request stays, withdrawn.
+  fastify.delete(
+    '/api/v1/governance/corrections/:id',
+    { preHandler: requireMember, schema: { tags: ['governance'] } },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const userId = request.sessionUser!.id
+      const row = await fastify.prisma.governanceCorrectionRequest.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true, requesterId: true, subject: true },
+      })
+      if (!row || row.requesterId !== userId) {
+        return reply.status(404).send({ error: 'Correction request not found' })
+      }
+      // The state is part of the update, so it cannot cross a board answer.
+      const withdrawn = await fastify.prisma.governanceCorrectionRequest.updateMany({
+        where: { id: row.id, state: 'OPEN' },
+        data: { state: 'WITHDRAWN' },
+      })
+      if (withdrawn.count === 0) {
+        return reply.status(409).send({ error: 'This request is no longer waiting for an answer' })
+      }
+      await auditLog(fastify.prisma, {
+        action: 'CORRECTION_WITHDRAW',
+        actorId: userId,
+        targetId: row.id,
+        meta: { subject: row.subject },
+      })
+      return reply.status(204).send()
     },
   )
 }

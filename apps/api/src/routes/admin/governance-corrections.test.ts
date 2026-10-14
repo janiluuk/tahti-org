@@ -205,4 +205,30 @@ describe('the board answers correction requests', () => {
     })
     expect(other.statusCode).toBe(200)
   })
+
+  it('lets a member withdraw their own waiting request, which the board then cannot answer', async () => {
+    const withdraw = (who: string, id: string) =>
+      app.inject({
+        method: 'DELETE',
+        url: `/api/v1/governance/corrections/${id}`,
+        headers: { cookie: who },
+      })
+    const id = await file(secondBoardCookie, 'Filed twice by mistake, please ignore.')
+    expect((await withdraw(memberCookie, id)).statusCode).toBe(404)
+    expect((await withdraw(secondBoardCookie, id)).statusCode).toBe(204)
+    expect((await withdraw(secondBoardCookie, id)).statusCode).toBe(409)
+    const row = await prisma.governanceCorrectionRequest.findUniqueOrThrow({ where: { id } })
+    expect(row.state).toBe('WITHDRAWN')
+    expect(
+      await prisma.auditLog.count({ where: { action: 'CORRECTION_WITHDRAW', targetId: id } }),
+    ).toBe(1)
+    const late = await answer(boardCookie, id, { state: 'ACCEPTED', resolutionNote: 'Done' })
+    expect(late.statusCode).toBe(409)
+    const queued = ours((await queue(boardCookie, '?state=WITHDRAWN')).json() as AdminRow[])
+    expect(queued.map((r) => r.id)).toContain(id)
+
+    const answered = await file(secondBoardCookie, 'My postal address changed last month.')
+    await answer(boardCookie, answered, { state: 'REJECTED', resolutionNote: 'Not ours to fix' })
+    expect((await withdraw(secondBoardCookie, answered)).statusCode).toBe(409)
+  })
 })

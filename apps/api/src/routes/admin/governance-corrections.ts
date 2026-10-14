@@ -96,6 +96,9 @@ const adminGovernanceCorrectionRoutes: FastifyPluginAsync = async (fastify) => {
           .status(403)
           .send({ error: 'Another board member has to answer your own request' })
       }
+      if (existing.state === 'WITHDRAWN') {
+        return reply.status(409).send({ error: 'The member withdrew this request' })
+      }
 
       // The state is part of the update, so two board members answering at
       // once cannot both win.

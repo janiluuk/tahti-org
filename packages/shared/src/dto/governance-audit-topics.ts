@@ -69,6 +69,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'USER_TIER_CHANGE',
       'CORRECTION_REQUEST',
       'CORRECTION_RESOLVE',
+      'CORRECTION_WITHDRAW',
     ],
   },
   {
@@ -226,6 +227,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MOTION_RESULT_CORRECT: 'Correction added to a motion result',
   CORRECTION_REQUEST: 'Correction requested by a member',
   CORRECTION_RESOLVE: 'Correction request answered by the board',
+  CORRECTION_WITHDRAW: 'Correction request withdrawn by the member',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
   RESOLUTION_LEGAL_HOLD: 'Legal hold placed on or lifted from a resolution',

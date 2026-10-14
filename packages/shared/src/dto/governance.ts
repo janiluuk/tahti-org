@@ -325,7 +325,7 @@ export const GovernanceDocumentItemSchema = z.object({
 export const GovernanceDocumentListSchema = z.array(GovernanceDocumentItemSchema)
 
 export const GovernanceCorrectionSubjectSchema = z.enum(['MEMBER_REGISTER', 'GOVERNANCE_RECORD'])
-export const GovernanceCorrectionStateSchema = z.enum(['OPEN', 'ACCEPTED', 'REJECTED'])
+export const GovernanceCorrectionStateSchema = z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN'])
 
 export const GovernanceCorrectionRecordKindSchema = z.enum([
   'MEETING',
