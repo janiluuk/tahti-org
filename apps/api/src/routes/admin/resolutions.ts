@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { Prisma } from '@tahti/db'
 import {
   AdminResolutionCreateSchema,
   AdminResolutionListQuerySchema,
@@ -17,6 +18,30 @@ import {
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { userName } from '../../lib/safe-names.js'
+import { resolveAgendaLinks } from '../../lib/agenda-links.js'
+
+type ResolutionWithCreator = Prisma.BoardResolutionGetPayload<{
+  include: { createdBy: { select: { username: true; displayName: true } } }
+}>
+
+function resolutionRow(row: ResolutionWithCreator) {
+  return {
+    id: row.id.toString(),
+    title: row.title,
+    body: row.body,
+    votedAt: row.votedAt,
+    outcome: row.outcome,
+    voteFor: row.voteFor,
+    voteAgainst: row.voteAgainst,
+    voteAbstain: row.voteAbstain,
+    publishedAt: row.publishedAt,
+    createdAt: row.createdAt,
+    createdByDisplayName: userName(row.createdBy),
+    meetingId: row.meetingId,
+    agendaItemId: row.agendaItemId,
+    binding: row.binding,
+  }
+}
 
 const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -43,23 +68,7 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         include: { createdBy: { select: { username: true, displayName: true } } },
       })
 
-      return reply.send(
-        rows.map((r) => ({
-          id: r.id.toString(),
-          title: r.title,
-          body: r.body,
-          votedAt: r.votedAt,
-          outcome: r.outcome,
-          voteFor: r.voteFor,
-          voteAgainst: r.voteAgainst,
-          voteAbstain: r.voteAbstain,
-          publishedAt: r.publishedAt,
-          createdAt: r.createdAt,
-          createdByDisplayName: userName(r.createdBy),
-          meetingId: r.meetingId,
-          binding: r.binding,
-        })),
-      )
+      return reply.send(rows.map(resolutionRow))
     },
   )
 
@@ -84,13 +93,11 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const body = parsed.data
 
-      if (body.meetingId) {
-        const meeting = await fastify.prisma.governanceMeeting.findUnique({
-          where: { id: body.meetingId },
-          select: { id: true },
-        })
-        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
-      }
+      const links = await resolveAgendaLinks(fastify.prisma, body, {
+        meetingId: null,
+        agendaItemId: null,
+      })
+      if ('error' in links) return reply.status(400).send({ error: links.error })
 
       const row = await fastify.prisma.boardResolution.create({
         data: {
@@ -102,7 +109,8 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           voteAgainst: body.voteAgainst,
           voteAbstain: body.voteAbstain,
           createdById: actor.id,
-          meetingId: body.meetingId,
+          meetingId: links.meetingId,
+          agendaItemId: links.agendaItemId,
           binding: body.binding,
         },
         include: { createdBy: { select: { username: true, displayName: true } } },
@@ -116,25 +124,12 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           title: row.title,
           outcome: row.outcome,
           meetingId: row.meetingId,
+          agendaItemId: row.agendaItemId,
           binding: row.binding,
         },
       })
 
-      return reply.status(201).send({
-        id: row.id.toString(),
-        title: row.title,
-        body: row.body,
-        votedAt: row.votedAt,
-        outcome: row.outcome,
-        voteFor: row.voteFor,
-        voteAgainst: row.voteAgainst,
-        voteAbstain: row.voteAbstain,
-        publishedAt: row.publishedAt,
-        createdAt: row.createdAt,
-        createdByDisplayName: userName(row.createdBy),
-        meetingId: row.meetingId,
-        binding: row.binding,
-      })
+      return reply.status(201).send(resolutionRow(row))
     },
   )
 
@@ -175,17 +170,12 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
-      if (parsed.data.meetingId) {
-        const meeting = await fastify.prisma.governanceMeeting.findUnique({
-          where: { id: parsed.data.meetingId },
-          select: { id: true },
-        })
-        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
-      }
+      const links = await resolveAgendaLinks(fastify.prisma, parsed.data, existing)
+      if ('error' in links) return reply.status(400).send({ error: links.error })
 
       const row = await fastify.prisma.boardResolution.update({
         where: { id },
-        data: parsed.data,
+        data: { ...parsed.data, ...links },
         include: { createdBy: { select: { username: true, displayName: true } } },
       })
 
@@ -198,25 +188,12 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
           outcome: row.outcome,
           published: Boolean(row.publishedAt),
           meetingId: row.meetingId,
+          agendaItemId: row.agendaItemId,
           binding: row.binding,
         },
       })
 
-      return reply.send({
-        id: row.id.toString(),
-        title: row.title,
-        body: row.body,
-        votedAt: row.votedAt,
-        outcome: row.outcome,
-        voteFor: row.voteFor,
-        voteAgainst: row.voteAgainst,
-        voteAbstain: row.voteAbstain,
-        publishedAt: row.publishedAt,
-        createdAt: row.createdAt,
-        createdByDisplayName: userName(row.createdBy),
-        meetingId: row.meetingId,
-        binding: row.binding,
-      })
+      return reply.send(resolutionRow(row))
     },
   )
 }

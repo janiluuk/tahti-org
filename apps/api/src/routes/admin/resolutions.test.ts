@@ -182,4 +182,72 @@ describe('M21-G — board resolutions', () => {
     })
     expect(patchRes.statusCode).toBe(400)
   })
+  it('links a resolution to the agenda item it settles, and with it the meeting', async () => {
+    const meeting = (title: string) =>
+      prisma.governanceMeeting.create({
+        data: {
+          title,
+          type: 'BOARD',
+          state: 'HELD',
+          scheduledAt: new Date(),
+          createdById: boardId,
+        },
+      })
+    const spring = await meeting('Spring board meeting')
+    const autumn = await meeting('Autumn board meeting')
+    const item = await prisma.governanceAgendaItem.create({
+      data: { meetingId: spring.id, position: 1, title: 'Budget' },
+    })
+    const create = (extra: Record<string, unknown>) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/admin/resolutions',
+        headers: { cookie: boardCookie },
+        payload: {
+          title: 'Budget approved',
+          body: 'The board approves the budget.',
+          votedAt: '2026-04-01T12:00:00.000Z',
+          outcome: 'PASSED',
+          voteFor: 4,
+          voteAgainst: 1,
+          voteAbstain: 0,
+          ...extra,
+        },
+      })
+
+    const res = await create({ agendaItemId: item.id })
+    expect(res.statusCode).toBe(201)
+    expect(res.json()).toMatchObject({ meetingId: spring.id, agendaItemId: item.id })
+    expect((await create({ agendaItemId: item.id, meetingId: autumn.id })).statusCode).toBe(400)
+    expect((await create({ agendaItemId: 'missing-item' })).statusCode).toBe(400)
+
+    const patch = (payload: Record<string, unknown>) =>
+      app.inject({
+        method: 'PATCH',
+        url: `/api/admin/resolutions/${res.json().id}`,
+        headers: { cookie: boardCookie },
+        payload,
+      })
+    // Editing other fields keeps the link.
+    expect((await patch({ title: 'Budget 2027 approved' })).json()).toMatchObject({
+      agendaItemId: item.id,
+    })
+    // The item cannot be removed while the resolution points at it.
+    const remove = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/governance/agenda-items/${item.id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(remove.statusCode).toBe(409)
+    // Moving the resolution to another meeting drops the old meeting's item.
+    expect((await patch({ meetingId: autumn.id })).json()).toMatchObject({
+      meetingId: autumn.id,
+      agendaItemId: null,
+    })
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'RESOLUTION_UPDATE', targetId: res.json().id },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(audit?.meta).toMatchObject({ meetingId: autumn.id, agendaItemId: null })
+  })
 })

@@ -2605,7 +2605,8 @@ model GovernanceAgendaItem {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
-  motions Motion[]
+  motions     Motion[]
+  resolutions BoardResolution[]
 
   @@index([meetingId, position])
   @@schema("governance")
@@ -3935,27 +3936,31 @@ model SupportTicketNote {
 }
 
 model BoardResolution {
-  id          BigInt             @id @default(autoincrement())
-  title       String
-  body        String
-  votedAt     DateTime
-  outcome     ResolutionOutcome
-  voteFor     Int
-  voteAgainst Int
-  voteAbstain Int
-  createdById String
-  createdBy   User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  publishedAt DateTime?
-  createdAt   DateTime           @default(now())
-  meetingId   String?
-  meeting     GovernanceMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  id           BigInt                @id @default(autoincrement())
+  title        String
+  body         String
+  votedAt      DateTime
+  outcome      ResolutionOutcome
+  voteFor      Int
+  voteAgainst  Int
+  voteAbstain  Int
+  createdById  String
+  createdBy    User                  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  publishedAt  DateTime?
+  createdAt    DateTime              @default(now())
+  meetingId    String?
+  meeting      GovernanceMeeting?    @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// The agenda item the resolution settles; always on `meeting`.
+  agendaItemId String?
+  agendaItem   GovernanceAgendaItem? @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   /// A board resolution is a binding decision by default (that's what
   /// distinguishes it from an advisory Motion); false marks one recorded
   /// for the register without binding force (e.g. a formal statement).
-  binding     Boolean            @default(true)
+  binding      Boolean               @default(true)
 
   @@index([votedAt(sort: Desc)])
   @@index([meetingId])
+  @@index([agendaItemId])
   @@schema("admin")
 }
 
