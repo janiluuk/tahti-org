@@ -25,6 +25,12 @@ describe('sendMeetingNoticeAndRecordDeliveries', () => {
         ]),
       },
       governanceNoticeDelivery: { upsert: vi.fn().mockResolvedValue({}) },
+      governanceAgendaItem: {
+        findMany: vi.fn().mockResolvedValue([
+          { position: 1, title: 'Opening of the meeting' },
+          { position: 2, title: 'Budget' },
+        ]),
+      },
     } as unknown as PrismaClient
 
     await sendMeetingNoticeAndRecordDeliveries(prisma, {
@@ -37,7 +43,14 @@ describe('sendMeetingNoticeAndRecordDeliveries', () => {
     })
 
     expect(sendGovernanceMeetingNoticeEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'member@example.com', displayName: 'member' }),
+      expect.objectContaining({
+        to: 'member@example.com',
+        displayName: 'member',
+        agendaItems: [
+          { position: 1, title: 'Opening of the meeting' },
+          { position: 2, title: 'Budget' },
+        ],
+      }),
     )
   })
 })

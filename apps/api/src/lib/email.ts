@@ -159,9 +159,12 @@ export async function sendGovernanceMeetingNoticeEmail(opts: {
   scheduledAt: Date | null
   location: string | null
   remoteUrl: string | null
+  /** The numbered agenda, when the board has listed it as items. */
+  agendaItems?: Array<{ position: number; title: string }>
 }): Promise<void> {
   const when = opts.scheduledAt ? opts.scheduledAt.toISOString() : 'to be confirmed'
   const where = [opts.location, opts.remoteUrl].filter(Boolean).join(' / ') || 'to be confirmed'
+  const agenda = opts.agendaItems ?? []
   const text = [
     `Hi ${opts.displayName},`,
     '',
@@ -169,9 +172,16 @@ export async function sendGovernanceMeetingNoticeEmail(opts: {
     '',
     `When: ${when}`,
     `Where: ${where}`,
+    ...(agenda.length > 0
+      ? ['', 'Agenda:', ...agenda.map((item) => `${item.position}. ${item.title}`)]
+      : []),
     '',
     '— Tahti ry',
   ].join('\n')
+  const agendaHtml =
+    agenda.length > 0
+      ? `<p>Agenda:</p><ol>${agenda.map((item) => `<li>${item.title.replace(/</g, '&lt;')}</li>`).join('')}</ol>`
+      : ''
 
   await sendMail({
     to: opts.to,
@@ -182,6 +192,7 @@ export async function sendGovernanceMeetingNoticeEmail(opts: {
       <p>You are being notified of an upcoming Tahti ry meeting: ${opts.meetingTitle.replace(/</g, '&lt;')} (${opts.meetingType}).</p>
       <p>When: ${when}</p>
       <p>Where: ${where.replace(/</g, '&lt;')}</p>
+      ${agendaHtml}
       <p>— Tahti ry</p>
     `,
   })
