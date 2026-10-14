@@ -181,7 +181,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       })
 
       const modRows = await fastify.prisma.channelModerator.findMany({
-        where: { userId: user.id },
+        where: { userId: user.id, channel: { user: availableUserWhere } },
         orderBy: { grantedAt: 'asc' },
         include: {
           channel: {
