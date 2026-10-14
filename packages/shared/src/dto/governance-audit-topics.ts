@@ -59,7 +59,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'membership',
     label: 'Membership & register',
     description:
-      'Member suspend/reinstate, renewal reminders, lapses, account deletion, and membership-tier changes.',
+      'Member suspend/reinstate, renewal reminders, lapses, account deletion, membership-tier changes, and member requests to correct register data or records.',
     actions: [
       'MEMBER_SUSPEND',
       'MEMBER_REINSTATE',
@@ -67,6 +67,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'MEMBERSHIP_LAPSED',
       'ACCOUNT_DELETE',
       'USER_TIER_CHANGE',
+      'CORRECTION_REQUEST',
     ],
   },
   {
@@ -188,6 +189,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MOTION_WITHDRAW: 'Motion draft withdrawn by proposer',
   MOTION_EDIT: 'Motion draft edited by proposer',
   MOTION_MEETING_LINK: 'Motion linked to a meeting',
+  CORRECTION_REQUEST: 'Correction requested by a member',
   RESOLUTION_CREATE: 'Board resolution recorded',
   RESOLUTION_UPDATE: 'Board resolution updated',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',

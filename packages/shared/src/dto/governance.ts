@@ -283,3 +283,24 @@ export const GovernanceDocumentItemSchema = z.object({
 })
 
 export const GovernanceDocumentListSchema = z.array(GovernanceDocumentItemSchema)
+
+export const GovernanceCorrectionSubjectSchema = z.enum(['MEMBER_REGISTER', 'GOVERNANCE_RECORD'])
+export const GovernanceCorrectionStateSchema = z.enum(['OPEN', 'ACCEPTED', 'REJECTED'])
+
+/** POST /api/v1/governance/corrections */
+export const CreateGovernanceCorrectionSchema = z.object({
+  subject: GovernanceCorrectionSubjectSchema,
+  details: z.string().trim().min(10, 'Say what is wrong and what it should be').max(5000),
+})
+
+export const GovernanceCorrectionItemSchema = z.object({
+  id: z.string(),
+  subject: GovernanceCorrectionSubjectSchema,
+  details: z.string(),
+  state: GovernanceCorrectionStateSchema,
+  resolutionNote: z.string().nullable(),
+  resolvedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const GovernanceCorrectionListSchema = z.array(GovernanceCorrectionItemSchema)
