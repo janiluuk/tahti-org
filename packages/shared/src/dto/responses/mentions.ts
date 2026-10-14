@@ -30,3 +30,34 @@ export const MentionMutedResponseSchema = z.object({
 export const MentionUnmutedResponseSchema = z.object({
   unmuted: z.string(),
 })
+
+export const MentionMutedUserSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+})
+
+/** GET /api/me/mentions/settings */
+export const MentionSettingsSchema = z.object({
+  mentionsEnabled: z.boolean(),
+  publicMentionsEnabled: z.boolean(),
+  muted: z.array(MentionMutedUserSchema),
+})
+
+export const MentionInboxItemSchema = z.object({
+  id: z.string(),
+  surface: z.string(),
+  sourceId: z.string(),
+  createdAt: z.coerce.date(),
+  mentioner: z.object({
+    username: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
+  }),
+  sourceTitle: z.string().nullable(),
+  sourceUrl: z.string().nullable(),
+})
+
+/** GET /api/me/mentions — incoming mentions for the signed-in artist. */
+export const MentionsInboxSchema = z.object({
+  mentions: z.array(MentionInboxItemSchema),
+})

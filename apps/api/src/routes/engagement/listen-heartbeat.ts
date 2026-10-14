@@ -3,7 +3,11 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { ListenHeartbeatBodySchema, clientIpFromHeaders } from '@tahti/shared'
+import {
+  ListenHeartbeatBodySchema,
+  clientIpFromHeaders,
+  openApiNoContentResponse,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { countryFromIp } from '../../lib/geoip.js'
 
@@ -30,7 +34,15 @@ function sha256(input: string): string {
 const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/v1/listen/heartbeat',
-    { schema: { response: { 204: { type: 'null' } } } },
+    {
+      schema: {
+        tags: ['engagement'],
+        summary: 'Ping that the caller is still listening',
+        description:
+          'Extends or opens a ListenSession. Answers 204 even when the track/channel is gone so playback is not interrupted. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiNoContentResponse(),
+      },
+    },
     async (request, reply) => {
       const parsed = ListenHeartbeatBodySchema.safeParse(request.body)
       if (!parsed.success) {
