@@ -6,7 +6,10 @@ import { availableUserWhere } from '@tahti/db'
 
 /** Members who can still read a notification, without the board member who
  * made the change (they already know). */
-async function membersToNotify(prisma: PrismaClient, actorUserId: string): Promise<string[]> {
+export async function membersToNotify(
+  prisma: PrismaClient,
+  actorUserId: string,
+): Promise<string[]> {
   const members = await prisma.user.findMany({
     where: { isMember: true, id: { not: actorUserId }, ...availableUserWhere },
     select: { id: true },
