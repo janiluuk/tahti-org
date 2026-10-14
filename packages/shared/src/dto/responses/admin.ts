@@ -14,7 +14,16 @@ export const AdminVenueBoardSchema = z.object({
   createdBy: z.string(),
 })
 
-export const AdminVenueListSchema = z.array(AdminVenueBoardSchema)
+export const AdminVenueListItemSchema = AdminVenueBoardSchema.extend({
+  submitter: z
+    .object({
+      username: z.string(),
+      displayName: z.string(),
+    })
+    .nullable(),
+})
+
+export const AdminVenueListSchema = z.array(AdminVenueListItemSchema)
 
 export const AdminVenueUpdatedSchema = AdminVenueBoardSchema.passthrough()
 
