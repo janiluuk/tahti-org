@@ -268,7 +268,11 @@ export async function buildApp(opts: BuildOptions = {}) {
         { name: 'radio', description: 'Tahti Radio meta-stream' },
         { name: 'settings', description: 'Account settings, incl. personal API tokens' },
         { name: 'admin', description: 'Board / admin endpoints' },
-        { name: 'imports', description: 'Import providers (hearthis, Mixcloud embed, …)' },
+        {
+          name: 'imports',
+          description:
+            'Import providers (Google Drive, SoundCloud, Spotify, hearthis, Mixcloud embed, upload, stash)',
+        },
         { name: 'integrations', description: 'Per-user integration credentials' },
         { name: 'addons', description: 'Channel / homepage add-on widgets' },
         { name: 'webhooks', description: 'Provider webhooks (Stripe, export, email)' },

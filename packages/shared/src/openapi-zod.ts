@@ -65,6 +65,13 @@ export function openApiRedirectResponse(status = 302): Record<number, { type: 'n
   }
 }
 
+/** Empty success body (204 uninstall, unlink, revoke). Not a Fastify body schema. */
+export function openApiNoContentResponse(status = 204): Record<number, { type: 'null' }> {
+  return {
+    [status]: { type: 'null' },
+  }
+}
+
 /** Register Zod schemas under OpenAPI `components.schemas` (PLAT-014). */
 export function zodOpenApiComponents(
   schemas: Record<string, z.ZodTypeAny>,
