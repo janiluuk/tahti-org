@@ -7,11 +7,12 @@ import {
   AdminAnnualReportListSchema,
   AdminAnnualReportRowSchema,
   ApproveAnnualReportSchema,
+  PublishedAnnualReportListSchema,
   openApiResponse,
   openApiResponses,
   yearFromPathParams,
 } from '@tahti/shared'
-import { requireBoard } from '../../plugins/auth.js'
+import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { assembleAnnualReportMarkdown, annualReportStorageKey } from '../../lib/annual-report.js'
 import { presignedGetUrl, putObjectText } from '../../lib/minio.js'
 import { auditLog } from '../../lib/audit.js'
@@ -24,6 +25,7 @@ function reportRow(report: {
   generatedBy: { displayName: string }
   approvedAt: Date | null
   approvalMeetingId: string | null
+  publishedAt: Date | null
 }) {
   return presignedGetUrl(report.storageKey, 3600)
     .catch(() => null)
@@ -36,6 +38,7 @@ function reportRow(report: {
       downloadUrl,
       approvedAt: report.approvedAt,
       approvalMeetingId: report.approvalMeetingId,
+      publishedAt: report.publishedAt,
     }))
 }
 
@@ -180,6 +183,70 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { year, storageKey: updated.storageKey, meetingId: meetingId ?? null },
       })
       return reply.send(await reportRow(updated))
+    },
+  )
+
+  fastify.post(
+    '/api/admin/reports/annual/:year/publish',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (!report.approvedAt) {
+        return reply.status(409).send({ error: 'Only an approved report can be published' })
+      }
+      if (report.publishedAt)
+        return reply.status(409).send({ error: 'This report is already published' })
+
+      const updated = await fastify.prisma.annualReport.update({
+        where: { year },
+        data: { publishedAt: new Date() },
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+      await auditLog(fastify.prisma, {
+        action: 'ANNUAL_REPORT_PUBLISH',
+        actorId: request.sessionUser!.id,
+        targetId: String(year),
+        meta: { year, storageKey: updated.storageKey },
+      })
+      return reply.send(await reportRow(updated))
+    },
+  )
+
+  // Members had no way to read a yearly report: generated reports were
+  // listed to the board only.
+  fastify.get(
+    '/api/v1/governance/annual-reports',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(PublishedAnnualReportListSchema, 'PublishedAnnualReportList'),
+      },
+    },
+    async (_request, reply) => {
+      const reports = await fastify.prisma.annualReport.findMany({
+        where: { publishedAt: { not: null }, approvedAt: { not: null } },
+        orderBy: { year: 'desc' },
+        select: { year: true, approvedAt: true, publishedAt: true, storageKey: true },
+      })
+      return reply.send(
+        await Promise.all(
+          reports.map(async ({ storageKey, ...report }) => ({
+            ...report,
+            downloadUrl: await presignedGetUrl(storageKey, 3600).catch(() => null),
+          })),
+        ),
+      )
     },
   )
 }
