@@ -42,8 +42,10 @@ const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Versioned export-provider capabilities for external clients',
+        tags: ['releases'],
+        summary: 'Export-provider capability catalog',
+        description:
+          'Versioned export-provider capabilities for Tahti Player (`GET /api/me/export-plugins`). Revelator submit/status/webhook; storefront IDs are deep-links, not submit providers.',
         response: openApiResponse(ExportPluginProviderListSchema, 'ExportPluginProviderList'),
       },
     },
@@ -56,7 +58,9 @@ const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'ExportProvider status alias (delegates to provider-specific status)',
+        summary: 'ExportProvider release status alias',
+        description:
+          'Uniform ExportProvider status. `provider=revelator` delegates to GET /api/me/releases/:id/revelator. Other providers 404.',
         response: openApiResponse(RevelatorReleaseStatusSchema, 'RevelatorReleaseStatus'),
       },
     },
@@ -86,7 +90,9 @@ const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'ExportProvider submit alias (delegates to provider-specific submit)',
+        summary: 'ExportProvider release submit alias',
+        description:
+          'Uniform ExportProvider submit. `provider=revelator` delegates to POST /api/me/releases/:id/revelator/submit (202). Other providers 404.',
         response: openApiResponses([
           { status: 202, schema: RevelatorSubmitAcceptedSchema, name: 'RevelatorSubmitAccepted' },
         ]),
@@ -125,8 +131,9 @@ const meExportPluginRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'ExportProvider sound submit alias',
         description:
-          'Sound-scoped ExportProvider submit alias (hearthis-export → POST /api/me/sound/:id/export/hearthis)',
+          'Sound-scoped ExportProvider submit. `provider=hearthis-export` delegates to POST /api/me/sound/:id/export/hearthis (202). Other providers 404.',
         response: openApiResponses([
           { status: 202, schema: HearthisExportQueuedSchema, name: 'HearthisExportQueued' },
         ]),
