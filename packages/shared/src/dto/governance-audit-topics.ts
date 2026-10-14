@@ -185,8 +185,8 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'conflicts',
     label: 'Conflicts & recusals',
     description:
-      'Declared conflicts of interest tied to a meeting, and whether the declarant recused themselves. Free-text "matter" field, not linked to a specific motion/resolution row.',
-    actions: ['CONFLICT_DECLARE'],
+      'Declared conflicts of interest tied to a meeting, and whether the declarant recused themselves. Free-text "matter" field, optionally naming the agenda item it concerns. A mistaken declaration can be removed before the minutes are approved; the removal keeps what it said.',
+    actions: ['CONFLICT_DECLARE', 'CONFLICT_REMOVE'],
   },
 ]
 
@@ -274,6 +274,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   MINUTES_REDACT: 'Minutes marked redacted',
   MINUTES_PUBLISH: 'Minutes published',
   CONFLICT_DECLARE: 'Conflict of interest declared',
+  CONFLICT_REMOVE: 'Conflict-of-interest declaration removed',
 }
 
 const TOPIC_BY_ACTION = new Map<string, GovernanceAuditTopicId>()
