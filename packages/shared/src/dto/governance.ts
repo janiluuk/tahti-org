@@ -361,6 +361,19 @@ export const GovernanceBoardTermSchema = z.object({
 
 export const GovernanceBoardTermListSchema = z.array(GovernanceBoardTermSchema)
 
+/** GET /api/v1/governance/board — the board as it stands today, chair first. */
+export const CurrentBoardSchema = z.array(
+  z.object({
+    id: z.string(),
+    role: GovernanceBoardRoleSchema,
+    displayName: z.string(),
+    // The member's profile, while the account exists.
+    username: z.string().nullable(),
+    termStart: z.coerce.date(),
+    termEnd: z.coerce.date().nullable(),
+  }),
+)
+
 /** POST /api/admin/governance/board-terms */
 export const CreateGovernanceBoardTermSchema = z
   .object({
