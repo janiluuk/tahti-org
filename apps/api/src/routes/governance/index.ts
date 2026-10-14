@@ -30,7 +30,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import type { MotionState, Prisma } from '@tahti/db'
 import { userName } from '../../lib/safe-names.js'
 import { motionCommentView } from '../../lib/motion-comments.js'
-import { issueMotionCertificate } from '../../lib/motion-certificate.js'
+import { closedMotionTally, issueMotionCertificate } from '../../lib/motion-certificate.js'
 import {
   notifyMembersOfMotionOpened,
   notifyMembersOfMotionResult,
@@ -65,6 +65,19 @@ function decodeMotionCursor(raw: string): { createdAt: Date; id: string } | null
 // To avoid a bandwagon effect, per-choice tallies are hidden while a motion is
 // OPEN and only revealed once it CLOSES. The requesting member can always see
 // whether (and how) they voted.
+
+// A closed motion shows the result fixed in its certificate, or the board's
+// latest correction to it, not the vote rows as they are today.
+function publishedResult(motion: {
+  resultTally: unknown
+  resultCorrections: Array<{ tally: unknown }>
+  votes: Array<{ choice: 'YES' | 'NO' | 'ABSTAIN' }>
+}) {
+  const live = { YES: 0, NO: 0, ABSTAIN: 0 }
+  for (const vote of motion.votes) live[vote.choice] += 1
+  const { tally, source } = closedMotionTally(motion.resultTally, motion.resultCorrections, live)
+  return { tally, tallySource: source, totalVotes: tally.YES + tally.NO + tally.ABSTAIN }
+}
 
 const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/members — members-only directory (PRH register view)
@@ -166,6 +179,10 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           // response is the only place a CLOSED motion's tally is ever shown.
           votes: { select: { userId: true, choice: true } },
           seconds: { select: { userId: true } },
+          resultCorrections: {
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+            select: { tally: true },
+          },
         },
       })
 
@@ -178,11 +195,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         page.map((m) => {
           const myVote = m.votes.find((v) => v.userId === user.id)
-          let tally: { YES: number; NO: number; ABSTAIN: number } | undefined
-          if (m.state === 'CLOSED') {
-            tally = { YES: 0, NO: 0, ABSTAIN: 0 }
-            for (const v of m.votes) tally[v.choice] += 1
-          }
+          const result = m.state === 'CLOSED' ? publishedResult(m) : undefined
           return {
             id: m.id,
             title: m.title,
@@ -191,14 +204,15 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             openAt: m.openAt,
             closeAt: m.closeAt,
             proposer: userName(m.proposer),
-            totalVotes: m._count.votes,
+            totalVotes: result ? result.totalVotes : m._count.votes,
             youVoted: Boolean(myVote),
             yourChoice: myVote?.choice ?? null,
             commentCount: m._count.comments,
             eligibleMemberCount: m.eligibleMemberCount,
             secondCount: m.seconds.length,
             youSeconded: m.seconds.some((s) => s.userId === user.id),
-            tally,
+            tally: result?.tally,
+            tallySource: result?.tallySource,
           }
         }),
       )
@@ -274,6 +288,10 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           seconds: { select: { userId: true } },
           meeting: { select: { id: true, title: true, scheduledAt: true, state: true } },
           _count: { select: { comments: true } },
+          resultCorrections: {
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+            select: { tally: true },
+          },
         },
       })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
@@ -310,9 +328,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Per-choice tally is published only once voting has closed.
       if (motion.state === 'CLOSED') {
-        const tally = { YES: 0, NO: 0, ABSTAIN: 0 }
-        for (const v of motion.votes) tally[v.choice] += 1
-        return reply.send({ ...base, tally })
+        return reply.send({ ...base, ...publishedResult(motion) })
       }
 
       return reply.send(base)

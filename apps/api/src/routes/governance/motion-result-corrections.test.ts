@@ -194,4 +194,43 @@ describe('corrections to a motion result', () => {
     }
     expect((await correct('missing-motion', { note: 'x' })).statusCode).toBe(404)
   })
+
+  it('shows members the certified result, then the correction, in the list and detail', async () => {
+    const id = await closedMotion('Shown to members')
+    const detail = async () =>
+      (
+        await app.inject({
+          method: 'GET',
+          url: `/api/v1/governance/motions/${id}`,
+          headers: { cookie: memberCookie },
+        })
+      ).json()
+    const listed = async () =>
+      (
+        (
+          await app.inject({
+            method: 'GET',
+            url: '/api/v1/governance/motions?limit=100',
+            headers: { cookie: memberCookie },
+          })
+        ).json() as Array<Record<string, unknown>>
+      ).find((m) => m.id === id)
+
+    // A vote row removed after closing does not change the published result.
+    await prisma.vote.deleteMany({ where: { motionId: id } })
+    expect(await detail()).toMatchObject({
+      tally: { YES: 1, NO: 0, ABSTAIN: 0 },
+      totalVotes: 1,
+      tallySource: 'CERTIFICATE',
+    })
+
+    await correct(id, { note: 'Recount', tally: { YES: 0, NO: 1, ABSTAIN: 0 } })
+    const expected = {
+      tally: { YES: 0, NO: 1, ABSTAIN: 0 },
+      totalVotes: 1,
+      tallySource: 'CORRECTION',
+    }
+    expect(await detail()).toMatchObject(expected)
+    expect(await listed()).toMatchObject(expected)
+  })
 })
