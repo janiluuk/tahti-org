@@ -60,8 +60,17 @@ export const MotionSummarySchema = z.object({
 
 export const MotionListSchema = z.array(MotionSummarySchema)
 
+export const MotionMeetingRefSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  scheduledAt: z.coerce.date().nullable(),
+})
+
 export const MotionDetailSchema = MotionSummarySchema.extend({
   description: z.string(),
+  // The meeting that takes this motion up, if the board linked one. A
+  // meeting still in DRAFT is shown to the board only.
+  meeting: MotionMeetingRefSchema.nullable(),
 })
 
 export const MotionCommentSchema = z.object({
@@ -122,4 +131,9 @@ export const MotionDraftEditedResponseSchema = z.object({
 
 export const MotionCommentRemovedResponseSchema = z.object({
   ok: z.literal(true),
+})
+
+export const MotionMeetingLinkResponseSchema = z.object({
+  id: z.string(),
+  meeting: MotionMeetingRefSchema.nullable(),
 })
