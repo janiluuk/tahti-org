@@ -25,7 +25,7 @@ vi.mock('nodemailer', () => ({
   },
 }))
 
-import { sendBetaApplicationEmail } from './email.js'
+import { sendBetaApplicationEmail, sendGovernanceMeetingNoticeEmail } from './email.js'
 
 describe('sendBetaApplicationEmail', () => {
   beforeEach(() => {
@@ -50,5 +50,36 @@ describe('sendBetaApplicationEmail', () => {
     )
     expect(nodemailerSendMail.mock.calls[0]?.[0]?.text).toContain('https://soundcloud.com/a')
     expect(nodemailerSendMail.mock.calls[0]?.[0]?.text).toContain('https://bandcamp.com/b')
+  })
+})
+
+describe('sendGovernanceMeetingNoticeEmail', () => {
+  beforeEach(() => {
+    nodemailerSendMail.mockClear()
+  })
+
+  it('lists the numbered agenda when there is one', async () => {
+    const notice = {
+      to: 'member@example.com',
+      displayName: 'Member',
+      meetingTitle: 'Annual meeting',
+      meetingType: 'GENERAL',
+      scheduledAt: null,
+      location: null,
+      remoteUrl: null,
+    }
+    await sendGovernanceMeetingNoticeEmail({
+      ...notice,
+      agendaItems: [
+        { position: 1, title: 'Opening' },
+        { position: 2, title: 'Budget <draft>' },
+      ],
+    })
+    const mail = nodemailerSendMail.mock.calls[0]?.[0]
+    expect(mail?.text).toContain('Agenda:\n1. Opening\n2. Budget <draft>')
+    expect(mail?.html).toContain('<ol><li>Opening</li><li>Budget &lt;draft></li></ol>')
+
+    await sendGovernanceMeetingNoticeEmail(notice)
+    expect(nodemailerSendMail.mock.calls[1]?.[0]?.text).not.toContain('Agenda:')
   })
 })

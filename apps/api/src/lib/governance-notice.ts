@@ -27,6 +27,13 @@ export async function sendMeetingNoticeAndRecordDeliveries(
     select: { id: true, email: true, username: true, displayName: true },
   })
 
+  // The numbered agenda goes into the notice once the board has listed it.
+  const agendaItems = await prisma.governanceAgendaItem.findMany({
+    where: { meetingId: meeting.id },
+    orderBy: { position: 'asc' },
+    select: { position: true, title: true },
+  })
+
   let recorded = 0
   for (const recipient of recipients) {
     if (!recipient.email) continue
@@ -39,6 +46,7 @@ export async function sendMeetingNoticeAndRecordDeliveries(
         scheduledAt: meeting.scheduledAt,
         location: meeting.location,
         remoteUrl: meeting.remoteUrl,
+        agendaItems,
       })
       await prisma.governanceNoticeDelivery.upsert({
         where: { meetingId_memberId: { meetingId: meeting.id, memberId: recipient.id } },
