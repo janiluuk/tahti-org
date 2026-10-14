@@ -766,3 +766,27 @@ unchanged. Earlier steps: adapter + caller migration (player #46), host façade,
 §6 tests 22/22 (player #85). PR tahti-player#121. Leftover (own-repo move)
 moved to `remaining-work.md`; `App.hydration.test.tsx` fails on master
 independently of this work.
+
+### 2026-10-15 — Governance records API (`docs/governance-worklog.md`)
+
+Sixty single-slice PRs (#763–#831), API only — no web pages. **Motions:**
+seconding with seconders listed, proposer edit/withdraw of drafts, comment
+removal, board circulation of a draft, meeting link, notifications (opened,
+result, seconded, commented, circulated), a sha256 result certificate on close
+with chained board corrections, and the certified tally in lists/history.
+**Corrections:** members request register/record corrections (optionally naming
+the record), the board answers, the member is told, and can withdraw an
+unanswered one. **Documents:** versions name what they supersede, archive,
+field edits. **Association:** registered details and contacts, auditors and
+operations inspectors with terms, board roles and terms (end early with a
+reason, board on a given day). **Yearly reports:** approve, publish, filing
+date + reference, correct with kept revisions, archive. **Meetings:** numbered
+agenda items (reorder/remove until minutes approved) that motions, resolutions,
+documents and conflict declarations can name, a per-item outcome shown once
+minutes are published, conflict removal and member view, agenda in the notice
+email. **Legal holds** on documents, resolutions, yearly reports and meetings,
+with a board list filterable by kind. **Elections:** set up, edit, cancel,
+candidacies and nominations, result creating board terms, member view,
+notifications. Also fixed a `board-terms.test.ts` setup timeout under load
+(#831). Leftovers — every web UI, signatories, PRH submission, ballots — stay in
+`docs/governance-worklog.md` and `remaining-work.md`.
