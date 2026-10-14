@@ -192,6 +192,9 @@ export const CreateGovernanceDocumentSchema = z.object({
   effectiveAt: z.coerce.date().optional(),
   publishedAt: z.coerce.date().nullable().optional(),
   meetingId: z.string().cuid().nullable().optional(),
+  /** The earlier version this one replaces (same type). When given, `version`
+   * defaults to that document's version + 1. */
+  supersedesId: z.string().trim().min(1).max(64).optional(),
 })
 
 export const GovernanceMeetingItemSchema = z.object({
@@ -278,6 +281,10 @@ export const GovernanceDocumentItemSchema = z.object({
   meetingId: z.string().nullable(),
   downloadUrl: z.string().nullable(),
   externalUrl: z.string().nullable(),
+  // The version this document replaces, and the one that replaces it. In the
+  // member list a successor counts only once it is published.
+  supersedesId: z.string().nullable(),
+  supersededById: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

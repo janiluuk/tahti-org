@@ -37,6 +37,8 @@ async function documentResponse(document: {
   meetingId: string | null
   storageKey: string | null
   externalUrl: string | null
+  supersedesId: string | null
+  supersededBy?: { id: string } | null
   createdAt: Date
   updatedAt: Date
 }) {
@@ -53,6 +55,8 @@ async function documentResponse(document: {
       ? await presignedGetUrl(document.storageKey, 3600).catch(() => null)
       : null,
     externalUrl: document.externalUrl,
+    supersedesId: document.supersedesId,
+    supersededById: document.supersededBy?.id ?? null,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
   }
@@ -156,8 +160,18 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: [{ type: 'asc' }, { effectiveAt: 'desc' }, { version: 'desc' }],
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         take: limit + 1,
+        include: { supersededBy: { select: { id: true, publishedAt: true } } },
       })
-      const rows = await Promise.all(documents.map(documentResponse))
+      const rows = await Promise.all(
+        documents.map((document) =>
+          documentResponse({
+            ...document,
+            // A successor the board has not published yet is not shown, and
+            // neither is a link back to a version members cannot see.
+            supersededBy: document.supersededBy?.publishedAt ? document.supersededBy : null,
+          }),
+        ),
+      )
       return reply.send(nextCursor(reply, rows, limit))
     },
   )
@@ -567,6 +581,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       const documents = await fastify.prisma.governanceDocument.findMany({
         orderBy: { createdAt: 'desc' },
         take: 200,
+        include: { supersededBy: { select: { id: true } } },
       })
       return reply.send(await Promise.all(documents.map(documentResponse)))
     },
@@ -589,14 +604,44 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply
           .status(400)
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      // A new version names the one it replaces. Each version was a
+      // separate, manually numbered row before, with nothing saying which
+      // bylaws are the current ones.
+      let version = parsed.data.version
+      if (parsed.data.supersedesId) {
+        const previous = await fastify.prisma.governanceDocument.findUnique({
+          where: { id: parsed.data.supersedesId },
+          select: { type: true, version: true, supersededBy: { select: { id: true } } },
+        })
+        if (!previous) return reply.status(400).send({ error: 'Superseded document not found' })
+        if (previous.type !== parsed.data.type) {
+          return reply
+            .status(400)
+            .send({ error: 'A document can only supersede one of the same type' })
+        }
+        if (previous.supersededBy) {
+          return reply.status(409).send({ error: 'That version has already been superseded' })
+        }
+        if (version !== undefined && version <= previous.version) {
+          return reply
+            .status(400)
+            .send({ error: 'The version must be higher than the one it supersedes' })
+        }
+        version ??= previous.version + 1
+      }
       const document = await fastify.prisma.governanceDocument.create({
-        data: { ...parsed.data, createdById: request.sessionUser!.id },
+        data: { ...parsed.data, version, createdById: request.sessionUser!.id },
       })
       await auditLog(fastify.prisma, {
         action: 'DOCUMENT_CREATE',
         actorId: request.sessionUser!.id,
         targetId: document.id,
-        meta: { title: document.title, type: document.type, version: document.version },
+        meta: {
+          title: document.title,
+          type: document.type,
+          version: document.version,
+          ...(document.supersedesId ? { supersedesId: document.supersedesId } : {}),
+        },
       })
       return reply.status(201).send(await documentResponse(document))
     },
