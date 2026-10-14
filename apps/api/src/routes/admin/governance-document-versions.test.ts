@@ -120,4 +120,60 @@ describe('governance document versions', () => {
     expect((v2.json() as Doc).version).toBe(7)
     expect((await create({ supersedesId: v1.id })).statusCode).toBe(409)
   })
+
+  describe('archiving', () => {
+    function archive(who: string, id: string, archived: unknown) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/admin/governance/documents/${id}`,
+        headers: { cookie: who },
+        payload: { archived },
+      })
+    }
+
+    it('takes a published document out of the member list and can put it back', async () => {
+      const doc = (
+        await create({ title: 'Posted by mistake', type: 'OTHER', publishedAt: new Date() })
+      ).json() as Doc
+
+      const res = await archive(boardCookie, doc.id, true)
+      expect(res.statusCode).toBe(200)
+      expect(res.json().archivedAt).not.toBeNull()
+      // Archiving twice is one audit entry.
+      await archive(boardCookie, doc.id, true)
+
+      let rows = await list('/api/v1/governance/documents', memberCookie)
+      expect(rows.find((d) => d.id === doc.id)).toBeUndefined()
+      const admin = await list('/api/admin/governance/documents', boardCookie)
+      expect(admin.find((d) => d.id === doc.id)).toBeDefined()
+
+      expect((await archive(boardCookie, doc.id, false)).json().archivedAt).toBeNull()
+      rows = await list('/api/v1/governance/documents', memberCookie)
+      expect(rows.find((d) => d.id === doc.id)).toBeDefined()
+
+      const audits = await prisma.auditLog.findMany({
+        where: { action: 'DOCUMENT_ARCHIVE', targetId: doc.id },
+        orderBy: { id: 'asc' },
+      })
+      expect(audits.map((a) => a.meta)).toEqual([
+        { title: 'Posted by mistake', archived: true },
+        { title: 'Posted by mistake', archived: false },
+      ])
+    })
+
+    it('does not point members at an archived successor', async () => {
+      const v1 = (await create({ version: 1, publishedAt: new Date() })).json() as Doc
+      const v2 = (await create({ supersedesId: v1.id, publishedAt: new Date() })).json() as Doc
+      await archive(boardCookie, v2.id, true)
+      const rows = await list('/api/v1/governance/documents', memberCookie)
+      expect(rows.find((d) => d.id === v1.id)?.supersededById).toBeNull()
+    })
+
+    it('is for the board only and checks its input', async () => {
+      const doc = (await create({ type: 'OTHER' })).json() as Doc
+      expect((await archive(memberCookie, doc.id, true)).statusCode).toBe(403)
+      expect((await archive(boardCookie, doc.id, 'yes')).statusCode).toBe(400)
+      expect((await archive(boardCookie, 'missing-document', true)).statusCode).toBe(404)
+    })
+  })
 })
