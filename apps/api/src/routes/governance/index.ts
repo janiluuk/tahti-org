@@ -29,6 +29,7 @@ import { auditLog } from '../../lib/audit.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import type { MotionState, Prisma } from '@tahti/db'
 import { userName } from '../../lib/safe-names.js'
+import { motionCommentView } from '../../lib/motion-comments.js'
 import {
   notifyMembersOfMotionOpened,
   notifyMembersOfMotionResult,
@@ -546,13 +547,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
 
       const byMotion: Record<string, unknown[]> = Object.fromEntries(ids.map((id) => [id, []]))
       for (const c of comments) {
-        byMotion[c.motionId]!.push({
-          id: c.id.toString(),
-          body: c.body,
-          authorId: c.authorId,
-          authorDisplayName: c.author ? userName(c.author) : null,
-          createdAt: c.createdAt,
-        })
+        byMotion[c.motionId]!.push(motionCommentView(c))
       }
 
       return reply.send(byMotion)
@@ -584,15 +579,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         include: { author: { select: { username: true, displayName: true } } },
       })
 
-      return reply.send(
-        comments.map((c) => ({
-          id: c.id.toString(),
-          body: c.body,
-          authorId: c.authorId,
-          authorDisplayName: c.author ? userName(c.author) : null,
-          createdAt: c.createdAt,
-        })),
-      )
+      return reply.send(comments.map(motionCommentView))
     },
   )
 
@@ -641,13 +628,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: id,
       })
 
-      return reply.status(201).send({
-        id: comment.id.toString(),
-        body: comment.body,
-        authorId: comment.authorId,
-        authorDisplayName: comment.author ? userName(comment.author) : null,
-        createdAt: comment.createdAt,
-      })
+      return reply.status(201).send(motionCommentView(comment))
     },
   )
 
