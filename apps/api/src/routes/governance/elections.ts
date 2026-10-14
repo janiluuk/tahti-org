@@ -13,6 +13,7 @@ import {
   NominateElectionCandidateSchema,
   RecordElectionResultSchema,
   StandForElectionSchema,
+  UpdateGovernanceElectionSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -98,6 +99,9 @@ async function nominate(
     select: CANDIDATE_SELECT,
   })
 }
+
+const same = (a: unknown, b: unknown) =>
+  (a instanceof Date ? a.getTime() : a) === (b instanceof Date ? b.getTime() : b)
 
 /** A result the board cannot record; thrown to roll the whole result back. */
 class ResultRefused extends Error {
@@ -226,6 +230,69 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       return reply.status(201).send(election)
+    },
+  )
+
+  fastify.patch(
+    '/api/admin/governance/elections/:id',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceElectionListSchema.element, 'GovernanceElection'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = UpdateGovernanceElectionSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const existing = await fastify.prisma.governanceElection.findUnique({
+        where: { id: routeParams.id },
+        select: ELECTION_SELECT,
+      })
+      if (!existing) return reply.status(404).send({ error: 'Election not found' })
+      if (existing.decidedAt) {
+        return reply.status(409).send({ error: 'The result of this election is recorded' })
+      }
+      const { seats, meetingId } = parsed.data
+      if (seats !== undefined && existing.role === 'CHAIR' && seats !== 1) {
+        return reply.status(400).send({ error: 'There is one chair' })
+      }
+      if (meetingId) {
+        const meeting = await fastify.prisma.governanceMeeting.findUnique({
+          where: { id: meetingId },
+          select: { id: true },
+        })
+        if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
+      }
+      const changed = (Object.keys(parsed.data) as Array<keyof typeof parsed.data>).filter(
+        (key) => parsed.data[key] !== undefined && !same(parsed.data[key], existing[key]),
+      )
+      if (changed.length === 0) return reply.send(existing)
+      // The result cannot be recorded in between: it also checks decidedAt.
+      const updated = await fastify.prisma.governanceElection.updateMany({
+        where: { id: existing.id, decidedAt: null },
+        data: parsed.data,
+      })
+      if (updated.count === 0) {
+        return reply.status(409).send({ error: 'The result of this election is recorded' })
+      }
+      await auditLog(fastify.prisma, {
+        action: 'ELECTION_UPDATE',
+        actorId: request.sessionUser!.id,
+        targetId: existing.id,
+        meta: { title: existing.title, changed },
+      })
+      return reply.send(
+        await fastify.prisma.governanceElection.findUniqueOrThrow({
+          where: { id: existing.id },
+          select: ELECTION_SELECT,
+        }),
+      )
     },
   )
 

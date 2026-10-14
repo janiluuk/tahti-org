@@ -31,6 +31,19 @@ export const CreateGovernanceElectionSchema = z
     path: ['seats'],
   })
 
+/** PATCH /api/admin/governance/elections/:id — until the result is recorded.
+ * The role stays: a different role is a different election. */
+export const UpdateGovernanceElectionSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    seats: z.number().int().min(1).max(20).optional(),
+    meetingId: z.string().cuid().nullable().optional(),
+    nominationsCloseAt: z.coerce.date().nullable().optional(),
+  })
+  .refine((body) => Object.values(body).some((value) => value !== undefined), {
+    message: 'Nothing to change',
+  })
+
 export const GovernanceElectionCandidateSchema = z.object({
   id: z.string(),
   userId: z.string().nullable(),
