@@ -37,3 +37,22 @@ export const ReorderGovernanceAgendaItemsSchema = z.object({
     .max(200)
     .refine((ids) => new Set(ids).size === ids.length, 'An item is listed twice'),
 })
+
+/** GET /api/v1/governance/meetings/:id/agenda-items — each item with the
+ * records filed under it that members can see: motions past DRAFT, published
+ * resolutions, and published documents that are not archived. */
+export const MemberGovernanceAgendaItemListSchema = z.array(
+  GovernanceAgendaItemSchema.extend({
+    motions: z.array(
+      z.object({ id: z.string(), title: z.string(), state: z.enum(['OPEN', 'CLOSED']) }),
+    ),
+    resolutions: z.array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        outcome: z.enum(['PASSED', 'FAILED', 'DEFERRED']),
+      }),
+    ),
+    documents: z.array(z.object({ id: z.string(), title: z.string(), type: z.string() })),
+  }),
+)
