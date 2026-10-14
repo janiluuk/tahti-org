@@ -6,6 +6,7 @@ import {
   AdminAnnualReportGeneratedSchema,
   AdminAnnualReportListSchema,
   AdminAnnualReportRowSchema,
+  AnnualReportFilingSchema,
   ApproveAnnualReportSchema,
   PublishedAnnualReportListSchema,
   openApiResponse,
@@ -26,6 +27,8 @@ function reportRow(report: {
   approvedAt: Date | null
   approvalMeetingId: string | null
   publishedAt: Date | null
+  filedAt: Date | null
+  filingReference: string | null
 }) {
   return presignedGetUrl(report.storageKey, 3600)
     .catch(() => null)
@@ -39,6 +42,8 @@ function reportRow(report: {
       approvedAt: report.approvedAt,
       approvalMeetingId: report.approvalMeetingId,
       publishedAt: report.publishedAt,
+      filedAt: report.filedAt,
+      filingReference: report.filingReference,
     }))
 }
 
@@ -222,6 +227,57 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // Filing status: when the approved report went to the authority that
+  // receives it, and the reference given. Nothing recorded this before.
+  fastify.put(
+    '/api/admin/reports/annual/:year/filing',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const parsed = AnnualReportFilingSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (!report.approvedAt) {
+        return reply.status(409).send({ error: 'Only an approved report can be filed' })
+      }
+      const { filedAt } = parsed.data
+      const filingReference = filedAt ? (parsed.data.filingReference ?? null) : null
+      if (filedAt && filedAt < report.approvedAt) {
+        return reply.status(400).send({ error: 'A report cannot be filed before it was approved' })
+      }
+
+      const updated = await fastify.prisma.annualReport.update({
+        where: { year },
+        data: { filedAt, filingReference },
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+      if (
+        report.filedAt?.getTime() !== filedAt?.getTime() ||
+        report.filingReference !== filingReference
+      ) {
+        await auditLog(fastify.prisma, {
+          action: 'ANNUAL_REPORT_FILE',
+          actorId: request.sessionUser!.id,
+          targetId: String(year),
+          meta: { year, filedAt, filingReference },
+        })
+      }
+      return reply.send(await reportRow(updated))
+    },
+  )
+
   // Members had no way to read a yearly report: generated reports were
   // listed to the board only.
   fastify.get(
@@ -237,7 +293,13 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
       const reports = await fastify.prisma.annualReport.findMany({
         where: { publishedAt: { not: null }, approvedAt: { not: null } },
         orderBy: { year: 'desc' },
-        select: { year: true, approvedAt: true, publishedAt: true, storageKey: true },
+        select: {
+          year: true,
+          approvedAt: true,
+          publishedAt: true,
+          filedAt: true,
+          storageKey: true,
+        },
       })
       return reply.send(
         await Promise.all(

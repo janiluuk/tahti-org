@@ -442,6 +442,7 @@ enum AuditAction {
   ANNUAL_REPORT_GENERATE
   ANNUAL_REPORT_APPROVE
   ANNUAL_REPORT_PUBLISH
+  ANNUAL_REPORT_FILE
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
@@ -3942,6 +3943,10 @@ model AnnualReport {
   approvalMeeting   GovernanceMeeting? @relation(fields: [approvalMeetingId], references: [id], onDelete: SetNull)
   /// Set when the board publishes the approved report to members.
   publishedAt       DateTime?
+  /// When the report was filed with the authority that receives it, and the
+  /// reference that authority gave, as the board records them.
+  filedAt           DateTime?
+  filingReference   String?
 
   @@schema("admin")
 }

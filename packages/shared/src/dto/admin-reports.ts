@@ -13,6 +13,14 @@ export const AdminAnnualReportRowSchema = z.object({
   approvedAt: z.coerce.date().nullable(),
   approvalMeetingId: z.string().nullable(),
   publishedAt: z.coerce.date().nullable(),
+  filedAt: z.coerce.date().nullable(),
+  filingReference: z.string().nullable(),
+})
+
+/** PUT /api/admin/reports/annual/:year/filing — null `filedAt` clears it. */
+export const AnnualReportFilingSchema = z.object({
+  filedAt: z.coerce.date().nullable(),
+  filingReference: z.string().trim().min(1).max(100).nullable().optional(),
 })
 
 /** GET /api/v1/governance/annual-reports — published reports, newest first. */
@@ -21,6 +29,7 @@ export const PublishedAnnualReportListSchema = z.array(
     year: z.number().int(),
     approvedAt: z.coerce.date(),
     publishedAt: z.coerce.date(),
+    filedAt: z.coerce.date().nullable(),
     downloadUrl: z.string().nullable(),
   }),
 )
