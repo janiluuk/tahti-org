@@ -30,6 +30,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import type { MotionState, Prisma } from '@tahti/db'
 import { userName } from '../../lib/safe-names.js'
 import { motionCommentView } from '../../lib/motion-comments.js'
+import { issueMotionCertificate } from '../../lib/motion-certificate.js'
 import {
   notifyMembersOfMotionOpened,
   notifyMembersOfMotionResult,
@@ -398,6 +399,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
       if (body.state === 'CLOSED') {
+        await issueMotionCertificate(fastify.prisma, updated.id)
         await notifyMembersOfMotionResult(fastify.prisma, updated, user.id).catch(
           (err: unknown) => {
             request.log.error({ err, motionId: updated.id }, 'motion-result notification failed')
