@@ -361,6 +361,74 @@ describe('board elections', () => {
       )
     })
   })
+  describe('cancelling', () => {
+    it('calls an election off with a reason, after which nothing changes', async () => {
+      const id = (await setUp({ title: 'Election called off', role: 'SECRETARY', seats: 1 })).json()
+        .id
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/elections/${id}/candidacy`,
+        headers: { cookie: memberCookie },
+        payload: {},
+      })
+      const cancel = (payload: Record<string, unknown>) =>
+        app.inject({
+          method: 'POST',
+          url: `/api/admin/governance/elections/${id}/cancel`,
+          headers: { cookie: boardCookie },
+          payload,
+        })
+      expect((await cancel({ reason: ' ' })).statusCode).toBe(400)
+      const res = await cancel({ reason: 'The secretary is chosen by the board' })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({ cancelReason: 'The secretary is chosen by the board' })
+      expect(res.json().cancelledAt).toBeTruthy()
+      expect((await cancel({ reason: 'Again' })).statusCode).toBe(409)
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'ELECTION_CANCEL', targetId: id },
+      })
+      expect(audit?.meta).toMatchObject({ reason: 'The secretary is chosen by the board' })
+
+      const refused = await Promise.all([
+        app.inject({
+          method: 'POST',
+          url: `/api/admin/governance/elections/${id}/candidates`,
+          headers: { cookie: boardCookie },
+          payload: { userId: ids.other },
+        }),
+        app.inject({
+          method: 'DELETE',
+          url: `/api/v1/governance/elections/${id}/candidacy`,
+          headers: { cookie: memberCookie },
+        }),
+        app.inject({
+          method: 'POST',
+          url: `/api/admin/governance/elections/${id}/result`,
+          headers: { cookie: boardCookie },
+          payload: { electedUserIds: [ids.member], termStart: iso(30) },
+        }),
+        app.inject({
+          method: 'PATCH',
+          url: `/api/admin/governance/elections/${id}`,
+          headers: { cookie: boardCookie },
+          payload: { seats: 2 },
+        }),
+      ])
+      expect(refused.map((r) => r.statusCode)).toEqual([409, 409, 409, 409])
+
+      const members = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/elections',
+        headers: { cookie: memberCookie },
+      })
+      expect(
+        (members.json() as Array<{ id: string }>).find((election) => election.id === id),
+      ).toMatchObject({
+        nominationsOpen: false,
+        cancelReason: 'The secretary is chosen by the board',
+      })
+    })
+  })
   describe('member view', () => {
     it('lists elections with the candidates standing and the result', async () => {
       const res = await app.inject({

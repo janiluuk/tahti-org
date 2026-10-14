@@ -12,6 +12,8 @@ export const GovernanceElectionSchema = z.object({
   meetingId: z.string().nullable(),
   nominationsCloseAt: z.coerce.date().nullable(),
   decidedAt: z.coerce.date().nullable(),
+  cancelledAt: z.coerce.date().nullable(),
+  cancelReason: z.string().nullable(),
   createdAt: z.coerce.date(),
 })
 
@@ -43,6 +45,11 @@ export const UpdateGovernanceElectionSchema = z
   .refine((body) => Object.values(body).some((value) => value !== undefined), {
     message: 'Nothing to change',
   })
+
+/** POST /api/admin/governance/elections/:id/cancel */
+export const CancelGovernanceElectionSchema = z.object({
+  reason: z.string().trim().min(1).max(1000),
+})
 
 export const GovernanceElectionCandidateSchema = z.object({
   id: z.string(),

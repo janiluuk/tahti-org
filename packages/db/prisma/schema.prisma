@@ -405,6 +405,7 @@ enum AuditAction {
   ELECTION_NOMINATE
   ELECTION_WITHDRAW
   ELECTION_DECIDE
+  ELECTION_CANCEL
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -2640,6 +2641,9 @@ model GovernanceElection {
   nominationsCloseAt DateTime?
   /// Set once the board records the result.
   decidedAt          DateTime?
+  /// Set when the board calls the election off; nothing can change after.
+  cancelledAt        DateTime?
+  cancelReason       String?
   createdById        String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
