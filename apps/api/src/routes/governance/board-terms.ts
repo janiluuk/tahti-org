@@ -4,11 +4,12 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateGovernanceBoardTermSchema,
+  CurrentBoardSchema,
   GovernanceBoardTermListSchema,
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
-import { requireBoard } from '../../plugins/auth.js'
+import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
 // Board members' elected roles and terms. Only free-text chair/secretary names
@@ -35,6 +36,39 @@ function overlapping(start: Date, end: Date | null) {
 }
 
 const boardTermRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/v1/governance/board',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(CurrentBoardSchema, 'CurrentBoard'),
+      },
+    },
+    async (_request, reply) => {
+      const now = new Date()
+      const terms = await fastify.prisma.governanceBoardTerm.findMany({
+        where: {
+          termStart: { lte: now },
+          OR: [{ termEnd: null }, { termEnd: { gt: now } }],
+        },
+        // Postgres orders an enum by its declared order: chair first.
+        orderBy: [{ role: 'asc' }, { displayName: 'asc' }],
+        select: {
+          id: true,
+          role: true,
+          displayName: true,
+          termStart: true,
+          termEnd: true,
+          user: { select: { username: true } },
+        },
+      })
+      return reply.send(
+        terms.map(({ user, ...term }) => ({ ...term, username: user?.username ?? null })),
+      )
+    },
+  )
+
   fastify.get(
     '/api/admin/governance/board-terms',
     {

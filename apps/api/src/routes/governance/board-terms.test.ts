@@ -122,4 +122,21 @@ describe('board terms', () => {
     })
     expect(list.statusCode).toBe(200)
   })
+
+  it('shows members the board as it stands today, chair first', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/board',
+      headers: { cookie: memberCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const board = (res.json() as Array<{ displayName: string; role: string; username: string }>)
+      .filter((t) => t.displayName.startsWith('Term '))
+      .map((t) => [t.role, t.displayName, t.username])
+    // The chair whose term starts in a year is not shown yet.
+    expect(board).toEqual([
+      ['CHAIR', 'Term board', 'governance-boardterm-board'],
+      ['TREASURER', 'Term member', 'governance-boardterm-member'],
+    ])
+  })
 })
