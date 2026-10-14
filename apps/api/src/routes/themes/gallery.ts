@@ -43,7 +43,9 @@ const themeGalleryRoute: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['themes'],
-        description: 'Themes published in the tahti-registry catalog',
+        summary: 'Published theme gallery from tahti-registry',
+        description:
+          'Themes published in the tahti-registry `themes.json` catalog (cached 5 min). Same file Tahti Player Store reads.',
         response: openApiResponse(ThemeGalleryResponseSchema, 'ThemeGallery'),
       },
     },

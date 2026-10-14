@@ -10,6 +10,7 @@ import {
   MixcloudOAuthCallbackQuerySchema,
   MixcloudUploadQueuedSchema,
   MixcloudUploadStatusSchema,
+  PROVIDER_NOT_CONNECTED,
   openApiRedirectResponse,
   openApiResponse,
   openApiResponses,
@@ -34,8 +35,10 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['releases'],
-        description: 'M7: Mixcloud OAuth connection status',
+        tags: ['imports'],
+        summary: 'Mixcloud OAuth connection status',
+        description:
+          'Whether the caller has connected Mixcloud for archive upload, and whether this server has Mixcloud OAuth configured (client id and secret). Catalog statusPath for the Mixcloud OAuth import provider (upload/rescue, not embed search).',
         response: openApiResponse(MixcloudConnectStatusSchema, 'MixcloudConnectStatus'),
       },
     },
@@ -57,7 +60,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['releases'],
+        tags: ['imports'],
         summary: 'Start Mixcloud OAuth',
         description:
           'Browser navigation, not a fetch: sets a short-lived state cookie and redirects to Mixcloud. Answers 503 when Mixcloud OAuth is not configured.',
@@ -91,7 +94,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/mixcloud/oauth/callback',
     {
       schema: {
-        tags: ['releases'],
+        tags: ['imports'],
         summary: 'Mixcloud OAuth callback',
         description:
           'Mixcloud redirects the browser here with `code` and `state`. Always redirects to the dashboard with `?mixcloud=connected`, `?mixcloud=error` or `?mixcloud=login`.',
@@ -147,7 +150,10 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['releases'],
+        tags: ['imports'],
+        summary: 'Disconnect Mixcloud',
+        description:
+          'Clears the stored Mixcloud token. Same `{ connected, configured }` body as status.',
         response: openApiResponse(MixcloudConnectStatusSchema, 'MixcloudConnectStatus'),
       },
     },
@@ -167,7 +173,9 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: queue sound mix upload to Mixcloud',
+        summary: 'Queue Mixcloud upload for a sound',
+        description:
+          "Upload/rescue a READY archive mix to the caller's Mixcloud account. Answers 202. 403 PROVIDER_NOT_CONNECTED when Mixcloud OAuth is configured but the caller has not connected.",
         response: openApiResponses([
           { status: 202, schema: MixcloudUploadQueuedSchema, name: 'MixcloudUploadQueued' },
         ]),
@@ -187,6 +195,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       if (config.mixcloud.clientId && !me?.mixcloudAccessTokenEnc) {
         return reply.status(403).send({
           error: 'Connect your Mixcloud account first',
+          code: PROVIDER_NOT_CONNECTED,
           connectPath: '/api/me/mixcloud/oauth/start',
         })
       }
@@ -224,6 +233,8 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Mixcloud upload status for a sound',
+        description: 'Status of the Mixcloud upload/rescue job for this sound, if one was queued.',
         response: openApiResponse(MixcloudUploadStatusSchema, 'MixcloudUploadStatus'),
       },
     },
