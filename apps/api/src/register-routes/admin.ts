@@ -30,6 +30,7 @@ import governanceLegalHoldRoutes from '../routes/admin/governance-legal-holds.js
 import associationRoutes from '../routes/governance/association.js'
 import boardTermRoutes from '../routes/governance/board-terms.js'
 import agendaItemRoutes from '../routes/governance/agenda-items.js'
+import electionRoutes from '../routes/governance/elections.js'
 import adminGovernanceCorrectionRoutes from '../routes/admin/governance-corrections.js'
 import adminGovernanceOverviewRoutes from '../routes/admin/governance-overview.js'
 import adminReportsRoutes from '../routes/admin/reports.js'
@@ -76,6 +77,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(associationRoutes)
   await fastify.register(boardTermRoutes)
   await fastify.register(agendaItemRoutes)
+  await fastify.register(electionRoutes)
   await fastify.register(adminGovernanceCorrectionRoutes)
   await fastify.register(adminGovernanceOverviewRoutes)
   await fastify.register(adminReportsRoutes)

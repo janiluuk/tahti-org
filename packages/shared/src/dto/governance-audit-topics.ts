@@ -99,7 +99,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'officers',
     label: 'Board & roles',
     description:
-      "Board-role grants/revokes, account suspensions, edits to the association's registered details, and auditor appointments, and board members' elected roles and terms.",
+      "Board-role grants/revokes, account suspensions, edits to the association's registered details, auditor appointments, board members' elected roles and terms, and board elections.",
     actions: [
       'BOARD_ROLE_CHANGE',
       'USER_SUSPEND',
@@ -109,6 +109,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'AUDITOR_TERM_END',
       'BOARD_TERM_RECORD',
       'BOARD_TERM_END',
+      'ELECTION_CREATE',
     ],
   },
   {
@@ -230,6 +231,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   AUDITOR_TERM_END: "Auditor's term ended",
   BOARD_TERM_RECORD: 'Board term recorded',
   BOARD_TERM_END: 'Board term ended early',
+  ELECTION_CREATE: 'Board election set up',
   USER_SUSPEND: 'Account suspended',
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',
