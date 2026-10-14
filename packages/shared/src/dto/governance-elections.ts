@@ -30,3 +30,27 @@ export const CreateGovernanceElectionSchema = z
     message: 'There is one chair',
     path: ['seats'],
   })
+
+export const GovernanceElectionCandidateSchema = z.object({
+  id: z.string(),
+  userId: z.string().nullable(),
+  displayName: z.string(),
+  statement: z.string().nullable(),
+  // True when the member nominated themselves.
+  selfNominated: z.boolean(),
+  withdrawnAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const GovernanceElectionCandidateListSchema = z.array(GovernanceElectionCandidateSchema)
+
+/** POST /api/admin/governance/elections/:id/candidates — the board nominates a member. */
+export const NominateElectionCandidateSchema = z.object({
+  userId: z.string().trim().min(1).max(64),
+  statement: z.string().trim().min(1).max(2000).optional(),
+})
+
+/** POST /api/v1/governance/elections/:id/candidacy — a member stands. */
+export const StandForElectionSchema = z.object({
+  statement: z.string().trim().min(1).max(2000).optional(),
+})

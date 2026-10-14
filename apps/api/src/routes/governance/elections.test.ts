@@ -56,6 +56,8 @@ describe('board elections', () => {
     const board = await make('board', { isMember: true, isBoard: true })
     boardCookie = await sessionCookieFor(prisma, board.id)
     memberCookie = await sessionCookieFor(prisma, (await make('member', { isMember: true })).id)
+    await make('other', { isMember: true })
+    await make('free', {})
     meetingId = (
       await prisma.governanceMeeting.create({
         data: {
@@ -116,6 +118,111 @@ describe('board elections', () => {
         (await setUp({ title: 'Election by member', role: 'MEMBER', seats: 1 }, memberCookie))
           .statusCode,
       ).toBe(403)
+    })
+  })
+  describe('candidates', () => {
+    let electionId: string
+    const candidates = async () =>
+      (
+        await app.inject({
+          method: 'GET',
+          url: `/api/admin/governance/elections/${electionId}/candidates`,
+          headers: { cookie: boardCookie },
+        })
+      ).json() as Array<{
+        userId: string
+        displayName: string
+        statement: string | null
+        selfNominated: boolean
+        withdrawnAt: string | null
+      }>
+    const stand = (payload: Record<string, unknown> = {}, id = electionId) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/elections/${id}/candidacy`,
+        headers: { cookie: memberCookie },
+        payload,
+      })
+    const withdraw = () =>
+      app.inject({
+        method: 'DELETE',
+        url: `/api/v1/governance/elections/${electionId}/candidacy`,
+        headers: { cookie: memberCookie },
+      })
+    const nominate = (userId: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/admin/governance/elections/${electionId}/candidates`,
+        headers: { cookie: boardCookie },
+        payload: { userId },
+      })
+
+    beforeAll(async () => {
+      electionId = (
+        await setUp({
+          title: 'Election of the treasurer',
+          role: 'TREASURER',
+          seats: 1,
+          nominationsCloseAt: iso(10),
+        })
+      ).json().id
+    })
+
+    it('lets a member stand with a statement, and withdraw', async () => {
+      const res = await stand({ statement: 'I keep the books.' })
+      expect(res.statusCode).toBe(201)
+      expect(res.json()).toMatchObject({
+        userId: ids.member,
+        displayName: 'Election member',
+        statement: 'I keep the books.',
+        selfNominated: true,
+        withdrawnAt: null,
+      })
+      expect((await withdraw()).statusCode).toBe(204)
+      expect((await candidates()).find((c) => c.userId === ids.member)?.withdrawnAt).toBeTruthy()
+
+      // Standing again brings the same candidacy back.
+      await stand()
+      const again = (await candidates()).filter((c) => c.userId === ids.member)
+      expect(again).toHaveLength(1)
+      expect(again[0]!.withdrawnAt).toBeNull()
+
+      const audits = await prisma.auditLog.findMany({
+        where: { action: { in: ['ELECTION_NOMINATE', 'ELECTION_WITHDRAW'] }, targetId: electionId },
+        orderBy: { createdAt: 'asc' },
+      })
+      expect(audits.map((a) => a.action)).toEqual([
+        'ELECTION_NOMINATE',
+        'ELECTION_WITHDRAW',
+        'ELECTION_NOMINATE',
+      ])
+    })
+
+    it('lets the board nominate members only', async () => {
+      const res = await nominate(ids.other!)
+      expect(res.statusCode).toBe(201)
+      expect(res.json()).toMatchObject({ displayName: 'Election other', selfNominated: false })
+      expect((await nominate(ids.free!)).statusCode).toBe(400)
+    })
+
+    it('closes self-nomination at the deadline; the board can still nominate', async () => {
+      await prisma.governanceElection.update({
+        where: { id: electionId },
+        data: { nominationsCloseAt: new Date(Date.now() - 1000) },
+      })
+      await withdraw()
+      expect((await stand()).statusCode).toBe(409)
+      expect((await nominate(ids.member!)).statusCode).toBe(201)
+    })
+
+    it('freezes the candidates once the result is recorded', async () => {
+      await prisma.governanceElection.update({
+        where: { id: electionId },
+        data: { decidedAt: new Date() },
+      })
+      expect((await nominate(ids.other!)).statusCode).toBe(409)
+      expect((await withdraw()).statusCode).toBe(409)
+      expect((await stand({}, 'cmissingelection0000000000')).statusCode).toBe(404)
     })
   })
 })
