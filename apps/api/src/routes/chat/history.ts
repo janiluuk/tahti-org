@@ -39,7 +39,7 @@ const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
 
       const result = await getCachedJson(`chat-history:${slug}`, 5, async () => {
         const rows = await fastify.prisma.chatMessage.findMany({
-          where: { channelId: channel.id, fanOnly: false },
+          where: { channelId: channel.id, fanOnly: false, removedAt: null },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           take: HISTORY_LIMIT,
           select: {
