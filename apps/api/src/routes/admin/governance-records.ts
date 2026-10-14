@@ -14,6 +14,7 @@ import {
   GovernanceDocumentListSchema,
   GovernanceMeetingListSchema,
   GovernanceNoticeDeliveryListSchema,
+  MemberGovernanceConflictListSchema,
   PatchGovernanceDocumentSchema,
   PatchGovernanceMeetingSchema,
   PrepareMinutesUploadResponseSchema,
@@ -464,6 +465,48 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: { declaredAt: 'asc' },
       })
       return reply.send(records)
+    },
+  )
+
+  // Members see who declared a conflict and whether they stepped aside, as
+  // the minutes record it: only once the minutes are published.
+  fastify.get(
+    '/api/v1/governance/meetings/:id/conflicts',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(
+          MemberGovernanceConflictListSchema,
+          'MemberGovernanceConflictList',
+        ),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const meeting = await fastify.prisma.governanceMeeting.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true, state: true, minutesPublishedAt: true },
+      })
+      if (!meeting || meeting.state === 'DRAFT') {
+        return reply.status(404).send({ error: 'Meeting not found' })
+      }
+      if (!meeting.minutesPublishedAt) return reply.send([])
+      return reply.send(
+        await fastify.prisma.governanceConflictDeclaration.findMany({
+          where: { meetingId: meeting.id },
+          orderBy: { declaredAt: 'asc' },
+          select: {
+            id: true,
+            displayName: true,
+            matter: true,
+            agendaItemId: true,
+            recused: true,
+            declaredAt: true,
+          },
+        }),
+      )
     },
   )
 
