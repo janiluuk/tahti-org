@@ -57,7 +57,10 @@ describe('board terms', () => {
     memberCookie = await sessionCookieFor(prisma, (await make('member', { isMember: true })).id)
     await make('other', { isMember: true })
     await make('free', {})
-  })
+    // Four test users mean eight argon2id hashes (64 MiB each); on a loaded
+    // machine that alone can pass vitest's 10s hook default. Users are made one
+    // at a time on purpose: member numbers race when created concurrently.
+  }, 30_000)
 
   afterAll(async () => {
     await cleanup()
