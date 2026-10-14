@@ -12,7 +12,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { requireBoard } from '../../plugins/auth.js'
+import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
 // A meeting's agenda as separate items. The meeting's `agenda` JSON is the
@@ -32,6 +32,37 @@ const ITEM_SELECT = {
 const AGENDA_LOCKED = 'The agenda is fixed once the minutes are approved'
 
 const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
+  // Members see the agenda of any meeting that has been announced (the same
+  // meetings `GET /api/v1/governance/meetings` lists).
+  fastify.get(
+    '/api/v1/governance/meetings/:id/agenda-items',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(GovernanceAgendaItemListSchema, 'GovernanceAgendaItemList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const meeting = await fastify.prisma.governanceMeeting.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true, state: true },
+      })
+      if (!meeting || meeting.state === 'DRAFT') {
+        return reply.status(404).send({ error: 'Meeting not found' })
+      }
+      return reply.send(
+        await fastify.prisma.governanceAgendaItem.findMany({
+          where: { meetingId: meeting.id },
+          orderBy: { position: 'asc' },
+          select: ITEM_SELECT,
+        }),
+      )
+    },
+  )
+
   fastify.get(
     '/api/admin/governance/meetings/:id/agenda-items',
     {
