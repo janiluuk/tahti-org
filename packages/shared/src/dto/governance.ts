@@ -327,16 +327,39 @@ export const GovernanceDocumentListSchema = z.array(GovernanceDocumentItemSchema
 export const GovernanceCorrectionSubjectSchema = z.enum(['MEMBER_REGISTER', 'GOVERNANCE_RECORD'])
 export const GovernanceCorrectionStateSchema = z.enum(['OPEN', 'ACCEPTED', 'REJECTED'])
 
-/** POST /api/v1/governance/corrections */
-export const CreateGovernanceCorrectionSchema = z.object({
-  subject: GovernanceCorrectionSubjectSchema,
-  details: z.string().trim().min(10, 'Say what is wrong and what it should be').max(5000),
-})
+export const GovernanceCorrectionRecordKindSchema = z.enum([
+  'MEETING',
+  'DOCUMENT',
+  'RESOLUTION',
+  'MOTION',
+  'ANNUAL_REPORT',
+])
+
+/** POST /api/v1/governance/corrections — a governance-record request can name
+ * the record, one members can see: a resolution by its number, a yearly
+ * report by its year, anything else by its id. */
+export const CreateGovernanceCorrectionSchema = z
+  .object({
+    subject: GovernanceCorrectionSubjectSchema,
+    details: z.string().trim().min(10, 'Say what is wrong and what it should be').max(5000),
+    recordKind: GovernanceCorrectionRecordKindSchema.optional(),
+    recordId: z.string().trim().min(1).max(64).optional(),
+  })
+  .refine((body) => (body.recordKind === undefined) === (body.recordId === undefined), {
+    message: 'Name both the kind of record and its id',
+    path: ['recordId'],
+  })
+  .refine((body) => !body.recordKind || body.subject === 'GOVERNANCE_RECORD', {
+    message: 'Only a governance-record request names a record',
+    path: ['recordKind'],
+  })
 
 export const GovernanceCorrectionItemSchema = z.object({
   id: z.string(),
   subject: GovernanceCorrectionSubjectSchema,
   details: z.string(),
+  recordKind: GovernanceCorrectionRecordKindSchema.nullable(),
+  recordId: z.string().nullable(),
   state: GovernanceCorrectionStateSchema,
   resolutionNote: z.string().nullable(),
   resolvedAt: z.coerce.date().nullable(),

@@ -2795,6 +2795,17 @@ enum GovernanceCorrectionSubject {
   @@schema("governance")
 }
 
+/// The kind of governance record a correction request is about.
+enum GovernanceCorrectionRecordKind {
+  MEETING
+  DOCUMENT
+  RESOLUTION
+  MOTION
+  ANNUAL_REPORT
+
+  @@schema("governance")
+}
+
 enum GovernanceCorrectionState {
   OPEN
   ACCEPTED
@@ -2807,18 +2818,22 @@ enum GovernanceCorrectionState {
 /// record corrected. The board answers it; the request itself changes
 /// nothing, the board makes the correction by hand.
 model GovernanceCorrectionRequest {
-  id             String                      @id @default(cuid())
+  id             String                          @id @default(cuid())
   requesterId    String
-  requester      User                        @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  requester      User                            @relation(fields: [requesterId], references: [id], onDelete: Cascade)
   subject        GovernanceCorrectionSubject
   details        String
-  state          GovernanceCorrectionState   @default(OPEN)
+  /// The record the request is about, when the member names one. Not a
+  /// relation: the kinds live in different tables (and schemas).
+  recordKind     GovernanceCorrectionRecordKind?
+  recordId       String?
+  state          GovernanceCorrectionState       @default(OPEN)
   resolutionNote String?
   /// The board member who answered. Not a relation: the audit log is the record.
   resolvedById   String?
   resolvedAt     DateTime?
-  createdAt      DateTime                    @default(now())
-  updatedAt      DateTime                    @updatedAt
+  createdAt      DateTime                        @default(now())
+  updatedAt      DateTime                        @updatedAt
 
   @@index([requesterId, createdAt])
   @@index([state, createdAt])

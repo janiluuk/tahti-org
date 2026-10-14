@@ -21,6 +21,7 @@ describe('governance correction requests', () => {
   let memberId: string
 
   async function cleanup() {
+    await prisma.governanceMeeting.deleteMany({ where: { title: { startsWith: 'Corr ' } } })
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
     await prisma.user.deleteMany({ where: { memberNumber: { gte: 97900, lte: 97999 } } })
   }
@@ -72,6 +73,55 @@ describe('governance correction requests', () => {
   afterAll(async () => {
     await cleanup()
     await app.close()
+  })
+
+  it('names a record the member can see, and refuses one they cannot', async () => {
+    const passwordHash = await hashPassword('testpassword')
+    const user = await prisma.user.create({
+      data: {
+        passwordHash,
+        emailVerifiedAt: new Date(),
+        email: `${PREFIX}records@example.com`,
+        username: 'gov-corr-records',
+        displayName: 'Corr records',
+        isMember: true,
+        memberNumber: 97903,
+        memberSince: new Date(),
+      },
+    })
+    const who = cookie((await createSession(prisma, user.id)).id)
+    const meeting = (state: 'DRAFT' | 'HELD') =>
+      prisma.governanceMeeting.create({
+        data: { title: `Corr ${state} meeting`, type: 'BOARD', state, createdById: memberId },
+      })
+    const held = await meeting('HELD')
+    const draft = await meeting('DRAFT')
+    const details = 'The attendance list leaves me out.'
+
+    const res = await file(who, {
+      subject: 'GOVERNANCE_RECORD',
+      details,
+      recordKind: 'MEETING',
+      recordId: held.id,
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json()).toMatchObject({ recordKind: 'MEETING', recordId: held.id })
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'CORRECTION_REQUEST', targetId: res.json().id },
+    })
+    expect(audit?.meta).toMatchObject({ recordKind: 'MEETING', recordId: held.id })
+
+    for (const payload of [
+      { subject: 'GOVERNANCE_RECORD', details, recordKind: 'MEETING', recordId: draft.id },
+      { subject: 'GOVERNANCE_RECORD', details, recordKind: 'RESOLUTION', recordId: 'abc' },
+      { subject: 'GOVERNANCE_RECORD', details, recordKind: 'ANNUAL_REPORT', recordId: '1999' },
+      { subject: 'GOVERNANCE_RECORD', details, recordKind: 'MEETING' },
+      { subject: 'MEMBER_REGISTER', details, recordKind: 'MEETING', recordId: held.id },
+    ]) {
+      expect((await file(who, payload)).statusCode).toBe(400)
+    }
+    const plain = await file(who, { subject: 'GOVERNANCE_RECORD', details })
+    expect(plain.json()).toMatchObject({ recordKind: null, recordId: null })
   })
 
   it('lets a member file a request and read it back', async () => {
