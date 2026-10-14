@@ -22,6 +22,9 @@ describe('board elections', () => {
   const ids: Record<string, string> = {}
 
   async function cleanup() {
+    await prisma.governanceBoardTerm.deleteMany({
+      where: { displayName: { startsWith: 'Election ' } },
+    })
     await prisma.governanceElection.deleteMany({ where: { title: { startsWith: 'Election ' } } })
     await prisma.governanceMeeting.deleteMany({ where: { title: { startsWith: 'Election ' } } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
@@ -223,6 +226,99 @@ describe('board elections', () => {
       expect((await nominate(ids.other!)).statusCode).toBe(409)
       expect((await withdraw()).statusCode).toBe(409)
       expect((await stand({}, 'cmissingelection0000000000')).statusCode).toBe(404)
+    })
+  })
+  describe('result', () => {
+    let electionId: string
+    const record = (payload: Record<string, unknown>, id = electionId) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/admin/governance/elections/${id}/result`,
+        headers: { cookie: boardCookie },
+        payload,
+      })
+
+    beforeAll(async () => {
+      electionId = (
+        await setUp({ title: 'Election of two members', role: 'MEMBER', seats: 2, meetingId })
+      ).json().id
+      for (const name of ['member', 'other', 'board']) {
+        await app.inject({
+          method: 'POST',
+          url: `/api/admin/governance/elections/${electionId}/candidates`,
+          headers: { cookie: boardCookie },
+          payload: { userId: ids[name] },
+        })
+      }
+    })
+
+    it('checks the seats and that everyone elected is standing', async () => {
+      expect(
+        (await record({ electedUserIds: [ids.member, ids.other, ids.board], termStart: iso(30) }))
+          .statusCode,
+      ).toBe(400)
+      expect((await record({ electedUserIds: [ids.free], termStart: iso(30) })).statusCode).toBe(
+        400,
+      )
+    })
+
+    it('refuses a result that would overlap a term the member already holds, and changes nothing', async () => {
+      await prisma.governanceBoardTerm.create({
+        data: {
+          userId: ids.board,
+          displayName: 'Election board',
+          role: 'SECRETARY',
+          termStart: new Date(Date.now() - day),
+        },
+      })
+      const res = await record({ electedUserIds: [ids.member, ids.board], termStart: iso(30) })
+      expect(res.statusCode).toBe(409)
+      expect(
+        await prisma.governanceBoardTerm.count({ where: { userId: ids.member, role: 'MEMBER' } }),
+      ).toBe(0)
+      const election = await prisma.governanceElection.findUniqueOrThrow({
+        where: { id: electionId },
+      })
+      expect(election.decidedAt).toBeNull()
+    })
+
+    it('records who was elected and gives each a term from the electing meeting', async () => {
+      const res = await record({
+        electedUserIds: [ids.member, ids.other],
+        termStart: iso(30),
+        termEnd: iso(30 + 730),
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.election.decidedAt).toBeTruthy()
+      expect(
+        (body.candidates as Array<{ userId: string; elected: boolean }>)
+          .filter((c) => c.elected)
+          .map((c) => c.userId)
+          .sort(),
+      ).toEqual([ids.member, ids.other].sort())
+      expect(body.terms).toHaveLength(2)
+      expect(body.terms[0]).toMatchObject({ role: 'MEMBER', meetingId })
+
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'ELECTION_DECIDE', targetId: electionId },
+      })
+      expect((audit?.meta as { elected: string[] }).elected.sort()).toEqual([
+        'Election member',
+        'Election other',
+      ])
+      expect(
+        await prisma.auditLog.count({
+          where: {
+            action: 'BOARD_TERM_RECORD',
+            targetId: { in: body.terms.map((t: { id: string }) => t.id) },
+          },
+        }),
+      ).toBe(2)
+
+      expect((await record({ electedUserIds: [ids.member], termStart: iso(30) })).statusCode).toBe(
+        409,
+      )
     })
   })
 })

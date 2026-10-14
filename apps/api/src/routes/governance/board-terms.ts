@@ -14,6 +14,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { boardTermClash } from '../../lib/board-terms.js'
 
 // Board members' elected roles and terms. Only free-text chair/secretary names
 // on a meeting existed before, so nothing said who held which role when.
@@ -29,14 +30,6 @@ const TERM_SELECT = {
   endReason: true,
   meetingId: true,
 } as const
-
-/** Terms that overlap [start, end). An open end runs forever. */
-function overlapping(start: Date, end: Date | null) {
-  return [
-    ...(end ? [{ termStart: { lt: end } }] : []),
-    { OR: [{ termEnd: null }, { termEnd: { gt: start } }] },
-  ]
-}
 
 const boardTermRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -127,24 +120,13 @@ const boardTermRoutes: FastifyPluginAsync = async (fastify) => {
         })
         if (!meeting) return reply.status(400).send({ error: 'Meeting not found' })
       }
-      // One person holds one role at a time, and there is one chair.
-      const clash = await fastify.prisma.governanceBoardTerm.findFirst({
-        where: {
-          AND: [
-            ...overlapping(termStart, termEnd ?? null),
-            { OR: [{ userId }, ...(role === 'CHAIR' ? [{ role: 'CHAIR' as const }] : [])] },
-          ],
-        },
-        select: { id: true },
+      const clash = await boardTermClash(fastify.prisma, {
+        userId,
+        role,
+        termStart,
+        termEnd: termEnd ?? null,
       })
-      if (clash) {
-        return reply.status(409).send({
-          error:
-            role === 'CHAIR'
-              ? 'That term overlaps another chair or another term of this member'
-              : 'That term overlaps another term of this member',
-        })
-      }
+      if (clash) return reply.status(409).send({ error: clash })
 
       const term = await fastify.prisma.governanceBoardTerm.create({
         data: {

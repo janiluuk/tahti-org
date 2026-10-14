@@ -403,6 +403,7 @@ enum AuditAction {
   ELECTION_CREATE
   ELECTION_NOMINATE
   ELECTION_WITHDRAW
+  ELECTION_DECIDE
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -2660,6 +2661,8 @@ model GovernanceElectionCandidate {
   statement     String?
   nominatedById String?
   withdrawnAt   DateTime?
+  /// Set when the board records this candidate as elected.
+  elected       Boolean            @default(false)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 

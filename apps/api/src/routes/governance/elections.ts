@@ -7,8 +7,10 @@ import {
   CreateGovernanceElectionSchema,
   GovernanceElectionCandidateListSchema,
   GovernanceElectionListSchema,
+  GovernanceElectionResultSchema,
   IdParamSchema,
   NominateElectionCandidateSchema,
+  RecordElectionResultSchema,
   StandForElectionSchema,
   openApiResponse,
   openApiResponses,
@@ -16,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { boardTermClash } from '../../lib/board-terms.js'
 
 // Board elections. A term could name the meeting that elected it, but
 // nothing recorded the election itself: the role, the seats, and who stood.
@@ -39,7 +42,19 @@ const CANDIDATE_SELECT = {
   statement: true,
   nominatedById: true,
   withdrawnAt: true,
+  elected: true,
   createdAt: true,
+} as const
+
+const TERM_SELECT = {
+  id: true,
+  userId: true,
+  displayName: true,
+  role: true,
+  termStart: true,
+  termEnd: true,
+  endReason: true,
+  meetingId: true,
 } as const
 
 function candidateRow({
@@ -52,6 +67,7 @@ function candidateRow({
   statement: string | null
   nominatedById: string | null
   withdrawnAt: Date | null
+  elected: boolean
   createdAt: Date
 }) {
   return { ...candidate, selfNominated: nominatedById === candidate.userId }
@@ -80,6 +96,16 @@ async function nominate(
     update: { withdrawnAt: null, statement, nominatedById },
     select: CANDIDATE_SELECT,
   })
+}
+
+/** A result the board cannot record; thrown to roll the whole result back. */
+class ResultRefused extends Error {
+  constructor(
+    readonly status: 400 | 404 | 409,
+    message: string,
+  ) {
+    super(message)
+  }
 }
 
 const electionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -331,6 +357,139 @@ const electionRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       return reply.status(204).send()
+    },
+  )
+
+  // Recording the result closes the election and gives each elected
+  // candidate a board term in its role, named after the electing meeting.
+  // Board access (`User.isBoard`) is still granted separately.
+  fastify.post(
+    '/api/admin/governance/elections/:id/result',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceElectionResultSchema, 'GovernanceElectionResult'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = RecordElectionResultSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const { electedUserIds, termStart, termEnd } = parsed.data
+      const actorId = request.sessionUser!.id
+
+      let created: Array<{ id: string; displayName: string; userId: string | null }>
+      try {
+        created = await fastify.prisma.$transaction(async (tx) => {
+          await tx.$queryRaw`SELECT id FROM "governance"."GovernanceElection" WHERE id = ${routeParams.id} FOR UPDATE`
+          const election = await tx.governanceElection.findUnique({
+            where: { id: routeParams.id },
+            select: { id: true, role: true, seats: true, meetingId: true, decidedAt: true },
+          })
+          if (!election) throw new ResultRefused(404, 'Election not found')
+          if (election.decidedAt) {
+            throw new ResultRefused(409, 'The result of this election is already recorded')
+          }
+          if (electedUserIds.length > election.seats) {
+            throw new ResultRefused(400, `This election fills ${election.seats} seat(s)`)
+          }
+          const candidates = await tx.governanceElectionCandidate.findMany({
+            where: { electionId: election.id, userId: { in: electedUserIds }, withdrawnAt: null },
+            select: { id: true, userId: true, displayName: true },
+          })
+          if (candidates.length !== electedUserIds.length) {
+            throw new ResultRefused(400, 'Everyone elected must be a standing candidate')
+          }
+          const terms = []
+          for (const candidate of candidates) {
+            const clash = await boardTermClash(tx, {
+              userId: candidate.userId!,
+              role: election.role,
+              termStart,
+              termEnd: termEnd ?? null,
+            })
+            if (clash) throw new ResultRefused(409, `${candidate.displayName}: ${clash}`)
+            terms.push(
+              await tx.governanceBoardTerm.create({
+                data: {
+                  userId: candidate.userId,
+                  displayName: candidate.displayName,
+                  role: election.role,
+                  termStart,
+                  termEnd,
+                  meetingId: election.meetingId,
+                  createdById: actorId,
+                },
+                select: { id: true, displayName: true, userId: true },
+              }),
+            )
+          }
+          await tx.governanceElectionCandidate.updateMany({
+            where: { id: { in: candidates.map((c) => c.id) } },
+            data: { elected: true },
+          })
+          await tx.governanceElection.update({
+            where: { id: election.id },
+            data: { decidedAt: new Date() },
+          })
+          return terms
+        })
+      } catch (err) {
+        if (err instanceof ResultRefused)
+          return reply.status(err.status).send({ error: err.message })
+        throw err
+      }
+
+      const election = await fastify.prisma.governanceElection.findUniqueOrThrow({
+        where: { id: routeParams.id },
+        select: {
+          ...ELECTION_SELECT,
+          candidates: {
+            orderBy: [{ displayName: 'asc' }, { id: 'asc' }],
+            select: CANDIDATE_SELECT,
+          },
+        },
+      })
+      await auditLog(fastify.prisma, {
+        action: 'ELECTION_DECIDE',
+        actorId,
+        targetId: election.id,
+        meta: {
+          title: election.title,
+          role: election.role,
+          elected: created.map((term) => term.displayName),
+        },
+      })
+      for (const term of created) {
+        await auditLog(fastify.prisma, {
+          action: 'BOARD_TERM_RECORD',
+          actorId,
+          targetId: term.id,
+          meta: {
+            userId: term.userId,
+            displayName: term.displayName,
+            role: election.role,
+            termStart,
+            termEnd: termEnd ?? null,
+            electionId: election.id,
+          },
+        })
+      }
+      const { candidates, ...rest } = election
+      return reply.send({
+        election: rest,
+        candidates: candidates.map(candidateRow),
+        terms: await fastify.prisma.governanceBoardTerm.findMany({
+          where: { id: { in: created.map((term) => term.id) } },
+          orderBy: { displayName: 'asc' },
+          select: TERM_SELECT,
+        }),
+      })
     },
   )
 }
