@@ -72,11 +72,19 @@ export const MotionMeetingRefSchema = z.object({
   scheduledAt: z.coerce.date().nullable(),
 })
 
+export const MotionAgendaItemRefSchema = z.object({
+  id: z.string(),
+  position: z.number().int(),
+  title: z.string(),
+})
+
 export const MotionDetailSchema = MotionSummarySchema.extend({
   description: z.string(),
   // The meeting that takes this motion up, if the board linked one. A
   // meeting still in DRAFT is shown to the board only.
   meeting: MotionMeetingRefSchema.nullable(),
+  // The item on that meeting's agenda, if the board named one.
+  agendaItem: MotionAgendaItemRefSchema.nullable(),
 })
 
 export const MotionCommentSchema = z.object({
@@ -142,6 +150,7 @@ export const MotionCommentRemovedResponseSchema = z.object({
 export const MotionMeetingLinkResponseSchema = z.object({
   id: z.string(),
   meeting: MotionMeetingRefSchema.nullable(),
+  agendaItem: MotionAgendaItemRefSchema.nullable(),
 })
 
 /** The fixed result of a closed motion (GET .../motions/:id/certificate). */

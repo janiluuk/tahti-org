@@ -279,10 +279,19 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = routeParams
       const item = await fastify.prisma.governanceAgendaItem.findUnique({
         where: { id },
-        select: { ...ITEM_SELECT, meeting: { select: { minutesApprovedAt: true } } },
+        select: {
+          ...ITEM_SELECT,
+          meeting: { select: { minutesApprovedAt: true } },
+          _count: { select: { motions: true } },
+        },
       })
       if (!item) return reply.status(404).send({ error: 'Agenda item not found' })
       if (item.meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
+      if (item._count.motions > 0) {
+        return reply
+          .status(409)
+          .send({ error: 'Records still point at this agenda item: unlink them first' })
+      }
 
       // The items after it move up one place, so the numbering stays 1..n.
       await fastify.prisma.$transaction(async (tx) => {

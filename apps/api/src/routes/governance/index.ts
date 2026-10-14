@@ -287,6 +287,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
           votes: { select: { userId: true, choice: true } },
           seconds: { select: { userId: true } },
           meeting: { select: { id: true, title: true, scheduledAt: true, state: true } },
+          agendaItem: { select: { id: true, position: true, title: true } },
           _count: { select: { comments: true } },
           resultCorrections: {
             orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
@@ -297,6 +298,9 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
 
       const myVote = motion.votes.find((v) => v.userId === user.id)
+      const meetingVisible = Boolean(
+        motion.meeting && (user.isBoard || motion.meeting.state !== 'DRAFT'),
+      )
 
       const base = {
         id: motion.id,
@@ -316,14 +320,14 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         youSeconded: motion.seconds.some((s) => s.userId === user.id),
         // Members only see meetings that have left DRAFT (same rule as
         // GET /api/v1/governance/meetings).
-        meeting:
-          motion.meeting && (user.isBoard || motion.meeting.state !== 'DRAFT')
-            ? {
-                id: motion.meeting.id,
-                title: motion.meeting.title,
-                scheduledAt: motion.meeting.scheduledAt,
-              }
-            : null,
+        meeting: meetingVisible
+          ? {
+              id: motion.meeting!.id,
+              title: motion.meeting!.title,
+              scheduledAt: motion.meeting!.scheduledAt,
+            }
+          : null,
+        agendaItem: meetingVisible ? motion.agendaItem : null,
       }
 
       // Per-choice tally is published only once voting has closed.

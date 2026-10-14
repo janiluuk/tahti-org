@@ -457,6 +457,7 @@ enum AuditAction {
   AGENDA_ITEM_UPDATE
   AGENDA_ITEM_REMOVE
   AGENDA_ITEM_REORDER
+  MOTION_AGENDA_LINK
   SOUND_SHARE_ACCESS
 
   @@schema("governance")
@@ -2411,15 +2412,15 @@ model AuditLog {
 // electronic voting; `advisory` flips to false once that clause is filed.
 
 model Motion {
-  id                  String             @id @default(cuid())
+  id                  String                @id @default(cuid())
   title               String
   description         String
   proposedBy          String
-  proposer            User               @relation(fields: [proposedBy], references: [id])
-  advisory            Boolean            @default(true)
+  proposer            User                  @relation(fields: [proposedBy], references: [id])
+  advisory            Boolean               @default(true)
   openAt              DateTime
   closeAt             DateTime
-  state               MotionState        @default(DRAFT)
+  state               MotionState           @default(DRAFT)
   /// Count of `isMember` users at the moment voting opened — the turnout
   /// denominator, frozen so it doesn't drift as membership changes after the
   /// fact. Null for motions opened before this field existed.
@@ -2427,7 +2428,10 @@ model Motion {
   /// The meeting that takes this motion up, when the board has put it on an
   /// agenda. Advisory motions and meetings were unconnected records before.
   meetingId           String?
-  meeting             GovernanceMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  meeting             GovernanceMeeting?    @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// The agenda item that takes the motion up; always on `meeting`.
+  agendaItemId        String?
+  agendaItem          GovernanceAgendaItem? @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   /// When the board closed the motion, and the result as it stood then.
   /// Written once at close and never updated: the vote rows can still change
   /// afterwards (a deleted account takes its vote with it), the certificate
@@ -2436,8 +2440,8 @@ model Motion {
   resultTally         Json?
   /// sha256 over the motion's text, window, denominator and resultTally.
   resultDigest        String?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   votes             Vote[]
   comments          MotionComment[]
@@ -2446,6 +2450,7 @@ model Motion {
 
   @@index([state, closeAt])
   @@index([meetingId])
+  @@index([agendaItemId])
   @@schema("governance")
 }
 
@@ -2599,6 +2604,8 @@ model GovernanceAgendaItem {
   createdById String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  motions Motion[]
 
   @@index([meetingId, position])
   @@schema("governance")

@@ -39,6 +39,12 @@ export const LinkMotionMeetingSchema = z.object({
   meetingId: z.string().trim().min(1).max(64).nullable(),
 })
 
+/** PUT /api/v1/governance/motions/:id/agenda-item — null unlinks the item and
+ * keeps the meeting. */
+export const LinkMotionAgendaItemSchema = z.object({
+  agendaItemId: z.string().trim().min(1).max(64).nullable(),
+})
+
 /** A proposer's edit of their own draft (PUT /api/v1/governance/motions/:id/draft). */
 export const EditMotionDraftSchema = z
   .object({
