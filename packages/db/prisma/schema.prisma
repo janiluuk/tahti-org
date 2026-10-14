@@ -384,6 +384,7 @@ enum AuditAction {
   MOTION_EDIT
   MOTION_COMMENT_REMOVE
   MOTION_MEETING_LINK
+  MOTION_RESULT_CORRECT
   CORRECTION_REQUEST
   CORRECTION_RESOLVE
   GRANT_RUN
@@ -929,6 +930,7 @@ model User {
   votes                          Vote[]
   motionComments                 MotionComment[]
   motionSeconds                  MotionSecond[]
+  motionResultCorrections        MotionResultCorrection[]
   correctionRequests             GovernanceCorrectionRequest[]
   grants                         GrantDisbursement[]
   fanTiers                       FanTier[]
@@ -2422,9 +2424,10 @@ model Motion {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
-  votes    Vote[]
-  comments MotionComment[]
-  seconds  MotionSecond[]
+  votes             Vote[]
+  comments          MotionComment[]
+  seconds           MotionSecond[]
+  resultCorrections MotionResultCorrection[]
 
   @@index([state, closeAt])
   @@index([meetingId])
@@ -2618,6 +2621,25 @@ model GovernanceCorrectionRequest {
 /// cannot second their own motion, and seconds are only taken while the
 /// motion is a DRAFT: once the board opens it, the list is the record of who
 /// backed it. One row per member and motion.
+/// A correction to a closed motion's certified result. Append-only: the
+/// certificate itself is never rewritten, and each correction carries a digest
+/// chained to the certificate or the correction before it.
+model MotionResultCorrection {
+  id          String   @id @default(cuid())
+  motionId    String
+  motion      Motion   @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  note        String
+  /// The corrected tally, when the correction changes the numbers.
+  tally       Json?
+  digest      String
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([motionId, createdAt])
+  @@schema("governance")
+}
+
 model MotionSecond {
   motionId  String
   motion    Motion   @relation(fields: [motionId], references: [id], onDelete: Cascade)

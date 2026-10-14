@@ -152,4 +152,28 @@ export const MotionCertificateSchema = z.object({
   // False when the motion's text or the stored tally no longer produce the
   // digest, or the vote rows no longer add up to the stored tally.
   matchesRecord: z.boolean(),
+  // Corrections the board has added since, oldest first. The certificate
+  // above is never rewritten; `correctedTally` is the latest corrected count.
+  corrections: z.array(
+    z.object({
+      id: z.string(),
+      note: z.string(),
+      tally: MotionVoteTallySchema.nullable(),
+      createdAt: z.coerce.date(),
+      digest: z.string(),
+      // False when this entry no longer chains to the one before it.
+      matchesRecord: z.boolean(),
+    }),
+  ),
+  correctedTally: MotionVoteTallySchema.nullable(),
+})
+
+/** POST /api/admin/governance/motions/:id/result-corrections */
+export const CreateMotionResultCorrectionSchema = z.object({
+  note: z.string().trim().min(1).max(2000),
+  tally: MotionVoteTallySchema.extend({
+    YES: z.number().int().min(0),
+    NO: z.number().int().min(0),
+    ABSTAIN: z.number().int().min(0),
+  }).optional(),
 })
