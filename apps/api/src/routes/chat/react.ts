@@ -12,6 +12,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 // In-memory rate limit: max 3 reactions per fingerprint per 5s window
 const reactBucket = new Map<string, { count: number; reset: number }>()
@@ -67,10 +68,35 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, userId: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      // Reactions float over the stream for everyone watching, so someone
+      // banned from the chat could keep flooding the room with them. The ban
+      // is looked up under the same per-channel fingerprint the chat token
+      // route issues, and a block between the sender and the owner counts
+      // the same way it does for chat messages.
+      const chatFingerprint = createHash('sha256')
+        .update(`${ip}:${ua}:${channel.id}:${process.env.FINGERPRINT_SALT ?? 'dev-salt'}`)
+        .digest('hex')
+        .slice(0, 16)
+      const ban = await fastify.prisma.chatBan.findUnique({
+        where: {
+          channelId_fingerprintHash: { channelId: channel.id, fingerprintHash: chatFingerprint },
+        },
+        select: { id: true },
+      })
+      if (ban) return reply.status(403).send({ error: 'banned' })
+      const senderId = request.sessionUser?.id
+      if (
+        senderId &&
+        senderId !== channel.userId &&
+        (await isBlockedEitherWay(fastify.prisma, channel.userId, senderId))
+      ) {
+        return reply.status(403).send({ error: 'banned' })
+      }
 
       // Anchor to the currently-live broadcast (if any) so this reaction can
       // later be replayed at the right moment against the recording —

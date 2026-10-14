@@ -16,8 +16,10 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Presigned URL for sound source upload',
+        tags: ['imports'],
+        summary: 'Prepare a local or stash audio upload',
+        description:
+          'Presigned PUT URL for a sound source upload (prepare → object store → complete). Catalog importPath for both the local-upload and stash providers.',
         response: openApiResponse(PrepareUploadResponseSchema, 'PrepareUpload'),
       },
     },
