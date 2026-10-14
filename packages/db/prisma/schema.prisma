@@ -396,6 +396,8 @@ enum AuditAction {
   USER_UNSUSPEND
   BOARD_ROLE_CHANGE
   ASSOCIATION_PROFILE_UPDATE
+  AUDITOR_APPOINT
+  AUDITOR_TERM_END
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -2471,6 +2473,7 @@ model GovernanceMeeting {
   conflictDeclarations GovernanceConflictDeclaration[]
   boardResolutions     BoardResolution[]
   motions              Motion[]
+  auditors             GovernanceAuditor[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -2551,6 +2554,34 @@ model AssociationProfile {
   updatedById    String?
   updatedAt      DateTime @updatedAt
 
+  @@schema("governance")
+}
+
+enum GovernanceAuditorKind {
+  AUDITOR
+  OPERATIONS_INSPECTOR
+
+  @@schema("governance")
+}
+
+/// An auditor or operations inspector (toiminnantarkastaja) the association
+/// has elected, with their term. Ending a term keeps the row as history.
+model GovernanceAuditor {
+  id          String                @id @default(cuid())
+  kind        GovernanceAuditorKind
+  deputy      Boolean               @default(false)
+  name        String
+  firm        String?
+  termStart   DateTime
+  termEnd     DateTime?
+  /// The meeting that elected them, if recorded.
+  meetingId   String?
+  meeting     GovernanceMeeting?    @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([termStart])
   @@schema("governance")
 }
 
