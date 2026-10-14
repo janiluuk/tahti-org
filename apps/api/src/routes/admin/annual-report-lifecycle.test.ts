@@ -241,4 +241,62 @@ describe('annual report lifecycle', () => {
       )
     })
   })
+
+  describe('archiving', () => {
+    function archive(year: number, archived: unknown, who = boardCookie) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/admin/reports/annual/${year}`,
+        headers: { cookie: who },
+        payload: { archived },
+      })
+    }
+
+    async function memberYears() {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/annual-reports',
+        headers: { cookie: memberCookie },
+      })
+      return (res.json() as Array<{ year: number }>).map((r) => r.year)
+    }
+
+    it('takes a published report out of the member list and can put it back', async () => {
+      await generate(2099)
+      await post('/api/admin/reports/annual/2099/approve')
+      await post('/api/admin/reports/annual/2099/publish')
+      expect(await memberYears()).toContain(2099)
+
+      const res = await archive(2099, true)
+      expect(res.statusCode).toBe(200)
+      expect(res.json().archivedAt).not.toBeNull()
+      await archive(2099, true)
+      expect(await memberYears()).not.toContain(2099)
+
+      const board = await app.inject({
+        method: 'GET',
+        url: '/api/admin/reports',
+        headers: { cookie: boardCookie },
+      })
+      expect((board.json() as Array<{ year: number }>).some((r) => r.year === 2099)).toBe(true)
+
+      expect((await archive(2099, false)).json().archivedAt).toBeNull()
+      expect(await memberYears()).toContain(2099)
+
+      const audits = await prisma.auditLog.findMany({
+        where: { action: 'ANNUAL_REPORT_ARCHIVE', targetId: '2099', createdAt: { gte: STARTED } },
+        orderBy: { id: 'asc' },
+      })
+      expect(audits.map((a) => a.meta)).toEqual([
+        { year: 2099, archived: true },
+        { year: 2099, archived: false },
+      ])
+    })
+
+    it('is for the board only and checks its input', async () => {
+      expect((await archive(2099, true, memberCookie)).statusCode).toBe(403)
+      expect((await archive(2099, 'yes')).statusCode).toBe(400)
+      expect((await archive(2098, true)).statusCode).toBe(404)
+    })
+  })
 })

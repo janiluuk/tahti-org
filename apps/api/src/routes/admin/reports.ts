@@ -9,6 +9,7 @@ import {
   AnnualReportFilingSchema,
   AnnualReportRevisionListSchema,
   ApproveAnnualReportSchema,
+  ArchiveAnnualReportSchema,
   CorrectAnnualReportSchema,
   PublishedAnnualReportListSchema,
   openApiResponse,
@@ -36,6 +37,7 @@ function reportRow(report: {
   filedAt: Date | null
   filingReference: string | null
   correctedAt: Date | null
+  archivedAt: Date | null
 }) {
   return presignedGetUrl(report.storageKey, 3600)
     .catch(() => null)
@@ -52,6 +54,7 @@ function reportRow(report: {
       filedAt: report.filedAt,
       filingReference: report.filingReference,
       correctedAt: report.correctedAt,
+      archivedAt: report.archivedAt,
     }))
 }
 
@@ -383,6 +386,50 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // Archive or restore. A report published by mistake, or for a year that
+  // should not be shown, stayed in the member list for good.
+  fastify.patch(
+    '/api/admin/reports/annual/:year',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const parsed = ArchiveAnnualReportSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+
+      const { archived } = parsed.data
+      if (archived !== (report.archivedAt !== null)) {
+        await fastify.prisma.annualReport.update({
+          where: { year },
+          data: { archivedAt: archived ? new Date() : null },
+        })
+        await auditLog(fastify.prisma, {
+          action: 'ANNUAL_REPORT_ARCHIVE',
+          actorId: request.sessionUser!.id,
+          targetId: String(year),
+          meta: { year, archived },
+        })
+      }
+      const updated = await fastify.prisma.annualReport.findUniqueOrThrow({
+        where: { year },
+        include: { generatedBy: { select: { displayName: true } } },
+      })
+      return reply.send(await reportRow(updated))
+    },
+  )
+
   // Members had no way to read a yearly report: generated reports were
   // listed to the board only.
   fastify.get(
@@ -396,7 +443,7 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (_request, reply) => {
       const reports = await fastify.prisma.annualReport.findMany({
-        where: { publishedAt: { not: null }, approvedAt: { not: null } },
+        where: { publishedAt: { not: null }, approvedAt: { not: null }, archivedAt: null },
         orderBy: { year: 'desc' },
         select: {
           year: true,

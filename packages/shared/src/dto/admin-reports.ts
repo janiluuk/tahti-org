@@ -16,6 +16,12 @@ export const AdminAnnualReportRowSchema = z.object({
   filedAt: z.coerce.date().nullable(),
   filingReference: z.string().nullable(),
   correctedAt: z.coerce.date().nullable(),
+  archivedAt: z.coerce.date().nullable(),
+})
+
+/** PATCH /api/admin/reports/annual/:year */
+export const ArchiveAnnualReportSchema = z.object({
+  archived: z.boolean(),
 })
 
 /** POST /api/admin/reports/annual/:year/correct */
