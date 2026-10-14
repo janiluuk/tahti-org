@@ -406,7 +406,16 @@ export const GovernanceBoardTermSchema = z.object({
 
 export const GovernanceBoardTermListSchema = z.array(GovernanceBoardTermSchema)
 
-/** GET /api/v1/governance/board — the board as it stands today, chair first. */
+/** ?on=2025-06-01 — the board as it stood (or will stand) on that day. */
+export const BoardOnDateQuerySchema = z.object({
+  on: z.coerce
+    .date()
+    .refine((date) => !Number.isNaN(date.getTime()), 'Invalid date')
+    .optional(),
+})
+
+/** GET /api/v1/governance/board — the board as it stands today (or on the
+ * `on` date), chair first. */
 export const CurrentBoardSchema = z.array(
   z.object({
     id: z.string(),

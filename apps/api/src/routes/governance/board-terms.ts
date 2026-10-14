@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  BoardOnDateQuerySchema,
   CreateGovernanceBoardTermSchema,
   CurrentBoardSchema,
   EndGovernanceBoardTermSchema,
@@ -41,8 +42,11 @@ const boardTermRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(CurrentBoardSchema, 'CurrentBoard'),
       },
     },
-    async (_request, reply) => {
-      const now = new Date()
+    async (request, reply) => {
+      const query = BoardOnDateQuerySchema.safeParse(request.query ?? {})
+      if (!query.success) return reply.status(400).send({ error: 'Invalid date' })
+      // Who held which role on a past day (whose signature, whose decision).
+      const now = query.data.on ?? new Date()
       const terms = await fastify.prisma.governanceBoardTerm.findMany({
         where: {
           termStart: { lte: now },
