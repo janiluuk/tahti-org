@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { SearchQuerySchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { performSearch } from '../discover/search.js'
+import { registerLibraryTools } from './tools.js'
 
 /** True for a session-cookie login (unscoped — same access as the website) or
  * a personal API token that was minted with 'write'. False only for a
@@ -39,9 +40,7 @@ function buildServer(request: FastifyRequest): McpServer {
     },
   )
 
-  // Next slice: mutating tools (add-to-playlist, favorite, ...) register
-  // here too, each starting with `if (!hasWriteAccess(request)) return
-  // { isError: true, content: [{ type: 'text', text: 'This token is read-only.' }] }`.
+  registerLibraryTools(server, request, hasWriteAccess(request))
 
   return server
 }
