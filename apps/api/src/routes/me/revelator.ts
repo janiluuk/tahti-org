@@ -48,7 +48,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: Revelator submission status for a release',
+        summary: 'Revelator delivery status for a release',
+        description:
+          'Canonical ExportProvider statusPath for revelator. Alias: GET /api/me/export-plugins/revelator/releases/:id/status.',
         response: openApiResponse(RevelatorReleaseStatusSchema, 'RevelatorReleaseStatus'),
       },
     },
@@ -75,7 +77,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: distribution fee status before Revelator submit',
+        summary: 'Distribution fee status before Revelator submit',
+        description:
+          'Whether the caller has paid (or been waived) the DSP distribution fee for this release.',
         response: openApiResponse(RevelatorBillingStatusSchema, 'RevelatorBillingStatus'),
       },
     },
@@ -110,7 +114,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: pay distribution fee or consume Studio included slot',
+        summary: 'Pay distribution fee or consume a Studio slot',
+        description:
+          'Starts Stripe checkout when a fee is due, or records a waived/dev payment. Revelator-specific; not an ExportProvider path.',
         response: openApiResponse(RevelatorCheckoutResponseSchema, 'RevelatorCheckoutResponse'),
       },
     },
@@ -194,7 +200,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        description: 'M7: queue Revelator DSP delivery for a release',
+        summary: 'Queue Revelator DSP delivery',
+        description:
+          'Canonical ExportProvider submitPath for revelator. Answers 202. Alias: POST /api/me/export-plugins/revelator/releases/:id/submit.',
         response: openApiResponses([
           { status: 202, schema: RevelatorSubmitAcceptedSchema, name: 'RevelatorSubmitAccepted' },
         ]),
@@ -229,6 +237,7 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Revelator royalty reports for a release',
         description: 'M7: Revelator royalty reports synced for a release',
         response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
       },
@@ -283,6 +292,7 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'All Revelator royalty reports',
         description: 'M7: all Revelator royalty reports for the signed-in artist',
         response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
       },
