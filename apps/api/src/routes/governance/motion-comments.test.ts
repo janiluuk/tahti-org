@@ -183,6 +183,25 @@ describe('removing a motion comment', () => {
     expect(audit?.meta).toMatchObject({ commentId: posted.id, byAuthor: false })
   })
 
+  it('tells the proposer about a comment on their motion, but not about their own', async () => {
+    // The board account proposes every motion in this file.
+    const board = await prisma.user.findUniqueOrThrow({
+      where: { email: `${PREFIX}board@example.com` },
+    })
+    const motionId = await motion()
+    const url = `/governance/motions/${motionId}`
+    await comment(motionId, boardCookie, 'My own note')
+    expect(await prisma.notification.count({ where: { userId: board.id, url } })).toBe(0)
+
+    await comment(motionId, authorCookie, 'A question for the proposer')
+    const notes = await prisma.notification.findMany({ where: { userId: board.id, url } })
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatchObject({ type: 'MOTION_COMMENT', title: 'New comment on your motion' })
+    expect(notes[0]!.body).toContain('Discussed proposal')
+    // The comment text is not copied into the notification.
+    expect(notes[0]!.body).not.toContain('A question for the proposer')
+  })
+
   it('answers 404 for a comment that is not on that motion, and 400 for a bad id', async () => {
     const motionId = await motion()
     const elsewhere = await motion()
