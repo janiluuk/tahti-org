@@ -57,6 +57,12 @@ describe('M17 — admin venue verification', () => {
     })
     expect(list.statusCode).toBe(200)
     expect(Array.isArray(list.json())).toBe(true)
+    const listed = list.json().find((venue: { slug: string }) => venue.slug === venueSlug)
+    expect(listed.submitter).toEqual({
+      username: 'admin-venues-board',
+      displayName: expect.any(String),
+    })
+    expect(listed.submitter.displayName).not.toContain('@')
 
     const verify = await app.inject({
       method: 'POST',

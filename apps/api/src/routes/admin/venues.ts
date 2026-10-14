@@ -8,6 +8,7 @@ import {
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 
@@ -33,7 +34,25 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
           createdBy: true,
         },
       })
-      return reply.send(venues)
+      const submitters = await fastify.prisma.user.findMany({
+        where: { id: { in: [...new Set(venues.map((venue) => venue.createdBy))] } },
+        select: { id: true, username: true, displayName: true },
+      })
+      const byId = new Map(submitters.map((user) => [user.id, user]))
+      return reply.send(
+        venues.map((venue) => {
+          const submitter = byId.get(venue.createdBy)
+          return {
+            ...venue,
+            submitter: submitter
+              ? {
+                  username: submitter.username,
+                  displayName: safeDisplayName(submitter.displayName, submitter.username),
+                }
+              : null,
+          }
+        }),
+      )
     },
   )
 
