@@ -7,14 +7,20 @@ import {
   AdminAnnualReportListSchema,
   AdminAnnualReportRowSchema,
   AnnualReportFilingSchema,
+  AnnualReportRevisionListSchema,
   ApproveAnnualReportSchema,
+  CorrectAnnualReportSchema,
   PublishedAnnualReportListSchema,
   openApiResponse,
   openApiResponses,
   yearFromPathParams,
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
-import { assembleAnnualReportMarkdown, annualReportStorageKey } from '../../lib/annual-report.js'
+import {
+  assembleAnnualReportMarkdown,
+  annualReportStorageKey,
+  correctedAnnualReportStorageKey,
+} from '../../lib/annual-report.js'
 import { presignedGetUrl, putObjectText } from '../../lib/minio.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -29,6 +35,7 @@ function reportRow(report: {
   publishedAt: Date | null
   filedAt: Date | null
   filingReference: string | null
+  correctedAt: Date | null
 }) {
   return presignedGetUrl(report.storageKey, 3600)
     .catch(() => null)
@@ -44,6 +51,7 @@ function reportRow(report: {
       publishedAt: report.publishedAt,
       filedAt: report.filedAt,
       filingReference: report.filingReference,
+      correctedAt: report.correctedAt,
     }))
 }
 
@@ -278,6 +286,103 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // An approved report is not regenerated in place. When it turns out to be
+  // wrong, the board corrects it: the report is regenerated under a new file,
+  // and the version it replaces is kept with the board's note. Approval,
+  // publication and filing stay as they were.
+  fastify.post(
+    '/api/admin/reports/annual/:year/correct',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminAnnualReportRowSchema, 'AdminAnnualReportRow'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const parsed = CorrectAnnualReportSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const report = await fastify.prisma.annualReport.findUnique({ where: { year } })
+      if (!report)
+        return reply.status(404).send({ error: 'No report has been generated for that year' })
+      if (!report.approvedAt) {
+        return reply
+          .status(409)
+          .send({ error: 'A report that is not approved yet is regenerated, not corrected' })
+      }
+
+      const now = new Date()
+      const { markdown } = await assembleAnnualReportMarkdown(fastify.prisma, year)
+      const storageKey = correctedAnnualReportStorageKey(year, now)
+      await putObjectText(storageKey, markdown, 'text/markdown; charset=utf-8')
+
+      const [, updated] = await fastify.prisma.$transaction([
+        fastify.prisma.annualReportRevision.create({
+          data: {
+            year,
+            storageKey: report.storageKey,
+            generatedAt: report.generatedAt,
+            replacedAt: now,
+            replacedById: request.sessionUser!.id,
+            note: parsed.data.note,
+          },
+        }),
+        fastify.prisma.annualReport.update({
+          where: { year },
+          data: {
+            storageKey,
+            generatedAt: now,
+            generatedById: request.sessionUser!.id,
+            correctedAt: now,
+          },
+          include: { generatedBy: { select: { displayName: true } } },
+        }),
+      ])
+      await auditLog(fastify.prisma, {
+        action: 'ANNUAL_REPORT_CORRECT',
+        actorId: request.sessionUser!.id,
+        targetId: String(year),
+        meta: { year, storageKey, replacedStorageKey: report.storageKey },
+      })
+      return reply.send(await reportRow(updated))
+    },
+  )
+
+  fastify.get(
+    '/api/admin/reports/annual/:year/revisions',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AnnualReportRevisionListSchema, 'AnnualReportRevisionList'),
+      },
+    },
+    async (request, reply) => {
+      const year = yearFromPathParams(request.params)
+      if (year === null) return reply.status(400).send({ error: 'Invalid year' })
+      const revisions = await fastify.prisma.annualReportRevision.findMany({
+        where: { year },
+        orderBy: [{ replacedAt: 'desc' }, { id: 'desc' }],
+      })
+      return reply.send(
+        await Promise.all(
+          revisions.map(async (revision) => ({
+            id: revision.id.toString(),
+            generatedAt: revision.generatedAt,
+            replacedAt: revision.replacedAt,
+            note: revision.note,
+            downloadUrl: await presignedGetUrl(revision.storageKey, 3600).catch(() => null),
+          })),
+        ),
+      )
+    },
+  )
+
   // Members had no way to read a yearly report: generated reports were
   // listed to the board only.
   fastify.get(
@@ -298,6 +403,7 @@ const adminReportsRoutes: FastifyPluginAsync = async (fastify) => {
           approvedAt: true,
           publishedAt: true,
           filedAt: true,
+          correctedAt: true,
           storageKey: true,
         },
       })

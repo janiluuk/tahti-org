@@ -207,3 +207,8 @@ export async function assembleAnnualReportMarkdown(
 export function annualReportStorageKey(year: number): string {
   return `transparency/reports/${year}/annual-report.md`
 }
+
+/** Where a corrected report is stored, so the version it replaces stays. */
+export function correctedAnnualReportStorageKey(year: number, at: Date): string {
+  return `transparency/reports/${year}/annual-report-corrected-${at.getTime()}.md`
+}
