@@ -232,7 +232,9 @@ describe('meeting agenda items', () => {
       headers: { cookie: memberCookie },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual(await list())
+    expect(res.json()).toEqual(
+      (await list()).map((item) => ({ ...item, motions: [], resolutions: [], documents: [] })),
+    )
 
     const draft = await prisma.governanceMeeting.create({
       data: {
@@ -254,5 +256,75 @@ describe('meeting agenda items', () => {
       url: `/api/v1/governance/meetings/${meetingId}/agenda-items`,
     })
     expect(outsider.statusCode).toBe(401)
+  })
+  it('shows members the records filed under each item that they may see', async () => {
+    const [item] = await list()
+    const motion = (title: string, state: 'DRAFT' | 'OPEN') =>
+      prisma.motion.create({
+        data: {
+          title,
+          description: 'Agenda test motion',
+          proposedBy: boardId,
+          openAt: new Date(),
+          closeAt: new Date(Date.now() + 86400000),
+          state,
+          meetingId,
+          agendaItemId: item!.id,
+        },
+      })
+    const open = await motion('Agenda test open motion', 'OPEN')
+    await motion('Agenda test draft motion', 'DRAFT')
+    const resolution = (title: string, publishedAt: Date | null) =>
+      prisma.boardResolution.create({
+        data: {
+          title,
+          body: 'Agenda test resolution',
+          votedAt: new Date(),
+          outcome: 'PASSED',
+          voteFor: 3,
+          voteAgainst: 0,
+          voteAbstain: 0,
+          createdById: boardId,
+          publishedAt,
+          meetingId,
+          agendaItemId: item!.id,
+        },
+      })
+    const published = await resolution('Agenda test published resolution', new Date())
+    await resolution('Agenda test unpublished resolution', null)
+    const document = (title: string, archivedAt: Date | null) =>
+      prisma.governanceDocument.create({
+        data: {
+          title,
+          type: 'OTHER',
+          publishedAt: new Date(),
+          archivedAt,
+          meetingId,
+          agendaItemId: item!.id,
+          createdById: boardId,
+        },
+      })
+    const filed = await document('Agenda test proposal', null)
+    await document('Agenda test archived proposal', new Date())
+
+    try {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/governance/meetings/${meetingId}/agenda-items`,
+        headers: { cookie: memberCookie },
+      })
+      expect(res.json()[0]).toMatchObject({
+        id: item!.id,
+        motions: [{ id: open.id, title: 'Agenda test open motion', state: 'OPEN' }],
+        resolutions: [{ id: published.id.toString(), outcome: 'PASSED' }],
+        documents: [{ id: filed.id, title: 'Agenda test proposal', type: 'OTHER' }],
+      })
+    } finally {
+      await prisma.motion.deleteMany({ where: { description: 'Agenda test motion' } })
+      await prisma.boardResolution.deleteMany({ where: { body: 'Agenda test resolution' } })
+      await prisma.governanceDocument.deleteMany({
+        where: { title: { startsWith: 'Agenda test ' } },
+      })
+    }
   })
 })

@@ -6,6 +6,7 @@ import {
   CreateGovernanceAgendaItemSchema,
   GovernanceAgendaItemListSchema,
   IdParamSchema,
+  MemberGovernanceAgendaItemListSchema,
   PatchGovernanceAgendaItemSchema,
   ReorderGovernanceAgendaItemsSchema,
   openApiResponse,
@@ -40,7 +41,10 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireMember,
       schema: {
         tags: ['governance'],
-        response: openApiResponse(GovernanceAgendaItemListSchema, 'GovernanceAgendaItemList'),
+        response: openApiResponse(
+          MemberGovernanceAgendaItemListSchema,
+          'MemberGovernanceAgendaItemList',
+        ),
       },
     },
     async (request, reply) => {
@@ -53,12 +57,33 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
       if (!meeting || meeting.state === 'DRAFT') {
         return reply.status(404).send({ error: 'Meeting not found' })
       }
+      const items = await fastify.prisma.governanceAgendaItem.findMany({
+        where: { meetingId: meeting.id },
+        orderBy: { position: 'asc' },
+        select: {
+          ...ITEM_SELECT,
+          motions: {
+            where: { state: { not: 'DRAFT' } },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, title: true, state: true },
+          },
+          resolutions: {
+            where: { publishedAt: { not: null } },
+            orderBy: { votedAt: 'asc' },
+            select: { id: true, title: true, outcome: true },
+          },
+          documents: {
+            where: { publishedAt: { not: null }, archivedAt: null },
+            orderBy: [{ type: 'asc' }, { title: 'asc' }],
+            select: { id: true, title: true, type: true },
+          },
+        },
+      })
       return reply.send(
-        await fastify.prisma.governanceAgendaItem.findMany({
-          where: { meetingId: meeting.id },
-          orderBy: { position: 'asc' },
-          select: ITEM_SELECT,
-        }),
+        items.map((item) => ({
+          ...item,
+          resolutions: item.resolutions.map((r) => ({ ...r, id: r.id.toString() })),
+        })),
       )
     },
   )
