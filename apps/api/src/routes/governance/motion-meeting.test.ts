@@ -45,7 +45,10 @@ describe('linking a motion to a meeting', () => {
       url: `/api/v1/governance/motions/${motionId}`,
       headers: { cookie: who },
     })
-    return res.json() as { meeting: { id: string; title: string } | null }
+    return res.json() as {
+      meeting: { id: string; title: string } | null
+      agendaItem: { id: string; position: number; title: string } | null
+    }
   }
 
   beforeAll(async () => {
@@ -137,11 +140,57 @@ describe('linking a motion to a meeting', () => {
   it('can be unlinked, and refuses a meeting or motion that does not exist', async () => {
     const res = await link(boardCookie, null)
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ id: motionId, meeting: null })
+    expect(res.json()).toEqual({ id: motionId, meeting: null, agendaItem: null })
     expect((await detail(boardCookie)).meeting).toBeNull()
 
     expect((await link(boardCookie, 'missing-meeting')).statusCode).toBe(400)
     expect((await link(boardCookie, scheduledId, 'missing-motion')).statusCode).toBe(404)
+  })
+
+  it('names the agenda item, and with it the meeting, that takes the motion up', async () => {
+    const item = await prisma.governanceAgendaItem.create({
+      data: { meetingId: scheduledId, position: 1, title: 'Member proposals' },
+    })
+    const linkItem = (agendaItemId: string | null, who = boardCookie) =>
+      app.inject({
+        method: 'PUT',
+        url: `/api/v1/governance/motions/${motionId}/agenda-item`,
+        headers: { cookie: who },
+        payload: { agendaItemId },
+      })
+
+    expect((await linkItem(item.id, memberCookie)).statusCode).toBe(403)
+    expect((await linkItem('missing-item')).statusCode).toBe(400)
+
+    const res = await linkItem(item.id)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({
+      meeting: { id: scheduledId },
+      agendaItem: { id: item.id, position: 1, title: 'Member proposals' },
+    })
+    expect((await detail(memberCookie)).agendaItem).toMatchObject({ id: item.id })
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'MOTION_AGENDA_LINK', targetId: motionId },
+    })
+    expect(audit?.meta).toMatchObject({ agendaItemId: item.id, meetingId: scheduledId })
+
+    // The item cannot be removed while the motion points at it.
+    const remove = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/governance/agenda-items/${item.id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(remove.statusCode).toBe(409)
+
+    // Unlinking the item keeps the meeting.
+    const cleared = await linkItem(null)
+    expect(cleared.json()).toMatchObject({ meeting: { id: scheduledId }, agendaItem: null })
+
+    // Moving the motion to another meeting drops the old meeting's item.
+    await linkItem(item.id)
+    const moved = await link(boardCookie, draftId)
+    expect(moved.json()).toMatchObject({ meeting: { id: draftId }, agendaItem: null })
+    expect((await detail(boardCookie)).agendaItem).toBeNull()
   })
 
   it('keeps the motion when its meeting is deleted', async () => {
