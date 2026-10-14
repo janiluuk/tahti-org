@@ -36,6 +36,21 @@ export function motionResultDigest(motion: CertifiedMotion, tally: MotionTally):
   return createHash('sha256').update(canonical).digest('hex')
 }
 
+/** The digest of a result correction, chained to the certificate's digest or
+ * the previous correction's. */
+export function motionCorrectionDigest(
+  previousDigest: string,
+  correction: { note: string; tally: MotionTally | null; createdAt: Date },
+): string {
+  const canonical = JSON.stringify([
+    previousDigest,
+    correction.note,
+    correction.tally ? [correction.tally.YES, correction.tally.NO, correction.tally.ABSTAIN] : null,
+    correction.createdAt.toISOString(),
+  ])
+  return createHash('sha256').update(canonical).digest('hex')
+}
+
 export async function countMotionVotes(
   prisma: PrismaClient,
   motionId: string,
