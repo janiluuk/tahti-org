@@ -2607,6 +2607,7 @@ model GovernanceAgendaItem {
 
   motions     Motion[]
   resolutions BoardResolution[]
+  documents   GovernanceDocument[]
 
   @@index([meetingId, position])
   @@schema("governance")
@@ -2674,6 +2675,9 @@ model GovernanceDocument {
   publishedAt     DateTime?
   meetingId       String?
   meeting         GovernanceMeeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  /// The agenda item the document belongs to (a proposal, a report); always on `meeting`.
+  agendaItemId    String?
+  agendaItem      GovernanceAgendaItem?  @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   /// The earlier version this document replaces. Unique: a version has at
   /// most one successor, so the versions of a document form a single chain.
   supersedesId    String?                @unique
@@ -2691,6 +2695,7 @@ model GovernanceDocument {
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 
+  @@index([agendaItemId])
   @@index([type, publishedAt])
   @@index([meetingId])
   @@schema("governance")
