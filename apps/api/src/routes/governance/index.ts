@@ -211,6 +211,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
             eligibleMemberCount: m.eligibleMemberCount,
             secondCount: m.seconds.length,
             youSeconded: m.seconds.some((s) => s.userId === user.id),
+            circulatedAt: m.circulatedAt,
             tally: result?.tally,
             tallySource: result?.tallySource,
           }
@@ -318,6 +319,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         eligibleMemberCount: motion.eligibleMemberCount,
         secondCount: motion.seconds.length,
         youSeconded: motion.seconds.some((s) => s.userId === user.id),
+        circulatedAt: motion.circulatedAt,
         // Members only see meetings that have left DRAFT (same rule as
         // GET /api/v1/governance/meetings).
         meeting: meetingVisible
