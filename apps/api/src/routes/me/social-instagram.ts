@@ -5,7 +5,9 @@ import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import {
   InstagramSocialPatchSchema,
+  SocialOkSchema,
   SocialSettingsViewSchema,
+  openApiRedirectResponse,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -24,7 +26,16 @@ const OAUTH_STATE_TTL_SEC = 600
 const socialInstagramRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/social/instagram/oauth/start',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Start Instagram OAuth',
+        description:
+          'Browser navigation: redirects 302 to Instagram. Answers 503 when Instagram OAuth is not configured or Redis is down.',
+        response: openApiRedirectResponse(302),
+      },
+    },
     async (request, reply) => {
       if (!config.instagram.clientId) {
         return reply.status(503).send({ error: 'Instagram OAuth is not configured' })
@@ -48,50 +59,62 @@ const socialInstagramRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/social/instagram/oauth/callback', async (request, reply) => {
-    const query = request.query as { code?: string; state?: string; error?: string }
-    if (query.error || !query.code || !query.state) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
-    }
+  fastify.get(
+    '/api/me/social/instagram/oauth/callback',
+    {
+      schema: {
+        tags: ['releases'],
+        summary: 'Instagram OAuth callback',
+        description:
+          'Instagram redirects here after auth. Always redirects to the dashboard with `?social=instagram_connected` or `?social=instagram_error`.',
+        response: openApiRedirectResponse(302),
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as { code?: string; state?: string; error?: string }
+      if (query.error || !query.code || !query.state) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
+      }
 
-    const redis = await getRedisClient()
-    if (!redis) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
-    }
+      const redis = await getRedisClient()
+      if (!redis) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
+      }
 
-    const raw = await redis.get(`instagram:oauth:${query.state}`)
-    await redis.del(`instagram:oauth:${query.state}`)
-    if (!raw) {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
-    }
+      const raw = await redis.get(`instagram:oauth:${query.state}`)
+      await redis.del(`instagram:oauth:${query.state}`)
+      if (!raw) {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
+      }
 
-    const { userId } = JSON.parse(raw) as { userId: string }
+      const { userId } = JSON.parse(raw) as { userId: string }
 
-    try {
-      const userAccessToken = await exchangeInstagramCode(query.code)
-      const account = await fetchInstagramAccount(userAccessToken)
+      try {
+        const userAccessToken = await exchangeInstagramCode(query.code)
+        const account = await fetchInstagramAccount(userAccessToken)
 
-      await fastify.prisma.socialConnection.upsert({
-        where: { userId_platform: { userId, platform: 'INSTAGRAM' } },
-        create: {
-          userId,
-          platform: 'INSTAGRAM',
-          instanceUrl: `@${account.username}`,
-          externalAccountId: account.igUserId,
-          accessTokenEnc: encodeInstagramTokens(account),
-        },
-        update: {
-          instanceUrl: `@${account.username}`,
-          externalAccountId: account.igUserId,
-          accessTokenEnc: encodeInstagramTokens(account),
-        },
-      })
+        await fastify.prisma.socialConnection.upsert({
+          where: { userId_platform: { userId, platform: 'INSTAGRAM' } },
+          create: {
+            userId,
+            platform: 'INSTAGRAM',
+            instanceUrl: `@${account.username}`,
+            externalAccountId: account.igUserId,
+            accessTokenEnc: encodeInstagramTokens(account),
+          },
+          update: {
+            instanceUrl: `@${account.username}`,
+            externalAccountId: account.igUserId,
+            accessTokenEnc: encodeInstagramTokens(account),
+          },
+        })
 
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_connected`)
-    } catch {
-      return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
-    }
-  })
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_connected`)
+      } catch {
+        return reply.redirect(302, `${config.appUrl}/dashboard?social=instagram_error`)
+      }
+    },
+  )
 
   fastify.patch(
     '/api/me/social/instagram',
@@ -99,6 +122,9 @@ const socialInstagramRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
+        summary: 'Update Instagram auto-post settings',
+        description:
+          'Toggles and template for an already-connected Instagram account. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
@@ -136,7 +162,16 @@ const socialInstagramRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/me/social/instagram',
-    { preHandler: requireAuth, schema: { tags: ['releases'] } },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        summary: 'Disconnect Instagram auto-post',
+        description:
+          "Removes the caller's Instagram connection. Answers 200 `{ ok: true }` (not 204).",
+        response: openApiResponse(SocialOkSchema, 'SocialOk'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.socialConnection.deleteMany({
