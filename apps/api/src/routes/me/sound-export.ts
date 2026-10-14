@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
-import { IdParamSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
+import { IdParamSchema, openApiResponses, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { submitHearthisSoundExport } from '../../lib/hearthis-export-submit.js'
 
@@ -23,8 +23,10 @@ const meSoundExportRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['releases'],
         summary: 'Queue hearthis.at export for a sound',
         description:
-          'Sound-scoped ExportProvider submit (see GET /api/me/export-plugins hearthis-export). Requires installed hearthis-export integration credentials.',
-        response: openApiResponse(HearthisExportQueuedSchema, 'HearthisExportQueued'),
+          "Canonical hearthis-export submit (see GET /api/me/export-plugins). Answers 202; poll the sound's hearthisExportStatus. Requires installed hearthis-export integration credentials. Alias: POST /api/me/export-plugins/hearthis-export/sounds/:id/submit.",
+        response: openApiResponses([
+          { status: 202, schema: HearthisExportQueuedSchema, name: 'HearthisExportQueued' },
+        ]),
       },
     },
     async (request, reply) => {

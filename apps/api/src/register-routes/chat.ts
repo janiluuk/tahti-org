@@ -16,14 +16,19 @@ import meChat from '../routes/me/chat.js'
 import meCommentSettings from '../routes/me/comment-settings.js'
 import meTopListsSettings from '../routes/me/top-lists-settings.js'
 import meRecordingSettings from '../routes/me/recording-settings.js'
+import meAutoplaySettings from '../routes/me/autoplay-settings.js'
 import mePublishSettings from '../routes/me/publish-settings.js'
 import commentsRoutes from '../routes/comments/index.js'
 import trackReactionsRoutes from '../routes/reactions/track.js'
 import meNotificationPreferencesRoutes from '../routes/me/notification-preferences.js'
 import meModerators from '../routes/me/moderators.js'
+import meModerateMessages from '../routes/me/moderate-messages.js'
+import meModerateMessageBan from '../routes/me/moderate-message-ban.js'
+import meModerateMessageRemove from '../routes/me/moderate-message-remove.js'
 import rtmpTargetRoutes from '../routes/me/rtmp-targets.js'
 import apiTokenRoutes from '../routes/me/api-tokens.js'
 import obsPresetRoutes from '../routes/me/obs-preset.js'
+import meModerateLeave from '../routes/me/moderate-leave.js'
 
 export async function registerChatRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(chatTokenRoute)
@@ -40,13 +45,18 @@ export async function registerChatRoutes(fastify: FastifyInstance): Promise<void
   await fastify.register(meCommentSettings)
   await fastify.register(meTopListsSettings)
   await fastify.register(meRecordingSettings)
+  await fastify.register(meAutoplaySettings)
   await fastify.register(mePublishSettings)
   await fastify.register(commentsRoutes)
   await fastify.register(trackReactionsRoutes)
   await fastify.register(meNotificationPreferencesRoutes)
   await fastify.register(meModerators)
+  await fastify.register(meModerateMessages)
+  await fastify.register(meModerateMessageBan)
+  await fastify.register(meModerateMessageRemove)
   await fastify.register(rtmpTargetRoutes)
   await fastify.register(rtmpTargetRoutes, { scope: 'radio' })
   await fastify.register(obsPresetRoutes)
   await fastify.register(apiTokenRoutes)
+  await fastify.register(meModerateLeave)
 }
