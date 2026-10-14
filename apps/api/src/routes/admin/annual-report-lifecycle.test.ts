@@ -135,4 +135,47 @@ describe('annual report lifecycle', () => {
       expect((await post('/api/admin/reports/annual/2093/publish')).statusCode).toBe(404)
     })
   })
+
+  describe('filing', () => {
+    function file(year: number, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PUT',
+        url: `/api/admin/reports/annual/${year}/filing`,
+        headers: { cookie: boardCookie },
+        payload,
+      })
+    }
+
+    it('records, changes and clears the filing of an approved report', async () => {
+      await generate(2094)
+      expect((await file(2094, { filedAt: new Date().toISOString() })).statusCode).toBe(409)
+      await post('/api/admin/reports/annual/2094/approve')
+
+      const filedAt = new Date(Date.now() + 60000).toISOString()
+      const res = await file(2094, { filedAt, filingReference: 'PRH 2094/123' })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({ filedAt, filingReference: 'PRH 2094/123' })
+      // The same values again are not a new audit entry.
+      await file(2094, { filedAt, filingReference: 'PRH 2094/123' })
+
+      const cleared = await file(2094, { filedAt: null, filingReference: 'ignored' })
+      expect(cleared.json()).toMatchObject({ filedAt: null, filingReference: null })
+
+      const audits = await prisma.auditLog.findMany({
+        where: { action: 'ANNUAL_REPORT_FILE', targetId: '2094' },
+        orderBy: { id: 'asc' },
+      })
+      expect(
+        audits.map((a) => (a.meta as { filingReference: string | null }).filingReference),
+      ).toEqual(['PRH 2094/123', null])
+    })
+
+    it('refuses a filing date before the approval and bad input', async () => {
+      await generate(2095)
+      await post('/api/admin/reports/annual/2095/approve')
+      expect((await file(2095, { filedAt: '2020-01-01T00:00:00.000Z' })).statusCode).toBe(400)
+      expect((await file(2095, {})).statusCode).toBe(400)
+      expect((await file(2096, { filedAt: null })).statusCode).toBe(404)
+    })
+  })
 })
