@@ -97,8 +97,9 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
   {
     id: 'officers',
     label: 'Board & roles',
-    description: 'Board-role grants/revokes and account suspensions.',
-    actions: ['BOARD_ROLE_CHANGE', 'USER_SUSPEND', 'USER_UNSUSPEND'],
+    description:
+      "Board-role grants/revokes, account suspensions, and edits to the association's registered details.",
+    actions: ['BOARD_ROLE_CHANGE', 'USER_SUSPEND', 'USER_UNSUSPEND', 'ASSOCIATION_PROFILE_UPDATE'],
   },
   {
     id: 'meetings',
@@ -201,6 +202,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   RESOLUTION_UPDATE: 'Board resolution updated',
   FEATURE_REQUEST_QUARTERLY_REPORT: 'Quarterly feature report generated',
   BOARD_ROLE_CHANGE: 'Board role changed',
+  ASSOCIATION_PROFILE_UPDATE: 'Association details updated',
   USER_SUSPEND: 'Account suspended',
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',

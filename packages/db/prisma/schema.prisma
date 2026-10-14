@@ -395,6 +395,7 @@ enum AuditAction {
   USER_SUSPEND
   USER_UNSUSPEND
   BOARD_ROLE_CHANGE
+  ASSOCIATION_PROFILE_UPDATE
   USER_TIER_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
@@ -2530,6 +2531,26 @@ model GovernanceConflictDeclaration {
   declaredAt  DateTime          @default(now())
 
   @@index([meetingId])
+  @@schema("governance")
+}
+
+/// Singleton row (`id = "default"`): the association's registered identity
+/// and contacts, as members should find them. Board edits it.
+model AssociationProfile {
+  id             String   @id @default("default")
+  name           String?
+  /// Finnish business ID (Y-tunnus), e.g. 1234567-8.
+  businessId     String?
+  /// Number in the Finnish Register of Associations (yhdistysrekisteri).
+  registerNumber String?
+  /// Domicile (kotipaikka) as registered.
+  domicile       String?
+  contactEmail   String?
+  postalAddress  String?
+  website        String?
+  updatedById    String?
+  updatedAt      DateTime @updatedAt
+
   @@schema("governance")
 }
 
