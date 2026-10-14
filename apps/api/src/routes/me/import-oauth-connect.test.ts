@@ -141,6 +141,7 @@ describe('OAuth import providers: status, connect and disconnect', () => {
       headers: { cookie },
     })
     expect(res.statusCode).toBe(403)
+    expect(res.json().code).toBe('PROVIDER_NOT_CONNECTED')
   })
 
   describe('SoundCloud track list for a connected account', () => {
@@ -211,6 +212,7 @@ describe('OAuth import providers: status, connect and disconnect', () => {
         headers: { cookie },
       })
       expect(res.statusCode).toBe(401)
+      expect(res.json().code).toBe('PROVIDER_TOKEN_EXPIRED')
       const row = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
         select: { soundcloudAccessTokenEnc: true },

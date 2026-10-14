@@ -14,6 +14,7 @@ import { extractHandles, recordMentions } from '../../lib/mentions.js'
 import { auditLog } from '../../lib/audit.js'
 import { canUseFanChat } from '../../lib/fan-perks.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
+import { isAccountChatBanned } from '../../lib/chat-ban.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -112,6 +113,13 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
         })
         if (ban) return refusePublish(reply, 403, 'banned')
       }
+      if (
+        mentionerUserId &&
+        mentionerUserId !== channel.userId &&
+        (await isAccountChatBanned(fastify.prisma, channel.id, mentionerUserId))
+      ) {
+        return refusePublish(reply, 403, 'banned')
+      }
 
       // @mentions → Mention rows + in-app notifications (signed-in chatters only).
       if (mentionerUserId && text && extractHandles(text).length > 0) {
@@ -159,6 +167,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
             handle,
             text,
             userId: mentionerUserId,
+            fingerprintHash: fingerprint || null,
             supporter,
             channelRole,
             countryCode,

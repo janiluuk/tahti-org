@@ -7,6 +7,7 @@ import {
   SpotifyProfileStatusResponseSchema,
   getSpotifyArtist,
   parseSpotifyArtistId,
+  openApiNoContentResponse,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -23,8 +24,10 @@ const spotifyProfileRoute: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: "The connected artist's own Spotify artist profile, if linked",
+        tags: ['imports'],
+        summary: 'Spotify artist profile link status',
+        description:
+          "Whether this server has Spotify search configured, and the caller's linked Spotify artist profile if any. Used as the Spotify search provider's statusPath.",
         response: openApiResponse(SpotifyProfileStatusResponseSchema, 'SpotifyProfileStatus'),
       },
     },
@@ -61,9 +64,10 @@ const spotifyProfileRoute: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
+        tags: ['imports'],
+        summary: 'Link a Spotify artist profile',
         description:
-          'Link a Spotify artist profile — verified against the Spotify catalog before saving',
+          'Saves User.spotifyArtistId after verifying the pasted artist URL against the Spotify catalog. Answers 503 when Spotify is not configured.',
         response: openApiResponse(SpotifyProfileStatusResponseSchema, 'SpotifyProfileStatus'),
       },
     },
@@ -110,8 +114,10 @@ const spotifyProfileRoute: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
-        tags: ['channel'],
-        description: 'Unlink the Spotify artist profile',
+        tags: ['imports'],
+        summary: 'Unlink the Spotify artist profile',
+        description: 'Clears the stored Spotify artist id. Answers 204.',
+        response: openApiNoContentResponse(),
       },
     },
     async (request, reply) => {

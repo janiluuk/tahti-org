@@ -16,6 +16,7 @@ import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { isChatCaptchaVerified, markChatCaptchaVerified } from '../../lib/chat-captcha.js'
 import { countryFromIp } from '../../lib/geoip.js'
+import { isAccountChatBanned } from '../../lib/chat-ban.js'
 
 // Rate limit: 10 tokens per IP per minute
 const tokenBucket = new Map<string, { count: number; reset: number }>()
@@ -112,6 +113,12 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       if (ban) return reply.status(403).send({ error: 'banned' })
+      if (
+        request.sessionUser?.id &&
+        (await isAccountChatBanned(fastify.prisma, channel.id, request.sessionUser.id))
+      ) {
+        return reply.status(403).send({ error: 'banned' })
+      }
 
       const [supporter, sessionUserCountry, channelRole] = await Promise.all([
         request.sessionUser?.id
