@@ -65,14 +65,17 @@ adopted bylaws and legal review.
 
 | ID / item                                                                                              | Status | Owner       | Depends                 |
 | ------------------------------------------------------------------------------------------------------ | :----: | ----------- | ----------------------- |
-| Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[ ]`  | Dev / Board | meeting model           |
-| Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[ ]`  | Dev / Legal | bylaws                  |
+| Member-motion review, seconding, circulation deadline, and AGM scheduling                              | `[~]`  | Dev / Board | meeting model           |
+| Official voting rules: eligibility snapshot, quorum, majority, ballot method, result certificate       | `[~]`  | Dev / Legal | bylaws                  |
 | Signed minutes upload, approval, redaction, publication, and immutable history                         | `[ ]`  | Dev / Board | document model          |
-| Organized association document repository for bylaws, policies, notices, reports, minutes, and filings | `[ ]`  | Dev / Board | document model          |
-| Link published decisions to meetings, agenda items, motions, votes, and minutes                        | `[ ]`  | Dev         | official decision model |
-| Member notices, reminders, delivery log, and deadline tracking                                         | `[ ]`  | Dev / Board | member communication    |
-| Board roles, terms, election history, conflicts, recusals, and scoped permissions                      | `[ ]`  | Dev / Board | board records           |
+| Organized association document repository for bylaws, policies, notices, reports, minutes, and filings | `[~]`  | Dev / Board | document model          |
+| Link published decisions to meetings, agenda items, motions, votes, and minutes                        | `[~]`  | Dev         | official decision model |
+| Member notices, reminders, delivery log, and deadline tracking                                         | `[~]`  | Dev / Board | member communication    |
+| Board roles, terms, election history, conflicts, recusals, and scoped permissions                      | `[~]`  | Dev / Board | board records           |
 | Privacy controls and historical membership eligibility records                                         | `[ ]`  | Dev / Legal | GDPR / bylaws           |
+
+`[~]` rows have API support from #763–#831 (HISTORY 2026-10-15) but no web UI;
+what is open per item is in `docs/governance-worklog.md`.
 
 Additional governance gaps from the audit:
 
@@ -80,8 +83,8 @@ Additional governance gaps from the audit:
 - [ ] Add official ballot receipts, secret-ballot protection, recount, and correction procedure.
 - [ ] Add member notices, reminders, delivery evidence, and circulation deadlines.
 - [ ] Add permanent public archive pages for decisions, minutes, bylaws, and historical reports.
-- [ ] Add legal association information: Business ID, registered details, contacts, auditor, and signatories.
-- [ ] Add annual filing checklist and approval status for accounts, auditor report, and PRH submission.
+- [~] Add legal association information: Business ID, registered details, contacts, auditor, and signatories. API has all but signatories; no web UI.
+- [~] Add annual filing checklist and approval status for accounts, auditor report, and PRH submission. API records approval, publication and filing date/reference on the yearly report; no checklist, auditor report or PRH submission, no web UI.
 
 ## Plugin registry separation (non-breaking preparation)
 
@@ -166,9 +169,9 @@ Folded here when their worklogs/todos were archived to `docs/todo/HISTORY.md`.
 | hearthis.at real-audio import                    | Self-owned tracks/sets only; embed-only was a ToS/rights choice                                                                                                                                                                                      |
 | Fallback cover for releases without artwork      | Gradient placeholder exists; no approved fallback asset                                                                                                                                                                                              |
 | Jam SSE multi-instance                           | In-process fan-out only; needs Redis pub/sub before >1 API replica                                                                                                                                                                                   |
-| Discord bot → Tahti Radio                        | **Ops:** set non-empty `TAHTI_RADIO_AUDIO_URL` (HLS) on the bot in prod; do **not** use `GET /api/v1/radio` as audio. Code/docs: `docs/technical/discord-bot-credentials.md` |
-| Revelator export webhook sync                    | Shipped — webhook updates `Release.revelatorStatus` (see gap-mapping batch 2)                                                                                                                                                              |
-| Per-DSP export submit                            | hearthis-export sound submit is live; storefront DSP rows remain deep-links via Revelator                                                                                                                                                  |
+| Discord bot → Tahti Radio                        | **Ops:** set non-empty `TAHTI_RADIO_AUDIO_URL` (HLS) on the bot in prod; do **not** use `GET /api/v1/radio` as audio. Code/docs: `docs/technical/discord-bot-credentials.md`                                                                         |
+| Revelator export webhook sync                    | Shipped — webhook updates `Release.revelatorStatus` (see gap-mapping batch 2)                                                                                                                                                                        |
+| Per-DSP export submit                            | hearthis-export sound submit is live; storefront DSP rows remain deep-links via Revelator                                                                                                                                                            |
 | `streaming-architecture.md` vs shipped infra     | Confirm how much of the target edge-encoder/MinIO design is live                                                                                                                                                                                     |
 | Sounds player: verify in live app                | PR #469 shipped from a static CSS preview only (no seeded dev stack); confirm waveform overlay legibility over the water-ripple visualizer, embed-row icons, and 1:1 cover art on a real mobile viewport                                             |
 | Your feed redesign: verify in live app           | PR #535 shipped verified by unit tests/tsc only; confirm `FeedCard` cover images no longer crop, teaser text is readable, and `Reveal` expands correctly on a seeded dev stack (desktop + mobile)                                                    |
