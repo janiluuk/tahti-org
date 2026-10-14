@@ -522,6 +522,41 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // A declaration recorded by mistake (wrong person, wrong meeting) can be
+  // removed until the minutes are approved; the audit entry keeps what it said.
+  fastify.delete(
+    '/api/admin/governance/conflicts/:id',
+    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const record = await fastify.prisma.governanceConflictDeclaration.findUnique({
+        where: { id: routeParams.id },
+        include: { meeting: { select: { minutesApprovedAt: true, legalHoldAt: true } } },
+      })
+      if (!record) return reply.status(404).send({ error: 'Conflict declaration not found' })
+      if (record.meeting.minutesApprovedAt) {
+        return reply.status(409).send({ error: 'The declaration is part of the approved minutes' })
+      }
+      if (record.meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
+      await fastify.prisma.governanceConflictDeclaration.delete({ where: { id: record.id } })
+      await auditLog(fastify.prisma, {
+        action: 'CONFLICT_REMOVE',
+        actorId: request.sessionUser!.id,
+        targetId: record.meetingId,
+        meta: {
+          conflictId: record.id,
+          memberId: record.memberId,
+          displayName: record.displayName,
+          matter: record.matter,
+          agendaItemId: record.agendaItemId,
+          recused: record.recused,
+        },
+      })
+      return reply.status(204).send()
+    },
+  )
+
   fastify.get(
     '/api/admin/governance/documents',
     {

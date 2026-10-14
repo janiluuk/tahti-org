@@ -95,4 +95,29 @@ describe('conflict-of-interest declarations', () => {
     })
     expect(remove.statusCode).toBe(409)
   })
+
+  it('removes a mistaken declaration until the minutes are approved', async () => {
+    const held = await meeting('Conflicts removal meeting')
+    const remove = (id: string) =>
+      app.inject({
+        method: 'DELETE',
+        url: `/api/admin/governance/conflicts/${id}`,
+        headers: { cookie: boardCookie },
+      })
+    const wrong = (await declare(held.id, { displayName: 'Wrong person', matter: 'Typo' })).json()
+    expect((await remove(wrong.id)).statusCode).toBe(204)
+    expect(await prisma.governanceConflictDeclaration.count({ where: { id: wrong.id } })).toBe(0)
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'CONFLICT_REMOVE', targetId: held.id },
+    })
+    expect(audit?.meta).toMatchObject({ conflictId: wrong.id, displayName: 'Wrong person' })
+    expect((await remove(wrong.id)).statusCode).toBe(404)
+
+    const kept = (await declare(held.id, { displayName: 'Right person', matter: 'Real' })).json()
+    await prisma.governanceMeeting.update({
+      where: { id: held.id },
+      data: { minutesApprovedAt: new Date() },
+    })
+    expect((await remove(kept.id)).statusCode).toBe(409)
+  })
 })
