@@ -76,7 +76,9 @@ status / webhook shapes.
 ## Honesty rules
 
 - If `capabilities.import` / `fileList` / `search` is true, the matching
-  `importPath` / `listPath` / `searchPath` must be a real route.
+  `importPath` / `listPath` / `searchPath` must be a real route. The reverse
+  also holds: a non-null path means the matching flag is true. A live route
+  with `import: false` (or a true flag with a null path) is a catalog lie.
 - Never advertise a phantom path (e.g. Bandcamp import was wrongly
   `/api/v1/imports/bandcamp/add` with no handler — keep `import: false` until
   Bandcamp API v1 lands).
@@ -87,7 +89,35 @@ status / webhook shapes.
 - Every non-null path in the import and export catalogs must be a registered
   route with an OpenAPI tag and summary. `plugin-provider-routes.test.ts` in
   `apps/api/src/lib/` fails when a catalog row points at a missing or
-  undocumented route.
+  undocumented route, or when the documented success status is not the one
+  the handler sends.
+
+## OpenAPI status honesty
+
+These routes send a non-200 success; OpenAPI documents that status, not a
+default 200:
+
+| Route                                                  | Success                                    |
+| ------------------------------------------------------ | ------------------------------------------ |
+| `POST /api/me/google-drive/import`                     | 202 — poll `GET /api/me/cloud-import/jobs` |
+| `POST /api/me/soundcloud/import`                       | 202 — same job list                        |
+| `POST /api/v1/imports/{spotify,mixcloud,hearthis}/add` | 201 — embed Sound created                  |
+| `POST /api/uploads/prepare`                            | 200 — presigned PUT (not a created Sound)  |
+| `POST /api/uploads/complete`                           | 201 — Sound created, transcode queued      |
+| `POST /api/me/stash`                                   | 201 — stash file row after the PUT         |
+| `POST /api/me/stash/:id/share`                         | 201 — keyed share                          |
+| `DELETE /api/me/stash/:id`                             | 200 `{ ok: true }` — not 204               |
+| `DELETE /api/me/stash/shares/:shareId`                 | 200 `{ ok: true }` — not 204               |
+
+Drive status/picker/import/jobs, Spotify profile (including 204 unlink),
+stash list, uploads/prepare, Mixcloud OAuth status/connect/disconnect, and
+`GET /api/me/import-plugins` are tagged `imports` (not `channel`). Mixcloud
+**upload** of an archive mix (`POST /api/me/sound/:id/mixcloud`) stays under
+`releases` — it is rescue-to-Mixcloud, not catalog import.
+
+The desktop SoundCloud download
+(`GET`/`HEAD /api/v1/imports/soundcloud/tracks/:id/download?ticket=`) is in
+OpenAPI as a 302. It is ticket-auth, not session-auth; do not `hide` it.
 
 ## OAuth provider status (`statusPath`)
 
@@ -106,6 +136,22 @@ state cookie and redirects (302) to the provider. The provider then returns the
 browser to `…/oauth/callback`, which redirects to the dashboard with a result
 flag (`?bc=`, `?sc=`, `?gd=` or `?mixcloud=` set to `connected`, `error` or
 `login`).
+
+MusicBrainz (`/api/me/musicbrainz`, an integration, not an import provider)
+follows the same rules and adds `username` to the status body; its callback
+flag is `?mb=`.
+
+### Error codes
+
+Provider routes put a machine-readable `code` on the error body so a client can
+tell these apart from an empty result:
+
+| Code                     | Status | Meaning                                                                           |
+| ------------------------ | ------ | --------------------------------------------------------------------------------- |
+| `PROVIDER_NOT_CONNECTED` | 403    | The caller never connected this provider. Mixcloud upload includes `connectPath`. |
+| `PROVIDER_TOKEN_EXPIRED` | 401    | The stored token no longer works. The API has cleared it; connect again.          |
+
+A 401 without `PROVIDER_TOKEN_EXPIRED` is the Tahti session, not the provider.
 
 ## Parity checklist for new providers
 
