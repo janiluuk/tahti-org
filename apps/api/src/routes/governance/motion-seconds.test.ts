@@ -22,6 +22,9 @@ describe('seconding a motion draft', () => {
   let motionId: string
 
   async function cleanup() {
+    await prisma.notification.deleteMany({
+      where: { type: 'MOTION_CIRCULATED', body: { contains: '"Second circulated' } },
+    })
     await prisma.motion.deleteMany({ where: { proposer: { email: { startsWith: PREFIX } } } })
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
     await prisma.user.deleteMany({ where: { memberNumber: { gte: 97400, lte: 97499 } } })
@@ -192,6 +195,53 @@ describe('seconding a motion draft', () => {
         })
       ).statusCode,
     ).toBe(404)
+  })
+
+  it('lets the board circulate a draft once, telling the members', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: proposerCookie },
+      payload: {
+        title: 'Second circulated proposal',
+        description: 'Details',
+        openAt: new Date(Date.now() + 86400000).toISOString(),
+        closeAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+      },
+    })
+    const id = created.json().id as string
+    const circulate = (who: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/motions/${id}/circulate`,
+        headers: { cookie: who },
+      })
+    expect((await circulate(memberCookie)).statusCode).toBe(403)
+    const res = await circulate(boardCookie)
+    expect(res.statusCode).toBe(200)
+    expect(res.json().notified).toBeGreaterThanOrEqual(2)
+    const told = await prisma.notification.findMany({
+      where: { type: 'MOTION_CIRCULATED', url: `/governance/motions/${id}` },
+      select: { user: { select: { username: true } } },
+    })
+    const usernames = told.map((row) => row.user.username)
+    expect(usernames).toEqual(expect.arrayContaining(['gov-second-proposer', 'gov-second-member']))
+    expect(usernames).not.toContain('gov-second-board')
+    expect(usernames).not.toContain('gov-second-free')
+    expect(
+      await prisma.auditLog.count({ where: { action: 'MOTION_CIRCULATE', targetId: id } }),
+    ).toBe(1)
+
+    const shown = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${id}`,
+      headers: { cookie: memberCookie },
+    })
+    expect(shown.json().circulatedAt).toBe(res.json().circulatedAt)
+    expect((await circulate(boardCookie)).statusCode).toBe(409)
+
+    await prisma.motion.update({ where: { id }, data: { state: 'OPEN', circulatedAt: null } })
+    expect((await circulate(boardCookie)).statusCode).toBe(409)
   })
 
   it('answers 404 for a motion that does not exist', async () => {

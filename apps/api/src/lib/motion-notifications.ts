@@ -131,3 +131,28 @@ export async function notifyProposerOfComment(
   })
   return true
 }
+
+/**
+ * Tells every member that the board circulated a motion draft for seconds.
+ * A draft only gathered seconds from members who happened to look at the
+ * list. Returns how many were told.
+ */
+export async function notifyMembersOfMotionCirculated(
+  prisma: PrismaClient,
+  motion: { id: string; title: string },
+  actorUserId: string,
+): Promise<number> {
+  const ids = await membersToNotify(prisma, actorUserId)
+  if (ids.length === 0) return 0
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'MOTION_CIRCULATED' as const,
+      actorUserId,
+      title: 'A motion draft is looking for support',
+      body: `Read "${motion.title}" and second it if it should go to a vote.`,
+      url: `/governance/motions/${motion.id}`,
+    })),
+  })
+  return ids.length
+}

@@ -380,6 +380,7 @@ enum AuditAction {
   VOTE_RETRACT
   MOTION_SECOND
   MOTION_SECOND_WITHDRAW
+  MOTION_CIRCULATE
   MOTION_WITHDRAW
   MOTION_EDIT
   MOTION_COMMENT_REMOVE
@@ -678,6 +679,8 @@ enum NotificationType {
   ELECTION_OPENED
   /// The board recorded the result of an election you stood in.
   ELECTION_RESULT
+  /// The board circulated a motion draft for seconds; sent to every other member.
+  MOTION_CIRCULATED
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
@@ -2441,6 +2444,8 @@ model Motion {
   /// denominator, frozen so it doesn't drift as membership changes after the
   /// fact. Null for motions opened before this field existed.
   eligibleMemberCount Int?
+  /// When the board sent the draft round to members for seconds and comments.
+  circulatedAt        DateTime?
   /// The meeting that takes this motion up, when the board has put it on an
   /// agenda. Advisory motions and meetings were unconnected records before.
   meetingId           String?

@@ -4,16 +4,20 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
+  MotionCirculateResponseSchema,
   MotionSecondResponseSchema,
   MotionSeconderListSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
-import { requireMember } from '../../plugins/auth.js'
+import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { userName } from '../../lib/safe-names.js'
-import { notifyProposerOfSecond } from '../../lib/motion-notifications.js'
+import {
+  notifyMembersOfMotionCirculated,
+  notifyProposerOfSecond,
+} from '../../lib/motion-notifications.js'
 
 // Seconding a motion draft. A member-submitted draft sat in the list with no
 // way for other members to show the board it has support; the board decided
@@ -145,6 +149,54 @@ const motionSecondsRoutes: FastifyPluginAsync = async (fastify) => {
       })
       const secondCount = await fastify.prisma.motionSecond.count({ where: { motionId: id } })
       return reply.send({ ok: true, secondCount })
+    },
+  )
+
+  // POST /api/v1/governance/motions/:id/circulate — the board sends a draft
+  // round to every member for seconds and comments. Once per draft.
+  fastify.post(
+    '/api/v1/governance/motions/:id/circulate',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionCirculateResponseSchema, 'MotionCirculateResponse'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const motion = await fastify.prisma.motion.findUnique({
+        where: { id },
+        select: { id: true, title: true, state: true, circulatedAt: true },
+      })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+      if (motion.state !== 'DRAFT') {
+        return reply.status(409).send({ error: 'Only a draft is circulated for seconds' })
+      }
+      const circulatedAt = new Date()
+      const marked = await fastify.prisma.motion.updateMany({
+        where: { id, state: 'DRAFT', circulatedAt: null },
+        data: { circulatedAt },
+      })
+      if (marked.count === 0) {
+        return reply.status(409).send({ error: 'This draft has already been circulated' })
+      }
+      const userId = request.sessionUser!.id
+      const notified = await notifyMembersOfMotionCirculated(fastify.prisma, motion, userId).catch(
+        (err: unknown) => {
+          request.log.error({ err, motionId: id }, 'motion-circulated notification failed')
+          return 0
+        },
+      )
+      await auditLog(fastify.prisma, {
+        action: 'MOTION_CIRCULATE',
+        actorId: userId,
+        targetId: id,
+        meta: { title: motion.title, notified },
+      })
+      return reply.send({ id, circulatedAt, notified })
     },
   )
 }

@@ -55,6 +55,8 @@ export const MotionSummarySchema = z.object({
   // Members who back this draft being put to a vote (never the proposer).
   secondCount: z.number().int(),
   youSeconded: z.boolean(),
+  // When the board sent the draft round to members for seconds.
+  circulatedAt: z.coerce.date().nullable(),
   // Only present once CLOSED (hidden while OPEN to avoid a bandwagon effect —
   // see comment in apps/api/src/routes/governance/index.ts). Included in the
   // list response, not just the detail one, since the governance page has no
@@ -121,6 +123,13 @@ export const VoteRetractResponseSchema = z.object({
 export const MotionSecondResponseSchema = z.object({
   ok: z.literal(true),
   secondCount: z.number().int(),
+})
+
+/** POST /api/v1/governance/motions/:id/circulate — how many members were told. */
+export const MotionCirculateResponseSchema = z.object({
+  id: z.string(),
+  circulatedAt: z.coerce.date(),
+  notified: z.number().int(),
 })
 
 /** Who seconded a motion, oldest first. Members only, like the motion itself. */
