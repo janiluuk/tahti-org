@@ -21,6 +21,7 @@ export const NotificationTypeSchema = z.enum([
   'MISSED_LIVE_SHOW_FLAGGED',
   'MOTION_OPENED',
   'MOTION_RESULT',
+  'MOTION_SECONDED',
   'STREAMING_COPY_READY',
   'CHANNEL_LIVE',
   'NEW_EVENT',
