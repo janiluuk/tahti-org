@@ -124,6 +124,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'DOCUMENT_ARCHIVE',
       'DOCUMENT_LEGAL_HOLD',
       'ANNUAL_REPORT_GENERATE',
+      'ANNUAL_REPORT_APPROVE',
     ],
   },
   {
@@ -226,6 +227,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   DOCUMENT_ARCHIVE: 'Governance document archived or restored',
   DOCUMENT_LEGAL_HOLD: 'Legal hold placed on or lifted from a governance document',
   ANNUAL_REPORT_GENERATE: 'Annual report generated',
+  ANNUAL_REPORT_APPROVE: 'Annual report approved',
   RADIO_SLOT_BOOKING_CREATE: 'Radio slot booked',
   RADIO_SLOT_BOOKING_UPDATE: 'Radio slot updated',
   RADIO_SLOT_BOOKING_CANCEL: 'Radio slot cancelled',

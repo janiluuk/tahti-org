@@ -37,7 +37,7 @@ describe('M21-G — annual reports', () => {
   })
 
   afterAll(async () => {
-    await prisma.annualReport.deleteMany({})
+    await prisma.annualReport.deleteMany({ where: { year: 2026 } })
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })

@@ -10,6 +10,13 @@ export const AdminAnnualReportRowSchema = z.object({
   generatedAt: z.coerce.date(),
   generatedByDisplayName: z.string().nullable(),
   downloadUrl: z.string().nullable(),
+  approvedAt: z.coerce.date().nullable(),
+  approvalMeetingId: z.string().nullable(),
+})
+
+/** POST /api/admin/reports/annual/:year/approve */
+export const ApproveAnnualReportSchema = z.object({
+  meetingId: z.string().cuid().optional(),
 })
 
 export const AdminAnnualReportListSchema = z.array(AdminAnnualReportRowSchema)

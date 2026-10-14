@@ -440,6 +440,7 @@ enum AuditAction {
   RESOLUTION_CREATE
   RESOLUTION_UPDATE
   ANNUAL_REPORT_GENERATE
+  ANNUAL_REPORT_APPROVE
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
@@ -2470,14 +2471,15 @@ model GovernanceMeeting {
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
 
-  documents            GovernanceDocument[]
-  attendance           GovernanceAttendance[]
-  noticeDeliveries     GovernanceNoticeDelivery[]
-  conflictDeclarations GovernanceConflictDeclaration[]
-  boardResolutions     BoardResolution[]
-  motions              Motion[]
-  auditors             GovernanceAuditor[]
-  boardTerms           GovernanceBoardTerm[]
+  documents             GovernanceDocument[]
+  attendance            GovernanceAttendance[]
+  noticeDeliveries      GovernanceNoticeDelivery[]
+  conflictDeclarations  GovernanceConflictDeclaration[]
+  boardResolutions      BoardResolution[]
+  motions               Motion[]
+  auditors              GovernanceAuditor[]
+  boardTerms            GovernanceBoardTerm[]
+  annualReportsApproved AnnualReport[]
 
   @@index([type, scheduledAt])
   @@index([state, scheduledAt])
@@ -3924,12 +3926,19 @@ model BoardResolution {
 }
 
 model AnnualReport {
-  id            BigInt   @id @default(autoincrement())
-  year          Int      @unique
-  storageKey    String
-  generatedAt   DateTime @default(now())
-  generatedById String
-  generatedBy   User     @relation(fields: [generatedById], references: [id], onDelete: Cascade)
+  id                BigInt             @id @default(autoincrement())
+  year              Int                @unique
+  storageKey        String
+  generatedAt       DateTime           @default(now())
+  generatedById     String
+  generatedBy       User               @relation(fields: [generatedById], references: [id], onDelete: Cascade)
+  /// Set when the board approves the report as generated. An approved report
+  /// is not regenerated in place.
+  approvedAt        DateTime?
+  approvedById      String?
+  /// The meeting that approved it, if recorded.
+  approvalMeetingId String?
+  approvalMeeting   GovernanceMeeting? @relation(fields: [approvalMeetingId], references: [id], onDelete: SetNull)
 
   @@schema("admin")
 }
