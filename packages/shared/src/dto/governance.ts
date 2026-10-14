@@ -263,6 +263,8 @@ export const CreateGovernanceConflictDeclarationSchema = z.object({
   memberId: z.string().cuid().nullable().optional(),
   displayName: z.string().trim().min(1).max(200),
   matter: z.string().trim().min(1).max(2000),
+  // The agenda item the conflict concerns; it must be on the same meeting.
+  agendaItemId: z.string().cuid().optional(),
   recused: z.boolean().optional(),
 })
 export const GovernanceConflictDeclarationItemSchema = z.object({
@@ -270,6 +272,7 @@ export const GovernanceConflictDeclarationItemSchema = z.object({
   memberId: z.string().nullable(),
   displayName: z.string(),
   matter: z.string(),
+  agendaItemId: z.string().nullable(),
   recused: z.boolean(),
   declaredAt: z.coerce.date(),
 })

@@ -495,6 +495,15 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
       if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
+      if (parsed.data.agendaItemId) {
+        const item = await fastify.prisma.governanceAgendaItem.findUnique({
+          where: { id: parsed.data.agendaItemId },
+          select: { meetingId: true },
+        })
+        if (item?.meetingId !== meetingId) {
+          return reply.status(400).send({ error: 'That agenda item is not on this meeting' })
+        }
+      }
       const record = await fastify.prisma.governanceConflictDeclaration.create({
         data: { meetingId, ...parsed.data },
       })
@@ -505,6 +514,7 @@ const governanceRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         meta: {
           conflictId: record.id,
           displayName: record.displayName,
+          agendaItemId: record.agendaItemId,
           recused: record.recused,
         },
       })

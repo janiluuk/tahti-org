@@ -2562,17 +2562,21 @@ model GovernanceAttendance {
 /// related entity, just enough to answer "who declared what, and did they
 /// recuse".
 model GovernanceConflictDeclaration {
-  id          String            @id @default(cuid())
-  meetingId   String
-  meeting     GovernanceMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  memberId    String?
-  member      User?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
-  displayName String
-  matter      String
-  recused     Boolean           @default(true)
-  declaredAt  DateTime          @default(now())
+  id           String                @id @default(cuid())
+  meetingId    String
+  meeting      GovernanceMeeting     @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId     String?
+  member       User?                 @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  displayName  String
+  matter       String
+  /// The agenda item the conflict concerns, when it is one; always on `meeting`.
+  agendaItemId String?
+  agendaItem   GovernanceAgendaItem? @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
+  recused      Boolean               @default(true)
+  declaredAt   DateTime              @default(now())
 
   @@index([meetingId])
+  @@index([agendaItemId])
   @@schema("governance")
 }
 
@@ -2629,6 +2633,7 @@ model GovernanceAgendaItem {
   motions     Motion[]
   resolutions BoardResolution[]
   documents   GovernanceDocument[]
+  conflicts   GovernanceConflictDeclaration[]
 
   @@index([meetingId, position])
   @@schema("governance")

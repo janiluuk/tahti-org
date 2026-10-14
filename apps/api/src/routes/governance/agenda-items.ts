@@ -317,13 +317,15 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           ...ITEM_SELECT,
           meeting: { select: { minutesApprovedAt: true, legalHoldAt: true } },
-          _count: { select: { motions: true, resolutions: true, documents: true } },
+          _count: {
+            select: { motions: true, resolutions: true, documents: true, conflicts: true },
+          },
         },
       })
       if (!item) return reply.status(404).send({ error: 'Agenda item not found' })
       if (item.meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
       if (item.meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
-      if (item._count.motions + item._count.resolutions + item._count.documents > 0) {
+      if (Object.values(item._count).some((count) => count > 0)) {
         return reply
           .status(409)
           .send({ error: 'Records still point at this agenda item: unlink them first' })
