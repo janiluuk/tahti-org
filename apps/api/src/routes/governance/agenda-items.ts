@@ -15,6 +15,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { MEETING_HELD } from '../../lib/governance-meetings.js'
 
 // A meeting's agenda as separate items. The meeting's `agenda` JSON is the
 // free-form notice text and stays as it is; an item here is something a
@@ -141,10 +142,11 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
 
       const meeting = await fastify.prisma.governanceMeeting.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, title: true, minutesApprovedAt: true },
+        select: { id: true, title: true, minutesApprovedAt: true, legalHoldAt: true },
       })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
       if (meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
 
       // The meeting row is locked so two items added at once get distinct positions.
       const item = await fastify.prisma.$transaction(async (tx) => {
@@ -200,11 +202,15 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
 
       const found = await fastify.prisma.governanceAgendaItem.findUnique({
         where: { id },
-        select: { ...ITEM_SELECT, meeting: { select: { minutesApprovedAt: true } } },
+        select: {
+          ...ITEM_SELECT,
+          meeting: { select: { minutesApprovedAt: true, legalHoldAt: true } },
+        },
       })
       if (!found) return reply.status(404).send({ error: 'Agenda item not found' })
       const { meeting, ...existing } = found
       if (meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
       const changed = (Object.keys(parsed.data) as Array<keyof typeof parsed.data>).filter(
         (key) => parsed.data[key] !== existing[key],
       )
@@ -245,10 +251,11 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
 
       const meeting = await fastify.prisma.governanceMeeting.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, minutesApprovedAt: true },
+        select: { id: true, minutesApprovedAt: true, legalHoldAt: true },
       })
       if (!meeting) return reply.status(404).send({ error: 'Meeting not found' })
       if (meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
+      if (meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
 
       const result = await fastify.prisma.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "governance"."GovernanceMeeting" WHERE id = ${meeting.id} FOR UPDATE`
@@ -306,12 +313,13 @@ const agendaItemRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id },
         select: {
           ...ITEM_SELECT,
-          meeting: { select: { minutesApprovedAt: true } },
+          meeting: { select: { minutesApprovedAt: true, legalHoldAt: true } },
           _count: { select: { motions: true, resolutions: true, documents: true } },
         },
       })
       if (!item) return reply.status(404).send({ error: 'Agenda item not found' })
       if (item.meeting.minutesApprovedAt) return reply.status(409).send({ error: AGENDA_LOCKED })
+      if (item.meeting.legalHoldAt) return reply.status(409).send({ error: MEETING_HELD })
       if (item._count.motions + item._count.resolutions + item._count.documents > 0) {
         return reply
           .status(409)

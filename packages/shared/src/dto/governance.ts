@@ -225,6 +225,10 @@ export const GovernanceMeetingItemSchema = z.object({
   minutesApprovedAt: z.coerce.date().nullable(),
   minutesRedacted: z.boolean(),
   minutesPublishedAt: z.coerce.date().nullable(),
+  // A meeting under a legal hold cannot be changed. The reason is shown to the
+  // board only.
+  legalHoldAt: z.coerce.date().nullable(),
+  legalHoldReason: z.string().nullable(),
   eligibleMemberCount: z.number().int().nullable(),
   quorumRequired: z.number().int().nullable(),
   chairName: z.string().nullable(),
@@ -472,6 +476,11 @@ export const PatchAssociationProfileSchema = z
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
+
+/** PUT /api/admin/governance/meetings/:id/legal-hold */
+export const GovernanceMeetingLegalHoldSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+})
 
 /** PUT /api/admin/governance/documents/:id/legal-hold */
 export const GovernanceDocumentLegalHoldSchema = z.object({
