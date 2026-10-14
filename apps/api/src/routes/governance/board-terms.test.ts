@@ -139,4 +139,45 @@ describe('board terms', () => {
       ['TREASURER', 'Term member', 'governance-boardterm-member'],
     ])
   })
+
+  describe('ending a term early', () => {
+    function end(id: string, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/admin/governance/board-terms/${id}`,
+        headers: { cookie: boardCookie },
+        payload,
+      })
+    }
+
+    it('takes the member off the current board and keeps the reason', async () => {
+      const term = (
+        await record({ userId: ids.other, role: 'DEPUTY', termStart: iso(-20), termEnd: iso(200) })
+      ).json()
+      const res = await end(term.id, { termEnd: iso(-1), endReason: 'Resigned' })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({ endReason: 'Resigned' })
+
+      const board = await app.inject({
+        method: 'GET',
+        url: '/api/v1/governance/board',
+        headers: { cookie: memberCookie },
+      })
+      expect((board.json() as Array<{ id: string }>).some((t) => t.id === term.id)).toBe(false)
+
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'BOARD_TERM_END', targetId: term.id },
+      })
+      expect(audit?.meta).toMatchObject({ role: 'DEPUTY', endReason: 'Resigned' })
+    })
+
+    it('refuses to extend a term or end it before it starts', async () => {
+      const term = (
+        await record({ userId: ids.board, role: 'MEMBER', termStart: iso(400), termEnd: iso(700) })
+      ).json()
+      expect((await end(term.id, { termEnd: iso(800) })).statusCode).toBe(400)
+      expect((await end(term.id, { termEnd: iso(399) })).statusCode).toBe(400)
+      expect((await end('missing-term', { termEnd: iso(1) })).statusCode).toBe(404)
+    })
+  })
 })
