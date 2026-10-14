@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { memberCanSeeRecord } from '../../lib/governance-records.js'
 
 /** How many unanswered requests one member can have waiting. */
 const MAX_OPEN_REQUESTS = 5
@@ -19,6 +20,8 @@ type CorrectionRow = {
   id: string
   subject: string
   details: string
+  recordKind: string | null
+  recordId: string | null
   state: string
   resolutionNote: string | null
   resolvedAt: Date | null
@@ -30,6 +33,8 @@ export function correctionView(row: CorrectionRow) {
     id: row.id,
     subject: row.subject,
     details: row.details,
+    recordKind: row.recordKind,
+    recordId: row.recordId,
     state: row.state,
     resolutionNote: row.resolutionNote,
     resolvedAt: row.resolvedAt,
@@ -69,8 +74,23 @@ const correctionRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
+      const { recordKind, recordId } = parsed.data
+      if (
+        recordKind &&
+        recordId &&
+        !(await memberCanSeeRecord(fastify.prisma, recordKind, recordId))
+      ) {
+        return reply.status(400).send({ error: 'No such record' })
+      }
+
       const row = await fastify.prisma.governanceCorrectionRequest.create({
-        data: { requesterId: user.id, subject: parsed.data.subject, details: parsed.data.details },
+        data: {
+          requesterId: user.id,
+          subject: parsed.data.subject,
+          details: parsed.data.details,
+          recordKind,
+          recordId,
+        },
       })
       // The details can hold personal data, so the audit entry only says
       // that a request was made and about what.
@@ -78,7 +98,10 @@ const correctionRoutes: FastifyPluginAsync = async (fastify) => {
         action: 'CORRECTION_REQUEST',
         actorId: user.id,
         targetId: row.id,
-        meta: { subject: row.subject },
+        meta: {
+          subject: row.subject,
+          ...(row.recordKind && { recordKind: row.recordKind, recordId: row.recordId }),
+        },
       })
       return reply.status(201).send(correctionView(row))
     },
