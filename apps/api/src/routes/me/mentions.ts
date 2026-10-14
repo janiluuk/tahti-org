@@ -5,9 +5,11 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   HandleParamSchema,
   MentionMutedResponseSchema,
+  MentionSettingsSchema,
   MentionUnmutedResponseSchema,
   MentionsEnabledResponseSchema,
   MentionsEnabledSchema,
+  MentionsInboxSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -23,43 +25,68 @@ import { userName } from '../../lib/safe-names.js'
 // M15 — artist mention preferences and mute management
 const mentionRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/mentions/settings — current preferences + muted list
-  fastify.get('/api/me/mentions/settings', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        mentionsEnabled: true,
-        publicMentionsEnabled: true,
-        mentionsMuted: {
-          select: { target: { select: { username: true, displayName: true } } },
-        },
+  fastify.get(
+    '/api/me/mentions/settings',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['mentions'],
+        summary: 'Mention notification settings',
+        description: 'Incoming-mention toggles plus the muted-handle list.',
+        response: openApiResponse(MentionSettingsSchema, 'MentionSettings'),
       },
-    })
-    return reply.send({
-      mentionsEnabled: row?.mentionsEnabled ?? true,
-      publicMentionsEnabled: row?.publicMentionsEnabled ?? false,
-      muted: (row?.mentionsMuted ?? []).map((m) => ({
-        username: m.target.username,
-        displayName: userName(m.target),
-      })),
-    })
-  })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          mentionsEnabled: true,
+          publicMentionsEnabled: true,
+          mentionsMuted: {
+            select: { target: { select: { username: true, displayName: true } } },
+          },
+        },
+      })
+      return reply.send({
+        mentionsEnabled: row?.mentionsEnabled ?? true,
+        publicMentionsEnabled: row?.publicMentionsEnabled ?? false,
+        muted: (row?.mentionsMuted ?? []).map((m) => ({
+          username: m.target.username,
+          displayName: userName(m.target),
+        })),
+      })
+    },
+  )
 
   // GET /api/me/mentions — recent incoming mentions
-  fastify.get('/api/me/mentions', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const query = request.query as { limit?: string }
-    const asked = Number.parseInt(query.limit ?? '', 10)
-    const limit = asked > 0 ? Math.min(asked, 50) : 20
+  fastify.get(
+    '/api/me/mentions',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['mentions'],
+        summary: 'Incoming mentions inbox',
+        description:
+          'Recent mentions of the signed-in artist. Optional `?limit=` (1–50, default 20) is read in the handler, not by Fastify AJV.',
+        response: openApiResponse(MentionsInboxSchema, 'MentionsInbox'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const query = request.query as { limit?: string }
+      const asked = Number.parseInt(query.limit ?? '', 10)
+      const limit = asked > 0 ? Math.min(asked, 50) : 20
 
-    const mentions = await fastify.prisma.mention.findMany({
-      where: listedMentionsWhere(user.id),
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      select: mentionSourceSelect,
-    })
-    return reply.send({ mentions: await resolveMentionSources(fastify.prisma, mentions) })
-  })
+      const mentions = await fastify.prisma.mention.findMany({
+        where: listedMentionsWhere(user.id),
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: mentionSourceSelect,
+      })
+      return reply.send({ mentions: await resolveMentionSources(fastify.prisma, mentions) })
+    },
+  )
 
   // PATCH /api/me/mentions/settings — toggle mentions on/off
   fastify.patch(
@@ -67,6 +94,10 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
+        tags: ['mentions'],
+        summary: 'Update mention notification settings',
+        description:
+          'Toggle `mentionsEnabled` and/or `publicMentionsEnabled`. JSON body is validated in the handler, not by Fastify AJV.',
         response: openApiResponse(MentionsEnabledResponseSchema, 'MentionsEnabledResponse'),
       },
     },
@@ -100,6 +131,9 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
+        tags: ['mentions'],
+        summary: 'Mute mentions from an artist',
+        description: 'Answers 201 `{ muted }` for the handle. Idempotent upsert.',
         response: openApiResponses([
           { status: 201, schema: MentionMutedResponseSchema, name: 'MentionMutedResponse' },
         ]),
@@ -133,6 +167,9 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     {
       preHandler: requireAuth,
       schema: {
+        tags: ['mentions'],
+        summary: 'Unmute mentions from an artist',
+        description: 'Answers 200 `{ unmuted }` for the handle. Missing mutes are a no-op.',
         response: openApiResponse(MentionUnmutedResponseSchema, 'MentionUnmutedResponse'),
       },
     },
