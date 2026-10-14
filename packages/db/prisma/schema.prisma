@@ -444,6 +444,7 @@ enum AuditAction {
   ANNUAL_REPORT_PUBLISH
   ANNUAL_REPORT_FILE
   ANNUAL_REPORT_CORRECT
+  ANNUAL_REPORT_ARCHIVE
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
@@ -3951,6 +3952,9 @@ model AnnualReport {
   /// When an approved report was last corrected (regenerated with a note).
   /// Every replaced version is kept in AnnualReportRevision.
   correctedAt       DateTime?
+  /// Set when the board takes the report out of the member list. The row,
+  /// its file and its revisions stay.
+  archivedAt        DateTime?
 
   @@schema("admin")
 }
