@@ -126,6 +126,21 @@ describe('list of legal holds', () => {
     ])
   })
 
+  it('lists only the kinds asked for', async () => {
+    const list = (query: string) =>
+      app.inject({
+        method: 'GET',
+        url: `/api/admin/governance/legal-holds${query}`,
+        headers: { cookie: boardCookie },
+      })
+    const res = await list('?kind=MEETING,RESOLUTION')
+    expect(res.statusCode).toBe(200)
+    const kinds = new Set((res.json() as Array<{ kind: string }>).map((row) => row.kind))
+    expect([...kinds].sort()).toEqual(['MEETING', 'RESOLUTION'])
+    expect((await list('?kind=MOTION')).statusCode).toBe(400)
+    expect((await list('?kind=')).statusCode).toBe(400)
+  })
+
   it('is for the board only', async () => {
     const res = await app.inject({
       method: 'GET',
