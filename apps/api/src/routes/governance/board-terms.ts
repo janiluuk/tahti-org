@@ -5,9 +5,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateGovernanceBoardTermSchema,
   CurrentBoardSchema,
+  EndGovernanceBoardTermSchema,
   GovernanceBoardTermListSchema,
+  IdParamSchema,
   openApiResponse,
   openApiResponses,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard, requireMember } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -162,6 +165,58 @@ const boardTermRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { userId, displayName: term.displayName, role, termStart, termEnd: termEnd ?? null },
       })
       return reply.status(201).send(term)
+    },
+  )
+
+  fastify.patch(
+    '/api/admin/governance/board-terms/:id',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(GovernanceBoardTermListSchema.element, 'GovernanceBoardTerm'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = EndGovernanceBoardTermSchema.safeParse(request.body)
+      if (!parsed.success)
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      const { termEnd, endReason } = parsed.data
+
+      const existing = await fastify.prisma.governanceBoardTerm.findUnique({ where: { id } })
+      if (!existing) return reply.status(404).send({ error: 'Board term not found' })
+      if (termEnd <= existing.termStart) {
+        return reply.status(400).send({ error: 'The term must end after it starts' })
+      }
+      if (existing.termEnd && termEnd > existing.termEnd) {
+        return reply
+          .status(400)
+          .send({ error: 'A term can be ended early, not extended: record a new term instead' })
+      }
+      const term = await fastify.prisma.governanceBoardTerm.update({
+        where: { id },
+        data: { termEnd, endReason: endReason ?? existing.endReason },
+        select: TERM_SELECT,
+      })
+      if (existing.termEnd?.getTime() !== termEnd.getTime() || endReason !== undefined) {
+        await auditLog(fastify.prisma, {
+          action: 'BOARD_TERM_END',
+          actorId: request.sessionUser!.id,
+          targetId: id,
+          meta: {
+            displayName: existing.displayName,
+            role: existing.role,
+            termEnd,
+            ...(endReason ? { endReason } : {}),
+          },
+        })
+      }
+      return reply.send(term)
     },
   )
 }

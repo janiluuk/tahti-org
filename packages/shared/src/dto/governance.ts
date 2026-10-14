@@ -388,6 +388,13 @@ export const CreateGovernanceBoardTermSchema = z
     path: ['termEnd'],
   })
 
+/** PATCH /api/admin/governance/board-terms/:id — end a term early. A term
+ * can be ended or shortened, never extended: a longer term is a new election. */
+export const EndGovernanceBoardTermSchema = z.object({
+  termEnd: z.coerce.date(),
+  endReason: z.string().trim().min(1).max(500).optional(),
+})
+
 export const GovernanceAuditorKindSchema = z.enum(['AUDITOR', 'OPERATIONS_INSPECTOR'])
 
 export const GovernanceAuditorSchema = z.object({

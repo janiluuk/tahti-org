@@ -107,6 +107,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'AUDITOR_APPOINT',
       'AUDITOR_TERM_END',
       'BOARD_TERM_RECORD',
+      'BOARD_TERM_END',
     ],
   },
   {
@@ -214,6 +215,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   AUDITOR_APPOINT: 'Auditor or operations inspector recorded',
   AUDITOR_TERM_END: "Auditor's term ended",
   BOARD_TERM_RECORD: 'Board term recorded',
+  BOARD_TERM_END: 'Board term ended early',
   USER_SUSPEND: 'Account suspended',
   USER_UNSUSPEND: 'Suspension lifted',
   MEETING_CREATE: 'Meeting created',
