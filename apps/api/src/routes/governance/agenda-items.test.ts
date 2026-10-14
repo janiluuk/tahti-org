@@ -225,4 +225,34 @@ describe('meeting agenda items', () => {
     })
     expect(remove.statusCode).toBe(409)
   })
+  it('shows members the agenda of an announced meeting only', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/meetings/${meetingId}/agenda-items`,
+      headers: { cookie: memberCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(await list())
+
+    const draft = await prisma.governanceMeeting.create({
+      data: {
+        title: 'Agenda test draft meeting',
+        type: 'BOARD',
+        state: 'DRAFT',
+        createdById: boardId,
+      },
+    })
+    await add({ title: 'Not yet announced' }, boardCookie, draft.id)
+    const hidden = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/meetings/${draft.id}/agenda-items`,
+      headers: { cookie: memberCookie },
+    })
+    expect(hidden.statusCode).toBe(404)
+    const outsider = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/meetings/${meetingId}/agenda-items`,
+    })
+    expect(outsider.statusCode).toBe(401)
+  })
 })
