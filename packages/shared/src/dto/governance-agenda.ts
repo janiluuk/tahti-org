@@ -27,3 +27,13 @@ export const PatchGovernanceAgendaItemSchema = z
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, 'Nothing to change')
+
+/** PUT /api/admin/governance/meetings/:id/agenda-items/order — every item of
+ * the meeting, each once, in the new order. */
+export const ReorderGovernanceAgendaItemsSchema = z.object({
+  ids: z
+    .array(z.string().min(1).max(64))
+    .min(1)
+    .max(200)
+    .refine((ids) => new Set(ids).size === ids.length, 'An item is listed twice'),
+})

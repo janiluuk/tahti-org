@@ -143,4 +143,86 @@ describe('meeting agenda items', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+  it('reorders the whole agenda and refuses a partial or foreign list', async () => {
+    const items = await list()
+    const reversed = items.map((item) => item.id).reverse()
+    const res = await app.inject({
+      method: 'PUT',
+      url: `/api/admin/governance/meetings/${meetingId}/agenda-items/order`,
+      headers: { cookie: boardCookie },
+      payload: { ids: reversed },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().map((item: { id: string }) => item.id)).toEqual(reversed)
+    expect(res.json().map((item: { position: number }) => item.position)).toEqual(
+      items.map((_, index) => index + 1),
+    )
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'AGENDA_ITEM_REORDER', targetId: meetingId },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(audit?.meta).toMatchObject({ order: reversed })
+
+    for (const ids of [reversed.slice(1), [...reversed.slice(1), 'cforeignitem000000000000']]) {
+      const bad = await app.inject({
+        method: 'PUT',
+        url: `/api/admin/governance/meetings/${meetingId}/agenda-items/order`,
+        headers: { cookie: boardCookie },
+        payload: { ids },
+      })
+      expect(bad.statusCode).toBe(400)
+    }
+  })
+
+  it('removes an item and closes the gap in the numbering', async () => {
+    const items = await list()
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/governance/agenda-items/${items[1]!.id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(204)
+    const after = await list()
+    expect(after.map((item) => item.id)).toEqual(
+      items.filter((_, index) => index !== 1).map((item) => item.id),
+    )
+    expect(after.map((item) => item.position)).toEqual(after.map((_, index) => index + 1))
+    expect(
+      await prisma.auditLog.count({
+        where: { action: 'AGENDA_ITEM_REMOVE', targetId: items[1]!.id },
+      }),
+    ).toBe(1)
+  })
+
+  it('fixes the agenda once the minutes are approved', async () => {
+    const meeting = await prisma.governanceMeeting.create({
+      data: {
+        title: 'Agenda test approved meeting',
+        type: 'BOARD',
+        state: 'HELD',
+        scheduledAt: new Date(),
+        createdById: boardId,
+      },
+    })
+    const item = await add({ title: 'Approved item' }, boardCookie, meeting.id)
+    expect(item.statusCode).toBe(201)
+    await prisma.governanceMeeting.update({
+      where: { id: meeting.id },
+      data: { minutesApprovedAt: new Date() },
+    })
+    expect((await add({ title: 'Late addition' }, boardCookie, meeting.id)).statusCode).toBe(409)
+    const edit = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/governance/agenda-items/${item.json().id}`,
+      headers: { cookie: boardCookie },
+      payload: { title: 'Rewritten' },
+    })
+    expect(edit.statusCode).toBe(409)
+    const remove = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/governance/agenda-items/${item.json().id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(remove.statusCode).toBe(409)
+  })
 })
