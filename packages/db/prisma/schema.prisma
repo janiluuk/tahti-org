@@ -443,6 +443,7 @@ enum AuditAction {
   ANNUAL_REPORT_APPROVE
   ANNUAL_REPORT_PUBLISH
   ANNUAL_REPORT_FILE
+  ANNUAL_REPORT_CORRECT
   MINUTES_UPLOAD
   MINUTES_APPROVE
   MINUTES_SIGN
@@ -3947,7 +3948,26 @@ model AnnualReport {
   /// reference that authority gave, as the board records them.
   filedAt           DateTime?
   filingReference   String?
+  /// When an approved report was last corrected (regenerated with a note).
+  /// Every replaced version is kept in AnnualReportRevision.
+  correctedAt       DateTime?
 
+  @@schema("admin")
+}
+
+/// A version of an annual report that a correction replaced. The file under
+/// `storageKey` is left in place; the corrected report gets a new key.
+model AnnualReportRevision {
+  id           BigInt   @id @default(autoincrement())
+  year         Int
+  storageKey   String
+  generatedAt  DateTime
+  replacedAt   DateTime @default(now())
+  replacedById String?
+  /// Why the board corrected the report.
+  note         String
+
+  @@index([year, replacedAt])
   @@schema("admin")
 }
 

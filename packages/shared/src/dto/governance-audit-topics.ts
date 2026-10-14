@@ -127,6 +127,7 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
       'ANNUAL_REPORT_APPROVE',
       'ANNUAL_REPORT_PUBLISH',
       'ANNUAL_REPORT_FILE',
+      'ANNUAL_REPORT_CORRECT',
     ],
   },
   {
@@ -232,6 +233,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   ANNUAL_REPORT_APPROVE: 'Annual report approved',
   ANNUAL_REPORT_PUBLISH: 'Annual report published to members',
   ANNUAL_REPORT_FILE: 'Annual report filing recorded',
+  ANNUAL_REPORT_CORRECT: 'Approved annual report corrected',
   RADIO_SLOT_BOOKING_CREATE: 'Radio slot booked',
   RADIO_SLOT_BOOKING_UPDATE: 'Radio slot updated',
   RADIO_SLOT_BOOKING_CANCEL: 'Radio slot cancelled',
