@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { availableUserWhere } from '@tahti/db'
 import {
   IdParamSchema,
   TrackPlaybackDetailsSchema,
@@ -15,6 +16,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 interface TracklistEntry {
   startSec: number
@@ -105,8 +107,8 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const item = await fastify.prisma.sound.findUnique({
-        where: { id: routeParams.id },
+      const item = await fastify.prisma.sound.findFirst({
+        where: { id: routeParams.id, channel: { user: availableUserWhere } },
         select: {
           id: true,
           title: true,
@@ -182,17 +184,24 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(429).send({ error: 'Slow down' })
       }
 
-      const item = await fastify.prisma.sound.findUnique({
-        where: { id: routeParams.id },
+      const item = await fastify.prisma.sound.findFirst({
+        where: { id: routeParams.id, isPublic: true, channel: { user: availableUserWhere } },
         select: {
           id: true,
           title: true,
-          isPublic: true,
           durationSec: true,
-          channel: { select: { slug: true } },
+          channel: { select: { slug: true, userId: true } },
         },
       })
-      if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+      if (!item) return reply.status(404).send({ error: 'Track not found' })
+      // A block either way stops a new reaction, the same as a love; it
+      // answers like a missing track.
+      if (
+        item.channel.userId !== user.id &&
+        (await isBlockedEitherWay(fastify.prisma, item.channel.userId, user.id))
+      ) {
+        return reply.status(404).send({ error: 'Track not found' })
+      }
 
       const positionSec = item.durationSec
         ? Math.min(parsed.data.positionSec, item.durationSec)
