@@ -33,6 +33,15 @@
           environment: lab
           host: vimage
           layer: lab
+      - targets:
+          # tahti.local's standalone MinIO (infra/docker-compose.minio-remote.yml)
+          # — not yet the production MinIO (see docs/todo/tahti-local-onboarding.md),
+          # but probed the same way so its health shows up before cutover.
+          - http://192.168.2.107:9000/minio/health/live
+        labels:
+          environment: lab
+          host: tahti-local
+          layer: lab
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

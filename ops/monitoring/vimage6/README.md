@@ -43,7 +43,7 @@ The deploy script **replaces** the managed Prometheus snippet on each run (marke
 
 Existing Prometheus jobs on vimage6 already scrape **node_exporter**, **cAdvisor**, and **docker-catalog** on:
 
-`vimage`, `vimage2`–`vimage5`, `vimage6`, `pi4`, `pi5`, `web`
+`vimage`, `vimage2`–`vimage5`, `vimage6`, `vimage7`, `tahti-local` (tahti.local), `pi4`, `pi5`, `web`
 
 The infrastructure dashboard surfaces CPU, load, memory, disk free/used, disk I/O, and network for all of these.
 
