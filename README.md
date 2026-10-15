@@ -139,47 +139,59 @@ Both clients talk to the same API, chat, and media stack. Prefer the Tahti Playe
 
 ## Screenshots
 
-Captured against the seeded Docker stack (real fixture data, not empty states) via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh) - see [`docs/e2e-screenshots/README.md`](docs/e2e-screenshots/README.md) to regenerate. Full route -> file mapping in [`manifest.json`](docs/e2e-screenshots/manifest.json).
+From the [Tahti Player](https://github.com/janiluuk/tahti-player) web client (`tahti-web`, live on [beta.tahti.live](https://beta.tahti.live)), which talks to this API. The images load from that repo, so they follow its latest captures; light and dark versions follow your GitHub theme. Every screen is indexed in its [full view guide](https://github.com/janiluuk/tahti-player/blob/master/packages/tahti-web/docs/VIEW-GUIDE.md).
 
-**Listener-facing**
+### Listen home
 
-|                                                                              |                                                                                 |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| ![Channel page](docs/e2e-screenshots/public/channel.png)                     | ![Artist profile](docs/e2e-screenshots/public/profile.png)                      |
-| **Channel** (`/c/:slug`) - live player, archive rotation, chat, all one page | **Profile** (`/u/:username`) - bio, releases, archive, no algorithmic feed      |
-| ![Discover](docs/e2e-screenshots/public/listen.png)                          | ![Smart link](docs/e2e-screenshots/public/smart-link.png)                       |
-| **Discover** (`/listen`) - live channels, replays, new releases              | **Smart link** (`/r/:slug`) - one link, buttons for every DSP the artist listed |
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/listen-home-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/listen-home-v1.png" alt="Listen directory with favorites, Tahti Radio and channel discovery" /></picture>
 
-**Artist studio**
+_Listen hub: library favorites, Tahti Radio, and discover._
 
-|                                                                                                             |                                                                                               |
-| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ![Artist dashboard](docs/e2e-screenshots/artist/dashboard.png)                                              | ![Broadcast studio](docs/e2e-screenshots/artist/broadcast-studio.png)                         |
-| **Dashboard** (`/dashboard`) - broadcast status, usage, revenue, recent uploads at a glance                 | **Broadcast studio** (`/dashboard/broadcast`) - RTMP/Icecast credentials, pre-flight, go-live |
-| ![Stats](docs/e2e-screenshots/artist/stats.png)                                                             | ![Releases](docs/e2e-screenshots/artist/releases.png)                                         |
-| **Stats** (`/dashboard/stats`) - plays, downloads, listener map, grant estimate                             | **Releases** (`/dashboard/releases`) - draft/publish, DSP URLs, smart links                   |
-| ![Channel design](docs/e2e-screenshots/artist/channel-appearance.png)                                       | ![Collections](docs/e2e-screenshots/artist/collections.png)                                   |
-| **Channel design** (`/dashboard/channel/edit`) - identity, backgrounds, visualizer, press kit, live preview | **Collections** (`/dashboard/collections`) - curated sets, each with one-click embed          |
+### Channel (live + archive)
 
-**Governance & admin**
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/listen-channel-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/listen-channel-v1.png" alt="Channel page with live stage, archive, and chat" /></picture>
 
-|                                                                                               |                                                                               |
-| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| ![Governance](docs/e2e-screenshots/artist/governance.png)                                     | ![Transparency dashboard](docs/e2e-screenshots/public/transparency.png)       |
-| **Governance** (`/governance`) - motions, voting, topics, run from the member's own dashboard | **Transparency** (`/transparency`) - the public ledger every member can audit |
+_Public channel: live stage, pinned archive, chat rail._
 
-The current board-admin surface is also captured with review annotations. The cyan
-labels identify the admin navigation, main workspace, and page heading; the dark
-callout records the exact route.
+### Fan subscribe
 
-|                                                                                        |                                                                                      |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| ![Annotated admin AGM](docs/e2e-screenshots/admin/agm.png)                             | ![Annotated admin governance](docs/e2e-screenshots/admin/governance.png)             |
-| **AGM admin** (`/admin/agm`) - agenda builder, governance records, motions and minutes | **Governance admin** (`/admin/governance`) - board governance operations and records |
-| ![Annotated admin dashboard](docs/e2e-screenshots/admin/dashboard.png)                 | ![Annotated admin financial ledger](docs/e2e-screenshots/admin/financial-ledger.png) |
-| **Admin dashboard** (`/admin/dashboard`) - operational overview                        | **Financial ledger** (`/admin/financial/ledger`) - immutable financial records       |
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/subscribe-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/subscribe-v1.png" alt="Subscribe page with Supporter and Patron tiers" /></picture>
 
-More surfaces (listener, free/member/artist/admin roles, ~90 pages total) are captured under [`docs/e2e-screenshots/`](docs/e2e-screenshots/) - see that folder's `README.md` for the full manifest and how to regenerate them.
+_Fan membership tiers (Stripe Checkout on the live API)._
+
+### Studio home
+
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-home-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-home-v1.png" alt="Studio overview with broadcast and music pillars" /></picture>
+
+_Studio overview: Go Live, schedule, music, upload, albums._
+
+### Go Live
+
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-go-live-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-go-live-v1.png" alt="Go Live wizard with OBS RTMP credentials" /></picture>
+
+_Broadcast wizard: Connect → Live → Multistream._
+
+### Playlists
+
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-playlists-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-playlists-v1.png" alt="Studio playlists list" /></picture>
+
+_Playlists organize archive tracks and releases._
+
+### Channel design
+
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-channel-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/studio-channel-v1.png" alt="Channel designer with Aurora visualizer preset" /></picture>
+
+_Channel designer: look, 24/7 radio, profile, domain._
+
+### Board admin
+
+<picture><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/admin-dashboard-current-v1--light.png" /><img src="https://raw.githubusercontent.com/janiluuk/tahti-player/master/packages/tahti-web/docs/redesign-shots/admin-dashboard-current-v1.png" alt="Admin dashboard overview" /></picture>
+
+_Admin dashboard: health, activity, and moderation at a glance._
+
+### Legacy `apps/web` captures
+
+The production client in this repo (`apps/web`, until the cutover) is captured against the seeded Docker stack via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh): about 90 pages across the anonymous, listener, free, member, artist and admin roles, under [`docs/e2e-screenshots/`](docs/e2e-screenshots/). See that folder's [`README.md`](docs/e2e-screenshots/README.md) to regenerate them and [`manifest.json`](docs/e2e-screenshots/manifest.json) for the route → file mapping.
 
 ## Package structure
 
