@@ -159,6 +159,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       // user-typed message is ever seen server-side (system-generated
       // messages, e.g. love announcements, publish straight to Centrifugo
       // from elsewhere and skip this proxy, so they aren't captured here).
+      let messageId: string | undefined
       if (text) {
         const message = await fastify.prisma.chatMessage.create({
           data: {
@@ -181,6 +182,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
           targetId: channel.id,
           meta: { messageId: message.id, fanOnly: isFanChannel, handle },
         })
+        messageId = message.id
       }
 
       if (!body.data) return reply.send({ result: {} })
@@ -192,6 +194,8 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
           data: {
             ...rest,
             handle,
+            // Lets open chats drop the line when a moderator removes it.
+            ...(messageId ? { messageId } : {}),
             ...(supporter ? { supporter } : {}),
             ...(channelRole ? { channelRole } : {}),
             ...(countryCode ? { countryCode } : {}),
