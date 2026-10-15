@@ -270,10 +270,8 @@ manual step on vimage6 itself, not a code change here.
       (`http://192.168.2.105:3000` → Tahti — infrastructure & services) to
       confirm the host renders correctly, not just that Prometheus scrapes
       it.
-- [ ] Update `ops/monitoring/vimage6/README.md`'s host list line ("Existing
-      Prometheus jobs on vimage6 already scrape... on: `vimage, vimage2–
-vimage5, vimage6, pi4, pi5, web`") to include tahti.local/vimage7 (that
-      line is already stale re: vimage7 — worth fixing both at once).
+- [x] 2026-10-15: `ops/monitoring/vimage6/README.md`'s host list names
+      `vimage7` and `tahti-local` too.
 - [ ] Vital-metrics panels for tahti.local specifically: confirm `node`/
       `cadvisor` scrape gives disk **used space** (not just up/down — the
       5-disk MinIO pool + fast SSD + boot SSD each need their own
