@@ -137,6 +137,13 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'Close ListenSessions that stopped pinging (listen-time tracking)',
   },
   {
+    name: 'jam-session-expire',
+    pattern: '20 * * * *',
+    jobId: 'jam-session-expire-cron',
+    description:
+      'End Tahti Jams whose host has pushed no state for six hours and tell connected guests (20 min past the hour)',
+  },
+  {
     name: 'revelator-royalty-sync',
     pattern: '0 4 5 * *',
     jobId: 'revelator-royalty-sync-cron',
