@@ -77,7 +77,9 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       payload: { channel: `channel:${slug}`, data: { text: 'hello chat' } },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ result: { data: { text: 'hello chat', handle: 'anon' } } })
+    expect(res.json()).toEqual({
+      result: { data: { text: 'hello chat', handle: 'anon', messageId: expect.any(String) } },
+    })
   })
 
   it('persists the message to ChatMessage', async () => {
@@ -127,6 +129,7 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.json()).toEqual({
       result: {
         data: {
+          messageId: expect.any(String),
           text: 'trust me, I run this channel',
           handle: 'Plain Listener',
           ts: 1700000000000,
@@ -161,6 +164,7 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.json()).toEqual({
       result: {
         data: {
+          messageId: expect.any(String),
           text: 'hello from the booth',
           handle: 'The Artist',
           supporter: true,
@@ -517,7 +521,7 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
       [artistId, 'hello from the owner'],
     ] as const) {
       expect((await post(userId, text)).json()).toEqual({
-        result: { data: { text, handle: 'anon' } },
+        result: { data: { text, handle: 'anon', messageId: expect.any(String) } },
       })
     }
 
@@ -528,7 +532,7 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
 
     await prisma.userBlock.deleteMany({ where: { blockerUserId: artistId } })
     expect((await post(blockedByOwner!.id, 'unblocked')).json()).toEqual({
-      result: { data: { text: 'unblocked', handle: 'anon' } },
+      result: { data: { text: 'unblocked', handle: 'anon', messageId: expect.any(String) } },
     })
   })
 })

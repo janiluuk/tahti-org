@@ -124,7 +124,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
               actorUserId: user.id,
               title: `${actorDisplayName(user)} made you a moderator of their channel`,
               body: 'You can now remove messages and ban people from posting in its chat.',
-              url: `/channel/${channel.slug}`,
+              url: `/moderate/${channel.slug}`,
             },
           })
           .catch((err: unknown) => fastify.log.warn({ err }, 'moderator notification failed'))

@@ -31,6 +31,8 @@ export const ChatDailyListenersResponseSchema = z.object({
 })
 
 export const ChatHistoryMessageSchema = z.object({
+  /** Stored message id, so an open chat can drop the line when it is removed. */
+  id: z.string().optional(),
   handle: z.string(),
   text: z.string(),
   ts: z.number(),

@@ -60,6 +60,7 @@ export const WORKER_JOB_LANES = {
     'weekly-recap',
     'annual-grant-calc',
     'listen-session-close',
+    'jam-session-expire',
     'missed-live-show-scan',
   ],
   'edge-log': ['hls-caddy-egress-sync'],

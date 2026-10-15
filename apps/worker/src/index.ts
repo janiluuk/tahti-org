@@ -45,6 +45,7 @@ import { processMentionDigestJob } from './jobs/mention-digest.js'
 import { processWeeklyRecaps } from './lib/weekly-recap.js'
 import { processPostPublishNotifyJob } from './jobs/post-publish-notify.js'
 import { processListenSessionCloseJob } from './jobs/listen-session-close.js'
+import { expireAbandonedJams } from './jobs/jam-session-expire.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processHearthisExportJob } from './jobs/hearthis-export.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
@@ -229,6 +230,10 @@ const worker = new Worker(
         return summary
       } else if (job.name === 'listen-session-close') {
         return await processListenSessionCloseJob(job)
+      } else if (job.name === 'jam-session-expire') {
+        const summary = await expireAbandonedJams(prisma)
+        if (summary.ended > 0) console.log('[worker] jam-session-expire:', JSON.stringify(summary))
+        return summary
       } else if (job.name === 'revelator-deliver') {
         await processRevelatorDeliverJob(job)
       } else if (job.name === 'hearthis-export') {
