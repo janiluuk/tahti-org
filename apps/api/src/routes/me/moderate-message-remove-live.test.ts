@@ -57,6 +57,16 @@ describe('DELETE /api/me/moderate/:slug/chat/messages/:id tells open chats', () 
     await app.close()
   })
 
+  it('lists each message with its stored id in the public history', async () => {
+    const message = await prisma.chatMessage.create({
+      data: { channelId, handle: 'Visitor', text: 'has an id' },
+    })
+    const res = await app.inject({ method: 'GET', url: `/api/chat/${slug}/history` })
+    expect(res.json().messages).toContainEqual(
+      expect.objectContaining({ id: message.id, text: 'has an id' }),
+    )
+  })
+
   it('publishes the removed message id to the public room once', async () => {
     const message = await prisma.chatMessage.create({
       data: { channelId, handle: 'Visitor', text: 'remove me' },
