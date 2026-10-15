@@ -46,6 +46,7 @@ const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           take: HISTORY_LIMIT,
           select: {
+            id: true,
             handle: true,
             text: true,
             supporter: true,
@@ -55,6 +56,7 @@ const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
           },
         })
         const messages = rows.reverse().map((r) => ({
+          id: r.id,
           handle: r.handle,
           text: r.text,
           ts: r.createdAt.getTime(),
