@@ -102,7 +102,7 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
       where: { userId: modUserId, type: 'MODERATOR_ADDED' },
     })
     expect(notices).toHaveLength(1)
-    expect(notices[0]?.url).toBe(`/channel/${ownerSlug}`)
+    expect(notices[0]?.url).toBe(`/moderate/${ownerSlug}`)
     expect(notices[0]?.title).toContain('made you a moderator')
 
     await app.inject({
