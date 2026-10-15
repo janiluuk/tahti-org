@@ -217,7 +217,14 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, type: true, positionSec: true, createdAt: true },
       })
 
-      if (parsed.data.type === 'LOVE') {
+      // A listener can drop LOVE markers all along a track; the chat hears
+      // about the first one only, not every tap.
+      const firstLove =
+        parsed.data.type === 'LOVE' &&
+        (await fastify.prisma.trackReaction.count({
+          where: { soundId: item.id, userId: user.id, type: 'LOVE' },
+        })) === 1
+      if (firstLove) {
         publishLovedMessage({
           slug: item.channel.slug,
           actorDisplayName: userName(user),
