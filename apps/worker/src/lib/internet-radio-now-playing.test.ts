@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { fetchNowPlaying, parserForUrl } from './internet-radio-now-playing.js'
+import { NOW_PLAYING_USER_AGENT } from '@tahti/shared'
 
 // Trimmed to the exact markup shape each parser matches — confirmed against
 // a live fetch of the real page on 2026-09-16, not fabricated from scratch.
@@ -36,6 +37,26 @@ describe('parserForUrl', () => {
   it('returns null for an invalid URL', () => {
     expect(parserForUrl('not a url')).toBeNull()
   })
+
+  it('skips a whole site that is switched off', () => {
+    expect(parserForUrl('https://www.radioplay.fi/nrj', ['radioplay.fi'])).toBeNull()
+    expect(parserForUrl('https://www.radiohelsinki.fi/', ['radioplay.fi'])).not.toBeNull()
+  })
+
+  it('skips one station on a shared site and keeps the others', () => {
+    const off = ['www.radioplay.fi/nrj/']
+    expect(parserForUrl('https://www.radioplay.fi/nrj', off)).toBeNull()
+    expect(parserForUrl('https://radioplay.fi/nrj/kuuntele', off)).toBeNull()
+    expect(parserForUrl('https://www.radioplay.fi/radio-nova', off)).not.toBeNull()
+    expect(parserForUrl('https://www.radioplay.fi/nrjx', off)).not.toBeNull()
+  })
+
+  it('reads the switch from NOW_PLAYING_DISABLED_HOSTS', () => {
+    vi.stubEnv('NOW_PLAYING_DISABLED_HOSTS', ' RadioHelsinki.fi , ')
+    expect(parserForUrl('https://www.radiohelsinki.fi/ohjelmakartta/')).toBeNull()
+    vi.unstubAllEnvs()
+    expect(parserForUrl('https://www.radiohelsinki.fi/ohjelmakartta/')).not.toBeNull()
+  })
 })
 
 describe('fetchNowPlaying', () => {
@@ -49,6 +70,9 @@ describe('fetchNowPlaying', () => {
       fetchMock as unknown as typeof fetch,
     )
     expect(result).toEqual({ title: 'CADIA', artist: 'Bloc Party — Positive Tension' })
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual({
+      headers: { 'User-Agent': NOW_PLAYING_USER_AGENT },
+    })
   })
 
   it('parses the last non-empty Bauer stationNowPlaying block', async () => {

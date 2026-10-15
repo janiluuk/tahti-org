@@ -64,14 +64,40 @@ const PARSERS_BY_HOST: Record<string, Parser> = {
  * outcome (most of BACKGROUND_VISUAL_PRESETS-style reserved slots here
  * too: Yle Areena needs an API key, Nelonen Media's now-playing widget is
  * client-fetched with nothing in the initial HTML — not attempted). */
-export function parserForUrl(programmingUrl: string): Parser | null {
-  let host: string
+/** Sent with every programme page fetch, so a station can see who is
+ * asking and where to complain. */
+export const NOW_PLAYING_USER_AGENT = 'TahtiBot/1.0 (+https://tahti.live; now-playing)'
+
+/** Pages listed in `NOW_PLAYING_DISABLED_HOSTS` (comma separated: a host
+ * such as `radioplay.fi`, or a host and path such as `radioplay.fi/nrj` for
+ * one station on a shared site) are never fetched: the switch for a station
+ * whose page changed or that asked us to stop, without a deploy. */
+export function disabledNowPlayingHosts(): string[] {
+  const raw = typeof process === 'undefined' ? '' : process.env.NOW_PLAYING_DISABLED_HOSTS
+  return (raw ?? '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+export function parserForUrl(
+  programmingUrl: string,
+  disabledHosts: readonly string[] = disabledNowPlayingHosts(),
+): Parser | null {
+  let parsed: URL
   try {
-    host = new URL(programmingUrl).hostname
+    parsed = new URL(programmingUrl)
   } catch {
     return null
   }
-  return PARSERS_BY_HOST[host] ?? null
+  const parser = PARSERS_BY_HOST[parsed.hostname]
+  if (!parser) return null
+  const page = `${parsed.hostname.replace(/^www\./, '')}${parsed.pathname}`.toLowerCase()
+  const disabled = disabledHosts.some((entry) => {
+    const bare = entry.replace(/^www\./, '').replace(/\/+$/, '')
+    return page === bare || page.startsWith(`${bare}/`)
+  })
+  return disabled ? null : parser
 }
 
 export async function fetchNowPlaying(
@@ -82,7 +108,7 @@ export async function fetchNowPlaying(
   if (!parser) return null
   try {
     const res = await fetchImpl(programmingUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TahtiBot/1.0)' },
+      headers: { 'User-Agent': NOW_PLAYING_USER_AGENT },
     })
     if (!res.ok) return null
     const html = await res.text()
