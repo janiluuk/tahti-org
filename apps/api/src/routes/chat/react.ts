@@ -68,10 +68,13 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, user: { select: { chatEnabled: true } } },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      // Reactions are part of the chat: when the owner turns chat off, the
+      // room goes quiet for emoji too.
+      if (!channel.user.chatEnabled) return reply.status(403).send({ error: 'chat_disabled' })
 
       // Reactions float over the stream for everyone watching, so someone
       // banned from the chat could keep flooding the room with them. The ban
