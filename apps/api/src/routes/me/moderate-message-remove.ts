@@ -6,6 +6,7 @@ import { ModerateChatItemParamsSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
+import { invalidateCachedJson } from '../../lib/json-cache.js'
 import { resolveChannelForModeration } from '../../lib/channel-access.js'
 
 async function publishRemoval(slug: string, messageId: string, fanOnly: boolean) {
@@ -63,6 +64,11 @@ const meModerateMessageRemove: FastifyPluginAsync = async (fastify) => {
           targetId: channel.id,
           meta: { messageId: message.id, handle: message.handle },
         })
+        // History is cached for a few seconds; without this, someone opening
+        // the chat right after the removal would still be handed the line.
+        await invalidateCachedJson(
+          `${message.fanOnly ? 'chat-fan-history' : 'chat-history'}:${channel.slug}`,
+        )
         publishRemoval(channel.slug, message.id, message.fanOnly).catch((err: unknown) =>
           fastify.log.warn({ err }, 'centrifugo removal publish failed'),
         )
