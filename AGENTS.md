@@ -102,7 +102,9 @@ After any plugin add or change that has (or should have) a Store listing:
 ### Plugin runtime registry
 
 The desktop runtime registry (installed plugins, `plugins.json` in AppData) is
-extracted into `@tahti-player/plugin-registry` in `../tahti-player`; ownership
+`@tahti-player/plugin-registry`, in its own repo
+([janiluuk/tahti-plugin-registry](https://github.com/janiluuk/tahti-plugin-registry))
+and pinned by tag in `../tahti-player`; ownership
 split and rollback plan: `../tahti-player/docs/PLUGIN-REGISTRY.md`. Do not
 change registry keys, bootstrap ordering, plugin discovery semantics, or
 storage location without a migration plan. Cross-repo API honesty work:

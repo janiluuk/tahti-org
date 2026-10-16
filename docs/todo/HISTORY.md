@@ -790,3 +790,13 @@ candidacies and nominations, result creating board terms, member view,
 notifications. Also fixed a `board-terms.test.ts` setup timeout under load
 (#831). Leftovers — every web UI, signatories, PRH submission, ballots — stay in
 `docs/governance-worklog.md` and `remaining-work.md`.
+
+### 2026-10-16 — Plugin registry own-repo move (`remaining-work.md` leftover)
+
+`@tahti-player/plugin-registry` moved to
+[janiluuk/tahti-plugin-registry](https://github.com/janiluuk/tahti-plugin-registry)
+(`v0.1.0`), pinned by tag in tahti-player (tahti-player#872). `v0.1.0` adds
+read validation: rows without a string `id`/`version`/`path` and boolean
+`enabled` are skipped with a warning, nothing rewritten on disk. Storage keys,
+paths and bootstrap order unchanged. Stale "in progress" guardrails removed
+here and in tahti-player (#868). No leftovers.
