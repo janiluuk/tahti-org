@@ -14,6 +14,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
@@ -69,7 +70,8 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       const query = parsedQuery.data
 
       const release = await fastify.prisma.release.findFirst({
-        where: { smartLinkSlug, state: 'PUBLISHED' },
+        // No downloads while the artist is suspended, as for the release page.
+        where: { smartLinkSlug, state: 'PUBLISHED', user: availableUserWhere },
         select: { id: true, userId: true, user: { select: { tier: true } } },
       })
       if (!release) return reply.status(404).send({ error: 'Release not found' })
