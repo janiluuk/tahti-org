@@ -376,9 +376,11 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
 
       const broadcast = await fastify.prisma.venueBroadcast.findFirst({
         where: { id: params.broadcastId, venue: { slug: params.slug } },
+        include: { venue: { select: { createdBy: true } } },
       })
       if (!broadcast) return reply.status(404).send({ error: 'Broadcast not found' })
-      if (broadcast.artistUserId !== user.id) {
+      // The artist who booked the show, or the venue that hosts it, may call it off.
+      if (broadcast.artistUserId !== user.id && broadcast.venue.createdBy !== user.id) {
         return reply.status(403).send({ error: 'Forbidden' })
       }
 
