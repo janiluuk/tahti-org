@@ -24,8 +24,8 @@ const channelMembersRoute: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug: routeParams.slug },
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug: routeParams.slug, user: { suspendedAt: null } },
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
