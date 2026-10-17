@@ -47,8 +47,9 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
 }
 
 async function computeChannelView(fastify: FastifyInstance, slug: string) {
-  const channel = await fastify.prisma.channel.findUnique({
-    where: { slug },
+  // A suspended artist's channel is down, like their profile.
+  const channel = await fastify.prisma.channel.findFirst({
+    where: { slug, user: { suspendedAt: null } },
     select: {
       id: true,
       slug: true,
