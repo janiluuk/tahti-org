@@ -58,6 +58,9 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       const expand = parsedQuery.data.expand === 'items'
+      // Cap expanded items so a large archive collection cannot unbounded-load
+      // every row (+ cover work) for the whole list endpoint.
+      const EXPAND_ITEMS_TAKE = 100
       const where = { userId: user.id }
       const orderBy = { createdAt: 'desc' as const }
       const cols = expand
@@ -65,7 +68,14 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
             await fastify.prisma.collection.findMany({
               where,
               orderBy,
-              include: { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } },
+              include: {
+                items: {
+                  orderBy: { position: 'asc' },
+                  take: EXPAND_ITEMS_TAKE,
+                  include: collectionItemInclude,
+                },
+                _count: { select: { items: true } },
+              },
             })
           ).map((col) => ({ ...col, items: col.items.map((item) => withSafeNames(item)) }))
         : await fastify.prisma.collection.findMany({
