@@ -84,14 +84,22 @@ export async function validateSession(
         await prisma.session.delete({ where: { id: sessionId } })
         return null
       }
-      if (session.user.deletedAt) {
+      if (session.user.deletedAt || session.user.suspendedAt) {
         await prisma.session.delete({ where: { id: sessionId } })
         return null
       }
       return session
     },
   )
-  return cached ? rehydrateDates(cached) : null
+  if (!cached) return null
+  const session = rehydrateDates(cached)
+  // Cache can still hold a pre-suspend snapshot for up to SESSION_CACHE_TTL_SEC;
+  // reject here so login's suspendedAt gate isn't bypassed by a live cookie.
+  if (session.user.deletedAt || session.user.suspendedAt) {
+    await deleteSession(prisma, sessionId)
+    return null
+  }
+  return session
 }
 
 export async function deleteSession(prisma: PrismaClient, sessionId: string): Promise<void> {

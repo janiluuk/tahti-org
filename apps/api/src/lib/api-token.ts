@@ -54,6 +54,7 @@ export async function validateApiToken(
   if (token.revokedAt) return null
   if (token.expiresAt && token.expiresAt < new Date()) return null
   if (token.user.deletedAt) return null
+  if (token.user.suspendedAt) return null
 
   void prisma.apiToken
     .update({ where: { id: token.id }, data: { lastUsedAt: new Date() } })
