@@ -3,10 +3,24 @@
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../server.js'
+import { scrubRequestUrl } from './request-log.js'
 
 vi.mock('../lib/minio.js', () => ({
   s3: { send: vi.fn().mockResolvedValue({}) },
 }))
+
+describe('scrubRequestUrl', () => {
+  it('redacts secret query values', () => {
+    expect(scrubRequestUrl('/internal/icecast?mount=/live&secret=s3cr3t')).toBe(
+      '/internal/icecast?mount=/live&secret=[redacted]',
+    )
+  })
+
+  it('leaves URLs without secrets unchanged', () => {
+    expect(scrubRequestUrl('/api/me/profile')).toBe('/api/me/profile')
+    expect(scrubRequestUrl('/api/search?q=hello')).toBe('/api/search?q=hello')
+  })
+})
 
 describe('M11 request-log plugin', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
