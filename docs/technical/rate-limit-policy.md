@@ -8,20 +8,20 @@
 
 Environment overrides:
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `RATE_LIMIT_API_MAX` | `120` | Max requests per IP per minute (general API) |
-| `RATE_LIMIT_AUTH_MAX` | `10` | Max requests per IP per minute (register, login, chat) |
-| `RATE_LIMIT_REDIS_FAIL_OPEN` | `true` | When Redis is down, allow traffic (`true`) or reject (`false`) |
+| Variable                     | Default | Meaning                                                        |
+| ---------------------------- | ------- | -------------------------------------------------------------- |
+| `RATE_LIMIT_API_MAX`         | `120`   | Max requests per IP per minute (general API)                   |
+| `RATE_LIMIT_AUTH_MAX`        | `10`    | Max requests per IP per minute (register, login, chat)         |
+| `RATE_LIMIT_REDIS_FAIL_OPEN` | `true`  | When Redis is down, allow traffic (`true`) or reject (`false`) |
 
 ## Download engagement limits (`archive` + `release` downloads)
 
 Per fingerprint **or** IP (whichever trips first):
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DOWNLOAD_RATE_PER_HOUR` | `5` | Max download requests per hour |
-| `DOWNLOAD_RATE_PER_DAY` | `20` | Max download requests per day |
+| Variable                 | Default | Meaning                        |
+| ------------------------ | ------- | ------------------------------ |
+| `DOWNLOAD_RATE_PER_HOUR` | `5`     | Max download requests per hour |
+| `DOWNLOAD_RATE_PER_DAY`  | `20`    | Max download requests per day  |
 
 Other anti-fraud knobs remain in `DOWNLOAD_NO_COUNT_CIDRS`, `DOWNLOAD_TRUST_OVERRIDE_IPS`, and the download-fraud-scan worker.
 
