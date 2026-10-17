@@ -278,6 +278,9 @@ services:
       <<: *db-pool-env
       NODE_ENV: production
       REDIS_URL: redis://redis:6379
+      # Fail-closed when Redis is down (rate limits / abuse). Single Redis is OK for ~100 users;
+      # set true only for emergency access if Redis is unreachable and on-call is fixing it.
+      RATE_LIMIT_REDIS_FAIL_OPEN: "false"
       MINIO_ENDPOINT: http://minio:9000
       MINIO_PUBLIC_ENDPOINT: https://cdn.tahti.live
       MINIO_ACCESS_KEY: tahti
