@@ -10,6 +10,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { availableUserWhere, listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { userName } from '../../lib/safe-names.js'
 
 const userRepostsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -28,14 +29,19 @@ const userRepostsRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const user = await fastify.prisma.user.findUnique({
-        where: { username: routeParams.username },
+      // A suspended or deleted account's reposts are not shown, and reposts
+      // of tracks by such accounts drop out.
+      const user = await fastify.prisma.user.findFirst({
+        where: { username: routeParams.username, ...availableUserWhere },
         select: { id: true },
       })
       if (!user) return reply.status(404).send({ error: 'User not found' })
 
       const reposts = await fastify.prisma.soundRepost.findMany({
-        where: { userId: user.id, sound: { status: 'READY', isPublic: true } },
+        where: {
+          userId: user.id,
+          sound: { status: 'READY', isPublic: true, ...listedArtistSoundWhere },
+        },
         orderBy: { createdAt: 'desc' },
         take: REPOSTED_TRACKS_LIMIT,
         select: {
