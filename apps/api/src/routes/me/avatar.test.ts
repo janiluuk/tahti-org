@@ -173,6 +173,35 @@ describe('avatar upload routes', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('GET proxy rejects a private/loopback address (SSRF)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/profile/avatar/proxy?url=http://127.0.0.1/secret.jpg',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(422)
+    expect(res.json().error).toMatch(/disallowed|resolve/i)
+  })
+
+  it('GET proxy rejects redirects', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(null, {
+          status: 302,
+          headers: { location: 'http://127.0.0.1/secret.jpg' },
+        }),
+      ),
+    )
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/profile/avatar/proxy?url=https://example.com/redir.jpg',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(422)
+    expect(res.json().error).toMatch(/Redirect/i)
+  })
+
   it('requires auth on all three routes', async () => {
     const prepare = await app.inject({
       method: 'POST',
