@@ -12,6 +12,7 @@ import { ThemeGalleryResponseSchema, openApiResponse, type ThemeGalleryEntry } f
 import { getCachedJson } from '../../lib/json-cache.js'
 
 const REGISTRY_URL = 'https://raw.githubusercontent.com/janiluuk/tahti-registry/master/themes.json'
+const REGISTRY_TIMEOUT_MS = 5000
 
 function strings(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : undefined
@@ -50,15 +51,15 @@ const themeGalleryRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
+      // A failed fetch throws out of the cache callback, so an outage or a
+      // slow registry is not cached as an empty gallery for five minutes.
       const themes = await getCachedJson('themes:gallery', 300, async () => {
-        try {
-          const res = await fetch(REGISTRY_URL)
-          if (!res.ok) return []
-          return galleryEntriesFromCatalog(await res.json())
-        } catch (e) {
-          fastify.log.warn(e, 'failed to fetch theme registry')
-          return []
-        }
+        const res = await fetch(REGISTRY_URL, { signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS) })
+        if (!res.ok) throw new Error(`theme registry answered ${res.status}`)
+        return galleryEntriesFromCatalog(await res.json())
+      }).catch((e: unknown) => {
+        fastify.log.warn(e, 'failed to fetch theme registry')
+        return []
       })
       return reply.send({ themes })
     },
