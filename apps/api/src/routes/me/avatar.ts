@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { Readable } from 'node:stream'
 import { nanoid } from 'nanoid'
 import {
   AvatarProxyQuerySchema,
@@ -27,9 +26,16 @@ import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
 import { extractPalette } from '../../lib/palette-extract.js'
 
 const PRESIGN_TTL_SEC = 900
-const PROXY_FETCH_TIMEOUT_MS = 8000
-const PROXY_MAX_BYTES = 12 * 1024 * 1024
-const ALLOWED_PROXY_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
+function avatarProxyErrorStatus(error: string): number {
+  if (error.includes('Invalid') || error.includes('must be http')) return 400
+  if (error.includes('too large')) return 413
+  if (error.includes('JPEG') || error.includes('does not point')) return 415
+  if (error.includes('disallowed') || error.includes('Redirects') || error.includes('resolve')) {
+    return 422
+  }
+  return 502
+}
 
 /** Fire-and-forget: extract a palette from the new avatar and persist it. */
 function refreshAvatarPalette(
@@ -65,30 +71,15 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid URL' })
       }
 
-      let upstream: Response
-      try {
-        upstream = await fetch(parsed.data.url, {
-          signal: AbortSignal.timeout(PROXY_FETCH_TIMEOUT_MS),
-        })
-      } catch {
-        return reply.status(502).send({ error: 'Could not fetch that URL' })
-      }
-      if (!upstream.ok || !upstream.body) {
-        return reply.status(502).send({ error: 'Could not fetch that URL' })
+      // Same SSRF guards as /from-url (DNS/private-IP, no redirects, MIME + size).
+      const fetched = await fetchImageFromUrl(parsed.data.url)
+      if (!fetched.ok) {
+        return reply.status(avatarProxyErrorStatus(fetched.error)).send({ error: fetched.error })
       }
 
-      const contentType = upstream.headers.get('content-type')?.split(';')[0]?.trim() ?? ''
-      if (!ALLOWED_PROXY_MIME.has(contentType)) {
-        return reply.status(415).send({ error: 'URL does not point to a JPEG, PNG, WebP, or GIF' })
-      }
-      const contentLength = Number(upstream.headers.get('content-length') ?? '0')
-      if (contentLength > PROXY_MAX_BYTES) {
-        return reply.status(413).send({ error: 'Image is too large' })
-      }
-
-      reply.header('Content-Type', contentType)
+      reply.header('Content-Type', fetched.contentType)
       reply.header('Cache-Control', 'private, no-store')
-      return reply.send(Readable.fromWeb(upstream.body as import('node:stream/web').ReadableStream))
+      return reply.send(fetched.bytes)
     },
   )
 
