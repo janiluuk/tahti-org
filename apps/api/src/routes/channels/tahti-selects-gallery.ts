@@ -7,6 +7,7 @@ import {
   TahtiSelectsGalleryResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
+import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { toGatedGalleryItem, type GallerySoundRow } from '../../lib/playback-url.js'
 
@@ -29,7 +30,10 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
         if (!channel) return { items: [] as GallerySoundRow[] }
 
         const rows = await fastify.prisma.curatedRotationItem.findMany({
-          where: { channelId: channel.id, sound: { isPublic: true, status: 'READY' } },
+          where: {
+            channelId: channel.id,
+            sound: { isPublic: true, status: 'READY', ...listedArtistSoundWhere },
+          },
           orderBy: { position: 'asc' },
           select: {
             sound: {
