@@ -14,6 +14,24 @@ export type SnsSubscriptionConfirm = {
   subscribeUrl: string
 }
 
+/** AWS SNS ConfirmSubscription endpoints only — never follow an arbitrary SubscribeURL. */
+const SNS_HOST = /^sns\.[a-z0-9-]+\.amazonaws\.com$/i
+
+export function isAllowedSnsSubscribeUrl(subscribeUrl: string): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(subscribeUrl)
+  } catch {
+    return false
+  }
+  if (parsed.protocol !== 'https:') return false
+  if (!SNS_HOST.test(parsed.hostname)) return false
+  // ConfirmSubscription is a GET with Action=ConfirmSubscription (+ TopicArn/Token).
+  const action = parsed.searchParams.get('Action')
+  if (action && action !== 'ConfirmSubscription') return false
+  return true
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }

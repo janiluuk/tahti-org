@@ -77,6 +77,33 @@ describe('M13 — email bounce webhook', () => {
     expect(res.statusCode).toBe(401)
   })
 
+  it('rejects SNS SubscribeURL pointing off aws sns hosts', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/email/bounce',
+      headers: { 'x-tahti-webhook-secret': WEBHOOK_SECRET },
+      payload: {
+        Type: 'SubscriptionConfirmation',
+        SubscribeURL: 'https://evil.example/confirm?Action=ConfirmSubscription',
+      },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toMatch(/not allowed/i)
+  })
+
+  it('rejects http SNS SubscribeURL even on an sns host', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/email/bounce',
+      headers: { 'x-tahti-webhook-secret': WEBHOOK_SECRET },
+      payload: {
+        Type: 'SubscriptionConfirmation',
+        SubscribeURL: 'http://sns.eu-west-1.amazonaws.com/?Action=ConfirmSubscription',
+      },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('hard bounce unsubscribes and marks send bounced', async () => {
     await prisma.newsletterSubscriber.update({
       where: { id: subscriberId },

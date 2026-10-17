@@ -3,11 +3,20 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  isAllowedSnsSubscribeUrl,
   parseEmailBouncePayload,
   recordNewsletterBounce,
   shouldUnsubscribeForBounce,
 } from '../../lib/newsletter-bounce.js'
 import { recordGovernanceNoticeBounce } from '../../lib/governance-notice.js'
+
+function safeUrlHost(url: string): string | undefined {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return undefined
+  }
+}
 
 function webhookAuthorized(request: { headers: Record<string, unknown> }): boolean {
   const secret = process.env.EMAIL_BOUNCE_WEBHOOK_SECRET?.trim() ?? ''
@@ -42,8 +51,19 @@ const emailBounceWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       if ('subscribeUrl' in parsed) {
+        if (!isAllowedSnsSubscribeUrl(parsed.subscribeUrl)) {
+          request.log.warn({ host: safeUrlHost(parsed.subscribeUrl) }, 'sns SubscribeURL rejected')
+          return reply.status(400).send({ error: 'SNS SubscribeURL not allowed' })
+        }
         try {
-          const res = await fetch(parsed.subscribeUrl, { method: 'GET' })
+          const res = await fetch(parsed.subscribeUrl, {
+            method: 'GET',
+            redirect: 'manual',
+            signal: AbortSignal.timeout(8000),
+          })
+          if (res.status >= 300 && res.status < 400) {
+            return reply.status(502).send({ error: 'SNS confirm failed' })
+          }
           request.log.info({ status: res.status }, 'sns subscription confirmed')
         } catch (err) {
           request.log.warn({ err }, 'sns subscription confirm failed')
