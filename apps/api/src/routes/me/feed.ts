@@ -6,6 +6,7 @@ import type { FeedItem } from '@tahti/shared'
 import { MyFeedResponseSchema, soundPlaybackKey, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
@@ -27,8 +28,10 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
 
+      // Followed artists who are suspended or deleted drop out of the feed,
+      // as they do from search, Discover and the charts.
       const follows = await fastify.prisma.artistFollow.findMany({
-        where: { followerUserId: user.id },
+        where: { followerUserId: user.id, artist: availableUserWhere },
         select: { artistUserId: true },
       })
       const artistIds = follows.map((f) => f.artistUserId)
