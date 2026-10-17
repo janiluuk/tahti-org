@@ -9,6 +9,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
@@ -64,7 +65,14 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       const item = await fastify.prisma.sound.findFirst({
-        where: { id, status: 'READY', ...(shared ? {} : { isPublic: true }) },
+        where: {
+          id,
+          status: 'READY',
+          ...(shared ? {} : { isPublic: true }),
+          // Down with the artist's profile and channel while they are
+          // suspended, or after their account was deleted.
+          ...listedArtistSoundWhere,
+        },
         select: {
           id: true,
           title: true,
