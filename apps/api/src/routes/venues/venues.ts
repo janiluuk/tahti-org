@@ -265,13 +265,27 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
       const startAt = new Date(body.startAt)
+      const endAt = body.endAt ? new Date(body.endAt) : null
+      if (endAt && endAt <= startAt) {
+        return reply.status(400).send({ error: 'The show must end after it starts' })
+      }
+
+      // Same check as PATCH (SEC-014): a show may only be credited to the
+      // caller's own channel.
+      if (body.channelId) {
+        const ownChannel = await fastify.prisma.channel.findFirst({
+          where: { id: body.channelId, userId: user.id },
+          select: { id: true },
+        })
+        if (!ownChannel) return reply.status(403).send({ error: 'You do not own that channel' })
+      }
 
       const broadcast = await fastify.prisma.venueBroadcast.create({
         data: {
           venueId: venue.id,
           artistUserId: user.id,
           startAt,
-          endAt: body.endAt ? new Date(body.endAt) : null,
+          endAt,
           description: body.description?.trim() || null,
           channelId: body.channelId ?? null,
           state: 'SCHEDULED',
@@ -348,6 +362,13 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
         if (!targetChannel) {
           return reply.status(403).send({ error: 'You do not own that channel' })
         }
+      }
+
+      const nextStart = body.startAt !== undefined ? new Date(body.startAt) : broadcast.startAt
+      const nextEnd =
+        body.endAt !== undefined ? (body.endAt ? new Date(body.endAt) : null) : broadcast.endAt
+      if (nextEnd && nextEnd <= nextStart) {
+        return reply.status(400).send({ error: 'The show must end after it starts' })
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
