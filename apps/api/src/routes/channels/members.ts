@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 
 // GET /api/channels/:slug/members — public lineup/credits list for the artist page
 const channelMembersRoute: FastifyPluginAsync = async (fastify) => {
@@ -31,7 +32,7 @@ const channelMembersRoute: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const members = await fastify.prisma.channelMember.findMany({
-        where: { channelId: channel.id },
+        where: { channelId: channel.id, channel: { user: availableUserWhere } },
         orderBy: { position: 'asc' },
       })
       return reply.send(members)
