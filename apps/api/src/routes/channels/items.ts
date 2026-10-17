@@ -29,8 +29,9 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { slug } = routeParams
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug },
+      // A suspended artist's archive is down with their channel page.
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug, user: { suspendedAt: null } },
         select: { id: true, userId: true },
       })
 
