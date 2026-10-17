@@ -7,7 +7,7 @@ import { prisma } from '@tahti/db'
 import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 
 const PREFIX = 'sublist-susp-'
-const LISTS = ['events', 'posts', 'embeds', 'members']
+const LISTS = ['posts', 'embeds', 'members']
 
 describe("a suspended artist's channel lists", () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -17,10 +17,19 @@ describe("a suspended artist's channel lists", () => {
     app = await buildApp({ logger: false })
     await app.ready()
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
-    await createTestArtist(prisma, {
+    const artist = await createTestArtist(prisma, {
       email: `${PREFIX}artist@example.com`,
       username: slug,
       tier: 'ARTIST',
+    })
+    await prisma.artistPost.create({
+      data: { userId: artist.id, title: 'Tour news', body: 'Dates out', publishAt: new Date() },
+    })
+    await prisma.artistEmbed.create({
+      data: { userId: artist.id, provider: 'youtube', url: 'https://youtube.com/watch?v=x' },
+    })
+    await prisma.channelMember.create({
+      data: { channelId: artist.channel!.id, name: 'Drummer', role: 'drums', position: 0 },
     })
   })
 
@@ -29,21 +38,23 @@ describe("a suspended artist's channel lists", () => {
     await app.close()
   })
 
-  it('answers in good standing', async () => {
+  it('lists them in good standing', async () => {
     for (const list of LISTS) {
       const res = await app.inject({ method: 'GET', url: `/api/channels/${slug}/${list}` })
       expect(res.statusCode, list).toBe(200)
+      expect((res.json() as unknown[]).length, list).toBe(1)
     }
   })
 
-  it('answers not found once the owner is suspended', async () => {
+  it('lists nothing once the owner is suspended, like events', async () => {
     await prisma.user.update({
       where: { username: slug },
       data: { suspendedAt: new Date(), suspendReason: 'test' },
     })
     for (const list of LISTS) {
       const res = await app.inject({ method: 'GET', url: `/api/channels/${slug}/${list}` })
-      expect(res.statusCode, list).toBe(404)
+      expect(res.statusCode, list).toBe(200)
+      expect(res.json(), list).toEqual([])
     }
   })
 })

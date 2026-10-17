@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 
 // GET /api/channels/:slug/embeds — public, most recent first
 const channelEmbedsRoute: FastifyPluginAsync = async (fastify) => {
@@ -24,14 +25,14 @@ const channelEmbedsRoute: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-      const channel = await fastify.prisma.channel.findFirst({
-        where: { slug: routeParams.slug, user: { suspendedAt: null } },
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: routeParams.slug },
         select: { userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const embeds = await fastify.prisma.artistEmbed.findMany({
-        where: { userId: channel.userId },
+        where: { userId: channel.userId, user: availableUserWhere },
         orderBy: { createdAt: 'desc' },
         take: 20,
       })
