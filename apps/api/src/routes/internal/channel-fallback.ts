@@ -233,6 +233,9 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       if (rows.length === 0) {
+        // Cap fallback pool so a huge artist library cannot load every READY
+        // row into Liquidsoap memory on each rebuild (~100-user small-prod).
+        const FALLBACK_POOL_TAKE = 500
         const items = channel.fallbackEnabled
           ? await fastify.prisma.sound.findMany({
               where: {
@@ -240,6 +243,8 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
                 status: 'READY',
                 OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
               },
+              orderBy: [{ isFallback: 'desc' }, { fallbackOrder: 'asc' }, { createdAt: 'desc' }],
+              take: FALLBACK_POOL_TAKE,
               select: {
                 id: true,
                 title: true,
