@@ -21,6 +21,7 @@ import { requireBoard } from '../../plugins/auth.js'
 import { executeAccountDeletion } from '../../lib/account-deletion.js'
 import { auditLog, auditUserTierChange } from '../../lib/audit.js'
 import { sendCsv } from '../../lib/csv.js'
+import { revokeAllSessions } from '../../lib/session.js'
 
 async function fetchUserDetail(prisma: Parameters<typeof computeEngagementUnits>[0], id: string) {
   const user = await prisma.user.findUnique({
@@ -369,6 +370,9 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id },
         data: { suspendedAt: new Date(), suspendReason: parsed.data.reason },
       })
+      // Drop live cookies immediately — validateSession also rejects suspendedAt,
+      // but the short session cache could otherwise keep serving for a few seconds.
+      await revokeAllSessions(fastify.prisma, id)
 
       await auditLog(fastify.prisma, {
         action: 'USER_SUSPEND',

@@ -79,6 +79,10 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
   if (!request.sessionUser) {
     return reply.status(401).send({ error: 'Unauthorized' })
   }
+  if (request.sessionUser.suspendedAt) {
+    request.sessionUser = null
+    return reply.status(401).send({ error: 'Account suspended' })
+  }
 }
 
 // Routes that change how the account is signed in to: minting or revoking API
