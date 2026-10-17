@@ -14,6 +14,14 @@ declare module 'fastify' {
 
 const QUIET_PATHS = new Set(['/health', '/api/v1/status', '/metrics'])
 
+/** Strip sensitive query values from a request URL before logging. */
+export function scrubRequestUrl(url: string): string {
+  return url.replace(
+    /([?&])(secret|token|access_token|apikey|api_key)=([^&]*)/gi,
+    '$1$2=[redacted]',
+  )
+}
+
 /** M11: structured request logging with correlation IDs (pino JSON via Fastify). */
 const requestLogPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest('requestId', '')
@@ -40,7 +48,7 @@ const requestLogPlugin: FastifyPluginAsync = async (fastify) => {
       event: 'http_request',
       requestId: request.requestId,
       method: request.method,
-      url: request.url,
+      url: scrubRequestUrl(request.url),
       statusCode: reply.statusCode,
       responseTimeMs: Math.round(reply.elapsedTime),
     }
