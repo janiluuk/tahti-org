@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { config } from '../../config.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
@@ -37,7 +38,8 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
       const { smartLinkSlug } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
-        where: { smartLinkSlug, state: 'PUBLISHED' },
+        // Down while the artist is suspended, like their profile.
+        where: { smartLinkSlug, state: 'PUBLISHED', user: availableUserWhere },
         select: {
           id: true,
           title: true,
