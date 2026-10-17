@@ -121,9 +121,9 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const items = await getCachedJson(`profile:news:${username}`, 300, async () => {
         const user = await fastify.prisma.user.findUnique({
           where: { username },
-          select: { newsFeedUrl: true },
+          select: { newsFeedUrl: true, suspendedAt: true },
         })
-        if (!user?.newsFeedUrl) return []
+        if (!user?.newsFeedUrl || user.suspendedAt) return []
         const result = await fetchGuardedFeed(user.newsFeedUrl)
         if (!result.ok) return []
         return parseFeedItems(result.xml)
@@ -162,6 +162,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       showPageHero: true,
       stripeConnectChargesEnabled: true,
       createdAt: true,
+      suspendedAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
       channel: {
         select: {
@@ -261,7 +262,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     },
   })
 
-  if (!user) return null
+  // A suspended account's page is down, as search and the charts already
+  // treat it.
+  if (!user || user.suspendedAt) return null
 
   const channelSlug = user.channel?.slug ?? null
 
