@@ -20,6 +20,14 @@ import { trackArtistName } from '../../lib/safe-names.js'
 
 const VENUE_RECORDINGS_LIMIT = 24
 
+// Shows still to come, plus one on now: a LIVE show started in the past, so
+// a plain `startAt >= now` filter dropped it while it was playing.
+function upcomingOrLive(now: Date) {
+  return {
+    OR: [{ state: 'SCHEDULED' as const, startAt: { gte: now } }, { state: 'LIVE' as const }],
+  }
+}
+
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
   err: { issues: Array<{ message?: string }> },
@@ -77,7 +85,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
         where: { slug },
         include: {
           broadcasts: {
-            where: { startAt: { gte: new Date() }, state: 'SCHEDULED' },
+            where: upcomingOrLive(new Date()),
             orderBy: { startAt: 'asc' },
             take: 20,
           },
@@ -183,11 +191,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
       const broadcasts = await fastify.prisma.venueBroadcast.findMany({
-        where: {
-          venueId: venue.id,
-          startAt: { gte: new Date() },
-          state: { in: ['SCHEDULED', 'LIVE'] },
-        },
+        where: { venueId: venue.id, ...upcomingOrLive(new Date()) },
         orderBy: { startAt: 'asc' },
         take: 100,
       })
@@ -207,7 +211,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       where: { createdBy: user.id },
       include: {
         broadcasts: {
-          where: { startAt: { gte: new Date() }, state: { in: ['SCHEDULED', 'LIVE'] } },
+          where: upcomingOrLive(new Date()),
           orderBy: { startAt: 'asc' },
           take: 10,
         },
