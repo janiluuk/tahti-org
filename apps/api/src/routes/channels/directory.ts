@@ -8,6 +8,7 @@ import {
   parseSocialLinksArtistRoles,
   parseSocialLinksGenres,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { userName } from '../../lib/safe-names.js'
 
@@ -26,7 +27,7 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
         const channels = await fastify.prisma.channel.findMany({
           where: {
             sounds: { some: { status: 'READY', isPublic: true } },
-            user: { deletedAt: null },
+            user: availableUserWhere,
           },
           orderBy: { user: { displayName: 'asc' } },
           take: 500,
