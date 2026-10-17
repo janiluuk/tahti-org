@@ -391,8 +391,35 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   )
 }
 
+/** RFC 5545 TEXT: backslash, semicolon, comma and newlines are escaped. */
+export function escapeIcsText(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n')
+}
+
+/** RFC 5545 folds content lines longer than 75 octets, continuing with a space. */
+export function foldIcsLine(line: string): string {
+  const bytes = Buffer.from(line, 'utf8')
+  if (bytes.length <= 75) return line
+  const parts: string[] = []
+  let start = 0
+  let limit = 75
+  while (start < bytes.length) {
+    let end = Math.min(start + limit, bytes.length)
+    // Never split a multi-byte character.
+    while (end < bytes.length && (bytes[end]! & 0xc0) === 0x80) end--
+    parts.push(bytes.subarray(start, end).toString('utf8'))
+    start = end
+    limit = 74
+  }
+  return parts.join('\r\n ')
+}
+
 // Minimal iCalendar builder
-function buildIcs(
+export function buildIcs(
   venue: { name: string; slug: string; address: string; city: string },
   broadcasts: Array<{
     id: string
@@ -401,16 +428,18 @@ function buildIcs(
     description: string | null
     state: string
   }>,
+  now = new Date(),
 ): string {
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Tahti ry//Venue Calendar//EN',
-    `X-WR-CALNAME:${venue.name} — Tahti`,
+    `X-WR-CALNAME:${escapeIcsText(`${venue.name} — Tahti`)}`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
   ]
 
+  const dtstamp = formatIcsDate(now)
   for (const b of broadcasts) {
     const dtstart = formatIcsDate(b.startAt)
     const dtend = b.endAt
@@ -419,17 +448,18 @@ function buildIcs(
     lines.push(
       'BEGIN:VEVENT',
       `UID:${b.id}@tahti.live`,
+      `DTSTAMP:${dtstamp}`,
       `DTSTART:${dtstart}`,
       `DTEND:${dtend}`,
-      `SUMMARY:Live at ${venue.name}`,
-      `LOCATION:${venue.address}\\, ${venue.city}`,
-      ...(b.description ? [`DESCRIPTION:${b.description.replace(/\n/g, '\\n')}`] : []),
+      `SUMMARY:${escapeIcsText(`Live at ${venue.name}`)}`,
+      `LOCATION:${escapeIcsText(`${venue.address}, ${venue.city}`)}`,
+      ...(b.description ? [`DESCRIPTION:${escapeIcsText(b.description)}`] : []),
       'END:VEVENT',
     )
   }
 
   lines.push('END:VCALENDAR')
-  return lines.join('\r\n')
+  return lines.map(foldIcsLine).join('\r\n') + '\r\n'
 }
 
 function formatIcsDate(d: Date): string {
