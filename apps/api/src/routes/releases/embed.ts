@@ -17,6 +17,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { config } from '../../config.js'
 import { linkReachableCollectionWhere, publicCollectionSoundWhere } from '../collections/helpers.js'
 import { presignedGetUrl } from '../../lib/minio.js'
@@ -60,7 +61,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (releaseMatch) {
         const slug = releaseMatch[1]
         const release = await fastify.prisma.release.findFirst({
-          where: { smartLinkSlug: slug, state: 'PUBLISHED' },
+          where: { smartLinkSlug: slug, state: 'PUBLISHED', user: availableUserWhere },
           select: {
             id: true,
             title: true,
@@ -82,8 +83,8 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         if (!channelMatch) return reply.status(404).send({ error: 'Unrecognised URL' })
 
         const slug = channelMatch[1]
-        const channel = await fastify.prisma.channel.findUnique({
-          where: { slug },
+        const channel = await fastify.prisma.channel.findFirst({
+          where: { slug, user: availableUserWhere },
           select: { slug: true, user: { select: { username: true, displayName: true } } },
         })
         if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -127,7 +128,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
-        where: { id, state: 'PUBLISHED' },
+        where: { id, state: 'PUBLISHED', user: availableUserWhere },
         select: {
           id: true,
           title: true,
@@ -189,8 +190,8 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { slug } = routeParams
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug },
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug, user: availableUserWhere },
         select: {
           slug: true,
           state: true,
@@ -366,7 +367,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       const { id, trackId } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
-        where: { id, state: 'PUBLISHED' },
+        where: { id, state: 'PUBLISHED', user: availableUserWhere },
         select: { id: true },
       })
       if (!release) return reply.status(404).send({ error: 'Release not found' })
