@@ -34,7 +34,7 @@ describe("a suspended artist's channel archive", () => {
     await app.close()
   })
 
-  it('lists the archive in good standing and is not found once suspended', async () => {
+  it('lists the archive in good standing and nothing once suspended', async () => {
     const before = await app.inject({ method: 'GET', url: `/api/channels/${slug}/items` })
     expect(before.statusCode).toBe(200)
     expect(JSON.stringify(before.json())).toContain('Archive set')
@@ -44,6 +44,7 @@ describe("a suspended artist's channel archive", () => {
       data: { suspendedAt: new Date(), suspendReason: 'test' },
     })
     const after = await app.inject({ method: 'GET', url: `/api/channels/${slug}/items` })
-    expect(after.statusCode).toBe(404)
+    expect(after.statusCode).toBe(200)
+    expect(after.json()).toEqual([])
   })
 })
