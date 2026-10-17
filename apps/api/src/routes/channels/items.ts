@@ -10,6 +10,7 @@ import {
   parseColorScheme,
   parseRouteParams,
 } from '@tahti/shared'
+import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
@@ -43,7 +44,12 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
       // per viewer.
       const cached = await getCachedJson(`channel:items:${slug}`, 15, async () => {
         const items = await fastify.prisma.sound.findMany({
-          where: { channelId: channel.id, status: 'READY', isPublic: true },
+          where: {
+            channelId: channel.id,
+            status: 'READY',
+            isPublic: true,
+            ...listedArtistSoundWhere,
+          },
           orderBy: { createdAt: 'desc' },
           take: 50,
           select: {
