@@ -13,6 +13,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { availableUserWhere } from '../../lib/listed-artist.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import {
@@ -90,8 +91,10 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         }
         const query = parsedQuery.data
 
-        const channel = await fastify.prisma.channel.findUnique({
-          where: { slug },
+        // No downloads while the artist is suspended or after their
+        // account was deleted, as for their track pages.
+        const channel = await fastify.prisma.channel.findFirst({
+          where: { slug, user: availableUserWhere },
           select: { id: true, userId: true, user: { select: { tier: true } } },
         })
         if (!channel) return reply.status(404).send({ error: 'Channel not found' })
