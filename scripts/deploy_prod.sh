@@ -59,6 +59,8 @@ rsync -az --delete \
   --exclude dist \
   --exclude 'docs/e2e-screenshots/.seed-output.json' \
   --exclude infra/stack.env \
+  --exclude infra/stack.env.backups \
+  --exclude 'infra/stack.env.swarm-*' \
   --exclude infra/icecast.xml \
   --exclude infra/icecast-b.xml \
   ./ "${HOST}:${REMOTE_PATH}/"
