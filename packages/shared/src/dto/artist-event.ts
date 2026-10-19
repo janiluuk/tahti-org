@@ -44,3 +44,18 @@ export const ArtistEventSchema = z.object({
 export type ArtistEventView = z.infer<typeof ArtistEventSchema>
 
 export const ArtistEventListSchema = z.array(ArtistEventSchema)
+
+export const UpcomingEventsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(12),
+})
+
+export const UpcomingEventSchema = ArtistEventSchema.extend({
+  artistDisplayName: z.string(),
+  artistUsername: z.string(),
+  channelSlug: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+})
+
+export type UpcomingEventView = z.infer<typeof UpcomingEventSchema>
+
+export const UpcomingEventListSchema = z.array(UpcomingEventSchema)
