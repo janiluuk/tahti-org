@@ -8,11 +8,11 @@
 
 Environment overrides:
 
-| Variable                     | Default | Meaning                                                        |
-| ---------------------------- | ------- | -------------------------------------------------------------- |
-| `RATE_LIMIT_API_MAX`         | `120`   | Max requests per IP per minute (general API)                   |
-| `RATE_LIMIT_AUTH_MAX`        | `10`    | Max requests per IP per minute (register, login, chat)         |
-| `RATE_LIMIT_REDIS_FAIL_OPEN` | `true`  | When Redis is down, allow traffic (`true`) or reject (`false`) |
+| Variable                     | Default | Meaning                                                                           |
+| ---------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `RATE_LIMIT_API_MAX`         | `120`   | Max requests per IP per minute (general API)                                      |
+| `RATE_LIMIT_AUTH_MAX`        | `10`    | Max requests per IP per minute (register, login, chat), counted in its own bucket |
+| `RATE_LIMIT_REDIS_FAIL_OPEN` | `true`  | When Redis is down, allow traffic (`true`) or reject (`false`)                    |
 
 ## Download engagement limits (`archive` + `release` downloads)
 

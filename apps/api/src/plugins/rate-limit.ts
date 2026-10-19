@@ -3,7 +3,8 @@
 
 // Redis token-bucket rate limiting for Fastify.
 // Applied globally — individual routes can override limits via config.
-// Default: 60 req/min per IP for API routes, 10 req/min for auth routes.
+// Per-IP buckets: RATE_LIMIT_API_MAX for API routes, RATE_LIMIT_AUTH_MAX for auth
+// routes (counted separately) — see docs/technical/rate-limit-policy.md.
 
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
@@ -22,12 +23,18 @@ interface RateLimitConfig {
   keyPrefix?: string
 }
 
-function defaultLimit(): RateLimitConfig {
+export function defaultLimit(): RateLimitConfig {
   return { max: config.rateLimit.apiMaxPerMin, windowSec: 60 }
 }
 
-function authLimit(): RateLimitConfig {
-  return { max: config.rateLimit.authMaxPerMin, windowSec: 60 }
+// Own bucket: sharing `rl:api:<ip>` meant ordinary page traffic counted
+// against the much lower login limit, so a busy session locked sign-in.
+export function authLimit(): RateLimitConfig {
+  return { max: config.rateLimit.authMaxPerMin, windowSec: 60, keyPrefix: 'auth' }
+}
+
+export function rateLimitKey(limit: RateLimitConfig, ip: string, nowMs = Date.now()): string {
+  return `rl:${limit.keyPrefix ?? 'api'}:${ip}:${Math.floor(nowMs / (limit.windowSec * 1000))}`
 }
 
 async function checkLimit(
@@ -39,7 +46,7 @@ async function checkLimit(
   if (!rd) {
     return rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec)
   }
-  const key = `rl:${limit.keyPrefix ?? 'api'}:${ip}:${Math.floor(Date.now() / (limit.windowSec * 1000))}`
+  const key = rateLimitKey(limit, ip)
 
   try {
     const count = await rd.incr(key)
