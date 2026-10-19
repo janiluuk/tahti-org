@@ -328,7 +328,23 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
             OR: [{ channel: { userId: user.id } }, { isPublic: true }],
           },
         })
-        if (!sound) return reply.status(400).send({ error: 'Sound item not found' })
+        if (!sound) {
+          const ownPending = await fastify.prisma.sound.findFirst({
+            where: {
+              id: body.soundId,
+              channel: { userId: user.id },
+              status: { in: ['PENDING', 'PROCESSING'] },
+            },
+            select: { id: true },
+          })
+          if (ownPending) {
+            return reply.status(409).send({
+              error: 'This track is still processing. Add it once it is ready.',
+              code: 'SOUND_NOT_READY',
+            })
+          }
+          return reply.status(400).send({ error: 'Sound item not found' })
+        }
         if (sound.isPublic) announceTitle = sound.title
       }
 
