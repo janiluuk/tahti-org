@@ -12,7 +12,7 @@ export const PrepareUploadSchema = z.object({
     .int()
     .min(1)
     .max(2 * 1024 * 1024 * 1024),
-  title: z.string().min(1).max(200).trim(),
+  title: z.string().trim().min(1).max(200).optional(),
 })
 
 export type PrepareUploadInput = z.infer<typeof PrepareUploadSchema>
