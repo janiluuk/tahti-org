@@ -112,4 +112,34 @@ describe('POST /api/uploads/prepare', () => {
     expect(body.uploadUrl).toBe('https://minio.test/presigned')
     expect(body.expiresAt).toBeDefined()
   })
+
+  it('derives the title from the file name when none is sent', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/prepare',
+      cookies: { tahti_session: sessionCookie },
+      payload: {
+        filename: 'Night_Drive_final.wav',
+        contentType: 'audio/wav',
+        fileSizeBytes: 1024,
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().title).toBe('Night Drive final')
+  })
+
+  it('keeps a sent title', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/prepare',
+      cookies: { tahti_session: sessionCookie },
+      payload: {
+        filename: 'x.wav',
+        contentType: 'audio/wav',
+        fileSizeBytes: 1024,
+        title: '  Kept  ',
+      },
+    })
+    expect(res.json().title).toBe('Kept')
+  })
 })

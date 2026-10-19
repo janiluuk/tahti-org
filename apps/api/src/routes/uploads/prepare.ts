@@ -7,6 +7,7 @@ import { PrepareUploadResponseSchema, PrepareUploadSchema, openApiResponse } fro
 import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
+import { titleFromFilename } from '../../lib/upload-title.js'
 
 const PRESIGN_TTL_SEC = 900
 
@@ -32,7 +33,8 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const { filename, contentType, title, fileSizeBytes } = parsed.data
+      const { filename, contentType, fileSizeBytes } = parsed.data
+      const title = parsed.data.title ?? titleFromFilename(filename)
       const user = request.sessionUser!
 
       const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
