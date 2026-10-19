@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { parseSpotifyArtistId, spotifyTrackUri, trackIdFromSpotifyUri } from './spotify.js'
+import {
+  parseSpotifyArtistId,
+  parseSpotifyPlaylistId,
+  spotifyTrackUri,
+  trackIdFromSpotifyUri,
+} from './spotify.js'
 
 describe('spotify URI/URL parsing', () => {
   it('extracts a track ID from a well-formed URI', () => {
@@ -44,5 +49,30 @@ describe('spotify URI/URL parsing', () => {
   it('rejects unrelated URLs and garbage input', () => {
     expect(parseSpotifyArtistId('https://example.com/artist/xyz')).toBe(null)
     expect(parseSpotifyArtistId('not an id')).toBe(null)
+  })
+
+  it('resolves a playlist ID from a URL with tracking params', () => {
+    expect(
+      parseSpotifyPlaylistId(
+        'https://open.spotify.com/playlist/2esDahb3pYLC84NF3bWx98?si=f022a0a9cc20432f',
+      ),
+    ).toBe('2esDahb3pYLC84NF3bWx98')
+  })
+
+  it('resolves a playlist ID from an intl path', () => {
+    expect(
+      parseSpotifyPlaylistId('https://open.spotify.com/intl-fi/playlist/2esDahb3pYLC84NF3bWx98'),
+    ).toBe('2esDahb3pYLC84NF3bWx98')
+  })
+
+  it('resolves a playlist ID from a spotify:playlist: URI', () => {
+    expect(parseSpotifyPlaylistId('spotify:playlist:2esDahb3pYLC84NF3bWx98')).toBe(
+      '2esDahb3pYLC84NF3bWx98',
+    )
+  })
+
+  it('rejects unrelated playlist input', () => {
+    expect(parseSpotifyPlaylistId('https://open.spotify.com/track/abc')).toBe(null)
+    expect(parseSpotifyPlaylistId('not a playlist')).toBe(null)
   })
 })
