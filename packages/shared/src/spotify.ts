@@ -77,6 +77,29 @@ export function parseSpotifyArtistId(input: string): string | null {
   }
 }
 
+/**
+ * Resolves a playlist ID from a pasted Spotify playlist URL, a
+ * spotify:playlist:ID URI, or a bare ID. Accepts intl paths
+ * (`/intl-fi/playlist/…`) and tracking query params.
+ */
+export function parseSpotifyPlaylistId(input: string): string | null {
+  const trimmed = input.trim()
+
+  const uriMatch = /^spotify:playlist:([A-Za-z0-9]+)$/.exec(trimmed)
+  if (uriMatch) return uriMatch[1]
+
+  try {
+    const url = new URL(trimmed)
+    if (url.hostname === 'open.spotify.com' || url.hostname.endsWith('.spotify.com')) {
+      const pathMatch = /\/playlist\/([A-Za-z0-9]+)/.exec(url.pathname)
+      if (pathMatch) return pathMatch[1]
+    }
+    return null
+  } catch {
+    return /^[A-Za-z0-9]{22}$/.test(trimmed) ? trimmed : null
+  }
+}
+
 export interface SpotifyTrackResult {
   uri: string
   title: string
@@ -195,4 +218,30 @@ export async function getSpotifyArtistTracks(
     if (tracks.length >= limit) break
   }
   return tracks.slice(0, limit)
+}
+
+/**
+ * Public playlist tracks (Client Credentials). Private / region-blocked
+ * playlists fail at the Spotify API — callers surface that as 502.
+ */
+export async function getSpotifyPlaylistTracks(
+  accessToken: string,
+  playlistId: string,
+  limit = 100,
+): Promise<SpotifyTrackResult[]> {
+  const params = new URLSearchParams({
+    limit: String(Math.min(limit, 100)),
+    fields: 'items(track(id,uri,name,duration_ms,artists(id,name),album(name,images)))',
+  })
+  const data = await spotifyApiGet<{
+    items: Array<{ track: RawSpotifyTrack | null }>
+  }>(accessToken, `/playlists/${encodeURIComponent(playlistId)}/tracks?${params}`)
+
+  const tracks: SpotifyTrackResult[] = []
+  for (const item of data.items) {
+    if (!item.track?.id) continue
+    tracks.push(mapSpotifyTrack(item.track))
+    if (tracks.length >= limit) break
+  }
+  return tracks
 }

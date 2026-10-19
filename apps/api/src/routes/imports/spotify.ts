@@ -10,9 +10,11 @@ import {
   SpotifySearchResponseSchema,
   getSpotifyArtist,
   getSpotifyArtistTracks,
+  getSpotifyPlaylistTracks,
   getSpotifyTrack,
   mapGenre,
   parseSpotifyArtistId,
+  parseSpotifyPlaylistId,
   searchSpotifyTracks,
   trackIdFromSpotifyUri,
   openApiResponse,
@@ -130,6 +132,42 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.send({ tracks })
       } catch {
         return reply.status(502).send({ error: 'Spotify lookup failed' })
+      }
+    },
+  )
+
+  // GET /api/v1/imports/spotify/by-playlist-url?playlistUrl=... — Listen widget + collections.
+  fastify.get(
+    '/api/v1/imports/spotify/by-playlist-url',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['imports'],
+        summary: 'List tracks in a public Spotify playlist',
+        description:
+          'List tracks in a public Spotify playlist (embed references only, no audio fetch)',
+        response: openApiResponse(SpotifySearchResponseSchema, 'SpotifySearchResponse'),
+      },
+    },
+    async (request, reply) => {
+      const credential = await resolveSpotifyCredential(fastify.prisma, request.sessionUser!.id)
+      if (!credential && !spotifyConfigured()) {
+        return reply.status(503).send({ error: 'Spotify search is not configured' })
+      }
+      const query = request.query as Record<string, string>
+      const playlistId = query.playlistUrl ? parseSpotifyPlaylistId(query.playlistUrl) : null
+      if (!playlistId) {
+        return reply
+          .status(400)
+          .send({ error: 'Could not parse a Spotify playlist from playlistUrl' })
+      }
+
+      try {
+        const token = await getSpotifyAppToken(credential ?? undefined)
+        const tracks = await getSpotifyPlaylistTracks(token, playlistId)
+        return reply.send({ tracks })
+      } catch {
+        return reply.status(502).send({ error: 'Spotify playlist lookup failed' })
       }
     },
   )
