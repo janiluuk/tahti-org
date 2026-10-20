@@ -37,6 +37,16 @@ if (
   )
 }
 
+const jwtAccessSecret = process.env.JWT_ACCESS_SECRET ?? sessionSecret
+if (
+  process.env.NODE_ENV === 'production' &&
+  (!process.env.JWT_ACCESS_SECRET || process.env.JWT_ACCESS_SECRET === sessionSecret)
+) {
+  console.warn(
+    '[config] JWT_ACCESS_SECRET unset — falling back to SESSION_SECRET. Set JWT_ACCESS_SECRET in production.',
+  )
+}
+
 const centrifugoJwtSecret = process.env.CENTRIFUGO_JWT_SECRET ?? 'dev_secret_do_not_use_in_prod'
 if (
   process.env.NODE_ENV === 'production' &&
@@ -99,6 +109,16 @@ export const config = {
   sessionCookieDomain:
     process.env.SESSION_COOKIE_DOMAIN ??
     (process.env.NODE_ENV === 'production' ? '.tahti.live' : undefined),
+  jwtAccessSecret,
+  accessTokenTtlSec: parseInt(process.env.ACCESS_TOKEN_TTL_SEC ?? String(15 * 60), 10),
+  refreshTokenTtlSec: parseInt(process.env.REFRESH_TOKEN_TTL_SEC ?? String(60 * 24 * 60 * 60), 10),
+  refreshTokenAbsoluteCapSec: parseInt(
+    process.env.REFRESH_TOKEN_ABSOLUTE_CAP_SEC ?? String(365 * 24 * 60 * 60),
+    10,
+  ),
+  refreshReuseGraceSec: parseInt(process.env.REFRESH_REUSE_GRACE_SEC ?? '30', 10),
+  refreshCookieName: 'tahti_refresh',
+  refreshCookiePath: '/api/auth/token',
   email: {
     host: smtpHost,
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),

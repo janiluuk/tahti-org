@@ -952,6 +952,7 @@ model User {
   updatedAt                     DateTime  @updatedAt
 
   sessions                       Session[]
+  refreshTokens                  RefreshToken[]
   apiTokens                      ApiToken[]
   emailVerifications             EmailVerification[]
   totpBackupCodes                TotpBackupCode[]
@@ -1212,13 +1213,38 @@ model SocialPost {
 }
 
 model Session {
-  id        String   @id
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id            String         @id
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceLabel   String?
+  expiresAt     DateTime
+  createdAt     DateTime       @default(now())
+  refreshTokens RefreshToken[]
 
   @@index([userId])
+  @@schema("core")
+}
+
+// Opaque refresh token (hashed). familyId groups a device login chain;
+// presenting a retired token outside the grace window revokes the family.
+model RefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId    String
+  session      Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  familyId     String
+  tokenHash    String    @unique
+  deviceLabel  String?
+  lastUsedAt   DateTime?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([sessionId])
   @@schema("core")
 }
 

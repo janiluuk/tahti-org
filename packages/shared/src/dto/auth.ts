@@ -42,6 +42,7 @@ export type RegisterInput = z.infer<typeof RegisterSchema>
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1, 'Password is required'),
+  deviceLabel: z.string().trim().max(120).optional(),
 })
 
 export type LoginInput = z.infer<typeof LoginSchema>
@@ -49,6 +50,7 @@ export type LoginInput = z.infer<typeof LoginSchema>
 export const LoginTotpSchema = z.object({
   challengeId: z.string().min(1, 'challengeId is required'),
   code: z.string().trim().min(1, 'code is required').max(32),
+  deviceLabel: z.string().trim().max(120).optional(),
 })
 
 export type LoginTotpInput = z.infer<typeof LoginTotpSchema>

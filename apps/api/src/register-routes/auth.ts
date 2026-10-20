@@ -13,6 +13,8 @@ import loginRoute from '../routes/auth/login.js'
 import loginTotpRoute from '../routes/auth/login-totp.js'
 import logoutRoute from '../routes/auth/logout.js'
 import meRoute from '../routes/auth/me.js'
+import tokenRefreshRoute from '../routes/auth/token-refresh.js'
+import sessionsRoute from '../routes/me/sessions.js'
 
 export async function registerAuthRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(registerRoute)
@@ -26,4 +28,6 @@ export async function registerAuthRoutes(fastify: FastifyInstance): Promise<void
   await fastify.register(loginTotpRoute)
   await fastify.register(logoutRoute)
   await fastify.register(meRoute)
+  await fastify.register(tokenRefreshRoute)
+  await fastify.register(sessionsRoute)
 }

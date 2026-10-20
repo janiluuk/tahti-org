@@ -117,7 +117,7 @@ const resetPasswordRoute: FastifyPluginAsync = async (fastify) => {
       ])
 
       // A password reset can follow a compromised-credentials scenario —
-      // kick out every other session the same way a fresh login does (SEC-010).
+      // kick out every other session (password reset still revokes all; login no longer does).
       await revokeAllSessions(fastify.prisma, reset.userId)
       const session = await createSession(fastify.prisma, reset.userId)
       reply.setCookie(config.sessionCookieName, session.id, {

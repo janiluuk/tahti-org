@@ -49,6 +49,27 @@ export const AuthLoginResponseSchema = z.object({
   user: AuthUserSummarySchema.optional(),
   requiresTotp: z.boolean().optional(),
   challengeId: z.string().optional(),
+  accessToken: z.string().optional(),
+  expiresIn: z.number().int().min(1).optional(),
+  refreshToken: z.string().optional(),
+})
+
+export const AuthTokenRefreshResponseSchema = z.object({
+  accessToken: z.string(),
+  expiresIn: z.number().int().min(1),
+  refreshToken: z.string().optional(),
+})
+
+export const AuthSessionListItemSchema = z.object({
+  id: z.string(),
+  deviceLabel: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  lastUsedAt: z.coerce.date().nullable(),
+  current: z.boolean(),
+})
+
+export const AuthSessionListResponseSchema = z.object({
+  sessions: z.array(AuthSessionListItemSchema),
 })
 
 export const TotpStatusResponseSchema = z.object({
