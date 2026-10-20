@@ -2,14 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AuthMessageResponseSchema, AuthSessionListResponseSchema, openApiResponse } from '@tahti/shared'
+import {
+  AuthMessageResponseSchema,
+  AuthSessionListResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { deleteSession, revokeAllSessions } from '../../lib/session.js'
-import {
-  revokeAllRefreshForUser,
-  revokeRefreshForSession,
-} from '../../auth/tokens/refresh.js'
+import { revokeAllRefreshForUser, revokeRefreshForSession } from '../../auth/tokens/refresh.js'
 import { clearRefreshCookie } from '../../auth/tokens/cookies.js'
 import { sessionCookieCandidates } from '../../lib/session-cookie.js'
 

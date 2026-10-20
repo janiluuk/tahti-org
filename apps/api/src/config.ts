@@ -37,7 +37,6 @@ if (
   )
 }
 
-
 const jwtAccessSecret = process.env.JWT_ACCESS_SECRET ?? sessionSecret
 if (
   process.env.NODE_ENV === 'production' &&

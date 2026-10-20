@@ -52,7 +52,11 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
           return reply.status(401).send({ error: 'Invalid or expired API token' })
         }
         const exempt = request.routeOptions.config?.methodScopeCheckExempt === true
-        if (!exempt && !SAFE_METHODS.has(request.method) && !result.token.scopes.includes('write')) {
+        if (
+          !exempt &&
+          !SAFE_METHODS.has(request.method) &&
+          !result.token.scopes.includes('write')
+        ) {
           return reply.status(403).send({ error: 'This API token does not have write access' })
         }
         request.sessionUser = result.user

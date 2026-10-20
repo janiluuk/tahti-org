@@ -7,7 +7,11 @@ import { deleteSession } from '../../lib/session.js'
 import { config } from '../../config.js'
 import { sessionCookieCandidates } from '../../lib/session-cookie.js'
 import { clearRefreshCookie } from '../../auth/tokens/cookies.js'
-import { revokeRefreshForSession, revokeRefreshFamily, hashRefreshToken } from '../../auth/tokens/refresh.js'
+import {
+  revokeRefreshForSession,
+  revokeRefreshFamily,
+  hashRefreshToken,
+} from '../../auth/tokens/refresh.js'
 
 const logoutRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
