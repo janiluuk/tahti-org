@@ -230,10 +230,8 @@ describe('2FA (TOTP) login flow', () => {
   })
 
   it('disabling 2FA requires the account password', async () => {
-    // SEC-010: every real /api/auth/login(/totp) completion above this test
-    // revoked whatever session existed before it, including the module-level
-    // sessionCookie from beforeAll — get a fresh one rather than assume it's
-    // still valid this deep into the file.
+    // Prefer a fresh session cookie rather than assuming the module-level
+    // sessionCookie from beforeAll is still the one we want this deep in the file.
     const freshCookie = await sessionCookieFor(prisma, userId)
 
     const wrongPassword = await app.inject({
