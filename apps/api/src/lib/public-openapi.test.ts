@@ -49,10 +49,20 @@ describe('toPublicOpenApi', () => {
 
 describe('renderPublicApiDocsHtml', () => {
   it('embeds Scalar pointing at the OpenAPI URL', () => {
-    const html = renderPublicApiDocsHtml('/api/openapi.json')
+    const html = renderPublicApiDocsHtml('/api/openapi.json', 'https://tahti.live')
     expect(html).toContain('<!doctype html>')
     expect(html).toContain('@scalar/api-reference')
     expect(html).toContain('/api/openapi.json')
     expect(html).toContain('Tahti API')
+  })
+
+  it('links back to the web app', () => {
+    const html = renderPublicApiDocsHtml('/api/openapi.json', 'https://tahti.live')
+    expect(html).toMatch(/<a href="https:\/\/tahti\.live"[^>]*>&larr; Back to Tahti<\/a>/)
+  })
+
+  it('escapes the app URL', () => {
+    const html = renderPublicApiDocsHtml('/api/openapi.json', 'https://x.test/"><script>')
+    expect(html).not.toContain('"><script>')
   })
 })

@@ -17,7 +17,7 @@ const publicApiDocsRoute: FastifyPluginAsync = async (fastify) => {
     return reply
       .type('text/html; charset=utf-8')
       .header('Cache-Control', 'public, max-age=60')
-      .send(renderPublicApiDocsHtml(openapiPath))
+      .send(renderPublicApiDocsHtml(openapiPath, config.appUrl))
   }
 
   // Apex of the API host — what people expect when they open api.tahti.live

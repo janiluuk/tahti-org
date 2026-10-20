@@ -22,6 +22,7 @@ describe('Public API docs', () => {
     expect(res.headers['content-type']).toMatch(/text\/html/)
     expect(res.body).toContain('@scalar/api-reference')
     expect(res.body).toContain('/api/openapi.json')
+    expect(res.body).toContain('Back to Tahti')
   })
 
   it('GET /api serves Scalar HTML without auth', async () => {

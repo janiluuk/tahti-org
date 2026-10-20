@@ -102,9 +102,15 @@ export function toPublicOpenApi(
   }
 }
 
-/** Minimal Scalar shell — loads the public OpenAPI JSON (CDN, no PHP / no static dump). */
-export function renderPublicApiDocsHtml(openapiUrl: string): string {
+const escapeAttr = (value: string) =>
+  value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+/** Minimal Scalar shell — loads the public OpenAPI JSON (CDN, no PHP / no static dump).
+ * The bar on top links back to the web app: the docs open in their own tab with no
+ * Tahti chrome, so without it there is no way back. */
+export function renderPublicApiDocsHtml(openapiUrl: string, appUrl: string): string {
   const safeUrl = openapiUrl.replace(/"/g, '&quot;')
+  const safeAppUrl = escapeAttr(appUrl)
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -115,9 +121,19 @@ export function renderPublicApiDocsHtml(openapiUrl: string): string {
   <link rel="icon" href="https://tahti.live/favicon.ico" />
   <style>
     html, body { margin: 0; padding: 0; height: 100%; }
+    .tahti-docs-bar {
+      display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+      font: 600 14px/1.4 system-ui, sans-serif; background: #111; color: #eee;
+      border-bottom: 1px solid #333;
+    }
+    .tahti-docs-bar a { color: inherit; text-decoration: none; }
+    .tahti-docs-bar a:hover, .tahti-docs-bar a:focus-visible { text-decoration: underline; }
   </style>
 </head>
 <body>
+  <header class="tahti-docs-bar">
+    <a href="${safeAppUrl}" data-testid="docs-back-to-app">&larr; Back to Tahti</a>
+  </header>
   <script
     id="api-reference"
     data-url="${safeUrl}"
