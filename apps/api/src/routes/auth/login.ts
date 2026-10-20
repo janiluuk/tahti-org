@@ -5,7 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
 import { restrictionErrorMessage } from '@tahti/db'
 import { verifyPassword } from '../../lib/password.js'
-import { createSession, revokeAllSessions } from '../../lib/session.js'
+import { createSession } from '../../lib/session.js'
+import { issueAuthTokens } from '../../auth/tokens/index.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
@@ -37,6 +38,8 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           displayName: true,
           username: true,
           tier: true,
+          isMember: true,
+          isBoard: true,
           suspendedAt: true,
           deletedAt: true,
           totpEnabledAt: true,
@@ -80,8 +83,12 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         return reply.send({ requiresTotp: true, challengeId: challenge.id })
       }
 
-      await revokeAllSessions(fastify.prisma, user.id)
-      const session = await createSession(fastify.prisma, user.id)
+      const deviceLabel =
+        parsed.data.deviceLabel?.trim() ||
+        (typeof request.headers['user-agent'] === 'string'
+          ? request.headers['user-agent'].slice(0, 120)
+          : null)
+      const session = await createSession(fastify.prisma, user.id, { deviceLabel })
 
       void auditLog(fastify.prisma, {
         action: 'USER_LOGIN',
@@ -98,6 +105,13 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         domain: config.sessionCookieDomain,
       })
 
+      const tokens = await issueAuthTokens(fastify.prisma, reply, {
+        user,
+        session,
+        deviceLabel,
+        includeRefreshInBody: true,
+      })
+
       return reply.send({
         user: {
           id: user.id,
@@ -106,6 +120,9 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           displayName: user.displayName,
           tier: user.tier,
         },
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+        refreshToken: tokens.refreshToken,
       })
     },
   )

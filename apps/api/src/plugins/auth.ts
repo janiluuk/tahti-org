@@ -8,6 +8,7 @@ import { validateSession } from '../lib/session.js'
 import { validateApiToken, TOKEN_PREFIX } from '../lib/api-token.js'
 import { config } from '../config.js'
 import { sessionCookieCandidates } from '../lib/session-cookie.js'
+import { looksLikeAccessJwt, verifyAccessToken } from '../auth/tokens/access-jwt.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -15,6 +16,8 @@ declare module 'fastify' {
     /** Non-null only when auth came from a personal API token (Authorization: Bearer),
      * as opposed to the session cookie. Drives the read/write scope check below. */
     apiTokenScopes: string[] | null
+    /** Session id for cookie or access-JWT auth (not API tokens). */
+    authSessionId: string | null
     /** Set by requireArtist once it's confirmed sessionUser owns a channel. */
     channel: Channel | null
   }
@@ -36,27 +39,43 @@ declare module 'fastify' {
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest('sessionUser', null)
   fastify.decorateRequest('apiTokenScopes', null)
+  fastify.decorateRequest('authSessionId', null)
   fastify.decorateRequest('channel', null)
 
   fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const authHeader = request.headers.authorization
-    // Only claim Bearer tokens that look like personal API tokens (`tahti_...`).
-    // Other Bearer schemes — e.g. internal service-to-service secrets checked by
-    // individual routes — must fall through untouched rather than getting 401'd here.
-    if (authHeader?.startsWith(`Bearer ${TOKEN_PREFIX}`)) {
+    if (authHeader?.startsWith('Bearer ')) {
       const rawToken = authHeader.slice('Bearer '.length).trim()
-      const result = await validateApiToken(fastify.prisma, rawToken)
-      if (!result) {
-        return reply.status(401).send({ error: 'Invalid or expired API token' })
+      if (rawToken.startsWith(TOKEN_PREFIX)) {
+        const result = await validateApiToken(fastify.prisma, rawToken)
+        if (!result) {
+          return reply.status(401).send({ error: 'Invalid or expired API token' })
+        }
+        const exempt = request.routeOptions.config?.methodScopeCheckExempt === true
+        if (!exempt && !SAFE_METHODS.has(request.method) && !result.token.scopes.includes('write')) {
+          return reply.status(403).send({ error: 'This API token does not have write access' })
+        }
+        request.sessionUser = result.user
+        request.apiTokenScopes = result.token.scopes
+        return
       }
-      // A read-only token can look but not touch: every mutating request needs 'write'.
-      const exempt = request.routeOptions.config?.methodScopeCheckExempt === true
-      if (!exempt && !SAFE_METHODS.has(request.method) && !result.token.scopes.includes('write')) {
-        return reply.status(403).send({ error: 'This API token does not have write access' })
+
+      if (looksLikeAccessJwt(rawToken)) {
+        const claims = verifyAccessToken(rawToken)
+        if (!claims) {
+          return reply.status(401).send({ error: 'Invalid or expired access token' })
+        }
+        const session = await validateSession(fastify.prisma, claims.sid)
+        if (!session || session.userId !== claims.sub) {
+          return reply.status(401).send({ error: 'Invalid or expired access token' })
+        }
+        if (session.user.suspendedAt) {
+          return reply.status(403).send({ error: 'This account has been suspended' })
+        }
+        request.sessionUser = session.user
+        request.authSessionId = session.id
+        return
       }
-      request.sessionUser = result.user
-      request.apiTokenScopes = result.token.scopes
-      return
     }
 
     const sessionIds = sessionCookieCandidates(
@@ -68,6 +87,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       const session = await validateSession(fastify.prisma, sessionId)
       if (!session) continue
       request.sessionUser = session.user
+      request.authSessionId = session.id
       break
     }
   })
@@ -85,10 +105,6 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
   }
 }
 
-// Routes that change how the account is signed in to: minting or revoking API
-// tokens, setting up or turning off 2FA, asking for the account to be deleted.
-// A personal API token must not be able to do these, or a leaked token could
-// make itself permanent or weaken the account it belongs to.
 export async function requireSession(request: FastifyRequest, reply: FastifyReply) {
   await requireAuth(request, reply)
   if (reply.sent) return
@@ -100,8 +116,6 @@ export async function requireSession(request: FastifyRequest, reply: FastifyRepl
   }
 }
 
-// Members-only routes (the yhdistys register). Requires an authenticated user
-// who has an active membership.
 export async function requireMember(request: FastifyRequest, reply: FastifyReply) {
   await requireAuth(request, reply)
   if (reply.sent) return
@@ -110,7 +124,6 @@ export async function requireMember(request: FastifyRequest, reply: FastifyReply
   }
 }
 
-// Board-only routes (posting/opening/closing motions, treasurer ledger entries).
 export async function requireBoard(request: FastifyRequest, reply: FastifyReply) {
   await requireAuth(request, reply)
   if (reply.sent) return
@@ -119,9 +132,6 @@ export async function requireBoard(request: FastifyRequest, reply: FastifyReply)
   }
 }
 
-// Artist-only routes (has a channel). Decorates request.channel so the route
-// doesn't have to re-run the same findUnique-or-404 lookup every route did
-// ad hoc before this existed (see e.g. routes/me/profile.ts).
 export async function requireArtist(request: FastifyRequest, reply: FastifyReply) {
   await requireAuth(request, reply)
   if (reply.sent) return

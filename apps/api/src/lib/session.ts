@@ -61,10 +61,16 @@ function sessionCacheKey(sessionId: string): string {
   return `session:${sessionId}`
 }
 
-export async function createSession(prisma: PrismaClient, userId: string): Promise<Session> {
+export async function createSession(
+  prisma: PrismaClient,
+  userId: string,
+  opts?: { deviceLabel?: string | null },
+): Promise<Session> {
   const id = generateSessionId()
   const expiresAt = sessionExpiresAt()
-  return prisma.session.create({ data: { id, userId, expiresAt } })
+  return prisma.session.create({
+    data: { id, userId, expiresAt, deviceLabel: opts?.deviceLabel ?? null },
+  })
 }
 
 export async function validateSession(
@@ -115,6 +121,10 @@ export async function deleteSession(prisma: PrismaClient, sessionId: string): Pr
  * specifically to end sessions *now*, so it can't rely on the short cache
  * TTL to expire on its own. */
 export async function revokeAllSessions(prisma: PrismaClient, userId: string): Promise<void> {
+  await prisma.refreshToken.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
   const revoked = await prisma.session.findMany({ where: { userId }, select: { id: true } })
   if (revoked.length === 0) return
   await prisma.session.deleteMany({ where: { userId } })

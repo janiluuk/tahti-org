@@ -3,7 +3,8 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginTotpSchema, openApiResponse } from '@tahti/shared'
-import { createSession, revokeAllSessions } from '../../lib/session.js'
+import { createSession } from '../../lib/session.js'
+import { issueAuthTokens } from '../../auth/tokens/index.js'
 import { config } from '../../config.js'
 import { verifyTotpCode } from '../../lib/totp.js'
 import { decryptTotpSecret } from '../../lib/totp-secret-enc.js'
@@ -44,6 +45,8 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
           username: true,
           displayName: true,
           tier: true,
+          isMember: true,
+          isBoard: true,
           totpSecretEnc: true,
           totpEnabledAt: true,
         },
@@ -86,8 +89,12 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
 
       await fastify.prisma.totpChallenge.delete({ where: { id: challenge.id } })
 
-      await revokeAllSessions(fastify.prisma, user.id)
-      const session = await createSession(fastify.prisma, user.id)
+      const deviceLabel =
+        parsed.data.deviceLabel?.trim() ||
+        (typeof request.headers['user-agent'] === 'string'
+          ? request.headers['user-agent'].slice(0, 120)
+          : null)
+      const session = await createSession(fastify.prisma, user.id, { deviceLabel })
 
       void auditLog(fastify.prisma, {
         action: 'USER_LOGIN',
@@ -104,6 +111,13 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
         domain: config.sessionCookieDomain,
       })
 
+      const tokens = await issueAuthTokens(fastify.prisma, reply, {
+        user,
+        session,
+        deviceLabel,
+        includeRefreshInBody: true,
+      })
+
       return reply.send({
         user: {
           id: user.id,
@@ -112,6 +126,9 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
           displayName: user.displayName,
           tier: user.tier,
         },
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+        refreshToken: tokens.refreshToken,
       })
     },
   )
