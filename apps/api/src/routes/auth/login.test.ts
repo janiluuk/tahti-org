@@ -156,18 +156,18 @@ describe('POST /api/auth/login', () => {
     expect(response.statusCode).toBe(401)
   })
 
-  it('SEC-010: a second login revokes the first session', async () => {
+  it('a second login keeps the first session (per-device)', async () => {
     const firstLogin = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
         email: `${TEST_EMAIL_PREFIX}user@example.com`,
         password: 'correctpassword',
+        deviceLabel: 'Device A',
       },
     })
     const firstCookie = firstLogin.cookies.find((c) => c.name === 'tahti_session')!
 
-    // Confirm it's valid before the second login
     const meBefore = await app.inject({
       method: 'GET',
       url: '/api/auth/me',
@@ -181,6 +181,7 @@ describe('POST /api/auth/login', () => {
       payload: {
         email: `${TEST_EMAIL_PREFIX}user@example.com`,
         password: 'correctpassword',
+        deviceLabel: 'Device B',
       },
     })
     const secondCookie = secondLogin.cookies.find((c) => c.name === 'tahti_session')!
@@ -191,7 +192,7 @@ describe('POST /api/auth/login', () => {
       url: '/api/auth/me',
       cookies: { tahti_session: firstCookie.value },
     })
-    expect(meAfterFirst.statusCode).toBe(401)
+    expect(meAfterFirst.statusCode).toBe(200)
 
     const meAfterSecond = await app.inject({
       method: 'GET',
@@ -199,6 +200,14 @@ describe('POST /api/auth/login', () => {
       cookies: { tahti_session: secondCookie.value },
     })
     expect(meAfterSecond.statusCode).toBe(200)
+
+    const sessions = await app.inject({
+      method: 'GET',
+      url: '/api/me/sessions',
+      cookies: { tahti_session: firstCookie.value },
+    })
+    expect(sessions.statusCode).toBe(200)
+    expect(sessions.json().sessions.length).toBeGreaterThanOrEqual(2)
   })
 
   it('POST /api/auth/logout clears the session', async () => {
