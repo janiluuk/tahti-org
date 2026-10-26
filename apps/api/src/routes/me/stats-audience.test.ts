@@ -137,6 +137,15 @@ describe('GET /api/me/stats/audience', () => {
     ])
   })
 
+  it('names the surface each listen played on', async () => {
+    const res = await get('dimension=surface&range=all')
+    expect(res.json()).toMatchObject({
+      dimension: 'surface',
+      total: 20,
+      items: [{ name: 'CHANNEL_PAGE', count: 20, share: 1 }],
+    })
+  })
+
   it('narrows to one track', async () => {
     const res = await get(`dimension=browser&range=all&soundId=${soundId}`)
     expect(res.json()).toMatchObject({

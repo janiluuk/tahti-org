@@ -7,6 +7,7 @@ import {
   StatsAudienceResponseSchema,
   StatsAudienceWindowQuerySchema,
   StatsLocationsResponseSchema,
+  StatsListeningResponseSchema,
   StatsLoyaltyResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
@@ -14,6 +15,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import {
   AUDIENCE_MIN_BUCKET,
   buildAudienceShares,
+  buildListeningTime,
   buildLocationShares,
   buildLoyaltyCurve,
 } from '../../lib/listen-audience.js'
@@ -36,7 +38,7 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Share of listens by browser, OS, device type, device vendor or source (referrer host); names with fewer than 5 listens fold into Other',
+          'Share of listens by browser, OS, device type, device vendor, source (referrer host) or surface (where on Tahti it played: CHANNEL_PAGE, TAHTI_RADIO, ARTIST_PROFILE, DISCOVER, LIBRARY, EMBED, OTHER); names with fewer than 5 listens fold into Other',
         response: openApiResponse(StatsAudienceResponseSchema, 'StatsAudience'),
       },
     },
@@ -105,6 +107,33 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
         ? await buildLoyaltyCurve(fastify.prisma, channelId, parsed.data)
         : { total: 0, points: [] }
       return reply.send({ minBucket: AUDIENCE_MIN_BUCKET, ...curve })
+    },
+  )
+
+  fastify.get(
+    '/api/me/stats/listening',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Listens and minutes listened to the artist (channel and tracks) in the window, from listen sessions',
+        response: openApiResponse(StatsListeningResponseSchema, 'StatsListening'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = StatsAudienceWindowQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      }
+      const channelId = await ownChannelId(request.sessionUser!.id)
+      return reply.send(
+        channelId
+          ? await buildListeningTime(fastify.prisma, channelId, parsed.data)
+          : { listens: 0, minutes: 0, averageMinutes: 0 },
+      )
     },
   )
 }

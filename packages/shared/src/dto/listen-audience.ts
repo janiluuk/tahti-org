@@ -25,6 +25,7 @@ export const StatsAudienceDimensionSchema = z.enum([
   'deviceType',
   'deviceVendor',
   'source',
+  'surface',
 ])
 
 export type StatsAudienceDimension = z.infer<typeof StatsAudienceDimensionSchema>
@@ -77,3 +78,33 @@ export const StatsLoyaltyResponseSchema = z.object({
 })
 
 export type StatsLoyaltyResponse = z.infer<typeof StatsLoyaltyResponseSchema>
+
+export const StatsListeningResponseSchema = z.object({
+  listens: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  averageMinutes: z.number().nonnegative(),
+})
+
+export type StatsListeningResponse = z.infer<typeof StatsListeningResponseSchema>
+
+export const AdminListeningQuerySchema = z.object({
+  range: z.enum(['7', '30', 'all']).default('30'),
+})
+
+export const AdminListeningResponseSchema = z.object({
+  range: z.enum(['7', '30', 'all']),
+  listens: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  signedInListeners: z.number().int().nonnegative(),
+  surfaces: z.array(StatsShareItemSchema),
+  topChannels: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      minutes: z.number().int().nonnegative(),
+      listens: z.number().int().nonnegative(),
+    }),
+  ),
+})
+
+export type AdminListeningResponse = z.infer<typeof AdminListeningResponseSchema>
