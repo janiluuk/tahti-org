@@ -600,17 +600,31 @@ export async function processScheduledPostNotifications(
       id: true,
       title: true,
       body: true,
-      user: { select: { id: true, username: true, displayName: true } },
+      user: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          deletedAt: true,
+          suspendedAt: true,
+        },
+      },
     },
   })
 
+  let notified = 0
   for (const post of due) {
-    await notifyFollowersOfNewPost(prisma, post.user, post)
+    // A post that comes due after its author was suspended or deleted is
+    // closed without telling anyone; followers would land on a hidden page.
+    if (!post.user.deletedAt && !post.user.suspendedAt) {
+      await notifyFollowersOfNewPost(prisma, post.user, post)
+      notified++
+    }
     await prisma.artistPost.update({
       where: { id: post.id },
       data: { notifiedAt: new Date() },
     })
   }
 
-  return { notified: due.length }
+  return { notified }
 }

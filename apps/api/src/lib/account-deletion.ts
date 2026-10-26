@@ -132,6 +132,7 @@ export async function executeAccountDeletion(
     })
   }
   await prisma.artistEvent.deleteMany({ where: { userId, startAt: { gt: now } } })
+  await prisma.artistPost.deleteMany({ where: { userId, publishAt: { gt: now } } })
 
   await prisma.supportTicket.updateMany({
     where: { artistId: userId, status: { in: ['OPEN', 'IN_PROGRESS'] } },
