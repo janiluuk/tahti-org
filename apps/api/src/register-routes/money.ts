@@ -22,6 +22,7 @@ import meLikesRoutes from '../routes/engagement/me-likes.js'
 import userLikesRoutes from '../routes/engagement/user-likes.js'
 import listenEventsRoutes from '../routes/engagement/listen-events.js'
 import listenHeartbeatRoutes from '../routes/engagement/listen-heartbeat.js'
+import meListeningRoutes from '../routes/me/listening.js'
 import meGrantsRoutes from '../routes/me/grants.js'
 import adminGrantsRoutes from '../routes/admin/grants.js'
 import fanTierRoutes from '../routes/fansubs/tiers.js'
@@ -53,6 +54,7 @@ export async function registerMoneyRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(meLikesRoutes)
   await fastify.register(listenEventsRoutes)
   await fastify.register(listenHeartbeatRoutes)
+  await fastify.register(meListeningRoutes)
   await fastify.register(soundRepostAckRoutes)
   await fastify.register(userRepostsRoutes)
   await fastify.register(userLikesRoutes)

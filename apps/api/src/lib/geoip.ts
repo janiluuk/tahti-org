@@ -11,7 +11,7 @@ import { createRequire } from 'node:module'
 
 const _require = createRequire(import.meta.url)
 
-type GeoipModule = { lookup: (ip: string) => { country?: string } | null }
+type GeoipModule = { lookup: (ip: string) => { country?: string; city?: string } | null }
 
 let _geoip: GeoipModule | null | undefined
 
@@ -71,6 +71,19 @@ export function countryFromIp(ip: string): string | null {
   if (!geoip) return null
   const lookup = geoip.lookup(normalizeIp(ip))
   return lookup?.country ?? null
+}
+
+/**
+ * City name for `ip` from the same GeoLite database, or `null` when the
+ * database has none (common for mobile and datacenter ranges). Studio stats
+ * only show a city once enough listeners share it.
+ */
+export function cityFromIp(ip: string): string | null {
+  if (!ip || isPrivate(ip)) return null
+  const geoip = getGeoip()
+  if (!geoip) return null
+  const city = geoip.lookup(normalizeIp(ip))?.city?.trim()
+  return city ? city.slice(0, 120) : null
 }
 
 const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })

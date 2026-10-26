@@ -86,6 +86,31 @@ describe('M12/M19 — press kit and privacy', () => {
     })
     await prisma.soundLike.create({ data: { userId: me.id, soundId: theirs.id } })
     await prisma.artistFollow.create({ data: { followerUserId: me.id, artistUserId: other.id } })
+    await prisma.listenSession.createMany({
+      data: [
+        {
+          channelId: other.channel!.id,
+          soundId: theirs.id,
+          byUserId: me.id,
+          byFingerprint: `${PREFIX}mine`,
+          byIpHash: 'x',
+          source: 'CHANNEL_PAGE',
+          city: 'Helsinki',
+          uaBrowser: 'Firefox',
+          referrerHost: 'example.org',
+          maxPositionSec: 90,
+          durationSec: 200,
+        },
+        {
+          channelId: me.channel!.id,
+          byUserId: other.id,
+          byFingerprint: `${PREFIX}theirs`,
+          byIpHash: 'x',
+          source: 'CHANNEL_PAGE',
+          city: 'Not Mine City',
+        },
+      ],
+    })
     await prisma.newsletterSubscriber.create({
       data: {
         artistUserId: other.id,
@@ -111,6 +136,17 @@ describe('M12/M19 — press kit and privacy', () => {
       'press-kit-other',
     ])
     expect(body.newsletterSubscriptions).toHaveLength(1)
+    expect(body.listening).toEqual([
+      expect.objectContaining({
+        soundId: theirs.id,
+        city: 'Helsinki',
+        uaBrowser: 'Firefox',
+        referrerHost: 'example.org',
+        maxPositionSec: 90,
+      }),
+    ])
+    expect(body.listening[0]).not.toHaveProperty('byIpHash')
+    expect(res.body).not.toContain('Not Mine City')
     expect(res.body).not.toContain('not mine')
     expect(res.body).not.toContain(`${PREFIX}other@example.com`)
   })
