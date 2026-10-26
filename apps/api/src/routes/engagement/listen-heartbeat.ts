@@ -6,6 +6,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ListenHeartbeatBodySchema,
   clientIpFromHeaders,
+  normalizeReferrerHost,
   openApiNoContentResponse,
   parseListenDevice,
 } from '@tahti/shared'
@@ -112,6 +113,7 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             uaDeviceType: device.deviceType,
             uaDeviceVendor: device.deviceVendor,
             isBot: device.isBot,
+            referrerHost: normalizeReferrerHost(body.referrerHost),
             startedAt: now,
             lastSeenAt: now,
           },
