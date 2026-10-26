@@ -95,4 +95,16 @@ describe('POST /api/v1/listen/heartbeat', () => {
     })
     expect(session).toEqual({ city: 'Helsinki', countryCode: 'FI' })
   })
+
+  it('keeps the furthest position reached in the track', async () => {
+    const fp = `${PREFIX}position`
+    await beat(IPHONE_UA, fp, { positionSec: 30.4, durationSec: 240.2 })
+    await beat(IPHONE_UA, fp, { positionSec: 200, durationSec: 240.2 })
+    await beat(IPHONE_UA, fp, { positionSec: 10, durationSec: 240.2 })
+    const sessions = await prisma.listenSession.findMany({
+      where: { channelId, soundId, durationSec: { not: null } },
+      select: { maxPositionSec: true, durationSec: true },
+    })
+    expect(sessions).toEqual([{ maxPositionSec: 200, durationSec: 240 }])
+  })
 })
