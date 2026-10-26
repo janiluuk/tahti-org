@@ -97,3 +97,44 @@ export async function buildAudienceShares(
   }))
   return toShares(counts)
 }
+
+/** Listener countries and cities as shares of all listens in the window.
+ * Countries are named by ISO code; a city is only named once enough
+ * listens share it, and cities the database doesn't know are left out. */
+export async function buildLocationShares(
+  prisma: PrismaClient,
+  channelId: string,
+  window: AudienceWindow,
+) {
+  const where = audienceWhere(channelId, window)
+  const [countryRows, cityRows] = await Promise.all([
+    prisma.listenSession.groupBy({ by: ['countryCode'], where, _count: { _all: true } }),
+    prisma.listenSession.groupBy({
+      by: ['countryCode', 'city'],
+      where: { ...where, city: { not: null } },
+      _count: { _all: true },
+    }),
+  ])
+  const countries = toShares(
+    countryRows.map((row) => ({ name: row.countryCode ?? 'Unknown', count: row._count._all })),
+  )
+  const total = countries.total
+  const share = (count: number) => (total > 0 ? Math.round((count / total) * 10_000) / 10_000 : 0)
+  const cities = cityRows
+    .filter((row) => row._count._all >= AUDIENCE_MIN_BUCKET)
+    .map((row) => ({
+      name: row.city!,
+      countryCode: row.countryCode,
+      count: row._count._all,
+      share: share(row._count._all),
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  return {
+    total,
+    countries: countries.items.map((item) => ({
+      ...item,
+      countryCode: item.name === AUDIENCE_OTHER || item.name === 'Unknown' ? null : item.name,
+    })),
+    cities,
+  }
+}

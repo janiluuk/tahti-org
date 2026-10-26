@@ -13,6 +13,8 @@ import {
 const PREFIX = 'stats-audience-test-'
 
 type SessionSeed = {
+  countryCode?: string | null
+  city?: string | null
   uaBrowser?: string | null
   uaDeviceType?: string | null
   referrerHost?: string | null
@@ -35,6 +37,8 @@ describe('GET /api/me/stats/audience', () => {
         byFingerprint: `${PREFIX}${channel}-${i}-${Math.random()}`,
         byIpHash: 'x',
         source: 'CHANNEL_PAGE' as const,
+        countryCode: data.countryCode ?? null,
+        city: data.city ?? null,
         uaBrowser: data.uaBrowser ?? null,
         uaDeviceType: data.uaDeviceType ?? null,
         referrerHost: data.referrerHost ?? null,
@@ -65,13 +69,26 @@ describe('GET /api/me/stats/audience', () => {
     })
     soundId = sound.id
 
-    await seed(channelId, 12, { uaBrowser: 'Chrome', uaDeviceType: 'Desktop', soundId })
+    await seed(channelId, 12, {
+      uaBrowser: 'Chrome',
+      uaDeviceType: 'Desktop',
+      soundId,
+      countryCode: 'FI',
+      city: 'Helsinki',
+    })
     await seed(channelId, 6, {
       uaBrowser: 'Firefox',
       uaDeviceType: 'Smartphone',
       referrerHost: 'example.com',
+      countryCode: 'SE',
+      city: 'Malmö',
     })
-    await seed(channelId, 2, { uaBrowser: 'Opera', uaDeviceType: 'Desktop' })
+    await seed(channelId, 2, {
+      uaBrowser: 'Opera',
+      uaDeviceType: 'Desktop',
+      countryCode: 'FI',
+      city: 'Oulu',
+    })
     await seed(channelId, 7, { uaBrowser: 'Bot', uaDeviceType: 'Bot', isBot: true })
     await seed(otherChannelId, 9, { uaBrowser: 'Edge' })
   })
@@ -131,5 +148,26 @@ describe('GET /api/me/stats/audience', () => {
   it('rejects an unknown dimension and anonymous callers', async () => {
     expect((await get('dimension=ip&range=all')).statusCode).toBe(400)
     expect((await get('dimension=browser', false)).statusCode).toBe(401)
+  })
+
+  it('lists countries and the cities enough listeners share', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/stats/locations?range=all',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({
+      total: 20,
+      minBucket: 5,
+      countries: [
+        { name: 'FI', countryCode: 'FI', count: 14, share: 0.7 },
+        { name: 'SE', countryCode: 'SE', count: 6, share: 0.3 },
+      ],
+      cities: [
+        { name: 'Helsinki', countryCode: 'FI', count: 12, share: 0.6 },
+        { name: 'Malmö', countryCode: 'SE', count: 6, share: 0.3 },
+      ],
+    })
   })
 })

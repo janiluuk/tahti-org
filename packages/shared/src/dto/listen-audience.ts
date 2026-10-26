@@ -49,3 +49,18 @@ export const StatsAudienceResponseSchema = z.object({
 })
 
 export type StatsAudienceResponse = z.infer<typeof StatsAudienceResponseSchema>
+
+export const StatsLocationItemSchema = StatsShareItemSchema.extend({
+  countryCode: z.string().nullable(),
+})
+
+export type StatsLocationItem = z.infer<typeof StatsLocationItemSchema>
+
+export const StatsLocationsResponseSchema = z.object({
+  total: z.number().int().nonnegative(),
+  minBucket: z.number().int().min(1),
+  countries: z.array(StatsLocationItemSchema),
+  cities: z.array(StatsLocationItemSchema),
+})
+
+export type StatsLocationsResponse = z.infer<typeof StatsLocationsResponseSchema>
