@@ -89,13 +89,24 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
           endedAt: null,
         },
         orderBy: { lastSeenAt: 'desc' },
-        select: { id: true },
+        select: { id: true, maxPositionSec: true },
       })
+
+      const positionSec =
+        body.soundId && body.positionSec != null ? Math.floor(body.positionSec) : null
+      const durationSec =
+        body.soundId && body.durationSec != null ? Math.round(body.durationSec) : null
 
       if (open) {
         await fastify.prisma.listenSession.update({
           where: { id: open.id },
-          data: { lastSeenAt: now },
+          data: {
+            lastSeenAt: now,
+            ...(positionSec != null && positionSec > (open.maxPositionSec ?? -1)
+              ? { maxPositionSec: positionSec }
+              : {}),
+            ...(durationSec != null ? { durationSec } : {}),
+          },
         })
       } else {
         const device = parseListenDevice(request.headers['user-agent'])
@@ -108,6 +119,8 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             byIpHash: sha256(`${clientIp}:${salt}`),
             countryCode: countryFromIp(clientIp),
             city: cityFromIp(clientIp),
+            maxPositionSec: positionSec,
+            durationSec,
             source: body.source,
             uaBrowser: device.browser,
             uaOs: device.os,

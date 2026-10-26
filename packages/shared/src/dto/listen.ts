@@ -33,6 +33,8 @@ export const ListenHeartbeatBodySchema = z
     source: ListenSourceSchema,
     fp: z.string().max(128).optional(),
     referrerHost: z.string().max(253).optional(),
+    positionSec: z.number().nonnegative().max(86_400).optional(),
+    durationSec: z.number().positive().max(86_400).optional(),
   })
   .refine((body) => Boolean(body.channelSlug || body.soundId), {
     message: 'channelSlug or soundId is required',
