@@ -78,3 +78,11 @@ export const StatsLoyaltyResponseSchema = z.object({
 })
 
 export type StatsLoyaltyResponse = z.infer<typeof StatsLoyaltyResponseSchema>
+
+export const StatsListeningResponseSchema = z.object({
+  listens: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  averageMinutes: z.number().nonnegative(),
+})
+
+export type StatsListeningResponse = z.infer<typeof StatsListeningResponseSchema>
