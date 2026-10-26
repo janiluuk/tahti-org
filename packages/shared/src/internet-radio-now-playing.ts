@@ -21,7 +21,7 @@ export interface NowPlaying {
   artist: string | null
 }
 
-type Parser = (html: string) => NowPlaying | null
+type Parser = (body: string, pageUrl: URL) => NowPlaying | null
 
 /** radiohelsinki.fi also renders the current show + song server-side:
  * `<div class="program-name current-program-title">CADIA</div>` plus
@@ -83,40 +83,87 @@ function radioHelsinkiFeedUrl(now: number): string {
   return `https://www.radiohelsinki.fi/wp-content/djonline.js?dt=${bucket}`
 }
 
-/** radioplay.fi (Bauer Media — NRJ, Radio Nova) embeds a hydration state
- * blob server-side with one or more `"stationNowPlaying":{...}` objects
- * (earlier ones in the page can be empty placeholders for sibling
- * stations/widgets) — the last non-empty one is this page's own station. */
-const parseBauerRadioplay: Parser = (html) => {
-  const matches = [...html.matchAll(/"nowPlayingTrack":"([^"]*)","nowPlayingArtist":"([^"]*)"/g)]
-  for (let i = matches.length - 1; i >= 0; i--) {
-    const [, track, artist] = matches[i]!
-    if (track || artist) {
-      return { title: track || null, artist: artist || null }
-    }
+/** The station slug of a radioplay.fi / rayo.fi page: `/nrj` → `nrj`. */
+function bauerStationSlug(pageUrl: URL): string | undefined {
+  return pageUrl.pathname.split('/').filter(Boolean)[0]?.toLowerCase()
+}
+
+/** radioplay.fi (now redirecting to rayo.fi; Bauer Media — NRJ, Radio Nova)
+ * embeds a hydration state blob with `stationsById`, one entry per Bauer
+ * station, each with its own `stationNowPlaying`. Only this page's station
+ * entry (keyed by the URL slug) is read: other entries are other stations. */
+const parseBauerRadioplay: Parser = (html, pageUrl) => {
+  const slug = bauerStationSlug(pageUrl)
+  if (!slug) return null
+  const start = html.indexOf(`"${slug}":{"stationId"`)
+  if (start < 0) return null
+  const entry = html.slice(start, start + 6000)
+  const nowPlaying =
+    /"stationNowPlaying":\{[^{}]*?"nowPlayingTrack":"([^"]*)","nowPlayingArtist":"([^"]*)"/.exec(
+      entry,
+    )
+  const track = nowPlaying?.[1]?.trim()
+  const artist = nowPlaying?.[2]?.trim()
+  return track || artist ? { title: track || null, artist: artist || null } : null
+}
+
+/** Bauer's own listen API station codes for the catalog stations (the
+ * `stationCode` in their page state). */
+const BAUER_STATION_CODES: Record<string, string> = {
+  nrj: 'nrj',
+  'radio-nova': 'nfi',
+}
+
+function bauerFeedUrl(pageUrl: URL): string | null {
+  const code = BAUER_STATION_CODES[bauerStationSlug(pageUrl) ?? '']
+  return code ? `https://listenapi.planetradio.co.uk/api9.2/nowplaying/${code}` : null
+}
+
+interface BauerNowPlayingFeed {
+  EventType?: unknown
+  TrackTitle?: unknown
+  ArtistName?: unknown
+}
+
+/** The same per-station now-playing the Bauer player uses; only a song
+ * event (`EventType` S) names a track. */
+const parseBauerFeed: Parser = (body) => {
+  let feed: BauerNowPlayingFeed
+  try {
+    feed = JSON.parse(body) as BauerNowPlayingFeed
+  } catch {
+    return null
   }
-  return null
+  if (feed?.EventType !== 'S') return null
+  const title = trimmedString(feed.TrackTitle)
+  const artist = trimmedString(feed.ArtistName)
+  return title || artist ? { title: title ?? null, artist: artist ?? null } : null
 }
 
 /** How to read one site: its programme page, and optionally a live feed
  * that is tried first because the page itself is cached or stale. */
 export interface NowPlayingSource {
   parse: Parser
-  liveFeed?: { url: (now: number) => string; parse: Parser }
+  liveFeed?: { url: (pageUrl: URL, now: number) => string | null; parse: Parser }
 }
 
 const radioHelsinkiSource: NowPlayingSource = {
   parse: parseRadioHelsinki,
-  liveFeed: { url: radioHelsinkiFeedUrl, parse: parseRadioHelsinkiFeed },
+  liveFeed: { url: (_pageUrl, now) => radioHelsinkiFeedUrl(now), parse: parseRadioHelsinkiFeed },
 }
 
-const bauerRadioplaySource: NowPlayingSource = { parse: parseBauerRadioplay }
+const bauerRadioplaySource: NowPlayingSource = {
+  parse: parseBauerRadioplay,
+  liveFeed: { url: bauerFeedUrl, parse: parseBauerFeed },
+}
 
 const SOURCES_BY_HOST: Record<string, NowPlayingSource> = {
   'www.radiohelsinki.fi': radioHelsinkiSource,
   'radiohelsinki.fi': radioHelsinkiSource,
   'www.radioplay.fi': bauerRadioplaySource,
   'radioplay.fi': bauerRadioplaySource,
+  'www.rayo.fi': bauerRadioplaySource,
+  'rayo.fi': bauerRadioplaySource,
 }
 
 /** Null means "no parser for this host" — a real, expected, non-error
@@ -165,19 +212,18 @@ export async function fetchNowPlaying(
 ): Promise<NowPlaying | null> {
   const source = parserForUrl(programmingUrl)
   if (!source) return null
-  if (source.liveFeed) {
-    const live = await fetchAndParse(
-      source.liveFeed.url(Date.now()),
-      source.liveFeed.parse,
-      fetchImpl,
-    )
+  const pageUrl = new URL(programmingUrl)
+  const feedUrl = source.liveFeed?.url(pageUrl, Date.now())
+  if (source.liveFeed && feedUrl) {
+    const live = await fetchAndParse(feedUrl, pageUrl, source.liveFeed.parse, fetchImpl)
     if (live) return live
   }
-  return fetchAndParse(programmingUrl, source.parse, fetchImpl)
+  return fetchAndParse(programmingUrl, pageUrl, source.parse, fetchImpl)
 }
 
 async function fetchAndParse(
   url: string,
+  pageUrl: URL,
   parse: Parser,
   fetchImpl: typeof fetch,
 ): Promise<NowPlaying | null> {
@@ -186,7 +232,7 @@ async function fetchAndParse(
       headers: { 'User-Agent': NOW_PLAYING_USER_AGENT },
     })
     if (!res.ok) return null
-    return parse(await res.text())
+    return parse(await res.text(), pageUrl)
   } catch {
     return null
   }
