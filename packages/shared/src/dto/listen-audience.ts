@@ -64,3 +64,16 @@ export const StatsLocationsResponseSchema = z.object({
 })
 
 export type StatsLocationsResponse = z.infer<typeof StatsLocationsResponseSchema>
+
+export const StatsLoyaltyPointSchema = z.object({
+  percent: z.number().int().min(0).max(100),
+  share: z.number().min(0).max(1),
+})
+
+export const StatsLoyaltyResponseSchema = z.object({
+  total: z.number().int().nonnegative(),
+  minBucket: z.number().int().min(1),
+  points: z.array(StatsLoyaltyPointSchema),
+})
+
+export type StatsLoyaltyResponse = z.infer<typeof StatsLoyaltyResponseSchema>

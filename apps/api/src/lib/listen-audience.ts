@@ -138,3 +138,36 @@ export async function buildLocationShares(
     cities,
   }
 }
+
+const LOYALTY_SAMPLE_LIMIT = 50_000
+
+/** Drop-off curve for on-demand listens: for 0, 10 … 100 % of a track, the
+ * share of listens that got at least that far. Empty until enough listens
+ * report a position. */
+export async function buildLoyaltyCurve(
+  prisma: PrismaClient,
+  channelId: string,
+  window: AudienceWindow,
+) {
+  const rows = await prisma.listenSession.findMany({
+    where: {
+      ...audienceWhere(channelId, window),
+      soundId: window.soundId ?? { not: null },
+      maxPositionSec: { not: null },
+      durationSec: { gt: 0 },
+    },
+    select: { maxPositionSec: true, durationSec: true },
+    orderBy: { startedAt: 'desc' },
+    take: LOYALTY_SAMPLE_LIMIT,
+  })
+  const total = rows.length
+  if (total < AUDIENCE_MIN_BUCKET) return { total, points: [] }
+  const reachedTenths = rows.map((row) =>
+    Math.min(10, Math.floor((10 * row.maxPositionSec!) / row.durationSec!)),
+  )
+  const points = Array.from({ length: 11 }, (_, tenth) => {
+    const reached = reachedTenths.filter((value) => value >= tenth).length
+    return { percent: tenth * 10, share: Math.round((reached / total) * 10_000) / 10_000 }
+  })
+  return { total, points }
+}
