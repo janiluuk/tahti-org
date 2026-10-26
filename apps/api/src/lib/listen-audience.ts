@@ -76,6 +76,7 @@ const COLUMN = {
   deviceType: 'uaDeviceType',
   deviceVendor: 'uaDeviceVendor',
   source: 'referrerHost',
+  surface: 'source',
 } as const satisfies Record<StatsAudienceDimension, keyof Prisma.ListenSessionGroupByOutputType>
 
 export async function buildAudienceShares(

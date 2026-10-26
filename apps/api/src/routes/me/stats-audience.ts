@@ -36,7 +36,7 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Share of listens by browser, OS, device type, device vendor or source (referrer host); names with fewer than 5 listens fold into Other',
+          'Share of listens by browser, OS, device type, device vendor, source (referrer host) or surface (where on Tahti it played: CHANNEL_PAGE, TAHTI_RADIO, ARTIST_PROFILE, DISCOVER, LIBRARY, EMBED, OTHER); names with fewer than 5 listens fold into Other',
         response: openApiResponse(StatsAudienceResponseSchema, 'StatsAudience'),
       },
     },

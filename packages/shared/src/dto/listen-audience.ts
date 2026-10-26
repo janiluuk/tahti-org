@@ -25,6 +25,7 @@ export const StatsAudienceDimensionSchema = z.enum([
   'deviceType',
   'deviceVendor',
   'source',
+  'surface',
 ])
 
 export type StatsAudienceDimension = z.infer<typeof StatsAudienceDimensionSchema>
