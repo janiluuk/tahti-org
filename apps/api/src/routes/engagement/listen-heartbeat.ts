@@ -11,7 +11,7 @@ import {
   parseListenDevice,
 } from '@tahti/shared'
 import { config } from '../../config.js'
-import { countryFromIp } from '../../lib/geoip.js'
+import { cityFromIp, countryFromIp } from '../../lib/geoip.js'
 
 function dailySalt(): string {
   const day = new Date().toISOString().slice(0, 10)
@@ -107,6 +107,7 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             byFingerprint,
             byIpHash: sha256(`${clientIp}:${salt}`),
             countryCode: countryFromIp(clientIp),
+            city: cityFromIp(clientIp),
             source: body.source,
             uaBrowser: device.browser,
             uaOs: device.os,

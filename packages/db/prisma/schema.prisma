@@ -3080,6 +3080,8 @@ model ListenSession {
   isBot          Boolean     @default(false)
   // Host of the page the listener came from (document.referrer), host only.
   referrerHost   String?
+  // GeoLite city of the listener's IP, when the database has one.
+  city           String?
 
   @@index([channelId, startedAt])
   @@index([soundId, startedAt])

@@ -37,11 +37,16 @@ describe('POST /api/v1/listen/heartbeat', () => {
     await app.close()
   })
 
-  const beat = (userAgent: string, fp: string, extra: Record<string, unknown> = {}) =>
+  const beat = (
+    userAgent: string,
+    fp: string,
+    extra: Record<string, unknown> = {},
+    ip = '127.0.0.1',
+  ) =>
     app.inject({
       method: 'POST',
       url: '/api/v1/listen/heartbeat',
-      headers: { 'user-agent': userAgent },
+      headers: { 'user-agent': userAgent, 'x-forwarded-for': ip },
       payload: { soundId, source: 'CHANNEL_PAGE', fp, ...extra },
     })
 
@@ -80,5 +85,14 @@ describe('POST /api/v1/listen/heartbeat', () => {
       select: { referrerHost: true },
     })
     expect(sessions.map((s) => s.referrerHost)).toEqual(['example.com'])
+  })
+
+  it('stores the city and country of the listener', async () => {
+    await beat(IPHONE_UA, `${PREFIX}city`, {}, '81.175.255.179')
+    const session = await prisma.listenSession.findFirstOrThrow({
+      where: { channelId, soundId, city: { not: null } },
+      select: { city: true, countryCode: true },
+    })
+    expect(session).toEqual({ city: 'Helsinki', countryCode: 'FI' })
   })
 })
