@@ -32,9 +32,25 @@ export const ListenHeartbeatBodySchema = z
     soundId: z.string().optional(),
     source: ListenSourceSchema,
     fp: z.string().max(128).optional(),
+    referrerHost: z.string().max(253).optional(),
+    positionSec: z.number().nonnegative().max(86_400).optional(),
+    durationSec: z.number().positive().max(86_400).optional(),
   })
   .refine((body) => Boolean(body.channelSlug || body.soundId), {
     message: 'channelSlug or soundId is required',
   })
 
 export type ListenHeartbeatBody = z.infer<typeof ListenHeartbeatBodySchema>
+
+/** The host a listener came from, lower-cased without `www.`; null when it
+ * is not a plain hostname (no paths, ports or query strings are kept). */
+export function normalizeReferrerHost(raw: string | null | undefined): string | null {
+  const host = (raw ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/^www\./, '')
+  if (!host || host.length > 253) return null
+  return /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(host)
+    ? host
+    : null
+}

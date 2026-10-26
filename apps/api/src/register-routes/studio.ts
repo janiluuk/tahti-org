@@ -48,6 +48,7 @@ import meListenerGeoRoutes from '../routes/me/listener-geo.js'
 import meChannelLiveStatsRoutes from '../routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from '../routes/me/channel-funnel-stats.js'
 import meStatsRoutes from '../routes/me/stats.js'
+import meStatsAudienceRoutes from '../routes/me/stats-audience.js'
 import meEndBroadcastRoutes from '../routes/me/end-broadcast.js'
 import meBroadcastRoutes from '../routes/me/broadcasts.js'
 import meGoLiveRoutes from '../routes/me/go-live.js'
@@ -105,6 +106,7 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(meChannelLiveStatsRoutes)
   await fastify.register(meChannelFunnelStatsRoutes)
   await fastify.register(meStatsRoutes)
+  await fastify.register(meStatsAudienceRoutes)
   await fastify.register(meEndBroadcastRoutes)
   await fastify.register(meBroadcastRoutes)
   await fastify.register(meGoLiveRoutes)

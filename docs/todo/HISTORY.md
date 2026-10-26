@@ -800,3 +800,13 @@ read validation: rows without a string `id`/`version`/`path` and boolean
 `enabled` are skipped with a warning, nothing rewritten on disk. Storage keys,
 paths and bootstrap order unchanged. Stale "in progress" guardrails removed
 here and in tahti-player (#868). No leftovers.
+
+### 2026-10-27 — Listen-session audience stats (tahti-player cross-repo batch 111)
+
+Listen sessions now record coarse device labels (#883, in-repo `parseListenDevice`, no raw UA),
+referrer host (#884), GeoLite city (#885) and furthest position (#886). New Studio routes
+`/api/me/stats/audience` (browser / OS / device type / vendor / source / surface, #887, #892),
+`/locations` (#888), `/loyalty` (#889), `/listening` (#893): shares only, names under 5 listens
+fold into Other. A listener's own `/api/me/listening` across devices (#894), listen sessions in
+the data export (#895), board `/api/admin/stats/listening` (#897). Landed together via #883.
+Leftover: the fingerprint / IP hashes stay out of the export (product call).

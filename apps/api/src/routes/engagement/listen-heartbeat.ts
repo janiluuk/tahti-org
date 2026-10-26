@@ -6,10 +6,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ListenHeartbeatBodySchema,
   clientIpFromHeaders,
+  normalizeReferrerHost,
   openApiNoContentResponse,
+  parseListenDevice,
 } from '@tahti/shared'
 import { config } from '../../config.js'
-import { countryFromIp } from '../../lib/geoip.js'
+import { cityFromIp, countryFromIp } from '../../lib/geoip.js'
 
 function dailySalt(): string {
   const day = new Date().toISOString().slice(0, 10)
@@ -87,15 +89,27 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
           endedAt: null,
         },
         orderBy: { lastSeenAt: 'desc' },
-        select: { id: true },
+        select: { id: true, maxPositionSec: true },
       })
+
+      const positionSec =
+        body.soundId && body.positionSec != null ? Math.floor(body.positionSec) : null
+      const durationSec =
+        body.soundId && body.durationSec != null ? Math.round(body.durationSec) : null
 
       if (open) {
         await fastify.prisma.listenSession.update({
           where: { id: open.id },
-          data: { lastSeenAt: now },
+          data: {
+            lastSeenAt: now,
+            ...(positionSec != null && positionSec > (open.maxPositionSec ?? -1)
+              ? { maxPositionSec: positionSec }
+              : {}),
+            ...(durationSec != null ? { durationSec } : {}),
+          },
         })
       } else {
+        const device = parseListenDevice(request.headers['user-agent'])
         await fastify.prisma.listenSession.create({
           data: {
             channelId,
@@ -104,7 +118,16 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             byFingerprint,
             byIpHash: sha256(`${clientIp}:${salt}`),
             countryCode: countryFromIp(clientIp),
+            city: cityFromIp(clientIp),
+            maxPositionSec: positionSec,
+            durationSec,
             source: body.source,
+            uaBrowser: device.browser,
+            uaOs: device.os,
+            uaDeviceType: device.deviceType,
+            uaDeviceVendor: device.deviceVendor,
+            isBot: device.isBot,
+            referrerHost: normalizeReferrerHost(body.referrerHost),
             startedAt: now,
             lastSeenAt: now,
           },
