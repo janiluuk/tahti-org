@@ -172,3 +172,30 @@ export async function buildLoyaltyCurve(
   })
   return { total, points }
 }
+
+const LISTENING_SAMPLE_LIMIT = 200_000
+
+/** Listens and minutes listened in the window. A session lasts from its
+ * first to its last heartbeat (3 minutes apart), or as far as its track
+ * played when that is longer, so a short listen still counts. */
+export async function buildListeningTime(
+  prisma: PrismaClient,
+  channelId: string,
+  window: AudienceWindow,
+) {
+  const rows = await prisma.listenSession.findMany({
+    where: audienceWhere(channelId, window),
+    select: { startedAt: true, lastSeenAt: true, maxPositionSec: true },
+    take: LISTENING_SAMPLE_LIMIT,
+  })
+  const seconds = rows.reduce((sum, row) => {
+    const span = Math.max(0, (row.lastSeenAt.getTime() - row.startedAt.getTime()) / 1000)
+    return sum + Math.max(span, row.maxPositionSec ?? 0)
+  }, 0)
+  const minutes = Math.round(seconds / 60)
+  return {
+    listens: rows.length,
+    minutes,
+    averageMinutes: rows.length > 0 ? Math.round((seconds / 60 / rows.length) * 10) / 10 : 0,
+  }
+}
