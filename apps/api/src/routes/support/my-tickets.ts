@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyBoardOfSupportTicket } from '@tahti/db'
 import {
   MySupportTicketListSchema,
   MySupportTicketReplyBodySchema,
@@ -105,7 +106,7 @@ const mySupportTicketsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const ticket = await fastify.prisma.supportTicket.findFirst({
         where: { id: routeParams.id, artistId: user.id },
-        select: { id: true, status: true },
+        select: { id: true, status: true, subject: true },
       })
       if (!ticket) return reply.status(404).send({ error: 'Request not found' })
 
@@ -130,6 +131,12 @@ const mySupportTicketsRoutes: FastifyPluginAsync = async (fastify) => {
         })
         return created
       })
+      await notifyBoardOfSupportTicket(
+        fastify.prisma,
+        { subject: ticket.subject },
+        'reply',
+        user.id,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'support board notice failed'))
 
       return reply.status(201).send(mapReply(note, user.id))
     },

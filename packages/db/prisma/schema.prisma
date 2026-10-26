@@ -704,6 +704,8 @@ enum NotificationType {
   SUPPORT_REPLY
   /// An artist made you a moderator of their channel's chat.
   MODERATOR_ADDED
+  /// Board: a new support request, or the requester replied on one.
+  SUPPORT_TICKET
 
   @@schema("core")
 }

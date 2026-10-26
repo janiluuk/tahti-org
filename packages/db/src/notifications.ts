@@ -574,6 +574,36 @@ export async function notifyBoardOfMissedLiveShow(
   })
 }
 
+/** Tells the board about a new support request, or a requester's follow-up
+ * on one, so tickets don't wait until someone opens Admin → Moderation.
+ * The person who wrote it is never told about their own message. */
+export async function notifyBoardOfSupportTicket(
+  prisma: PrismaClient,
+  ticket: { subject: string },
+  kind: 'new' | 'reply',
+  authorUserId?: string | null,
+): Promise<void> {
+  const board = await prisma.user.findMany({
+    where: { isBoard: true, ...availableUserWhere },
+    select: { id: true },
+  })
+  const ids = board.map((m) => m.id).filter((id) => id !== authorUserId)
+  if (ids.length === 0) return
+
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'SUPPORT_TICKET' as const,
+      title:
+        kind === 'new'
+          ? `New support request: ${ticket.subject}`
+          : `Support request answered: ${ticket.subject}`,
+      body: kind === 'new' ? 'Waiting for a reply.' : 'The requester replied.',
+      url: '/admin/moderation/support',
+    })),
+  })
+}
+
 /** One-off notification an admin sends from /admin/news's test-notification form. */
 export async function notifyUserAdminTest(
   prisma: PrismaClient,

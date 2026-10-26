@@ -63,6 +63,7 @@ export {
   notifyUserThemeRejected,
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,
+  notifyBoardOfSupportTicket,
   processScheduledPostNotifications,
 } from './notifications.js'
 export { closeStaleListenSessions } from './listen-sessions.js'

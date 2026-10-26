@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyBoardOfSupportTicket } from '@tahti/db'
 import { SupportContactResponseSchema, SupportContactSchema, openApiResponse } from '@tahti/shared'
 
 // M21-F: public support contact form (rate-limited 3/hour per IP)
@@ -38,6 +39,9 @@ const supportContactRoutes: FastifyPluginAsync = async (fastify) => {
           category,
         },
       })
+      await notifyBoardOfSupportTicket(fastify.prisma, { subject }, 'new', user?.id).catch(
+        (err: unknown) => fastify.log.warn({ err }, 'support board notice failed'),
+      )
 
       return reply.status(201).send({
         ok: true as const,
