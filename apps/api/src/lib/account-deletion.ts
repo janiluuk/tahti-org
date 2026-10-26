@@ -90,6 +90,10 @@ export async function executeAccountDeletion(
   await prisma.session.deleteMany({ where: { userId } })
   await prisma.emailVerification.deleteMany({ where: { userId } })
 
+  // Listening the account did stays in artists' anonymous totals, but is no
+  // longer tied to the account (it carries place and device labels).
+  await prisma.listenSession.updateMany({ where: { byUserId: userId }, data: { byUserId: null } })
+
   // Nothing that can act for the account, or reach a third party in its name,
   // outlives it: API tokens, 2FA material, integration secrets, stream keys
   // for mirrored broadcasts and moderator rights on other channels.

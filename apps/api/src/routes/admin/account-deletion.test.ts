@@ -233,4 +233,35 @@ describe('M19 — account deletion execute', () => {
     ).not.toBeNull()
     expect(await prisma.artistEvent.findUnique({ where: { id: pastEvent.id } })).not.toBeNull()
   })
+
+  it("POST delete-account keeps listening in artists' totals but unlinks it", async () => {
+    const listener = await createTestArtist(prisma, {
+      email: `${PREFIX}listener@example.com`,
+      username: 'acct-del-listener',
+    })
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}listened@example.com`,
+      username: 'acct-del-listened',
+    })
+    const session = await prisma.listenSession.create({
+      data: {
+        channelId: artist.channel!.id,
+        byUserId: listener.id,
+        byFingerprint: `${PREFIX}listener`,
+        byIpHash: 'x',
+        source: 'CHANNEL_PAGE',
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${listener.id}/delete-account`,
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const after = await prisma.listenSession.findUnique({ where: { id: session.id } })
+    expect(after).not.toBeNull()
+    expect(after!.byUserId).toBeNull()
+    await prisma.listenSession.delete({ where: { id: session.id } })
+  })
 })
