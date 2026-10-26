@@ -3078,6 +3078,8 @@ model ListenSession {
   uaDeviceType   String?
   uaDeviceVendor String?
   isBot          Boolean     @default(false)
+  // Host of the page the listener came from (document.referrer), host only.
+  referrerHost   String?
 
   @@index([channelId, startedAt])
   @@index([soundId, startedAt])

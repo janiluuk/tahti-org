@@ -37,12 +37,12 @@ describe('POST /api/v1/listen/heartbeat', () => {
     await app.close()
   })
 
-  const beat = (userAgent: string, fp: string) =>
+  const beat = (userAgent: string, fp: string, extra: Record<string, unknown> = {}) =>
     app.inject({
       method: 'POST',
       url: '/api/v1/listen/heartbeat',
       headers: { 'user-agent': userAgent },
-      payload: { soundId, source: 'CHANNEL_PAGE', fp },
+      payload: { soundId, source: 'CHANNEL_PAGE', fp, ...extra },
     })
 
   it('stores coarse device labels, not the user agent', async () => {
@@ -70,5 +70,15 @@ describe('POST /api/v1/listen/heartbeat', () => {
       where: { channelId, soundId, isBot: true },
     })
     expect(bot.uaDeviceType).toBe('Bot')
+  })
+
+  it('keeps only a clean referrer host', async () => {
+    await beat(IPHONE_UA, `${PREFIX}ref-ok`, { referrerHost: 'WWW.Example.COM' })
+    await beat(IPHONE_UA, `${PREFIX}ref-bad`, { referrerHost: 'example.com/path?q=1' })
+    const sessions = await prisma.listenSession.findMany({
+      where: { channelId, soundId, referrerHost: { not: null } },
+      select: { referrerHost: true },
+    })
+    expect(sessions.map((s) => s.referrerHost)).toEqual(['example.com'])
   })
 })
