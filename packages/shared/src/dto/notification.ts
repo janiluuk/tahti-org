@@ -76,6 +76,14 @@ export const NotificationListQuerySchema = z.object({
   before: z.string().min(1).max(64).optional(),
 })
 
+export const NotificationClearQuerySchema = z.object({
+  read: z.literal('true'),
+})
+
+export const NotificationClearResponseSchema = z.object({
+  removed: z.number().int(),
+})
+
 // M40: /feed — recent activity from artists the current user follows.
 const FeedArtistSchema = z.object({
   username: z.string(),
