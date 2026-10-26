@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { NotificationKindSchema } from './notification-kind.js'
 
 export const NotificationTypeSchema = z.enum([
   'NEW_POST',
@@ -74,6 +75,7 @@ export const NotificationListQuerySchema = z.object({
   stickyOnly: z.enum(['true', 'false']).optional(),
   limit: z.coerce.number().int().min(1).max(50).optional(),
   before: z.string().min(1).max(64).optional(),
+  kind: NotificationKindSchema.optional(),
 })
 
 // M40: /feed — recent activity from artists the current user follows.
