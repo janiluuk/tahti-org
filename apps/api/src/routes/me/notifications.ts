@@ -7,6 +7,7 @@ import {
   NotificationListQuerySchema,
   NotificationListSchema,
   openApiResponse,
+  notificationKindTypes,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -30,6 +31,8 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
   // ?limit=1..50 (default NOTIFICATION_LIMIT); ?before=<id> pages to the ones
   // older than that notification. ?stickyOnly=true returns unread sticky
   // notifications only (unbounded) for the must-acknowledge toaster.
+  // ?kind=social|music|money|governance|other narrows the list to one group
+  // (see NOTIFICATION_KIND_TYPES); unreadCount always counts the whole inbox.
   fastify.get(
     '/api/me/notifications',
     {
@@ -57,7 +60,12 @@ const meNotificationRoutes: FastifyPluginAsync = async (fastify) => {
 
       const [rows, unreadCount] = await Promise.all([
         fastify.prisma.notification.findMany({
-          where: stickyOnly ? { userId: user.id, sticky: true, readAt: null } : { userId: user.id },
+          where: stickyOnly
+            ? { userId: user.id, sticky: true, readAt: null }
+            : {
+                userId: user.id,
+                ...(query.data.kind ? { type: notificationKindTypes(query.data.kind) } : {}),
+              },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           ...(stickyOnly
             ? {}
