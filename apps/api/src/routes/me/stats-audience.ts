@@ -7,6 +7,7 @@ import {
   StatsAudienceResponseSchema,
   StatsAudienceWindowQuerySchema,
   StatsLocationsResponseSchema,
+  StatsLoyaltyResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -14,6 +15,7 @@ import {
   AUDIENCE_MIN_BUCKET,
   buildAudienceShares,
   buildLocationShares,
+  buildLoyaltyCurve,
 } from '../../lib/listen-audience.js'
 
 /** Studio audience breakdown from listen sessions: shares only, never rows
@@ -77,6 +79,32 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
         ? await buildLocationShares(fastify.prisma, channelId, parsed.data)
         : { total: 0, countries: [], cities: [] }
       return reply.send({ minBucket: AUDIENCE_MIN_BUCKET, ...locations })
+    },
+  )
+
+  fastify.get(
+    '/api/me/stats/loyalty',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Listener loyalty: share of on-demand listens that reached 0, 10 … 100 % of the track; empty under 5 listens',
+        response: openApiResponse(StatsLoyaltyResponseSchema, 'StatsLoyalty'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = StatsAudienceWindowQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      }
+      const channelId = await ownChannelId(request.sessionUser!.id)
+      const curve = channelId
+        ? await buildLoyaltyCurve(fastify.prisma, channelId, parsed.data)
+        : { total: 0, points: [] }
+      return reply.send({ minBucket: AUDIENCE_MIN_BUCKET, ...curve })
     },
   )
 }
