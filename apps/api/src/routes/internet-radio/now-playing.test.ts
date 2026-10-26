@@ -10,6 +10,11 @@ const RADIO_HELSINKI_PAGE = `
   <div class="title current-song-title">Positive Tension</div>
 `
 
+const RADIO_HELSINKI_FEED = JSON.stringify({
+  programs: { current: { program_title: 'CADIA' } },
+  last_playing: [{ artist: 'Bloc Party', song: 'Positive Tension' }],
+})
+
 describe('GET /api/v1/internet-radio/now-playing', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
 
@@ -32,15 +37,34 @@ describe('GET /api/v1/internet-radio/now-playing', () => {
       url: `/api/v1/internet-radio/now-playing?url=${encodeURIComponent(url)}`,
     })
 
-  it("reads the programme and track from a known station's page", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(RADIO_HELSINKI_PAGE))
+  it("reads the programme and track from a known station's live feed", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(new Response(RADIO_HELSINKI_FEED)))
     vi.stubGlobal('fetch', fetchMock)
 
-    const res = await get('https://www.radiohelsinki.fi/ohjelmakartta/')
+    const res = await get('https://www.radiohelsinki.fi/ohjelmakartta/?feed')
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ title: 'CADIA', artist: 'Bloc Party — Positive Tension' })
+    expect(res.headers['cache-control']).toBe('public, max-age=20')
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://www.radiohelsinki.fi/ohjelmakartta/')
+    expect(String(fetchMock.mock.calls[0]?.[0])).toMatch(
+      /^https:\/\/www\.radiohelsinki\.fi\/wp-content\/djonline\.js\?dt=\d+$/,
+    )
+  })
+
+  it("falls back to the station's page when its feed is empty", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation((url: string) =>
+        Promise.resolve(new Response(url.includes('djonline.js') ? '' : RADIO_HELSINKI_PAGE)),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const res = await get('https://www.radiohelsinki.fi/ohjelmakartta/?page')
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ title: 'CADIA', artist: 'Bloc Party — Positive Tension' })
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('https://www.radiohelsinki.fi/ohjelmakartta/?page')
   })
 
   it('answers with empty fields when the page cannot be read', async () => {

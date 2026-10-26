@@ -12,8 +12,9 @@ import {
 } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
 
-// One fetch per station page per minute, however many listeners ask.
-const CACHE_SECONDS = 60
+// One fetch per station per 20 seconds, however many listeners ask — the
+// same cadence Radio Helsinki's own player polls its feed at.
+const CACHE_SECONDS = 20
 
 const internetRadioNowPlayingRoute: FastifyPluginAsync = async (fastify) => {
   // Public (no auth) — what a catalog station is playing, read from the
