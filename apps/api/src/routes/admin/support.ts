@@ -17,7 +17,10 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { userName } from '../../lib/safe-names.js'
-import { notifyRequesterOfSupportReply } from '../../lib/support-reply-notice.js'
+import {
+  notifyRequesterOfSupportReply,
+  notifyRequesterOfSupportResolved,
+} from '../../lib/support-reply-notice.js'
 
 function mapTicketRow(ticket: {
   id: bigint
@@ -275,6 +278,9 @@ const adminSupportRoutes: FastifyPluginAsync = async (fastify) => {
             authorId: actor.id,
           },
         })
+        if (parsed.data.status === 'RESOLVED') {
+          await notifyRequesterOfSupportResolved(fastify.prisma, id, actor.id, fastify.log)
+        }
       }
 
       const ticket = await fastify.prisma.supportTicket.findUnique({
