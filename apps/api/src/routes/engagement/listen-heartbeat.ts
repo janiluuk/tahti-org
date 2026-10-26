@@ -7,6 +7,7 @@ import {
   ListenHeartbeatBodySchema,
   clientIpFromHeaders,
   openApiNoContentResponse,
+  parseListenDevice,
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { countryFromIp } from '../../lib/geoip.js'
@@ -96,6 +97,7 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
           data: { lastSeenAt: now },
         })
       } else {
+        const device = parseListenDevice(request.headers['user-agent'])
         await fastify.prisma.listenSession.create({
           data: {
             channelId,
@@ -105,6 +107,11 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             byIpHash: sha256(`${clientIp}:${salt}`),
             countryCode: countryFromIp(clientIp),
             source: body.source,
+            uaBrowser: device.browser,
+            uaOs: device.os,
+            uaDeviceType: device.deviceType,
+            uaDeviceVendor: device.deviceVendor,
+            isBot: device.isBot,
             startedAt: now,
             lastSeenAt: now,
           },

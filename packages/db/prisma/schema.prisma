@@ -3072,6 +3072,12 @@ model ListenSession {
   startedAt     DateTime     @default(now())
   lastSeenAt    DateTime     @default(now())
   endedAt       DateTime?
+  // Coarse device labels parsed from the User-Agent (never the raw UA).
+  uaBrowser      String?
+  uaOs           String?
+  uaDeviceType   String?
+  uaDeviceVendor String?
+  isBot          Boolean     @default(false)
 
   @@index([channelId, startedAt])
   @@index([soundId, startedAt])
