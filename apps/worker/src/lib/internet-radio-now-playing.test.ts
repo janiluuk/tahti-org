@@ -49,25 +49,40 @@ const RADIO_HELSINKI_FEED = JSON.stringify({
 
 function respondByUrl(bodies: { feed?: string | null; page?: string | null }) {
   return vi.fn((url: string) => {
-    const body = url.includes('/wp-content/djonline.js') ? bodies.feed : bodies.page
+    const body =
+      url.includes('/wp-content/djonline.js') || url.includes('listenapi.planetradio.co.uk')
+        ? bodies.feed
+        : bodies.page
     return Promise.resolve(
       body == null ? { ok: false } : { ok: true, text: () => Promise.resolve(body) },
     )
   })
 }
 
+// Trimmed from rayo.fi/nrj on 2026-10-26: one stationsById entry per Bauer
+// station, each with its own stationNowPlaying.
 const BAUER_RADIOPLAY_FRAGMENT = `
-  <script>window.__STATE__ = {"player":{"stationNowPlaying":{"nowPlayingTrackId":0,"nowPlayingTrack":"","nowPlayingArtist":""},"station":{}},
-  "sidebar":{"stationNowPlaying":{"nowPlayingTrackId":279589,"nowPlayingTrack":"Usa","nowPlayingArtist":"Viivi"}}}</script>
+  <script>window.__STATE__ = {"player":{"stationNowPlaying":{"nowPlayingTrackId":0,"nowPlayingTrack":"","nowPlayingArtist":""}},
+  "stationList":{"stationsById":{"auran-aallot":{"stationId":480,"stationCode":"aaf","stationName":"Auran Aallot","stationNowPlaying":{"nowPlayingTrackId":13576,"nowPlayingTrack":"Woman In Love","nowPlayingArtist":"Barbra Streisand","nowPlayingImage":""}},
+  "nrj":{"stationId":334,"stationCode":"nrj","stationName":"NRJ","stationNowPlaying":{"nowPlayingTrackId":103526,"nowPlayingTrack":"Pray For Me","nowPlayingArtist":"The Weeknd and Kendrick Lamar","nowPlayingImage":""}},
+  "radio-nova":{"stationId":254,"stationCode":"nfi","stationName":"Radio Nova","stationNowPlaying":{"nowPlayingTrackId":0,"nowPlayingTrack":"","nowPlayingArtist":"","nowPlayingImage":""}},
+  "ysari":{"stationId":426,"stationCode":"ysf","stationName":"Ysäri","stationNowPlaying":{"nowPlayingTrackId":5868,"nowPlayingTrack":"If You Had My Love","nowPlayingArtist":"Jennifer Lopez","nowPlayingImage":""}}}}}</script>
 `
+
+const BAUER_FEED = JSON.stringify({
+  EventType: 'S',
+  TrackTitle: 'The Show Must Go On',
+  ArtistName: 'Queen',
+})
 
 describe('parserForUrl', () => {
   it('matches radiohelsinki.fi', () => {
     expect(parserForUrl('https://www.radiohelsinki.fi/ohjelmakartta/')).not.toBeNull()
   })
 
-  it('matches radioplay.fi', () => {
+  it('matches radioplay.fi and rayo.fi', () => {
     expect(parserForUrl('https://www.radioplay.fi/nrj')).not.toBeNull()
+    expect(parserForUrl('https://rayo.fi/nrj')).not.toBeNull()
   })
 
   it('returns null for an unsupported host', () => {
@@ -165,16 +180,45 @@ describe('fetchNowPlaying', () => {
     })
   })
 
-  it('parses the last non-empty Bauer stationNowPlaying block', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(BAUER_RADIOPLAY_FRAGMENT),
-    })
+  it("reads a Bauer station from its own entry, never a sibling station's", async () => {
+    const fetchMock = respondByUrl({ feed: null, page: BAUER_RADIOPLAY_FRAGMENT })
     const result = await fetchNowPlaying(
       'https://www.radioplay.fi/nrj',
       fetchMock as unknown as typeof fetch,
     )
-    expect(result).toEqual({ title: 'Usa', artist: 'Viivi' })
+    expect(result).toEqual({ title: 'Pray For Me', artist: 'The Weeknd and Kendrick Lamar' })
+  })
+
+  it("reads Bauer's live feed for the station first", async () => {
+    const fetchMock = respondByUrl({ feed: BAUER_FEED, page: BAUER_RADIOPLAY_FRAGMENT })
+    const result = await fetchNowPlaying(
+      'https://www.radioplay.fi/radio-nova',
+      fetchMock as unknown as typeof fetch,
+    )
+    expect(result).toEqual({ title: 'The Show Must Go On', artist: 'Queen' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://listenapi.planetradio.co.uk/api9.2/nowplaying/nfi',
+    )
+  })
+
+  it('answers nothing rather than guess when the station entry is empty', async () => {
+    const fetchMock = respondByUrl({ feed: null, page: BAUER_RADIOPLAY_FRAGMENT })
+    expect(
+      await fetchNowPlaying('https://rayo.fi/radio-nova', fetchMock as unknown as typeof fetch),
+    ).toBeNull()
+  })
+
+  it('ignores a Bauer feed event that is not a song', async () => {
+    const fetchMock = respondByUrl({
+      feed: JSON.stringify({ EventType: 'A', TrackTitle: 'Advert', ArtistName: '' }),
+      page: BAUER_RADIOPLAY_FRAGMENT,
+    })
+    const result = await fetchNowPlaying(
+      'https://rayo.fi/nrj',
+      fetchMock as unknown as typeof fetch,
+    )
+    expect(result).toEqual({ title: 'Pray For Me', artist: 'The Weeknd and Kendrick Lamar' })
   })
 
   it('returns null for a host with no parser, without fetching', async () => {
