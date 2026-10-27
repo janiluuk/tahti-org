@@ -77,7 +77,7 @@ describe('Cancelling a venue show tells the other side', () => {
     expect(sent[0]).toMatchObject({
       title: 'Kellari cancelled your show',
       body: 'It was on 2026-12-04',
-      url: '/studio/venues',
+      url: '/venues',
     })
   })
 

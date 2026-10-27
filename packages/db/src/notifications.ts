@@ -145,7 +145,7 @@ export async function notifyOfCanceledVenueShow(
         ? `${show.venue.name} cancelled your show`
         : `${actorDisplayName(actor)} cancelled their show at ${show.venue.name}`,
       body: `It was on ${show.startAt.toISOString().slice(0, 10)}`,
-      url: byVenue ? '/studio/venues' : '/venues/mine',
+      url: byVenue ? '/venues' : '/venues/mine',
     },
   })
 }
