@@ -9,7 +9,8 @@ import type { PrismaClient } from '@tahti/db'
  * subscriptions, the accounts it blocked, its listening sessions, the chat
  * messages it posted while signed in, its track reactions, and its feature
  * requests, motion comments, seconds and votes (the member already sees their
- * own choice on each motion) and correction requests. Other
+ * own choice on each motion), correction requests, its follow-ups on its
+ * support requests, and the radio stations, themes and embeds it added. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -40,6 +41,10 @@ export async function buildActivityExport(
     motionSeconds,
     motionVotes,
     correctionRequests,
+    supportReplies,
+    radioStations,
+    themes,
+    embeds,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -223,6 +228,41 @@ export async function buildActivityExport(
         createdAt: true,
       },
     }),
+    prisma.supportTicketNote.findMany({
+      where: { authorId: user.id, kind: 'MESSAGE', ticket: { artistId: user.id } },
+      orderBy: { createdAt: 'asc' },
+      select: { body: true, createdAt: true, ticket: { select: { subject: true } } },
+    }),
+    prisma.internetRadioStation.findMany({
+      where: { userId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        genre: true,
+        description: true,
+        streamUrl: true,
+        programmingUrl: true,
+        iconUrl: true,
+        createdAt: true,
+      },
+    }),
+    prisma.theme.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        name: true,
+        varsJson: true,
+        darkJson: true,
+        visibility: true,
+        prUrl: true,
+        createdAt: true,
+      },
+    }),
+    prisma.artistEmbed.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { provider: true, url: true, title: true, createdAt: true },
+    }),
   ])
 
   return {
@@ -250,5 +290,9 @@ export async function buildActivityExport(
     motionSeconds,
     motionVotes,
     correctionRequests,
+    supportReplies,
+    radioStations,
+    themes,
+    embeds,
   }
 }
