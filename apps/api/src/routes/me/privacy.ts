@@ -90,7 +90,36 @@ const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
         }),
         fastify.prisma.release.findMany({
           where: { userId: user.id },
-          select: { title: true, state: true, smartLinkSlug: true, releaseDate: true },
+          orderBy: { releaseDate: 'asc' },
+          select: {
+            title: true,
+            type: true,
+            state: true,
+            smartLinkSlug: true,
+            releaseDate: true,
+            genre: true,
+            upc: true,
+            pLine: true,
+            labelImprint: true,
+            commentary: true,
+            credits: true,
+            createdAt: true,
+            tracks: {
+              orderBy: { position: 'asc' },
+              select: {
+                position: true,
+                title: true,
+                isrc: true,
+                durationSec: true,
+                genre: true,
+                tags: true,
+                bpm: true,
+                musicalKey: true,
+                mixVersion: true,
+                credits: true,
+              },
+            },
+          },
         }),
       ])
 
