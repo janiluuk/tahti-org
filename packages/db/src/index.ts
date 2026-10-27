@@ -51,6 +51,7 @@ export {
   notifyFollowersOfNewEvent,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
+  notifyVenueOwnerOfVerification,
   notifyArtistOfNewComment,
   notifyArtistOfNewRepost,
   notifyArtistStreamingCopyReady,

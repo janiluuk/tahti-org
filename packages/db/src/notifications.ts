@@ -387,6 +387,30 @@ export async function notifyPlaylistOfNewTrack(
   })
 }
 
+/** Tells a venue's owner the board verified it (the badge shows on the venue
+ * list) or took the verification back. */
+export async function notifyVenueOwnerOfVerification(
+  prisma: PrismaClient,
+  venue: { name: string; createdBy: string },
+  verified: boolean,
+): Promise<void> {
+  const owner = await prisma.user.findFirst({
+    where: { id: venue.createdBy, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!owner) return
+  await prisma.notification.create({
+    data: {
+      userId: owner.id,
+      type: 'VENUE_VERIFIED',
+      title: verified
+        ? `${venue.name} is now a verified venue`
+        : `${venue.name} is no longer verified`,
+      url: '/venues/mine',
+    },
+  })
+}
+
 /** M38: notify a conversation participant that a new direct message arrived. */
 export async function notifyUserOfNewMessage(
   prisma: PrismaClient,

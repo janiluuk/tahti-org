@@ -10,6 +10,7 @@ import {
   parseRouteParams,
   safeDisplayName,
 } from '@tahti/shared'
+import { notifyVenueOwnerOfVerification } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 
 // M17: board verifies venue listings before they appear in the public directory.
@@ -73,6 +74,11 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
         where: { slug },
         data: { verifiedAt: new Date() },
       })
+      if (!venue.verifiedAt) {
+        await notifyVenueOwnerOfVerification(fastify.prisma, venue, true).catch((err: unknown) =>
+          fastify.log.warn({ err }, 'venue verification notice failed'),
+        )
+      }
       return reply.send(updated)
     },
   )
@@ -94,6 +100,11 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
         where: { slug },
         data: { verifiedAt: null },
       })
+      if (venue.verifiedAt) {
+        await notifyVenueOwnerOfVerification(fastify.prisma, venue, false).catch((err: unknown) =>
+          fastify.log.warn({ err }, 'venue verification notice failed'),
+        )
+      }
       return reply.send(updated)
     },
   )
