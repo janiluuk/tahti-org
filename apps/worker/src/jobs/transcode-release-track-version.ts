@@ -6,7 +6,8 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, syncActiveVersionToTrack } from '@tahti/db'
+import { notifyJobOutcome, prisma, syncActiveVersionToTrack, type JobOutcome } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { pruneOldR2VersionsForTrack, writeThroughToR2 } from '../lib/release-r2-sync.js'
 
@@ -56,6 +57,19 @@ function transcodeFlac(inputPath: string, outputPath: string): Promise<void> {
       .on('end', () => resolve())
       .save(outputPath)
   })
+}
+
+/** What the artist is told when a replacement for a release track can't be processed. */
+export function releaseTrackVersionFailedNotice(version: {
+  releaseTrack: { title: string; release: { id: string; userId: string } }
+}): JobOutcome {
+  return {
+    userId: version.releaseTrack.release.userId,
+    outcome: 'failed',
+    title: `The new audio for "${version.releaseTrack.title}" could not be processed`,
+    body: 'The track keeps its current audio. Upload the replacement again.',
+    url: `/studio/releases/${version.releaseTrack.release.id}`,
+  }
 }
 
 export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<void> {
@@ -151,6 +165,9 @@ export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<
       where: { id: versionId },
       data: { status: 'FAILED' },
     })
+    if (isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, releaseTrackVersionFailedNotice(version))
+    }
     logLine(
       {
         trackId,

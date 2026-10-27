@@ -15,6 +15,7 @@ const {
   uploadFile,
   deleteObject,
   processTranscodeVersionJob,
+  notifyJobOutcome,
   ffmpegFactory,
 } = vi.hoisted(() => {
   const chain: Record<string, unknown> & {
@@ -40,9 +41,11 @@ const {
         updateMany: vi.fn(),
         delete: vi.fn(),
       },
+      sound: { findUnique: vi.fn() },
       $transaction: vi.fn(),
     },
     syncActiveVersionToItem: vi.fn(),
+    notifyJobOutcome: vi.fn(),
     downloadSourceCached: vi.fn(),
     uploadFile: vi.fn(),
     deleteObject: vi.fn(),
@@ -57,7 +60,7 @@ const {
 
 vi.mock('node:fs/promises', () => ({ mkdtemp, rm, stat }))
 vi.mock('fluent-ffmpeg', () => ({ default: ffmpegFactory }))
-vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
+vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem, notifyJobOutcome }))
 vi.mock('../lib/source-cache.js', () => ({ downloadSourceCached }))
 vi.mock('../lib/minio.js', () => ({ uploadFile, deleteObject }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
@@ -84,6 +87,11 @@ describe('processRenderSoundEditJob', () => {
     prismaMock.soundVersion.delete.mockResolvedValue({})
     prismaMock.$transaction.mockResolvedValue([])
     syncActiveVersionToItem.mockResolvedValue(undefined)
+    prismaMock.sound.findUnique.mockResolvedValue({
+      id: 'item-1',
+      title: 'Night drive',
+      channel: { userId: 'user-1' },
+    })
   })
 
   it('renders, uploads, transcodes and activates the version', async () => {
@@ -115,6 +123,35 @@ describe('processRenderSoundEditJob', () => {
     expect(prismaMock.$transaction).toHaveBeenCalled()
     expect(syncActiveVersionToItem).toHaveBeenCalledWith(prismaMock, 'item-1')
     expect(rm).toHaveBeenCalledWith('/tmp/tahti-render-edit-xyz', { recursive: true, force: true })
+    expect(notifyJobOutcome).toHaveBeenCalledWith(prismaMock, {
+      userId: 'user-1',
+      outcome: 'done',
+      title: 'Your edit of "Night drive" is ready',
+      url: '/studio/sounds/item-1',
+    })
+  })
+
+  it('tells the artist when the final attempt fails', async () => {
+    downloadSourceCached.mockRejectedValue(new Error('download failed'))
+    const payload: RenderSoundEditPayload = {
+      versionId: 'ver-1',
+      soundId: 'item-1',
+      channelSlug: 'artist-one',
+      sourceKey: 'raw/artist-one/source.flac',
+      editList: createDefaultEditList(120),
+      format: 'flac',
+      activate: false,
+    }
+    const job = { ...jobFor(payload), attemptsMade: 0, opts: { attempts: 1 } } as unknown as Job
+    await expect(processRenderSoundEditJob(job)).rejects.toThrow('download failed')
+    expect(notifyJobOutcome).toHaveBeenCalledWith(
+      prismaMock,
+      expect.objectContaining({
+        outcome: 'failed',
+        title: 'Your edit of "Night drive" could not be rendered',
+        url: '/studio/sounds/item-1/editor',
+      }),
+    )
   })
 
   it('does not activate when activate is false', async () => {
