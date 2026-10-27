@@ -277,7 +277,7 @@ jobs:
           fi
 
       - name: Run tests
-        run: pnpm test --reporter=verbose --shard=${{ matrix.shard }}/4
+        run: pnpm exec vitest run --reporter=verbose --shard=${{ matrix.shard }}/4
 
       - name: Upload coverage
         if: always()
