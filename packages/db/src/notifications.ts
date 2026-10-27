@@ -678,6 +678,26 @@ export async function notifyArtistStreamingCopyReady(
   })
 }
 
+/** Tells a channel's owner the board took the channel out of the Tahti Radio
+ * rotation, or put it back, since it overrides the owner's own setting. */
+export async function notifyOwnerOfRadioInclusion(
+  prisma: PrismaClient,
+  ownerUserId: string,
+  included: boolean,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: ownerUserId,
+      type: 'TAHTI_RADIO_INCLUSION_CHANGED',
+      title: included
+        ? 'Your channel is back in the Tahti Radio rotation'
+        : 'The board took your channel out of Tahti Radio',
+      body: included ? null : 'Ask the board through Help → Support if you want to know why.',
+      url: '/studio/channel?tab=tahti-radio',
+    },
+  })
+}
+
 export async function notifyUserThemeApproved(
   prisma: PrismaClient,
   userId: string,

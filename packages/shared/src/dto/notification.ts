@@ -41,6 +41,7 @@ export const NotificationTypeSchema = z.enum([
   'NEW_EVENT',
   'NEW_FAN_SUBSCRIBER',
   'NEW_PURCHASE',
+  'TAHTI_RADIO_INCLUSION_CHANGED',
   'NEW_COMMENT',
   'PAYOUT_SENT',
   'FAN_SUB_PAYMENT_FAILED',
