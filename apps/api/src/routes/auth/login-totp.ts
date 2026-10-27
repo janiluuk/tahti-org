@@ -12,6 +12,7 @@ import { verifyPassword } from '../../lib/password.js'
 import { normalizeBackupCode } from '../../lib/totp-backup-codes.js'
 import { auditLog } from '../../lib/audit.js'
 import { restrictionErrorMessage } from '@tahti/db'
+import { suspendedLoginMessage } from '../../lib/suspended-login.js'
 
 const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -49,10 +50,18 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
           isBoard: true,
           totpSecretEnc: true,
           totpEnabledAt: true,
+          suspendedAt: true,
+          suspendReason: true,
         },
       })
       if (!user || !user.totpEnabledAt || !user.totpSecretEnc) {
         return reply.status(401).send({ error: 'Invalid login challenge' })
+      }
+      // Same as the restriction check below: the board may suspend the
+      // account while its challenge is still valid.
+      if (user.suspendedAt) {
+        await fastify.prisma.totpChallenge.delete({ where: { id: challenge.id } })
+        return reply.status(403).send({ error: suspendedLoginMessage(user.suspendReason) })
       }
 
       // The initial /api/auth/login step already checks this before ever
