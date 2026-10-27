@@ -3,10 +3,13 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  CreateDiscussionPostSchema,
+  DiscussionPostViewSchema,
   DiscussionTopicDetailSchema,
   DiscussionTopicListSchema,
   IdParamSchema,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
@@ -89,6 +92,65 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           author: post.author ? userName(post.author) : 'Deleted account',
           createdAt: post.createdAt.toISOString(),
         })),
+      })
+    },
+  )
+
+  // POST /api/v1/governance/discussions/:id/posts — reply to a topic. The
+  // replier follows the topic from then on. A CLOSED topic takes no replies.
+  fastify.post(
+    '/api/v1/governance/discussions/:id/posts',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponses([
+          { status: 201, schema: DiscussionPostViewSchema, name: 'DiscussionPost' },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = CreateDiscussionPostSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+      const topic = await fastify.prisma.discussionTopic.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true, status: true },
+      })
+      if (!topic) return reply.status(404).send({ error: 'Topic not found' })
+      if (topic.status === 'CLOSED') {
+        return reply.status(409).send({ error: 'This topic is closed to replies' })
+      }
+      const now = new Date()
+      const [post] = await fastify.prisma.$transaction([
+        fastify.prisma.discussionPost.create({
+          data: { topicId: topic.id, authorId: user.id, body: parsed.data.body, createdAt: now },
+          select: {
+            id: true,
+            body: true,
+            createdAt: true,
+            author: { select: { username: true, displayName: true } },
+          },
+        }),
+        fastify.prisma.discussionTopic.update({
+          where: { id: topic.id },
+          data: { lastPostAt: now },
+        }),
+        fastify.prisma.discussionParticipant.upsert({
+          where: { topicId_userId: { topicId: topic.id, userId: user.id } },
+          create: { topicId: topic.id, userId: user.id },
+          update: {},
+        }),
+      ])
+      return reply.status(201).send({
+        id: post.id.toString(),
+        body: post.body,
+        author: post.author ? userName(post.author) : 'Deleted account',
+        createdAt: post.createdAt.toISOString(),
       })
     },
   )
