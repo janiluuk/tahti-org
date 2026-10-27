@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { Prisma } from '@tahti/db'
+import { notifyUserOfBoardAccountChange, type Prisma } from '@tahti/db'
 import { computeEngagementUnits } from '@tahti/ledger'
 import {
   AdminUserDetailSchema,
@@ -100,6 +100,8 @@ function buildUserWhere(query: {
   }
   return where
 }
+
+const TIER_LABELS: Record<string, string> = { FREE: 'Free', ARTIST: 'Artist', STUDIO: 'Studio' }
 
 const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -334,6 +336,24 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
       const memberSince = data.isMember && !existing.memberSince ? { memberSince: new Date() } : {}
 
       await fastify.prisma.user.update({ where: { id }, data: { ...data, ...memberSince } })
+
+      const changes: string[] = []
+      if (data.tier !== undefined && data.tier !== existing.tier) {
+        changes.push(`Plan: ${TIER_LABELS[existing.tier]} → ${TIER_LABELS[data.tier]}`)
+      }
+      if (data.isMember !== undefined && data.isMember !== existing.isMember) {
+        changes.push(data.isMember ? 'Membership: started' : 'Membership: ended')
+      }
+      if (data.isBoard !== undefined && data.isBoard !== existing.isBoard) {
+        changes.push(data.isBoard ? 'Board seat: added' : 'Board seat: removed')
+      }
+      if (changes.length > 0 && id !== actor.id) {
+        await notifyUserOfBoardAccountChange(fastify.prisma, id, {
+          title: 'The board updated your account',
+          body: changes.join('. '),
+          url: '/settings/account',
+        }).catch((err: unknown) => request.log.warn({ err }, 'account change notice failed'))
+      }
 
       const detail = await fetchUserDetail(fastify.prisma, id)
       return reply.send(detail)
