@@ -14,6 +14,7 @@ import {
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { requireAuth } from '../../plugins/auth.js'
+import { notifyGranteeOfShare } from '../../lib/track-share-notice.js'
 
 const MAX_SHARES_PER_SOUND = 50
 
@@ -138,6 +139,13 @@ const meSoundShareRoutes: FastifyPluginAsync = async (fastify) => {
           expiresAt: expiresInDays ? new Date(Date.now() + expiresInDays * 86_400_000) : null,
         },
       })
+      if (granteeUsername) {
+        await notifyGranteeOfShare(
+          fastify.prisma,
+          { soundId: sound.id, token: share.token, granteeUsername, sharerId: user.id },
+          request.log,
+        )
+      }
       return reply.status(201).send(serializeShare(share))
     },
   )

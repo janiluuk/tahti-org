@@ -651,6 +651,8 @@ enum NotificationType {
   VENUE_SHOW_CANCELED
   NEW_LIKE
   NEW_REPOST
+  /// An artist shared a private track with you.
+  TRACK_SHARED
   PLAYLIST_TRACK_ADDED
   /// The board verified your venue, or took the verification back.
   VENUE_VERIFIED
