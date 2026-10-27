@@ -53,6 +53,7 @@ export const NotificationTypeSchema = z.enum([
   'BOARD_ACCOUNT_CHANGE',
   'MODERATOR_ADDED',
   'SUPPORT_TICKET',
+  'CONTENT_REMOVED_BY_BOARD',
   'CONTENT_REPORTED',
   'FEATURE_REQUEST_UPDATED',
 ])
