@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateDiscussionPostSchema,
+  DiscussionParticipationSchema,
   DiscussionPostViewSchema,
   DiscussionTopicDetailSchema,
   DiscussionTopicListSchema,
@@ -11,6 +12,8 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  SetDiscussionFollowSchema,
+  SetDiscussionMuteSchema,
 } from '@tahti/shared'
 import { requireMember } from '../../plugins/auth.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
@@ -156,6 +159,76 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         author: post.author ? userName(post.author) : 'Deleted account',
         createdAt: post.createdAt.toISOString(),
       })
+    },
+  )
+
+  // PUT /api/v1/governance/discussions/:id/follow — follow a topic without
+  // replying, or stop following it. Replying follows it again.
+  fastify.put(
+    '/api/v1/governance/discussions/:id/follow',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionParticipationSchema, 'DiscussionParticipation'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = SetDiscussionFollowSchema.safeParse(request.body)
+      if (!parsed.success) return reply.status(400).send({ error: 'Invalid body' })
+      const userId = request.sessionUser!.id
+      const topicId = routeParams.id
+      const topic = await fastify.prisma.discussionTopic.findUnique({
+        where: { id: topicId },
+        select: { id: true },
+      })
+      if (!topic) return reply.status(404).send({ error: 'Topic not found' })
+      if (!parsed.data.following) {
+        await fastify.prisma.discussionParticipant.deleteMany({ where: { topicId, userId } })
+        return reply.send({ following: false, muted: false })
+      }
+      const row = await fastify.prisma.discussionParticipant.upsert({
+        where: { topicId_userId: { topicId, userId } },
+        create: { topicId, userId },
+        update: {},
+        select: { mutedAt: true },
+      })
+      return reply.send({ following: true, muted: Boolean(row.mutedAt) })
+    },
+  )
+
+  // PUT /api/v1/governance/discussions/:id/mute — stop (or resume) reply
+  // notices for a topic while still following it.
+  fastify.put(
+    '/api/v1/governance/discussions/:id/mute',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionParticipationSchema, 'DiscussionParticipation'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = SetDiscussionMuteSchema.safeParse(request.body)
+      if (!parsed.success) return reply.status(400).send({ error: 'Invalid body' })
+      const userId = request.sessionUser!.id
+      const topicId = routeParams.id
+      const topic = await fastify.prisma.discussionTopic.findUnique({
+        where: { id: topicId },
+        select: { id: true },
+      })
+      if (!topic) return reply.status(404).send({ error: 'Topic not found' })
+      const mutedAt = parsed.data.muted ? new Date() : null
+      await fastify.prisma.discussionParticipant.upsert({
+        where: { topicId_userId: { topicId, userId } },
+        create: { topicId, userId, mutedAt },
+        update: { mutedAt },
+      })
+      return reply.send({ following: true, muted: parsed.data.muted })
     },
   )
 }
