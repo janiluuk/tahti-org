@@ -10,7 +10,7 @@ import { verifyTotpCode } from '../../lib/totp.js'
 import { decryptTotpSecret } from '../../lib/totp-secret-enc.js'
 import { verifyPassword } from '../../lib/password.js'
 import { normalizeBackupCode } from '../../lib/totp-backup-codes.js'
-import { auditLog } from '../../lib/audit.js'
+import { recordSignIn } from '../../lib/sign-in-notice.js'
 import { restrictionErrorMessage } from '@tahti/db'
 import { suspendedLoginMessage } from '../../lib/suspended-login.js'
 
@@ -105,11 +105,7 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
           : null)
       const session = await createSession(fastify.prisma, user.id, { deviceLabel })
 
-      void auditLog(fastify.prisma, {
-        action: 'USER_LOGIN',
-        actorId: user.id,
-        meta: { username: user.username },
-      })
+      void recordSignIn(fastify.prisma, user, deviceLabel, request.log)
 
       reply.setCookie(config.sessionCookieName, session.id, {
         httpOnly: true,
