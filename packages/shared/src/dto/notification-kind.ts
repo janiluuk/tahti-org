@@ -63,3 +63,22 @@ export function notificationKindTypes(
   }
   return { in: [...NOTIFICATION_KIND_TYPES[kind]] }
 }
+
+/** The kind a notification type is filed under. */
+export function notificationKindOf(type: string): NotificationKind {
+  for (const [kind, types] of Object.entries(NOTIFICATION_KIND_TYPES)) {
+    if ((types as readonly string[]).includes(type)) return kind as NotificationKind
+  }
+  return 'other'
+}
+
+export const NotificationUnreadCountsSchema = z.object({
+  total: z.number().int().nonnegative(),
+  byKind: z.object({
+    social: z.number().int().nonnegative(),
+    music: z.number().int().nonnegative(),
+    money: z.number().int().nonnegative(),
+    governance: z.number().int().nonnegative(),
+    other: z.number().int().nonnegative(),
+  }),
+})
