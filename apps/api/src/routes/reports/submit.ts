@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyBoardOfContentReport } from '@tahti/db'
 import { createHash } from 'node:crypto'
 import {
   SubmitContentReportResponseSchema,
@@ -71,6 +72,10 @@ const reportsRoute: FastifyPluginAsync = async (fastify) => {
           reporterIpHash,
         },
       })
+
+      await notifyBoardOfContentReport(fastify.prisma, { label: target.label, reason }).catch(
+        (err: unknown) => fastify.log.warn({ err }, 'content report board notice failed'),
+      )
 
       return reply.status(201).send({ ok: true as const, reportId: report.id.toString() })
     },

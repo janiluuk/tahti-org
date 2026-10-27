@@ -40,6 +40,7 @@ export const NotificationTypeSchema = z.enum([
   'SUPPORT_REPLY',
   'MODERATOR_ADDED',
   'SUPPORT_TICKET',
+  'CONTENT_REPORTED',
 ])
 
 export const NotificationSchema = z.object({

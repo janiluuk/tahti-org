@@ -604,6 +604,38 @@ export async function notifyBoardOfSupportTicket(
   })
 }
 
+const REPORT_REASON_LABELS: Record<string, string> = {
+  COPYRIGHT: 'Copyright',
+  HARASSMENT: 'Harassment',
+  SPAM: 'Spam',
+  ILLEGAL_CONTENT: 'Illegal content',
+  OTHER: 'Other',
+}
+
+/** Tells the board a new content report is waiting, so a copyright or
+ * harassment report doesn't sit unseen in Admin → Moderation. Repeats from
+ * the same reporter are folded before this is called. */
+export async function notifyBoardOfContentReport(
+  prisma: PrismaClient,
+  report: { label: string; reason: string },
+): Promise<void> {
+  const board = await prisma.user.findMany({
+    where: { isBoard: true, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (board.length === 0) return
+
+  await prisma.notification.createMany({
+    data: board.map((member) => ({
+      userId: member.id,
+      type: 'CONTENT_REPORTED' as const,
+      title: `New report: ${report.label}`,
+      body: `Reason: ${REPORT_REASON_LABELS[report.reason] ?? report.reason}`,
+      url: '/admin/moderation/content-reports',
+    })),
+  })
+}
+
 /** One-off notification an admin sends from /admin/news's test-notification form. */
 export async function notifyUserAdminTest(
   prisma: PrismaClient,
