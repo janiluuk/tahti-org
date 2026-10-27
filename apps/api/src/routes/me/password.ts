@@ -2,10 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AuthMessageResponseSchema, ChangePasswordSchema, openApiResponse } from '@tahti/shared'
+import {
+  AuthMessageResponseSchema,
+  ChangePasswordSchema,
+  openApiResponse,
+  safeDisplayName,
+} from '@tahti/shared'
 import { requireSession } from '../../plugins/auth.js'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import { revokeOtherSessions } from '../../lib/session.js'
+import { sendSecurityNotice } from '../../lib/security-email.js'
 
 const mePasswordRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/password — change the password while signed in. Needs the
@@ -30,7 +36,7 @@ const mePasswordRoutes: FastifyPluginAsync = async (fastify) => {
       const userId = request.sessionUser!.id
       const user = await fastify.prisma.user.findUnique({
         where: { id: userId },
-        select: { passwordHash: true },
+        select: { passwordHash: true, email: true, username: true, displayName: true },
       })
       if (!user?.passwordHash) {
         return reply.status(400).send({ error: 'This account has no password yet — set one first' })
@@ -44,6 +50,15 @@ const mePasswordRoutes: FastifyPluginAsync = async (fastify) => {
         data: { passwordHash: await hashPassword(parsed.data.newPassword) },
       })
       await revokeOtherSessions(fastify.prisma, userId, request.authSessionId)
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'Your Tahti password was changed',
+          what: 'The password on your Tahti account was just changed, and your other devices were signed out.',
+        },
+        request.log,
+      )
 
       return reply.send({ message: 'Password changed. Other devices were signed out.' })
     },
