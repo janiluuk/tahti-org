@@ -6,7 +6,8 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, soundOwnerDefaults } from '@tahti/db'
+import { prisma, soundOwnerDefaults, notifyJobOutcome, type JobOutcome } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
@@ -50,6 +51,25 @@ function ffprobeGetDuration(filePath: string): Promise<number> {
   })
 }
 
+/** What the artist is told once a live broadcast's recording is saved as a
+ * track: published straight away, or a draft to finish in Studio. */
+export function recordingSavedNotice(sound: {
+  id: string
+  title: string
+  isPublic: boolean
+  ownerId: string
+}): JobOutcome {
+  return {
+    userId: sound.ownerId,
+    outcome: 'done',
+    title: sound.isPublic
+      ? `Your broadcast "${sound.title}" is now a track`
+      : `Your broadcast "${sound.title}" is saved as a draft`,
+    body: sound.isPublic ? null : 'Publish it from Studio when it is ready.',
+    url: `/studio/sounds/${sound.id}`,
+  }
+}
+
 export async function processSoundBroadcastJob(job: Job): Promise<void> {
   const { broadcastId } = job.data as { broadcastId: string }
 
@@ -60,6 +80,7 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
         select: {
           id: true,
           slug: true,
+          userId: true,
           user: { select: { tier: true } },
         },
       },
@@ -187,6 +208,15 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
       }),
     )
     await enqueueWarmSoundFallbackCache(broadcast.channel.id)
+    await notifyJobOutcome(
+      prisma,
+      recordingSavedNotice({
+        id: sound.id,
+        title: sound.title,
+        isPublic: sound.isPublic,
+        ownerId: broadcast.channel.userId,
+      }),
+    )
   } catch (err) {
     console.error(
       JSON.stringify({
@@ -196,6 +226,15 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
         component: 'sound-broadcast',
       }),
     )
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: broadcast.channel.userId,
+        outcome: 'failed',
+        title: 'Your broadcast recording could not be saved as a track',
+        body: 'Ask the board through Help → Support; the recording itself is kept.',
+        url: '/studio/recordings',
+      })
+    }
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
