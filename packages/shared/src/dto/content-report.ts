@@ -10,6 +10,7 @@ export const ContentReportTargetTypeSchema = z.enum([
   'COLLECTION',
   'MOTION_COMMENT',
   'COMMENT',
+  'DISCUSSION_POST',
 ])
 
 export const ContentReportReasonSchema = z.enum([

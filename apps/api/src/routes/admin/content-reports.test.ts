@@ -108,6 +108,41 @@ describe('content moderation reports', () => {
     expect(await prisma.contentReport.count()).toBe(before + 2)
   })
 
+  it('accepts a report about a discussion reply and resolves it to the topic', async () => {
+    const board = await prisma.user.findFirstOrThrow({
+      where: { username: 'content-report-board' },
+    })
+    const topic = await prisma.discussionTopic.create({
+      data: {
+        title: `${PREFIX}topic`,
+        body: 'b',
+        createdById: board.id,
+        posts: { create: { body: 'Rude reply', authorId: board.id } },
+      },
+      include: { posts: true },
+    })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/reports',
+      payload: {
+        targetType: 'DISCUSSION_POST',
+        targetId: topic.posts[0]!.id.toString(),
+        reason: 'HARASSMENT',
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    const report = await prisma.contentReport.findFirstOrThrow({
+      where: { targetType: 'DISCUSSION_POST', targetId: topic.posts[0]!.id.toString() },
+    })
+    expect(report).toMatchObject({ targetType: 'DISCUSSION_POST' })
+    const missing = await app.inject({
+      method: 'POST',
+      url: '/api/v1/reports',
+      payload: { targetType: 'DISCUSSION_POST', targetId: '999999999', reason: 'SPAM' },
+    })
+    expect(missing.statusCode).toBe(404)
+  })
+
   it('folds a repeat report from the same reporter into the open one', async () => {
     const payload = { targetType: 'CHANNEL', targetId: channelSlug, reason: 'SPAM' }
     const before = await prisma.contentReport.count({

@@ -85,6 +85,20 @@ export async function resolveContentReportTarget(
         }
       )
     }
+    case 'DISCUSSION_POST': {
+      if (!/^\d+$/.test(targetId)) return null
+      const post = await prisma.discussionPost.findUnique({
+        where: { id: BigInt(targetId) },
+        select: { body: true, topicId: true, topic: { select: { title: true } } },
+      })
+      return (
+        post && {
+          label: `Reply in "${post.topic.title}"`,
+          url: `/governance/discussions/${post.topicId}`,
+          excerpt: post.body.slice(0, EXCERPT_LENGTH),
+        }
+      )
+    }
     default:
       return null
   }
