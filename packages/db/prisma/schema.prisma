@@ -645,6 +645,8 @@ enum NotificationType {
   NEW_MESSAGE
   NEW_TRACK
   NEW_FOLLOWER
+  /// A venue show you are part of was cancelled by the artist or the venue.
+  VENUE_SHOW_CANCELED
   NEW_LIKE
   NEW_REPOST
   PLAYLIST_TRACK_ADDED

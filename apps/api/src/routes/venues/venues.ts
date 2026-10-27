@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyOfCanceledVenueShow } from '@tahti/db'
 import {
   CreateVenueBroadcastSchema,
   CreateVenueSchema,
@@ -401,7 +402,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
 
       const broadcast = await fastify.prisma.venueBroadcast.findFirst({
         where: { id: params.broadcastId, venue: { slug: params.slug } },
-        include: { venue: { select: { createdBy: true } } },
+        include: { venue: { select: { createdBy: true, name: true } } },
       })
       if (!broadcast) return reply.status(404).send({ error: 'Broadcast not found' })
       // The artist who booked the show, or the venue that hosts it, may call it off.
@@ -413,6 +414,14 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: broadcast.id },
         data: { state: 'CANCELED' },
       })
+      if (broadcast.state !== 'CANCELED') {
+        await notifyOfCanceledVenueShow(fastify.prisma, {
+          venue: broadcast.venue,
+          artistUserId: broadcast.artistUserId,
+          startAt: broadcast.startAt,
+          canceledBy: user.id,
+        }).catch((err: unknown) => fastify.log.warn({ err }, 'venue cancel notice failed'))
+      }
       return reply.status(204).send()
     },
   )
