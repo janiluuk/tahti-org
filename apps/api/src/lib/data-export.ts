@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, and its grants and fan-subscription payouts. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, its grants and fan-subscription payouts, the add-ons it published or installed, and its signed-in devices and API tokens (names and prefixes, never the secrets). Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -58,6 +58,10 @@ export async function buildActivityExport(
     notifications,
     grants,
     fanSubscriptionPayouts,
+    addonsPublished,
+    addonInstalls,
+    devices,
+    apiTokens,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -432,6 +436,49 @@ export async function buildActivityExport(
         paidAt: true,
       },
     }),
+    prisma.addon.findMany({
+      where: { authorUserId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        slug: true,
+        name: true,
+        description: true,
+        scope: true,
+        currentVersion: true,
+        status: true,
+        moderationNote: true,
+        createdAt: true,
+      },
+    }),
+    prisma.addonInstall.findMany({
+      where: { OR: [{ listenerUserId: user.id }, { channel: { userId: user.id } }] },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        enabled: true,
+        position: true,
+        configJson: true,
+        createdAt: true,
+        widget: { select: { slug: true, name: true } },
+      },
+    }),
+    prisma.session.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { deviceLabel: true, createdAt: true, expiresAt: true },
+    }),
+    prisma.apiToken.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        name: true,
+        tokenPrefix: true,
+        scopes: true,
+        lastUsedAt: true,
+        expiresAt: true,
+        revokedAt: true,
+        createdAt: true,
+      },
+    }),
   ])
 
   return {
@@ -475,5 +522,9 @@ export async function buildActivityExport(
     notifications,
     grants: grants.map((grant) => ({ ...grant, amountCents: Number(grant.amountCents) })),
     fanSubscriptionPayouts,
+    addonsPublished,
+    addonInstalls,
+    devices,
+    apiTokens,
   }
 }
