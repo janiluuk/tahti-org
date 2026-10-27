@@ -66,9 +66,29 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         where: { channelId: channel.id },
         orderBy: SOUND_LIST_ORDER_BY[parsedQuery.data.sort ?? 'newest'],
         take: 100,
-        select: soundMetadataSelect,
+        select: {
+          ...soundMetadataSelect,
+          _count: { select: { likes: true, listenEvents: true } },
+        },
       })
-      return reply.send(items.map((i) => serializeSound(i)))
+      const downloadCounts = items.length
+        ? await fastify.prisma.download.groupBy({
+            by: ['soundId'],
+            where: { soundId: { in: items.map((i) => i.id) }, countedAt: { not: null } },
+            _count: { _all: true },
+          })
+        : []
+      const downloadsBySoundId = new Map(
+        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+      )
+      return reply.send(
+        items.map(({ _count, ...item }) => ({
+          ...serializeSound(item),
+          likeCount: _count.likes,
+          playCount: _count.listenEvents,
+          downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+        })),
+      )
     },
   )
 
