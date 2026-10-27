@@ -695,6 +695,8 @@ enum NotificationType {
   CORRECTION_RESOLVED
   /// The board set up a board election that takes nominations; sent to every other member.
   ELECTION_OPENED
+  /// An artist invited you to the green room of their live broadcast.
+  GREEN_ROOM_INVITE
   /// The board recorded the result of an election you stood in.
   ELECTION_RESULT
   /// A board member edited the details of one of your tracks.
