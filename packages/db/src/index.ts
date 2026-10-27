@@ -64,6 +64,7 @@ export {
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,
   notifyBoardOfSupportTicket,
+  notifyFeatureRequestFollowers,
   processScheduledPostNotifications,
 } from './notifications.js'
 export { closeStaleListenSessions } from './listen-sessions.js'
