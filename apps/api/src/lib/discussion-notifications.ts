@@ -73,3 +73,33 @@ export async function notifyMembersOfDiscussionOpened(
   })
   return ids.length
 }
+
+/** Tells a closed topic's followers (muted ones too: closing is final, not
+ * chatter) that it takes no more replies, without the board member who
+ * closed it. Returns how many were told. */
+export async function notifyDiscussionClosed(
+  prisma: PrismaClient,
+  topic: { id: string; title: string },
+  actorUserId: string,
+): Promise<number> {
+  const participants = await prisma.discussionParticipant.findMany({
+    where: {
+      topicId: topic.id,
+      userId: { not: actorUserId },
+      user: { isMember: true, ...availableUserWhere },
+    },
+    select: { userId: true },
+  })
+  if (participants.length === 0) return 0
+  await prisma.notification.createMany({
+    data: participants.map(({ userId }) => ({
+      userId,
+      type: 'DISCUSSION_CLOSED' as const,
+      actorUserId,
+      title: 'A discussion you follow was closed',
+      body: `"${topic.title}" takes no more replies.`,
+      url: `/governance/discussions/${topic.id}`,
+    })),
+  })
+  return participants.length
+}

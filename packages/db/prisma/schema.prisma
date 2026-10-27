@@ -715,6 +715,8 @@ enum NotificationType {
   DISCUSSION_REPLY
   /// The board opened a discussion topic; sent to every other member.
   DISCUSSION_OPENED
+  /// The board closed a discussion topic you follow.
+  DISCUSSION_CLOSED
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY

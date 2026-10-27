@@ -11,7 +11,10 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
-import { notifyMembersOfDiscussionOpened } from '../../lib/discussion-notifications.js'
+import {
+  notifyDiscussionClosed,
+  notifyMembersOfDiscussionOpened,
+} from '../../lib/discussion-notifications.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
 
 const adminDiscussionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -70,7 +73,7 @@ const adminDiscussionRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const existing = await fastify.prisma.discussionTopic.findUnique({
         where: { id: routeParams.id },
-        select: { id: true },
+        select: { id: true, status: true },
       })
       if (!existing) return reply.status(404).send({ error: 'Topic not found' })
       const topic = await fastify.prisma.discussionTopic.update({
@@ -78,6 +81,13 @@ const adminDiscussionRoutes: FastifyPluginAsync = async (fastify) => {
         data: parsed.data,
         select: DISCUSSION_TOPIC_SELECT,
       })
+      if (existing.status === 'OPEN' && topic.status === 'CLOSED') {
+        await notifyDiscussionClosed(fastify.prisma, topic, request.sessionUser!.id).catch(
+          (err: unknown) => {
+            request.log.error({ err, topicId: topic.id }, 'discussion closed notification failed')
+          },
+        )
+      }
       return reply.send(toDiscussionTopicView(topic))
     },
   )
