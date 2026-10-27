@@ -15,6 +15,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { trackArtistName } from '../../lib/safe-names.js'
 
@@ -258,6 +259,12 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
+      const bookingBanError = await restrictionErrorMessage(
+        fastify.prisma,
+        user.id,
+        'LIVE_SHOW_BOOKING',
+      )
+      if (bookingBanError) return reply.status(403).send({ error: bookingBanError })
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { slug } = routeParams
