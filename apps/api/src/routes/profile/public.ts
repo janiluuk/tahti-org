@@ -292,9 +292,22 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           embedProvider: true,
           embedUri: true,
           peaks: true,
+          genre: true,
+          genreCustom: true,
+          _count: { select: { likes: true, listenEvents: true } },
         },
       })
     : []
+  const downloadCounts = allSounds.length
+    ? await fastify.prisma.download.groupBy({
+        by: ['soundId'],
+        where: { soundId: { in: allSounds.map((s) => s.id) }, countedAt: { not: null } },
+        _count: { _all: true },
+      })
+    : []
+  const downloadsBySoundId = new Map(
+    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+  )
 
   const soundIds = new Set<string>([
     ...user.releases.flatMap((r) =>
@@ -364,6 +377,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     embedProvider: item.embedProvider,
     embedUri: item.embedUri,
     peaks: item.peaks,
+    genre: item.genreCustom ?? item.genre,
+    playCount: item._count.listenEvents,
+    likeCount: item._count.likes,
+    downloadCount: downloadsBySoundId.get(item.id) ?? 0,
   }))
 
   const releases = await Promise.all(

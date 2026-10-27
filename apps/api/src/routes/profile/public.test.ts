@@ -177,6 +177,52 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track!.pinned).toBe(true)
   })
 
+  it('gives each track its genre, plays, likes and counted downloads', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: 'public-profile-artist' },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    const item = await createReadySound(prisma, artist.channel!.id, 'Counted track')
+    await prisma.sound.update({
+      where: { id: item.id },
+      data: { genre: 'Techno', genreCustom: 'Progressive House' },
+    })
+    await prisma.listenEvent.createMany({
+      data: [
+        { soundId: item.id, dedupeKey: 'a', dayBucket: '2026-10-01' },
+        { soundId: item.id, dedupeKey: 'b', dayBucket: '2026-10-01' },
+      ],
+    })
+    await prisma.soundLike.create({ data: { soundId: item.id, userId: artist.id } })
+    await prisma.download.createMany({
+      data: [
+        {
+          channelId: artist.channel!.id,
+          soundId: item.id,
+          format: 'mp3',
+          byFingerprint: 'f1',
+          byIpHash: 'i1',
+          countedAt: new Date(),
+        },
+        {
+          channelId: artist.channel!.id,
+          soundId: item.id,
+          format: 'mp3',
+          byFingerprint: 'f2',
+          byIpHash: 'i2',
+        },
+      ],
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/v1/u/public-profile-artist/profile' })
+    const track = res.json().tracks.find((t: { id: string }) => t.id === item.id)
+    expect(track).toMatchObject({
+      genre: 'Progressive House',
+      playCount: 2,
+      likeCount: 1,
+      downloadCount: 1,
+    })
+  })
+
   it('lists tracks in the order saved by PUT /api/me/sound/reorder, newest first by default', async () => {
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}order@example.com`,
