@@ -67,6 +67,15 @@ const meEmailChangeRoutes: FastifyPluginAsync = async (fastify) => {
         displayName: safeDisplayName(user.displayName, user.username),
         confirmUrl: `${config.appUrl.replace(/\/$/, '')}/email-change?token=${token}`,
       }).catch((err: unknown) => request.log.warn({ err }, 'email change link failed'))
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'Someone asked to change your Tahti email address',
+          what: `A link to move your Tahti account to ${newEmail} was just sent there. Nothing changes until it is opened; you can cancel it in Settings → Account → Password & email.`,
+        },
+        request.log,
+      )
 
       return reply.send({ message: `We sent a link to ${newEmail}. Open it to finish.` })
     },
