@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, and the notifications it received. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, and its grants and fan-subscription payouts. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -56,6 +56,8 @@ export async function buildActivityExport(
     fanTiers,
     storeItems,
     notifications,
+    grants,
+    fanSubscriptionPayouts,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -403,6 +405,33 @@ export async function buildActivityExport(
         actor: { select: { username: true } },
       },
     }),
+    prisma.grantDisbursement.findMany({
+      where: { userId: user.id },
+      orderBy: { forYear: 'asc' },
+      select: {
+        forYear: true,
+        units: true,
+        amountCents: true,
+        state: true,
+        notifiedAt: true,
+        paidAt: true,
+        publishedAs: true,
+      },
+    }),
+    prisma.fanSubPayout.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { forPeriodStart: 'asc' },
+      select: {
+        forPeriodStart: true,
+        forPeriodEnd: true,
+        grossCents: true,
+        stripeFeeCents: true,
+        orgFeeCents: true,
+        netToArtistCents: true,
+        state: true,
+        paidAt: true,
+      },
+    }),
   ])
 
   return {
@@ -444,5 +473,7 @@ export async function buildActivityExport(
     fanTiers,
     storeItems,
     notifications,
+    grants: grants.map((grant) => ({ ...grant, amountCents: Number(grant.amountCents) })),
+    fanSubscriptionPayouts,
   }
 }
