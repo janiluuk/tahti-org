@@ -14,6 +14,7 @@ const SELECT = {
   notifyMoneyMovesInApp: true,
   notifyListenerActivityEmail: true,
   notifyWeeklyRecapEmail: true,
+  notifyStudioJobsInApp: true,
 } as const
 
 // /dashboard/settings/notifications instrument-pattern view (docs/design/ground-rules.md)

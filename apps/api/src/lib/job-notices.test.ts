@@ -48,6 +48,14 @@ describe('notifyJobOutcome', () => {
     ])
   })
 
+  it('respects the Studio notices preference', async () => {
+    await prisma.user.update({ where: { id: userId }, data: { notifyStudioJobsInApp: false } })
+    const before = await prisma.notification.count({ where: { userId } })
+    await notifyJobOutcome(prisma, { userId, outcome: 'done', title: 'Quiet', url: '/' })
+    expect(await prisma.notification.count({ where: { userId } })).toBe(before)
+    await prisma.user.update({ where: { id: userId }, data: { notifyStudioJobsInApp: true } })
+  })
+
   it('skips a suspended account', async () => {
     await notifyJobOutcome(prisma, { userId: suspendedId, outcome: 'done', title: 'x', url: '/' })
     expect(await prisma.notification.count({ where: { userId: suspendedId } })).toBe(0)
