@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, and any restrictions the board put on it (without who issued them). Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -51,6 +51,8 @@ export async function buildActivityExport(
     venues,
     venueShows,
     restrictions,
+    radioSubmissions,
+    stationSuggestions,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -333,6 +335,33 @@ export async function buildActivityExport(
       orderBy: { bannedAt: 'asc' },
       select: { type: true, reason: true, bannedAt: true, expiresAt: true, liftedAt: true },
     }),
+    prisma.radioTrackSubmissionItem.findMany({
+      where: { batch: { submitterId: user.id } },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        status: true,
+        rejectionNote: true,
+        reviewedAt: true,
+        createdAt: true,
+        sound: { select: { id: true, title: true } },
+        batch: { select: { note: true } },
+      },
+    }),
+    prisma.radioStationSuggestion.findMany({
+      where: { submitterId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        name: true,
+        logoUrl: true,
+        language: true,
+        bitrateKbps: true,
+        streamUrl: true,
+        status: true,
+        rejectionNote: true,
+        reviewedAt: true,
+        createdAt: true,
+      },
+    }),
   ])
 
   return {
@@ -369,5 +398,7 @@ export async function buildActivityExport(
     venues,
     venueShows,
     restrictions,
+    radioSubmissions,
+    stationSuggestions,
   }
 }
