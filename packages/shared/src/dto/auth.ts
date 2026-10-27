@@ -101,6 +101,9 @@ export const ChangeEmailSchema = z.object({
 
 export type ChangeEmailInput = z.infer<typeof ChangeEmailSchema>
 
+/** POST /api/auth/email-change/confirm — the link from the new address. */
+export const ConfirmEmailChangeSchema = z.object({ token: z.string().min(1) })
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
   hcaptchaToken: z.string().optional(),

@@ -11,6 +11,7 @@ const AUTH_ROUTES = [
   '/api/auth/reset-password',
   '/api/me/password',
   '/api/me/email',
+  '/api/auth/email-change/confirm',
 ]
 
 /** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */
