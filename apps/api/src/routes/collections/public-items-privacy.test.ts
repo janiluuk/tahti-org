@@ -86,6 +86,27 @@ describe('public collection surfaces hide private entries', () => {
     expect(titles).toEqual(['Released single', 'Out now EP'])
   })
 
+  it('gives each public track its genre, waveform, download flag and totals', async () => {
+    await prisma.sound.update({
+      where: { id: publicId },
+      data: { genre: 'Techno', peaks: [10, 80, 200] },
+    })
+    await prisma.listenEvent.create({
+      data: { soundId: publicId, dedupeKey: 'c1', dayBucket: '2026-10-01' },
+    })
+    const res = await app.inject({ method: 'GET', url: `/api/v1/collections/${SLUG}` })
+    const sound = res.json().items[0].sound
+    expect(sound).toMatchObject({
+      genre: 'Techno',
+      peaks: [10, 80, 200],
+      downloadsEnabled: true,
+      likeCount: 0,
+      playCount: 1,
+      downloadCount: 0,
+    })
+    expect(sound._count).toBeUndefined()
+  })
+
   it('the RSS feed leaves the private entries out', async () => {
     const res = await app.inject({ method: 'GET', url: `/api/v1/collections/${SLUG}/rss.xml` })
     expect(res.statusCode).toBe(200)
