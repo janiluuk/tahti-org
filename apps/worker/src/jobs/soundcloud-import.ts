@@ -4,7 +4,8 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { prisma, soundOwnerDefaults } from '@tahti/db'
+import { notifyJobOutcome, prisma, soundOwnerDefaults } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { extensionFromDriveFile, mapGenre } from '@tahti/shared'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
 import { uploadStream } from '../lib/minio.js'
@@ -136,6 +137,17 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
         completedAt: new Date(),
       },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: importJob.userId,
+        outcome: 'failed',
+        title: importJob.fileName
+          ? `"${importJob.fileName}" could not be imported from SoundCloud`
+          : 'A track could not be imported from SoundCloud',
+        body: 'See why on Upload, then try the import again.',
+        url: '/studio/upload',
+      })
+    }
     throw err
   }
 }

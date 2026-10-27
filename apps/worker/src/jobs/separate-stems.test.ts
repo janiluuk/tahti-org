@@ -6,7 +6,8 @@ import type { Job } from 'bullmq'
 import { writeFile } from 'node:fs/promises'
 import AdmZip from 'adm-zip'
 
-const { prismaMock, minioMock } = vi.hoisted(() => ({
+const { prismaMock, minioMock, notifyJobOutcome } = vi.hoisted(() => ({
+  notifyJobOutcome: vi.fn(),
   prismaMock: {
     sound: { findUnique: vi.fn() },
     soundStemJob: { update: vi.fn() },
@@ -17,7 +18,7 @@ const { prismaMock, minioMock } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@tahti/db', () => ({ prisma: prismaMock }))
+vi.mock('@tahti/db', () => ({ prisma: prismaMock, notifyJobOutcome }))
 vi.mock('../lib/minio.js', () => minioMock)
 
 const { processSeparateStemsJob } = await import('./separate-stems.js')
@@ -36,7 +37,8 @@ describe('processSeparateStemsJob', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     prismaMock.sound.findUnique.mockResolvedValue({
-      channel: { slug: 'test-artist' },
+      title: 'Night drive',
+      channel: { slug: 'test-artist', userId: 'user-1' },
     })
     minioMock.downloadToFile.mockImplementation(async (_key: string, destPath: string) => {
       await writeFile(destPath, 'fake-source-audio')
@@ -76,6 +78,15 @@ describe('processSeparateStemsJob', () => {
     expect(data.vocalsKey).toContain('stems/test-artist/item-1/job-1')
     expect(data.instrumentalKey).toContain('stems/test-artist/item-1/job-1')
     expect(data.expiresAt).toBeInstanceOf(Date)
+    expect(notifyJobOutcome).toHaveBeenCalledWith(
+      prismaMock,
+      expect.objectContaining({
+        userId: 'user-1',
+        outcome: 'done',
+        title: 'Stems for "Night drive" are ready',
+        url: '/studio/sounds/item-1',
+      }),
+    )
   })
 
   it('marks the job ERROR when the stem-separator call fails', async () => {
@@ -93,6 +104,8 @@ describe('processSeparateStemsJob', () => {
           sourceKey: 'raw/test-artist/track.wav',
           stemSet: 'FOUR_STEM',
         },
+        attemptsMade: 0,
+        opts: { attempts: 1 },
       } as unknown as Job),
     ).rejects.toThrow()
 
@@ -100,5 +113,12 @@ describe('processSeparateStemsJob', () => {
       (call: unknown[]) => (call[0] as { data: { status?: string } }).data.status === 'ERROR',
     )
     expect(errorCall).toBeDefined()
+    expect(notifyJobOutcome).toHaveBeenCalledWith(
+      prismaMock,
+      expect.objectContaining({
+        outcome: 'failed',
+        title: 'Stems for "Night drive" could not be made',
+      }),
+    )
   })
 })

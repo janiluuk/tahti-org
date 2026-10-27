@@ -4,7 +4,8 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { prisma, soundOwnerDefaults } from '@tahti/db'
+import { notifyJobOutcome, prisma, soundOwnerDefaults } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { extensionFromDriveFile } from '@tahti/shared'
 import { createHearthisClient } from '@tahti/hearthis'
 import { uploadStream } from '../lib/minio.js'
@@ -117,6 +118,17 @@ export async function processHearthisImportJob(job: Job): Promise<void> {
       where: { id: cloudImportJobId },
       data: { status: 'FAILED', error: message, completedAt: new Date() },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: importJob.userId,
+        outcome: 'failed',
+        title: importJob.fileName
+          ? `"${importJob.fileName}" could not be imported from hearthis.at`
+          : 'A track could not be imported from hearthis.at',
+        body: 'See why on Upload, then try the import again.',
+        url: '/studio/upload',
+      })
+    }
     throw err
   }
 }
