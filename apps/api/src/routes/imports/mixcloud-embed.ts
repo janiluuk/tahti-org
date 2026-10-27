@@ -17,7 +17,11 @@ import {
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
-import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
+import {
+  getUserIntegrationCredential,
+  restrictionErrorMessage,
+  soundOwnerDefaults,
+} from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
 
@@ -137,6 +141,8 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const { collectionId, cloudcastUrl } = parsed.data
       const user = request.sessionUser!
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
 
       const credential = await getUserIntegrationCredential(
         fastify.prisma,
