@@ -90,7 +90,7 @@ describe('Members read discussion topics', () => {
     })
     expect(res.json()).toMatchObject({
       title: `${PREFIX}pinned`,
-      posts: [expect.objectContaining({ body: 'First reply' })],
+      posts: [expect.objectContaining({ body: 'First reply', mine: true })],
     })
   })
 

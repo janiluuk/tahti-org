@@ -88,6 +88,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
               id: true,
               body: true,
               createdAt: true,
+              authorId: true,
               author: { select: { username: true, displayName: true } },
             },
           },
@@ -103,6 +104,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           body: post.body,
           author: post.author ? userName(post.author) : 'Deleted account',
           createdAt: post.createdAt.toISOString(),
+          mine: post.authorId === userId,
         })),
       })
     },
@@ -166,6 +168,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         body: post.body,
         author: post.author ? userName(post.author) : 'Deleted account',
         createdAt: post.createdAt.toISOString(),
+        mine: true,
       })
     },
   )
