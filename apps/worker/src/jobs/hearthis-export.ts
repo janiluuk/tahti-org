@@ -5,7 +5,8 @@ import type { Job } from 'bullmq'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
-import { prisma, getUserIntegrationCredential } from '@tahti/db'
+import { prisma, getUserIntegrationCredential, notifyJobOutcome } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { downloadToFile } from '../lib/minio.js'
 import { uploadTrackToHearthis, HearthisPremiumRequiredError } from '@tahti/hearthis'
 
@@ -61,11 +62,29 @@ export async function processHearthisExportJob(job: Job): Promise<void> {
         hearthisExportedAt: new Date(),
       },
     })
+    await notifyJobOutcome(prisma, {
+      userId: item.channel.userId,
+      outcome: 'done',
+      title: `"${item.title}" is on hearthis.at`,
+      url: `/studio/sounds/${soundId}`,
+    })
   } catch (err) {
     await prisma.sound.update({
       where: { id: soundId },
       data: { hearthisExportStatus: 'failed' },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: item.channel.userId,
+        outcome: 'failed',
+        title: `"${item.title}" could not be sent to hearthis.at`,
+        body:
+          err instanceof HearthisPremiumRequiredError
+            ? 'hearthis.at needs a Premium account for uploads; check yours, then try again.'
+            : 'Open the track in Studio and try again.',
+        url: `/studio/sounds/${soundId}`,
+      })
+    }
     // Surfaced in job logs, not persisted (Sound has no error-message
     // column — same convention as Release.revelatorStatus) — but distinguish
     // the Premium-lapsed case in the message so ops can tell it apart from a

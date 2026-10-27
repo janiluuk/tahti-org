@@ -5,7 +5,8 @@ import type { Job } from 'bullmq'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { prisma } from '@tahti/db'
+import { notifyJobOutcome, prisma } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { soundPlaybackKey } from '@tahti/shared'
 import { uploadToMixcloud } from '@tahti/mixcloud'
 import { downloadToFile } from '../lib/minio.js'
@@ -57,6 +58,12 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
         completedAt: new Date(),
       },
     })
+    await notifyJobOutcome(prisma, {
+      userId: upload.userId,
+      outcome: 'done',
+      title: `"${upload.sound.title}" is on Mixcloud`,
+      url: `/studio/sounds/${upload.soundId}`,
+    })
   } catch (err) {
     await prisma.mixUpload.update({
       where: { id: mixUploadId },
@@ -65,6 +72,15 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
         error: err instanceof Error ? err.message : String(err),
       },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: upload.userId,
+        outcome: 'failed',
+        title: `"${upload.sound.title}" could not be uploaded to Mixcloud`,
+        body: 'Open the track in Studio and try again.',
+        url: `/studio/sounds/${upload.soundId}`,
+      })
+    }
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
