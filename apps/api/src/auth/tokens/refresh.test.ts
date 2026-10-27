@@ -43,18 +43,23 @@ describe('auth refresh tokens', () => {
     }
   })
 
-  async function login(refreshTokenDelivery: 'body' | undefined = 'body') {
+  async function login(delivery: 'body' | 'cookie' = 'body') {
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password, deviceLabel: 'Test Device', refreshTokenDelivery },
+      payload: {
+        email,
+        password,
+        deviceLabel: 'Test Device',
+        ...(delivery === 'body' ? { refreshTokenDelivery: 'body' } : {}),
+      },
     })
     expect(response.statusCode).toBe(200)
     return response
   }
 
   it('keeps the refresh token out of the body for browser logins (cookie only)', async () => {
-    const res = await login(undefined)
+    const res = await login('cookie')
     const body = res.json()
     expect(body.accessToken).toBeTruthy()
     expect(body).not.toHaveProperty('refreshToken')
