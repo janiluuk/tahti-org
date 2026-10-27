@@ -15,6 +15,7 @@ import mePostRoutes from '../routes/me/posts.js'
 import channelPostsRoute from '../routes/channels/posts.js'
 import meNotificationRoutes from '../routes/me/notifications.js'
 import meNotificationDismissRoutes from '../routes/me/notifications-dismiss.js'
+import meNotificationCountRoutes from '../routes/me/notifications-counts.js'
 import meFeedRoutes from '../routes/me/feed.js'
 import meChannelMemberRoutes from '../routes/me/channel-members.js'
 import channelMembersRoute from '../routes/channels/members.js'
@@ -39,6 +40,7 @@ export async function registerCommunityRoutes(fastify: FastifyInstance): Promise
   await fastify.register(channelPostsRoute)
   await fastify.register(meNotificationRoutes)
   await fastify.register(meNotificationDismissRoutes)
+  await fastify.register(meNotificationCountRoutes)
   await fastify.register(meFeedRoutes)
   await fastify.register(meChannelMemberRoutes)
   await fastify.register(channelMembersRoute)
