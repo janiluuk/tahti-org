@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, and the fan subscription tiers and store items it offers. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, and the notifications it received. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -55,6 +55,7 @@ export async function buildActivityExport(
     stationSuggestions,
     fanTiers,
     storeItems,
+    notifications,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -389,6 +390,19 @@ export async function buildActivityExport(
         sounds: { select: { id: true, title: true } },
       },
     }),
+    prisma.notification.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        type: true,
+        title: true,
+        body: true,
+        url: true,
+        readAt: true,
+        createdAt: true,
+        actor: { select: { username: true } },
+      },
+    }),
   ])
 
   return {
@@ -429,5 +443,6 @@ export async function buildActivityExport(
     stationSuggestions,
     fanTiers,
     storeItems,
+    notifications,
   }
 }
