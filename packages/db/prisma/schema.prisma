@@ -664,6 +664,8 @@ enum NotificationType {
   THEME_APPROVED
   /// Admin rejected your theme submission (see the notification body for why).
   THEME_REJECTED
+  /// The board accepted or turned down a radio station you suggested.
+  RADIO_STATION_REVIEWED
   /// Manually sent by an admin from /admin/news's test-notification form.
   ADMIN_TEST
   /// Sent to every board member when the missed-live-show-scan cron flags a
