@@ -710,6 +710,8 @@ enum NotificationType {
   TRACK_EDITED_BY_BOARD
   /// The board circulated a motion draft for seconds; sent to every other member.
   MOTION_CIRCULATED
+  /// A member replied to a discussion topic you follow and have not muted.
+  DISCUSSION_REPLY
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY
