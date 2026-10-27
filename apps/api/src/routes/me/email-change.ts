@@ -72,6 +72,36 @@ const meEmailChangeRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // GET /api/me/email — the pending change, if any, so Settings can say a
+  // link is waiting at the new address. DELETE cancels it.
+  fastify.get(
+    '/api/me/email',
+    { preHandler: requireSession, schema: { tags: ['auth'] } },
+    async (request, reply) => {
+      const pending = await fastify.prisma.emailChange.findFirst({
+        where: { userId: request.sessionUser!.id, usedAt: null, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' },
+        select: { newEmail: true, expiresAt: true },
+      })
+      return reply.send({
+        pending: pending
+          ? { newEmail: pending.newEmail, expiresAt: pending.expiresAt.toISOString() }
+          : null,
+      })
+    },
+  )
+
+  fastify.delete(
+    '/api/me/email',
+    { preHandler: requireSession, schema: { tags: ['auth'] } },
+    async (request, reply) => {
+      await fastify.prisma.emailChange.deleteMany({
+        where: { userId: request.sessionUser!.id, usedAt: null },
+      })
+      return reply.status(204).send()
+    },
+  )
+
   // POST /api/auth/email-change/confirm — opened from the link sent to the
   // new address. Works signed out (the link may open on another device).
   // The old address is told, in case it wasn't the owner who asked.
