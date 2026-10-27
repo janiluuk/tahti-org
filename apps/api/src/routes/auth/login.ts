@@ -2,12 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import {
-  AuthLoginResponseSchema,
-  BETA_SUPPORT_INBOX,
-  LoginSchema,
-  openApiResponse,
-} from '@tahti/shared'
+import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
 import { restrictionErrorMessage } from '@tahti/db'
 import { verifyPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
@@ -15,6 +10,7 @@ import { issueAuthTokens } from '../../auth/tokens/index.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
+import { suspendedLoginMessage } from '../../lib/suspended-login.js'
 
 const loginRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -69,10 +65,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       // The password was right, so the account's owner may see why.
       if (user.suspendedAt) {
-        const reason = user.suspendReason ? ` Reason: ${user.suspendReason}.` : ''
-        return reply.status(403).send({
-          error: `This account has been suspended.${reason} Write to ${BETA_SUPPORT_INBOX} if you think this is a mistake.`,
-        })
+        return reply.status(403).send({ error: suspendedLoginMessage(user.suspendReason) })
       }
 
       if (user.deletedAt) {
