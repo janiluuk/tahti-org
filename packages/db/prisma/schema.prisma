@@ -2275,6 +2275,14 @@ model AnnouncementClip {
   // this file (not from a previous trim), so edits stay non-destructive and
   // the editor can always offer an "original" preview to A/B against.
   originalAudioKey     String
+  editorSettings       Json?
+  draftSettings        Json?
+  draftAudioKey        String?
+  draftDurationSec     Int?
+  draftStatus          AnnouncementRenderStatus?
+  renderToken          String?
+  placement            String                   @default("BETWEEN")
+  targetSoundId        String?
   durationSec          Int?
   isEnabled            Boolean                  @default(true)
   scheduleMode         AnnouncementScheduleMode @default(RANDOM)

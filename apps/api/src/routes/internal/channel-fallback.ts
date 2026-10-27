@@ -126,13 +126,27 @@ async function ownAnnouncementRows(
 ): Promise<FallbackPlaybackRow[]> {
   const clips = await prisma.announcementClip.findMany({
     where: { channelId, isEnabled: true },
-    select: { id: true, title: true, audioKey: true, durationSec: true },
+    orderBy: [{ position: 'asc' }, { id: 'asc' }],
+    select: {
+      id: true,
+      title: true,
+      audioKey: true,
+      durationSec: true,
+      scheduleMode: true,
+      everyNth: true,
+      placement: true,
+      targetSoundId: true,
+    },
   })
   return clips.map((c) => ({
     id: c.id,
     title: c.title,
     playbackKey: c.audioKey,
     durationSec: c.durationSec,
+    scheduleMode: c.scheduleMode,
+    everyNth: c.everyNth,
+    placement: c.placement,
+    targetSoundId: c.targetSoundId,
   }))
 }
 
@@ -277,6 +291,12 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      const [systemAnnouncements, ownAnnouncements] = await Promise.all([
+        systemAnnouncementRows(fastify.prisma),
+        channel.announcementsEnabled ? ownAnnouncementRows(fastify.prisma, channelId) : [],
+      ])
+      rows = interleaveAnnouncements(rows, systemAnnouncements, ownAnnouncements)
+
       const broadcast = await fastify.prisma.broadcast.findFirst({
         where: { channelId, endedAt: null },
         orderBy: { startedAt: 'desc' },
@@ -293,12 +313,6 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         rows = synced.rows
         seekOffsetSec = synced.position?.offsetSec
       }
-
-      const [systemAnnouncements, ownAnnouncements] = await Promise.all([
-        systemAnnouncementRows(fastify.prisma),
-        channel.announcementsEnabled ? ownAnnouncementRows(fastify.prisma, channelId) : [],
-      ])
-      rows = interleaveAnnouncements(rows, systemAnnouncements, ownAnnouncements)
 
       const body = renderFallbackM3u(await toM3uEntries(rows), seekOffsetSec)
 

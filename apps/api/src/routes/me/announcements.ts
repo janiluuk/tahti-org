@@ -3,7 +3,10 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { Prisma } from '@tahti/db'
 import {
+  AnnouncementVoiceSettingsSchema,
+  ApplyAnnouncementEditorSchema,
   AnnouncementClipListSchema,
   AnnouncementClipViewSchema,
   AnnouncementEditorRenderResponseSchema,
@@ -21,7 +24,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedGetUrl, presignedPutUrl } from '../../lib/minio.js'
-import { enqueueRenderAnnouncementTrim } from '../../lib/queue.js'
+import { enqueueRenderAnnouncementTrim, enqueueWarmSoundFallbackCache } from '../../lib/queue.js'
 
 const PRESIGN_TTL_SEC = 900
 
@@ -34,6 +37,9 @@ const CLIP_SELECT = {
   everyNth: true,
   position: true,
   renderStatus: true,
+  draftStatus: true,
+  placement: true,
+  targetSoundId: true,
   createdAt: true,
 } as const
 
@@ -128,6 +134,8 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
           title,
           audioKey: uploadId,
           originalAudioKey: uploadId,
+          isEnabled: false,
+          scheduleMode: 'AFTER_EVERY',
           durationSec,
         },
         select: CLIP_SELECT,
@@ -245,6 +253,9 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: CLIP_SELECT,
       })
+      await enqueueWarmSoundFallbackCache(channel.id).catch((error) =>
+        request.log.error(error, 'Could not warm clip playlist'),
+      )
       return reply.send(withProfileFlag(clip, channel.profileBackgroundClipId))
     },
   )
@@ -267,6 +278,9 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id, channelId: channel.id },
       })
       if (count === 0) return reply.status(404).send({ error: 'Announcement not found' })
+      await enqueueWarmSoundFallbackCache(channel.id).catch((error) =>
+        request.log.error(error, 'Could not warm clip playlist'),
+      )
       return reply.status(204).send()
     },
   )
@@ -299,6 +313,11 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
           title: true,
           audioKey: true,
           originalAudioKey: true,
+          editorSettings: true,
+          draftSettings: true,
+          draftAudioKey: true,
+          draftStatus: true,
+          renderToken: true,
           durationSec: true,
           renderStatus: true,
         },
@@ -313,6 +332,11 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         url,
         originalUrl,
+        editorSettings: clip.editorSettings,
+        draftSettings: clip.draftSettings,
+        draftUrl: clip.draftAudioKey ? await presignedGetUrl(clip.draftAudioKey, 3600) : null,
+        draftStatus: clip.draftStatus,
+        renderToken: clip.renderToken,
         durationSec: clip.durationSec,
         title: clip.title,
         renderStatus: clip.renderStatus,
@@ -372,6 +396,125 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send({ ok: true as const, renderStatus: 'PROCESSING' as const })
+    },
+  )
+  fastify.post(
+    '/api/me/announcements/:id/editor/preview',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const params = parseRouteParams(IdParamSchema, request.params)
+      const parsed = AnnouncementVoiceSettingsSchema.safeParse(request.body)
+      if (!params || !parsed.success)
+        return reply.status(400).send({ error: 'Invalid clip settings' })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: request.sessionUser!.id },
+        select: { id: true, slug: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      const clip = await fastify.prisma.announcementClip.findFirst({
+        where: { id: params.id, channelId: channel.id },
+      })
+      if (!clip) return reply.status(404).send({ error: 'Clip not found' })
+      const renderToken = nanoid(24)
+      await fastify.prisma.announcementClip.update({
+        where: { id: clip.id },
+        data: {
+          renderToken,
+          draftSettings: parsed.data,
+          draftStatus: 'PROCESSING',
+          draftAudioKey: null,
+          draftDurationSec: null,
+        },
+      })
+      try {
+        await enqueueRenderAnnouncementTrim({
+          clipId: clip.id,
+          sourceKey: clip.originalAudioKey,
+          outputKeyPrefix: `announcements/own/${channel.slug}`,
+          ...parsed.data,
+          editorToken: renderToken,
+        })
+      } catch (error) {
+        await fastify.prisma.announcementClip.updateMany({
+          where: { id: clip.id, renderToken },
+          data: { draftStatus: 'ERROR' },
+        })
+        request.log.error(error, 'Could not queue clip preview')
+        return reply.status(503).send({ error: 'Could not queue preview. Try again.' })
+      }
+      return reply.send({ renderToken, draftStatus: 'PROCESSING' })
+    },
+  )
+
+  fastify.post(
+    '/api/me/announcements/:id/editor/apply',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const params = parseRouteParams(IdParamSchema, request.params)
+      const parsed = ApplyAnnouncementEditorSchema.safeParse(request.body)
+      if (!params || !parsed.success)
+        return reply.status(400).send({ error: 'Invalid clip or placement settings' })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: request.sessionUser!.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      const settings = parsed.data
+      if (settings.placement !== 'BETWEEN') {
+        const target = await fastify.prisma.sound.findFirst({
+          where: {
+            id: settings.targetSoundId!,
+            channelId: channel.id,
+            status: 'READY',
+            isFallback: true,
+          },
+        })
+        if (!target)
+          return reply.status(400).send({
+            error: 'That program is no longer in your rotation. Choose another placement.',
+          })
+      }
+      const result = await fastify.prisma.$transaction(async (tx) => {
+        const clip = await tx.announcementClip.findFirst({
+          where: { id: params.id, channelId: channel.id },
+        })
+        if (!clip) return 'missing'
+        if (
+          clip.renderToken !== settings.renderToken ||
+          clip.draftStatus !== 'READY' ||
+          !clip.draftAudioKey ||
+          !clip.draftSettings
+        )
+          return 'stale'
+        const { count } = await tx.announcementClip.updateMany({
+          where: { id: clip.id, renderToken: settings.renderToken, draftStatus: 'READY' },
+          data: {
+            title: settings.title,
+            isEnabled: settings.isEnabled,
+            scheduleMode: settings.scheduleMode,
+            everyNth: settings.everyNth,
+            placement: settings.placement,
+            targetSoundId: settings.placement === 'BETWEEN' ? null : settings.targetSoundId,
+            audioKey: clip.draftAudioKey,
+            durationSec: clip.draftDurationSec,
+            editorSettings: clip.draftSettings as Prisma.InputJsonValue,
+            renderStatus: 'READY',
+            renderToken: null,
+            draftStatus: null,
+            draftAudioKey: null,
+            draftSettings: Prisma.DbNull,
+            draftDurationSec: null,
+          },
+        })
+        return count ? 'saved' : 'stale'
+      })
+      if (result === 'missing') return reply.status(404).send({ error: 'Clip not found' })
+      if (result === 'stale')
+        return reply.status(409).send({ error: 'Generate a fresh preview before saving.' })
+      await enqueueWarmSoundFallbackCache(channel.id).catch((error) =>
+        request.log.error(error, 'Could not warm clip playlist'),
+      )
+      return reply.send({ ok: true })
     },
   )
 }
