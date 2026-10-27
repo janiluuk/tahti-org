@@ -2,11 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { availableUserWhere } from '@tahti/db'
 import { MeListeningQuerySchema, MeListeningResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
 
 const TOP_LIMIT = 5
+// Candidates looked up per list, so hidden artists and tracks can drop out
+// and the list still fills up.
+const TOP_CANDIDATES = 25
 const SESSION_LIMIT = 50_000
 
 function sessionSeconds(row: { startedAt: Date; lastSeenAt: Date; maxPositionSec: number | null }) {
@@ -66,18 +70,32 @@ const meListeningRoutes: FastifyPluginAsync = async (fastify) => {
         if (row.soundId) bySound.set(row.soundId, (bySound.get(row.soundId) ?? 0) + s)
       }
 
-      const topChannels = topBy(byChannel, TOP_LIMIT)
-      const topSounds = topBy(bySound, TOP_LIMIT)
+      const userId = request.sessionUser!.id
+      const topChannels = topBy(byChannel, TOP_CANDIDATES)
+      const topSounds = topBy(bySound, TOP_CANDIDATES)
       const [channels, sounds] = await Promise.all([
         fastify.prisma.channel.findMany({
-          where: { id: { in: topChannels.map(([id]) => id) } },
+          // Suspended and deleted artists drop out of the list (their
+          // minutes still count in the totals).
+          where: {
+            id: { in: topChannels.map(([id]) => id) },
+            OR: [{ userId }, { user: availableUserWhere }],
+          },
           select: {
             id: true,
             user: { select: { username: true, displayName: true, avatarUrl: true } },
           },
         }),
         fastify.prisma.sound.findMany({
-          where: { id: { in: topSounds.map(([id]) => id) } },
+          // A track its artist has since made private, or one by an
+          // unavailable artist, is no longer named; your own always are.
+          where: {
+            id: { in: topSounds.map(([id]) => id) },
+            OR: [
+              { channel: { userId } },
+              { isPublic: true, channel: { user: availableUserWhere } },
+            ],
+          },
           select: {
             id: true,
             title: true,
@@ -93,32 +111,36 @@ const meListeningRoutes: FastifyPluginAsync = async (fastify) => {
         range,
         minutes: Math.round(seconds / 60),
         listens: rows.length,
-        topArtists: topChannels.flatMap(([id, s]) => {
-          const channel = channelById.get(id)
-          return channel
-            ? [
-                {
-                  username: channel.user.username,
-                  displayName: userName(channel.user),
-                  avatarUrl: channel.user.avatarUrl,
-                  minutes: Math.round(s / 60),
-                },
-              ]
-            : []
-        }),
-        topTracks: topSounds.flatMap(([id, s]) => {
-          const sound = soundById.get(id)
-          return sound
-            ? [
-                {
-                  soundId: sound.id,
-                  title: sound.title,
-                  artistName: trackArtistName(sound),
-                  minutes: Math.round(s / 60),
-                },
-              ]
-            : []
-        }),
+        topArtists: topChannels
+          .flatMap(([id, s]) => {
+            const channel = channelById.get(id)
+            return channel
+              ? [
+                  {
+                    username: channel.user.username,
+                    displayName: userName(channel.user),
+                    avatarUrl: channel.user.avatarUrl,
+                    minutes: Math.round(s / 60),
+                  },
+                ]
+              : []
+          })
+          .slice(0, TOP_LIMIT),
+        topTracks: topSounds
+          .flatMap(([id, s]) => {
+            const sound = soundById.get(id)
+            return sound
+              ? [
+                  {
+                    soundId: sound.id,
+                    title: sound.title,
+                    artistName: trackArtistName(sound),
+                    minutes: Math.round(s / 60),
+                  },
+                ]
+              : []
+          })
+          .slice(0, TOP_LIMIT),
       })
     },
   )

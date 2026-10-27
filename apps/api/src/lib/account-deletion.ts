@@ -89,6 +89,28 @@ export async function executeAccountDeletion(
 
   await prisma.session.deleteMany({ where: { userId } })
   await prisma.emailVerification.deleteMany({ where: { userId } })
+  await prisma.passwordSetup.deleteMany({ where: { userId } })
+
+  // Imports and Mixcloud uploads still waiting would run against a deleted
+  // channel; they end here with a reason instead of failing on a missing token.
+  const endedAt = new Date()
+  await prisma.cloudImportJob.updateMany({
+    where: { userId, status: { in: ['QUEUED', 'DOWNLOADING'] } },
+    data: { status: 'FAILED', error: 'Account deleted', completedAt: endedAt },
+  })
+  await prisma.mixUpload.updateMany({
+    where: { userId, status: { in: ['PENDING', 'UPLOADING'] } },
+    data: { status: 'FAILED', error: 'Account deleted', completedAt: endedAt },
+  })
+  // A jam the account hosts ends for its guests; in others it leaves.
+  await prisma.jamSession.updateMany({
+    where: { hostUserId: userId, endedAt: null },
+    data: { endedAt, isPlaying: false },
+  })
+  await prisma.jamParticipant.updateMany({
+    where: { userId, leftAt: null },
+    data: { leftAt: endedAt },
+  })
 
   // Listening the account did stays in artists' anonymous totals, but is no
   // longer tied to the account (it carries place and device labels).
