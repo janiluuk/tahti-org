@@ -47,6 +47,7 @@ export const NOTIFICATION_KIND_TYPES = {
     'CORRECTION_RESOLVED',
     'ELECTION_OPENED',
     'ELECTION_RESULT',
+    'FEATURE_REQUEST_UPDATED',
   ],
 } as const satisfies Record<string, readonly NotificationType[]>
 
