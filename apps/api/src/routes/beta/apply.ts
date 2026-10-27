@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyBoardOfSupportTicket } from '@tahti/db'
 import { BetaApplyResponseSchema, BetaApplySchema, openApiResponse } from '@tahti/shared'
 import { sendBetaApplicationEmail } from '../../lib/email.js'
 import { applyPublicFormCors } from '../../lib/public-cors.js'
@@ -107,6 +108,9 @@ const betaApplyRoutes: FastifyPluginAsync = async (fastify) => {
           },
         })
         ticketId = ticket.id.toString()
+        await notifyBoardOfSupportTicket(fastify.prisma, { subject: ticket.subject }, 'new').catch(
+          (err: unknown) => fastify.log.warn({ err }, 'beta apply board notice failed'),
+        )
       } catch (err) {
         fastify.log.error({ err }, 'beta apply ticket create failed')
       }
