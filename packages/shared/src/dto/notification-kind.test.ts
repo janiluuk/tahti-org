@@ -23,6 +23,9 @@ describe('notificationKindOf', () => {
     }
     expect(notificationKindOf('FAN_SUB_CANCELED')).toBe('money')
     expect(notificationKindOf('GRANT_AWARDED')).toBe('money')
+    expect(notificationKindOf('MEMBERSHIP_ENDED')).toBe('money')
+    expect(notificationKindOf('BACKGROUND_JOB_DONE')).toBe('music')
+    expect(notificationKindOf('BACKGROUND_JOB_FAILED')).toBe('music')
     for (const type of [
       'ACCOUNT_RESTRICTED',
       'BOARD_ACCOUNT_CHANGE',
