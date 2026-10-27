@@ -220,6 +220,7 @@ describe('GET /api/v1/u/:username/profile', () => {
       playCount: 2,
       likeCount: 1,
       downloadCount: 1,
+      downloadsEnabled: true,
     })
   })
 
