@@ -67,6 +67,13 @@ const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
             createdAt: true,
             socialLinks: true,
             channel: { select: { slug: true, state: true } },
+            notifyMoneyMovesEmail: true,
+            notifyMoneyMovesInApp: true,
+            notifyListenerActivityEmail: true,
+            notifyWeeklyRecapEmail: true,
+            notifyStudioJobsInApp: true,
+            topListsOptOut: true,
+            totpEnabledAt: true,
           },
         }),
         fastify.prisma.fanSubscription.findMany({
