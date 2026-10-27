@@ -50,7 +50,7 @@ describe('Mikseri embed import', () => {
       headers: { cookie },
       payload: {
         collectionId,
-        trackUrl: 'https://mikseri.net/artists/example/demo.635878/',
+        trackUrl: 'https://mikseri.net/artists/example/demo/635878/',
         title: 'Demo song',
         artistName: 'Demo artist',
         genre: 'Electronic',
