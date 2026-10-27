@@ -200,7 +200,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Members see "Unlimited" whatever the target is, so only others hear of it.
       if (!existing.isMember && existing.softTargetBytes !== BigInt(quotaBytes)) {
-        const gb = (quotaBytes / 1_000_000_000).toLocaleString('en', { maximumFractionDigits: 1 })
+        const gb = (quotaBytes / 1024 ** 3).toFixed(1)
         await notifyUserOfBoardAccountChange(fastify.prisma, routeParams.id, {
           title: `The board set your storage target to ${gb} GB`,
           url: '/settings/account',
