@@ -632,6 +632,44 @@ export async function notifyBoardOfContentReport(
       title: `New report: ${report.label}`,
       body: `Reason: ${REPORT_REASON_LABELS[report.reason] ?? report.reason}`,
       url: '/admin/moderation/content-reports',
+
+const FEATURE_REQUEST_STATUS_LABELS: Record<string, string> = {
+  OPEN: 'reopened',
+  PLANNED: 'planned',
+  IN_PROGRESS: 'in progress',
+  DONE: 'done',
+  DECLINED: 'declined',
+  DUPLICATE: 'closed as a duplicate',
+}
+
+/** Tells whoever proposed or voted for a feature request that the board
+ * moved it (planned, in progress, done, declined, merged into another).
+ * The board member who made the change, and unavailable accounts, are left
+ * out. */
+export async function notifyFeatureRequestFollowers(
+  prisma: PrismaClient,
+  request: { id: string; title: string; status: string; proposedById: string; actorId: string },
+): Promise<void> {
+  const voters = await prisma.featureRequestVote.findMany({
+    where: { featureRequestId: request.id, user: availableUserWhere },
+    select: { userId: true },
+  })
+  const proposer = await prisma.user.findFirst({
+    where: { id: request.proposedById, ...availableUserWhere },
+    select: { id: true },
+  })
+  const ids = new Set([...(proposer ? [proposer.id] : []), ...voters.map((v) => v.userId)])
+  ids.delete(request.actorId)
+  if (ids.size === 0) return
+
+  const label = FEATURE_REQUEST_STATUS_LABELS[request.status] ?? request.status.toLowerCase()
+  await prisma.notification.createMany({
+    data: [...ids].map((userId) => ({
+      userId,
+      type: 'FEATURE_REQUEST_UPDATED' as const,
+      title: `Feature request ${label}: ${request.title}`,
+      body: userId === request.proposedById ? 'You proposed this.' : 'You voted for this.',
+      url: '/governance/feature-requests',
     })),
   })
 }

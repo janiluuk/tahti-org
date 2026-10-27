@@ -708,6 +708,8 @@ enum NotificationType {
   SUPPORT_TICKET
   /// Board: someone reported content for review.
   CONTENT_REPORTED
+  /// The board moved a feature request you proposed or voted for.
+  FEATURE_REQUEST_UPDATED
 
   @@schema("core")
 }

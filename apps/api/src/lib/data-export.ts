@@ -6,7 +6,12 @@ import type { PrismaClient } from '@tahti/db'
 /** What the account itself made or did, beyond the profile and billing rows
  * the export always had: uploads, collections, posts, events, comments,
  * likes, reposts, follows, messages it sent, purchases, newsletter
- * subscriptions, the accounts it blocked and its listening sessions. Other
+ * subscriptions, the accounts it blocked, its listening sessions, the chat
+ * messages it posted while signed in, its track reactions, and its feature
+ * requests, motion comments, seconds and votes (the member already sees their
+ * own choice on each motion), correction requests, its follow-ups on its
+ * support requests, the radio stations, themes and embeds it added, what
+ * it downloaded and the Tahti Jams it hosted or joined. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -28,6 +33,21 @@ export async function buildActivityExport(
     supportRequests,
     blockedAccounts,
     listening,
+    chatMessages,
+    trackReactions,
+    featureRequests,
+    featureRequestComments,
+    featureRequestVotes,
+    motionComments,
+    motionSeconds,
+    motionVotes,
+    correctionRequests,
+    supportReplies,
+    radioStations,
+    themes,
+    embeds,
+    downloads,
+    jams,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -141,6 +161,141 @@ export async function buildActivityExport(
         durationSec: true,
       },
     }),
+    prisma.chatMessage.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        text: true,
+        handle: true,
+        fanOnly: true,
+        createdAt: true,
+        removedAt: true,
+        channel: { select: { slug: true } },
+      },
+    }),
+    prisma.trackReaction.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        type: true,
+        positionSec: true,
+        createdAt: true,
+        sound: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.featureRequest.findMany({
+      where: { proposedById: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { title: true, description: true, status: true, createdAt: true },
+    }),
+    prisma.featureRequestComment.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { body: true, createdAt: true, featureRequest: { select: { title: true } } },
+    }),
+    prisma.featureRequestVote.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true, featureRequest: { select: { title: true } } },
+    }),
+    prisma.motionComment.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        body: true,
+        createdAt: true,
+        removedAt: true,
+        motion: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.motionSecond.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true, motion: { select: { id: true, title: true } } },
+    }),
+    prisma.vote.findMany({
+      where: { userId: user.id },
+      orderBy: { castAt: 'asc' },
+      select: { choice: true, castAt: true, motion: { select: { id: true, title: true } } },
+    }),
+    prisma.governanceCorrectionRequest.findMany({
+      where: { requesterId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        subject: true,
+        details: true,
+        recordKind: true,
+        state: true,
+        resolutionNote: true,
+        resolvedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.supportTicketNote.findMany({
+      where: { authorId: user.id, kind: 'MESSAGE', ticket: { artistId: user.id } },
+      orderBy: { createdAt: 'asc' },
+      select: { body: true, createdAt: true, ticket: { select: { subject: true } } },
+    }),
+    prisma.internetRadioStation.findMany({
+      where: { userId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        genre: true,
+        description: true,
+        streamUrl: true,
+        programmingUrl: true,
+        iconUrl: true,
+        createdAt: true,
+      },
+    }),
+    prisma.theme.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        name: true,
+        varsJson: true,
+        darkJson: true,
+        visibility: true,
+        prUrl: true,
+        createdAt: true,
+      },
+    }),
+    prisma.artistEmbed.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { provider: true, url: true, title: true, createdAt: true },
+    }),
+    prisma.download.findMany({
+      where: { byUserId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        channelId: true,
+        soundId: true,
+        releaseTrackId: true,
+        format: true,
+        countryCode: true,
+        createdAt: true,
+      },
+    }),
+    prisma.jamParticipant.findMany({
+      where: { userId: user.id },
+      orderBy: { joinedAt: 'asc' },
+      select: {
+        role: true,
+        joinedAt: true,
+        leftAt: true,
+        removedAt: true,
+        session: {
+          select: {
+            code: true,
+            createdAt: true,
+            endedAt: true,
+            host: { select: { username: true } },
+          },
+        },
+      },
+    }),
   ])
 
   return {
@@ -159,5 +314,20 @@ export async function buildActivityExport(
     supportRequests,
     blockedAccounts,
     listening,
+    chatMessages,
+    trackReactions,
+    featureRequests,
+    featureRequestComments,
+    featureRequestVotes,
+    motionComments,
+    motionSeconds,
+    motionVotes,
+    correctionRequests,
+    supportReplies,
+    radioStations,
+    themes,
+    embeds,
+    downloads,
+    jams,
   }
 }

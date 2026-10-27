@@ -52,7 +52,10 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       const { dimension, ...window } = parsed.data
       const channelId = await ownChannelId(request.sessionUser!.id)
       const shares = channelId
-        ? await buildAudienceShares(fastify.prisma, channelId, dimension, window)
+        ? await buildAudienceShares(fastify.prisma, channelId, dimension, {
+            ...window,
+            excludeUserId: request.sessionUser!.id,
+          })
         : { total: 0, items: [] }
       return reply.send({ dimension, minBucket: AUDIENCE_MIN_BUCKET, ...shares })
     },
@@ -78,7 +81,10 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const channelId = await ownChannelId(request.sessionUser!.id)
       const locations = channelId
-        ? await buildLocationShares(fastify.prisma, channelId, parsed.data)
+        ? await buildLocationShares(fastify.prisma, channelId, {
+            ...parsed.data,
+            excludeUserId: request.sessionUser!.id,
+          })
         : { total: 0, countries: [], cities: [] }
       return reply.send({ minBucket: AUDIENCE_MIN_BUCKET, ...locations })
     },
@@ -104,7 +110,10 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const channelId = await ownChannelId(request.sessionUser!.id)
       const curve = channelId
-        ? await buildLoyaltyCurve(fastify.prisma, channelId, parsed.data)
+        ? await buildLoyaltyCurve(fastify.prisma, channelId, {
+            ...parsed.data,
+            excludeUserId: request.sessionUser!.id,
+          })
         : { total: 0, points: [] }
       return reply.send({ minBucket: AUDIENCE_MIN_BUCKET, ...curve })
     },
@@ -131,7 +140,10 @@ const meStatsAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       const channelId = await ownChannelId(request.sessionUser!.id)
       return reply.send(
         channelId
-          ? await buildListeningTime(fastify.prisma, channelId, parsed.data)
+          ? await buildListeningTime(fastify.prisma, channelId, {
+              ...parsed.data,
+              excludeUserId: request.sessionUser!.id,
+            })
           : { listens: 0, minutes: 0, averageMinutes: 0 },
       )
     },

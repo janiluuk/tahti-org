@@ -16,6 +16,9 @@ export interface AudienceWindow {
   to?: string
   soundId?: string
   includeBots: boolean
+  /** The artist's own listening (signed in to their account) is left out,
+   * like their own plays in the play counts. */
+  excludeUserId?: string
 }
 
 function startedAtFilter(window: AudienceWindow): Prisma.DateTimeFilter | undefined {
@@ -44,6 +47,9 @@ export function audienceWhere(
     ...(window.soundId ? { soundId: window.soundId } : {}),
     ...(startedAt ? { startedAt } : {}),
     ...(window.includeBots ? {} : { isBot: false }),
+    ...(window.excludeUserId
+      ? { OR: [{ byUserId: null }, { byUserId: { not: window.excludeUserId } }] }
+      : {}),
   }
 }
 

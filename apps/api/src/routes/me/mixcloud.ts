@@ -175,7 +175,7 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['releases'],
         summary: 'Queue Mixcloud upload for a sound',
         description:
-          "Upload/rescue a READY archive mix to the caller's Mixcloud account. Answers 202. 403 PROVIDER_NOT_CONNECTED when Mixcloud OAuth is configured but the caller has not connected.",
+          "Upload/rescue a READY archive mix to the caller's Mixcloud account. Answers 202; a failed upload can be sent again. 403 PROVIDER_NOT_CONNECTED when Mixcloud OAuth is configured but the caller has not connected.",
         response: openApiResponses([
           { status: 202, schema: MixcloudUploadQueuedSchema, name: 'MixcloudUploadQueued' },
         ]),
@@ -209,7 +209,9 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       if (item.status !== 'READY') {
         return reply.status(409).send({ error: 'Sound item is not ready for upload' })
       }
-      if (item.mixUpload) {
+      // A failed upload can be sent again (the row is reused, so the sound
+      // keeps one upload); one that is queued, uploading or done can't.
+      if (item.mixUpload && item.mixUpload.status !== 'FAILED') {
         return reply.status(409).send({
           error: 'Already queued',
           status: item.mixUpload.status,
@@ -217,9 +219,14 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const upload = await fastify.prisma.mixUpload.create({
-        data: { userId: user.id, soundId: itemId, status: 'PENDING' },
-      })
+      const upload = item.mixUpload
+        ? await fastify.prisma.mixUpload.update({
+            where: { id: item.mixUpload.id },
+            data: { status: 'PENDING', error: null, completedAt: null, queuedAt: new Date() },
+          })
+        : await fastify.prisma.mixUpload.create({
+            data: { userId: user.id, soundId: itemId, status: 'PENDING' },
+          })
 
       await mediaQueue.add('mixcloud-upload', { mixUploadId: upload.id })
 
