@@ -722,6 +722,8 @@ enum NotificationType {
   MODERATOR_ADDED
   /// Board: a new support request, or the requester replied on one.
   SUPPORT_TICKET
+  /// The board removed a track or comment of yours.
+  CONTENT_REMOVED_BY_BOARD
   /// Board: someone reported content for review.
   CONTENT_REPORTED
   /// The board moved a feature request you proposed or voted for.

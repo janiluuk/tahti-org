@@ -48,6 +48,7 @@ export const NotificationTypeSchema = z.enum([
   'SUPPORT_REPLY',
   'MODERATOR_ADDED',
   'SUPPORT_TICKET',
+  'CONTENT_REMOVED_BY_BOARD',
   'CONTENT_REPORTED',
   'FEATURE_REQUEST_UPDATED',
 ])

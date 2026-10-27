@@ -18,6 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { notifyOfBoardRemoval } from '../../lib/board-removal-notice.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { trackArtistName } from '../../lib/safe-names.js'
 
@@ -349,7 +350,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
 
       const found = await fastify.prisma.sound.findMany({
         where: { id: { in: ids } },
-        select: { id: true, title: true, channel: { select: { slug: true } } },
+        select: { id: true, title: true, channel: { select: { slug: true, userId: true } } },
       })
       const byId = new Map(found.map((item) => [item.id, item]))
 
@@ -366,6 +367,16 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
         try {
           await fastify.prisma.sound.delete({ where: { id } })
           deleted.push({ id, title: item.title, slug: item.channel.slug })
+          await notifyOfBoardRemoval(
+            fastify.prisma,
+            {
+              ownerId: item.channel.userId,
+              actorId: actor.id,
+              title: `The board removed "${item.title}"`,
+              url: '/studio/sounds',
+            },
+            request.log,
+          )
         } catch (err) {
           if (err instanceof PrismaNS.PrismaClientKnownRequestError && err.code === 'P2003') {
             failed.push({
@@ -464,7 +475,7 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = request.params as { id: string }
       const item = await fastify.prisma.sound.findUnique({
         where: { id },
-        select: { id: true, title: true, channel: { select: { slug: true } } },
+        select: { id: true, title: true, channel: { select: { slug: true, userId: true } } },
       })
       if (!item) return reply.status(404).send({ error: 'Sound item not found' })
 
@@ -490,6 +501,16 @@ const adminFilesRoutes: FastifyPluginAsync = async (fastify) => {
           deleted: true,
         },
       })
+      await notifyOfBoardRemoval(
+        fastify.prisma,
+        {
+          ownerId: item.channel.userId,
+          actorId: actor.id,
+          title: `The board removed "${item.title}"`,
+          url: '/studio/sounds',
+        },
+        request.log,
+      )
       return reply.status(204).send()
     },
   )
