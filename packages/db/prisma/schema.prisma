@@ -976,6 +976,7 @@ model User {
   notifyMoneyMovesInApp         Boolean   @default(true)
   notifyListenerActivityEmail   Boolean   @default(true)
   notifyWeeklyRecapEmail        Boolean   @default(true)
+  notifyStudioJobsInApp         Boolean   @default(true)
   suspendedAt                   DateTime?
   suspendReason                 String?
   deletedAt                     DateTime?

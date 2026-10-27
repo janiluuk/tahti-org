@@ -15,14 +15,15 @@ export type JobOutcome = {
 /** Tells the owner how a background job they started ended — uploads that
  * fail to process, editor renders, stems, exports, imports, deliveries — so
  * they don't have to keep a page open to find out. Skips deleted or
- * suspended accounts. Never throws: the job's own state is already saved. */
+ * suspended accounts and anyone who turned these notices off
+ * (`notifyStudioJobsInApp`). Never throws: the job's own state is already saved. */
 export async function notifyJobOutcome(prisma: PrismaClient, job: JobOutcome): Promise<void> {
   try {
     const user = await prisma.user.findFirst({
       where: { id: job.userId, ...availableUserWhere },
-      select: { id: true },
+      select: { id: true, notifyStudioJobsInApp: true },
     })
-    if (!user) return
+    if (!user?.notifyStudioJobsInApp) return
     await prisma.notification.create({
       data: {
         userId: user.id,

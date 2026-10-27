@@ -8,6 +8,7 @@ export const NotificationPreferencesSchema = z.object({
   notifyMoneyMovesInApp: z.boolean(),
   notifyListenerActivityEmail: z.boolean(),
   notifyWeeklyRecapEmail: z.boolean(),
+  notifyStudioJobsInApp: z.boolean(),
 })
 
 export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>
