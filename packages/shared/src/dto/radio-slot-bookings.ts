@@ -10,6 +10,10 @@ export const RADIO_SLOT_MAX_HOURS = 2
 export const RADIO_SLOT_MAX_ADVANCE_DAYS = 30
 /** Cap on simultaneous upcoming reservations per channel — keeps the shared calendar fair. */
 export const RADIO_SLOT_MAX_UPCOMING_PER_CHANNEL = 5
+/** Widest window the public (no-auth) slot calendar serves in one request. Bookings
+ * open at most RADIO_SLOT_MAX_ADVANCE_DAYS ahead, so this covers every client view
+ * while keeping an anonymous caller from scanning the whole booking history at once. */
+export const RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS = 62
 
 export const CreateRadioSlotBookingSchema = z.object({
   startAt: z.string().datetime(),

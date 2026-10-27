@@ -11,6 +11,7 @@ import {
   RadioShowDetailSchema,
   RadioShowNowPlayingSchema,
   RadioShowUpcomingSchema,
+  RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS,
   RadioSlotBookingListQuerySchema,
   TAHTI_RADIO_SLUG,
   openApiResponse,
@@ -26,6 +27,7 @@ import { availableUserWhere } from '../../lib/listed-artist.js'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
+const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 // Same staleness window as apps/api/src/routes/channels/get.ts — stale
 // poller data (orchestrator down, channel not actually running) is worse
@@ -269,6 +271,11 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       const from = new Date(parsed.data.from)
       const to = new Date(parsed.data.to)
       if (to <= from) return reply.status(400).send({ error: '"to" must be after "from"' })
+      if (to.getTime() - from.getTime() > RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS * MS_PER_DAY) {
+        return reply
+          .status(400)
+          .send({ error: `The range can span at most ${RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS} days` })
+      }
 
       const rows = await fastify.prisma.radioSlotBooking.findMany({
         where: { startAt: { lt: to }, endAt: { gt: from }, channel: { user: availableUserWhere } },
