@@ -679,6 +679,8 @@ enum NotificationType {
   ELECTION_OPENED
   /// The board recorded the result of an election you stood in.
   ELECTION_RESULT
+  /// A board member edited the details of one of your tracks.
+  TRACK_EDITED_BY_BOARD
   /// The board circulated a motion draft for seconds; sent to every other member.
   MOTION_CIRCULATED
   /// A lossless upload's compressed streaming copy finished encoding — see

@@ -10,6 +10,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyArtistOfBoardTrackEdit } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import {
   soundMetadataSelect,
@@ -24,6 +25,21 @@ import type { TracklistEntry } from '@tahti/shared'
 // Board access to any artist's sound/track metadata — mirrors /api/me/sound's
 // list + patch endpoints exactly, scoped by :slug (requireBoard) instead of the
 // session user. Same pattern as /api/admin/channels/:slug/programme.
+function comparable(value: unknown): string {
+  return value === null || value === undefined || value === '' ? '' : JSON.stringify(value)
+}
+
+function changedFields(
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown>,
+  fields: string[],
+): string[] {
+  return fields.filter(
+    (field) =>
+      !before || !(field in after) || comparable(before[field]) !== comparable(after[field]),
+  )
+}
+
 const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/admin/channels/:slug/sound',
@@ -104,6 +120,10 @@ const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      const before = await fastify.prisma.sound.findUnique({
+        where: { id: itemId },
+        select: soundMetadataSelect,
+      })
       const updated = await fastify.prisma.sound.update({
         where: { id: itemId },
         data: patch.data,
@@ -129,6 +149,13 @@ const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: itemId,
         meta: { slug, previousTitle: item.title, fields: Object.keys(patch.data) },
       })
+      await notifyArtistOfBoardTrackEdit(fastify.prisma, {
+        soundId: itemId,
+        channelId: item.channelId,
+        title: updated.title,
+        fields: changedFields(before, updated, Object.keys(patch.data)),
+        actorId: actor.id,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'board edit notice failed'))
 
       return reply.send(serializeSound(updated))
     },

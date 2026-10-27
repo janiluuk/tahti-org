@@ -283,6 +283,35 @@ export async function notifyArtistOfNewComment(
   })
 }
 
+function fieldLabel(field: string): string {
+  return field.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()
+}
+
+/** Tells an artist a board member changed a track's details from Admin →
+ * Content, naming the fields, so an edit they didn't make isn't a mystery.
+ * Silent when the board member edits their own track. */
+export async function notifyArtistOfBoardTrackEdit(
+  prisma: PrismaClient,
+  edit: { soundId: string; channelId: string; title: string; fields: string[]; actorId: string },
+): Promise<void> {
+  if (edit.fields.length === 0) return
+  const channel = await prisma.channel.findUnique({
+    where: { id: edit.channelId },
+    select: { userId: true },
+  })
+  if (!channel || channel.userId === edit.actorId) return
+  await prisma.notification.create({
+    data: {
+      userId: channel.userId,
+      type: 'TRACK_EDITED_BY_BOARD',
+      actorUserId: edit.actorId,
+      title: `The board edited "${edit.title}"`,
+      body: `Changed: ${edit.fields.map(fieldLabel).join(', ')}`.slice(0, 500),
+      url: `/studio/sounds/${edit.soundId}`,
+    },
+  })
+}
+
 /** Notify an artist that someone reposted/shared one of their tracks. */
 export async function notifyArtistOfNewRepost(
   prisma: PrismaClient,

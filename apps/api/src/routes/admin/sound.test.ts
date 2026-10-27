@@ -101,6 +101,20 @@ describe("admin sound edit — board access to any channel's tracks", () => {
     expect(audit?.actorId).not.toBe(artistUserId)
   })
 
+  it('tells the artist which details the board changed', async () => {
+    const notices = await prisma.notification.findMany({
+      where: { userId: artistUserId, type: 'TRACK_EDITED_BY_BOARD' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]).toMatchObject({
+      title: 'The board edited "Moderated title"',
+      url: `/studio/sounds/${soundId}`,
+    })
+    expect(notices[0].body).toMatch(/^Changed: /)
+    expect(notices[0].body).toContain('title')
+    expect(notices[0].body).not.toContain('description')
+  })
+
   it('404s for an item that does not belong to the given channel slug', async () => {
     const other = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,

@@ -54,6 +54,7 @@ export {
   notifyArtistOfNewComment,
   notifyArtistOfNewRepost,
   notifyArtistStreamingCopyReady,
+  notifyArtistOfBoardTrackEdit,
   notifyPlaylistOfNewTrack,
   notifyUserOfNewMessage,
   notifyUsersOfChatMention,
