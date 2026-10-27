@@ -6,7 +6,8 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, syncActiveVersionToItem } from '@tahti/db'
+import { notifyJobOutcome, prisma, syncActiveVersionToItem, type JobOutcome } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import {
   chooseLossyOutputBitrateKbps,
   isLosslessCodec,
@@ -82,6 +83,20 @@ function ffmpegToFlac(inputPath: string, outputPath: string): Promise<void> {
   })
 }
 
+/** What the artist is told when a new version of a track can't be processed. */
+export function soundVersionFailedNotice(version: {
+  versionNumber: number
+  sound: { id: string; title: string; channel: { userId: string } }
+}): JobOutcome {
+  return {
+    userId: version.sound.channel.userId,
+    outcome: 'failed',
+    title: `Version ${version.versionNumber} of "${version.sound.title}" could not be processed`,
+    body: 'The track keeps playing its current version. Upload the new one again.',
+    url: `/studio/sounds/${version.sound.id}`,
+  }
+}
+
 export async function processTranscodeVersionJob(job: Job): Promise<void> {
   const { versionId } = job.data as { versionId: string }
   const startedAt = Date.now()
@@ -89,7 +104,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
   const version = await prisma.soundVersion.findUnique({
     where: { id: versionId },
     include: {
-      sound: { include: { channel: { select: { slug: true } } } },
+      sound: { include: { channel: { select: { slug: true, userId: true } } } },
     },
   })
 
@@ -177,6 +192,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
       where: { id: versionId },
       data: { status: 'ERROR' },
     })
+    if (isFinalAttempt(job)) await notifyJobOutcome(prisma, soundVersionFailedNotice(version))
     logLine(
       {
         itemId,
