@@ -130,3 +130,26 @@ export async function revokeAllSessions(prisma: PrismaClient, userId: string): P
   await prisma.session.deleteMany({ where: { userId } })
   await Promise.all(revoked.map((s) => invalidateCachedJson(sessionCacheKey(s.id))))
 }
+
+/** Ends every session (and its refresh tokens) except the one making the
+ * request — for a password change, where the person changing it stays
+ * signed in but anyone else holding the old credentials is cut off. */
+export async function revokeOtherSessions(
+  prisma: PrismaClient,
+  userId: string,
+  keepSessionId: string | null,
+): Promise<void> {
+  const others = { userId, ...(keepSessionId ? { id: { not: keepSessionId } } : {}) }
+  await prisma.refreshToken.updateMany({
+    where: {
+      userId,
+      revokedAt: null,
+      ...(keepSessionId ? { sessionId: { not: keepSessionId } } : {}),
+    },
+    data: { revokedAt: new Date() },
+  })
+  const revoked = await prisma.session.findMany({ where: others, select: { id: true } })
+  if (revoked.length === 0) return
+  await prisma.session.deleteMany({ where: others })
+  await Promise.all(revoked.map((s) => invalidateCachedJson(sessionCacheKey(s.id))))
+}
