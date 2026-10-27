@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, ensureInitialVersion, notifyJobOutcome, Prisma } from '@tahti/db'
+import { prisma, ensureInitialVersion, notifyJobOutcome, Prisma, type JobOutcome } from '@tahti/db'
 import {
   chooseLossyOutputBitrateKbps,
   deriveQualityBadge,
@@ -148,6 +148,24 @@ async function buildTagPatch(
   return patch
 }
 
+/** What the artist is told when a new upload has finished processing. */
+export function uploadReadyNotice(item: {
+  id: string
+  title: string
+  isPublic: boolean
+  channel: { userId: string }
+}): JobOutcome {
+  return {
+    userId: item.channel.userId,
+    outcome: 'done',
+    title: `"${item.title}" is ready`,
+    body: item.isPublic
+      ? 'It is live on your channel.'
+      : 'It is saved as private; publish it from Studio when you are ready.',
+    url: `/studio/sounds/${item.id}`,
+  }
+}
+
 export async function processTranscodeJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
   const startedAt = Date.now()
@@ -226,7 +244,10 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         },
       })
       await ensureInitialVersion(prisma, itemId)
-      if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
+      if (firstTranscode) {
+        await announceNewPublicTrack(prisma, itemId)
+        await notifyJobOutcome(prisma, uploadReadyNotice(item))
+      }
       await enqueueWarmSoundFallbackCache(item.channelId)
       await enqueueEncodeStreamingCopy(itemId)
       logLine(
@@ -266,7 +287,10 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     })
 
     await ensureInitialVersion(prisma, itemId)
-    if (firstTranscode) await announceNewPublicTrack(prisma, itemId)
+    if (firstTranscode) {
+      await announceNewPublicTrack(prisma, itemId)
+      await notifyJobOutcome(prisma, uploadReadyNotice(item))
+    }
     await enqueueWarmSoundFallbackCache(item.channelId)
     logLine(
       { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
