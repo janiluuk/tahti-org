@@ -658,6 +658,8 @@ enum NotificationType {
   NEW_RELEASE
   /// Someone @mentioned you in a channel live chat.
   CHAT_MENTION
+  /// The board approved, rejected or disabled an add-on you published.
+  ADDON_REVIEWED
   /// Board rejected a Tahti Radio track submission (only when a note is provided).
   RADIO_SUBMISSION_REJECTED
   /// The board added your submitted track to Tahti Radio.
