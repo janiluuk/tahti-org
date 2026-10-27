@@ -234,6 +234,22 @@ export const TahtiSelectsGalleryResponseSchema = z.object({
   items: z.array(TahtiSelectsGalleryItemSchema),
 })
 
+/** Latest tracks also carry what a track row shows: genre, waveform, the
+ * download flag and public totals. */
+export const LatestTrackItemSchema = TahtiSelectsGalleryItemSchema.extend({
+  genre: z.string().nullable(),
+  peaks: z.array(z.number()).nullable(),
+  createdAt: z.string(),
+  downloadsEnabled: z.boolean(),
+  likeCount: z.number().int(),
+  playCount: z.number().int(),
+  downloadCount: z.number().int(),
+})
+
+export const LatestTracksResponseSchema = z.object({
+  items: z.array(LatestTrackItemSchema),
+})
+
 export type TahtiSelectsGalleryItem = z.infer<typeof TahtiSelectsGalleryItemSchema>
 
 /** Discover → New to you: unheard public tracks filtered by the listener's
