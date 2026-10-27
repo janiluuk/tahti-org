@@ -8,6 +8,9 @@ import { executeAccountDeletion } from './account-deletion.js'
 import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../test/helpers.js'
 
 const PREFIX = 'deletion-discussions-'
+// The deleted account is tombstoned, not removed, and keeps its channel slug,
+// so each run needs its own username.
+const RUN = Date.now().toString(36)
 const log = { info: () => {}, warn: () => {}, error: () => {} } as never
 
 describe('Discussions in the data export and account deletion', () => {
@@ -23,7 +26,7 @@ describe('Discussions in the data export and account deletion', () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     const user = await createTestArtist(prisma, {
       email: `${PREFIX}user@example.com`,
-      username: `${PREFIX}user`,
+      username: `${PREFIX}user-${RUN}`,
       isMember: true,
     })
     userId = user.id
@@ -67,7 +70,20 @@ describe('Discussions in the data export and account deletion', () => {
       }),
     ])
     expect(body.discussionFollows).toHaveLength(1)
+    expect(body.discussionTopicsOpened).toEqual([])
     expect(body.discussionFollows[0].mutedAt).not.toBeNull()
+  })
+
+  it('exports the topics a board member opened', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/data-export.json',
+      headers: { cookie: await sessionCookieFor(prisma, boardId) },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().discussionTopicsOpened).toEqual([
+      expect.objectContaining({ id: topicId, title: `${PREFIX}topic`, status: 'OPEN' }),
+    ])
   })
 
   it('keeps replies as from a deleted account and drops follows on deletion', async () => {
