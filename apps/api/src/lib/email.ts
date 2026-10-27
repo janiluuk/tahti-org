@@ -292,3 +292,25 @@ export async function sendAccountReinstatedEmail(opts: {
     `,
   })
 }
+
+/** The link that confirms a new account address; it goes to that address. */
+export async function sendEmailChangeLink(opts: {
+  to: string
+  displayName: string
+  confirmUrl: string
+}): Promise<void> {
+  await sendMail({
+    to: opts.to,
+    subject: 'Confirm your new Tahti email address',
+    text: [
+      `Hi ${opts.displayName},`,
+      '',
+      'Open this link to use this address for your Tahti account:',
+      opts.confirmUrl,
+      '',
+      'The link expires in 24 hours. Until then your account keeps its current address. If you did not ask for this, ignore this email.',
+      '',
+      '— Tahti ry',
+    ].join('\n'),
+  })
+}
