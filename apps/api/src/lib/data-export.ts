@@ -10,7 +10,8 @@ import type { PrismaClient } from '@tahti/db'
  * messages it posted while signed in, its track reactions, and its feature
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
- * support requests, and the radio stations, themes and embeds it added. Other
+ * support requests, the radio stations, themes and embeds it added, what
+ * it downloaded and the Tahti Jams it hosted or joined. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -45,6 +46,8 @@ export async function buildActivityExport(
     radioStations,
     themes,
     embeds,
+    downloads,
+    jams,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -263,6 +266,36 @@ export async function buildActivityExport(
       orderBy: { createdAt: 'asc' },
       select: { provider: true, url: true, title: true, createdAt: true },
     }),
+    prisma.download.findMany({
+      where: { byUserId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        channelId: true,
+        soundId: true,
+        releaseTrackId: true,
+        format: true,
+        countryCode: true,
+        createdAt: true,
+      },
+    }),
+    prisma.jamParticipant.findMany({
+      where: { userId: user.id },
+      orderBy: { joinedAt: 'asc' },
+      select: {
+        role: true,
+        joinedAt: true,
+        leftAt: true,
+        removedAt: true,
+        session: {
+          select: {
+            code: true,
+            createdAt: true,
+            endedAt: true,
+            host: { select: { username: true } },
+          },
+        },
+      },
+    }),
   ])
 
   return {
@@ -294,5 +327,7 @@ export async function buildActivityExport(
     radioStations,
     themes,
     embeds,
+    downloads,
+    jams,
   }
 }
