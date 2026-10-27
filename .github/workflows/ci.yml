@@ -194,11 +194,17 @@ jobs:
         run: pnpm typecheck
 
   test:
-    name: Unit + integration tests
+    name: Unit + integration tests (${{ matrix.shard }}/4)
     # No `needs: lint` — same reasoning as typecheck above.
     runs-on: ubuntu-24.04
-    # The suite takes 11-20 min depending on runner load (2000+ tests).
-    timeout-minutes: 35
+    # vitest.config.ts runs files one at a time because they share one
+    # Postgres, so the suite is split across jobs that each get their own
+    # database instead.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -256,7 +262,9 @@ jobs:
       - name: Push DB schema (test database)
         run: pnpm --filter @tahti/db db:migrate:test
 
+      # Only checks the migration folder, which is the same for every shard.
       - name: Baseline Prisma migrations on test DB (OPS-002)
+        if: matrix.shard == 1
         run: |
           if find packages/db/prisma/migrations -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
             for m in packages/db/prisma/migrations/*/; do
@@ -269,13 +277,13 @@ jobs:
           fi
 
       - name: Run tests
-        run: pnpm test --reporter=verbose
+        run: pnpm exec vitest run --reporter=verbose --shard=${{ matrix.shard }}/4
 
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-${{ github.sha }}
+          name: coverage-${{ github.sha }}-${{ matrix.shard }}
           path: '**/coverage/'
           retention-days: 7
 

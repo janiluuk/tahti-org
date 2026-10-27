@@ -174,6 +174,42 @@ describe('/api/comments — tracks and channels', () => {
     expect(del.statusCode).toBe(204)
   })
 
+  it('tells the commenter when the board removes their comment', async () => {
+    const board = await createTestArtist(prisma, {
+      email: `${PREFIX}board@example.com`,
+      username: `${PREFIX}board`,
+      isBoard: true,
+      isMember: true,
+    })
+    const boardCookie = await sessionCookieFor(prisma, board.id)
+    const commenter = await prisma.user.findUniqueOrThrow({
+      where: { username: `${PREFIX}other` },
+      select: { id: true },
+    })
+    const notices = () =>
+      prisma.notification.findMany({
+        where: { userId: commenter.id, type: 'CONTENT_REMOVED_BY_BOARD' },
+      })
+    const before = (await notices()).length
+
+    const post = await app.inject({
+      method: 'POST',
+      url: `/api/comments/track/${soundId}`,
+      headers: { cookie: otherCookie, 'content-type': 'application/json' },
+      payload: { body: 'board will remove this' },
+    })
+    const del = await app.inject({
+      method: 'DELETE',
+      url: `/api/comments/${post.json().id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(del.statusCode).toBe(204)
+    const after = await notices()
+    expect(after).toHaveLength(before + 1)
+    expect(after.at(-1)?.url).toBe(`/t/${soundId}`)
+    expect(after.at(-1)?.title).toMatch(/^The board removed your comment on "/)
+  })
+
   it('lists and posts channel-level comments', async () => {
     const list = await app.inject({ method: 'GET', url: `/api/comments/channel/${channelSlug}` })
     expect(list.statusCode).toBe(200)
