@@ -92,7 +92,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             embedUri: true,
             accessMode: true,
             purchaseTierId: true,
-            _count: { select: { comments: true } },
+            _count: { select: { comments: true, likes: true, listenEvents: true } },
           },
         })
 
@@ -118,6 +118,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             ...serializeSound(rest),
             fileSizeBytes: Number(item.fileSizeBytes),
             commentCount: _count.comments,
+            likeCount: _count.likes,
+            playCount: _count.listenEvents,
             downloadCount: downloadCountById.get(item.id) ?? 0,
             accentColor,
           }
