@@ -12,7 +12,7 @@ import {
 
 const PREFIX = 'embed-import-ban-'
 
-describe('An upload ban covers hearthis.at, Mixcloud and Spotify imports', () => {
+describe('An upload ban covers external embed imports', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let userId: string
   let channelId: string
@@ -51,6 +51,16 @@ describe('An upload ban covers hearthis.at, Mixcloud and Spotify imports', () =>
       { collectionId: 'c1', cloudcastUrl: 'https://www.mixcloud.com/dj/set/' },
     ],
     ['/api/v1/imports/spotify/add', { collectionId: 'c1', spotifyUri: 'spotify:track:abc123' }],
+    [
+      '/api/v1/imports/mikseri/add',
+      {
+        collectionId: 'c1',
+        trackUrl: '635878',
+        title: 'Demo',
+        artistName: 'Demo artist',
+        rightsConfirmed: true,
+      },
+    ],
   ])('refuses %s', async (url, payload) => {
     const res = await app.inject({ method: 'POST', url, headers: { cookie }, payload })
     expect(res.statusCode).toBe(403)

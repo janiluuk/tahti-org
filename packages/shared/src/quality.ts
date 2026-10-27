@@ -23,7 +23,7 @@ export type SoundSource =
 export type SoundQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
 
 export type SoundEmbedProvider =
-  'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
+  'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC' | 'MIKSERI'
 
 const EMBED_ONLY_SOURCES: ReadonlySet<SoundSource> = new Set([
   'SPOTIFY_EMBED',

@@ -84,7 +84,7 @@ export const CollectionEmbedViewSchema = z.object({
       title: z.string(),
       durationSec: z.number().int().nullable(),
       hasStream: z.boolean(),
-      embedProvider: z.enum(['SPOTIFY', 'MIXCLOUD', 'HEARTHIS']).nullable(),
+      embedProvider: z.enum(['SPOTIFY', 'MIXCLOUD', 'HEARTHIS', 'MIKSERI']).nullable(),
       embedUri: z.string().nullable(),
       /** Cached [0..255] amplitude buckets — null for embed-only tracks
        * (no local audio to analyze) or ones transcoded before this existed. */

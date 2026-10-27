@@ -12,7 +12,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Discovery:** `/listen` defaults to Live. Signed-in “For you” (feed, new-to-you, widgets) is collapsed on small screens and omitted when there is no session. Artist directory and Tahti Selects load when those tabs open. Radio keeps the player plus What’s next; track/channel history lives in History.
 - **Engagement:** Likes, follows, reposts, comments where enabled, add-to-queue feedback, and direct artist messaging for signed-in accounts.
 - **Downloads:** Artist-controlled downloads with MP3 or lossless files when available; anonymous download paths remain supported.
-- **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, and HearThis playback surfaces.
+- **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, HearThis, and Mikseri playback surfaces.
 - **Events:** Upcoming live shows and events appear on profiles in humanized form, such as “Next gig in 3 months at …”.
 - **Sharing and safety:** Share actions and content reporting are available from compact overflow menus.
 - **Tahti Jam:** `/jam/[code]` — synced group listening started from a public playlist (`/u/[username]/c/[slug]` → "Start a Jam"). One host device is the source of truth; guests' own players mirror its track, play state, and position (SSE-pushed, drift-corrected). Requires being signed in.
@@ -51,7 +51,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Discography:** `/dashboard/archive` manages uploaded tracks, sets, mixes, recordings, albums, metadata, visibility, downloads, and fallback eligibility.
 - **Resumable uploads:** WAV, FLAC, MP3, AAC, and supported audio files upload through the prepared multipart flow with progress and processing states.
 - **Track/set mode:** Upload UI distinguishes ordinary tracks from DJ sets, mixes, shows, and recordings so only relevant metadata is requested.
-- **Cloud and URL import:** Import paths exist for URLs, SoundCloud, Bandcamp, Google Drive, Mixcloud rescue, Spotify metadata, and HearThis.
+- **Cloud and URL import:** Import paths exist for URLs, SoundCloud, Bandcamp, Google Drive, Mixcloud rescue, Spotify metadata, HearThis, and artist-owned Mikseri track references.
 - **HearThis localization:** Download-enabled HearThis tracks can be fetched in the background, preserving the offered original/lossless source before normal processing; other tracks remain embeds.
 - **Collections:** Create playlists, add archive items or releases, reorder them, import catalog material, and customize collection presentation.
 - **Releases and smart links:** Draft and publish releases, upload tracks/artwork, manage versions and credits, set external DSP URLs, and share release landing pages.
