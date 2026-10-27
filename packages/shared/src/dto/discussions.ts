@@ -74,6 +74,13 @@ export const DiscussionTopicDetailSchema = DiscussionTopicViewSchema.extend({
   following: z.boolean(),
   muted: z.boolean(),
   posts: z.array(DiscussionPostViewSchema),
+  /** True when replies older than the first one sent exist. */
+  hasEarlierPosts: z.boolean(),
+})
+
+export const DiscussionPostsPageSchema = z.object({
+  posts: z.array(DiscussionPostViewSchema),
+  hasEarlierPosts: z.boolean(),
 })
 
 export type CreateDiscussionPostInput = z.infer<typeof CreateDiscussionPostSchema>
