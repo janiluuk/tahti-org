@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notifyOwnerOfRadioInclusion } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { getRadioFeatureHistory, listRadioEligibleChannels } from '../../lib/radio-feature.js'
 import { userName } from '../../lib/safe-names.js'
@@ -65,6 +66,11 @@ const adminRadioRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: channelId },
         data: { metaStreamOptOut: true },
       })
+      if (!channel.metaStreamOptOut) {
+        await notifyOwnerOfRadioInclusion(fastify.prisma, channel.userId, false).catch(
+          (err: unknown) => fastify.log.warn({ err }, 'radio inclusion notice failed'),
+        )
+      }
       return reply.send({ ok: true })
     },
   )
@@ -82,6 +88,11 @@ const adminRadioRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: channelId },
         data: { metaStreamOptOut: false },
       })
+      if (channel.metaStreamOptOut) {
+        await notifyOwnerOfRadioInclusion(fastify.prisma, channel.userId, true).catch(
+          (err: unknown) => fastify.log.warn({ err }, 'radio inclusion notice failed'),
+        )
+      }
       return reply.send({ ok: true })
     },
   )

@@ -232,16 +232,16 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
       method: 'PATCH',
       url: `/api/admin/storage/users/${artistId}/quota`,
       headers: { cookie: boardCookie },
-      payload: { quotaBytes: 2_000_000_000 },
+      payload: { quotaBytes: 2 * 1024 ** 3 },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ quotaBytes: 2_000_000_000, usedBytes: 0, unlimited: false })
+    expect(res.json()).toEqual({ quotaBytes: 2 * 1024 ** 3, usedBytes: 0, unlimited: false })
 
     const row = await prisma.user.findUnique({
       where: { id: artistId },
       select: { softTargetBytes: true },
     })
-    expect(row?.softTargetBytes).toBe(2_000_000_000n)
+    expect(row?.softTargetBytes).toBe(BigInt(2 * 1024 ** 3))
   })
 
   it('overwrites an existing quota without touching usedBytes', async () => {
@@ -257,6 +257,19 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
     const body = res.json()
     expect(body.quotaBytes).toBe(3_000_000_000)
     expect(body.usedBytes).toBe(500)
+  })
+
+  it('tells a non-member each time the target changes', async () => {
+    const titles = (
+      await prisma.notification.findMany({
+        where: { userId: artistId, type: 'BOARD_ACCOUNT_CHANGE' },
+        orderBy: { createdAt: 'asc' },
+      })
+    ).map((n) => n.title)
+    expect(titles).toEqual([
+      'The board set your storage target to 2.0 GB',
+      'The board set your storage target to 2.8 GB',
+    ])
   })
 
   it('reports unlimited for a member even when a quota row exists', async () => {

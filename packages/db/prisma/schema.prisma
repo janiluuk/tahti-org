@@ -677,6 +677,8 @@ enum NotificationType {
   MISSED_LIVE_SHOW_FLAGGED
   /// The board opened a motion for voting; sent to every other member.
   MOTION_OPENED
+  /// The board restricted your uploads or bookings, or lifted that.
+  ACCOUNT_RESTRICTED
   /// A motion closed; sent to every other member with the published tally.
   MOTION_RESULT
   /// A member seconded your motion draft.
@@ -700,24 +702,32 @@ enum NotificationType {
   STREAMING_COPY_READY
   /// An artist you follow went live on their channel.
   CHANNEL_LIVE
+  /// The board added your track to the Tahti Selects rotation.
+  TAHTI_SELECTS_PICK
   /// An artist you follow announced an upcoming event.
   NEW_EVENT
   /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).
   NEW_FAN_SUBSCRIBER
   /// Someone paid for one of your purchase tiers (honours notifyMoneyMovesInApp).
   NEW_PURCHASE
+  /// The board took your channel out of Tahti Radio, or put it back.
+  TAHTI_RADIO_INCLUSION_CHANGED
   /// Someone commented on one of your tracks or on your channel.
   NEW_COMMENT
   /// Fan-subscription money was paid out to you (honours notifyMoneyMovesInApp).
   PAYOUT_SENT
   /// A renewal payment for one of your fan subscriptions failed.
   FAN_SUB_PAYMENT_FAILED
+  /// The annual grant run awarded you a grant (honours notifyMoneyMovesInApp).
+  GRANT_AWARDED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
   /// A fan cancelled their subscription to you (perks run to the end of the period).
   FAN_SUB_CANCELED
   /// The board replied to your support request.
   SUPPORT_REPLY
+  /// The board changed a setting on your account or channel (channel kind, storage, tier, membership).
+  BOARD_ACCOUNT_CHANGE
   /// An artist made you a moderator of their channel's chat.
   MODERATOR_ADDED
   /// Board: a new support request, or the requester replied on one.

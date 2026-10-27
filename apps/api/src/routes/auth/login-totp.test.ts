@@ -162,6 +162,36 @@ describe('2FA (TOTP) login flow', () => {
     expect(meResponse.json().username).toBe('totp-test-user')
   })
 
+  it('refuses the code step once the account was suspended after the password step', async () => {
+    const loginResponse = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: `${TEST_EMAIL_PREFIX}user@example.com`, password: 'testpassword' },
+    })
+    const { challengeId } = loginResponse.json() as { challengeId: string }
+    await prisma.user.update({
+      where: { email: `${TEST_EMAIL_PREFIX}user@example.com` },
+      data: { suspendedAt: new Date(), suspendReason: 'Spam uploads' },
+    })
+    try {
+      const totpResponse = await app.inject({
+        method: 'POST',
+        url: '/api/auth/login/totp',
+        payload: { challengeId, code: codeFor(totpSecret) },
+      })
+      expect(totpResponse.statusCode).toBe(403)
+      expect(totpResponse.json().error).toMatch(
+        /^This account has been suspended\. Reason: Spam uploads\./,
+      )
+      expect(totpResponse.cookies.find((c) => c.name === 'tahti_session')).toBeUndefined()
+    } finally {
+      await prisma.user.update({
+        where: { email: `${TEST_EMAIL_PREFIX}user@example.com` },
+        data: { suspendedAt: null, suspendReason: null },
+      })
+    }
+  })
+
   it('rejects an incorrect authenticator code', async () => {
     const loginResponse = await app.inject({
       method: 'POST',
