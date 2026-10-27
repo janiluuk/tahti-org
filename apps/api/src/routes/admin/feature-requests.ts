@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { Prisma } from '@tahti/db'
+import { notifyFeatureRequestFollowers, type Prisma } from '@tahti/db'
 import {
   AdminFeatureRequestListSchema,
   AdminFeatureRequestRowSchema,
@@ -144,6 +144,18 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
           _count: { select: { votes: true, comments: true } },
         },
       })
+
+      if (updated.status !== existing.status) {
+        await notifyFeatureRequestFollowers(fastify.prisma, {
+          id,
+          title: updated.title,
+          status: updated.status,
+          proposedById: existing.proposedById,
+          actorId: actor.id,
+        }).catch((err: unknown) =>
+          fastify.log.warn({ err }, 'feature request status notice failed'),
+        )
+      }
 
       await auditLog(fastify.prisma, {
         action: 'FEATURE_REQUEST_STATUS_UPDATE',

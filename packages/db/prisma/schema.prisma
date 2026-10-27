@@ -706,6 +706,8 @@ enum NotificationType {
   MODERATOR_ADDED
   /// Board: a new support request, or the requester replied on one.
   SUPPORT_TICKET
+  /// The board moved a feature request you proposed or voted for.
+  FEATURE_REQUEST_UPDATED
 
   @@schema("core")
 }
