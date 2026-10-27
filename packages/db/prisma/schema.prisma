@@ -677,6 +677,8 @@ enum NotificationType {
   MISSED_LIVE_SHOW_FLAGGED
   /// The board opened a motion for voting; sent to every other member.
   MOTION_OPENED
+  /// The board restricted your uploads or bookings, or lifted that.
+  ACCOUNT_RESTRICTED
   /// A motion closed; sent to every other member with the published tally.
   MOTION_RESULT
   /// A member seconded your motion draft.

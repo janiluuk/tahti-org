@@ -899,6 +899,44 @@ export async function notifyFeatureRequestFollowers(
   })
 }
 
+const RESTRICTION_NOTICE = {
+  UPLOAD: { blocked: 'Uploads are blocked', lifted: 'You can upload again', url: '/studio' },
+  LIVE_SHOW_BOOKING: {
+    blocked: 'Booking shows is blocked',
+    lifted: 'You can book shows again',
+    url: '/studio/schedule',
+  },
+} as const
+
+/** Tells an account the board restricted (or lifted a restriction on) its
+ * uploads or show bookings, with the board's reason. A sign-in ban signs the
+ * account out, so it gets no notice. */
+export async function notifyUserOfAccountRestriction(
+  prisma: PrismaClient,
+  userId: string,
+  restriction: {
+    type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN'
+    reason: string
+    expiresAt: Date | null
+    lifted: boolean
+  },
+): Promise<void> {
+  if (restriction.type === 'LOGIN') return
+  const notice = RESTRICTION_NOTICE[restriction.type]
+  const until = restriction.expiresAt
+    ? ` until ${restriction.expiresAt.toISOString().slice(0, 10)}`
+    : ''
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'ACCOUNT_RESTRICTED',
+      title: restriction.lifted ? notice.lifted : `${notice.blocked}${until}`,
+      body: restriction.lifted ? null : `Reason: ${restriction.reason}`.slice(0, 500),
+      url: notice.url,
+    },
+  })
+}
+
 /** One-off notification an admin sends from /admin/news's test-notification form. */
 export async function notifyUserAdminTest(
   prisma: PrismaClient,
