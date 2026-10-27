@@ -99,3 +99,4 @@ export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaul
 export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
 export { actorDisplayName } from './display-name.js'
 export { availableUserWhere } from './available-user.js'
+export { notifyJobOutcome, type JobOutcome } from './job-notices.js'

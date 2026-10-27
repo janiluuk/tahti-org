@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, ensureInitialVersion, Prisma } from '@tahti/db'
+import { prisma, ensureInitialVersion, notifyJobOutcome, Prisma } from '@tahti/db'
 import {
   chooseLossyOutputBitrateKbps,
   deriveQualityBadge,
@@ -154,7 +154,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
   const item = await prisma.sound.findUnique({
     where: { id: itemId },
-    include: { channel: { select: { slug: true } } },
+    include: { channel: { select: { slug: true, userId: true } } },
   })
 
   if (!item) throw new Error(`Sound ${itemId} not found`)
@@ -282,6 +282,15 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         ? { status: 'ERROR', processingError: soundProcessingErrorMessage(stage) }
         : { status: 'PENDING' },
     })
+    if (final) {
+      await notifyJobOutcome(prisma, {
+        userId: item.channel.userId,
+        outcome: 'failed',
+        title: `"${item.title}" could not be processed`,
+        body: soundProcessingErrorMessage(stage),
+        url: `/studio/sounds/${itemId}`,
+      })
+    }
     logLine(
       {
         itemId,
