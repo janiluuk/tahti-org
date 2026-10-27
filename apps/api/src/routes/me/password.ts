@@ -50,6 +50,8 @@ const mePasswordRoutes: FastifyPluginAsync = async (fastify) => {
         data: { passwordHash: await hashPassword(parsed.data.newPassword) },
       })
       await revokeOtherSessions(fastify.prisma, userId, request.authSessionId)
+      // A reset link mailed before the change would undo it.
+      await fastify.prisma.passwordSetup.deleteMany({ where: { userId, usedAt: null } })
       await sendSecurityNotice(
         {
           to: user.email,

@@ -117,6 +117,10 @@ const meEmailChangeRoutes: FastifyPluginAsync = async (fastify) => {
           where: { id: change.id },
           data: { usedAt: new Date() },
         }),
+        // Reset links went to the old address; they mustn't outlive it.
+        fastify.prisma.passwordSetup.deleteMany({
+          where: { userId: change.userId, usedAt: null },
+        }),
       ])
       await sendSecurityNotice(
         {
