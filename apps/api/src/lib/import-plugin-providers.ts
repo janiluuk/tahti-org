@@ -176,6 +176,25 @@ export const IMPORT_PLUGIN_PROVIDERS: ImportPluginProvider[] = [
   },
   {
     contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
+    id: 'mikseri',
+    name: 'Mikseri.net',
+    description:
+      'Add artist-owned Mikseri tracks as official embeds without fetching or copying audio.',
+    kind: 'tool',
+    capabilities: {
+      configure: false,
+      connectionTest: false,
+      fileList: false,
+      import: true,
+      search: false,
+      playback: true,
+    },
+    oauthStartPath: null,
+    statusPath: null,
+    importPath: '/api/v1/imports/mikseri/add',
+  },
+  {
+    contractVersion: IMPORT_PLUGIN_CONTRACT_VERSION,
     id: 'stash',
     name: 'Stash',
     description: 'Private file locker — upload stems/masters without publishing to the channel.',

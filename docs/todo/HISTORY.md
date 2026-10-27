@@ -810,3 +810,7 @@ referrer host (#884), GeoLite city (#885) and furthest position (#886). New Stud
 fold into Other. A listener's own `/api/me/listening` across devices (#894), listen sessions in
 the data export (#895), board `/api/admin/stats/listening` (#897). Landed together via #883.
 Leftover: the fingerprint / IP hashes stay out of the export (product call).
+
+### 2026-10-27 — Mikseri embed import (`mikseri-embed-import.md`)
+
+Added a validated, authenticated collection-import route for artist-owned Mikseri tracks. It accepts a track ID, track page, or official track embed plus user-supplied metadata and explicit rights confirmation, then stores an `EMBED_ONLY` `URL_EMBED` sound with the `MIKSERI` provider. The API never fetches Mikseri pages or audio. Added the provider to the versioned import catalog, Prisma migration, shared DTO/parser coverage, route coverage, and coordinated Tahti Player UI contract. No leftovers.
