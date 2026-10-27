@@ -13,6 +13,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { auditLog } from '../../lib/audit.js'
 import { requireBoard } from '../../plugins/auth.js'
 
 const PRESET_SELECT = {
@@ -31,6 +32,22 @@ function zodError(
   err: { issues: Array<{ message?: string }> },
 ) {
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
+
+type PresetFields = Record<keyof typeof PRESET_SELECT, unknown>
+
+function changedPresetFields(
+  before: PresetFields,
+  input: Partial<Record<keyof PresetFields, unknown>>,
+): Record<string, { from: unknown; to: unknown }> {
+  const changes: Record<string, { from: unknown; to: unknown }> = {}
+  for (const [field, value] of Object.entries(input)) {
+    const previous = before[field as keyof PresetFields]
+    if (value !== undefined && value !== previous) {
+      changes[field] = { from: previous, to: value }
+    }
+  }
+  return changes
 }
 
 const adminInternetRadioRoutes: FastifyPluginAsync = async (fastify) => {
@@ -69,6 +86,12 @@ const adminInternetRadioRoutes: FastifyPluginAsync = async (fastify) => {
         data: parsed.data,
         select: PRESET_SELECT,
       })
+      await auditLog(fastify.prisma, {
+        action: 'INTERNET_RADIO_PRESET_CREATE',
+        actorId: request.sessionUser!.id,
+        targetId: preset.id,
+        meta: { name: preset.name, streamUrl: preset.streamUrl, enabled: preset.enabled },
+      })
       return reply.status(201).send(preset)
     },
   )
@@ -84,6 +107,7 @@ const adminInternetRadioRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.internetRadioPreset.findUnique({
         where: { id: routeParams.id },
+        select: PRESET_SELECT,
       })
       if (!existing) return reply.status(404).send({ error: 'Preset not found' })
 
@@ -91,6 +115,12 @@ const adminInternetRadioRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         data: parsed.data,
         select: PRESET_SELECT,
+      })
+      await auditLog(fastify.prisma, {
+        action: 'INTERNET_RADIO_PRESET_UPDATE',
+        actorId: request.sessionUser!.id,
+        targetId: preset.id,
+        meta: { name: preset.name, changes: changedPresetFields(existing, parsed.data) },
       })
       return reply.send(preset)
     },
@@ -103,10 +133,22 @@ const adminInternetRadioRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
+      const existing = await fastify.prisma.internetRadioPreset.findUnique({
+        where: { id: routeParams.id },
+        select: PRESET_SELECT,
+      })
+      if (!existing) return reply.status(404).send({ error: 'Preset not found' })
+
       const { count } = await fastify.prisma.internetRadioPreset.deleteMany({
         where: { id: routeParams.id },
       })
       if (count === 0) return reply.status(404).send({ error: 'Preset not found' })
+      await auditLog(fastify.prisma, {
+        action: 'INTERNET_RADIO_PRESET_DELETE',
+        actorId: request.sessionUser!.id,
+        targetId: existing.id,
+        meta: { name: existing.name, streamUrl: existing.streamUrl },
+      })
       return reply.status(204).send()
     },
   )
