@@ -78,6 +78,16 @@ describe('PATCH /api/admin/channels/:slug/kind', () => {
     expect(detail.json().channel.channelKind).toBe('RADIO')
   })
 
+  it('tells the owner once, and not for a no-op change', async () => {
+    const notices = () =>
+      prisma.notification.findMany({ where: { userId: artistId, type: 'BOARD_ACCOUNT_CHANGE' } })
+    expect((await notices()).map((n) => [n.title, n.url])).toEqual([
+      ['The board made your channel a radio station', '/c/admin-channel-kind-station'],
+    ])
+    expect((await setKind(boardCookie, 'RADIO')).statusCode).toBe(200)
+    expect(await notices()).toHaveLength(1)
+  })
+
   it('does not audit a no-op change', async () => {
     const before = await prisma.auditLog.count({ where: { targetId: artistId } })
     expect((await setKind(boardCookie, 'RADIO')).statusCode).toBe(200)
