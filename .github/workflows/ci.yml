@@ -250,8 +250,23 @@ jobs:
       # apps/worker's e2e tests (e.g. transcode-release-track.e2e.test.ts)
       # spawn the real ffmpeg binary rather than mocking fluent-ffmpeg, to
       # genuinely exercise the transcode + R2 write-through pipeline.
+      # Pinned static build (FFmpeg 6.1, same as Ubuntu 24.04's package) from
+      # GitHub releases: apt pulls ~60 packages from the Azure Ubuntu mirror,
+      # which has stalled shards until the job timed out.
       - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        timeout-minutes: 5
+        run: |
+          base=https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1
+          dir="$RUNNER_TEMP/ffmpeg"
+          mkdir -p "$dir" && cd "$dir"
+          curl -fsSL --retry 3 -o ffmpeg.gz "$base/ffmpeg-linux-x64.gz"
+          curl -fsSL --retry 3 -o ffprobe.gz "$base/ffprobe-linux-x64.gz"
+          echo "bfe8a8fc511530457b528c48d77b5737527b504a3797a9bc4866aeca69c2dffa  ffmpeg.gz" | sha256sum -c -
+          echo "25d9b6ccb05e3d9de9e04e31e2506d8dd7f9f0418981965ac6df12e8d3afd067  ffprobe.gz" | sha256sum -c -
+          gunzip ffmpeg.gz ffprobe.gz
+          chmod +x ffmpeg ffprobe
+          ./ffmpeg -hide_banner -version | head -1
+          echo "$dir" >> "$GITHUB_PATH"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
