@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { prisma } from '@tahti/db'
-import { TAHTI_RADIO_SLUG } from '@tahti/shared'
+import { RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS, TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { buildApp } from '../../server.js'
 import {
   cleanupUsersByEmailPrefix,
@@ -171,6 +171,26 @@ describe('public live-artist slot calendar', () => {
   it('rejects a query without from/to', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/radio/slots' })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('rejects a range wider than the public calendar serves', async () => {
+    const from = new Date('2026-01-01T00:00:00.000Z')
+    const to = new Date(from.getTime() + (RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS + 1) * 24 * 3600_000)
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/slots?from=${from.toISOString()}&to=${to.toISOString()}`,
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('serves a range of exactly the public maximum', async () => {
+    const from = new Date('2026-01-01T00:00:00.000Z')
+    const to = new Date(from.getTime() + RADIO_SLOT_PUBLIC_MAX_RANGE_DAYS * 24 * 3600_000)
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/slots?from=${from.toISOString()}&to=${to.toISOString()}`,
+    })
+    expect(res.statusCode).toBe(200)
   })
 
   it('lists a booked slot with public artist info, no auth required', async () => {
