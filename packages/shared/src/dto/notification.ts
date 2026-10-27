@@ -17,6 +17,7 @@ export const NotificationTypeSchema = z.enum([
   'PLAYLIST_TRACK_ADDED',
   'VENUE_VERIFIED',
   'NEW_RELEASE',
+  'MEMBERSHIP_ENDED',
   'CHAT_MENTION',
   'ADDON_REVIEWED',
   'RADIO_SUBMISSION_REJECTED',

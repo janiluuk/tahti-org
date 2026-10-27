@@ -659,6 +659,8 @@ enum NotificationType {
   VENUE_VERIFIED
   /// Fan-out when a Tahti Radio–opted-in artist publishes a release.
   NEW_RELEASE
+  /// Your Tahti ry membership year ended and the account went back to Free.
+  MEMBERSHIP_ENDED
   /// Someone @mentioned you in a channel live chat.
   CHAT_MENTION
   /// The board approved, rejected or disabled an add-on you published.
