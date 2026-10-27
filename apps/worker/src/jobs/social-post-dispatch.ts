@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import { notifyJobOutcome, type PrismaClient } from '@tahti/db'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
 
 async function postToMastodon(params: {
@@ -149,6 +149,30 @@ async function postToInstagram(params: {
   return published.id
 }
 
+const PLATFORM_LABELS: Record<string, string> = {
+  BLUESKY: 'Bluesky',
+  TWITTER: 'X',
+  INSTAGRAM: 'Instagram',
+  MASTODON: 'Mastodon',
+}
+
+/** Tells the artist an automatic post didn't go out — once, not on every
+ * retry of an already failed post. */
+async function tellPostFailed(
+  prisma: PrismaClient,
+  post: { userId: string; platform: string; state: string },
+  reason: string,
+): Promise<void> {
+  if (post.state === 'FAILED') return
+  await notifyJobOutcome(prisma, {
+    userId: post.userId,
+    outcome: 'failed',
+    title: `Your post to ${PLATFORM_LABELS[post.platform] ?? post.platform} didn't go out`,
+    body: reason,
+    url: '/settings/artist',
+  })
+}
+
 export async function processSocialPostDispatchJob(prisma: PrismaClient, postId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } })
   if (!post || post.state === 'SENT') return
@@ -161,6 +185,11 @@ export async function processSocialPostDispatchJob(prisma: PrismaClient, postId:
       where: { id: postId },
       data: { state: 'FAILED', error: 'Social connection removed', attempts: { increment: 1 } },
     })
+    await tellPostFailed(
+      prisma,
+      post,
+      'The account is no longer connected. Connect it again in Settings → Artist.',
+    )
     return
   }
 
@@ -204,6 +233,11 @@ export async function processSocialPostDispatchJob(prisma: PrismaClient, postId:
       where: { id: postId },
       data: { state: 'FAILED', error: message, attempts: { increment: 1 } },
     })
+    await tellPostFailed(
+      prisma,
+      post,
+      'Check the connection in Settings → Artist and post it again.',
+    )
     throw err
   }
 }

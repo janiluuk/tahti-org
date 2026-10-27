@@ -4,6 +4,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { PrismaClient } from '@tahti/db'
 
+const { notifyJobOutcome } = vi.hoisted(() => ({ notifyJobOutcome: vi.fn() }))
+vi.mock('@tahti/db', () => ({ notifyJobOutcome }))
+
 vi.mock('../lib/stream-key-enc.js', () => ({
   decryptStreamKey: (enc: string) => enc.replace(/^enc:/, ''),
 }))
@@ -118,5 +121,24 @@ describe('processSocialPostDispatchJob', () => {
         data: expect.objectContaining({ state: 'FAILED', error: 'Social connection removed' }),
       }),
     )
+    expect(notifyJobOutcome).toHaveBeenCalledWith(
+      prisma,
+      expect.objectContaining({
+        userId: 'u1',
+        outcome: 'failed',
+        title: "Your post to Mastodon didn't go out",
+        url: '/settings/artist',
+      }),
+    )
+  })
+
+  it('does not repeat the notice for a post that already failed', async () => {
+    const prisma = prismaMock(
+      { id: 'post-4', userId: 'u1', platform: 'BLUESKY', state: 'FAILED', message: 'again' },
+      null,
+    )
+    notifyJobOutcome.mockClear()
+    await processSocialPostDispatchJob(prisma, 'post-4')
+    expect(notifyJobOutcome).not.toHaveBeenCalled()
   })
 })
