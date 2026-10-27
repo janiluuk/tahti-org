@@ -6,7 +6,8 @@ import type { PrismaClient } from '@tahti/db'
 /** What the account itself made or did, beyond the profile and billing rows
  * the export always had: uploads, collections, posts, events, comments,
  * likes, reposts, follows, messages it sent, purchases, newsletter
- * subscriptions, the accounts it blocked and its listening sessions. Other
+ * subscriptions, the accounts it blocked, its listening sessions, the chat
+ * messages it posted while signed in and its track reactions. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -28,6 +29,8 @@ export async function buildActivityExport(
     supportRequests,
     blockedAccounts,
     listening,
+    chatMessages,
+    trackReactions,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -141,6 +144,28 @@ export async function buildActivityExport(
         durationSec: true,
       },
     }),
+    prisma.chatMessage.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        text: true,
+        handle: true,
+        fanOnly: true,
+        createdAt: true,
+        removedAt: true,
+        channel: { select: { slug: true } },
+      },
+    }),
+    prisma.trackReaction.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        type: true,
+        positionSec: true,
+        createdAt: true,
+        sound: { select: { id: true, title: true } },
+      },
+    }),
   ])
 
   return {
@@ -159,5 +184,7 @@ export async function buildActivityExport(
     supportRequests,
     blockedAccounts,
     listening,
+    chatMessages,
+    trackReactions,
   }
 }
