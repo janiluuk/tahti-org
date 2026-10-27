@@ -632,6 +632,9 @@ export async function notifyBoardOfContentReport(
       title: `New report: ${report.label}`,
       body: `Reason: ${REPORT_REASON_LABELS[report.reason] ?? report.reason}`,
       url: '/admin/moderation/content-reports',
+    })),
+  })
+}
 
 const FEATURE_REQUEST_STATUS_LABELS: Record<string, string> = {
   OPEN: 'reopened',
