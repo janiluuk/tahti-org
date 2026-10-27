@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import type { PrismaClient } from '@tahti/db'
+import { notifyOwnerOfForcedOffline, type PrismaClient } from '@tahti/db'
 import {
   AdminForceOfflineResponseSchema,
   AdminStreamControlResponseSchema,
@@ -93,6 +93,9 @@ const adminChannelsRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: channel.userId,
         meta: { channelId: channel.id, slug },
       })
+      await notifyOwnerOfForcedOffline(fastify.prisma, channel.userId).catch((err: unknown) =>
+        fastify.log.warn({ err }, 'force-offline notice failed'),
+      )
 
       return reply.send({ ok: true as const, channelId: channel.id, slug })
     },

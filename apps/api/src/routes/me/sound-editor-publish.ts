@@ -9,6 +9,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
+import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { resolveSoundEditorSource } from '../../lib/sound-editor-source.js'
@@ -42,6 +43,8 @@ const meSoundEditorPublishRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams

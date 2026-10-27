@@ -189,7 +189,9 @@ export async function isActiveFanSubscriber(
   return false
 }
 
-/** User or Stripe canceled — perks continue until currentPeriodEnd. */
+/** User or Stripe canceled — perks continue until currentPeriodEnd. The
+ * artist hears about it once, the way they hear about new subscribers; a
+ * repeat (the fan's cancel, then Stripe's webhook for it) is silent. */
 export async function markFanSubCanceledAtPeriodEnd(
   prisma: PrismaClient,
   opts: { subscriptionId?: string; stripeSubscriptionId?: string },
@@ -198,10 +200,30 @@ export async function markFanSubCanceledAtPeriodEnd(
     ? { id: opts.subscriptionId }
     : { stripeSubscriptionId: opts.stripeSubscriptionId! }
 
-  return prisma.fanSubscription.updateMany({
+  const newlyCanceled = await prisma.fanSubscription.findMany({
+    where: { ...where, state: 'ACTIVE' },
+    select: {
+      artistUserId: true,
+      subscriberUserId: true,
+      tierName: true,
+      currentPeriodEnd: true,
+      subscriber: { select: { username: true, displayName: true } },
+    },
+  })
+  const result = await prisma.fanSubscription.updateMany({
     where,
     data: { state: 'CANCELED', canceledAt: new Date() },
   })
+  for (const sub of newlyCanceled) {
+    const name = safeDisplayName(sub.subscriber.displayName, sub.subscriber.username)
+    await announceMoneyMove(prisma, sub.artistUserId, {
+      type: 'FAN_SUB_CANCELED',
+      actorUserId: sub.subscriberUserId,
+      title: `${name} cancelled their ${sub.tierName} subscription (perks until ${sub.currentPeriodEnd.toISOString().slice(0, 10)})`,
+      url: '/studio/revenue',
+    })
+  }
+  return result
 }
 
 const GRACE_MS = 7 * 24 * 60 * 60 * 1000
