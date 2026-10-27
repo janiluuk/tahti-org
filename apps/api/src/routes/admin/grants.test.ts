@@ -196,6 +196,20 @@ describe('M9 — annual grant calculation', () => {
     expect(Math.abs(sum - body.poolCents)).toBeLessThanOrEqual(1)
   })
 
+  it('tells each recipient their grant and marks it notified', async () => {
+    const notice = await prisma.notification.findFirst({
+      where: { userId: artistA.id, type: 'GRANT_AWARDED' },
+    })
+    expect(notice).toMatchObject({
+      title: `You were awarded a ${YEAR} grant of €540.00`,
+      url: '/studio/revenue',
+    })
+    const unnotified = await prisma.grantDisbursement.count({
+      where: { forYear: YEAR, notifiedAt: null },
+    })
+    expect(unnotified).toBe(0)
+  })
+
   it('writes GRANT_DISBURSEMENT + RESERVE_TRANSFER ledger entries', async () => {
     const disb = await prisma.ledgerEntry.findMany({
       where: { category: 'GRANT_DISBURSEMENT', externalRef: { contains: `grant:${YEAR}:` } },

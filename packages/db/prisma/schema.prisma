@@ -642,9 +642,13 @@ enum MentionSurface {
 
 enum NotificationType {
   NEW_POST
+  /// An artist added a show at a venue you run.
+  VENUE_SHOW_BOOKED
   NEW_MESSAGE
   NEW_TRACK
   NEW_FOLLOWER
+  /// A venue show you are part of was cancelled by the artist or the venue.
+  VENUE_SHOW_CANCELED
   NEW_LIKE
   NEW_REPOST
   PLAYLIST_TRACK_ADDED
@@ -664,6 +668,8 @@ enum NotificationType {
   THEME_APPROVED
   /// Admin rejected your theme submission (see the notification body for why).
   THEME_REJECTED
+  /// The board accepted or turned down a radio station you suggested.
+  RADIO_STATION_REVIEWED
   /// Manually sent by an admin from /admin/news's test-notification form.
   ADMIN_TEST
   /// Sent to every board member when the missed-live-show-scan cron flags a
@@ -671,6 +677,8 @@ enum NotificationType {
   MISSED_LIVE_SHOW_FLAGGED
   /// The board opened a motion for voting; sent to every other member.
   MOTION_OPENED
+  /// The board restricted your uploads or bookings, or lifted that.
+  ACCOUNT_RESTRICTED
   /// A motion closed; sent to every other member with the published tally.
   MOTION_RESULT
   /// A member seconded your motion draft.
@@ -694,18 +702,24 @@ enum NotificationType {
   STREAMING_COPY_READY
   /// An artist you follow went live on their channel.
   CHANNEL_LIVE
+  /// The board added your track to the Tahti Selects rotation.
+  TAHTI_SELECTS_PICK
   /// An artist you follow announced an upcoming event.
   NEW_EVENT
   /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).
   NEW_FAN_SUBSCRIBER
   /// Someone paid for one of your purchase tiers (honours notifyMoneyMovesInApp).
   NEW_PURCHASE
+  /// The board took your channel out of Tahti Radio, or put it back.
+  TAHTI_RADIO_INCLUSION_CHANGED
   /// Someone commented on one of your tracks or on your channel.
   NEW_COMMENT
   /// Fan-subscription money was paid out to you (honours notifyMoneyMovesInApp).
   PAYOUT_SENT
   /// A renewal payment for one of your fan subscriptions failed.
   FAN_SUB_PAYMENT_FAILED
+  /// The annual grant run awarded you a grant (honours notifyMoneyMovesInApp).
+  GRANT_AWARDED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
   /// A fan cancelled their subscription to you (perks run to the end of the period).
