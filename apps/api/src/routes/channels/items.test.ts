@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { invalidateCachedJson } from '../../lib/json-cache.js'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
@@ -106,6 +107,29 @@ describe('GET /api/channels/:slug/items', () => {
     expect(items[0].audioUrl).toBe('https://minio.test/get')
     expect(items[0].commentary).toBe('Thanks for listening — recorded live at Klubi.')
     expect(items[0].peaks).toEqual([10, 50, 200, 80])
+  })
+
+  it('counts likes and plays for each item', async () => {
+    const sound = await prisma.sound.findFirstOrThrow({
+      where: { channelId, title: 'Ready Track' },
+      select: { id: true, channel: { select: { userId: true } } },
+    })
+    await prisma.listenEvent.createMany({
+      data: [
+        { soundId: sound.id, dedupeKey: 'p1', dayBucket: '2026-10-01' },
+        { soundId: sound.id, dedupeKey: 'p2', dayBucket: '2026-10-01' },
+        { soundId: sound.id, dedupeKey: 'p3', dayBucket: '2026-10-02' },
+      ],
+    })
+    await prisma.soundLike.create({
+      data: { soundId: sound.id, userId: sound.channel.userId },
+    })
+    await invalidateCachedJson('channel:items:channel-items-testuser')
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-items-testuser/items',
+    })
+    expect(res.json()[0]).toMatchObject({ likeCount: 1, playCount: 3 })
   })
 
   it('serves flac when item has no mp3', async () => {
