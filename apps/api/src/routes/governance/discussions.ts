@@ -8,6 +8,7 @@ import {
   CreateDiscussionPostSchema,
   DiscussionParticipationSchema,
   DiscussionPostViewSchema,
+  DiscussionPostsPageSchema,
   DiscussionTopicDetailSchema,
   DiscussionTopicListSchema,
   DiscussionPostRemovedSchema,
@@ -24,7 +25,43 @@ import { userName } from '../../lib/safe-names.js'
 import { auditLog } from '../../lib/audit.js'
 import { notifyDiscussionParticipants } from '../../lib/discussion-notifications.js'
 
-const POSTS_LIMIT = 500
+/** Replies per page: the topic read sends the latest page, older pages come
+ * from GET .../posts?before=<postId>. */
+const POSTS_PAGE = 100
+
+const POST_SELECT = {
+  id: true,
+  body: true,
+  createdAt: true,
+  editedAt: true,
+  authorId: true,
+  author: { select: { username: true, displayName: true } },
+} as const
+
+function toPostView(
+  post: {
+    id: bigint
+    body: string
+    createdAt: Date
+    editedAt: Date | null
+    authorId: string | null
+    author: { username: string; displayName: string } | null
+  },
+  userId: string,
+) {
+  return {
+    id: post.id.toString(),
+    body: post.body,
+    author: post.author ? userName(post.author) : 'Deleted account',
+    createdAt: post.createdAt.toISOString(),
+    mine: post.authorId === userId,
+    editedAt: post.editedAt?.toISOString() ?? null,
+  }
+}
+
+const PostsPageQuerySchema = z.object({
+  before: z.string().regex(/^\d{1,18}$/),
+})
 
 const PostParamsSchema = z.object({
   id: z.string().min(1).max(64),
@@ -95,16 +132,9 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           ...DISCUSSION_TOPIC_SELECT,
           participants: { where: { userId }, select: { mutedAt: true } },
           posts: {
-            orderBy: { createdAt: 'asc' },
-            take: POSTS_LIMIT,
-            select: {
-              id: true,
-              body: true,
-              createdAt: true,
-              editedAt: true,
-              authorId: true,
-              author: { select: { username: true, displayName: true } },
-            },
+            orderBy: { id: 'desc' },
+            take: POSTS_PAGE + 1,
+            select: POST_SELECT,
           },
         },
       })
@@ -117,14 +147,49 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         ...toDiscussionTopicView(row),
         following: row.participants.length > 0,
         muted: Boolean(row.participants[0]?.mutedAt),
-        posts: row.posts.map((post) => ({
-          id: post.id.toString(),
-          body: post.body,
-          author: post.author ? userName(post.author) : 'Deleted account',
-          createdAt: post.createdAt.toISOString(),
-          mine: post.authorId === userId,
-          editedAt: post.editedAt?.toISOString() ?? null,
-        })),
+        posts: row.posts
+          .slice(0, POSTS_PAGE)
+          .reverse()
+          .map((post) => toPostView(post, userId)),
+        hasEarlierPosts: row.posts.length > POSTS_PAGE,
+      })
+    },
+  )
+
+  // GET /api/v1/governance/discussions/:id/posts?before=<postId> — the page of
+  // replies before a given one, oldest first, for "Show earlier replies".
+  fastify.get(
+    '/api/v1/governance/discussions/:id/posts',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionPostsPageSchema, 'DiscussionPostsPage'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const query = PostsPageQuerySchema.safeParse(request.query)
+      if (!query.success) return reply.status(400).send({ error: 'Invalid before cursor' })
+      const topic = await fastify.prisma.discussionTopic.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true },
+      })
+      if (!topic) return reply.status(404).send({ error: 'Topic not found' })
+      const rows = await fastify.prisma.discussionPost.findMany({
+        where: { topicId: topic.id, id: { lt: BigInt(query.data.before) } },
+        orderBy: { id: 'desc' },
+        take: POSTS_PAGE + 1,
+        select: POST_SELECT,
+      })
+      const userId = request.sessionUser!.id
+      return reply.send({
+        posts: rows
+          .slice(0, POSTS_PAGE)
+          .reverse()
+          .map((post) => toPostView(post, userId)),
+        hasEarlierPosts: rows.length > POSTS_PAGE,
       })
     },
   )
