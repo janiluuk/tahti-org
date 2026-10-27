@@ -9,12 +9,14 @@ import {
   TotpSetupResponseSchema,
   TotpStatusResponseSchema,
   openApiResponse,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireAuth, requireSession } from '../../plugins/auth.js'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import { generateTotpSecret, totpUri, verifyTotpCode } from '../../lib/totp.js'
 import { encryptTotpSecret, decryptTotpSecret } from '../../lib/totp-secret-enc.js'
 import { generateBackupCodes } from '../../lib/totp-backup-codes.js'
+import { sendSecurityNotice } from '../../lib/security-email.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -101,6 +103,15 @@ const meTotpRoutes: FastifyPluginAsync = async (fastify) => {
         ),
       ])
 
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'Two-step sign-in is on for your Tahti account',
+          what: 'Two-step sign-in was just turned on for your Tahti account. Keep your backup codes somewhere safe.',
+        },
+        request.log,
+      )
       return reply.send({ backupCodes })
     },
   )
@@ -126,6 +137,15 @@ const meTotpRoutes: FastifyPluginAsync = async (fastify) => {
           data: { totpSecretEnc: null, totpEnabledAt: null },
         }),
       ])
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'Two-step sign-in is off for your Tahti account',
+          what: 'Two-step sign-in was just turned off for your Tahti account. Signing in now needs only your password.',
+        },
+        request.log,
+      )
 
       return reply.status(204).send()
     },
