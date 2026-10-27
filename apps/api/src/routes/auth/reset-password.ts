@@ -9,10 +9,12 @@ import {
   ResetPasswordResponseSchema,
   openApiResponse,
   openApiResponses,
+  safeDisplayName,
 } from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
 import { createSession, revokeAllSessions } from '../../lib/session.js'
 import { config } from '../../config.js'
+import { sendSecurityNotice } from '../../lib/security-email.js'
 import { restrictionErrorMessage } from '@tahti/db'
 
 const resetPasswordRoute: FastifyPluginAsync = async (fastify) => {
@@ -119,6 +121,15 @@ const resetPasswordRoute: FastifyPluginAsync = async (fastify) => {
       // A password reset can follow a compromised-credentials scenario —
       // kick out every other session (password reset still revokes all; login no longer does).
       await revokeAllSessions(fastify.prisma, reset.userId)
+      await sendSecurityNotice(
+        {
+          to: reset.user.email,
+          displayName: safeDisplayName(reset.user.displayName, reset.user.username),
+          subject: 'Your Tahti password was reset',
+          what: 'The password on your Tahti account was just reset from an emailed link, and all other devices were signed out.',
+        },
+        request.log,
+      )
       const session = await createSession(fastify.prisma, reset.userId)
       reply.setCookie(config.sessionCookieName, session.id, {
         httpOnly: true,
