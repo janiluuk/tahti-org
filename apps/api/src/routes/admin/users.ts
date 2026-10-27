@@ -16,12 +16,15 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { executeAccountDeletion } from '../../lib/account-deletion.js'
 import { auditLog, auditUserTierChange } from '../../lib/audit.js'
 import { sendCsv } from '../../lib/csv.js'
 import { revokeAllSessions } from '../../lib/session.js'
+import { sendAccountReinstatedEmail, sendAccountSuspendedEmail } from '../../lib/email.js'
+import { config } from '../../config.js'
 
 async function fetchUserDetail(prisma: Parameters<typeof computeEngagementUnits>[0], id: string) {
   const user = await prisma.user.findUnique({
@@ -363,13 +366,23 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const user = await fastify.prisma.user.findUnique({ where: { id }, select: { id: true } })
+      const user = await fastify.prisma.user.findUnique({
+        where: { id },
+        select: { id: true, email: true, username: true, displayName: true, suspendedAt: true },
+      })
       if (!user) return reply.status(404).send({ error: 'User not found' })
 
       await fastify.prisma.user.update({
         where: { id },
         data: { suspendedAt: new Date(), suspendReason: parsed.data.reason },
       })
+      if (!user.suspendedAt) {
+        await sendAccountSuspendedEmail({
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          reason: parsed.data.reason,
+        }).catch((err: unknown) => request.log.warn({ err }, 'suspension email failed'))
+      }
       // Drop live cookies immediately — validateSession also rejects suspendedAt,
       // but the short session cache could otherwise keep serving for a few seconds.
       await revokeAllSessions(fastify.prisma, id)
@@ -401,13 +414,23 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const { id } = routeParams
 
-      const user = await fastify.prisma.user.findUnique({ where: { id }, select: { id: true } })
+      const user = await fastify.prisma.user.findUnique({
+        where: { id },
+        select: { id: true, email: true, username: true, displayName: true, suspendedAt: true },
+      })
       if (!user) return reply.status(404).send({ error: 'User not found' })
 
       await fastify.prisma.user.update({
         where: { id },
         data: { suspendedAt: null, suspendReason: null },
       })
+      if (user.suspendedAt) {
+        await sendAccountReinstatedEmail({
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          signInUrl: `${config.appUrl.replace(/\/$/, '')}/login`,
+        }).catch((err: unknown) => request.log.warn({ err }, 'reinstatement email failed'))
+      }
 
       await auditLog(fastify.prisma, {
         action: 'USER_UNSUSPEND',

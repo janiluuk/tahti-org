@@ -228,3 +228,67 @@ export async function sendPasswordResetEmail(
     `,
   })
 }
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+/** The board suspended the account. It can no longer sign in to read a
+ * notification, so this goes by email, with the board's reason and where to
+ * ask about it. */
+export async function sendAccountSuspendedEmail(opts: {
+  to: string
+  displayName: string
+  reason: string
+}): Promise<void> {
+  const text = [
+    `Hi ${opts.displayName},`,
+    '',
+    'The Tahti board has suspended your account. You cannot sign in while it is suspended.',
+    '',
+    `Reason: ${opts.reason}`,
+    '',
+    `If you think this is a mistake, reply to this email or write to ${BETA_SUPPORT_INBOX}.`,
+    '',
+    '— Tahti ry',
+  ].join('\n')
+  await sendMail({
+    to: opts.to,
+    replyTo: BETA_SUPPORT_INBOX,
+    subject: 'Your Tahti account has been suspended',
+    text,
+    html: `
+      <p>Hi ${escapeHtml(opts.displayName)},</p>
+      <p>The Tahti board has suspended your account. You cannot sign in while it is suspended.</p>
+      <p>Reason: ${escapeHtml(opts.reason)}</p>
+      <p>If you think this is a mistake, reply to this email or write to ${BETA_SUPPORT_INBOX}.</p>
+      <p>— Tahti ry</p>
+    `,
+  })
+}
+
+/** The board lifted a suspension: the account can sign in again. */
+export async function sendAccountReinstatedEmail(opts: {
+  to: string
+  displayName: string
+  signInUrl: string
+}): Promise<void> {
+  const text = [
+    `Hi ${opts.displayName},`,
+    '',
+    'The Tahti board has lifted the suspension on your account. You can sign in again:',
+    opts.signInUrl,
+    '',
+    '— Tahti ry',
+  ].join('\n')
+  await sendMail({
+    to: opts.to,
+    subject: 'Your Tahti account is active again',
+    text,
+    html: `
+      <p>Hi ${escapeHtml(opts.displayName)},</p>
+      <p>The Tahti board has lifted the suspension on your account. <a href="${opts.signInUrl}">Sign in again</a>.</p>
+      <p>— Tahti ry</p>
+    `,
+  })
+}

@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
+import {
+  AuthLoginResponseSchema,
+  BETA_SUPPORT_INBOX,
+  LoginSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { restrictionErrorMessage } from '@tahti/db'
 import { verifyPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
@@ -41,6 +46,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           isMember: true,
           isBoard: true,
           suspendedAt: true,
+          suspendReason: true,
           deletedAt: true,
           totpEnabledAt: true,
         },
@@ -61,8 +67,12 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Please verify your email before logging in' })
       }
 
+      // The password was right, so the account's owner may see why.
       if (user.suspendedAt) {
-        return reply.status(403).send({ error: 'This account has been suspended' })
+        const reason = user.suspendReason ? ` Reason: ${user.suspendReason}.` : ''
+        return reply.status(403).send({
+          error: `This account has been suspended.${reason} Write to ${BETA_SUPPORT_INBOX} if you think this is a mistake.`,
+        })
       }
 
       if (user.deletedAt) {
