@@ -18,73 +18,110 @@ export interface RenderAnnouncementTrimPayload {
   endSec: number
   fadeInSec: number
   fadeOutSec: number
+  editorToken?: string
+  normalize?: boolean
+  removeRumble?: boolean
+  compress?: boolean
+  deEss?: boolean
+  warmth?: boolean
+  clarity?: boolean
 }
 
-function trimAndFade(
+export function announcementFilters(settings: RenderAnnouncementTrimPayload): string[] {
+  const filters: string[] = []
+  if (settings.removeRumble) filters.push('highpass=f=80')
+  if (settings.warmth) filters.push('equalizer=f=180:t=q:w=0.7:g=2')
+  if (settings.clarity) filters.push('equalizer=f=3000:t=q:w=0.8:g=2')
+  if (settings.compress)
+    filters.push('acompressor=threshold=0.125:ratio=3:attack=10:release=150:makeup=1')
+  if (settings.deEss) filters.push('deesser=i=0.4:m=0.5:f=0.5')
+  if (settings.normalize) filters.push('loudnorm=I=-14:TP=-1.5:LRA=11')
+  if (settings.fadeInSec > 0) filters.push(`afade=t=in:st=0:d=${settings.fadeInSec}`)
+  if (settings.fadeOutSec > 0)
+    filters.push(
+      `afade=t=out:st=${settings.endSec - settings.startSec - settings.fadeOutSec}:d=${settings.fadeOutSec}`,
+    )
+  return filters
+}
+
+export async function renderAnnouncementAudio(
   inputPath: string,
   outputPath: string,
-  startSec: number,
-  endSec: number,
-  fadeInSec: number,
-  fadeOutSec: number,
-): Promise<void> {
-  const clipDuration = endSec - startSec
-  const filters: string[] = []
-  if (fadeInSec > 0) filters.push(`afade=t=in:st=0:d=${fadeInSec}`)
-  if (fadeOutSec > 0) {
-    const fadeOutStart = Math.max(0, clipDuration - fadeOutSec)
-    filters.push(`afade=t=out:st=${fadeOutStart}:d=${fadeOutSec}`)
+  settings: RenderAnnouncementTrimPayload,
+): Promise<number> {
+  const metadata = await new Promise<ffmpeg.FfprobeData>((resolve, reject) => {
+    ffmpeg.ffprobe(inputPath, (error, data) => (error ? reject(error) : resolve(data)))
+  })
+  const audio = metadata.streams.find((s) => s.codec_type === 'audio')
+  const duration = Number(metadata.format.duration)
+  const sampleRate = Number(audio?.sample_rate)
+  if (
+    !audio ||
+    !Number.isFinite(duration) ||
+    !sampleRate ||
+    duration > 600.1 ||
+    settings.endSec > duration + 0.05
+  ) {
+    throw new Error('The selected region is outside a valid audio clip (maximum 10 minutes).')
   }
-
-  return new Promise((resolve, reject) => {
-    let cmd = ffmpeg(inputPath).setStartTime(startSec).duration(clipDuration)
-    if (filters.length > 0) cmd = cmd.audioFilters(filters)
-    cmd
-      .audioCodec('libmp3lame')
-      .audioBitrate('192k')
-      .on('error', (err) => reject(err))
+  if (
+    !(settings.endSec > settings.startSec) ||
+    settings.startSec < 0 ||
+    settings.fadeInSec + settings.fadeOutSec > settings.endSec - settings.startSec
+  ) {
+    throw new Error('Invalid trim or fade settings')
+  }
+  await new Promise<void>((resolve, reject) => {
+    let command = ffmpeg(inputPath)
+      .noVideo()
+      .setStartTime(settings.startSec)
+      .duration(settings.endSec - settings.startSec)
+    const filters = announcementFilters(settings)
+    if (filters.length) command = command.audioFilters(filters)
+    command
+      .audioCodec('pcm_f32le')
+      .audioFrequency(sampleRate)
+      .format('wav')
+      .on('error', reject)
       .on('end', () => resolve())
       .save(outputPath)
   })
+  return Math.round(settings.endSec - settings.startSec)
 }
 
-// Always renders from the untouched original upload (payload.sourceKey is
-// AnnouncementClip.originalAudioKey) rather than the current audioKey, so
-// re-editing never compounds quality loss and the source is always available
-// for the editor's "original" A/B preview.
 export async function processRenderAnnouncementTrimJob(job: Job): Promise<void> {
-  const { clipId, sourceKey, outputKeyPrefix, startSec, endSec, fadeInSec, fadeOutSec } =
-    job.data as RenderAnnouncementTrimPayload
-
-  await prisma.announcementClip.update({
-    where: { id: clipId },
-    data: { renderStatus: 'PROCESSING' },
+  const settings = job.data as RenderAnnouncementTrimPayload
+  const { clipId, sourceKey, outputKeyPrefix, editorToken } = settings
+  const where = { id: clipId, ...(editorToken ? { renderToken: editorToken } : {}) }
+  const { count } = await prisma.announcementClip.updateMany({
+    where,
+    data: editorToken ? { draftStatus: 'PROCESSING' } : { renderStatus: 'PROCESSING' },
   })
-
+  if (!count) return
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-announcement-trim-'))
-  const outputKey = `${outputKeyPrefix}/${randomUUID()}.mp3`
-
+  const outputKey = `${outputKeyPrefix}/${randomUUID()}.wav`
   try {
     const inputPath = join(tmpDir, 'input')
-    const outputPath = join(tmpDir, 'trimmed.mp3')
+    const outputPath = join(tmpDir, 'processed.wav')
     await downloadToFile(sourceKey, inputPath)
-    await trimAndFade(inputPath, outputPath, startSec, endSec, fadeInSec, fadeOutSec)
-    await uploadFile(outputKey, outputPath, 'audio/mpeg')
-
-    await prisma.announcementClip.update({
-      where: { id: clipId },
-      data: {
-        audioKey: outputKey,
-        durationSec: Math.round(endSec - startSec),
-        renderStatus: 'READY',
-      },
+    const durationSec = await renderAnnouncementAudio(inputPath, outputPath, settings)
+    await uploadFile(outputKey, outputPath, 'audio/wav')
+    await prisma.announcementClip.updateMany({
+      where,
+      data: editorToken
+        ? {
+            draftAudioKey: outputKey,
+            draftDurationSec: durationSec,
+            draftStatus: 'READY',
+          }
+        : { audioKey: outputKey, durationSec, renderStatus: 'READY' },
     })
-  } catch (err) {
-    await prisma.announcementClip.update({
-      where: { id: clipId },
-      data: { renderStatus: 'ERROR' },
+  } catch (error) {
+    await prisma.announcementClip.updateMany({
+      where,
+      data: editorToken ? { draftStatus: 'ERROR' } : { renderStatus: 'ERROR' },
     })
-    throw err
+    throw error
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
   }

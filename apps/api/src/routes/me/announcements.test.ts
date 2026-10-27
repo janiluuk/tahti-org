@@ -77,8 +77,8 @@ describe('/api/me/announcements', () => {
     expect(complete.json()).toMatchObject({
       title: 'Station ID',
       durationSec: 8,
-      isEnabled: true,
-      scheduleMode: 'RANDOM',
+      isEnabled: false,
+      scheduleMode: 'AFTER_EVERY',
     })
     const clipId = complete.json().id
 

@@ -40,6 +40,9 @@ export const AnnouncementClipViewSchema = z.object({
   id: z.string(),
   title: z.string(),
   durationSec: z.number().int().nullable(),
+  placement: z.enum(['BETWEEN', 'BEFORE', 'AFTER']).default('BETWEEN'),
+  targetSoundId: z.string().nullable().optional(),
+  draftStatus: z.enum(ANNOUNCEMENT_RENDER_STATUSES).nullable().optional(),
   isEnabled: z.boolean(),
   scheduleMode: z.enum(ANNOUNCEMENT_SCHEDULE_MODES),
   everyNth: z.number().int().nullable(),
@@ -84,6 +87,11 @@ export type AnnouncementSettingsInput = z.infer<typeof AnnouncementSettingsSchem
 // Trim editor — always renders from the untouched original upload, so re-edits
 // never compound quality loss and the editor can A/B against the original.
 export const AnnouncementEditorSourceSchema = z.object({
+  editorSettings: z.unknown().optional(),
+  draftSettings: z.unknown().optional(),
+  draftUrl: z.string().url().nullable().optional(),
+  draftStatus: z.enum(ANNOUNCEMENT_RENDER_STATUSES).nullable().optional(),
+  renderToken: z.string().nullable().optional(),
   url: z.string().url(),
   originalUrl: z.string().url(),
   durationSec: z.number().int().nullable(),
@@ -105,3 +113,38 @@ export const AnnouncementEditorRenderResponseSchema = z.object({
   ok: z.literal(true),
   renderStatus: z.enum(ANNOUNCEMENT_RENDER_STATUSES),
 })
+
+export const AnnouncementVoiceSettingsSchema = z
+  .object({
+    startSec: z.number().finite().min(0).max(600),
+    endSec: z.number().finite().positive().max(600),
+    fadeInSec: z.number().finite().min(0).max(30).default(0),
+    fadeOutSec: z.number().finite().min(0).max(30).default(0),
+    normalize: z.boolean().default(false),
+    removeRumble: z.boolean().default(false),
+    compress: z.boolean().default(false),
+    deEss: z.boolean().default(false),
+    warmth: z.boolean().default(false),
+    clarity: z.boolean().default(false),
+  })
+  .refine((b) => b.endSec > b.startSec && b.fadeInSec + b.fadeOutSec <= b.endSec - b.startSec, {
+    message: 'End must follow start and fades must fit inside the clip',
+  })
+export type AnnouncementVoiceSettings = z.infer<typeof AnnouncementVoiceSettingsSchema>
+
+export const ApplyAnnouncementEditorSchema = z
+  .object({
+    renderToken: z.string().min(1),
+    title: z.string().trim().min(1).max(120),
+    isEnabled: z.boolean(),
+    scheduleMode: z.enum(['AFTER_EVERY', 'EVERY_NTH', 'RANDOM']),
+    everyNth: z.number().int().min(2).max(100).nullable(),
+    placement: z.enum(['BETWEEN', 'BEFORE', 'AFTER']),
+    targetSoundId: z.string().min(1).nullable(),
+  })
+  .refine((b) => b.scheduleMode !== 'EVERY_NTH' || b.everyNth !== null, {
+    message: 'Choose how many programs play between clips',
+  })
+  .refine((b) => b.placement === 'BETWEEN' || b.targetSoundId !== null, {
+    message: 'Choose a program for this placement',
+  })

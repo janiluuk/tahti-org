@@ -204,7 +204,12 @@ const RANDOM_ANNOUNCEMENT_CHANCE = 1 / 15
 export function interleaveAnnouncements(
   rows: FallbackPlaybackRow[],
   systemAnnouncements: AnnouncementPlaybackRow[],
-  ownAnnouncements: FallbackPlaybackRow[],
+  ownAnnouncements: (FallbackPlaybackRow & {
+    scheduleMode?: AnnouncementScheduleMode
+    everyNth?: number | null
+    placement?: string
+    targetSoundId?: string | null
+  })[],
 ): FallbackPlaybackRow[] {
   if (rows.length === 0) return rows
   if (systemAnnouncements.length === 0 && ownAnnouncements.length === 0) return rows
@@ -221,6 +226,10 @@ export function interleaveAnnouncements(
   const out: FallbackPlaybackRow[] = []
 
   for (let i = 0; i < rows.length; i++) {
+    const before = ownAnnouncements.filter(
+      (c) => c.placement === 'BEFORE' && c.targetSoundId === rows[i]!.id,
+    )
+    if (before.length) out.push(before[i % before.length]!)
     out.push(rows[i]!)
     const position = i + 1 // 1-based count of tracks played so far, for "every Nth"
 
@@ -238,8 +247,16 @@ export function interleaveAnnouncements(
       randomIdx++
     }
 
-    if (ownAnnouncements.length > 0 && Math.random() < RANDOM_ANNOUNCEMENT_CHANCE) {
-      out.push(ownAnnouncements[ownIdx % ownAnnouncements.length]!)
+    const eligible = ownAnnouncements.filter((c) => {
+      if (c.placement === 'BEFORE') return false
+      if (c.placement === 'AFTER') return c.targetSoundId === rows[i]!.id
+      if (c.scheduleMode === 'AFTER_EVERY') return true
+      if (c.scheduleMode === 'EVERY_NTH')
+        return c.everyNth != null && c.everyNth > 0 && position % c.everyNth === 0
+      return Math.random() < RANDOM_ANNOUNCEMENT_CHANCE
+    })
+    if (eligible.length) {
+      out.push(eligible[ownIdx % eligible.length]!)
       ownIdx++
     }
   }

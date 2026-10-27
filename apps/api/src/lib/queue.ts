@@ -190,6 +190,13 @@ export async function enqueueHearthisEmbedLocalization(payload: {
 }
 
 export interface RenderAnnouncementTrimJob {
+  editorToken?: string
+  normalize?: boolean
+  removeRumble?: boolean
+  compress?: boolean
+  deEss?: boolean
+  warmth?: boolean
+  clarity?: boolean
   clipId: string
   sourceKey: string
   outputKeyPrefix: string
@@ -203,7 +210,7 @@ export async function enqueueRenderAnnouncementTrim(
   payload: RenderAnnouncementTrimJob,
 ): Promise<void> {
   await mediaQueue.add('render-announcement-trim', payload, {
-    jobId: `render-announcement-trim-${payload.clipId}`,
+    jobId: `render-announcement-trim-${payload.clipId}-${payload.editorToken ?? Date.now()}`,
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   })
