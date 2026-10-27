@@ -93,6 +93,17 @@ export const ChangePasswordSchema = z
 
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>
 
+/** POST /api/me/email — ask to move the account to another address. */
+export const ChangeEmailSchema = z.object({
+  newEmail: z.string().trim().toLowerCase().email('Invalid email address').max(254),
+  password: z.string().min(1, 'Enter your password'),
+})
+
+export type ChangeEmailInput = z.infer<typeof ChangeEmailSchema>
+
+/** POST /api/auth/email-change/confirm — the link from the new address. */
+export const ConfirmEmailChangeSchema = z.object({ token: z.string().min(1) })
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
   hcaptchaToken: z.string().optional(),

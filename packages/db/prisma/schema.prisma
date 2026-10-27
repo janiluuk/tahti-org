@@ -995,6 +995,7 @@ model User {
   refreshTokens                  RefreshToken[]
   apiTokens                      ApiToken[]
   emailVerifications             EmailVerification[]
+  emailChanges                   EmailChange[]
   totpBackupCodes                TotpBackupCode[]
   totpChallenges                 TotpChallenge[]
   membership                     Membership?
@@ -1406,6 +1407,22 @@ model StashShare {
   createdAt       DateTime  @default(now())
 
   @@index([token])
+  @@schema("core")
+}
+
+/// A pending change of the account's email: the link goes to newEmail and
+/// the address changes only when it is opened.
+model EmailChange {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
   @@schema("core")
 }
 
