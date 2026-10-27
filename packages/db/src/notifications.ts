@@ -417,6 +417,33 @@ export async function notifyArtistOfNewRepost(
   })
 }
 
+/** Tells an artist the board picked one of their tracks for the Tahti
+ * Selects rotation. Bulk refills from the top-played list stay silent. */
+export async function notifyArtistOfSelectsPick(
+  prisma: PrismaClient,
+  pick: { soundId: string; channelSlug: string },
+): Promise<void> {
+  const sound = await prisma.sound.findUnique({
+    where: { id: pick.soundId },
+    select: { title: true, channel: { select: { userId: true } } },
+  })
+  if (!sound) return
+  const artist = await prisma.user.findFirst({
+    where: { id: sound.channel.userId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!artist) return
+  await prisma.notification.create({
+    data: {
+      userId: artist.id,
+      type: 'TAHTI_SELECTS_PICK',
+      title: `"${sound.title}" was picked for Tahti Selects`,
+      body: 'It plays in the Tahti Selects rotation from now on.',
+      url: `/c/${pick.channelSlug}`,
+    },
+  })
+}
+
 /** Notify a playlist's owner, everyone who has previously contributed a
  * track to it ("participants") and its subscribers (while it is public or
  * unlisted) when someone adds a new one — never notifies
@@ -651,6 +678,26 @@ export async function notifyArtistStreamingCopyReady(
   })
 }
 
+/** Tells a channel's owner the board took the channel out of the Tahti Radio
+ * rotation, or put it back, since it overrides the owner's own setting. */
+export async function notifyOwnerOfRadioInclusion(
+  prisma: PrismaClient,
+  ownerUserId: string,
+  included: boolean,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: ownerUserId,
+      type: 'TAHTI_RADIO_INCLUSION_CHANGED',
+      title: included
+        ? 'Your channel is back in the Tahti Radio rotation'
+        : 'The board took your channel out of Tahti Radio',
+      body: included ? null : 'Ask the board through Help → Support if you want to know why.',
+      url: '/studio/channel?tab=tahti-radio',
+    },
+  })
+}
+
 export async function notifyUserThemeApproved(
   prisma: PrismaClient,
   userId: string,
@@ -849,6 +896,44 @@ export async function notifyFeatureRequestFollowers(
       body: userId === request.proposedById ? 'You proposed this.' : 'You voted for this.',
       url: '/governance/feature-requests',
     })),
+  })
+}
+
+const RESTRICTION_NOTICE = {
+  UPLOAD: { blocked: 'Uploads are blocked', lifted: 'You can upload again', url: '/studio' },
+  LIVE_SHOW_BOOKING: {
+    blocked: 'Booking shows is blocked',
+    lifted: 'You can book shows again',
+    url: '/studio/schedule',
+  },
+} as const
+
+/** Tells an account the board restricted (or lifted a restriction on) its
+ * uploads or show bookings, with the board's reason. A sign-in ban signs the
+ * account out, so it gets no notice. */
+export async function notifyUserOfAccountRestriction(
+  prisma: PrismaClient,
+  userId: string,
+  restriction: {
+    type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN'
+    reason: string
+    expiresAt: Date | null
+    lifted: boolean
+  },
+): Promise<void> {
+  if (restriction.type === 'LOGIN') return
+  const notice = RESTRICTION_NOTICE[restriction.type]
+  const until = restriction.expiresAt
+    ? ` until ${restriction.expiresAt.toISOString().slice(0, 10)}`
+    : ''
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'ACCOUNT_RESTRICTED',
+      title: restriction.lifted ? notice.lifted : `${notice.blocked}${until}`,
+      body: restriction.lifted ? null : `Reason: ${restriction.reason}`.slice(0, 500),
+      url: notice.url,
+    },
   })
 }
 

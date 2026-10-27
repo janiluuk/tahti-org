@@ -9,6 +9,7 @@ import {
   openApiResponse,
   soundPlaybackKey,
 } from '@tahti/shared'
+import { notifyArtistOfSelectsPick } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { spawnChannelLiquidsoap, stopOrchestratorChannel } from '../../lib/orchestrator.js'
@@ -257,6 +258,11 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           addedById: request.sessionUser!.id,
         },
       })
+
+      await notifyArtistOfSelectsPick(fastify.prisma, {
+        soundId,
+        channelSlug: TAHTI_SELECTS_SLUG,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'Tahti Selects notice failed'))
 
       return reply.status(201).send({ ok: true as const, id: item.id })
     },
