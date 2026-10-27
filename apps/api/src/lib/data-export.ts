@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, and the fan subscription tiers and store items it offers. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -53,6 +53,8 @@ export async function buildActivityExport(
     restrictions,
     radioSubmissions,
     stationSuggestions,
+    fanTiers,
+    storeItems,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -362,6 +364,31 @@ export async function buildActivityExport(
         createdAt: true,
       },
     }),
+    prisma.fanTier.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        amountCents: true,
+        description: true,
+        perks: true,
+        active: true,
+        createdAt: true,
+      },
+    }),
+    prisma.purchaseTier.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        description: true,
+        priceCents: true,
+        priceOptional: true,
+        active: true,
+        createdAt: true,
+        sounds: { select: { id: true, title: true } },
+      },
+    }),
   ])
 
   return {
@@ -400,5 +427,7 @@ export async function buildActivityExport(
     restrictions,
     radioSubmissions,
     stationSuggestions,
+    fanTiers,
+    storeItems,
   }
 }
