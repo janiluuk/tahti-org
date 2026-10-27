@@ -30,7 +30,15 @@ export const UpsertInternetRadioPresetSchema = z.object({
   description: z.string().trim().max(400).optional(),
   iconUrl: z.string().url().optional(),
   programmingUrl: z.string().url().optional(),
-  streamUrl: z.string().url().optional(),
+  // The web player is served over HTTPS, so an http:// stream is blocked as mixed content.
+  streamUrl: z
+    .string()
+    .trim()
+    .url()
+    .refine((value) => value.startsWith('https://'), {
+      message: 'Stream URL must start with https://',
+    })
+    .optional(),
   enabled: z.boolean().optional(),
 })
 export type UpsertInternetRadioPresetInput = z.infer<typeof UpsertInternetRadioPresetSchema>
