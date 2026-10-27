@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TahtiSelectsGalleryResponseSchema, openApiResponse } from '@tahti/shared'
+import { LatestTracksResponseSchema, openApiResponse } from '@tahti/shared'
 import { toGatedGalleryItem } from '../../lib/playback-url.js'
 import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 
@@ -31,7 +31,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['discover'],
         description: 'Newest public tracks, for the Discover "Latest tracks" widget',
-        response: openApiResponse(TahtiSelectsGalleryResponseSchema, 'LatestTracks'),
+        response: openApiResponse(LatestTracksResponseSchema, 'LatestTracks'),
       },
     },
     async (request, reply) => {
@@ -72,6 +72,12 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           flacKey: true,
           accessMode: true,
           purchaseTierId: true,
+          genre: true,
+          genreCustom: true,
+          peaks: true,
+          createdAt: true,
+          downloadsEnabled: true,
+          _count: { select: { likes: true, listenEvents: true } },
           channel: {
             select: {
               slug: true,
@@ -83,8 +89,27 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const viewerUserId = request.sessionUser?.id ?? null
+      const downloadCounts = rows.length
+        ? await fastify.prisma.download.groupBy({
+            by: ['soundId'],
+            where: { soundId: { in: rows.map((row) => row.id) }, countedAt: { not: null } },
+            _count: { _all: true },
+          })
+        : []
+      const downloadsBySoundId = new Map(
+        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+      )
       const items = await Promise.all(
-        rows.map((item) => toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
+        rows.map(async (item) => ({
+          ...(await toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
+          genre: item.genreCustom ?? item.genre,
+          peaks: Array.isArray(item.peaks) ? (item.peaks as number[]) : null,
+          createdAt: item.createdAt.toISOString(),
+          downloadsEnabled: item.downloadsEnabled,
+          likeCount: item._count.likes,
+          playCount: item._count.listenEvents,
+          downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+        })),
       )
 
       return reply.send({ items })

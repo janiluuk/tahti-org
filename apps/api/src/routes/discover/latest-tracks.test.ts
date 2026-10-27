@@ -121,6 +121,24 @@ describe('/api/discover/latest-tracks', () => {
     expect(ids.indexOf(newestId)).toBeLessThan(ids.indexOf(olderId))
   })
 
+  it('carries genre, waveform, the download flag and public totals', async () => {
+    await prisma.sound.update({ where: { id: newestId }, data: { peaks: [5, 120, 240] } })
+    await prisma.listenEvent.create({
+      data: { soundId: newestId, dedupeKey: 'lt1', dayBucket: '2026-10-01' },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/discover/latest-tracks?limit=50' })
+    const item = res.json().items.find((i: { soundId: string }) => i.soundId === newestId)
+    expect(item).toMatchObject({
+      genre: 'Techno',
+      peaks: [5, 120, 240],
+      downloadsEnabled: true,
+      likeCount: 0,
+      playCount: 1,
+      downloadCount: 0,
+    })
+    expect(item.createdAt).toEqual(expect.any(String))
+  })
+
   it('filters by genre', async () => {
     const res = await app.inject({
       method: 'GET',
