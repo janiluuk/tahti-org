@@ -42,6 +42,22 @@ import {
   loadChannelSoundRssSource,
 } from './rss.js'
 
+/** The shared item include plus what a public track row shows: genre, the
+ * waveform, the download flag and public totals. */
+const publicCollectionItemInclude = {
+  ...collectionItemInclude,
+  sound: {
+    select: {
+      ...collectionItemInclude.sound.select,
+      genre: true,
+      genreCustom: true,
+      peaks: true,
+      downloadsEnabled: true,
+      _count: { select: { likes: true, listenEvents: true } },
+    },
+  },
+} as const
+
 export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── Public endpoints ────────────────────────────────────────────────────
 
@@ -66,11 +82,24 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           items: {
             where: publicCollectionItemWhere,
             orderBy: { position: 'asc' },
-            include: collectionItemInclude,
+            include: publicCollectionItemInclude,
           },
         },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      const soundIds = col.items
+        .map((item) => item.sound?.id)
+        .filter((id): id is string => Boolean(id))
+      const downloadCounts = soundIds.length
+        ? await fastify.prisma.download.groupBy({
+            by: ['soundId'],
+            where: { soundId: { in: soundIds }, countedAt: { not: null } },
+            _count: { _all: true },
+          })
+        : []
+      const downloadsBySoundId = new Map(
+        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+      )
 
       const ordered = sortCollectionItems(col.items, col.trackSortMode)
       const viewerUserId = request.sessionUser?.id ?? null
@@ -90,11 +119,15 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
             purchaseTierId: colItem.sound.purchaseTierId,
             viewerUserId,
           })
-          const { channel, ...soundRest } = colItem.sound
+          const { channel, _count, genre, genreCustom, ...soundRest } = colItem.sound
           return {
             ...colItem,
             sound: {
               ...soundRest,
+              genre: genreCustom ?? genre,
+              likeCount: _count.likes,
+              playCount: _count.listenEvents,
+              downloadCount: downloadsBySoundId.get(colItem.sound.id) ?? 0,
               audioUrl: url,
               gate,
               channel: { slug: channel.slug },
