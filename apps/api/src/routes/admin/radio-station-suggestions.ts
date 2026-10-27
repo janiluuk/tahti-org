@@ -11,6 +11,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifySubmitterOfStationReview } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 
 const LIST_LIMIT = 100
@@ -114,6 +115,10 @@ const adminRadioStationSuggestionRoutes: FastifyPluginAsync = async (fastify) =>
         })
         return created
       })
+      await notifySubmitterOfStationReview(fastify.prisma, suggestion, {
+        approved: true,
+        note: null,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'station review notice failed'))
       return reply.send({ ok: true as const, status: 'APPROVED' as const, presetId: preset.id })
     },
   )
@@ -142,7 +147,7 @@ const adminRadioStationSuggestionRoutes: FastifyPluginAsync = async (fastify) =>
       }
       const suggestion = await fastify.prisma.radioStationSuggestion.findUnique({
         where: { id: routeParams.id },
-        select: { status: true },
+        select: { status: true, submitterId: true, name: true },
       })
       if (!suggestion) return reply.status(404).send({ error: 'Suggestion not found' })
       if (suggestion.status !== 'PENDING') {
@@ -157,6 +162,10 @@ const adminRadioStationSuggestionRoutes: FastifyPluginAsync = async (fastify) =>
           reviewedAt: new Date(),
         },
       })
+      await notifySubmitterOfStationReview(fastify.prisma, suggestion, {
+        approved: false,
+        note: parsed.data.note || null,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'station review notice failed'))
       return reply.send({ ok: true as const, status: 'REJECTED' as const, presetId: null })
     },
   )

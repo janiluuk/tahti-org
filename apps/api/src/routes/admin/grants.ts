@@ -13,6 +13,7 @@ import {
 } from '@tahti/shared'
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
+import { announceMoneyMove, formatEuros } from '../../lib/money-moves.js'
 import { auditLog } from '../../lib/audit.js'
 import { sendCsv } from '../../lib/csv.js'
 
@@ -76,6 +77,28 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
           reserveCents: summary.reserveCents,
         },
       })
+
+      const grants = await fastify.prisma.grantDisbursement.findMany({
+        where: { forYear, notifiedAt: null },
+        select: { id: true, userId: true, amountCents: true },
+      })
+      for (const grant of grants) {
+        await announceMoneyMove(
+          fastify.prisma,
+          grant.userId,
+          {
+            type: 'GRANT_AWARDED',
+            actorUserId: null,
+            title: `You were awarded a ${forYear} grant of ${formatEuros(Number(grant.amountCents))}`,
+            url: '/studio/revenue',
+          },
+          request.log,
+        )
+        await fastify.prisma.grantDisbursement.update({
+          where: { id: grant.id },
+          data: { notifiedAt: new Date() },
+        })
+      }
 
       return reply.status(201).send({
         ...summary,

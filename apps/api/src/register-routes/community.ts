@@ -22,6 +22,7 @@ import channelMembersRoute from '../routes/channels/members.js'
 import meTrackInsightsRoutes from '../routes/me/track-insights.js'
 import meMessagesRoutes from '../routes/me/messages.js'
 import meBlocksRoutes from '../routes/me/blocks.js'
+import meRestrictionsRoutes from '../routes/me/restrictions.js'
 import meEmbedRoutes from '../routes/me/embeds.js'
 import meRssFeedRoutes from '../routes/me/rss-feed.js'
 import channelEmbedsRoute from '../routes/channels/embeds.js'
@@ -47,6 +48,7 @@ export async function registerCommunityRoutes(fastify: FastifyInstance): Promise
   await fastify.register(meTrackInsightsRoutes)
   await fastify.register(meMessagesRoutes)
   await fastify.register(meBlocksRoutes)
+  await fastify.register(meRestrictionsRoutes)
   await fastify.register(meEmbedRoutes)
   await fastify.register(meRssFeedRoutes)
   await fastify.register(channelEmbedsRoute)
