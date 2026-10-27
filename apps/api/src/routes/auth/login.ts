@@ -14,7 +14,7 @@ import { createSession } from '../../lib/session.js'
 import { issueAuthTokens } from '../../auth/tokens/index.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
-import { auditLog } from '../../lib/audit.js'
+import { recordSignIn } from '../../lib/sign-in-notice.js'
 
 const loginRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -100,11 +100,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           : null)
       const session = await createSession(fastify.prisma, user.id, { deviceLabel })
 
-      void auditLog(fastify.prisma, {
-        action: 'USER_LOGIN',
-        actorId: user.id,
-        meta: { username: user.username },
-      })
+      void recordSignIn(fastify.prisma, user, deviceLabel, request.log)
 
       reply.setCookie(config.sessionCookieName, session.id, {
         httpOnly: true,
