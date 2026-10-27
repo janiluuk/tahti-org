@@ -6,7 +6,8 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
 import AdmZip from 'adm-zip'
-import { prisma } from '@tahti/db'
+import { notifyJobOutcome, prisma } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 
 const STEM_SEPARATOR_URL = process.env.STEM_SEPARATOR_URL ?? 'http://localhost:8090'
@@ -35,7 +36,7 @@ export async function processSeparateStemsJob(job: Job): Promise<void> {
 
   const item = await prisma.sound.findUnique({
     where: { id: soundId },
-    select: { channel: { select: { slug: true } } },
+    select: { title: true, channel: { select: { slug: true, userId: true } } },
   })
   if (!item) throw new Error(`Sound ${soundId} not found`)
 
@@ -97,11 +98,27 @@ export async function processSeparateStemsJob(job: Job): Promise<void> {
       where: { id: stemJobId },
       data: { ...keys, status: 'READY', expiresAt, errorMessage: null },
     })
+    await notifyJobOutcome(prisma, {
+      userId: item.channel.userId,
+      outcome: 'done',
+      title: `Stems for "${item.title}" are ready`,
+      body: `Download them within ${STEM_RETENTION_DAYS} days.`,
+      url: `/studio/sounds/${soundId}`,
+    })
   } catch (err) {
     await prisma.soundStemJob.update({
       where: { id: stemJobId },
       data: { status: 'ERROR', errorMessage: err instanceof Error ? err.message : String(err) },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: item.channel.userId,
+        outcome: 'failed',
+        title: `Stems for "${item.title}" could not be made`,
+        body: 'Try splitting the track again from Studio.',
+        url: `/studio/sounds/${soundId}`,
+      })
+    }
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

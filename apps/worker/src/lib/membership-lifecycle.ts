@@ -82,6 +82,15 @@ export async function processMembershipLapse(prisma: PrismaClient) {
           meta: { from: 'ARTIST', to: 'FREE', reason: 'membership_lapse' },
         },
       }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'MEMBERSHIP_ENDED',
+          title: 'Your Tahti membership has ended',
+          body: 'Your account is on the Free plan now. Renew in Settings → Account → Membership to get your member features back.',
+          url: '/settings/account',
+        },
+      }),
     ])
     lapsed++
   }

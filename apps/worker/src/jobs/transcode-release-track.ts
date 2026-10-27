@@ -6,11 +6,12 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, Prisma } from '@tahti/db'
+import { prisma, notifyJobOutcome, Prisma, type JobOutcome } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 import { fingerprintAndIdentify } from '../lib/track-fingerprint.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode-release-track' }))
@@ -59,6 +60,39 @@ function transcodeFlac(inputPath: string, outputPath: string): Promise<void> {
       .on('end', () => resolve())
       .save(outputPath)
   })
+}
+
+/** What the artist is told when a release track can't be processed. */
+export function releaseTrackFailedNotice(track: {
+  title: string
+  releaseId: string
+  release: { userId: string }
+}): JobOutcome {
+  return {
+    userId: track.release.userId,
+    outcome: 'failed',
+    title: `"${track.title}" could not be processed`,
+    body: 'Upload the audio for this release track again.',
+    url: `/studio/releases/${track.releaseId}`,
+  }
+}
+
+/** What the artist is told when the upload fingerprint matches a recording
+ * already in AcoustID — worth checking before the release goes out. */
+export function fingerprintMatchNotice(
+  track: { title: string; releaseId: string; release: { userId: string } },
+  match: { title?: string; artist?: string },
+): JobOutcome {
+  const known = [match.artist, match.title].filter(Boolean).join(' – ')
+  return {
+    userId: track.release.userId,
+    outcome: 'done',
+    title: `"${track.title}" matches a recording already out there`,
+    body: known
+      ? `AcoustID knows it as ${known}. If that isn't yours, check the rights before you distribute the release.`
+      : "If that isn't your own recording, check the rights before you distribute the release.",
+    url: `/studio/releases/${track.releaseId}`,
+  }
 }
 
 export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
@@ -150,6 +184,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
         status: 'READY',
       },
     })
+    if (match) await notifyJobOutcome(prisma, fingerprintMatchNotice(track, match))
     logLine(
       { trackId, hasFlac: Boolean(flacKey), elapsedMs: Date.now() - startedAt },
       `release track ${trackId} transcode done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
@@ -159,6 +194,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       where: { id: trackId },
       data: { status: 'FAILED' },
     })
+    if (isFinalAttempt(job)) await notifyJobOutcome(prisma, releaseTrackFailedNotice(track))
     logLine(
       {
         trackId,
