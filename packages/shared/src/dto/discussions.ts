@@ -40,6 +40,8 @@ export const DiscussionPostViewSchema = z.object({
   body: z.string(),
   author: z.string(),
   createdAt: z.string(),
+  /** Whether the caller wrote it, so the app can offer Remove. */
+  mine: z.boolean(),
 })
 
 export const CreateDiscussionPostSchema = z.object({
