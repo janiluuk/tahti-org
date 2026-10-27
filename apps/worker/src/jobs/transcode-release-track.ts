@@ -6,11 +6,12 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, Prisma } from '@tahti/db'
+import { prisma, notifyJobOutcome, Prisma, type JobOutcome } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 import { fingerprintAndIdentify } from '../lib/track-fingerprint.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode-release-track' }))
@@ -59,6 +60,21 @@ function transcodeFlac(inputPath: string, outputPath: string): Promise<void> {
       .on('end', () => resolve())
       .save(outputPath)
   })
+}
+
+/** What the artist is told when a release track can't be processed. */
+export function releaseTrackFailedNotice(track: {
+  title: string
+  releaseId: string
+  release: { userId: string }
+}): JobOutcome {
+  return {
+    userId: track.release.userId,
+    outcome: 'failed',
+    title: `"${track.title}" could not be processed`,
+    body: 'Upload the audio for this release track again.',
+    url: `/studio/releases/${track.releaseId}`,
+  }
 }
 
 export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
@@ -159,6 +175,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       where: { id: trackId },
       data: { status: 'FAILED' },
     })
+    if (isFinalAttempt(job)) await notifyJobOutcome(prisma, releaseTrackFailedNotice(track))
     logLine(
       {
         trackId,

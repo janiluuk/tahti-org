@@ -20,7 +20,8 @@ import {
   type LoudnormMeasured,
   type OutputFormat,
 } from '@tahti/audio-edit'
-import { prisma, syncActiveVersionToItem } from '@tahti/db'
+import { notifyJobOutcome, prisma, syncActiveVersionToItem, type JobOutcome } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { pruneSoundRevisions } from '../lib/sound-version-retention.js'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
@@ -245,6 +246,36 @@ async function renderEditList(
   await renderSinglePass(inputPath, outputPath, edit, format, maxDurationSec)
 }
 
+/** What the artist is told when an editor render ends. Renders can take
+ * minutes, so the editor may be closed by then. */
+export function renderOutcomeNotice(
+  sound: { id: string; title: string; channel: { userId: string } },
+  outcome: 'done' | 'failed',
+): JobOutcome {
+  return outcome === 'done'
+    ? {
+        userId: sound.channel.userId,
+        outcome,
+        title: `Your edit of "${sound.title}" is ready`,
+        url: `/studio/sounds/${sound.id}`,
+      }
+    : {
+        userId: sound.channel.userId,
+        outcome,
+        title: `Your edit of "${sound.title}" could not be rendered`,
+        body: 'The track is unchanged. Open the editor and render it again.',
+        url: `/studio/sounds/${sound.id}/editor`,
+      }
+}
+
+async function tellOwner(soundId: string, outcome: 'done' | 'failed'): Promise<void> {
+  const sound = await prisma.sound.findUnique({
+    where: { id: soundId },
+    select: { id: true, title: true, channel: { select: { userId: true } } },
+  })
+  if (sound) await notifyJobOutcome(prisma, renderOutcomeNotice(sound, outcome))
+}
+
 export async function processRenderSoundEditJob(job: Job): Promise<void> {
   const data = job.data as RenderSoundEditPayload
   const {
@@ -334,11 +365,13 @@ export async function processRenderSoundEditJob(job: Job): Promise<void> {
     await pruneSoundRevisions(prisma, soundId)
 
     await reportProgress({ pct: 1, phase: 'done' })
+    await tellOwner(soundId, 'done')
   } catch (err) {
     await prisma.soundVersion.update({
       where: { id: versionId },
       data: { status: 'ERROR' },
     })
+    if (!sampleOnly && job.opts && isFinalAttempt(job)) await tellOwner(soundId, 'failed')
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

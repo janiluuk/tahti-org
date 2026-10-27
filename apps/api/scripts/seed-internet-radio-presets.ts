@@ -16,7 +16,7 @@ const PRESETS = [
     name: 'YleX',
     genre: 'Pop / Hits',
     description: 'Finnish youth-focused pop and hits station.',
-    iconUrl: 'https://images.cdn.yle.fi/f_auto,w_512,h_512,c_fit/v1496664710/yle-areena-app.png',
+    iconUrl: 'https://tahti.live/radio-logos/ylex.png',
     programmingUrl: 'https://areena.yle.fi/audio/ohjelmat/yle-x',
     streamUrl: 'https://icecast.live.yle.fi/radio/YleX/icecast.audio',
     enabled: true,
