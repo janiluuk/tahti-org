@@ -120,7 +120,7 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
         user,
         session,
         deviceLabel,
-        includeRefreshInBody: true,
+        includeRefreshInBody: parsed.data.refreshTokenDelivery === 'body',
       })
 
       return reply.send({
@@ -133,7 +133,7 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
         },
         accessToken: tokens.accessToken,
         expiresIn: tokens.expiresIn,
-        refreshToken: tokens.refreshToken,
+        ...(tokens.refreshToken ? { refreshToken: tokens.refreshToken } : {}),
       })
     },
   )

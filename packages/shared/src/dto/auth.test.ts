@@ -82,6 +82,13 @@ describe('LoginSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('accepts refreshTokenDelivery body or cookie, and nothing else', () => {
+    const base = { email: 'artist@example.com', password: 'pw' }
+    expect(LoginSchema.safeParse({ ...base, refreshTokenDelivery: 'body' }).success).toBe(true)
+    expect(LoginSchema.safeParse({ ...base, refreshTokenDelivery: 'cookie' }).success).toBe(true)
+    expect(LoginSchema.safeParse({ ...base, refreshTokenDelivery: 'header' }).success).toBe(false)
+  })
 })
 
 describe('VerifyEmailSchema', () => {

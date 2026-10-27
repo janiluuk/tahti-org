@@ -39,10 +39,17 @@ export const RegisterSchema = z.object({
 
 export type RegisterInput = z.infer<typeof RegisterSchema>
 
+/** `body` returns the refresh token in the JSON response (desktop keychain,
+ * CLI). Browsers omit it and only get the HttpOnly refresh cookie. */
+export const RefreshTokenDeliverySchema = z.enum(['cookie', 'body'])
+
+export type RefreshTokenDelivery = z.infer<typeof RefreshTokenDeliverySchema>
+
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1, 'Password is required'),
   deviceLabel: z.string().trim().max(120).optional(),
+  refreshTokenDelivery: RefreshTokenDeliverySchema.optional(),
 })
 
 export type LoginInput = z.infer<typeof LoginSchema>
@@ -51,6 +58,7 @@ export const LoginTotpSchema = z.object({
   challengeId: z.string().min(1, 'challengeId is required'),
   code: z.string().trim().min(1, 'code is required').max(32),
   deviceLabel: z.string().trim().max(120).optional(),
+  refreshTokenDelivery: RefreshTokenDeliverySchema.optional(),
 })
 
 export type LoginTotpInput = z.infer<typeof LoginTotpSchema>

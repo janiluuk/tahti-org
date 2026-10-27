@@ -10,7 +10,7 @@ import { setRefreshCookie } from './cookies.js'
 export type IssuedAuthTokens = {
   accessToken: string
   expiresIn: number
-  refreshToken: string
+  refreshToken?: string
 }
 
 export async function issueAuthTokens(
@@ -40,6 +40,6 @@ export async function issueAuthTokens(
   return {
     accessToken: access.token,
     expiresIn: access.expiresIn,
-    refreshToken: refresh.plaintext,
+    ...(input.includeRefreshInBody ? { refreshToken: refresh.plaintext } : {}),
   }
 }
