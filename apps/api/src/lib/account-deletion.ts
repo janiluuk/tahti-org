@@ -113,6 +113,11 @@ export async function executeAccountDeletion(
     data: { leftAt: endedAt },
   })
 
+  // Discussion replies stay so threads keep their shape, shown as from a
+  // deleted account; the account stops following every topic.
+  await prisma.discussionPost.updateMany({ where: { authorId: userId }, data: { authorId: null } })
+  await prisma.discussionParticipant.deleteMany({ where: { userId } })
+
   // Listening the account did stays in artists' anonymous totals, but is no
   // longer tied to the account (it carries place and device labels).
   await prisma.listenSession.updateMany({ where: { byUserId: userId }, data: { byUserId: null } })
