@@ -700,6 +700,8 @@ enum NotificationType {
   FAN_SUB_PAYMENT_FAILED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
+  /// A fan cancelled their subscription to you (perks run to the end of the period).
+  FAN_SUB_CANCELED
   /// The board replied to your support request.
   SUPPORT_REPLY
   /// An artist made you a moderator of their channel's chat.
