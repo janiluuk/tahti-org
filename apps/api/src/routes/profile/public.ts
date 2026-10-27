@@ -294,6 +294,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           peaks: true,
           genre: true,
           genreCustom: true,
+          downloadsEnabled: true,
           _count: { select: { likes: true, listenEvents: true } },
         },
       })
@@ -381,6 +382,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     playCount: item._count.listenEvents,
     likeCount: item._count.likes,
     downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+    downloadsEnabled: item.downloadsEnabled,
   }))
 
   const releases = await Promise.all(
