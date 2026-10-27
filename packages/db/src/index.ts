@@ -60,6 +60,7 @@ export {
   notifyArtistOfRadioSubmissionRejected,
   notifyUserThemeUnderReview,
   notifyUserThemeApproved,
+  notifySubmitterOfStationReview,
   notifyUserThemeRejected,
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,

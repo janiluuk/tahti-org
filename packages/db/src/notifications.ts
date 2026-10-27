@@ -574,6 +574,35 @@ export async function notifyBoardOfMissedLiveShow(
   })
 }
 
+/** Tells whoever suggested an internet radio station what the board decided.
+ * An accepted station starts switched off, so the notice doesn't promise it
+ * is listed yet. */
+export async function notifySubmitterOfStationReview(
+  prisma: PrismaClient,
+  suggestion: { submitterId: string | null; name: string },
+  review: { approved: boolean; note: string | null },
+): Promise<void> {
+  if (!suggestion.submitterId) return
+  const submitter = await prisma.user.findFirst({
+    where: { id: suggestion.submitterId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!submitter) return
+  await prisma.notification.create({
+    data: {
+      userId: submitter.id,
+      type: 'RADIO_STATION_REVIEWED',
+      title: review.approved
+        ? `${suggestion.name} was accepted`
+        : `${suggestion.name} was not added`,
+      body: review.approved
+        ? 'It shows on the Radio page once the board switches it on.'
+        : review.note?.slice(0, 500) || null,
+      url: '/radio',
+    },
+  })
+}
+
 /** Tells the board about a new support request, or a requester's follow-up
  * on one, so tickets don't wait until someone opens Admin → Moderation.
  * The person who wrote it is never told about their own message. */

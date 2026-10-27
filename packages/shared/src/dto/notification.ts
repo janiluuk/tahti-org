@@ -18,6 +18,7 @@ export const NotificationTypeSchema = z.enum([
   'THEME_UNDER_REVIEW',
   'THEME_APPROVED',
   'THEME_REJECTED',
+  'RADIO_STATION_REVIEWED',
   'ADMIN_TEST',
   'MISSED_LIVE_SHOW_FLAGGED',
   'MOTION_OPENED',
