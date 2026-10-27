@@ -2,12 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
 import {
   CreateDiscussionPostSchema,
   DiscussionParticipationSchema,
   DiscussionPostViewSchema,
   DiscussionTopicDetailSchema,
   DiscussionTopicListSchema,
+  DiscussionPostRemovedSchema,
   IdParamSchema,
   openApiResponse,
   openApiResponses,
@@ -18,9 +20,15 @@ import {
 import { requireMember } from '../../plugins/auth.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
 import { userName } from '../../lib/safe-names.js'
+import { auditLog } from '../../lib/audit.js'
 import { notifyDiscussionParticipants } from '../../lib/discussion-notifications.js'
 
 const POSTS_LIMIT = 500
+
+const PostParamsSchema = z.object({
+  id: z.string().min(1).max(64),
+  postId: z.string().regex(/^\d{1,18}$/),
+})
 
 const discussionRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/discussions — every topic, pinned first, then the
@@ -229,6 +237,46 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         update: { mutedAt },
       })
       return reply.send({ following: true, muted: parsed.data.muted })
+    },
+  )
+
+  // DELETE /api/v1/governance/discussions/:id/posts/:postId — the author
+  // removes their own reply while the topic is open; the board removes any
+  // reply at any time (personal data or abuse can be noticed after closing).
+  fastify.delete(
+    '/api/v1/governance/discussions/:id/posts/:postId',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionPostRemovedSchema, 'DiscussionPostRemoved'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(PostParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const user = request.sessionUser!
+      const postId = BigInt(routeParams.postId)
+      const post = await fastify.prisma.discussionPost.findFirst({
+        where: { id: postId, topicId: routeParams.id },
+        select: { authorId: true, topic: { select: { status: true } } },
+      })
+      if (!post) return reply.status(404).send({ error: 'Post not found' })
+      const byAuthor = post.authorId === user.id
+      if (!byAuthor && !user.isBoard) {
+        return reply.status(403).send({ error: 'You can only remove your own reply' })
+      }
+      if (post.topic.status === 'CLOSED' && !user.isBoard) {
+        return reply.status(409).send({ error: 'This topic is closed; its replies are kept' })
+      }
+      await fastify.prisma.discussionPost.delete({ where: { id: postId } })
+      await auditLog(fastify.prisma, {
+        action: 'DISCUSSION_POST_REMOVE',
+        actorId: user.id,
+        targetId: routeParams.id,
+        meta: { postId: routeParams.postId, byAuthor },
+      })
+      return reply.send({ ok: true })
     },
   )
 }
