@@ -8,7 +8,7 @@ import type { PrismaClient } from '@tahti/db'
  * likes, reposts, follows, messages it sent, purchases, newsletter
  * subscriptions, the accounts it blocked, its listening sessions, the chat
  * messages it posted while signed in, its track reactions, and its feature
- * requests, motion comments, seconds and votes (the member already sees their
+ * requests, motion comments, seconds and votes, its discussion replies and the discussion topics it follows (and whether it muted them) (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
  * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, its grants and fan-subscription payouts, the add-ons it published or installed, its signed-in devices and API tokens (names and prefixes, never the secrets), the private-track shares it made or received (never the link keys) the green rooms it was invited to, and its email address change requests (never the link tokens). Other
@@ -66,6 +66,8 @@ export async function buildActivityExport(
     sharesReceived,
     greenRoomInvites,
     emailChanges,
+    discussionPosts,
+    discussionFollows,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -525,6 +527,16 @@ export async function buildActivityExport(
       orderBy: { createdAt: 'asc' },
       select: { newEmail: true, createdAt: true, expiresAt: true, usedAt: true },
     }),
+    prisma.discussionPost.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { body: true, createdAt: true, topic: { select: { id: true, title: true } } },
+    }),
+    prisma.discussionParticipant.findMany({
+      where: { userId: user.id },
+      orderBy: { joinedAt: 'asc' },
+      select: { joinedAt: true, mutedAt: true, topic: { select: { id: true, title: true } } },
+    }),
   ])
 
   return {
@@ -576,5 +588,7 @@ export async function buildActivityExport(
     sharesReceived,
     greenRoomInvites,
     emailChanges,
+    discussionPosts,
+    discussionFollows,
   }
 }
