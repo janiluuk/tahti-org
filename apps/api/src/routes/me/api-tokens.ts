@@ -10,10 +10,12 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  safeDisplayName,
 } from '@tahti/shared'
 import { requireSession } from '../../plugins/auth.js'
 import { generateApiToken } from '../../lib/api-token.js'
 import { auditLog } from '../../lib/audit.js'
+import { sendSecurityNotice } from '../../lib/security-email.js'
 
 const MAX_TOKENS_PER_USER = 20
 
@@ -123,6 +125,15 @@ const apiTokenRoutes: FastifyPluginAsync = async (fastify) => {
         targetId: created.id,
         meta: { name: body.name, scopes: created.scopes },
       })
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'A new API token was created on your Tahti account',
+          what: `An API token named "${created.name}" (${created.tokenPrefix}…, ${created.scopes.join(' + ')} access) was just created on your Tahti account. You can revoke it in Settings → Account → API tokens.`,
+        },
+        request.log,
+      )
 
       return reply.status(201).send({ ...created, token: generated.token })
     },
