@@ -87,6 +87,11 @@ describe('Green room API', () => {
       payload: { username: 'green-room-guest' },
     })
     expect(invite.statusCode).toBe(201)
+    const notices = await prisma.notification.findMany({
+      where: { userId: guestUserId, type: 'GREEN_ROOM_INVITE' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]!.url).toMatch(/\/green-room$/)
 
     const access = await app.inject({
       method: 'GET',

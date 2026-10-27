@@ -30,6 +30,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyAuthorOfAddonReview } from '../../lib/addon-review-notice.js'
 import { requireBoard } from '../../plugins/auth.js'
 import { getObjectBuffer, presignedPutUrl } from '../../lib/minio.js'
 import { assertValidWidgetBundle, sha256Hex, toInstallUpdateData } from '../../lib/addons.js'
@@ -319,6 +320,13 @@ const adminAddonsRoutes: FastifyPluginAsync = async (fastify) => {
         data: { status: 'APPROVED', moderationNote: parsed.data.moderationNote ?? null },
         select: ADMIN_ITEM_SELECT,
       })
+      await notifyAuthorOfAddonReview(
+        fastify.prisma,
+        widget,
+        'APPROVED',
+        parsed.data.moderationNote ?? null,
+        request.log,
+      )
       return reply.send(updated)
     },
   )
@@ -344,6 +352,13 @@ const adminAddonsRoutes: FastifyPluginAsync = async (fastify) => {
         data: { status: 'REJECTED', moderationNote: parsed.data.moderationNote },
         select: ADMIN_ITEM_SELECT,
       })
+      await notifyAuthorOfAddonReview(
+        fastify.prisma,
+        widget,
+        'REJECTED',
+        parsed.data.moderationNote,
+        request.log,
+      )
       return reply.send(updated)
     },
   )
@@ -380,6 +395,13 @@ const adminAddonsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         select: ADMIN_ITEM_SELECT,
       })
+      await notifyAuthorOfAddonReview(
+        fastify.prisma,
+        widget,
+        'DISABLED',
+        parsed.data.moderationNote ?? null,
+        request.log,
+      )
       return reply.send(updated)
     },
   )

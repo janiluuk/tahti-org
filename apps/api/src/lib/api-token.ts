@@ -37,7 +37,8 @@ export interface ApiTokenAuthResult {
 }
 
 /** Looks up a bearer token by its hash. Expired/revoked tokens, and tokens
- * belonging to a deleted user, are treated as invalid. Touches lastUsedAt
+ * belonging to a deleted user, are treated as invalid; a suspended user's
+ * token is returned so the caller can say why it is refused. Touches lastUsedAt
  * best-effort (fire-and-forget — must not add latency to the request path). */
 export async function validateApiToken(
   prisma: PrismaClient,
@@ -54,7 +55,6 @@ export async function validateApiToken(
   if (token.revokedAt) return null
   if (token.expiresAt && token.expiresAt < new Date()) return null
   if (token.user.deletedAt) return null
-  if (token.user.suspendedAt) return null
 
   void prisma.apiToken
     .update({ where: { id: token.id }, data: { lastUsedAt: new Date() } })

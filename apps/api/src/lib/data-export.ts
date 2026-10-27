@@ -11,11 +11,11 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, its grants and fan-subscription payouts, the add-ons it published or installed, its signed-in devices and API tokens (names and prefixes, never the secrets), the private-track shares it made or received (never the link keys) and the green rooms it was invited to. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
-  user: { id: string; email: string },
+  user: { id: string; email: string; username: string },
 ) {
   const [
     sounds,
@@ -53,6 +53,18 @@ export async function buildActivityExport(
     restrictions,
     radioSubmissions,
     stationSuggestions,
+    fanTiers,
+    storeItems,
+    notifications,
+    grants,
+    fanSubscriptionPayouts,
+    addonsPublished,
+    addonInstalls,
+    devices,
+    apiTokens,
+    sharesGiven,
+    sharesReceived,
+    greenRoomInvites,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -362,6 +374,151 @@ export async function buildActivityExport(
         createdAt: true,
       },
     }),
+    prisma.fanTier.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        amountCents: true,
+        description: true,
+        perks: true,
+        active: true,
+        createdAt: true,
+      },
+    }),
+    prisma.purchaseTier.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { position: 'asc' },
+      select: {
+        name: true,
+        description: true,
+        priceCents: true,
+        priceOptional: true,
+        active: true,
+        createdAt: true,
+        sounds: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.notification.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        type: true,
+        title: true,
+        body: true,
+        url: true,
+        readAt: true,
+        createdAt: true,
+        actor: { select: { username: true } },
+      },
+    }),
+    prisma.grantDisbursement.findMany({
+      where: { userId: user.id },
+      orderBy: { forYear: 'asc' },
+      select: {
+        forYear: true,
+        units: true,
+        amountCents: true,
+        state: true,
+        notifiedAt: true,
+        paidAt: true,
+        publishedAs: true,
+      },
+    }),
+    prisma.fanSubPayout.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { forPeriodStart: 'asc' },
+      select: {
+        forPeriodStart: true,
+        forPeriodEnd: true,
+        grossCents: true,
+        stripeFeeCents: true,
+        orgFeeCents: true,
+        netToArtistCents: true,
+        state: true,
+        paidAt: true,
+      },
+    }),
+    prisma.addon.findMany({
+      where: { authorUserId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        slug: true,
+        name: true,
+        description: true,
+        scope: true,
+        currentVersion: true,
+        status: true,
+        moderationNote: true,
+        createdAt: true,
+      },
+    }),
+    prisma.addonInstall.findMany({
+      where: { OR: [{ listenerUserId: user.id }, { channel: { userId: user.id } }] },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        enabled: true,
+        position: true,
+        configJson: true,
+        createdAt: true,
+        widget: { select: { slug: true, name: true } },
+      },
+    }),
+    prisma.session.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { deviceLabel: true, createdAt: true, expiresAt: true },
+    }),
+    prisma.apiToken.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        name: true,
+        tokenPrefix: true,
+        scopes: true,
+        lastUsedAt: true,
+        expiresAt: true,
+        revokedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.soundShare.findMany({
+      where: { sound: { channel: { userId: user.id } } },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        granteeUsername: true,
+        permission: true,
+        expiresAt: true,
+        createdAt: true,
+        sound: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.soundShare.findMany({
+      where: { granteeUsername: user.username },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        permission: true,
+        expiresAt: true,
+        createdAt: true,
+        sound: {
+          select: {
+            id: true,
+            title: true,
+            channel: { select: { user: { select: { username: true } } } },
+          },
+        },
+      },
+    }),
+    prisma.broadcastGreenRoomInvite.findMany({
+      where: { userId: user.id },
+      orderBy: { invitedAt: 'asc' },
+      select: {
+        source: true,
+        invitedAt: true,
+        joinedAt: true,
+        broadcast: { select: { channel: { select: { slug: true } } } },
+      },
+    }),
   ])
 
   return {
@@ -400,5 +557,17 @@ export async function buildActivityExport(
     restrictions,
     radioSubmissions,
     stationSuggestions,
+    fanTiers,
+    storeItems,
+    notifications,
+    grants: grants.map((grant) => ({ ...grant, amountCents: Number(grant.amountCents) })),
+    fanSubscriptionPayouts,
+    addonsPublished,
+    addonInstalls,
+    devices,
+    apiTokens,
+    sharesGiven,
+    sharesReceived,
+    greenRoomInvites,
   }
 }
