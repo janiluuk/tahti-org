@@ -125,3 +125,20 @@ describe('processTranscodeJob failures', () => {
     expect(lastUpdateData()).toEqual({ status: 'PENDING' })
   })
 })
+
+describe('uploadReadyNotice', () => {
+  it('says whether the new track is live or private', async () => {
+    const { uploadReadyNotice } = await import('./transcode.js')
+    const base = { id: 's1', title: 'Night drive', channel: { userId: 'u1' } }
+    expect(uploadReadyNotice({ ...base, isPublic: true })).toEqual({
+      userId: 'u1',
+      outcome: 'done',
+      title: '"Night drive" is ready',
+      body: 'It is live on your channel.',
+      url: '/studio/sounds/s1',
+    })
+    expect(uploadReadyNotice({ ...base, isPublic: false }).body).toBe(
+      'It is saved as private; publish it from Studio when you are ready.',
+    )
+  })
+})
