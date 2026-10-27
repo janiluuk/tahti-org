@@ -23,7 +23,7 @@ The **`All checks`** job in the [CI workflow](./workflows/ci.yml) still aggregat
 | Validate website Docker build               | Marketing site image builds     |
 | Lint & format                               | ESLint + Prettier               |
 | Typecheck                                   | `tsc` across the monorepo       |
-| Unit + integration tests                    | Vitest + Postgres               |
+| Unit + integration tests (1/4 … 4/4)        | Vitest + Postgres, 4 shards     |
 | API vital flows (curl e2e)                  | Core API smoke paths            |
 | User journey e2e (listener, artist, member) | Guides-backed journeys          |
 | AGPL header check                           | License headers on source files |

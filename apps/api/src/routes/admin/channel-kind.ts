@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { parseRouteParams, SlugParamSchema } from '@tahti/shared'
+import { notifyUserOfBoardAccountChange } from '@tahti/db'
 import { z } from 'zod'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -50,6 +51,17 @@ const adminChannelKindRoutes: FastifyPluginAsync = async (fastify) => {
           targetId: channel.userId,
           meta: { channelId: channel.id, slug, from: channel.channelKind, to: channelKind },
         })
+        await notifyUserOfBoardAccountChange(fastify.prisma, channel.userId, {
+          title:
+            channelKind === 'RADIO'
+              ? 'The board made your channel a radio station'
+              : 'The board made your channel an artist channel',
+          body:
+            channelKind === 'RADIO'
+              ? 'Your channel page now shows the radio station layout.'
+              : 'Your channel page now shows the artist layout.',
+          url: `/c/${slug}`,
+        }).catch((err: unknown) => fastify.log.warn({ err }, 'channel kind notice failed'))
       }
 
       return reply.send({ slug, channelKind })
