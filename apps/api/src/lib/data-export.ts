@@ -7,7 +7,9 @@ import type { PrismaClient } from '@tahti/db'
  * the export always had: uploads, collections, posts, events, comments,
  * likes, reposts, follows, messages it sent, purchases, newsletter
  * subscriptions, the accounts it blocked, its listening sessions, the chat
- * messages it posted while signed in and its track reactions. Other
+ * messages it posted while signed in, its track reactions, and its feature
+ * requests, motion comments, seconds and votes (the member already sees their
+ * own choice on each motion) and correction requests. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -31,6 +33,13 @@ export async function buildActivityExport(
     listening,
     chatMessages,
     trackReactions,
+    featureRequests,
+    featureRequestComments,
+    featureRequestVotes,
+    motionComments,
+    motionSeconds,
+    motionVotes,
+    correctionRequests,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -166,6 +175,54 @@ export async function buildActivityExport(
         sound: { select: { id: true, title: true } },
       },
     }),
+    prisma.featureRequest.findMany({
+      where: { proposedById: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { title: true, description: true, status: true, createdAt: true },
+    }),
+    prisma.featureRequestComment.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { body: true, createdAt: true, featureRequest: { select: { title: true } } },
+    }),
+    prisma.featureRequestVote.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true, featureRequest: { select: { title: true } } },
+    }),
+    prisma.motionComment.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        body: true,
+        createdAt: true,
+        removedAt: true,
+        motion: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.motionSecond.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true, motion: { select: { id: true, title: true } } },
+    }),
+    prisma.vote.findMany({
+      where: { userId: user.id },
+      orderBy: { castAt: 'asc' },
+      select: { choice: true, castAt: true, motion: { select: { id: true, title: true } } },
+    }),
+    prisma.governanceCorrectionRequest.findMany({
+      where: { requesterId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        subject: true,
+        details: true,
+        recordKind: true,
+        state: true,
+        resolutionNote: true,
+        resolvedAt: true,
+        createdAt: true,
+      },
+    }),
   ])
 
   return {
@@ -186,5 +243,12 @@ export async function buildActivityExport(
     listening,
     chatMessages,
     trackReactions,
+    featureRequests,
+    featureRequestComments,
+    featureRequestVotes,
+    motionComments,
+    motionSeconds,
+    motionVotes,
+    correctionRequests,
   }
 }
