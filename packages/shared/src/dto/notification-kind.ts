@@ -66,6 +66,7 @@ export const NOTIFICATION_KIND_TYPES = {
     'FEATURE_REQUEST_UPDATED',
     'DISCUSSION_REPLY',
     'DISCUSSION_OPENED',
+    'DISCUSSION_CLOSED',
   ],
 } as const satisfies Record<string, readonly NotificationType[]>
 

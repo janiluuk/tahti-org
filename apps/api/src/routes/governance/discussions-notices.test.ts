@@ -94,4 +94,37 @@ describe('Discussion reply notices', () => {
     await reply('Third')
     expect(await noticesFor(followerId)).toHaveLength(2)
   })
+
+  it('tells every follower, muted ones too, when the board closes the topic', async () => {
+    const board = await prisma.user.findFirstOrThrow({ where: { username: `${PREFIX}board` } })
+    await prisma.user.update({ where: { id: board.id }, data: { isBoard: true } })
+    const boardCookie = await sessionCookieFor(prisma, board.id)
+    const closed = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/discussions/${topicId}`,
+      headers: { cookie: boardCookie },
+      payload: { status: 'CLOSED' },
+    })
+    expect(closed.statusCode).toBe(200)
+    const told = await prisma.notification.findMany({
+      where: { type: 'DISCUSSION_CLOSED', url: `/governance/discussions/${topicId}` },
+      select: { userId: true },
+    })
+    const ids = told.map((n) => n.userId)
+    expect(ids).toEqual(expect.arrayContaining([followerId, mutedId, replierId]))
+    expect(ids).not.toContain(board.id)
+
+    const again = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/discussions/${topicId}`,
+      headers: { cookie: boardCookie },
+      payload: { pinned: true },
+    })
+    expect(again.statusCode).toBe(200)
+    expect(
+      await prisma.notification.count({
+        where: { type: 'DISCUSSION_CLOSED', url: `/governance/discussions/${topicId}` },
+      }),
+    ).toBe(ids.length)
+  })
 })
