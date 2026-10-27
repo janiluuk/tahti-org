@@ -45,9 +45,11 @@ export {
 } from './release-track-versions.js'
 export {
   notifyFollowersOfNewPost,
+  notifyVenueOwnerOfShow,
   notifyFollowersOfNewTrack,
   notifyFollowersOfNewRelease,
   notifyFollowersOfLiveChannel,
+  notifyOfCanceledVenueShow,
   notifyFollowersOfNewEvent,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
@@ -63,6 +65,7 @@ export {
   notifyArtistOfRadioSubmissionRejected,
   notifyUserThemeUnderReview,
   notifyUserThemeApproved,
+  notifySubmitterOfStationReview,
   notifyUserThemeRejected,
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,

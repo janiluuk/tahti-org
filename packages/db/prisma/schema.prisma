@@ -642,9 +642,13 @@ enum MentionSurface {
 
 enum NotificationType {
   NEW_POST
+  /// An artist added a show at a venue you run.
+  VENUE_SHOW_BOOKED
   NEW_MESSAGE
   NEW_TRACK
   NEW_FOLLOWER
+  /// A venue show you are part of was cancelled by the artist or the venue.
+  VENUE_SHOW_CANCELED
   NEW_LIKE
   NEW_REPOST
   PLAYLIST_TRACK_ADDED
@@ -664,6 +668,8 @@ enum NotificationType {
   THEME_APPROVED
   /// Admin rejected your theme submission (see the notification body for why).
   THEME_REJECTED
+  /// The board accepted or turned down a radio station you suggested.
+  RADIO_STATION_REVIEWED
   /// Manually sent by an admin from /admin/news's test-notification form.
   ADMIN_TEST
   /// Sent to every board member when the missed-live-show-scan cron flags a
