@@ -20,6 +20,7 @@ import {
   syncGreenRoomInvites,
 } from '../../lib/green-room.js'
 import { userName } from '../../lib/safe-names.js'
+import { notifyGreenRoomGuest } from '../../lib/green-room-invite-notice.js'
 
 const meGreenRoomRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -229,6 +230,10 @@ const meGreenRoomRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'Cannot invite yourself' })
       }
 
+      const existing = await fastify.prisma.broadcastGreenRoomInvite.findUnique({
+        where: { broadcastId_userId: { broadcastId: broadcast.id, userId: target.id } },
+        select: { id: true },
+      })
       const invite = await fastify.prisma.broadcastGreenRoomInvite.upsert({
         where: { broadcastId_userId: { broadcastId: broadcast.id, userId: target.id } },
         create: {
@@ -239,6 +244,13 @@ const meGreenRoomRoutes: FastifyPluginAsync = async (fastify) => {
         update: {},
         include: { user: { select: { id: true, username: true, displayName: true } } },
       })
+      if (!existing) {
+        await notifyGreenRoomGuest(
+          fastify.prisma,
+          { guestId: target.id, hostId: user.id },
+          request.log,
+        )
+      }
 
       return reply.status(201).send({
         userId: invite.user.id,

@@ -651,6 +651,8 @@ enum NotificationType {
   VENUE_SHOW_CANCELED
   NEW_LIKE
   NEW_REPOST
+  /// An artist shared a private track with you.
+  TRACK_SHARED
   PLAYLIST_TRACK_ADDED
   /// The board verified your venue, or took the verification back.
   VENUE_VERIFIED
@@ -658,6 +660,8 @@ enum NotificationType {
   NEW_RELEASE
   /// Someone @mentioned you in a channel live chat.
   CHAT_MENTION
+  /// The board approved, rejected or disabled an add-on you published.
+  ADDON_REVIEWED
   /// Board rejected a Tahti Radio track submission (only when a note is provided).
   RADIO_SUBMISSION_REJECTED
   /// The board added your submitted track to Tahti Radio.
@@ -691,6 +695,8 @@ enum NotificationType {
   CORRECTION_RESOLVED
   /// The board set up a board election that takes nominations; sent to every other member.
   ELECTION_OPENED
+  /// An artist invited you to the green room of their live broadcast.
+  GREEN_ROOM_INVITE
   /// The board recorded the result of an election you stood in.
   ELECTION_RESULT
   /// A board member edited the details of one of your tracks.
@@ -726,10 +732,14 @@ enum NotificationType {
   FAN_SUB_CANCELED
   /// The board replied to your support request.
   SUPPORT_REPLY
+  /// The board changed a setting on your account or channel (channel kind, storage, tier, membership).
+  BOARD_ACCOUNT_CHANGE
   /// An artist made you a moderator of their channel's chat.
   MODERATOR_ADDED
   /// Board: a new support request, or the requester replied on one.
   SUPPORT_TICKET
+  /// The board removed a track or comment of yours.
+  CONTENT_REMOVED_BY_BOARD
   /// Board: someone reported content for review.
   CONTENT_REPORTED
   /// The board moved a feature request you proposed or voted for.
@@ -985,6 +995,7 @@ model User {
   refreshTokens                  RefreshToken[]
   apiTokens                      ApiToken[]
   emailVerifications             EmailVerification[]
+  emailChanges                   EmailChange[]
   totpBackupCodes                TotpBackupCode[]
   totpChallenges                 TotpChallenge[]
   membership                     Membership?
@@ -1396,6 +1407,22 @@ model StashShare {
   createdAt       DateTime  @default(now())
 
   @@index([token])
+  @@schema("core")
+}
+
+/// A pending change of the account's email: the link goes to newEmail and
+/// the address changes only when it is opened.
+model EmailChange {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
   @@schema("core")
 }
 
