@@ -86,6 +86,34 @@ describe('Removing discussion replies', () => {
     expect((await remove(id, boardCookie)).statusCode).toBe(200)
   })
 
+  it('the author edits their reply while the topic is open; it is marked edited', async () => {
+    await prisma.discussionTopic.update({ where: { id: topicId }, data: { status: 'OPEN' } })
+    const id = await post('Typo')
+    const edit = (cookie: string, body: string) =>
+      app.inject({
+        method: 'PATCH',
+        url: `/api/v1/governance/discussions/${topicId}/posts/${id}`,
+        headers: { cookie },
+        payload: { body },
+      })
+    expect((await edit(otherCookie, 'Hijack')).statusCode).toBe(403)
+    const res = await edit(authorCookie, '  Fixed  ')
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ body: 'Fixed', mine: true })
+    expect(res.json().editedAt).toEqual(expect.any(String))
+    const read = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/discussions/${topicId}`,
+      headers: { cookie: authorCookie },
+    })
+    expect(read.json().posts.find((p: { id: string }) => p.id === id)).toMatchObject({
+      body: 'Fixed',
+      editedAt: expect.any(String),
+    })
+    await prisma.discussionTopic.update({ where: { id: topicId }, data: { status: 'CLOSED' } })
+    expect((await edit(authorCookie, 'Late')).statusCode).toBe(409)
+  })
+
   it('404s an unknown reply', async () => {
     expect((await remove('999999999', boardCookie)).statusCode).toBe(404)
   })

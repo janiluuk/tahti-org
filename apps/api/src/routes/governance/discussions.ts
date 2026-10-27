@@ -101,6 +101,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
               id: true,
               body: true,
               createdAt: true,
+              editedAt: true,
               authorId: true,
               author: { select: { username: true, displayName: true } },
             },
@@ -122,6 +123,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           author: post.author ? userName(post.author) : 'Deleted account',
           createdAt: post.createdAt.toISOString(),
           mine: post.authorId === userId,
+          editedAt: post.editedAt?.toISOString() ?? null,
         })),
       })
     },
@@ -186,6 +188,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         author: post.author ? userName(post.author) : 'Deleted account',
         createdAt: post.createdAt.toISOString(),
         mine: true,
+        editedAt: null,
       })
     },
   )
@@ -257,6 +260,59 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         update: { mutedAt },
       })
       return reply.send({ following: true, muted: parsed.data.muted })
+    },
+  )
+
+  // PATCH /api/v1/governance/discussions/:id/posts/:postId — the author fixes
+  // their own reply while the topic is open. The reply is marked edited.
+  fastify.patch(
+    '/api/v1/governance/discussions/:id/posts/:postId',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionPostViewSchema, 'DiscussionPost'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(PostParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = CreateDiscussionPostSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+      const postId = BigInt(routeParams.postId)
+      const post = await fastify.prisma.discussionPost.findFirst({
+        where: { id: postId, topicId: routeParams.id },
+        select: { authorId: true, topic: { select: { status: true } } },
+      })
+      if (!post) return reply.status(404).send({ error: 'Post not found' })
+      if (post.authorId !== user.id) {
+        return reply.status(403).send({ error: 'You can only edit your own reply' })
+      }
+      if (post.topic.status === 'CLOSED') {
+        return reply.status(409).send({ error: 'This topic is closed; its replies are kept' })
+      }
+      const updated = await fastify.prisma.discussionPost.update({
+        where: { id: postId },
+        data: { body: parsed.data.body, editedAt: new Date() },
+        select: {
+          id: true,
+          body: true,
+          createdAt: true,
+          editedAt: true,
+          author: { select: { username: true, displayName: true } },
+        },
+      })
+      return reply.send({
+        id: updated.id.toString(),
+        body: updated.body,
+        author: updated.author ? userName(updated.author) : 'Deleted account',
+        createdAt: updated.createdAt.toISOString(),
+        mine: true,
+        editedAt: updated.editedAt?.toISOString() ?? null,
+      })
     },
   )
 
