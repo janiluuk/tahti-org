@@ -12,6 +12,7 @@ import motionMeetingRoutes from '../routes/governance/motion-meeting.js'
 import motionCertificateRoutes from '../routes/governance/motion-certificate.js'
 import correctionRoutes from '../routes/governance/corrections.js'
 import featureRequestsRoutes from '../routes/governance/feature-requests.js'
+import discussionRoutes from '../routes/governance/discussions.js'
 import downloadRoutes from '../routes/downloads/sound.js'
 import artistFollowRoutes from '../routes/engagement/artist-follows.js'
 import soundRepostRoutes from '../routes/engagement/sound-repost.js'
@@ -47,6 +48,7 @@ export async function registerMoneyRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(motionCertificateRoutes)
   await fastify.register(correctionRoutes)
   await fastify.register(featureRequestsRoutes)
+  await fastify.register(discussionRoutes)
   await fastify.register(downloadRoutes)
   await fastify.register(artistFollowRoutes)
   await fastify.register(soundRepostRoutes)

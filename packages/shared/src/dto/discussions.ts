@@ -35,6 +35,24 @@ export const DiscussionTopicViewSchema = z.object({
   createdAt: z.string(),
 })
 
+export const DiscussionPostViewSchema = z.object({
+  id: z.string(),
+  body: z.string(),
+  author: z.string(),
+  createdAt: z.string(),
+})
+
+export const DiscussionTopicListSchema = z.object({
+  topics: z.array(DiscussionTopicViewSchema.extend({ following: z.boolean(), muted: z.boolean() })),
+})
+
+export const DiscussionTopicDetailSchema = DiscussionTopicViewSchema.extend({
+  following: z.boolean(),
+  muted: z.boolean(),
+  posts: z.array(DiscussionPostViewSchema),
+})
+
+export type DiscussionPostView = z.infer<typeof DiscussionPostViewSchema>
 export type CreateDiscussionTopicInput = z.infer<typeof CreateDiscussionTopicSchema>
 export type UpdateDiscussionTopicInput = z.infer<typeof UpdateDiscussionTopicSchema>
 export type DiscussionTopicView = z.infer<typeof DiscussionTopicViewSchema>
