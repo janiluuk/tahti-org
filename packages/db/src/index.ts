@@ -64,6 +64,7 @@ export {
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,
   notifyBoardOfSupportTicket,
+  notifyBoardOfContentReport,
   notifyFeatureRequestFollowers,
   processScheduledPostNotifications,
 } from './notifications.js'
