@@ -9,6 +9,7 @@ import { validateApiToken, TOKEN_PREFIX } from '../lib/api-token.js'
 import { config } from '../config.js'
 import { sessionCookieCandidates } from '../lib/session-cookie.js'
 import { looksLikeAccessJwt, verifyAccessToken } from '../auth/tokens/access-jwt.js'
+import { suspendedLoginMessage } from '../lib/suspended-login.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -51,6 +52,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         if (!result) {
           return reply.status(401).send({ error: 'Invalid or expired API token' })
         }
+        if (result.user.suspendedAt) {
+          return reply.status(403).send({ error: suspendedLoginMessage(result.user.suspendReason) })
+        }
         const exempt = request.routeOptions.config?.methodScopeCheckExempt === true
         if (
           !exempt &&
@@ -74,7 +78,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
           return reply.status(401).send({ error: 'Invalid or expired access token' })
         }
         if (session.user.suspendedAt) {
-          return reply.status(403).send({ error: 'This account has been suspended' })
+          return reply
+            .status(403)
+            .send({ error: suspendedLoginMessage(session.user.suspendReason) })
         }
         request.sessionUser = session.user
         request.authSessionId = session.id
@@ -104,8 +110,9 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
     return reply.status(401).send({ error: 'Unauthorized' })
   }
   if (request.sessionUser.suspendedAt) {
+    const reason = request.sessionUser.suspendReason
     request.sessionUser = null
-    return reply.status(401).send({ error: 'Account suspended' })
+    return reply.status(401).send({ error: suspendedLoginMessage(reason) })
   }
 }
 

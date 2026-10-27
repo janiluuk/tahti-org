@@ -155,6 +155,13 @@ describe('/api/admin/files', () => {
     })
     expect(res.statusCode).toBe(204)
     expect(await prisma.sound.findUnique({ where: { id: folkId } })).toBeNull()
+    const notice = await prisma.notification.findFirst({
+      where: {
+        type: 'CONTENT_REMOVED_BY_BOARD',
+        title: `The board removed "${PREFIX} folk track"`,
+      },
+    })
+    expect(notice?.url).toBe('/studio/sounds')
   })
 
   it('bulk-deletes the selected files and reports the ones it could not find', async () => {

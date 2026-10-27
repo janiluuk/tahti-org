@@ -15,6 +15,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { notifyOfBoardRemoval } from '../../lib/board-removal-notice.js'
 import {
   shareKeyFromQuery,
   resolveSoundShare,
@@ -316,7 +317,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: routeParams.id },
         select: {
           authorId: true,
-          sound: { select: { channel: { select: { userId: true } } } },
+          sound: { select: { id: true, title: true, channel: { select: { userId: true } } } },
           channel: { select: { userId: true } },
         },
       })
@@ -329,6 +330,22 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       await fastify.prisma.comment.delete({ where: { id: routeParams.id } })
+      // Only a board removal is announced: telling a commenter that the artist
+      // deleted their comment would invite a fight the artist chose to avoid.
+      if (user.isBoard && comment.authorId !== user.id && ownerId !== user.id) {
+        await notifyOfBoardRemoval(
+          fastify.prisma,
+          {
+            ownerId: comment.authorId,
+            actorId: user.id,
+            title: comment.sound
+              ? `The board removed your comment on "${comment.sound.title}"`
+              : 'The board removed your comment',
+            url: comment.sound ? `/t/${comment.sound.id}` : '/help',
+          },
+          request.log,
+        )
+      }
       return reply.status(204).send()
     },
   )
