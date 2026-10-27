@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded and the Tahti Jams it hosted or joined. Other
+ * it downloaded, the Tahti Jams it hosted or joined, and the venues it runs and the venue shows it booked. Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -48,6 +48,8 @@ export async function buildActivityExport(
     embeds,
     downloads,
     jams,
+    venues,
+    venueShows,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -296,6 +298,35 @@ export async function buildActivityExport(
         },
       },
     }),
+    prisma.venue.findMany({
+      where: { createdBy: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        slug: true,
+        name: true,
+        address: true,
+        city: true,
+        countryCode: true,
+        capacity: true,
+        description: true,
+        externalLinks: true,
+        photos: true,
+        verifiedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.venueBroadcast.findMany({
+      where: { artistUserId: user.id },
+      orderBy: { startAt: 'asc' },
+      select: {
+        startAt: true,
+        endAt: true,
+        description: true,
+        state: true,
+        createdAt: true,
+        venue: { select: { slug: true, name: true } },
+      },
+    }),
   ])
 
   return {
@@ -329,5 +360,7 @@ export async function buildActivityExport(
     embeds,
     downloads,
     jams,
+    venues,
+    venueShows,
   }
 }
