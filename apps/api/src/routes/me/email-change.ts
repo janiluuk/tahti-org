@@ -161,6 +161,26 @@ const meEmailChangeRoutes: FastifyPluginAsync = async (fastify) => {
           where: { userId: change.userId, usedAt: null },
         }),
       ])
+      // Newsletter subscriptions are kept by address; follow the account to
+      // its new one, unless it already subscribed there to the same artist.
+      const subs = await fastify.prisma.newsletterSubscriber.findMany({
+        where: { email: { equals: oldEmail, mode: 'insensitive' } },
+        select: { id: true, artistUserId: true },
+      })
+      for (const sub of subs) {
+        const clash = await fastify.prisma.newsletterSubscriber.findUnique({
+          where: {
+            artistUserId_email: { artistUserId: sub.artistUserId, email: change.newEmail },
+          },
+          select: { id: true },
+        })
+        await (clash
+          ? fastify.prisma.newsletterSubscriber.delete({ where: { id: sub.id } })
+          : fastify.prisma.newsletterSubscriber.update({
+              where: { id: sub.id },
+              data: { email: change.newEmail },
+            }))
+      }
       await sendSecurityNotice(
         {
           to: oldEmail,
