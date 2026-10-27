@@ -53,6 +53,8 @@ export const DiscussionParticipationSchema = z.object({
   muted: z.boolean(),
 })
 
+export const DiscussionPostRemovedSchema = z.object({ ok: z.literal(true) })
+
 export const DiscussionTopicListSchema = z.object({
   topics: z.array(DiscussionTopicViewSchema.extend({ following: z.boolean(), muted: z.boolean() })),
 })
