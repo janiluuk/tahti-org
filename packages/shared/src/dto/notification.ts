@@ -50,6 +50,7 @@ export const NotificationTypeSchema = z.enum([
   'FAN_SUB_EXPIRED',
   'FAN_SUB_CANCELED',
   'SUPPORT_REPLY',
+  'BOARD_ACCOUNT_CHANGE',
   'MODERATOR_ADDED',
   'SUPPORT_TICKET',
   'CONTENT_REPORTED',
