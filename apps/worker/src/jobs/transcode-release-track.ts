@@ -77,6 +77,24 @@ export function releaseTrackFailedNotice(track: {
   }
 }
 
+/** What the artist is told when the upload fingerprint matches a recording
+ * already in AcoustID — worth checking before the release goes out. */
+export function fingerprintMatchNotice(
+  track: { title: string; releaseId: string; release: { userId: string } },
+  match: { title?: string; artist?: string },
+): JobOutcome {
+  const known = [match.artist, match.title].filter(Boolean).join(' – ')
+  return {
+    userId: track.release.userId,
+    outcome: 'done',
+    title: `"${track.title}" matches a recording already out there`,
+    body: known
+      ? `AcoustID knows it as ${known}. If that isn't yours, check the rights before you distribute the release.`
+      : "If that isn't your own recording, check the rights before you distribute the release.",
+    url: `/studio/releases/${track.releaseId}`,
+  }
+}
+
 export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
   const { trackId } = job.data as { trackId: string }
   const startedAt = Date.now()
@@ -166,6 +184,7 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
         status: 'READY',
       },
     })
+    if (match) await notifyJobOutcome(prisma, fingerprintMatchNotice(track, match))
     logLine(
       { trackId, hasFlac: Boolean(flacKey), elapsedMs: Date.now() - startedAt },
       `release track ${trackId} transcode done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
