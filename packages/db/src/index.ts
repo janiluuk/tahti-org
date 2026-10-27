@@ -69,6 +69,7 @@ export {
   notifyBoardOfSupportTicket,
   notifyBoardOfContentReport,
   notifyFeatureRequestFollowers,
+  notifyUserOfBoardAccountChange,
   notifyOwnerOfForcedOffline,
   processScheduledPostNotifications,
 } from './notifications.js'

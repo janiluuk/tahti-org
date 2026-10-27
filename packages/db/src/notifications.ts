@@ -749,6 +749,30 @@ export async function notifyFeatureRequestFollowers(
   })
 }
 
+/** Tells an account the board changed one of its settings from Admin →
+ * Users (channel kind, storage target, tier, membership), so a change it
+ * didn't make isn't a mystery. */
+export async function notifyUserOfBoardAccountChange(
+  prisma: PrismaClient,
+  userId: string,
+  change: { title: string; body?: string | null; url: string },
+): Promise<void> {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!user) return
+  await prisma.notification.create({
+    data: {
+      userId: user.id,
+      type: 'BOARD_ACCOUNT_CHANGE',
+      title: change.title,
+      body: change.body?.slice(0, 500) ?? null,
+      url: change.url,
+    },
+  })
+}
+
 /** One-off notification an admin sends from /admin/news's test-notification form. */
 export async function notifyUserAdminTest(
   prisma: PrismaClient,
