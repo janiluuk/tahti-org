@@ -259,6 +259,19 @@ describe('PATCH /api/admin/storage/users/:id/quota', () => {
     expect(body.usedBytes).toBe(500)
   })
 
+  it('tells a non-member each time the target changes', async () => {
+    const titles = (
+      await prisma.notification.findMany({
+        where: { userId: artistId, type: 'BOARD_ACCOUNT_CHANGE' },
+        orderBy: { createdAt: 'asc' },
+      })
+    ).map((n) => n.title)
+    expect(titles).toEqual([
+      'The board set your storage target to 2 GB',
+      'The board set your storage target to 3 GB',
+    ])
+  })
+
   it('reports unlimited for a member even when a quota row exists', async () => {
     const member = await createTestArtist(prisma, {
       email: `${PREFIX}quota-member@example.com`,

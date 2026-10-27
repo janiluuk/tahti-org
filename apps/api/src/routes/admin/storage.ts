@@ -11,6 +11,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyUserOfBoardAccountChange } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { getHostDiskSpace } from '../../lib/host-disk.js'
@@ -184,7 +185,7 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.user.findUnique({
         where: { id: routeParams.id },
-        select: { id: true },
+        select: { id: true, softTargetBytes: true, isMember: true },
       })
       if (!existing) return reply.status(404).send({ error: 'User not found' })
 
@@ -196,6 +197,15 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
         }),
         computeUserStorageUsedBytes(fastify.prisma, routeParams.id),
       ])
+
+      // Members see "Unlimited" whatever the target is, so only others hear of it.
+      if (!existing.isMember && existing.softTargetBytes !== BigInt(quotaBytes)) {
+        const gb = (quotaBytes / 1_000_000_000).toLocaleString('en', { maximumFractionDigits: 1 })
+        await notifyUserOfBoardAccountChange(fastify.prisma, routeParams.id, {
+          title: `The board set your storage target to ${gb} GB`,
+          url: '/settings/account',
+        }).catch((err: unknown) => fastify.log.warn({ err }, 'storage target notice failed'))
+      }
 
       // A board override always takes effect — a member's usage is still
       // recorded against it — but the row keeps reading "Unlimited" for members
