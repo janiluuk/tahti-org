@@ -648,12 +648,16 @@ enum NotificationType {
   NEW_LIKE
   NEW_REPOST
   PLAYLIST_TRACK_ADDED
+  /// The board verified your venue, or took the verification back.
+  VENUE_VERIFIED
   /// Fan-out when a Tahti Radio–opted-in artist publishes a release.
   NEW_RELEASE
   /// Someone @mentioned you in a channel live chat.
   CHAT_MENTION
   /// Board rejected a Tahti Radio track submission (only when a note is provided).
   RADIO_SUBMISSION_REJECTED
+  /// The board added your submitted track to Tahti Radio.
+  RADIO_SUBMISSION_ACCEPTED
   /// Your submitted theme entered the admin review queue.
   THEME_UNDER_REVIEW
   /// Admin approved your theme — a PR opening it for merge is in progress.
@@ -673,12 +677,16 @@ enum NotificationType {
   MOTION_SECONDED
   /// A member commented on a motion you proposed.
   MOTION_COMMENT
+  /// The board took your live broadcast off the air.
+  CHANNEL_FORCED_OFFLINE
   /// The board answered your governance correction request.
   CORRECTION_RESOLVED
   /// The board set up a board election that takes nominations; sent to every other member.
   ELECTION_OPENED
   /// The board recorded the result of an election you stood in.
   ELECTION_RESULT
+  /// A board member edited the details of one of your tracks.
+  TRACK_EDITED_BY_BOARD
   /// The board circulated a motion draft for seconds; sent to every other member.
   MOTION_CIRCULATED
   /// A lossless upload's compressed streaming copy finished encoding — see
@@ -700,6 +708,8 @@ enum NotificationType {
   FAN_SUB_PAYMENT_FAILED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
+  /// A fan cancelled their subscription to you (perks run to the end of the period).
+  FAN_SUB_CANCELED
   /// The board replied to your support request.
   SUPPORT_REPLY
   /// An artist made you a moderator of their channel's chat.

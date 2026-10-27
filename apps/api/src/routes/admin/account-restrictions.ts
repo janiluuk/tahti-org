@@ -10,6 +10,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { revokeAllSessions } from '../../lib/session.js'
 
 const adminAccountRestrictionRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -72,6 +73,7 @@ const adminAccountRestrictionRoutes: FastifyPluginAsync = async (fastify) => {
           bannedById: request.sessionUser!.id,
         },
       })
+      if (restriction.type === 'LOGIN') await revokeAllSessions(fastify.prisma, routeParams.id)
 
       return reply.status(201).send({
         id: restriction.id,

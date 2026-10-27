@@ -13,7 +13,10 @@ import {
   parseRouteParams,
   safeDisplayName,
 } from '@tahti/shared'
-import { notifyArtistOfRadioSubmissionRejected } from '@tahti/db'
+import {
+  notifyArtistOfRadioSubmissionAccepted,
+  notifyArtistOfRadioSubmissionRejected,
+} from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { userName, withSafeName } from '../../lib/safe-names.js'
@@ -128,7 +131,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const submission = await fastify.prisma.radioTrackSubmissionItem.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, status: true, soundId: true },
+        select: { id: true, status: true, soundId: true, batch: { select: { submitterId: true } } },
       })
       if (!submission) return reply.status(404).send({ error: 'Submission not found' })
       if (submission.status !== 'PENDING') {
@@ -143,7 +146,7 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const sound = await fastify.prisma.sound.findUnique({
         where: { id: submission.soundId },
-        select: { id: true, isPublic: true, status: true },
+        select: { id: true, isPublic: true, status: true, title: true },
       })
       if (!sound || sound.status !== 'READY') {
         return reply.status(400).send({ error: 'Track is not ready to add' })
@@ -189,6 +192,13 @@ const adminRadioSubmissionRoutes: FastifyPluginAsync = async (fastify) => {
           rejectionNote: null,
         },
       })
+
+      await notifyArtistOfRadioSubmissionAccepted(
+        fastify.prisma,
+        submission.batch.submitterId,
+        sound.title,
+        !sound.isPublic,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'radio acceptance notice failed'))
 
       return reply.send({ ok: true as const })
     },

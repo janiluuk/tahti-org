@@ -3,6 +3,7 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import { restrictionErrorMessage } from '@tahti/db'
 import {
   CloudImportJobListSchema,
   CloudImportJobStatusSchema,
@@ -234,6 +235,9 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
         select: { id: true },
