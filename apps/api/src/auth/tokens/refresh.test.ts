@@ -43,15 +43,54 @@ describe('auth refresh tokens', () => {
     }
   })
 
-  async function login() {
+  async function login(delivery: 'body' | 'cookie' = 'body') {
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password, deviceLabel: 'Test Device' },
+      payload: {
+        email,
+        password,
+        deviceLabel: 'Test Device',
+        ...(delivery === 'body' ? { refreshTokenDelivery: 'body' } : {}),
+      },
     })
     expect(response.statusCode).toBe(200)
     return response
   }
+
+  it('keeps the refresh token out of the body for browser logins (cookie only)', async () => {
+    const res = await login('cookie')
+    const body = res.json()
+    expect(body.accessToken).toBeTruthy()
+    expect(body).not.toHaveProperty('refreshToken')
+    const cookie = res.cookies.find((c) => c.name === config.refreshCookieName)
+    expect(cookie?.httpOnly).toBe(true)
+    expect(cookie?.path).toBe(config.refreshCookiePath)
+
+    const refreshed = await app.inject({
+      method: 'POST',
+      url: '/api/auth/token/refresh',
+      payload: {},
+      cookies: { [config.refreshCookieName]: cookie!.value },
+    })
+    expect(refreshed.statusCode).toBe(200)
+    expect(refreshed.json().accessToken).toBeTruthy()
+    expect(refreshed.json()).not.toHaveProperty('refreshToken')
+  })
+
+  it('returns the refresh token in the body when the client asks for it', async () => {
+    const res = await login('body')
+    expect(res.json().refreshToken).toMatch(/^rfr_/)
+  })
+
+  it('rejects an unknown refreshTokenDelivery value', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password, refreshTokenDelivery: 'header' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 
   it('login returns access + refresh and does not revoke other sessions', async () => {
     const first = await login()
