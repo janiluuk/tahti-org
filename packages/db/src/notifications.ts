@@ -343,6 +343,33 @@ export async function notifyArtistOfNewRepost(
   })
 }
 
+/** Tells an artist the board picked one of their tracks for the Tahti
+ * Selects rotation. Bulk refills from the top-played list stay silent. */
+export async function notifyArtistOfSelectsPick(
+  prisma: PrismaClient,
+  pick: { soundId: string; channelSlug: string },
+): Promise<void> {
+  const sound = await prisma.sound.findUnique({
+    where: { id: pick.soundId },
+    select: { title: true, channel: { select: { userId: true } } },
+  })
+  if (!sound) return
+  const artist = await prisma.user.findFirst({
+    where: { id: sound.channel.userId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!artist) return
+  await prisma.notification.create({
+    data: {
+      userId: artist.id,
+      type: 'TAHTI_SELECTS_PICK',
+      title: `"${sound.title}" was picked for Tahti Selects`,
+      body: 'It plays in the Tahti Selects rotation from now on.',
+      url: `/c/${pick.channelSlug}`,
+    },
+  })
+}
+
 /** Notify a playlist's owner, everyone who has previously contributed a
  * track to it ("participants") and its subscribers (while it is public or
  * unlisted) when someone adds a new one — never notifies
