@@ -11,7 +11,7 @@ import type { PrismaClient } from '@tahti/db'
  * requests, motion comments, seconds and votes (the member already sees their
  * own choice on each motion), correction requests, its follow-ups on its
  * support requests, the radio stations, themes and embeds it added, what
- * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, its grants and fan-subscription payouts, the add-ons it published or installed, its signed-in devices and API tokens (names and prefixes, never the secrets), the private-track shares it made or received (never the link keys) and the green rooms it was invited to. Other
+ * it downloaded, the Tahti Jams it hosted or joined, the venues it runs and the venue shows it booked, any restrictions the board put on it (without who issued them), the tracks it sent to Tahti Radio and the radio stations it suggested, the fan subscription tiers and store items it offers, the notifications it received, its grants and fan-subscription payouts, the add-ons it published or installed, its signed-in devices and API tokens (names and prefixes, never the secrets), the private-track shares it made or received (never the link keys) the green rooms it was invited to, and its email address change requests (never the link tokens). Other
  * people appear by username only. */
 export async function buildActivityExport(
   prisma: PrismaClient,
@@ -65,6 +65,7 @@ export async function buildActivityExport(
     sharesGiven,
     sharesReceived,
     greenRoomInvites,
+    emailChanges,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -519,6 +520,11 @@ export async function buildActivityExport(
         broadcast: { select: { channel: { select: { slug: true } } } },
       },
     }),
+    prisma.emailChange.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { newEmail: true, createdAt: true, expiresAt: true, usedAt: true },
+    }),
   ])
 
   return {
@@ -569,5 +575,6 @@ export async function buildActivityExport(
     sharesGiven,
     sharesReceived,
     greenRoomInvites,
+    emailChanges,
   }
 }
