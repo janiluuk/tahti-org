@@ -3,12 +3,17 @@
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 
+vi.mock('../../lib/security-email.js', () => ({
+  sendSecurityNotice: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('../../lib/email.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/email.js')>()),
   sendEmailChangeLink: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { sendEmailChangeLink } from '../../lib/email.js'
+import { sendSecurityNotice } from '../../lib/security-email.js'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -77,6 +82,13 @@ describe('POST /api/me/email', () => {
     )
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } })
     expect(user.email).toBe(`${PREFIX}user@example.com`)
+    expect(sendSecurityNotice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: `${PREFIX}user@example.com`,
+        subject: 'Someone asked to change your Tahti email address',
+      }),
+      expect.anything(),
+    )
 
     await ask({ newEmail: `${PREFIX}other@example.com`, password: 'testpassword' })
     expect(await prisma.emailChange.count({ where: { userId } })).toBe(1)
