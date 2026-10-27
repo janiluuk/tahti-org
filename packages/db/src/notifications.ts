@@ -42,6 +42,41 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
+/** Tells a venue's owner an artist put a show on the venue's calendar, which
+ * they otherwise only find by opening the venue page. Silent when the owner
+ * books their own venue. */
+export async function notifyVenueOwnerOfShow(
+  prisma: PrismaClient,
+  show: {
+    venue: { name: string; createdBy: string }
+    artistUserId: string
+    startAt: Date
+  },
+): Promise<void> {
+  if (show.venue.createdBy === show.artistUserId) return
+  const [owner, artist] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: show.venue.createdBy, ...availableUserWhere },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: show.artistUserId },
+      select: { username: true, displayName: true },
+    }),
+  ])
+  if (!owner || !artist) return
+  await prisma.notification.create({
+    data: {
+      userId: owner.id,
+      type: 'VENUE_SHOW_BOOKED',
+      actorUserId: show.artistUserId,
+      title: `${actorDisplayName(artist)} added a show at ${show.venue.name}`,
+      body: `On ${show.startAt.toISOString().slice(0, 10)}`,
+      url: '/venues/mine',
+    },
+  })
+}
+
 /** Fan out a NEW_TRACK notification to everyone following the artist, the
  * first time a track/set goes public. The notification opens the track. */
 export async function notifyFollowersOfNewTrack(
@@ -108,6 +143,45 @@ export async function notifyFollowersOfLiveChannel(
       url: `/c/${channel.slug}`,
       createdAt: now,
     })),
+  })
+}
+
+/** A show at a venue was called off: whichever side didn't cancel it (the
+ * booked artist or the venue's owner) is told. */
+export async function notifyOfCanceledVenueShow(
+  prisma: PrismaClient,
+  show: {
+    venue: { name: string; createdBy: string }
+    artistUserId: string
+    startAt: Date
+    canceledBy: string
+  },
+): Promise<void> {
+  const byVenue = show.canceledBy === show.venue.createdBy
+  const recipientId = byVenue ? show.artistUserId : show.venue.createdBy
+  if (recipientId === show.canceledBy) return
+  const [recipient, actor] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: recipientId, ...availableUserWhere },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: show.canceledBy },
+      select: { username: true, displayName: true },
+    }),
+  ])
+  if (!recipient || !actor) return
+  await prisma.notification.create({
+    data: {
+      userId: recipient.id,
+      type: 'VENUE_SHOW_CANCELED',
+      actorUserId: show.canceledBy,
+      title: byVenue
+        ? `${show.venue.name} cancelled your show`
+        : `${actorDisplayName(actor)} cancelled their show at ${show.venue.name}`,
+      body: `It was on ${show.startAt.toISOString().slice(0, 10)}`,
+      url: byVenue ? '/venues' : '/venues/mine',
+    },
   })
 }
 
@@ -339,6 +413,33 @@ export async function notifyArtistOfNewRepost(
       title: `${actorDisplayName(reposter)} reposted "${item.title}"`,
       body: null,
       url: `/t/${item.id}`,
+    },
+  })
+}
+
+/** Tells an artist the board picked one of their tracks for the Tahti
+ * Selects rotation. Bulk refills from the top-played list stay silent. */
+export async function notifyArtistOfSelectsPick(
+  prisma: PrismaClient,
+  pick: { soundId: string; channelSlug: string },
+): Promise<void> {
+  const sound = await prisma.sound.findUnique({
+    where: { id: pick.soundId },
+    select: { title: true, channel: { select: { userId: true } } },
+  })
+  if (!sound) return
+  const artist = await prisma.user.findFirst({
+    where: { id: sound.channel.userId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!artist) return
+  await prisma.notification.create({
+    data: {
+      userId: artist.id,
+      type: 'TAHTI_SELECTS_PICK',
+      title: `"${sound.title}" was picked for Tahti Selects`,
+      body: 'It plays in the Tahti Selects rotation from now on.',
+      url: `/c/${pick.channelSlug}`,
     },
   })
 }
@@ -577,6 +678,26 @@ export async function notifyArtistStreamingCopyReady(
   })
 }
 
+/** Tells a channel's owner the board took the channel out of the Tahti Radio
+ * rotation, or put it back, since it overrides the owner's own setting. */
+export async function notifyOwnerOfRadioInclusion(
+  prisma: PrismaClient,
+  ownerUserId: string,
+  included: boolean,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: ownerUserId,
+      type: 'TAHTI_RADIO_INCLUSION_CHANGED',
+      title: included
+        ? 'Your channel is back in the Tahti Radio rotation'
+        : 'The board took your channel out of Tahti Radio',
+      body: included ? null : 'Ask the board through Help → Support if you want to know why.',
+      url: '/studio/channel?tab=tahti-radio',
+    },
+  })
+}
+
 export async function notifyUserThemeApproved(
   prisma: PrismaClient,
   userId: string,
@@ -643,6 +764,35 @@ export async function notifyBoardOfMissedLiveShow(
       body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,
       url: '/admin/missed-shows',
     })),
+  })
+}
+
+/** Tells whoever suggested an internet radio station what the board decided.
+ * An accepted station starts switched off, so the notice doesn't promise it
+ * is listed yet. */
+export async function notifySubmitterOfStationReview(
+  prisma: PrismaClient,
+  suggestion: { submitterId: string | null; name: string },
+  review: { approved: boolean; note: string | null },
+): Promise<void> {
+  if (!suggestion.submitterId) return
+  const submitter = await prisma.user.findFirst({
+    where: { id: suggestion.submitterId, ...availableUserWhere },
+    select: { id: true },
+  })
+  if (!submitter) return
+  await prisma.notification.create({
+    data: {
+      userId: submitter.id,
+      type: 'RADIO_STATION_REVIEWED',
+      title: review.approved
+        ? `${suggestion.name} was accepted`
+        : `${suggestion.name} was not added`,
+      body: review.approved
+        ? 'It shows on the Radio page once the board switches it on.'
+        : review.note?.slice(0, 500) || null,
+      url: '/radio',
+    },
   })
 }
 
@@ -746,6 +896,44 @@ export async function notifyFeatureRequestFollowers(
       body: userId === request.proposedById ? 'You proposed this.' : 'You voted for this.',
       url: '/governance/feature-requests',
     })),
+  })
+}
+
+const RESTRICTION_NOTICE = {
+  UPLOAD: { blocked: 'Uploads are blocked', lifted: 'You can upload again', url: '/studio' },
+  LIVE_SHOW_BOOKING: {
+    blocked: 'Booking shows is blocked',
+    lifted: 'You can book shows again',
+    url: '/studio/schedule',
+  },
+} as const
+
+/** Tells an account the board restricted (or lifted a restriction on) its
+ * uploads or show bookings, with the board's reason. A sign-in ban signs the
+ * account out, so it gets no notice. */
+export async function notifyUserOfAccountRestriction(
+  prisma: PrismaClient,
+  userId: string,
+  restriction: {
+    type: 'LIVE_SHOW_BOOKING' | 'UPLOAD' | 'LOGIN'
+    reason: string
+    expiresAt: Date | null
+    lifted: boolean
+  },
+): Promise<void> {
+  if (restriction.type === 'LOGIN') return
+  const notice = RESTRICTION_NOTICE[restriction.type]
+  const until = restriction.expiresAt
+    ? ` until ${restriction.expiresAt.toISOString().slice(0, 10)}`
+    : ''
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: 'ACCOUNT_RESTRICTED',
+      title: restriction.lifted ? notice.lifted : `${notice.blocked}${until}`,
+      body: restriction.lifted ? null : `Reason: ${restriction.reason}`.slice(0, 500),
+      url: notice.url,
+    },
   })
 }
 

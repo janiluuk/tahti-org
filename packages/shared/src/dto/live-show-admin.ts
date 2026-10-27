@@ -64,6 +64,17 @@ export const AccountRestrictionListSchema = z.object({
   restrictions: z.array(AccountRestrictionViewSchema),
 })
 
+/** GET /api/me/restrictions — the caller's own active restrictions. */
+export const MyAccountRestrictionSchema = z.object({
+  type: AccountRestrictionTypeSchema,
+  reason: z.string(),
+  expiresAt: z.string().datetime().nullable(),
+})
+
+export const MyAccountRestrictionListSchema = z.object({
+  restrictions: z.array(MyAccountRestrictionSchema),
+})
+
 export const CreateAccountRestrictionSchema = z.object({
   type: AccountRestrictionTypeSchema,
   reason: z.string().trim().min(1, 'Reason is required').max(500),
@@ -72,4 +83,5 @@ export const CreateAccountRestrictionSchema = z.object({
 })
 
 export type AccountRestrictionView = z.infer<typeof AccountRestrictionViewSchema>
+export type MyAccountRestriction = z.infer<typeof MyAccountRestrictionSchema>
 export type CreateAccountRestriction = z.infer<typeof CreateAccountRestrictionSchema>
