@@ -42,6 +42,41 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
+/** Tells a venue's owner an artist put a show on the venue's calendar, which
+ * they otherwise only find by opening the venue page. Silent when the owner
+ * books their own venue. */
+export async function notifyVenueOwnerOfShow(
+  prisma: PrismaClient,
+  show: {
+    venue: { name: string; createdBy: string }
+    artistUserId: string
+    startAt: Date
+  },
+): Promise<void> {
+  if (show.venue.createdBy === show.artistUserId) return
+  const [owner, artist] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: show.venue.createdBy, ...availableUserWhere },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: show.artistUserId },
+      select: { username: true, displayName: true },
+    }),
+  ])
+  if (!owner || !artist) return
+  await prisma.notification.create({
+    data: {
+      userId: owner.id,
+      type: 'VENUE_SHOW_BOOKED',
+      actorUserId: show.artistUserId,
+      title: `${actorDisplayName(artist)} added a show at ${show.venue.name}`,
+      body: `On ${show.startAt.toISOString().slice(0, 10)}`,
+      url: '/venues/mine',
+    },
+  })
+}
+
 /** Fan out a NEW_TRACK notification to everyone following the artist, the
  * first time a track/set goes public. The notification opens the track. */
 export async function notifyFollowersOfNewTrack(

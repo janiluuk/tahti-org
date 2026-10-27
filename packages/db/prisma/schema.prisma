@@ -642,6 +642,8 @@ enum MentionSurface {
 
 enum NotificationType {
   NEW_POST
+  /// An artist added a show at a venue you run.
+  VENUE_SHOW_BOOKED
   NEW_MESSAGE
   NEW_TRACK
   NEW_FOLLOWER

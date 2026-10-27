@@ -18,6 +18,7 @@ import {
 import { restrictionErrorMessage } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { trackArtistName } from '../../lib/safe-names.js'
+import { notifyVenueOwnerOfShow } from '@tahti/db'
 
 const VENUE_RECORDINGS_LIMIT = 24
 
@@ -302,6 +303,11 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
           state: 'SCHEDULED',
         },
       })
+      await notifyVenueOwnerOfShow(fastify.prisma, {
+        venue,
+        artistUserId: user.id,
+        startAt,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'venue show notice failed'))
 
       return reply.status(201).send(broadcast)
     },

@@ -45,6 +45,7 @@ export {
 } from './release-track-versions.js'
 export {
   notifyFollowersOfNewPost,
+  notifyVenueOwnerOfShow,
   notifyFollowersOfNewTrack,
   notifyFollowersOfNewRelease,
   notifyFollowersOfLiveChannel,

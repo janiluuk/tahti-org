@@ -6,6 +6,7 @@ import { NotificationKindSchema } from './notification-kind.js'
 
 export const NotificationTypeSchema = z.enum([
   'NEW_POST',
+  'VENUE_SHOW_BOOKED',
   'NEW_MESSAGE',
   'NEW_TRACK',
   'NEW_FOLLOWER',
