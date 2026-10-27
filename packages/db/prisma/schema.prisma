@@ -647,6 +647,10 @@ enum NotificationType {
   VENUE_SHOW_BOOKED
   NEW_MESSAGE
   NEW_TRACK
+  /// Something you started in the background finished (a render, an export, an import, a delivery).
+  BACKGROUND_JOB_DONE
+  /// Something you started in the background failed (an upload, a render, an export, an import, a delivery).
+  BACKGROUND_JOB_FAILED
   NEW_FOLLOWER
   /// A venue show you are part of was cancelled by the artist or the venue.
   VENUE_SHOW_CANCELED

@@ -4,22 +4,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Job } from 'bullmq'
 
-const { prismaMock, downloadSourceCached, ffprobe, mkdtemp, rm } = vi.hoisted(() => ({
-  prismaMock: {
-    sound: { findUnique: vi.fn(), update: vi.fn() },
-    soundVersion: { count: vi.fn() },
-  },
-  downloadSourceCached: vi.fn(),
-  ffprobe: vi.fn(),
-  mkdtemp: vi.fn(),
-  rm: vi.fn(),
-}))
+const { prismaMock, downloadSourceCached, ffprobe, mkdtemp, rm, notifyJobOutcome } = vi.hoisted(
+  () => ({
+    notifyJobOutcome: vi.fn(),
+    prismaMock: {
+      sound: { findUnique: vi.fn(), update: vi.fn() },
+      soundVersion: { count: vi.fn() },
+    },
+    downloadSourceCached: vi.fn(),
+    ffprobe: vi.fn(),
+    mkdtemp: vi.fn(),
+    rm: vi.fn(),
+  }),
+)
 
 vi.mock('node:fs/promises', () => ({ mkdtemp, rm }))
 vi.mock('fluent-ffmpeg', () => ({ default: Object.assign(vi.fn(), { ffprobe }) }))
 vi.mock('@tahti/db', () => ({
   prisma: prismaMock,
   ensureInitialVersion: vi.fn(),
+  notifyJobOutcome,
   Prisma: {},
 }))
 vi.mock('../lib/source-cache.js', () => ({ downloadSourceCached }))
@@ -63,8 +67,9 @@ describe('processTranscodeJob failures', () => {
       id: 'snd-1',
       rawKey: 'uploads/secret-key',
       status: 'PENDING',
+      title: 'Night drive',
       channelId: 'ch-1',
-      channel: { slug: 'dj' },
+      channel: { slug: 'dj', userId: 'user-1' },
     })
     prismaMock.sound.update.mockResolvedValue({})
     downloadSourceCached.mockResolvedValue(undefined)
@@ -98,6 +103,20 @@ describe('processTranscodeJob failures', () => {
     expect(data.processingError).toBe(
       'The uploaded file could not be found. Try uploading it again.',
     )
+  })
+
+  it('tells the artist on the final attempt only', async () => {
+    downloadSourceCached.mockRejectedValue(new Error('NoSuchKey'))
+    await expect(processTranscodeJob(jobFor(0))).rejects.toThrow()
+    expect(notifyJobOutcome).not.toHaveBeenCalled()
+    await expect(processTranscodeJob(jobFor(2))).rejects.toThrow()
+    expect(notifyJobOutcome).toHaveBeenCalledWith(prismaMock, {
+      userId: 'user-1',
+      outcome: 'failed',
+      title: '"Night drive" could not be processed',
+      body: 'The uploaded file could not be found. Try uploading it again.',
+      url: '/studio/sounds/snd-1',
+    })
   })
 
   it('keeps the sound pending while BullMQ still has attempts left', async () => {
