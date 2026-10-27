@@ -46,6 +46,7 @@ import adminIntegrationsRoutes from '../routes/admin/integrations.js'
 import adminDiscordBotRoutes from '../routes/admin/discord-bot.js'
 import supportContactRoutes from '../routes/support/contact.js'
 import mySupportTicketsRoutes from '../routes/support/my-tickets.js'
+import mySupportTicketCloseRoutes from '../routes/support/my-ticket-close.js'
 import contentReportsRoute from '../routes/reports/submit.js'
 import betaApplyRoutes from '../routes/beta/apply.js'
 
@@ -94,6 +95,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminDiscordBotRoutes)
   await fastify.register(supportContactRoutes)
   await fastify.register(mySupportTicketsRoutes)
+  await fastify.register(mySupportTicketCloseRoutes)
   await fastify.register(contentReportsRoute)
   await fastify.register(betaApplyRoutes)
 }
