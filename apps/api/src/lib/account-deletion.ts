@@ -145,8 +145,9 @@ export async function executeAccountDeletion(
     data: { isPublic: false, visibility: 'DRAFT' },
   })
 
-  // Past bookings and events stay as history; future ones would otherwise keep
-  // listing "Deleted user" and keep the radio slot blocked for other artists.
+  // Past bookings, events and venue shows stay as history; future ones would
+  // otherwise keep listing "Deleted user" on the radio, profile and venue
+  // calendars and keep the radio slot blocked for other artists.
   const now = new Date()
   if (user.channel) {
     await prisma.radioSlotBooking.deleteMany({
@@ -154,6 +155,10 @@ export async function executeAccountDeletion(
     })
   }
   await prisma.artistEvent.deleteMany({ where: { userId, startAt: { gt: now } } })
+  await prisma.venueBroadcast.updateMany({
+    where: { artistUserId: userId, state: 'SCHEDULED', startAt: { gt: now } },
+    data: { state: 'CANCELED' },
+  })
   await prisma.artistPost.deleteMany({ where: { userId, publishAt: { gt: now } } })
 
   await prisma.supportTicket.updateMany({

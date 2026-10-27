@@ -3,6 +3,7 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import { restrictionErrorMessage } from '@tahti/db'
 import {
   SoundcloudImportRequestSchema,
   SoundcloudImportResponseSchema,
@@ -277,6 +278,9 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
       const row = await fastify.prisma.user.findUnique({
         where: { id: user.id },
         select: { soundcloudAccessTokenEnc: true },

@@ -20,7 +20,11 @@ import {
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
-import { getUserIntegrationCredential, soundOwnerDefaults } from '@tahti/db'
+import {
+  getUserIntegrationCredential,
+  restrictionErrorMessage,
+  soundOwnerDefaults,
+} from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { getSpotifyAppToken, spotifyConfigured } from '../../lib/spotify-session.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
@@ -189,6 +193,9 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
+      if (uploadBanError) return reply.status(403).send({ error: uploadBanError })
+
       const credential = await resolveSpotifyCredential(fastify.prisma, user.id)
       if (!credential && !spotifyConfigured()) {
         return reply.status(503).send({ error: 'Spotify search is not configured' })
