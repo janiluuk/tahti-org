@@ -694,6 +694,23 @@ export async function notifyUserAdminTest(
   })
 }
 
+/** Tells a channel's owner the board ended their live broadcast from Admin →
+ * Streams, so a cut stream doesn't look like a crash. */
+export async function notifyOwnerOfForcedOffline(
+  prisma: PrismaClient,
+  ownerUserId: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: ownerUserId,
+      type: 'CHANNEL_FORCED_OFFLINE',
+      title: 'The board took your broadcast off the air',
+      body: 'Ask the board through Help → Support if you think this was a mistake.',
+      url: '/help',
+    },
+  })
+}
+
 export async function processScheduledPostNotifications(
   prisma: PrismaClient,
 ): Promise<{ notified: number }> {

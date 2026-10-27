@@ -82,6 +82,16 @@ describe('M21-C — admin force-offline', () => {
     expect(audit).toBeTruthy()
   })
 
+  it('tells the channel owner their broadcast was taken off the air', async () => {
+    const notices = await prisma.notification.findMany({
+      where: { userId: artistId, type: 'CHANNEL_FORCED_OFFLINE' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]).toMatchObject({
+      title: 'The board took your broadcast off the air',
+      url: '/help',
+    })
+  })
   it('returns 409 when channel is not live', async () => {
     const res = await app.inject({
       method: 'POST',

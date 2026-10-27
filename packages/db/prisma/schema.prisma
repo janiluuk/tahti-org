@@ -673,6 +673,8 @@ enum NotificationType {
   MOTION_SECONDED
   /// A member commented on a motion you proposed.
   MOTION_COMMENT
+  /// The board took your live broadcast off the air.
+  CHANNEL_FORCED_OFFLINE
   /// The board answered your governance correction request.
   CORRECTION_RESOLVED
   /// The board set up a board election that takes nominations; sent to every other member.
