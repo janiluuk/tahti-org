@@ -9,6 +9,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyUserOfAccountRestriction } from '@tahti/db'
 import { requireBoard } from '../../plugins/auth.js'
 import { revokeAllSessions } from '../../lib/session.js'
 
@@ -74,6 +75,12 @@ const adminAccountRestrictionRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       if (restriction.type === 'LOGIN') await revokeAllSessions(fastify.prisma, routeParams.id)
+      await notifyUserOfAccountRestriction(fastify.prisma, routeParams.id, {
+        type: restriction.type,
+        reason: restriction.reason,
+        expiresAt: restriction.expiresAt,
+        lifted: false,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'restriction notice failed'))
 
       return reply.status(201).send({
         id: restriction.id,
@@ -106,6 +113,12 @@ const adminAccountRestrictionRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: existing.id },
         data: { liftedAt: new Date() },
       })
+      await notifyUserOfAccountRestriction(fastify.prisma, userId, {
+        type: existing.type,
+        reason: existing.reason,
+        expiresAt: existing.expiresAt,
+        lifted: true,
+      }).catch((err: unknown) => fastify.log.warn({ err }, 'restriction notice failed'))
       return reply.send({ ok: true })
     },
   )

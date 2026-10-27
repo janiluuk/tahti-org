@@ -63,6 +63,7 @@ export {
   notifyUserThemeRejected,
   notifyUserAdminTest,
   notifyBoardOfMissedLiveShow,
+  notifyUserOfAccountRestriction,
   notifyBoardOfSupportTicket,
   notifyBoardOfContentReport,
   notifyFeatureRequestFollowers,
