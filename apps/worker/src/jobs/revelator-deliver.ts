@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Job } from 'bullmq'
-import { prisma } from '@tahti/db'
+import { notifyJobOutcome, prisma } from '@tahti/db'
+import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { submitReleaseToRevelator } from '@tahti/revelator'
 
 export async function processRevelatorDeliverJob(job: Job): Promise<void> {
@@ -20,6 +21,7 @@ export async function processRevelatorDeliverJob(job: Job): Promise<void> {
       cLine: true,
       labelImprint: true,
       revelatorStatus: true,
+      userId: true,
       user: { select: { username: true, displayName: true } },
       tracks: {
         orderBy: { position: 'asc' },
@@ -52,6 +54,13 @@ export async function processRevelatorDeliverJob(job: Job): Promise<void> {
         revelatorStatus: 'submitted',
       },
     })
+    await notifyJobOutcome(prisma, {
+      userId: release.userId,
+      outcome: 'done',
+      title: `"${release.title}" was sent for distribution`,
+      body: 'Stores take a few days to a few weeks to list it.',
+      url: `/studio/releases/${release.id}`,
+    })
   } catch (err) {
     await prisma.release.update({
       where: { id: releaseId },
@@ -59,6 +68,15 @@ export async function processRevelatorDeliverJob(job: Job): Promise<void> {
         revelatorStatus: 'failed',
       },
     })
+    if (job.opts && isFinalAttempt(job)) {
+      await notifyJobOutcome(prisma, {
+        userId: release.userId,
+        outcome: 'failed',
+        title: `"${release.title}" could not be sent for distribution`,
+        body: 'Check the release details in Studio and send it again, or ask the board through Help → Support.',
+        url: `/studio/releases/${release.id}`,
+      })
+    }
     throw err
   }
 }
