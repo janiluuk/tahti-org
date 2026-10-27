@@ -80,6 +80,19 @@ export const ResendVerificationSchema = z.object({
 
 export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>
 
+/** POST /api/me/password — change the password while signed in. */
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: PasswordSchema,
+  })
+  .refine((body) => body.currentPassword !== body.newPassword, {
+    message: 'Choose a password different from the current one',
+    path: ['newPassword'],
+  })
+
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
   hcaptchaToken: z.string().optional(),
