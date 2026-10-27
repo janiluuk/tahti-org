@@ -42,6 +42,8 @@ export const DiscussionPostViewSchema = z.object({
   createdAt: z.string(),
   /** Whether the caller wrote it, so the app can offer Remove. */
   mine: z.boolean(),
+  /** Set when the author edited the reply. */
+  editedAt: z.string().nullable(),
 })
 
 export const CreateDiscussionPostSchema = z.object({
@@ -72,6 +74,13 @@ export const DiscussionTopicDetailSchema = DiscussionTopicViewSchema.extend({
   following: z.boolean(),
   muted: z.boolean(),
   posts: z.array(DiscussionPostViewSchema),
+  /** True when replies older than the first one sent exist. */
+  hasEarlierPosts: z.boolean(),
+})
+
+export const DiscussionPostsPageSchema = z.object({
+  posts: z.array(DiscussionPostViewSchema),
+  hasEarlierPosts: z.boolean(),
 })
 
 export type CreateDiscussionPostInput = z.infer<typeof CreateDiscussionPostSchema>

@@ -3047,6 +3047,8 @@ model DiscussionPost {
   authorId  String?
   author    User?           @relation("DiscussionPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   createdAt DateTime        @default(now())
+  /// Set when the author edits the reply.
+  editedAt  DateTime?
 
   @@index([topicId, createdAt(sort: Asc)])
   @@schema("governance")
