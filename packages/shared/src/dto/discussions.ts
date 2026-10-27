@@ -58,7 +58,14 @@ export const DiscussionParticipationSchema = z.object({
 export const DiscussionPostRemovedSchema = z.object({ ok: z.literal(true) })
 
 export const DiscussionTopicListSchema = z.object({
-  topics: z.array(DiscussionTopicViewSchema.extend({ following: z.boolean(), muted: z.boolean() })),
+  topics: z.array(
+    DiscussionTopicViewSchema.extend({
+      following: z.boolean(),
+      muted: z.boolean(),
+      /** Replies by others since the caller last opened it; 0 when not following. */
+      unreadCount: z.number().int().nonnegative(),
+    }),
+  ),
 })
 
 export const DiscussionTopicDetailSchema = DiscussionTopicViewSchema.extend({

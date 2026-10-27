@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
+import { Prisma } from '@tahti/db'
 import {
   CreateDiscussionPostSchema,
   DiscussionParticipationSchema,
@@ -52,11 +53,23 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           participants: { where: { userId }, select: { mutedAt: true } },
         },
       })
+      const unread = await fastify.prisma.$queryRaw<{ topicId: string; unread: bigint }[]>(
+        Prisma.sql`
+          SELECT p."topicId", COUNT(*) AS unread
+          FROM "governance"."DiscussionPost" p
+          JOIN "governance"."DiscussionParticipant" dp
+            ON dp."topicId" = p."topicId" AND dp."userId" = ${userId}
+          WHERE p."createdAt" > COALESCE(dp."lastReadAt", dp."joinedAt")
+            AND (p."authorId" IS NULL OR p."authorId" <> ${userId})
+          GROUP BY p."topicId"`,
+      )
+      const unreadByTopic = new Map(unread.map((row) => [row.topicId, Number(row.unread)]))
       return reply.send({
         topics: rows.map((row) => ({
           ...toDiscussionTopicView(row),
           following: row.participants.length > 0,
           muted: Boolean(row.participants[0]?.mutedAt),
+          unreadCount: unreadByTopic.get(row.id) ?? 0,
         })),
       })
     },
@@ -95,6 +108,10 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       if (!row) return reply.status(404).send({ error: 'Topic not found' })
+      await fastify.prisma.discussionParticipant.updateMany({
+        where: { topicId: row.id, userId },
+        data: { lastReadAt: new Date() },
+      })
       return reply.send({
         ...toDiscussionTopicView(row),
         following: row.participants.length > 0,
@@ -156,8 +173,8 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         }),
         fastify.prisma.discussionParticipant.upsert({
           where: { topicId_userId: { topicId: topic.id, userId: user.id } },
-          create: { topicId: topic.id, userId: user.id },
-          update: {},
+          create: { topicId: topic.id, userId: user.id, lastReadAt: now },
+          update: { lastReadAt: now },
         }),
       ])
       await notifyDiscussionParticipants(fastify.prisma, topic, user.id).catch((err: unknown) => {
@@ -202,7 +219,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const row = await fastify.prisma.discussionParticipant.upsert({
         where: { topicId_userId: { topicId, userId } },
-        create: { topicId, userId },
+        create: { topicId, userId, lastReadAt: new Date() },
         update: {},
         select: { mutedAt: true },
       })

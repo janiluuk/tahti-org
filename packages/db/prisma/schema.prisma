@@ -3050,12 +3050,14 @@ model DiscussionPost {
 /// Who follows a topic: its creator and everyone who replied. A muted
 /// participant gets no notices about new posts.
 model DiscussionParticipant {
-  topicId  String
-  topic    DiscussionTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  userId   String
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mutedAt  DateTime?
-  joinedAt DateTime        @default(now())
+  topicId    String
+  topic      DiscussionTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mutedAt    DateTime?
+  /// When they last opened the topic; replies after it count as unread.
+  lastReadAt DateTime?
+  joinedAt   DateTime        @default(now())
 
   @@id([topicId, userId])
   @@index([userId])
