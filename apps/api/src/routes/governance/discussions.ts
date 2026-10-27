@@ -15,6 +15,7 @@ import {
 import { requireMember } from '../../plugins/auth.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
 import { userName } from '../../lib/safe-names.js'
+import { notifyDiscussionParticipants } from '../../lib/discussion-notifications.js'
 
 const POSTS_LIMIT = 500
 
@@ -119,7 +120,7 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const topic = await fastify.prisma.discussionTopic.findUnique({
         where: { id: routeParams.id },
-        select: { id: true, status: true },
+        select: { id: true, title: true, status: true },
       })
       if (!topic) return reply.status(404).send({ error: 'Topic not found' })
       if (topic.status === 'CLOSED') {
@@ -146,6 +147,9 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           update: {},
         }),
       ])
+      await notifyDiscussionParticipants(fastify.prisma, topic, user.id).catch((err: unknown) => {
+        request.log.error({ err, topicId: topic.id }, 'discussion reply notification failed')
+      })
       return reply.status(201).send({
         id: post.id.toString(),
         body: post.body,

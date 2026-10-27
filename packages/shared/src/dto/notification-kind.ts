@@ -64,6 +64,7 @@ export const NOTIFICATION_KIND_TYPES = {
     'ELECTION_OPENED',
     'ELECTION_RESULT',
     'FEATURE_REQUEST_UPDATED',
+    'DISCUSSION_REPLY',
   ],
 } as const satisfies Record<string, readonly NotificationType[]>
 
