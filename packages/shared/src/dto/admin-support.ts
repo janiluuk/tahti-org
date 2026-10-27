@@ -52,6 +52,10 @@ export const MySupportTicketSchema = z.object({
   replies: z.array(MySupportTicketReplySchema),
 })
 
+export const MySupportTicketCloseResponseSchema = z.object({
+  status: z.literal('RESOLVED'),
+})
+
 export const MySupportTicketListSchema = z.object({
   tickets: z.array(MySupportTicketSchema),
 })
