@@ -146,6 +146,45 @@ export async function notifyFollowersOfLiveChannel(
   })
 }
 
+/** A show at a venue was called off: whichever side didn't cancel it (the
+ * booked artist or the venue's owner) is told. */
+export async function notifyOfCanceledVenueShow(
+  prisma: PrismaClient,
+  show: {
+    venue: { name: string; createdBy: string }
+    artistUserId: string
+    startAt: Date
+    canceledBy: string
+  },
+): Promise<void> {
+  const byVenue = show.canceledBy === show.venue.createdBy
+  const recipientId = byVenue ? show.artistUserId : show.venue.createdBy
+  if (recipientId === show.canceledBy) return
+  const [recipient, actor] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: recipientId, ...availableUserWhere },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: show.canceledBy },
+      select: { username: true, displayName: true },
+    }),
+  ])
+  if (!recipient || !actor) return
+  await prisma.notification.create({
+    data: {
+      userId: recipient.id,
+      type: 'VENUE_SHOW_CANCELED',
+      actorUserId: show.canceledBy,
+      title: byVenue
+        ? `${show.venue.name} cancelled your show`
+        : `${actorDisplayName(actor)} cancelled their show at ${show.venue.name}`,
+      body: `It was on ${show.startAt.toISOString().slice(0, 10)}`,
+      url: byVenue ? '/venues' : '/venues/mine',
+    },
+  })
+}
+
 /** Fan out a NEW_EVENT notification to everyone following the artist when
  * they add an upcoming event (events already in the past tell nobody). */
 export async function notifyFollowersOfNewEvent(

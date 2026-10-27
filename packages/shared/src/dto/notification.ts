@@ -10,6 +10,7 @@ export const NotificationTypeSchema = z.enum([
   'NEW_MESSAGE',
   'NEW_TRACK',
   'NEW_FOLLOWER',
+  'VENUE_SHOW_CANCELED',
   'NEW_LIKE',
   'NEW_REPOST',
   'PLAYLIST_TRACK_ADDED',
