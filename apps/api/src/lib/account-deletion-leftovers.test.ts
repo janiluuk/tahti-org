@@ -21,7 +21,7 @@ describe('Account deletion ends what was still pending', () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
   })
 
-  it('removes setup links, fails queued imports and uploads, ends and leaves jams', async () => {
+  it('removes setup links and email changes, fails queued imports and uploads, ends and leaves jams', async () => {
     const user = await createTestArtist(prisma, {
       email: `${PREFIX}user@example.com`,
       username: `${PREFIX}user`,
@@ -37,6 +37,14 @@ describe('Account deletion ends what was still pending', () => {
       data: {
         userId: user.id,
         token: `${PREFIX}token`,
+        expiresAt: new Date(Date.now() + 3600_000),
+      },
+    })
+    await prisma.emailChange.create({
+      data: {
+        userId: user.id,
+        newEmail: `${PREFIX}new@example.com`,
+        token: `${PREFIX}change`,
         expiresAt: new Date(Date.now() + 3600_000),
       },
     })
@@ -63,6 +71,7 @@ describe('Account deletion ends what was still pending', () => {
     await executeAccountDeletion(prisma, log, { userId: user.id, actorId: board.id })
 
     expect(await prisma.passwordSetup.count({ where: { userId: user.id } })).toBe(0)
+    expect(await prisma.emailChange.count({ where: { userId: user.id } })).toBe(0)
     expect(
       await prisma.cloudImportJob.findUniqueOrThrow({ where: { id: queued.id } }),
     ).toMatchObject({ status: 'FAILED', error: 'Account deleted' })
