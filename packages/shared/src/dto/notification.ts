@@ -37,6 +37,7 @@ export const NotificationTypeSchema = z.enum([
   'MOTION_CIRCULATED',
   'STREAMING_COPY_READY',
   'CHANNEL_LIVE',
+  'TAHTI_SELECTS_PICK',
   'NEW_EVENT',
   'NEW_FAN_SUBSCRIBER',
   'NEW_PURCHASE',

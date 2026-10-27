@@ -700,6 +700,8 @@ enum NotificationType {
   STREAMING_COPY_READY
   /// An artist you follow went live on their channel.
   CHANNEL_LIVE
+  /// The board added your track to the Tahti Selects rotation.
+  TAHTI_SELECTS_PICK
   /// An artist you follow announced an upcoming event.
   NEW_EVENT
   /// Someone started a fan subscription to you (honours notifyMoneyMovesInApp).

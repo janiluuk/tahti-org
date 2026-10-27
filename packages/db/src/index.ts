@@ -56,6 +56,7 @@ export {
   notifyVenueOwnerOfVerification,
   notifyArtistOfNewComment,
   notifyArtistOfNewRepost,
+  notifyArtistOfSelectsPick,
   notifyArtistStreamingCopyReady,
   notifyArtistOfBoardTrackEdit,
   notifyPlaylistOfNewTrack,
