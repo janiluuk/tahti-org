@@ -706,6 +706,8 @@ enum NotificationType {
   PAYOUT_SENT
   /// A renewal payment for one of your fan subscriptions failed.
   FAN_SUB_PAYMENT_FAILED
+  /// The annual grant run awarded you a grant (honours notifyMoneyMovesInApp).
+  GRANT_AWARDED
   /// One of your fan subscriptions ended (lapsed or ran out after canceling).
   FAN_SUB_EXPIRED
   /// A fan cancelled their subscription to you (perks run to the end of the period).
