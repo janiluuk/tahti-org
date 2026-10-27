@@ -491,6 +491,25 @@ export async function notifyArtistOfRadioSubmissionRejected(
   })
 }
 
+/** Board added a submitted track to Tahti Radio's rotation. Says so when
+ * the approval also made a private track public. */
+export async function notifyArtistOfRadioSubmissionAccepted(
+  prisma: PrismaClient,
+  artistUserId: string,
+  trackTitle: string,
+  madePublic: boolean,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'RADIO_SUBMISSION_ACCEPTED',
+      title: `"${trackTitle}" is now on Tahti Radio`,
+      body: madePublic ? 'The track was private, so it is now public.' : null,
+      url: '/studio/channel?tab=tahti-radio',
+    },
+  })
+}
+
 /** Theme review lifecycle — all three are sticky (must be explicitly
  * acknowledged; opening the bell / read-all does not clear them). */
 export async function notifyUserThemeUnderReview(

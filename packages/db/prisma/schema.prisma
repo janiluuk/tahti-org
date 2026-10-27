@@ -656,6 +656,8 @@ enum NotificationType {
   CHAT_MENTION
   /// Board rejected a Tahti Radio track submission (only when a note is provided).
   RADIO_SUBMISSION_REJECTED
+  /// The board added your submitted track to Tahti Radio.
+  RADIO_SUBMISSION_ACCEPTED
   /// Your submitted theme entered the admin review queue.
   THEME_UNDER_REVIEW
   /// Admin approved your theme — a PR opening it for merge is in progress.

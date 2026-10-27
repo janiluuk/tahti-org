@@ -58,6 +58,7 @@ export {
   notifyPlaylistOfNewTrack,
   notifyUserOfNewMessage,
   notifyUsersOfChatMention,
+  notifyArtistOfRadioSubmissionAccepted,
   notifyArtistOfRadioSubmissionRejected,
   notifyUserThemeUnderReview,
   notifyUserThemeApproved,
