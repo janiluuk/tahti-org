@@ -713,6 +713,8 @@ enum NotificationType {
   MOTION_CIRCULATED
   /// A member replied to a discussion topic you follow and have not muted.
   DISCUSSION_REPLY
+  /// The board opened a discussion topic; sent to every other member.
+  DISCUSSION_OPENED
   /// A lossless upload's compressed streaming copy finished encoding — see
   /// Sound.streamingCopyStatus and apps/worker/src/jobs/encode-streaming-copy.ts.
   STREAMING_COPY_READY

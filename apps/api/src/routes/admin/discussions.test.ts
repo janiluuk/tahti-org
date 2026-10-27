@@ -17,6 +17,7 @@ describe('/api/admin/discussions', () => {
   let boardCookie: string
   let memberCookie: string
   let boardId: string
+  let memberId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -35,6 +36,7 @@ describe('/api/admin/discussions', () => {
       username: `${PREFIX}member`,
       isMember: true,
     })
+    memberId = member.id
     memberCookie = await sessionCookieFor(prisma, member.id)
   })
 
@@ -61,6 +63,13 @@ describe('/api/admin/discussions', () => {
     expect(
       await prisma.discussionParticipant.count({ where: { topicId: topic.id, userId: boardId } }),
     ).toBe(1)
+    const notices = await prisma.notification.findMany({
+      where: { type: 'DISCUSSION_OPENED', url: `/governance/discussions/${topic.id}` },
+      select: { userId: true },
+    })
+    const told = notices.map((n) => n.userId)
+    expect(told).toContain(memberId)
+    expect(told).not.toContain(boardId)
 
     const closed = await app.inject({
       method: 'PATCH',

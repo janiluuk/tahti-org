@@ -11,6 +11,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { notifyMembersOfDiscussionOpened } from '../../lib/discussion-notifications.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
 
 const adminDiscussionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -41,6 +42,11 @@ const adminDiscussionRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: DISCUSSION_TOPIC_SELECT,
       })
+      await notifyMembersOfDiscussionOpened(fastify.prisma, topic, actor.id).catch(
+        (err: unknown) => {
+          request.log.error({ err, topicId: topic.id }, 'discussion opened notification failed')
+        },
+      )
       return reply.status(201).send(toDiscussionTopicView(topic))
     },
   )

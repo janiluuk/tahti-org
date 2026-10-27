@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { availableUserWhere } from '@tahti/db'
+import { membersToNotify } from './motion-notifications.js'
 
 /**
  * Tells a topic's participants that someone replied, skipping the replier and
@@ -46,6 +47,28 @@ export async function notifyDiscussionParticipants(
       title: 'New reply in a discussion you follow',
       body: `Someone replied to "${topic.title}".`,
       url,
+    })),
+  })
+  return ids.length
+}
+
+/** Tells every other member that the board opened a topic. Returns how many
+ * were told. */
+export async function notifyMembersOfDiscussionOpened(
+  prisma: PrismaClient,
+  topic: { id: string; title: string },
+  actorUserId: string,
+): Promise<number> {
+  const ids = await membersToNotify(prisma, actorUserId)
+  if (ids.length === 0) return 0
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'DISCUSSION_OPENED' as const,
+      actorUserId,
+      title: 'The board opened a discussion',
+      body: `Join the conversation: "${topic.title}".`,
+      url: `/governance/discussions/${topic.id}`,
     })),
   })
   return ids.length
