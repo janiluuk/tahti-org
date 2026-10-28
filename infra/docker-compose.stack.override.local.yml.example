@@ -62,9 +62,6 @@ services:
   radio-discord-bot:
     logging:
       driver: json-file
-  web:
-    logging:
-      driver: json-file
   worker:
     logging:
       driver: json-file

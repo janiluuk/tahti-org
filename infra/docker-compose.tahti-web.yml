@@ -1,13 +1,12 @@
 # Local-only: serves the tahti-player repo's tahti-web (Tahti Player UI) build
-# from THIS branch alongside the full stack (api + Next.js web + worker …).
+# alongside the full stack (api + worker …). This is the app UI for the local stack.
 #
 # Usage (from tahti-org/):
 #   ./scripts/stack-up.sh                                    # base stack first
 #   docker compose -f infra/docker-compose.stack.yml \
 #                  -f infra/docker-compose.tahti-web.yml \
 #                  up -d --build tahti-web
-#   open http://localhost:${TAHTI_WEB_PORT:-17778}           # this branch's client
-#   open http://localhost:${WEB_PORT:-17777}                 # stock Next.js web
+#   open http://localhost:${TAHTI_WEB_PORT:-17778}
 #
 # The image reuses packages/tahti-web/deploy/Dockerfile (dist/ must be built
 # first: `pnpm --filter @tahti-player/tahti-web build` on the branch you want

@@ -2,9 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // The postMessage wire protocol between a widget's sandboxed iframe and the
-// host page. Both sides import this file — the widget via createHostApi()
-// (index.ts), the host via AddonFrame (apps/web) — so the message
-// shapes can never drift out of sync between the two ends.
+// host page. The widget side imports it via createHostApi() (index.ts); the
+// host page (tahti-player's tahti-web) must speak the same message shapes.
 //
 // The sandbox iframe has no allow-same-origin, so its document has an opaque
 // origin — postMessage to/from it necessarily uses targetOrigin '*'. That's

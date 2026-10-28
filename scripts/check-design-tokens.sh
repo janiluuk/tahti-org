@@ -13,7 +13,7 @@ TOKEN_PATHS=(
 
 MATCHES=$(grep -rEn '#[0-9a-fA-F]{3,8}\b' \
   --include="*.css" --include="*.tsx" --include="*.ts" \
-  packages/ui/src apps/web/src 2>/dev/null || true)
+  packages/ui/src 2>/dev/null || true)
 
 for token_path in "${TOKEN_PATHS[@]}"; do
   MATCHES=$(echo "$MATCHES" | grep -v -F "$token_path" || true)
@@ -30,9 +30,7 @@ for allowed_path in \
   'packages/ui/src/styles/brand-channel.css' \
   'packages/ui/src/styles/brand-public.css' \
   'packages/ui/src/styles/brand-studio.css' \
-  'packages/ui/src/styles/admin-ui.css' \
-  'apps/web/src/components/themes/theme-editor.tsx' \
-  'apps/web/src/components/themes/theme-preview-card.tsx'; do
+  'packages/ui/src/styles/admin-ui.css'; do
   MATCHES=$(echo "$MATCHES" | grep -v -F "$allowed_path:" || true)
 done
 

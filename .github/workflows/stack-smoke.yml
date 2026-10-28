@@ -36,8 +36,5 @@ jobs:
       - name: Install Node dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Chromium for browser smoke
-        run: pnpm exec playwright install --with-deps chromium
-
       - name: Stack up, probe, tear down
         run: bash scripts/stack-smoke.sh

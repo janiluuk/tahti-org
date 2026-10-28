@@ -612,30 +612,6 @@ services:
         limits: { cpus: "2", memory: 1G }
 
   # ───────────────────────────────────────────────────────────────────────────
-  # Web — Next.js artist app (app.tahti.live + per-channel subdomains)
-  # ───────────────────────────────────────────────────────────────────────────
-  web:
-    image: registry.tahti.live/tahti/web:${TAG:-latest}
-    logging: *loki-logging
-    networks: [internal, edge]
-    # NOTE: NEXT_PUBLIC_* vars are inlined into the JS bundle at *build* time —
-    # setting them here has no effect at runtime. The real values are baked in
-    # by the `build-args` in .github/workflows/deploy.yml's web build step.
-    environment:
-      INTERNAL_API_BASE: http://api:3001
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
-      interval: 15s
-      retries: 5
-    deploy:
-      replicas: 2
-      placement:
-        constraints: [node.labels.role == worker]
-      update_config: { parallelism: 1, order: start-first }
-      resources:
-        limits: { cpus: "1", memory: 1G }
-
-  # ───────────────────────────────────────────────────────────────────────────
   # Caddy — TLS termination + reverse proxy
   # ───────────────────────────────────────────────────────────────────────────
   caddy:

@@ -22,10 +22,9 @@ help:
 	@echo "  e2e-screenshots  Local only: stack + seed + Playwright captures"
 	@echo ""
 	@echo "Build"
-	@echo "  build            Build all app images (website api web worker orchestrator)"
+	@echo "  build            Build all app images (website api worker orchestrator)"
 	@echo "  build-website    Build the marketing website image"
 	@echo "  build-api        Build the API image"
-	@echo "  build-web        Build the Next.js web image"
 	@echo "  build-worker     Build the worker image"
 	@echo "  build-orchestrator  Build the orchestrator image"
 	@echo "  push             Push all images to $(REGISTRY)"
@@ -73,7 +72,7 @@ e2e-screenshots:
 	./scripts/e2e-screenshots.sh
 
 # ── Build ─────────────────────────────────────────────────────────────────────
-build: build-website build-api build-web build-worker build-orchestrator
+build: build-website build-api build-worker build-orchestrator
 
 build-website:
 	docker build -t $(REGISTRY)/tahti/website:$(TAG) website/
@@ -82,10 +81,6 @@ build-website:
 build-api:
 	docker build -f apps/api/Dockerfile -t $(REGISTRY)/tahti/api:$(TAG) .
 	docker tag $(REGISTRY)/tahti/api:$(TAG) $(REGISTRY)/tahti/api:latest
-
-build-web:
-	docker build -f apps/web/Dockerfile -t $(REGISTRY)/tahti/web:$(TAG) .
-	docker tag $(REGISTRY)/tahti/web:$(TAG) $(REGISTRY)/tahti/web:latest
 
 build-worker:
 	docker build -f apps/worker/Dockerfile -t $(REGISTRY)/tahti/worker:$(TAG) .
@@ -100,8 +95,6 @@ push:
 	docker push $(REGISTRY)/tahti/website:latest
 	docker push $(REGISTRY)/tahti/api:$(TAG)
 	docker push $(REGISTRY)/tahti/api:latest
-	docker push $(REGISTRY)/tahti/web:$(TAG)
-	docker push $(REGISTRY)/tahti/web:latest
 	docker push $(REGISTRY)/tahti/worker:$(TAG)
 	docker push $(REGISTRY)/tahti/worker:latest
 	docker push $(REGISTRY)/tahti/orchestrator:$(TAG)

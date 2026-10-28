@@ -1,8 +1,7 @@
 {
   "log_level": "info",
   "allowed_origins": [
-    "http://localhost:17777",
-    "http://localhost:3000",
+    "http://localhost:17778",
     "https://tahti.live",
     "https://www.tahti.live",
     "https://*.tahti.live"

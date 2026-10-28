@@ -23,7 +23,6 @@ Do not skip this because local `pnpm test` passed — CI blocks merge on lint/fo
 Common failures:
 
 - **Prettier** — edit left trailing whitespace or long lines; run `pnpm format`.
-- **@tahti/web** — `next lint` runs in turbo; fix React/hooks/import issues in `apps/web`.
 - **New packages** — must have a `lint` script in `package.json` to be picked up by turbo.
 
 If CI reports `lint failed` in the aggregate job, open the **Lint & format** workflow step log (ESLint vs Prettier).

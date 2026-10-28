@@ -6,6 +6,10 @@ the new per-category Playwright screenshot journeys, and UI/perf/UX findings
 surfaced while running them. Fold into `docs/todo/HISTORY.md` when the PR
 merges; move any leftovers to `docs/remaining-work.md`.
 
+Note (2026-10-28): `apps/web` was removed. The Playwright journeys here drive
+the old Next.js UI and need porting to the tahti-player SPA; finding 1
+(`apps/web/Dockerfile`) no longer applies.
+
 ## What shipped
 
 - `tests/e2e/{anonymous,listener,artist,admin}/` — moved the persona bash

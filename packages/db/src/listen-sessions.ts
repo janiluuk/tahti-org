@@ -4,8 +4,8 @@
 import type { PrismaClient } from '@prisma/client'
 
 /** A ListenSession is considered abandoned once this long has passed since
- * its last heartbeat. The client pings every 180s (HEARTBEAT_INTERVAL_SEC
- * in apps/web's player-context.tsx) — one missed tick's worth of grace on
+ * its last heartbeat. The client pings every 180s (LISTEN_HEARTBEAT_MS in
+ * tahti-player's tahti-web ListenHeartbeat.tsx) — one missed tick's worth of grace on
  * top absorbs normal jitter (a slow request, a brief network blip) without
  * keeping genuinely-stopped sessions open for long. Keep this comfortably
  * above the client's ping interval if that ever changes. */

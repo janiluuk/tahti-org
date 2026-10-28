@@ -3229,7 +3229,7 @@ enum ListenSource {
 
 /// Listen-time tracking, session-based — deliberately relaxed polling, not
 /// per-second/per-minute. The client pings "still listening" every 3 min
-/// (HEARTBEAT_INTERVAL_SEC in apps/web's player-context.tsx); a ping either
+/// (LISTEN_HEARTBEAT_MS in tahti-player's tahti-web ListenHeartbeat.tsx); a ping either
 /// extends the caller's current open session (lastSeenAt) or opens a new
 /// one. The `listen-session-close` cron (every 3 min) closes any session
 /// whose lastSeenAt has gone stale (missed its last expected ping), setting
