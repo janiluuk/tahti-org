@@ -228,8 +228,8 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // GET /api/v1/addons/bundle/:bundleHash — proxied by apps/web's own
-  // /widget-sandbox/bundle/[bundleHash] route, then loaded there via
+  // GET /api/v1/addons/bundle/:bundleHash — proxied by the SPA's
+  // /widget-sandbox/bundle/<hash> location, then loaded there via
   // <script src integrity="sha256-..."> (see bundleHashToIntegrity in
   // @tahti/shared) so the browser's own SRI check enforces that these are
   // really the approved bytes. Public and unauthenticated by design — a

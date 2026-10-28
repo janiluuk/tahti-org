@@ -17,18 +17,18 @@ linked docs; do not invent product rules that contradict them.
 | Rule                                 | Path                                                                             |
 | ------------------------------------ | -------------------------------------------------------------------------------- |
 | Lint/format before done              | [`.cursor/rules/ci-lint-before-done.mdc`](.cursor/rules/ci-lint-before-done.mdc) |
-| UI only via `@tahti/ui`              | [`.cursor/rules/ui-library.mdc`](.cursor/rules/ui-library.mdc)                   |
+| No new UI in this repo               | [`.cursor/rules/ui-library.mdc`](.cursor/rules/ui-library.mdc)                   |
 | Do not touch `website/` unless asked | [`.cursor/rules/website-off-limits.mdc`](.cursor/rules/website-off-limits.mdc)   |
 | Project map + remaining work         | [`.cursor/rules/project-context.mdc`](.cursor/rules/project-context.mdc)         |
 | Done todos → HISTORY.md              | [`.cursor/rules/todo-history.mdc`](.cursor/rules/todo-history.mdc)               |
 | Stack PRs; defer catalog edits       | [`.cursor/rules/pr-stacking.mdc`](.cursor/rules/pr-stacking.mdc)                 |
 
-### UI component reuse
+### UI work
 
-When creating a new view, always use an applicable existing Storybook/
-`@tahti/ui` component. Add a new component to the shared UI kit and its
-Storybook coverage when no suitable component exists; do not introduce a
-one-off view primitive in `apps/web`.
+The web app is the Tahti Player SPA in `../tahti-player` (`packages/tahti-web`,
+components from `@tahti-player/ui`). Build UI there, not in this repo.
+`packages/ui` (`@tahti/ui`) remains only because `@tahti/audio-edit`'s plugin
+panels import it; do not add new components to it.
 
 Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
 Prettier command for the files changed) and then confirm with
@@ -43,10 +43,10 @@ units. Listeners stay anonymous by default.
 
 | Surface                    | Location                                                                                                 |
 | -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| API / workers / studio web | `apps/api`, `apps/worker`, `apps/web`                                                                    |
-| UI kit                     | `packages/ui` (`@tahti/ui`) — never duplicate in `apps/web`                                              |
+| API / workers              | `apps/api`, `apps/worker`, `services/orchestrator`                                                       |
+| Legacy UI kit              | `packages/ui` (`@tahti/ui`) — only for `@tahti/audio-edit` panels; no new components                     |
 | Marketing site             | `website/` — **off limits** unless user explicitly asks                                                  |
-| Tahti Player beta client   | Separate repo; cutover in [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) (`beta.tahti.live`) |
+| Web app (SPA)              | Separate repo `../tahti-player` (`packages/tahti-web`); all public hosts                                 |
 | Tahti Radio Discord bot    | Sibling `../tahti-radio-discord-bot` — Compose service `radio-discord-bot`, not the Fastify API          |
 
 ## Tahti Player import-plugin boundary
@@ -146,10 +146,10 @@ live Tahti Radio HLS feed, set `TAHTI_RADIO_AUDIO_URL` on the
 ## Running the app locally (env gotchas)
 
 Start with `./scripts/stack-up.sh --seed` (full Docker stack + demo fixtures;
-`--down` tears it down). Before running `apps/api` / `apps/web` directly with
-`pnpm dev`, or when you need the seed accounts, read
+`--down` tears it down). Before running `apps/api` directly with `pnpm dev`, or
+when you need the seed accounts, read
 [`.claude/skills/run-local/SKILL.md`](.claude/skills/run-local/SKILL.md) —
-entrypoint, `DATABASE_URL`, and `NEXT_PUBLIC_API_BASE` gotchas live there.
+entrypoint and `DATABASE_URL` gotchas live there.
 
 **Naming:** `beta.tahti.live` is the Tahti Player listen/studio SPA (production API).
 `[BETA]` / `*@beta.tahti.live` in seed scripts are **dev fixtures only**.
@@ -184,6 +184,6 @@ Prefer `pnpm ci:check` after TypeScript changes. Fix Prettier with `pnpm format`
 
 Full list in `docs/AGENT.md`. Never: enforce storage quotas as product limits;
 algorithmic feeds / follow graphs; mutate ledger entries; YouTube/Twitch for
-Tahti Radio; edit `website/` unasked; put UI components in `apps/web` instead of
-`@tahti/ui`; rewrite `remaining-work.md` / `features.md` / `HISTORY.md` on every
+Tahti Radio; edit `website/` unasked; add web UI to this repo instead of
+`../tahti-player`; rewrite `remaining-work.md` / `features.md` / `HISTORY.md` on every
 intermediate PR commit (stack related PRs; fold catalogs when ready to merge).

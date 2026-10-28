@@ -1,13 +1,6 @@
 {
 	email ops@tahti.live
 	admin 0.0.0.0:2019
-	# Required for the on_demand TLS block below — see infra/Caddyfile for the
-	# same fix and apps/api/src/routes/internal/tls-ask.ts for the endpoint.
-	# Staging's api container listens on 3001 (see api.staging.tahti.live below),
-	# not 3000 like the production Caddyfile.
-	on_demand_tls {
-		ask http://api:3001/internal/tls-ask
-	}
 }
 
 # ── Staging: marketing site ───────────────────────────────────────────────────
@@ -17,12 +10,6 @@ staging.tahti.live {
 	redir @artist_channel https://{re.artist_channel.1}.staging.tahti.live/ 308
 	encode zstd gzip
 	reverse_proxy website:80
-}
-
-# ── Staging: artist app ───────────────────────────────────────────────────────
-app.staging.tahti.live {
-	encode zstd gzip
-	reverse_proxy web:3000
 }
 
 # ── Staging: API ──────────────────────────────────────────────────────────────
@@ -60,18 +47,6 @@ stream.staging.tahti.live {
 	header Cache-Control "public, max-age=2, s-maxage=10"
 	rewrite * /hls-live{uri}
 	reverse_proxy minio:9000
-}
-
-# ── Staging: per-channel wildcard ─────────────────────────────────────────────
-*.staging.tahti.live {
-	@valid expression {labels.1} == "staging" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream"
-	encode zstd gzip
-	reverse_proxy @valid web:3000 {
-		header_up X-Tahti-Channel-Slug {labels.0}
-	}
-	tls {
-		on_demand
-	}
 }
 
 # ── Staging: smoke test endpoint (direct health access without TLS) ───────────

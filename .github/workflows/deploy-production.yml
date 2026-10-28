@@ -76,8 +76,8 @@ jobs:
       NODE_VERSION: '24'
 
     # packages/api-client/src/schema.d.ts is generated, never committed (see
-    # ci.yml's "Regenerate SDK types" step). apps/web/Dockerfile's builder
-    # stage only COPYs already-generated source — it has no network path to
+    # ci.yml's "Regenerate SDK types" step). The Docker builder stages only
+    # COPY already-generated source — they have no network path to
     # a Postgres/Redis on the production host (postgres/redis publish no
     # host port; only pgbouncer does) — so the SDK types must be generated
     # here, on the runner, and rsynced up with the rest of the tree before
@@ -228,7 +228,7 @@ jobs:
 
       # deploy_prod.sh rsyncs the checked-out tree to DEPLOY_HOST:DEPLOY_PATH
       # (excluding infra/stack.env, which only the copy already on the remote
-      # host is authoritative for), builds website/api/web/worker/orchestrator
+      # host is authoritative for), builds website/api/worker/orchestrator
       # with --env-file infra/stack.env, and brings the stack up with
       # `docker compose up -d --remove-orphans` — no `down` step, so existing
       # named volumes (postgres, minio, redis) are preserved across deploys.
@@ -247,6 +247,5 @@ jobs:
           ssh deploy-prod '
             set -euo pipefail
             curl -sfS http://127.0.0.1:15011/health
-            curl -sfS -o /dev/null http://127.0.0.1:17777/
             curl -sfS -o /dev/null http://127.0.0.1:18080/
           '

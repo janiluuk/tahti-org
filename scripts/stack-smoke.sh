@@ -6,7 +6,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 API_PORT="${API_PORT:-15011}"
-WEB_PORT="${WEB_PORT:-17777}"
 
 cleanup() {
   "${ROOT}/scripts/stack-up.sh" --down 2>/dev/null || true
@@ -19,13 +18,6 @@ echo "── Stack smoke: bringing up compose stack ──"
 echo "── Stack smoke: API probes ──"
 curl -sf "http://localhost:${API_PORT}/health" | grep -q '"status":"ok"'
 curl -sf "http://localhost:${API_PORT}/api/v1/status" | grep -q '"status"'
-
-echo "── Stack smoke: web probes ──"
-curl -sf "http://localhost:${WEB_PORT}/" | grep -qi tahti
-curl -sf "http://localhost:${WEB_PORT}/transparency" | grep -qi transparency
-
-echo "── Stack smoke: browser probes ──"
-WEB_BASE_URL="http://127.0.0.1:${WEB_PORT}" node "${ROOT}/tests/e2e/web-smoke.mjs"
 
 echo "── Stack smoke: PgBouncer port ──"
 if command -v pg_isready >/dev/null 2>&1; then

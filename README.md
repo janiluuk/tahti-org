@@ -130,12 +130,9 @@ Each section below states the problem an area of the product addresses and how T
 
 ### Web clients
 
-| Client                                                                                    | Role                                                                                                                                                                      |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/web`** (this repo)                                                                | Production Next.js listen + studio + admin - `app.tahti.live` / `tahti.live`                                                                                              |
-| **[Tahti Player](https://github.com/janiluuk/tahti-player)** (`tahti-web`, separate repo) | Next listen + studio SPA on Tahti Player UI - live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
+The web app is the Tahti Player SPA, **[`packages/tahti-web`](https://github.com/janiluuk/tahti-player/tree/master/packages/tahti-web)** in the separate [tahti-player](https://github.com/janiluuk/tahti-player) repo. It serves listen, studio and admin on `tahti.live`, `app.tahti.live`, `beta.tahti.live` and every `<slug>.tahti.live` channel host, and talks to the API, chat and media stack in this repo. Cutover record: [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md).
 
-Both clients talk to the same API, chat, and media stack. Prefer the Tahti Player beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
+The legacy Next.js client that used to live in `apps/web` was removed in October 2026.
 
 ## Screenshots
 
@@ -189,9 +186,9 @@ _Channel designer: look, 24/7 radio, profile, domain._
 
 _Admin dashboard: health, activity, and moderation at a glance._
 
-### Legacy `apps/web` captures
+### Legacy Next.js captures
 
-The production client in this repo (`apps/web`, until the cutover) is captured against the seeded Docker stack via [`scripts/e2e-screenshots.sh`](scripts/e2e-screenshots.sh): about 90 pages across the anonymous, listener, free, member, artist and admin roles, under [`docs/e2e-screenshots/`](docs/e2e-screenshots/). See that folder's [`README.md`](docs/e2e-screenshots/README.md) to regenerate them and [`manifest.json`](docs/e2e-screenshots/manifest.json) for the route → file mapping.
+[`docs/e2e-screenshots/`](docs/e2e-screenshots/) holds about 90 pages captured from the removed Next.js client (`apps/web`) across the anonymous, listener, free, member, artist and admin roles. They are a historical record; [`manifest.json`](docs/e2e-screenshots/manifest.json) maps route → file.
 
 ## Package structure
 

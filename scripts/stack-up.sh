@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bring up the full Tahti stack in Docker (infra + api + web + worker + orchestrator
+# Bring up the full Tahti stack in Docker (infra + api + worker + orchestrator
 # + radio-discord-bot when the sibling repo is present).
 #
 # Usage:
@@ -9,7 +9,6 @@
 #   ./scripts/stack-up.sh --no-cache  # rebuild images without cache
 #
 # After up:
-#   App:     http://localhost:${WEB_PORT:-17777}
 #   API:     http://localhost:${API_PORT:-15011}
 #   MailHog: http://localhost:${MAILHOG_UI_PORT:-18025}
 #   Dozzle:  http://localhost:${DOZZLE_PORT:-18090}  (see infra/stack/dozzle-users.yml)
@@ -26,7 +25,6 @@ if [[ -f "$LOCAL_OVERRIDE" ]]; then
 fi
 
 # All stack ports live above 15 000 to avoid clashing with any host dev service.
-export WEB_PORT="${WEB_PORT:-17777}"
 export API_PORT="${API_PORT:-15011}"
 SEED=false
 DOWN=false
@@ -97,7 +95,6 @@ wait_for() {
 }
 
 wait_for "http://localhost:${API_PORT:-15011}/health" "API"
-wait_for "http://localhost:${WEB_PORT:-17777}/" "Web"
 
 echo "── Seeding Tahti Radio channel (chat) ──"
 "${COMPOSE[@]}" run --rm --no-deps \
@@ -117,7 +114,6 @@ fi
 
 echo ""
 echo "── Tahti stack is up ─────────────────────────────────────"
-echo "   Web app:  http://localhost:${WEB_PORT:-17777}"
 echo "   API:      http://localhost:${API_PORT:-15011}/health"
 echo "   MailHog:  http://localhost:${MAILHOG_UI_PORT:-18025}"
 echo "   MinIO UI: http://localhost:${MINIO_CONSOLE_PORT:-19001}"

@@ -10,7 +10,7 @@ pnpm install --frozen-lockfile
 pnpm --filter @tahti/db db:generate
 ```
 
-For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`, web `:17777`).
+For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`). The stack has no web UI; the app is the tahti-player SPA (`infra/docker-compose.tahti-web.yml`, `:17778`).
 
 ## Commands
 
@@ -41,22 +41,18 @@ no channel), **artist** (channel owner), **admin** (board console). Each has
 persona API checks (bash) plus, for the Playwright ones, a screenshot journey
 capturing both light and dark `prefers-color-scheme` at 3440×1440.
 
-One-shot run (brings up Postgres/Redis in Docker, starts `apps/api` +
-`apps/web` as plain dev processes if not already running, seeds rich demo
-fixtures, runs all 4 journeys):
-
-```bash
-./scripts/run-e2e-journeys.sh                # all 4
-./scripts/run-e2e-journeys.sh artist admin   # only these
-./scripts/run-e2e-journeys.sh --keep-up      # leave API/web running after
-```
+The Playwright journeys and screenshot scripts were written against the
+removed Next.js client (`apps/web`). Their selectors don't match the
+tahti-player SPA, so they need porting before they can run again (tracked in
+[`remaining-work.md`](remaining-work.md)). The bash persona checks are API-only
+and still run in CI.
 
 Screenshots land under `docs/e2e-screenshots/<category>/journey/{light,dark}/`
 with a `manifest.json` per theme. See `docs/e2e-screenshots/README.md` for the
 full screenshot layout (including the older per-route capture tool) and the
 annotated review page.
 
-Individual journeys (stack/seed already up):
+Individual journeys (legacy Next.js selectors; stack/seed already up):
 
 ```bash
 node tests/e2e/anonymous/anonymous-journey.mjs

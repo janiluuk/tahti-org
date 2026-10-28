@@ -2,6 +2,10 @@
 
 Status: **open, not started**
 
+Note (2026-10-28): `apps/web` was removed, so the capture scripts below target
+a UI that no longer exists and the "page inside `apps/web`" option is gone.
+Captures of the live app need the tahti-player SPA.
+
 ## Ask (from Jani, 2026-09-22)
 
 - Re-run the e2e screenshot capture with richer seed data so every screen

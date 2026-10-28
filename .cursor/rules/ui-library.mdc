@@ -1,57 +1,21 @@
 ---
-description: All UI must use @tahti/ui — never duplicate components in apps/web
+description: Web UI lives in tahti-player — do not add UI components to this repo
 globs:
-  - apps/web/**/*.{tsx,ts,css}
   - packages/ui/**/*
+  - packages/audio-edit/**/*.tsx
 alwaysApply: true
 ---
 
-# UI component library — @tahti/ui
+# UI — build it in tahti-player
 
-**Single source of truth:** `packages/ui` (`@tahti/ui`). Every visual component, layout shell, and shared UI utility lives there.
+The web app is the Tahti Player SPA in `../tahti-player` (`packages/tahti-web`).
+Its components come from `@tahti-player/ui` (Storybook) in that repo. New or
+changed UI belongs there.
 
-## Rules for agents
+`packages/ui` (`@tahti/ui`) is the component kit of the removed Next.js app.
+It stays only because `@tahti/audio-edit`'s plugin `Panel` / `ChainRow`
+components import it, and because `scripts/check-design-tokens.sh`,
+`check-font-weight-cap.sh` and `check-reference-token-values.sh` read its CSS.
 
-1. **Import UI from `@tahti/ui`** (or `@/components/ui`, which re-exports the package — no new implementations in `apps/web`).
-2. **Never add** Button, Panel, Field, layout shells, or brand chrome under `apps/web/src/components/ui/` or parallel folders. Add to `packages/ui` and export from `packages/ui/src/index.ts`.
-3. **Never use inline `style={{…}}` for colors, borders, or typography** when a `@tahti/ui` class or component exists. Use design tokens (`var(--cyan)`, `var(--tahti-primary)`) via CSS in `packages/ui/src/styles/`.
-4. **Read `docs/design/README.md`** before writing or changing UI.
-
-## Surfaces and CSS (import once per route layout)
-
-| Surface | Routes | CSS imports |
-|---------|--------|-------------|
-| **Brand (dark)** | `/c`, `/u`, `/r`, marketing | `tokens.css`, `components.css`, `styles/brand-channel.css` |
-| **Studio (dark dashboard)** | `/dashboard` | `tokens.css`, `components.css`, `styles/brand-studio.css` |
-| **Admin (forms in mixed pages)** | root `globals.css` | `styles/admin-tokens.css`, `styles/admin-ui.css` |
-| **Auth / gateway (light)** | `/login`, `/join`, `/`, `/help` | `styles/brand-public.css` + admin tokens as needed |
-| **Embed (dark minimal)** | `/embed` | `styles/embed.css` |
-
-## Component map
-
-| Need | Import from `@tahti/ui` |
-|------|-------------------------|
-| Forms, panels, dashboard | `Button`, `Panel`, `Field`, `Input`, `Heading`, `Text`, … |
-| Channel page | `ChannelPageLayout`, `ChannelHeader` |
-| Artist profile / subscribe | `ProfilePageLayout`, `ProfileHero` |
-| Smart link | `SmartLinkPageLayout` |
-| Dashboard shell | `StudioShell`, `StudioSidebar`, `StudioTopNav` |
-| Live badge, stats | `LiveBadge`, `Stat`, `StatGrid`, `Callout` |
-| Marketing site | `MarketingButton`, `Nav`, `Card`, `SectionHeader` |
-| Escaped user text | `SafePlainText` |
-| Auth wordmark | `BrandLogo` |
-| Iframe embeds | `EmbedShell` + `styles/embed.css` |
-| Admin / system log lists | `LogViewer` |
-
-## Adding a new component
-
-1. Implement in `packages/ui/src/admin/`, `brand/`, or `marketing/` (match surface).
-2. Add styles to the matching file under `packages/ui/src/styles/`.
-3. Export from the folder `index.ts` and `packages/ui/src/index.ts`.
-4. Run `pnpm lint` and `pnpm format:check`.
-
-## Anti-patterns
-
-- Duplicating `packages/ui` under `apps/web/src/components/ui/*.tsx`
-- Light-theme hex (`#eee`, `#111`) on brand routes
-- Raw `<button style={{ background: '#16a34a' }}>` instead of `.tier-subscribe-btn` or `Button`
+- Do not add new components or routes to `packages/ui`.
+- Keep colours in `packages/ui/src/tokens.css` tokens (`pnpm check:tokens`).
