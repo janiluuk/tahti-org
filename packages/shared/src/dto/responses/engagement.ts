@@ -26,6 +26,16 @@ export const LikedTrackSchema = z.object({
   url: z.string(),
   embedProvider: z.string().nullable().optional(),
   embedUri: z.string().nullable().optional(),
+  /** What a track row shows: length, genre, waveform, the download flag and
+   * public totals. */
+  durationSec: z.number().int().nullable().optional(),
+  genre: z.string().nullable().optional(),
+  peaks: z.array(z.number()).nullable().optional(),
+  createdAt: z.string().optional(),
+  downloadsEnabled: z.boolean().optional(),
+  likeCount: z.number().int().optional(),
+  playCount: z.number().int().optional(),
+  downloadCount: z.number().int().optional(),
 })
 
 export const LikedPlaylistResponseSchema = z.object({
