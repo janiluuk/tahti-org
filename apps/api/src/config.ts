@@ -170,6 +170,15 @@ export const config = {
   },
   orchestratorUrl: process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003',
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
+  /** `live-streams` status check: LIVE channels whose HLS output in MinIO stopped updating. */
+  liveStreamsCheck: {
+    bucket: process.env.HLS_MINIO_BUCKET ?? 'hls-live',
+    /** A variant playlist older than this counts as silent. */
+    staleSec: parseInt(process.env.LIVE_STREAM_STALE_SECONDS ?? '60', 10),
+    /** A broadcast younger than this may not have written its first playlist yet. */
+    graceSec: parseInt(process.env.LIVE_STREAM_GRACE_SECONDS ?? '120', 10),
+    cacheMs: parseInt(process.env.LIVE_STREAMS_CHECK_CACHE_MS ?? '30000', 10),
+  },
   rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
   /** STREAM-003: comma-separated RTMP ingest hostnames for health-ranked failover. */
   rtmpIngestHosts: process.env.RTMP_INGEST_HOSTS ?? '',

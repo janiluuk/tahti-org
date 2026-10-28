@@ -8,6 +8,13 @@ import { getRedisClient } from './redis.js'
 import { s3 } from './minio.js'
 import { isHeartbeatStale, readDiscordBotHeartbeat } from './discord-bot-heartbeat.js'
 import { ONLINE_THRESHOLD_MS } from './liveness.js'
+import {
+  describeSilentChannels,
+  loadLiveChannels,
+  newestPlaylistFromMinio,
+  probeLiveStreams,
+  type LiveStreamsResult,
+} from './live-streams-check.js'
 
 export type DependencyState = 'up' | 'down' | 'skipped'
 
@@ -18,6 +25,8 @@ export interface DependencyCheck {
   critical: boolean
   latencyMs: number
   detail?: string
+  /** Only on `live-streams`: LIVE channels whose HLS output stopped updating. */
+  silentLiveChannels?: number
 }
 
 const CHECK_TIMEOUT_MS = 2500
@@ -109,6 +118,54 @@ async function checkDiscordBot(): Promise<DependencyCheck> {
   return ok('discord-bot', false, latencyMs)
 }
 
+export function liveStreamsCheckFrom(
+  result: LiveStreamsResult,
+  latencyMs: number,
+): DependencyCheck {
+  const { checked, alwaysOnChecked, silent } = result
+  if (silent.length === 0) {
+    return {
+      id: 'live-streams',
+      state: 'up',
+      critical: alwaysOnChecked,
+      latencyMs,
+      detail: checked === 0 ? 'no live channels' : `${checked} live streams fresh`,
+      silentLiveChannels: 0,
+    }
+  }
+  return {
+    id: 'live-streams',
+    state: 'down',
+    critical: silent.some((s) => s.alwaysOn),
+    latencyMs,
+    detail: describeSilentChannels(silent),
+    silentLiveChannels: silent.length,
+  }
+}
+
+async function checkLiveStreams(prisma: PrismaClient): Promise<DependencyCheck> {
+  const start = Date.now()
+  const { bucket, staleSec, graceSec } = config.liveStreamsCheck
+  try {
+    const result = await withTimeout('live-streams', async () =>
+      probeLiveStreams(await loadLiveChannels(prisma), newestPlaylistFromMinio(bucket), {
+        staleMs: staleSec * 1000,
+        graceMs: graceSec * 1000,
+        now: Date.now(),
+      }),
+    )
+    return liveStreamsCheckFrom(result, Date.now() - start)
+  } catch (err) {
+    return {
+      id: 'live-streams',
+      state: 'skipped',
+      critical: false,
+      latencyMs: Date.now() - start,
+      detail: `could not check: ${String(err)}`,
+    }
+  }
+}
+
 /**
  * Wraps `run` so concurrent callers share one in-flight run and a result is
  * reused for `ttlMs`. `ttlMs <= 0` disables reuse but still coalesces.
@@ -137,6 +194,7 @@ export function cacheForMs<T>(
 }
 
 let cachedChecks: (() => Promise<DependencyCheck[]>) | null = null
+let cachedLiveStreams: (() => Promise<DependencyCheck>) | null = null
 
 /**
  * Probes every dependency, shared across /health, /metrics, /api/v1/status and
@@ -154,19 +212,23 @@ export function runDependencyChecks(prisma: PrismaClient): Promise<DependencyChe
 async function probeDependencies(prisma: PrismaClient): Promise<DependencyCheck[]> {
   const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
 
-  const [postgres, redis, minio, centrifugo, orchestrator, icecast, discordBot] = await Promise.all(
-    [
-      checkPostgres(prisma),
-      checkRedis(),
-      checkMinio(),
-      checkHttp('centrifugo', centrifugoHealthUrl(), false),
-      checkHttp('orchestrator', `${config.orchestratorUrl.replace(/\/$/, '')}/health`, false),
-      checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false),
-      checkDiscordBot(),
-    ],
+  // One HEAD per variant playlist per live channel, so this probe gets a longer
+  // cache than the cheap dependency pings.
+  cachedLiveStreams ??= cacheForMs(
+    () => checkLiveStreams(prisma),
+    config.nodeEnv === 'test' ? 0 : config.liveStreamsCheck.cacheMs,
   )
 
-  return [postgres, redis, minio, centrifugo, orchestrator, icecast, discordBot]
+  return Promise.all([
+    checkPostgres(prisma),
+    checkRedis(),
+    checkMinio(),
+    checkHttp('centrifugo', centrifugoHealthUrl(), false),
+    checkHttp('orchestrator', `${config.orchestratorUrl.replace(/\/$/, '')}/health`, false),
+    checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false),
+    checkDiscordBot(),
+    cachedLiveStreams(),
+  ])
 }
 
 export function summarizeChecks(checks: DependencyCheck[]): {
@@ -201,6 +263,13 @@ export function renderPrometheusMetrics(checks: DependencyCheck[], uptimeSec: nu
       lines.push(`tahti_dependency_up{dependency="${check.id}"} ${up}`)
       lines.push(`tahti_dependency_check_latency_ms{dependency="${check.id}"} ${check.latencyMs}`)
     }
+  }
+
+  const liveStreams = checks.find((c) => c.silentLiveChannels !== undefined)
+  if (liveStreams) {
+    lines.push('# HELP tahti_live_streams_silent LIVE channels whose HLS output stopped updating.')
+    lines.push('# TYPE tahti_live_streams_silent gauge')
+    lines.push(`tahti_live_streams_silent ${liveStreams.silentLiveChannels}`)
   }
 
   const summary = summarizeChecks(checks)

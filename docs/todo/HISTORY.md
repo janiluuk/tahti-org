@@ -815,6 +815,16 @@ Leftover: the fingerprint / IP hashes stay out of the export (product call).
 
 Added a validated, authenticated collection-import route for artist-owned Mikseri tracks. It accepts a track ID, track page, or official track embed plus user-supplied metadata and explicit rights confirmation, then stores an `EMBED_ONLY` `URL_EMBED` sound with the `MIKSERI` provider. The API never fetches Mikseri pages or audio. Added the provider to the versioned import catalog, Prisma migration, shared DTO/parser coverage, route coverage, and coordinated Tahti Player UI contract. No leftovers.
 
+### 2026-10-28 — Status reports silent live streams
+
+New `live-streams` check in `runDependencyChecks` (`apps/api/src/lib/live-streams-check.ts`):
+every `LIVE` channel with an open broadcast older than `LIVE_STREAM_GRACE_SECONDS` (120) must
+have a variant playlist (`stream-mp3-192` / `stream-aac-320` / `stream-flac` `.m3u8`, not
+`master.m3u8`) in the `HLS_MINIO_BUCKET` bucket updated within `LIVE_STREAM_STALE_SECONDS` (60).
+Down lists each silent slug with how long; critical when Tahti Radio or a curated-rotation
+channel is silent, otherwise degraded. Cached `LIVE_STREAMS_CHECK_CACHE_MS` (30 s); Prometheus
+gauge `tahti_live_streams_silent`. Follows the 2026-10-28 incident where six LIVE channels had
+no HLS output for ~8.5 h unnoticed. No leftovers.
 ### 2026-10-28 — Remove the legacy Next.js web app (`remove-next-web.md`)
 
 Deleted `apps/web` after confirming every public host serves the tahti-player SPA. Also removed

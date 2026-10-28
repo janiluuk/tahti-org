@@ -25,6 +25,7 @@ describe('GET /api/v1/status', () => {
     expect(body.checks.postgres).toMatchObject({ state: expect.any(String), critical: true })
     expect(body.checks.redis).toMatchObject({ state: expect.any(String), critical: true })
     expect(body.checks.minio).toMatchObject({ state: expect.any(String), critical: true })
+    expect(body.checks['live-streams']).toMatchObject({ state: expect.any(String) })
     expect(body).toHaveProperty('uptimeSec')
   })
 })
