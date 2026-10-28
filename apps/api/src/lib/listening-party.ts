@@ -12,6 +12,10 @@ import {
 } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from './release-artwork.js'
 import { userName } from './safe-names.js'
+import { stripeEnabled } from './stripe.js'
+
+// Checkout charges in euros (see createPurchaseCheckoutSession).
+const PURCHASE_CURRENCY = 'EUR'
 
 export const listeningPartySelect = {
   id: true,
@@ -188,11 +192,24 @@ export async function buildListeningPartyDto(
   }
 }
 
+/** The host's active one-time purchase tiers, when their store is open and
+ * can take payments; checkout stays on the artist's tier checkout route. */
 async function hostPurchaseTiers(
-  _prisma: PrismaClient,
-  _party: ListeningPartyRow,
+  prisma: PrismaClient,
+  party: ListeningPartyRow,
 ): Promise<ListeningPartyDto['purchaseTiers']> {
-  return []
+  if (!party.channel.storeEnabled) return []
+  const host = await prisma.user.findUnique({
+    where: { id: party.hostUserId },
+    select: { stripeConnectChargesEnabled: true },
+  })
+  if (!host || (stripeEnabled && !host.stripeConnectChargesEnabled)) return []
+  const tiers = await prisma.purchaseTier.findMany({
+    where: { artistUserId: party.hostUserId, active: true },
+    orderBy: { position: 'asc' },
+    select: { id: true, name: true, description: true, priceCents: true, priceOptional: true },
+  })
+  return tiers.map((t) => ({ ...t, currency: PURCHASE_CURRENCY }))
 }
 
 /** How far back a party may have started and still be playing. Bounds the
