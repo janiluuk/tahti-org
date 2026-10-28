@@ -66,6 +66,8 @@ export const PublicChannelUserSchema = z.object({
 export const PublicChannelViewSchema = z.object({
   slug: z.string(),
   state: z.string(),
+  /** Deduplicated plays across the channel's public tracks. */
+  publicPlays: z.number().int().optional(),
   /** ARTIST (default) or RADIO — a radio-station page hides bio/links/
    * subscribe CTA and shows programming instead. Only ever RADIO on
    * system-owned rows like tahti-radio today. */

@@ -188,8 +188,15 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
     }
   }
 
+  // Deduplicated plays across the channel's public tracks — the same
+  // measure as each track row's play count.
+  const publicPlays = await fastify.prisma.listenEvent.count({
+    where: { sound: { channelId: channel.id, isPublic: true, status: 'READY' } },
+  })
+
   return {
     ...channelRest,
+    publicPlays,
     user: {
       ...userRest,
       joinDate: showJoinDate ? createdAt.toISOString() : null,
