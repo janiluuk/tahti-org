@@ -4,6 +4,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
   cacheForMs,
+  liveStreamsCheckFrom,
   renderPrometheusMetrics,
   summarizeChecks,
   type DependencyCheck,
@@ -36,6 +37,67 @@ describe('health-checks helpers', () => {
     expect(text).toContain('tahti_dependency_up{dependency="redis"} 0')
     expect(text).toContain('tahti_api_uptime_seconds 120')
     expect(text).toContain('tahti_api_healthy 0')
+  })
+})
+
+describe('liveStreamsCheckFrom', () => {
+  it('is up with a count when every live stream is fresh', () => {
+    expect(liveStreamsCheckFrom({ checked: 3, alwaysOnChecked: true, silent: [] }, 7)).toEqual({
+      id: 'live-streams',
+      state: 'up',
+      critical: true,
+      latencyMs: 7,
+      detail: '3 live streams fresh',
+      silentLiveChannels: 0,
+    })
+  })
+
+  it('is a critical outage when a 24/7 channel is silent', () => {
+    const check = liveStreamsCheckFrom(
+      {
+        checked: 2,
+        alwaysOnChecked: true,
+        silent: [
+          { slug: 'tahti-radio', alwaysOn: true, silentForMs: 30_660_000 },
+          { slug: 'artist', alwaysOn: false, silentForMs: null },
+        ],
+      },
+      5,
+    )
+    expect(check).toMatchObject({
+      state: 'down',
+      critical: true,
+      detail: 'tahti-radio silent 8h 31m; artist no playlist',
+      silentLiveChannels: 2,
+    })
+    expect(summarizeChecks([check])).toEqual({ status: 'outage', healthy: false })
+  })
+
+  it('is only degraded when just an artist channel is silent', () => {
+    const check = liveStreamsCheckFrom(
+      {
+        checked: 2,
+        alwaysOnChecked: true,
+        silent: [{ slug: 'artist', alwaysOn: false, silentForMs: 90_000 }],
+      },
+      5,
+    )
+    expect(check).toMatchObject({ state: 'down', critical: false })
+    expect(summarizeChecks([check])).toEqual({ status: 'degraded', healthy: false })
+  })
+
+  it('exports the silent count as a Prometheus gauge', () => {
+    const check = liveStreamsCheckFrom(
+      {
+        checked: 1,
+        alwaysOnChecked: false,
+        silent: [{ slug: 'artist', alwaysOn: false, silentForMs: 90_000 }],
+      },
+      5,
+    )
+    const text = renderPrometheusMetrics([check], 1)
+    expect(text).toContain('tahti_dependency_up{dependency="live-streams"} 0')
+    expect(text).toContain('tahti_live_streams_silent 1')
   })
 })
 
