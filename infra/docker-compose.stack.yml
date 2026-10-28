@@ -40,6 +40,9 @@ x-app-env: &app-env
   # never fine for a publicly reachable deploy).
   DATABASE_URL: postgresql://tahti:${POSTGRES_PASSWORD:-tahti_dev}@pgbouncer:5432/tahti?pgbouncer=true
   REDIS_URL: redis://redis:6379
+  # Rate limits reject requests while Redis is down instead of letting them all
+  # through. Override with true only as emergency access while on-call fixes Redis.
+  RATE_LIMIT_REDIS_FAIL_OPEN: ${RATE_LIMIT_REDIS_FAIL_OPEN:-false}
   SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-do-not-use-in-prod}
   INTERNAL_SECRET: ${INTERNAL_SECRET:-local-stack-internal-secret}
   DOCS_PASS: ${DOCS_PASS:-local-stack-docs-pass}
