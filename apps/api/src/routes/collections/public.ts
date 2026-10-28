@@ -53,7 +53,7 @@ const publicCollectionItemInclude = {
       genreCustom: true,
       peaks: true,
       downloadsEnabled: true,
-      _count: { select: { likes: true, listenEvents: true } },
+      _count: { select: { likes: true, listenEvents: true, comments: true } },
     },
   },
 } as const
@@ -126,6 +126,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
               ...soundRest,
               genre: genreCustom ?? genre,
               likeCount: _count.likes,
+              commentCount: _count.comments,
               playCount: _count.listenEvents,
               downloadCount: downloadsBySoundId.get(colItem.sound.id) ?? 0,
               audioUrl: url,

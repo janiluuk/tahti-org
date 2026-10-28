@@ -295,7 +295,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           genre: true,
           genreCustom: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true } },
+          _count: { select: { likes: true, listenEvents: true, comments: true } },
         },
       })
     : []
@@ -381,6 +381,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     genre: item.genreCustom ?? item.genre,
     playCount: item._count.listenEvents,
     likeCount: item._count.likes,
+    commentCount: item._count.comments,
     downloadCount: downloadsBySoundId.get(item.id) ?? 0,
     downloadsEnabled: item.downloadsEnabled,
   }))
