@@ -814,3 +814,7 @@ Leftover: the fingerprint / IP hashes stay out of the export (product call).
 ### 2026-10-27 — Mikseri embed import (`mikseri-embed-import.md`)
 
 Added a validated, authenticated collection-import route for artist-owned Mikseri tracks. It accepts a track ID, track page, or official track embed plus user-supplied metadata and explicit rights confirmation, then stores an `EMBED_ONLY` `URL_EMBED` sound with the `MIKSERI` provider. The API never fetches Mikseri pages or audio. Added the provider to the versioned import catalog, Prisma migration, shared DTO/parser coverage, route coverage, and coordinated Tahti Player UI contract. No leftovers.
+
+### 2026-10-28 — Orchestrator respawns LIVE channels lost across a restart (incident fix)
+
+After the 2026-10-28 deploy, Tahti Radio / Tahti Selects stayed LIVE over a 404 HLS for ~8.5 h. Boot reconcile now respawns Liquidsoap for LIVE channels with an open broadcast whose container is gone (rotation template if curated items, else channel; sidecars untouched). `spawnLiquidsoapContainer` always checks Docker, so a stale in-memory entry no longer makes `/spawn` a silent no-op. The STREAM-005 watchdog treats missing segments as stale after a 120 s grace instead of skipping. [#1028](https://github.com/janiluuk/tahti-org/pull/1028). Leftover: what removed the containers during the deploy is unknown.
