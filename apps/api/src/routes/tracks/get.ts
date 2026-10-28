@@ -106,7 +106,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           accessMode: true,
           purchaseTierId: true,
           venue: { select: { name: true, slug: true, verifiedAt: true } },
-          _count: { select: { comments: true } },
+          _count: { select: { comments: true, likes: true, listenEvents: true } },
           channel: {
             select: {
               slug: true,
@@ -172,6 +172,8 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         // Unverified venues have no public page (GET /api/v1/venues/:slug 404s).
         venue: venue?.verifiedAt ? { name: venue.name, slug: venue.slug } : null,
         commentCount: _count.comments,
+        likeCount: _count.likes,
+        playCount: _count.listenEvents,
         downloadCount,
         accessMode: accessMode ?? 'FREE',
         purchaseTierId: purchaseTierId ?? null,
