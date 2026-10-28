@@ -13,9 +13,12 @@ import {
   extractEditorPeaksPyramid,
   finePeaksKey,
 } from '../lib/editor-peaks.js'
+import { extractWaveformPeaks } from '../lib/waveform.js'
 
 /** PERF-04 backfill: compute editorPeaks for sounds ingested before the
- * column existed, and fine peaks for long sounds that don't have them. */
+ * column existed, fine peaks for long sounds that don't have them, and the
+ * track-row waveform (`peaks`) for sounds that never got one (seeded or
+ * imported tracks). */
 export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
 
@@ -26,8 +29,10 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
       status: true,
       durationSec: true,
       editorPeaks: true,
+      peaks: true,
       rawKey: true,
       flacKey: true,
+      mp3Key: true,
       sourceChannels: true,
       channel: { select: { slug: true } },
     },
@@ -35,9 +40,10 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
 
   if (!item || item.status !== 'READY') return
   const wantsFine = needsFinePeaks(item.durationSec, item.editorPeaks)
-  if (item.editorPeaks && !wantsFine) return
+  const wantsRowPeaks = item.peaks === null
+  if (item.editorPeaks && !wantsFine && !wantsRowPeaks) return
 
-  const sourceKey = item.flacKey ?? item.rawKey
+  const sourceKey = item.flacKey ?? item.rawKey ?? item.mp3Key
   if (!sourceKey) return
 
   const durationSec = item.durationSec ?? 60
@@ -48,7 +54,13 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
     const editorPeaks =
       (item.editorPeaks as unknown as PeaksPyramid | null) ??
       (await extractEditorPeaksPyramid(rawPath, durationSec))
-    if (!editorPeaks) return
+    const rowPeaks = wantsRowPeaks ? await extractWaveformPeaks(rawPath) : null
+    if (!editorPeaks) {
+      if (rowPeaks) {
+        await prisma.sound.update({ where: { id: itemId }, data: { peaks: rowPeaks } })
+      }
+      return
+    }
     if (wantsFine) {
       const fine = await extractAndStoreFinePeaks(
         rawPath,
@@ -60,7 +72,10 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
 
     await prisma.sound.update({
       where: { id: itemId },
-      data: { editorPeaks: editorPeaks as unknown as Prisma.InputJsonValue },
+      data: {
+        editorPeaks: editorPeaks as unknown as Prisma.InputJsonValue,
+        ...(rowPeaks ? { peaks: rowPeaks } : {}),
+      },
     })
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
