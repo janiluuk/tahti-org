@@ -77,7 +77,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           peaks: true,
           createdAt: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true } },
+          _count: { select: { likes: true, listenEvents: true, comments: true } },
           channel: {
             select: {
               slug: true,
@@ -107,6 +107,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           createdAt: item.createdAt.toISOString(),
           downloadsEnabled: item.downloadsEnabled,
           likeCount: item._count.likes,
+          commentCount: item._count.comments,
           playCount: item._count.listenEvents,
           downloadCount: downloadsBySoundId.get(item.id) ?? 0,
         })),
