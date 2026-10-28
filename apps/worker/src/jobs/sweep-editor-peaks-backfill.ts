@@ -23,10 +23,14 @@ const defaultJobOptions = {
   removeOnFail: { count: 1000 },
 }
 
-/** PERF-04: enqueue editorPeaks backfill for READY sounds missing the column. */
+/** PERF-04: enqueue the peaks backfill for READY sounds missing editor peaks
+ * or the track-row waveform. */
 export async function processSweepEditorPeaksBackfillJob(_job: Job): Promise<{ enqueued: number }> {
   const items = await prisma.sound.findMany({
-    where: { status: 'READY', editorPeaks: { equals: Prisma.DbNull } },
+    where: {
+      status: 'READY',
+      OR: [{ editorPeaks: { equals: Prisma.DbNull } }, { peaks: { equals: Prisma.DbNull } }],
+    },
     select: { id: true },
     take: BATCH_SIZE,
     orderBy: { createdAt: 'asc' },
