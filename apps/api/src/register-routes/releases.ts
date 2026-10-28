@@ -26,6 +26,7 @@ import meChannelBackdropRoutes from '../routes/me/channel-backdrop.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from '../routes/me/privacy.js'
 import mePressKitImages from '../routes/me/press-kit-images.js'
 import meRadioSlotBookings from '../routes/me/radio-slot-bookings.js'
+import meListeningPartyRoutes from '../routes/listening-parties/me.js'
 
 export async function registerReleaseRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(meReleaseRoutes)
@@ -53,4 +54,5 @@ export async function registerReleaseRoutes(fastify: FastifyInstance): Promise<v
   await fastify.register(mePressKitImages)
   await fastify.register(publicPressKitRoutes)
   await fastify.register(meRadioSlotBookings)
+  await fastify.register(meListeningPartyRoutes)
 }
