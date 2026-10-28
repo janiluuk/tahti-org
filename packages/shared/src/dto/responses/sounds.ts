@@ -120,6 +120,9 @@ export const PublicTrackDetailSchema = z
      * public page), else null. */
     venue: z.object({ name: z.string(), slug: z.string() }).nullable(),
     commentCount: z.number().int(),
+    likeCount: z.number().int(),
+    /** Deduplicated plays (listen events). */
+    playCount: z.number().int(),
     downloadCount: z.number().int(),
     /** False = the artist turned downloads off; the download routes answer 403 `downloads_disabled`. */
     downloadsEnabled: z.boolean(),

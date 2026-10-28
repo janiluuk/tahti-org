@@ -107,6 +107,8 @@ describe('GET /api/tracks/:id', () => {
     expect(body.commentary).toBe('Recorded live at Klubi.')
     expect(body.commentCount).toBe(0)
     expect(body.downloadCount).toBe(0)
+    expect(body.likeCount).toBe(0)
+    expect(body.playCount).toBe(0)
     expect(body.accessMode).toBe('FREE')
     expect(body.isAiGenerated).toBe(false)
     expect(body.downloadsEnabled).toBe(true)
