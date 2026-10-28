@@ -152,7 +152,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 genreCustom: true,
                 peaks: true,
                 downloadsEnabled: true,
-                _count: { select: { likes: true, listenEvents: true } },
+                _count: { select: { likes: true, listenEvents: true, comments: true } },
                 channel: { select: { userId: true } },
               },
             })
@@ -217,6 +217,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 peaks: Array.isArray(linked.peaks) ? (linked.peaks as number[]) : null,
                 downloadsEnabled: linked.downloadsEnabled,
                 likeCount: linked._count.likes,
+                commentCount: linked._count.comments,
                 playCount: linked._count.listenEvents,
                 downloadCount: downloadsBySoundId.get(linked.id) ?? 0,
               }

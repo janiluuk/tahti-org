@@ -98,6 +98,7 @@ describe('GET /api/me/likes', () => {
       likeCount: expect.any(Number),
       playCount: 0,
       downloadCount: 0,
+      commentCount: 0,
     })
     expect(items[0]!.createdAt).toEqual(expect.any(String))
     expect(items[1]!.audioUrl).toBeNull()

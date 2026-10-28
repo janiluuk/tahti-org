@@ -39,7 +39,7 @@ export async function listLikedTracks(
           peaks: true,
           createdAt: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true } },
+          _count: { select: { likes: true, listenEvents: true, comments: true } },
           channel: {
             select: {
               slug: true,
@@ -90,6 +90,7 @@ export async function listLikedTracks(
         createdAt: sound.createdAt.toISOString(),
         downloadsEnabled: sound.downloadsEnabled,
         likeCount: sound._count.likes,
+        commentCount: sound._count.comments,
         playCount: sound._count.listenEvents,
         downloadCount: downloadsBySoundId.get(sound.id) ?? 0,
       }

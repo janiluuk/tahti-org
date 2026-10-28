@@ -36,6 +36,7 @@ export const LikedTrackSchema = z.object({
   likeCount: z.number().int().optional(),
   playCount: z.number().int().optional(),
   downloadCount: z.number().int().optional(),
+  commentCount: z.number().int().optional(),
 })
 
 export const LikedPlaylistResponseSchema = z.object({
