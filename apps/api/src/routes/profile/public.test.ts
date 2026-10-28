@@ -223,6 +223,10 @@ describe('GET /api/v1/u/:username/profile', () => {
       downloadsEnabled: true,
       commentCount: 0,
     })
+    const totals = res.json().totals
+    expect(totals.plays).toBeGreaterThanOrEqual(2)
+    expect(totals.likes).toBeGreaterThanOrEqual(1)
+    expect(totals.downloads).toBeGreaterThanOrEqual(1)
   })
 
   it('lists tracks in the order saved by PUT /api/me/sound/reorder, newest first by default', async () => {
