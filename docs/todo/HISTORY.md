@@ -814,3 +814,13 @@ Leftover: the fingerprint / IP hashes stay out of the export (product call).
 ### 2026-10-27 — Mikseri embed import (`mikseri-embed-import.md`)
 
 Added a validated, authenticated collection-import route for artist-owned Mikseri tracks. It accepts a track ID, track page, or official track embed plus user-supplied metadata and explicit rights confirmation, then stores an `EMBED_ONLY` `URL_EMBED` sound with the `MIKSERI` provider. The API never fetches Mikseri pages or audio. Added the provider to the versioned import catalog, Prisma migration, shared DTO/parser coverage, route coverage, and coordinated Tahti Player UI contract. No leftovers.
+
+### 2026-10-28 — Remove the legacy Next.js web app (`remove-next-web.md`)
+
+Deleted `apps/web` after confirming every public host serves the tahti-player SPA. Also removed
+everything only it used: CI/deploy web image builds and `:17777` health checks, compose/Swarm `web`
+services, the app/wildcard/custom-domain Caddy blocks, turbo/vitest/Makefile/Dockerfile entries,
+`copy-ffmpeg-core.mjs`, and the Next-only e2e smoke. Kept `@tahti/ui` (audio-edit panels),
+`@tahti/addon-sdk`, `@tahti/api-client` and `/api/v1/custom-domain/resolve`. PR
+[#1030](https://github.com/janiluuk/tahti-org/pull/1030). Leftovers in `remaining-work.md`.
+Post-merge: confirm the deploy removed `tahti-stack-web-1`.
