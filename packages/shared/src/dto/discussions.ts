@@ -66,6 +66,8 @@ export const DiscussionTopicListSchema = z.object({
       muted: z.boolean(),
       /** Replies by others since the caller last opened it; 0 when not following. */
       unreadCount: z.number().int().nonnegative(),
+      /** Who wrote the latest reply; null before the first one. */
+      lastReplyBy: z.string().nullable(),
     }),
   ),
 })
