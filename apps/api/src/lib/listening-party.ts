@@ -54,8 +54,6 @@ export const listeningPartySelect = {
           title: true,
           durationSec: true,
           credits: true,
-          streamKey: true,
-          soundId: true,
         },
       },
     },
