@@ -9,6 +9,7 @@ import {
   DiscussionParticipationSchema,
   DiscussionPostViewSchema,
   DiscussionPostsPageSchema,
+  DiscussionsReadAllSchema,
   DiscussionTopicDetailSchema,
   DiscussionTopicListSchema,
   DiscussionPostRemovedSchema,
@@ -434,6 +435,26 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { postId: routeParams.postId, byAuthor },
       })
       return reply.send({ ok: true })
+    },
+  )
+
+  // POST /api/v1/governance/discussions/read-all — marks every followed
+  // topic read, so the list's new-reply counts go back to zero.
+  fastify.post(
+    '/api/v1/governance/discussions/read-all',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(DiscussionsReadAllSchema, 'DiscussionsReadAll'),
+      },
+    },
+    async (request, reply) => {
+      const { count } = await fastify.prisma.discussionParticipant.updateMany({
+        where: { userId: request.sessionUser!.id },
+        data: { lastReadAt: new Date() },
+      })
+      return reply.send({ marked: count })
     },
   )
 }
