@@ -489,6 +489,11 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       : null,
     releases,
     tracks,
+    totals: {
+      plays: tracks.reduce((sum, t) => sum + t.playCount, 0),
+      likes: tracks.reduce((sum, t) => sum + t.likeCount, 0),
+      downloads: tracks.reduce((sum, t) => sum + t.downloadCount, 0),
+    },
     fanTiers: user.fanTiers,
     purchaseTiers: user.channel?.storeEnabled ? user.purchaseTiers : [],
     storePaymentsReady: !stripeEnabled || user.stripeConnectChargesEnabled,

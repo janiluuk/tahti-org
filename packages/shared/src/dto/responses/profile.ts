@@ -77,6 +77,14 @@ export const PublicProfileViewSchema = z.object({
     .nullable(),
   releases: z.array(z.record(z.string(), z.unknown())),
   tracks: z.array(z.record(z.string(), z.unknown())),
+  /** Public totals across the listed tracks, for the profile header. */
+  totals: z
+    .object({
+      plays: z.number().int(),
+      likes: z.number().int(),
+      downloads: z.number().int(),
+    })
+    .optional(),
   fanTiers: z.array(
     z.object({
       id: z.string(),
