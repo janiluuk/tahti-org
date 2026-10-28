@@ -195,10 +195,10 @@ async function hostPurchaseTiers(
   return []
 }
 
-// Bounds the overlap query so ended parties don't pile up in it. A party that
-// started further back than this would need a release over a week long to
-// still be playing.
-const OVERLAP_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000
+/** How far back a party may have started and still be playing. Bounds the
+ * queries for overlapping or live parties so ended ones don't pile up in
+ * them; a party older than this would need a release over a week long. */
+export const PARTY_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Parties on a channel whose play window overlaps [startAt, endAt). */
 export async function findOverlappingParty(
@@ -209,7 +209,7 @@ export async function findOverlappingParty(
     where: {
       channelId: args.channelId,
       canceledAt: null,
-      startAt: { lt: args.endAt, gte: new Date(args.startAt.getTime() - OVERLAP_LOOKBACK_MS) },
+      startAt: { lt: args.endAt, gte: new Date(args.startAt.getTime() - PARTY_LOOKBACK_MS) },
       ...(args.excludeId ? { id: { not: args.excludeId } } : {}),
     },
     select: {

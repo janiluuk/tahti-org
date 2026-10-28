@@ -3,16 +3,21 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  CHANNEL_LISTENING_PARTIES_LIMIT,
   IdParamSchema,
   ListeningPartyDtoSchema,
+  ListeningPartySummaryListSchema,
   ListeningPartyTrackParamsSchema,
   openApiRedirectResponse,
   openApiResponse,
   parseRouteParams,
+  SlugParamSchema,
 } from '@tahti/shared'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import {
+  PARTY_LOOKBACK_MS,
   buildListeningPartyDto,
+  buildListeningPartySummary,
   isPreRelease,
   listeningPartySelect,
   partyTimeline,
@@ -123,6 +128,50 @@ const publicListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
         party.release.tracks.find((t) => t.id === routeParams.trackId)?.durationSec ?? 0
       const ttlSec = Math.min(PUBLIC_STREAM_TTL_SEC, durationSec + PRE_RELEASE_STREAM_SLACK_SEC)
       return reply.redirect(302, await presignedGetUrl(track.streamKey, ttlSec))
+    },
+  )
+
+  fastify.get(
+    '/api/channels/:slug/listening-parties',
+    {
+      schema: {
+        tags: ['listening-parties'],
+        summary: "A channel's upcoming and live listening parties",
+        description: `SCHEDULED and LIVE parties, soonest first, at most ${CHANNEL_LISTENING_PARTIES_LIMIT}.`,
+        response: openApiResponse(ListeningPartySummaryListSchema, 'ListeningPartySummaryList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { slug: routeParams.slug, user: availableUserWhere },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const now = new Date()
+      const where = { channelId: channel.id, canceledAt: null }
+      const [started, upcoming] = await Promise.all([
+        fastify.prisma.listeningParty.findMany({
+          where: {
+            ...where,
+            startAt: { gte: new Date(now.getTime() - PARTY_LOOKBACK_MS), lte: now },
+          },
+          orderBy: { startAt: 'asc' },
+          select: listeningPartySelect,
+        }),
+        fastify.prisma.listeningParty.findMany({
+          where: { ...where, startAt: { gt: now } },
+          orderBy: { startAt: 'asc' },
+          take: CHANNEL_LISTENING_PARTIES_LIMIT,
+          select: listeningPartySelect,
+        }),
+      ])
+      const live = started.filter((p) => partyTimeline(p, now).state === 'LIVE')
+      const parties = [...live, ...upcoming].slice(0, CHANNEL_LISTENING_PARTIES_LIMIT)
+      const items = await Promise.all(parties.map((p) => buildListeningPartySummary(p, now)))
+      return reply.header('Cache-Control', 'public, max-age=30').send({ items })
     },
   )
 }
