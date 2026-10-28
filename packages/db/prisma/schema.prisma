@@ -1038,6 +1038,7 @@ model User {
   purchaseTiers                  PurchaseTier[]
   purchasesAsBuyer               Purchase[]
   releases                       Release[]
+  hostedListeningParties         ListeningParty[]
   revelatorRoyaltyReports        RevelatorRoyaltyReport[]
   mixUploads                     MixUpload[]
   cloudImportJobs                CloudImportJob[]
@@ -1671,6 +1672,7 @@ model Channel {
   addonInstalls          AddonInstall[]
   visualPresets          ChannelVisualPreset[]
   blocks                 ChannelBlock[]
+  listeningParties       ListeningParty[]
 
   @@index([state])
   @@schema("channel")
@@ -1966,6 +1968,31 @@ model ScheduledLiveShow {
 
   @@index([channelId, startAt])
   @@index([seriesId, startAt])
+  @@schema("channel")
+}
+
+/// A scheduled one-time play of a release, start to finish, in the host's
+/// channel. State (SCHEDULED/LIVE/ENDED/CANCELED) is derived from startAt,
+/// the release's track durations, canceledAt and the clock, never stored, so
+/// a re-timed track can't leave a stale state behind. See
+/// computeListeningPartyTimeline in @tahti/shared.
+model ListeningParty {
+  id         String    @id @default(cuid())
+  releaseId  String
+  release    Release   @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  channelId  String
+  channel    Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  hostUserId String
+  host       User      @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  startAt    DateTime
+  /// Markdown, max 2000 chars.
+  hostNote   String?
+  canceledAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([channelId, startAt])
+  @@index([releaseId])
   @@schema("channel")
 }
 
@@ -3618,6 +3645,7 @@ model Release {
   collectionItems         CollectionItem[]
   revelatorRoyaltyReports RevelatorRoyaltyReport[]
   smartLinkClicks         SmartLinkClick[]
+  listeningParties        ListeningParty[]
 
   @@index([userId, releaseDate])
   @@index([userId, state])
