@@ -1977,19 +1977,23 @@ model ScheduledLiveShow {
 /// a re-timed track can't leave a stale state behind. See
 /// computeListeningPartyTimeline in @tahti/shared.
 model ListeningParty {
-  id         String    @id @default(cuid())
-  releaseId  String
-  release    Release   @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  channelId  String
-  channel    Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  hostUserId String
-  host       User      @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
-  startAt    DateTime
+  id                String    @id @default(cuid())
+  releaseId         String
+  release           Release   @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  channelId         String
+  channel           Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  hostUserId        String
+  host              User      @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  startAt           DateTime
   /// Markdown, max 2000 chars.
-  hostNote   String?
-  canceledAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  hostNote          String?
+  canceledAt        DateTime?
+  /// Highest track position the worker has announced in chat. Claimed with a
+  /// conditional update so each track start is announced at most once, even
+  /// with several workers ticking.
+  announcedPosition Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([channelId, startAt])
   @@index([releaseId])
