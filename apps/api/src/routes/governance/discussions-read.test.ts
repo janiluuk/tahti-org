@@ -73,10 +73,12 @@ describe('Members read discussion topics', () => {
     expect(res.statusCode).toBe(200)
     const mine = res.json().topics.filter((t: { title: string }) => t.title.startsWith(PREFIX))
     expect(mine.map((t: { id: string }) => t.id)).toEqual([pinnedId, otherId])
+    expect(mine[1].lastReplyBy).toBeNull()
     expect(mine[0]).toMatchObject({
       following: true,
       muted: true,
       postCount: 1,
+      lastReplyBy: expect.any(String),
       createdBy: 'Board Aino',
     })
     expect(mine[1]).toMatchObject({ following: false, muted: false })
