@@ -135,6 +135,7 @@ describe('/api/discover/latest-tracks', () => {
       likeCount: 0,
       playCount: 1,
       downloadCount: 0,
+      commentCount: 0,
     })
     expect(item.createdAt).toEqual(expect.any(String))
   })

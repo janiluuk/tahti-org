@@ -56,7 +56,12 @@ describe('GET /api/me/sound — public totals per track', () => {
     const res = await app.inject({ method: 'GET', url: '/api/me/sound', headers: { cookie } })
     expect(res.statusCode).toBe(200)
     const item = res.json().find((s: { id: string }) => s.id === soundId)
-    expect(item).toMatchObject({ likeCount: 1, playCount: 2, downloadCount: 1 })
+    expect(item).toMatchObject({
+      likeCount: 1,
+      playCount: 2,
+      downloadCount: 1,
+      commentCount: 0,
+    })
     expect(item._count).toBeUndefined()
   })
 })

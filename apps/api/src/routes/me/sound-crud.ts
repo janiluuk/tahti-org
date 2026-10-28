@@ -68,7 +68,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         take: 100,
         select: {
           ...soundMetadataSelect,
-          _count: { select: { likes: true, listenEvents: true } },
+          _count: { select: { likes: true, listenEvents: true, comments: true } },
         },
       })
       const downloadCounts = items.length
@@ -85,6 +85,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         items.map(({ _count, ...item }) => ({
           ...serializeSound(item),
           likeCount: _count.likes,
+          commentCount: _count.comments,
           playCount: _count.listenEvents,
           downloadCount: downloadsBySoundId.get(item.id) ?? 0,
         })),
