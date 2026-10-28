@@ -224,6 +224,21 @@ describe('M12 — releases and public profile', () => {
       data: { genre: null, genreCustom: null },
     })
     expect(await smartLinkGenre()).toBe('Techno')
+    await prisma.listenEvent.create({
+      data: { soundId: sound.id, dedupeKey: 'sl1', dayBucket: '2026-10-01' },
+    })
+    const linkedTrack = (
+      await app.inject({ method: 'GET', url: `/api/v1/r/${release!.smartLinkSlug}` })
+    )
+      .json()
+      .release.tracks.find((t: { soundId: string | null }) => t.soundId === sound.id)
+    expect(linkedTrack).toMatchObject({
+      genre: 'Techno',
+      downloadsEnabled: true,
+      likeCount: 0,
+      playCount: 1,
+      downloadCount: 0,
+    })
 
     await prisma.releaseTrack.update({
       where: { id: release!.tracks[0]!.id },
