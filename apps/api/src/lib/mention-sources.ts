@@ -76,7 +76,12 @@ export async function resolveMentionSources(
     .map((sourceId) => sourceId.split(':')[1])
     .filter((id): id is string => Boolean(id))
 
-  const [sounds, releases, chatChannels] = await Promise.all([
+  // A discussion mention's sourceId is `${topicId}:${postId}`.
+  const discussionTopicIds = idsFor('DISCUSSION')
+    .map((sourceId) => sourceId.split(':')[0])
+    .filter((id): id is string => Boolean(id))
+
+  const [sounds, releases, chatChannels, discussionTopics] = await Promise.all([
     soundIds.length > 0
       ? prisma.sound.findMany({
           where: { id: { in: soundIds }, isPublic: true, status: 'READY' },
@@ -95,7 +100,14 @@ export async function resolveMentionSources(
           select: { id: true, slug: true },
         })
       : Promise.resolve([]),
+    discussionTopicIds.length > 0
+      ? prisma.discussionTopic.findMany({
+          where: { id: { in: discussionTopicIds } },
+          select: { id: true, title: true },
+        })
+      : Promise.resolve([]),
   ])
+  const topicById = new Map(discussionTopics.map((t) => [t.id, t]))
   const soundById = new Map(sounds.map((s) => [s.id, s]))
   const releaseById = new Map(releases.map((r) => [r.id, r]))
   const chatChannelById = new Map(chatChannels.map((c) => [c.id, c]))
@@ -141,6 +153,14 @@ export async function resolveMentionSources(
         const channelId = m.sourceId.split(':')[1]
         const channel = channelId ? chatChannelById.get(channelId) : undefined
         return { ...base, sourceTitle: name, sourceUrl: channel ? `/chat/${channel.slug}` : null }
+      }
+      case 'DISCUSSION': {
+        const topic = topicById.get(m.sourceId.split(':')[0] ?? '')
+        return {
+          ...base,
+          sourceTitle: topic?.title ?? null,
+          sourceUrl: topic ? `/governance/discussions/${topic.id}` : null,
+        }
       }
       default:
         return { ...base, sourceTitle: null, sourceUrl: null }

@@ -23,7 +23,10 @@ import { requireMember } from '../../plugins/auth.js'
 import { DISCUSSION_TOPIC_SELECT, toDiscussionTopicView } from '../../lib/discussion-view.js'
 import { userName } from '../../lib/safe-names.js'
 import { auditLog } from '../../lib/audit.js'
-import { notifyDiscussionParticipants } from '../../lib/discussion-notifications.js'
+import {
+  notifyDiscussionMentions,
+  notifyDiscussionParticipants,
+} from '../../lib/discussion-notifications.js'
 
 /** Replies per page: the topic read sends the latest page, older pages come
  * from GET .../posts?before=<postId>. */
@@ -246,6 +249,9 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
       ])
       await notifyDiscussionParticipants(fastify.prisma, topic, user.id).catch((err: unknown) => {
         request.log.error({ err, topicId: topic.id }, 'discussion reply notification failed')
+      })
+      await notifyDiscussionMentions(fastify.prisma, topic, post, user.id).catch((err: unknown) => {
+        request.log.error({ err, topicId: topic.id }, 'discussion mention notification failed')
       })
       return reply.status(201).send({
         id: post.id.toString(),

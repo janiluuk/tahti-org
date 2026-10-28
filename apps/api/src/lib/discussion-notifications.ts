@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import { availableUserWhere } from '@tahti/db'
 import { membersToNotify } from './motion-notifications.js'
+import { recordMentions } from './mentions.js'
 
 /**
  * Tells a topic's participants that someone replied, skipping the replier and
@@ -102,4 +103,40 @@ export async function notifyDiscussionClosed(
     })),
   })
   return participants.length
+}
+
+/** Records @mentions in a discussion reply (the Mentions page) and tells the
+ * mentioned members, skipping anyone who turned mentions off, muted or
+ * blocked the replier. Non-members can't open the topic, so they are not
+ * told. Returns how many were told. */
+export async function notifyDiscussionMentions(
+  prisma: PrismaClient,
+  topic: { id: string; title: string },
+  post: { id: bigint; body: string },
+  actorUserId: string,
+): Promise<number> {
+  const targetIds = await recordMentions(
+    prisma,
+    actorUserId,
+    post.body,
+    'DISCUSSION',
+    `${topic.id}:${post.id.toString()}`,
+  )
+  if (targetIds.length === 0) return 0
+  const members = await prisma.user.findMany({
+    where: { id: { in: targetIds }, isMember: true },
+    select: { id: true },
+  })
+  if (members.length === 0) return 0
+  await prisma.notification.createMany({
+    data: members.map(({ id }) => ({
+      userId: id,
+      type: 'DISCUSSION_MENTION' as const,
+      actorUserId,
+      title: 'You were mentioned in a discussion',
+      body: `In "${topic.title}".`,
+      url: `/governance/discussions/${topic.id}`,
+    })),
+  })
+  return members.length
 }
