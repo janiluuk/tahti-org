@@ -103,6 +103,7 @@ describe('public collection surfaces hide private entries', () => {
       likeCount: 0,
       playCount: 1,
       downloadCount: 0,
+      commentCount: 0,
     })
     expect(sound._count).toBeUndefined()
   })

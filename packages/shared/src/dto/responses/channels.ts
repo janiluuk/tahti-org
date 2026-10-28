@@ -244,6 +244,7 @@ export const LatestTrackItemSchema = TahtiSelectsGalleryItemSchema.extend({
   likeCount: z.number().int(),
   playCount: z.number().int(),
   downloadCount: z.number().int(),
+  commentCount: z.number().int(),
 })
 
 export const LatestTracksResponseSchema = z.object({

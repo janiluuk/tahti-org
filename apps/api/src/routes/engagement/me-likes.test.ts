@@ -93,6 +93,13 @@ describe('GET /api/me/likes', () => {
     expect(items.map((i) => i.id)).toEqual([newerId, gatedId, olderId])
     expect(items[0]!.artistDisplayName).toBe('Liked Artist')
     expect(items[0]!.audioUrl).toBe('https://minio.test/mp3/liked-newer.mp3')
+    expect(items[0]).toMatchObject({
+      downloadsEnabled: true,
+      likeCount: expect.any(Number),
+      playCount: 0,
+      downloadCount: 0,
+    })
+    expect(items[0]!.createdAt).toEqual(expect.any(String))
     expect(items[1]!.audioUrl).toBeNull()
   })
 

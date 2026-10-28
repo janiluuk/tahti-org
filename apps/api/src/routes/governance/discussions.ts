@@ -91,6 +91,11 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           ...DISCUSSION_TOPIC_SELECT,
           participants: { where: { userId }, select: { mutedAt: true } },
+          posts: {
+            orderBy: { id: 'desc' },
+            take: 1,
+            select: { author: { select: { username: true, displayName: true } } },
+          },
         },
       })
       const unread = await fastify.prisma.$queryRaw<{ topicId: string; unread: bigint }[]>(
@@ -110,6 +115,11 @@ const discussionRoutes: FastifyPluginAsync = async (fastify) => {
           following: row.participants.length > 0,
           muted: Boolean(row.participants[0]?.mutedAt),
           unreadCount: unreadByTopic.get(row.id) ?? 0,
+          lastReplyBy: row.posts[0]
+            ? row.posts[0].author
+              ? userName(row.posts[0].author)
+              : 'Deleted account'
+            : null,
         })),
       })
     },
