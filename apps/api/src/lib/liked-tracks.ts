@@ -33,6 +33,13 @@ export async function listLikedTracks(
           flacKey: true,
           accessMode: true,
           purchaseTierId: true,
+          durationSec: true,
+          genre: true,
+          genreCustom: true,
+          peaks: true,
+          createdAt: true,
+          downloadsEnabled: true,
+          _count: { select: { likes: true, listenEvents: true } },
           channel: {
             select: {
               slug: true,
@@ -44,6 +51,18 @@ export async function listLikedTracks(
       },
     },
   })
+
+  const soundIds = likes.map(({ sound }) => sound.id)
+  const downloadCounts = soundIds.length
+    ? await prisma.download.groupBy({
+        by: ['soundId'],
+        where: { soundId: { in: soundIds }, countedAt: { not: null } },
+        _count: { _all: true },
+      })
+    : []
+  const downloadsBySoundId = new Map(
+    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+  )
 
   return Promise.all(
     likes.map(async ({ createdAt, sound }) => {
@@ -65,6 +84,14 @@ export async function listLikedTracks(
         artistDisplayName: sound.artistName || safeDisplayName(artist.displayName, artist.username),
         likedAt: createdAt.toISOString(),
         url: resolveChannelUrl(sound.channel.slug, { hash: `sound-item-${sound.id}` }),
+        durationSec: sound.durationSec,
+        genre: sound.genreCustom ?? sound.genre,
+        peaks: Array.isArray(sound.peaks) ? (sound.peaks as number[]) : null,
+        createdAt: sound.createdAt.toISOString(),
+        downloadsEnabled: sound.downloadsEnabled,
+        likeCount: sound._count.likes,
+        playCount: sound._count.listenEvents,
+        downloadCount: downloadsBySoundId.get(sound.id) ?? 0,
       }
     }),
   )
