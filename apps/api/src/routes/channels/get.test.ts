@@ -62,6 +62,7 @@ describe('GET /api/channels/:slug', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.slug).toBe('channel-get-testuser')
+    expect(body.publicPlays).toBe(0)
     expect(body.user.displayName).toBe('Channel Get Test')
     expect(body.user.username).toBe('channel-get-testuser')
     expect(body.user.isMember).toBe(true)
