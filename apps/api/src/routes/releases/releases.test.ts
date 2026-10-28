@@ -238,6 +238,7 @@ describe('M12 — releases and public profile', () => {
       likeCount: 0,
       playCount: 1,
       downloadCount: 0,
+      commentCount: 0,
     })
 
     await prisma.releaseTrack.update({
