@@ -2,9 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
-import type { Prisma } from '@tahti/db'
+import type { Prisma, PrismaClient } from '@tahti/db'
 import {
   CreateListeningPartyBodySchema,
+  IdParamSchema,
   LISTENING_PARTY_MAX_LEAD_MS,
   LISTENING_PARTY_MIN_LEAD_MS,
   ListeningPartyDtoSchema,
@@ -12,6 +13,8 @@ import {
   listeningPartyDurationSec,
   openApiResponse,
   openApiResponses,
+  parseRouteParams,
+  UpdateListeningPartyBodySchema,
 } from '@tahti/shared'
 import type { ZodError } from 'zod'
 import { requireAuth } from '../../plugins/auth.js'
@@ -20,6 +23,8 @@ import {
   buildListeningPartySummary,
   findOverlappingParty,
   listeningPartySelect,
+  partyTimeline,
+  type ListeningPartyRow,
 } from '../../lib/listening-party.js'
 
 function badRequest(reply: FastifyReply, error: ZodError) {
@@ -45,6 +50,33 @@ async function lockChannelParties(tx: Prisma.TransactionClient, channelId: strin
 }
 
 class OverlapError extends Error {}
+
+/** The party when the signed-in user hosts it; otherwise the reply is sent. */
+async function loadHostedParty(
+  prisma: PrismaClient,
+  reply: FastifyReply,
+  params: unknown,
+  userId: string,
+): Promise<ListeningPartyRow | null> {
+  const routeParams = parseRouteParams(IdParamSchema, params)
+  if (!routeParams) {
+    await reply.status(400).send({ error: 'Invalid path parameters' })
+    return null
+  }
+  const party = await prisma.listeningParty.findUnique({
+    where: { id: routeParams.id },
+    select: listeningPartySelect,
+  })
+  if (!party) {
+    await reply.status(404).send({ error: 'Listening party not found' })
+    return null
+  }
+  if (party.hostUserId !== userId) {
+    await reply.status(403).send({ error: 'Not your listening party' })
+    return null
+  }
+  return party
+}
 
 const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -156,6 +188,80 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
       })
       const items = await Promise.all(parties.map((p) => buildListeningPartySummary(p, now)))
       return reply.send({ items })
+    },
+  )
+
+  fastify.patch(
+    '/api/me/listening-parties/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['listening-parties'],
+        summary: 'Reschedule a listening party or edit its host note',
+        description:
+          'Only while SCHEDULED: 409 once LIVE, ENDED or CANCELED, and 409 when the new time overlaps another party on your channel. startAt follows the same 5 minute / 365 day window as create.',
+        response: openApiResponse(ListeningPartyDtoSchema, 'ListeningParty'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const party = await loadHostedParty(fastify.prisma, reply, request.params, user.id)
+      if (!party) return reply
+      const parsed = UpdateListeningPartyBodySchema.safeParse(request.body)
+      if (!parsed.success) return badRequest(reply, parsed.error)
+      const body = parsed.data
+      const now = new Date()
+
+      const { state } = partyTimeline(party, now)
+      if (state !== 'SCHEDULED') {
+        return reply
+          .status(409)
+          .send({ error: `A ${state.toLowerCase()} listening party can't be changed` })
+      }
+
+      const startAt = body.startAt ? new Date(body.startAt) : undefined
+      if (startAt) {
+        const startError = startAtError(startAt, now)
+        if (startError) return reply.status(400).send({ error: startError })
+      }
+
+      try {
+        await fastify.prisma.$transaction(async (tx) => {
+          if (startAt) {
+            await lockChannelParties(tx, party.channelId)
+            const endAt = new Date(
+              startAt.getTime() + listeningPartyDurationSec(party.release.tracks) * 1000,
+            )
+            const clash = await findOverlappingParty(tx, {
+              channelId: party.channelId,
+              startAt,
+              endAt,
+              excludeId: party.id,
+            })
+            if (clash) throw new OverlapError()
+          }
+          await tx.listeningParty.update({
+            where: { id: party.id },
+            data: {
+              ...(startAt ? { startAt } : {}),
+              ...(body.hostNote !== undefined ? { hostNote: body.hostNote } : {}),
+            },
+          })
+        })
+      } catch (err) {
+        if (err instanceof OverlapError) {
+          return reply
+            .status(409)
+            .send({ error: 'Another listening party on your channel overlaps this time' })
+        }
+        throw err
+      }
+
+      const updated = await fastify.prisma.listeningParty.findUniqueOrThrow({
+        where: { id: party.id },
+        select: listeningPartySelect,
+      })
+      return reply.send(await buildListeningPartyDto(fastify.prisma, updated, now))
     },
   )
 }
