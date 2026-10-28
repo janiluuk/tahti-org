@@ -8,13 +8,16 @@ import {
   LISTENING_PARTY_MAX_LEAD_MS,
   LISTENING_PARTY_MIN_LEAD_MS,
   ListeningPartyDtoSchema,
+  ListeningPartySummaryListSchema,
   listeningPartyDurationSec,
+  openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
 import type { ZodError } from 'zod'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   buildListeningPartyDto,
+  buildListeningPartySummary,
   findOverlappingParty,
   listeningPartySelect,
 } from '../../lib/listening-party.js'
@@ -129,6 +132,30 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
         select: listeningPartySelect,
       })
       return reply.status(201).send(await buildListeningPartyDto(fastify.prisma, party, now))
+    },
+  )
+
+  fastify.get(
+    '/api/me/listening-parties',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['listening-parties'],
+        summary: 'Your listening parties',
+        description: 'Every party you host, in any state, latest startAt first.',
+        response: openApiResponse(ListeningPartySummaryListSchema, 'ListeningPartySummaryList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const now = new Date()
+      const parties = await fastify.prisma.listeningParty.findMany({
+        where: { hostUserId: user.id },
+        orderBy: { startAt: 'desc' },
+        select: listeningPartySelect,
+      })
+      const items = await Promise.all(parties.map((p) => buildListeningPartySummary(p, now)))
+      return reply.send({ items })
     },
   )
 }
