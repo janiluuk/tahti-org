@@ -824,3 +824,6 @@ services, the app/wildcard/custom-domain Caddy blocks, turbo/vitest/Makefile/Doc
 `@tahti/addon-sdk`, `@tahti/api-client` and `/api/v1/custom-domain/resolve`. PR
 [#1030](https://github.com/janiluuk/tahti-org/pull/1030). Leftovers in `remaining-work.md`.
 Post-merge: confirm the deploy removed `tahti-stack-web-1`.
+### 2026-10-28 — Orchestrator respawns LIVE channels lost across a restart (incident fix)
+
+After the 2026-10-28 deploy, Tahti Radio / Tahti Selects stayed LIVE over a 404 HLS for ~8.5 h. Boot reconcile now respawns Liquidsoap for LIVE channels with an open broadcast whose container is gone (rotation template if curated items, else channel; sidecars untouched). `spawnLiquidsoapContainer` always checks Docker, so a stale in-memory entry no longer makes `/spawn` a silent no-op. The STREAM-005 watchdog treats missing segments as stale after a 120 s grace instead of skipping. [#1028](https://github.com/janiluuk/tahti-org/pull/1028). Leftover: what removed the containers during the deploy is unknown.

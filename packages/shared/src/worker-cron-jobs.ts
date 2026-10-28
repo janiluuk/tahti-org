@@ -73,6 +73,15 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-001: mirror live HLS segments from volume to MinIO hls-live bucket',
   },
   {
+    name: 'listening-party-announce',
+    // Track starts are announced in chat; a minute's cron floor would post
+    // "Now playing" up to a minute late.
+    everyMs: 15_000,
+    jobId: 'listening-party-announce-cron',
+    description:
+      'Post "Now playing n/N · Title" in the host channel chat when a live listening party moves to a new track (once per track)',
+  },
+  {
     name: 'hls-caddy-egress-sync',
     pattern: '* * * * *',
     jobId: 'hls-caddy-egress-sync-cron',

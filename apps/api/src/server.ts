@@ -259,6 +259,10 @@ export async function buildApp(opts: BuildOptions = {}) {
         { name: 'channel', description: 'Channel + sound management' },
         { name: 'chat', description: 'Live chat (Centrifugo)' },
         { name: 'releases', description: 'Release catalogue and smart links' },
+        {
+          name: 'listening-parties',
+          description: 'Scheduled album plays with shared timing, liner notes and chat',
+        },
         { name: 'downloads', description: 'Public downloads with anti-fraud' },
         { name: 'newsletter', description: 'Fan newsletter system' },
         { name: 'fansubs', description: 'Fan-to-artist subscriptions' },
