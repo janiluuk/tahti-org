@@ -264,6 +264,39 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(await buildListeningPartyDto(fastify.prisma, updated, now))
     },
   )
+
+  fastify.post(
+    '/api/me/listening-parties/:id/cancel',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['listening-parties'],
+        summary: 'Cancel a listening party',
+        description:
+          'Cancels a SCHEDULED or LIVE party; canceling one already CANCELED returns it unchanged. 409 once ENDED.',
+        response: openApiResponse(ListeningPartyDtoSchema, 'ListeningParty'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const party = await loadHostedParty(fastify.prisma, reply, request.params, user.id)
+      if (!party) return reply
+      const now = new Date()
+      const { state } = partyTimeline(party, now)
+      if (state === 'ENDED') {
+        return reply.status(409).send({ error: 'This listening party has already ended' })
+      }
+      if (state === 'CANCELED') {
+        return reply.send(await buildListeningPartyDto(fastify.prisma, party, now))
+      }
+      const canceled = await fastify.prisma.listeningParty.update({
+        where: { id: party.id },
+        data: { canceledAt: now },
+        select: listeningPartySelect,
+      })
+      return reply.send(await buildListeningPartyDto(fastify.prisma, canceled, now))
+    },
+  )
 }
 
 export default meListeningPartyRoutes
