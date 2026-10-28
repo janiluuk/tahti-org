@@ -59,6 +59,8 @@ export const DiscussionParticipationSchema = z.object({
 
 export const DiscussionPostRemovedSchema = z.object({ ok: z.literal(true) })
 
+export const DiscussionsReadAllSchema = z.object({ marked: z.number().int() })
+
 export const DiscussionTopicListSchema = z.object({
   topics: z.array(
     DiscussionTopicViewSchema.extend({

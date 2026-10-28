@@ -80,4 +80,17 @@ describe('Unread replies in discussion topics', () => {
     await reply(otherCookie, 'Three')
     expect(await unreadCount()).toBe(1)
   })
+
+  it('marks every followed topic read at once', async () => {
+    await reply(otherCookie, 'Four')
+    expect(await unreadCount()).toBeGreaterThan(0)
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/governance/discussions/read-all',
+      headers: { cookie: readerCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().marked).toBeGreaterThan(0)
+    expect(await unreadCount()).toBe(0)
+  })
 })
