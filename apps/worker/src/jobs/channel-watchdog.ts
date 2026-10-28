@@ -13,6 +13,9 @@ const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
 const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
 const RESTART_WINDOW_MS = 10 * 60 * 1000
 const MAX_RESTARTS = 2
+/** A broadcast this young may simply not have written its first segment yet. */
+const MISSING_SEGMENTS_GRACE_MS =
+  parseInt(process.env.HLS_MISSING_SEGMENTS_GRACE_SECONDS ?? '120', 10) * 1000
 
 function redisUrl(): string {
   return process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -54,7 +57,7 @@ export async function processChannelWatchdogJob(
         where: { endedAt: null },
         orderBy: { startedAt: 'desc' },
         take: 1,
-        select: { id: true },
+        select: { id: true, startedAt: true },
       },
       // Always-on curated channels (Tahti Selects) use the rotation template — no
       // live source ever connects, so this is the only signal that distinguishes them.
@@ -66,23 +69,32 @@ export async function processChannelWatchdogJob(
   let skipped = 0
 
   for (const ch of live) {
-    const broadcastId = ch.broadcasts[0]?.id
-    if (!broadcastId) {
+    const broadcast = ch.broadcasts[0]
+    if (!broadcast) {
       skipped++
       continue
     }
+    const broadcastId = broadcast.id
 
+    // No segments anywhere is the worst kind of stale, not "unknown": once a
+    // channel's Liquidsoap container is gone nothing rewrites its HLS dir, and
+    // hls-live-prune drops the last MinIO copies, so a dead channel ends up
+    // here permanently while the API keeps reporting it LIVE.
     const age = await segmentAgeSec(ch.id, ch.slug)
     if (age === null) {
-      skipped++
+      if (Date.now() - broadcast.startedAt.getTime() < MISSING_SEGMENTS_GRACE_MS) {
+        skipped++
+        continue
+      }
+    } else if (age <= STALE_SEC) {
       continue
     }
-    if (age <= STALE_SEC) continue
+    const ageLabel = age === null ? 'missing' : `${age.toFixed(0)}s`
 
     const restartCount = await recordRestart(ch.id)
     if (restartCount > MAX_RESTARTS) {
       console.error(
-        `[channel-watchdog] ${ch.slug}: segment stale ${age.toFixed(0)}s but restart cap hit (${restartCount} in 10m)`,
+        `[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but restart cap hit (${restartCount} in 10m)`,
       )
       skipped++
       continue
