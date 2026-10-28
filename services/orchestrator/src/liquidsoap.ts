@@ -245,22 +245,50 @@ export function getContainerNameForChannel(channelId: string): string | undefine
   return activeChannels.get(channelId)
 }
 
-/** activeChannels is in-memory and empty on every fresh orchestrator process —
- * a channel whose Liquidsoap container was spawned before this restart (and
- * never actually stopped, e.g. Tahti Radio's 24/7 rotation) keeps playing
- * fine, but getActiveChannelEntries() silently returns nothing for it until
- * something calls spawnLiquidsoapContainer again. That starves the STREAM-012
- * now-playing poller (now-playing-sync.ts), which iterates that same list —
- * "now playing" freezes at whatever it last was, with no error anywhere to
- * point at. Call once at boot to reconcile against real Docker state before
- * the poller starts, the same check spawnLiquidsoapContainer already does
- * per-channel on demand, just proactively for everything already running. */
-export async function reconcileActiveChannelsOnBoot(): Promise<void> {
+/** Running or restarting — either way the container holds its name, so a fresh
+ * `docker run --name` would conflict with it. */
+async function isLiquidsoapContainerUp(containerName: string): Promise<boolean> {
+  const { stdout } = await execAsync(
+    `docker ps -q --filter "name=^/${containerName}$" --filter "status=running" --filter "status=restarting"`,
+  ).catch(() => ({ stdout: '' }))
+  return stdout.trim().length > 0
+}
+
+export interface BootReconcileResult {
+  registered: string[]
+  respawned: string[]
+  failed: string[]
+  skipped: string[]
+}
+
+/** activeChannels is in-memory and empty on every fresh orchestrator process.
+ * A LIVE channel whose container survived the restart is re-registered so the
+ * STREAM-012 now-playing poller (which iterates getActiveChannelEntries()) and
+ * the manage-panel controls see it. A LIVE channel whose container did NOT
+ * survive is respawned: a LIVE channel with an open Broadcast is one the API
+ * still advertises to listeners, and both templates keep playing without a live
+ * encoder (channel: live → archive rotation → blank; rotation: curated items),
+ * so leaving it down only produces a LIVE badge over a 404 playlist. Only the
+ * Liquidsoap container is respawned, as /restart does — recorder and edge
+ * encoder sidecars may still be attached to a live session and recreating them
+ * would cut the recording or drop the artist's RTMP connection. */
+export async function reconcileActiveChannelsOnBoot(): Promise<BootReconcileResult> {
+  const result: BootReconcileResult = { registered: [], respawned: [], failed: [], skipped: [] }
   const live = await prisma.channel.findMany({
     where: { state: 'LIVE' },
-    select: { id: true, slug: true },
+    select: {
+      id: true,
+      slug: true,
+      broadcasts: {
+        where: { endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        take: 1,
+        select: { id: true, source: true },
+      },
+      curatedRotationItems: { select: { id: true }, take: 1 },
+    },
   })
-  if (live.length === 0) return
+  if (live.length === 0) return result
 
   const { stdout } = await execAsync(
     `docker ps --format '{{.Names}}' --filter "status=running"`,
@@ -276,8 +304,31 @@ export async function reconcileActiveChannelsOnBoot(): Promise<void> {
     const containerName = `tahti-channel-${ch.slug}`
     if (runningNames.has(containerName)) {
       activeChannels.set(ch.id, containerName)
+      result.registered.push(ch.slug)
+      continue
+    }
+
+    const broadcast = ch.broadcasts[0]
+    if (!broadcast) {
+      console.warn(`[orchestrator] boot: ${ch.slug} is LIVE with no open broadcast, not respawning`)
+      result.skipped.push(ch.slug)
+      continue
+    }
+
+    const templateKind: LiquidsoapTemplateKind =
+      ch.curatedRotationItems.length > 0 ? 'rotation' : 'channel'
+    try {
+      await spawnLiquidsoapContainer(ch.id, ch.slug, broadcast.id, broadcast.source, templateKind)
+      console.warn(
+        `[orchestrator] boot: respawned missing Liquidsoap container for LIVE channel ${ch.slug} (${templateKind})`,
+      )
+      result.respawned.push(ch.slug)
+    } catch (err) {
+      console.error(`[orchestrator] boot: respawn failed for ${ch.slug}:`, err)
+      result.failed.push(ch.slug)
     }
   }
+  return result
 }
 
 export type RtmpTargetLiveStatus = 'connected' | 'error' | 'offline'
@@ -328,23 +379,16 @@ export async function spawnLiquidsoapContainer(
   source: BroadcastSource = 'ICECAST',
   templateKind: LiquidsoapTemplateKind = 'channel',
 ): Promise<void> {
-  if (activeChannels.has(channelId)) {
-    return
-  }
-
-  // activeChannels is in-memory and lost on orchestrator restart. Without this
-  // check, a restarted orchestrator has no idea the container is already up and
-  // retries `docker run --name X` on every tick, which always fails with a name
-  // conflict against the still-running container — it can never recover on its
-  // own. Reconcile with actual Docker state before assuming nothing is running.
+  // activeChannels can outlive the container it points at: a container
+  // registered at boot (or spawned earlier) can be removed out from under this
+  // process. Trusting the map alone would make every later /spawn a silent
+  // no-op that still reports success, so check real Docker state every time.
   const containerName = `tahti-channel-${slug}`
-  const { stdout: runningId } = await execAsync(
-    `docker ps -q --filter "name=^/${containerName}$" --filter "status=running"`,
-  ).catch(() => ({ stdout: '' }))
-  if (runningId.trim()) {
+  if (await isLiquidsoapContainerUp(containerName)) {
     activeChannels.set(channelId, containerName)
     return
   }
+  activeChannels.delete(channelId)
 
   // The running check above only covers the happy path. A container that
   // exited without being removed (e.g. every container gets killed by an

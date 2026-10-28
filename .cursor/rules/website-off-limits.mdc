@@ -7,7 +7,7 @@ alwaysApply: true
 
 # Marketing site (`website/`) — off limits by default
 
-The `website/` directory is the **tahti.live static marketing site** (separate from `apps/web`). It has its own deploy pipeline and assets.
+The `website/` directory is the **tahti.live static marketing site** (separate from the web app in `../tahti-player`). It has its own deploy pipeline and assets.
 
 ## Rules for agents
 

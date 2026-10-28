@@ -825,3 +825,15 @@ Down lists each silent slug with how long; critical when Tahti Radio or a curate
 channel is silent, otherwise degraded. Cached `LIVE_STREAMS_CHECK_CACHE_MS` (30 s); Prometheus
 gauge `tahti_live_streams_silent`. Follows the 2026-10-28 incident where six LIVE channels had
 no HLS output for ~8.5 h unnoticed. No leftovers.
+### 2026-10-28 — Remove the legacy Next.js web app (`remove-next-web.md`)
+
+Deleted `apps/web` after confirming every public host serves the tahti-player SPA. Also removed
+everything only it used: CI/deploy web image builds and `:17777` health checks, compose/Swarm `web`
+services, the app/wildcard/custom-domain Caddy blocks, turbo/vitest/Makefile/Dockerfile entries,
+`copy-ffmpeg-core.mjs`, and the Next-only e2e smoke. Kept `@tahti/ui` (audio-edit panels),
+`@tahti/addon-sdk`, `@tahti/api-client` and `/api/v1/custom-domain/resolve`. PR
+[#1030](https://github.com/janiluuk/tahti-org/pull/1030). Leftovers in `remaining-work.md`.
+Post-merge: confirm the deploy removed `tahti-stack-web-1`.
+### 2026-10-28 — Orchestrator respawns LIVE channels lost across a restart (incident fix)
+
+After the 2026-10-28 deploy, Tahti Radio / Tahti Selects stayed LIVE over a 404 HLS for ~8.5 h. Boot reconcile now respawns Liquidsoap for LIVE channels with an open broadcast whose container is gone (rotation template if curated items, else channel; sidecars untouched). `spawnLiquidsoapContainer` always checks Docker, so a stale in-memory entry no longer makes `/spawn` a silent no-op. The STREAM-005 watchdog treats missing segments as stale after a 120 s grace instead of skipping. [#1028](https://github.com/janiluuk/tahti-org/pull/1028). Leftover: what removed the containers during the deploy is unknown.

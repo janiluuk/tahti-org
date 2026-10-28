@@ -97,7 +97,7 @@ else
 fi
 
 ssh_remote "cd '${REMOTE_PATH}' && \
-  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push radio-discord-bot"
+  RELEASE_VERSION='${RELEASE_VERSION}' ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api worker orchestrator db-push radio-discord-bot"
 
 # ── Up ────────────────────────────────────────────────────────────────────────
 echo "==> Starting stack on ${HOST}"
@@ -111,15 +111,8 @@ ssh_remote "for i in \$(seq 1 30); do
   sleep 3
 done"
 
-echo "==> Waiting for Web..."
-ssh_remote "for i in \$(seq 1 30); do
-  curl -sf -o /dev/null http://127.0.0.1:17777/ 2>&1 && echo '✓ Web healthy' && break
-  sleep 3
-done"
-
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Tahti stack deployed on ${HOST}"
 echo "  API:  http://${HOST}:15011/health"
-echo "  Web:  http://${HOST}:17777"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

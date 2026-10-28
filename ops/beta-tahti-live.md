@@ -38,4 +38,4 @@ Details: [`tahti-player/packages/tahti-web/deploy/README.md`](../../tahti-player
 
 ## Production cutover
 
-When replacing production `apps/web` with this client, follow **[`nuclear-web-cutover.md`](nuclear-web-cutover.md)** → [`CUTOVER.md`](../../tahti-player/packages/tahti-web/CUTOVER.md).
+This client replaced the Next.js `apps/web` on every production host (now removed from this repo); history in **[`nuclear-web-cutover.md`](nuclear-web-cutover.md)** → [`CUTOVER.md`](../../tahti-player/packages/tahti-web/CUTOVER.md).

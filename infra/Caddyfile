@@ -1,12 +1,6 @@
 {
 	email ops@tahti.live
 	admin 0.0.0.0:2019
-	# Required for on_demand TLS below (*.tahti.live wildcard + custom-domain catch-all) —
-	# Caddy refuses to enable on-demand TLS at all without a permission endpoint to prevent
-	# cert-issuance abuse. See apps/api/src/routes/internal/tls-ask.ts.
-	on_demand_tls {
-		ask http://api:3001/internal/tls-ask
-	}
 }
 
 # SEC-008: HSTS + baseline CSP applied to every site block below via `import security_headers`.
@@ -40,26 +34,8 @@ tahti.live, www.tahti.live {
 	reverse_proxy website:80
 }
 
-# ── Artist app ────────────────────────────────────────────────────────────────
-app.tahti.live {
-	import security_headers
-	encode zstd gzip
-	reverse_proxy web:3000
-}
-
-# ── Per-channel landing pages — wildcard subdomain routing ───────────────────
-*.tahti.live {
-	import security_headers
-	@app host app.tahti.live
-	@valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "grafana" && {labels.0} != "minio" && {labels.0} != "mail" && {labels.0} != "registry" && {labels.0} != "support" && {labels.0} != "ingest" && {labels.0} != "ingest-b" && {labels.0} != "ingest-icecast" && {labels.0} != "ingest-icecast-b"
-	encode zstd gzip
-	reverse_proxy @valid web:3000 {
-		header_up X-Tahti-Channel-Slug {labels.0}
-	}
-	tls {
-		on_demand
-	}
-}
+# app.tahti.live and <slug>.tahti.live are served by the tahti-player SPA
+# (packages/tahti-web), which runs outside this stack.
 
 # ── Artist API ────────────────────────────────────────────────────────────────
 api.tahti.live {
@@ -130,23 +106,4 @@ grafana.tahti.live {
 	@allowed remote_ip 127.0.0.1/32 10.0.0.0/8
 	reverse_proxy @allowed grafana:3000
 	respond 403
-}
-
-# ── Custom domains (PLAT-051) — artist-owned domains pointing to the platform ─
-# Artists add a CNAME/A record to this server, then verify via DNS TXT record.
-# On-demand TLS provisions a Let's Encrypt cert automatically on first hit.
-# Next.js reads X-Tahti-Custom-Host and resolves the channel via /api/v1/custom-domain/resolve.
-:443 {
-	tls {
-		on_demand
-	}
-	@custom_domain {
-		not host tahti.live www.tahti.live app.tahti.live api.tahti.live chat.tahti.live stream.tahti.live cdn.tahti.live ingest-icecast.tahti.live ingest-icecast-b.tahti.live minio.tahti.live grafana.tahti.live *.tahti.live
-	}
-	handle @custom_domain {
-		encode zstd gzip
-		reverse_proxy web:3000 {
-			header_up X-Tahti-Custom-Host {http.request.host}
-		}
-	}
 }

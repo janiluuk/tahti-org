@@ -16,9 +16,9 @@ export const UpdateChannelSchema = z.object({
 
 export type UpdateChannelInput = z.infer<typeof UpdateChannelSchema>
 
-/** Top-level Next.js route segments under apps/web/src/app, plus platform
- * infra hostnames (Caddy / tls-ask) and curated channels — none of these can
- * become someone's <slug>.tahti.live. */
+/** Top-level web app route segments, plus platform infra hostnames (Caddy /
+ * tls-ask) and curated channels — none of these can become someone's
+ * <slug>.tahti.live. */
 export const RESERVED_CHANNEL_SLUGS = [
   'admin',
   'api',

@@ -1,7 +1,7 @@
 # @tahti/api-client
 
 Typed SDK for the Tahti API, generated directly from apps/api's own Fastify route
-schemas — not hand-maintained. Frontend code (apps/web) should call the API through
+schemas — not hand-maintained. TypeScript consumers should call the API through
 this package instead of raw `fetch`, so a route's shape only ever has to be defined
 once (in the route itself).
 
@@ -32,7 +32,7 @@ Inside the monorepo, workspace packages keep importing the TypeScript source
 ```ts
 import { createTahtiClient } from '@tahti/api-client'
 
-// Server-side (Next.js Server Action / Route Handler) — forward the session cookie,
+// Server-side — forward the session cookie,
 // since the browser's cookie jar isn't available there.
 const api = createTahtiClient({
   baseUrl: process.env.API_URL!,
@@ -58,8 +58,8 @@ not a runtime surprise.
 
 ## Auth
 
-- **Session cookie** (`cookie` option) — for server-side code in apps/web that
-  already has the visitor's session.
+- **Session cookie** (`cookie` option) — for server-side code that already has
+  the visitor's session.
 - **Personal API token** (`token` option) — `Authorization: Bearer <token>`, for
   scripts, the hearthis.at import pipeline, or any third-party integration.
   Tokens are minted at `POST /api/me/api-tokens` (see the Settings → API tokens
@@ -78,9 +78,8 @@ pnpm --filter @tahti/api-client generate
 
 This exports a fresh `openapi.json` from apps/api's live route graph (no server
 needs to be running — see `apps/api/scripts/export-openapi.ts`) and feeds it to
-`openapi-typescript`. turbo also runs this automatically before apps/web's
-`dev`/`build`/`typecheck` (see the root `turbo.json` — this package's `generate`
-task is keyed on apps/api's route/schema/plugin sources), and CI regenerates it
+`openapi-typescript`. turbo also runs this automatically before this package's
+`typecheck` (see the root `turbo.json` — the `generate` task is keyed on apps/api's route/schema/plugin sources), and CI regenerates it
 before typecheck (see `.github/workflows/ci.yml`). The file is gitignored —
 never commit it, never edit it directly.
 

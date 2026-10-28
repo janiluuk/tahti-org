@@ -17,8 +17,8 @@
 // the published SDK matches the spec attached to the GitHub release exactly.
 //
 // Run via `pnpm --filter @tahti/api-client generate`, or let turbo run it
-// automatically (see turbo.json — apps/web's dev/build/typecheck depend on
-// this package's `generate` task, keyed on apps/api's route/schema sources).
+// automatically (see turbo.json — this package's typecheck depends on its
+// `generate` task, keyed on apps/api's route/schema sources).
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'

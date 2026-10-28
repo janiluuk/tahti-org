@@ -1,9 +1,9 @@
-# Full local Tahti stack — infra + API + web + worker + orchestrator +
+# Full local Tahti stack — infra + API + worker + orchestrator +
 # radio-discord-bot (source from sibling tahti-radio-discord-bot, synced by
 # deploy_prod.sh).
 # Not Swarm; use: ./scripts/stack-up.sh
 #
-# App UI:     http://localhost:17777  (override WEB_PORT)
+# App UI:     tahti-player SPA overlay — see infra/docker-compose.tahti-web.yml
 # API:        http://localhost:15011  (override API_PORT)
 # MailHog:    http://localhost:18025
 # MinIO:      http://localhost:19001  (tahti / local-stack-minio-secret)
@@ -110,7 +110,7 @@ x-app-env: &app-env
   # Worker sound-fallback cache jobs read this name. Keep ARCHIVE_CACHE_ROOT
   # above for compatibility with older images during rolling deployments.
   SOUND_CACHE_ROOT: /archive-cache
-  APP_URL: ${APP_URL:-http://localhost:${WEB_PORT:-17777}}
+  APP_URL: ${APP_URL:-http://localhost:${TAHTI_WEB_PORT:-17778}}
   # Self-serve /signup — closed in production unless SIGNUP_OPEN=true in stack.env
   SIGNUP_OPEN: ${SIGNUP_OPEN:-false}
   API_URL: ${API_URL:-http://localhost:${API_PORT:-15011}}
@@ -462,40 +462,6 @@ services:
     depends_on:
       api:
         condition: service_healthy
-
-  web:
-    restart: unless-stopped
-    logging: *loki-logging
-    build:
-      context: ..
-      dockerfile: apps/web/Dockerfile
-      # Browser-side fetches (e.g. the Spotify/Mixcloud cover-art proxies) can't reach the
-      # `api` service name — they need a browser-reachable address, not API_URL's
-      # docker-network one. Defaults to the host-mapped port for local stack use;
-      # PROD: set NEXT_PUBLIC_API_BASE/NEXT_PUBLIC_API_URL in infra/stack.env to the
-      # public API hostname, since these are baked into the client bundle at build time.
-      args:
-        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:${API_PORT:-15011}}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-15011}}
-        NEXT_PUBLIC_CENTRIFUGO_WS: ${NEXT_PUBLIC_CENTRIFUGO_WS:-ws://localhost:${CHAT_PORT:-18000}/connection/websocket}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:${WEB_PORT:-17777}}
-        NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ${NEXT_PUBLIC_HCAPTCHA_SITE_KEY:-}
-        SIGNUP_OPEN: ${SIGNUP_OPEN:-false}
-    environment:
-      <<: *app-env
-      API_URL: http://api:3001
-      PORT: '3000'
-    ports:
-      - '${WEB_PORT:-17777}:3000'
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      start_period: 45s
 
   worker:
     restart: unless-stopped

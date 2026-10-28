@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
-    # @tahti/web#typecheck depends on @tahti/api-client#generate (turbo.json),
+    # @tahti/api-client#typecheck depends on its generate task (turbo.json),
     # which boots the real apps/api Fastify app (buildApp/ready) to export its
     # OpenAPI spec — that needs a reachable Postgres, same as the test job.
     services:
@@ -714,20 +714,6 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/api:latest
           cache-to: type=inline
 
-      - name: Build and push web
-        if: steps.registry.outputs.enabled == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: apps/web/Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/tahti/web:${{ steps.version.outputs.tag }}
-            ${{ env.REGISTRY }}/tahti/web:${{ github.sha }}
-            ${{ env.REGISTRY }}/tahti/web:latest
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/web:latest
-          cache-to: type=inline
-
       - name: Build and push worker
         if: steps.registry.outputs.enabled == 'true'
         uses: docker/build-push-action@v5
@@ -780,7 +766,7 @@ jobs:
               echo "Tagged \`${{ steps.version.outputs.tag }}\`, \`${{ github.sha }}\`, and \`latest\`:"
               echo ""
               echo '```'
-              for svc in website api web worker orchestrator; do
+              for svc in website api worker orchestrator; do
                 echo "${{ env.REGISTRY }}/tahti/${svc}:${{ steps.version.outputs.tag }}"
               done
               echo '```'

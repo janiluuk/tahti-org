@@ -151,7 +151,7 @@ The streaming pipeline is the core product. Every component must be designed for
   - Nginx-RTMP for OBS, Streamlabs, vMix, FFmpeg-direct
   - Browser-based broadcaster (WebRTC → SRT → Liquidsoap) as a third option
 - **Broadcaster:** Liquidsoap 2.2+
-- **Frontend:** Next.js 14 App Router (App + Pages, RSC on channel landing)
+- **Frontend:** Vite + React SPA in the separate tahti-player repo (`packages/tahti-web`); this repo has no web app
 - **Audio in browser:** HLS.js for stream playback
 - **Distribution backend:** Revelator API (DSP delivery)
 - **Mixcloud:** Mixcloud Upload API for mixes
@@ -168,7 +168,6 @@ The streaming pipeline is the core product. Every component must be designed for
 tahti/
 ├── apps/
 │   ├── api/                     # Fastify
-│   ├── web/                     # Next.js (channels, profiles, dashboard, transparency, members)
 │   └── worker/                  # BullMQ workers
 ├── services/
 │   ├── orchestrator/            # Spawns channel liquidsoap containers
@@ -184,7 +183,7 @@ tahti/
 │   ├── revelator/               # Distribution client
 │   ├── mixcloud/                # Mixcloud client
 │   ├── ledger/                  # Accounting helpers, monthly rollup logic
-│   ├── ui/                      # **All UI components** — @tahti/ui (admin, brand shells, marketing)
+│   ├── ui/                      # Legacy @tahti/ui kit — only for @tahti/audio-edit panels
 │   ├── smart-link/              # Smart link routing + click logging
 │   └── social-post/             # Twitter/Mastodon/Threads/Bluesky OAuth + post + retry
 ├── infra/
@@ -207,22 +206,16 @@ Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts w
 
 ## E2E screenshots (agents)
 
-After public UI changes, regenerate and commit captures under **`docs/e2e-screenshots/`** only:
-
-```bash
-./scripts/e2e-screenshots.sh
-```
-
-See `docs/e2e-screenshots/README.md` for ports, fixtures, and route → file mapping. Do **not** sync into `website/` without explicit user permission.
+`docs/e2e-screenshots/` is a historical capture of the removed Next.js client.
+UI screenshots for the live app belong to the tahti-player repo. Do **not** sync
+into `website/` without explicit user permission.
 
 ## UI components (READ BEFORE ANY FRONTEND WORK)
 
-**All UI lives in `packages/ui` (`@tahti/ui`).** Do not implement Button, Panel, layout shells, or brand chrome under `apps/web`. The web app imports from `@tahti/ui` (or `@/components/ui`, which re-exports the package).
-
-When creating a new view, always reuse an applicable existing Storybook/
-`@tahti/ui` component. If no suitable component exists, add the component to
-the shared UI kit together with Storybook coverage before using it in the web
-app; do not create one-off view primitives in `apps/web`.
+The web app is the Tahti Player SPA in `../tahti-player` (`packages/tahti-web`,
+components from `@tahti-player/ui`). Build UI there. `packages/ui` (`@tahti/ui`)
+here is the legacy Next.js kit, kept only for `@tahti/audio-edit`'s plugin
+panels; do not add components to it.
 
 Before running `pnpm ci:check`, always run `pnpm format` (or the narrower
 Prettier command for the files changed) and then confirm with
@@ -1458,7 +1451,7 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
   job postings, no application flows, no mediation. We are not Resident Advisor.
 - **v6:** Requiring accounts for free downloads. Anti-fraud relies on rate
   limits + fingerprint dedup. Accounts are required only for fan-subscribers.
-- **Modifying `website/` without explicit user request.** The tahti.live marketing site is separate from `apps/web`. UI screenshots go in `docs/e2e-screenshots/` only.
+- **Modifying `website/` without explicit user request.** The tahti.live marketing site is separate from the web app. UI screenshots go in `docs/e2e-screenshots/` only.
 
 ## What's explicitly NOT in this product
 
