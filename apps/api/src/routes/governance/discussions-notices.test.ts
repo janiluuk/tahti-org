@@ -127,4 +127,23 @@ describe('Discussion reply notices', () => {
       }),
     ).toBe(ids.length)
   })
+
+  it('tells a member mentioned with @username and lists it on their Mentions page', async () => {
+    const mentioned = await createTestArtist(prisma, {
+      email: `${PREFIX}mentioned@example.com`,
+      username: `${PREFIX}mentioned`,
+      isMember: true,
+    })
+    await prisma.discussionTopic.update({ where: { id: topicId }, data: { status: 'OPEN' } })
+    await reply(`What do you think, @${PREFIX}mentioned?`)
+    const notices = await prisma.notification.findMany({
+      where: { userId: mentioned.id, type: 'DISCUSSION_MENTION' },
+    })
+    expect(notices).toHaveLength(1)
+    expect(notices[0]!.url).toBe(`/governance/discussions/${topicId}`)
+    const mention = await prisma.mention.findFirst({
+      where: { targetUserId: mentioned.id, surface: 'DISCUSSION' },
+    })
+    expect(mention?.sourceId.startsWith(`${topicId}:`)).toBe(true)
+  })
 })

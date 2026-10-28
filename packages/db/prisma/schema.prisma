@@ -641,6 +641,8 @@ enum MentionSurface {
   NEWSLETTER
   TRACKLIST
   CHAT
+  /// A reply in a board-created discussion topic; sourceId is `topicId:postId`.
+  DISCUSSION
 
   @@schema("core")
 }
@@ -716,6 +718,8 @@ enum NotificationType {
   MOTION_CIRCULATED
   /// A member replied to a discussion topic you follow and have not muted.
   DISCUSSION_REPLY
+  /// A member mentioned you in a discussion reply.
+  DISCUSSION_MENTION
   /// The board opened a discussion topic; sent to every other member.
   DISCUSSION_OPENED
   /// The board closed a discussion topic you follow.
