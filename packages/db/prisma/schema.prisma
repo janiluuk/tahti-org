@@ -476,6 +476,9 @@ enum AuditAction {
   INTERNET_RADIO_PRESET_CREATE
   INTERNET_RADIO_PRESET_UPDATE
   INTERNET_RADIO_PRESET_DELETE
+  ARTWORK_PRESET_CREATE
+  ARTWORK_PRESET_UPDATE
+  ARTWORK_PRESET_DELETE
 
   @@schema("governance")
 }
@@ -4577,6 +4580,22 @@ model RadioStationSuggestion {
 
   @@index([status, createdAt])
   @@index([submitterId])
+  @@schema("core")
+}
+
+/// Board-curated cover art. An enabled preset is saved as the cover of a
+/// sound, collection or channel avatar created without one, and is offered
+/// in every user's cover picker. `url` may be a web-app path
+/// (`/artwork-presets/...`), resolved against PUBLIC_WEB_URL.
+model ArtworkPreset {
+  id        String   @id @default(cuid())
+  url       String
+  enabled   Boolean  @default(true)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled, position])
   @@schema("core")
 }
 

@@ -22,6 +22,8 @@ import internetRadioPresetsRoute from '../routes/internet-radio/presets.js'
 import internetRadioNowPlayingRoute from '../routes/internet-radio/now-playing.js'
 import meInternetRadioRoutes from '../routes/me/internet-radio.js'
 import adminInternetRadioRoutes from '../routes/admin/internet-radio.js'
+import adminArtworkPresetRoutes from '../routes/admin/artwork-presets.js'
+import artworkPresetsRoute from '../routes/artwork-presets.js'
 import meRadioStationSuggestionRoutes from '../routes/me/radio-station-suggestions.js'
 import adminRadioStationSuggestionRoutes from '../routes/admin/radio-station-suggestions.js'
 import meThemesRoutes from '../routes/me/themes.js'
@@ -80,6 +82,8 @@ export async function registerStudioRoutes(fastify: FastifyInstance): Promise<vo
   await fastify.register(internetRadioNowPlayingRoute)
   await fastify.register(meInternetRadioRoutes)
   await fastify.register(adminInternetRadioRoutes)
+  await fastify.register(adminArtworkPresetRoutes)
+  await fastify.register(artworkPresetsRoute)
   await fastify.register(meRadioStationSuggestionRoutes)
   await fastify.register(adminRadioStationSuggestionRoutes)
   await fastify.register(meThemesRoutes)

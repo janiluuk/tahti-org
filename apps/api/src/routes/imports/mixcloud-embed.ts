@@ -24,6 +24,7 @@ import {
 } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 
 // Mixcloud's read API (search, a user's cloudcasts) is public — no client ID, no OAuth.
 // That's distinct from the existing @tahti/mixcloud upload client used by mixcloud rescue-import.
@@ -188,6 +189,7 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true },
       })
+      await assignPresetCovers(fastify.prisma, 'sound', [sound.id])
 
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {

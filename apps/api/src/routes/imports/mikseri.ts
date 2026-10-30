@@ -11,6 +11,7 @@ import {
 import { restrictionErrorMessage, soundOwnerDefaults } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 
 const mikseriImportRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -80,6 +81,7 @@ const mikseriImportRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true },
       })
+      await assignPresetCovers(fastify.prisma, 'sound', [sound.id])
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {
           collectionId: collection.id,

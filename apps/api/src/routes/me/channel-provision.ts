@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
 import { hashPassword } from '../../lib/password.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 
 /** Self-service channel provisioning for accounts created without one (e.g. legacy listener accounts). */
 const channelProvisionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -42,6 +43,7 @@ const channelProvisionRoutes: FastifyPluginAsync = async (fastify) => {
       },
       select: { slug: true },
     })
+    await assignPresetCovers(fastify.prisma, 'avatar', [user.id])
 
     return reply.status(201).send({ slug: channel.slug })
   })
