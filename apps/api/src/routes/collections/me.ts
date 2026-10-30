@@ -18,6 +18,7 @@ import {
 import { notifyPlaylistOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import {
@@ -207,6 +208,13 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
           ...(body.releaseDate ? { releaseDate: new Date(`${body.releaseDate}T00:00:00Z`) } : {}),
         },
       })
+      if (!col.coverUrl && (await assignPresetCovers(fastify.prisma, 'collection', [col.id]))) {
+        const withCover = await fastify.prisma.collection.findUniqueOrThrow({
+          where: { id: col.id },
+        })
+        refreshCollectionCoverPalette(fastify.prisma, col.id, withCover.coverUrl!)
+        return reply.status(201).send(withDateOnly(withCover))
+      }
       if (col.coverUrl) refreshCollectionCoverPalette(fastify.prisma, col.id, col.coverUrl)
       return reply.status(201).send(withDateOnly(col))
     } catch (err) {

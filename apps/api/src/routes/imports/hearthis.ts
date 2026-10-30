@@ -28,6 +28,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueHearthisEmbedLocalization } from '../../lib/queue.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 
 // hearthis.at's read API (search, feed, profiles, tracks) is public — no key/secret required.
 // Mirrors imports/mixcloud-embed.ts: embed-only, we never fetch or re-host hearthis.at audio.
@@ -327,6 +328,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true },
       })
+      await assignPresetCovers(fastify.prisma, 'sound', [sound.id])
 
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {

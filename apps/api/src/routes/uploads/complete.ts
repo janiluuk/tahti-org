@@ -7,6 +7,7 @@ import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponses } 
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/sound-metadata.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { headObjectSize } from '../../lib/minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
@@ -92,6 +93,8 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true, status: true },
       })
+
+      await assignPresetCovers(fastify.prisma, 'sound', [item.id])
 
       void auditLog(fastify.prisma, {
         action: 'CONTENT_UPLOAD',

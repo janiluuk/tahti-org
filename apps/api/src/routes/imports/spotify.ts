@@ -28,6 +28,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { getSpotifyAppToken, spotifyConfigured } from '../../lib/spotify-session.js'
 import { nextCollectionPosition } from '../collections/helpers.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 
 /** The caller's installed Spotify credential, if any — else null to fall back to global config. */
 async function resolveSpotifyCredential(
@@ -253,6 +254,7 @@ const spotifyImportRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: { id: true },
       })
+      await assignPresetCovers(fastify.prisma, 'sound', [sound.id])
 
       const collectionItem = await fastify.prisma.collectionItem.create({
         data: {
