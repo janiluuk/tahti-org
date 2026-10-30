@@ -1152,21 +1152,30 @@ model UserStorageQuota {
   @@schema("core")
 }
 
+enum ArtistPostCategory {
+  STORY
+  NEWS
+  ANNOUNCEMENT
+
+  @@schema("core")
+}
+
 // Public artist updates/news feed, separate from live chat's ephemeral ChannelAnnouncement.
 model ArtistPost {
-  id         String    @id @default(cuid())
+  id         String             @id @default(cuid())
   userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   title      String?
   body       String
-  images     String[]  @default([])
+  images     String[]           @default([])
   linkUrl    String?
   linkLabel  String?
+  category   ArtistPostCategory @default(STORY)
   // Defaults to createdAt (immediate publish). A future value schedules the
   // post — public routes filter on publishAt <= now, so "publishing" is a
   // pure query-time check, not a status flipped by a cron job.
-  publishAt  DateTime  @default(now())
-  createdAt  DateTime  @default(now())
+  publishAt  DateTime           @default(now())
+  createdAt  DateTime           @default(now())
   // Set once follower notifications have gone out — immediately for a post
   // published right away, or by post-publish-notify-cron once a scheduled
   // post's publishAt passes. Prevents double-notifying scheduled posts.
@@ -1175,6 +1184,7 @@ model ArtistPost {
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, publishAt(sort: Desc)])
   @@index([notifiedAt, publishAt])
+  @@index([publishAt(sort: Desc), id(sort: Desc)])
   @@schema("core")
 }
 

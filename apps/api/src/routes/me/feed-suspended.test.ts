@@ -62,6 +62,13 @@ describe('the follower feed and suspended artists', () => {
     return JSON.stringify(res.json())
   }
 
+  it('includes the post category on post items', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/me/feed', headers: { cookie } })
+    const items = res.json().items as Array<{ kind: string; body?: string; category?: string }>
+    const post = items.find((i) => i.kind === 'post' && i.body === `${PREFIX}kept post`)
+    expect(post?.category).toBe('STORY')
+  })
+
   it("leaves a suspended artist's posts and tracks out", async () => {
     const before = await titles()
     expect(before).toContain(`${PREFIX}suspended track`)

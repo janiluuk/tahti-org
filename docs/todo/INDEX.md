@@ -22,6 +22,7 @@ One file per in-progress task. When a task ships, fold it into
 | open    | [admin-cli-consolidation.md](admin-cli-consolidation.md)                               | Fold the operator scripts in `scripts/` into one `tahti-admin` CLI; `scripts/stack-env.sh` is the first piece                                                           |
 | partial | [remove-next-web.md](remove-next-web.md)                                               | Legacy Next.js `apps/web` removed; left: confirm prod deploy dropped the `tahti-stack-web-1` container                                                                  |
 | partial | [listening-parties.md](listening-parties.md)                                           | Listening Party API: model, timeline, routes, pre-release stream gate, chat "Now playing" job; web half in tahti-player                                                 |
+| partial | [community-stories.md](community-stories.md)                                           | Public `GET /api/v1/community/stories` feed + `ArtistPost.category`; web half in tahti-player                                                                           |
 
 ## Roadmap & planning (broader than a single task)
 
