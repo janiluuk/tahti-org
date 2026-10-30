@@ -83,6 +83,12 @@ describe('artwork preset routes', () => {
   })
 
   it('saves a preset as the cover of a new collection without one', async () => {
+    await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/artwork-presets/${presetId}`,
+      headers: { cookie: boardCookie },
+      payload: { enabled: true },
+    })
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/collections',
