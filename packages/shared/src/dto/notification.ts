@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { NotificationKindSchema } from './notification-kind.js'
+import { ArtistPostCategorySchema } from './artist-post.js'
 
 export const NotificationTypeSchema = z.enum([
   'NEW_POST',
@@ -131,6 +132,7 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     images: z.array(z.string()),
     linkUrl: z.string().nullable(),
     linkLabel: z.string().nullable(),
+    category: ArtistPostCategorySchema,
     url: z.string(),
   }),
   z.object({

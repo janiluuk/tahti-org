@@ -16,6 +16,7 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  type ArtistPostCategory,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
@@ -31,6 +32,7 @@ function serialize(post: {
   images: string[]
   linkUrl: string | null
   linkLabel: string | null
+  category: ArtistPostCategory
   publishAt: Date
   createdAt: Date
 }) {
@@ -95,6 +97,7 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
           body: body.body,
           linkUrl: body.linkUrl?.trim() || null,
           linkLabel: body.linkLabel?.trim() || null,
+          ...(body.category ? { category: body.category } : {}),
           publishAt,
           ...(isImmediate ? { notifiedAt: new Date() } : {}),
         },
@@ -141,6 +144,7 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
           ...(body.body !== undefined ? { body: body.body } : {}),
           ...(body.linkUrl !== undefined ? { linkUrl: body.linkUrl?.trim() || null } : {}),
           ...(body.linkLabel !== undefined ? { linkLabel: body.linkLabel?.trim() || null } : {}),
+          ...(body.category !== undefined ? { category: body.category } : {}),
           ...(body.publishAt !== undefined ? { publishAt: new Date(body.publishAt) } : {}),
         },
       })

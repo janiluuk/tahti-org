@@ -204,4 +204,82 @@ describe('Artist posts: scheduling and publish-time filtering', () => {
     expect(notifCount).toBe(1)
     void secondSummary
   })
+
+  it('defaults category to STORY and round-trips it on create and update', async () => {
+    const plain = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'No category given' },
+    })
+    expect(plain.statusCode).toBe(201)
+    expect(plain.json().category).toBe('STORY')
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Tour dates are out', category: 'NEWS' },
+    })
+    expect(created.statusCode).toBe(201)
+    const post = created.json() as { id: string; category: string }
+    expect(post.category).toBe('NEWS')
+
+    const patched = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/posts/${post.id}`,
+      headers: { cookie: artistCookie },
+      payload: { category: 'ANNOUNCEMENT' },
+    })
+    expect(patched.statusCode).toBe(200)
+    expect(patched.json().category).toBe('ANNOUNCEMENT')
+
+    const untouched = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/posts/${post.id}`,
+      headers: { cookie: artistCookie },
+      payload: { body: 'Tour dates are out (updated)' },
+    })
+    expect(untouched.json().category).toBe('ANNOUNCEMENT')
+
+    const own = await app.inject({
+      method: 'GET',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+    })
+    const ownPost = (own.json() as Array<{ id: string; category: string }>).find(
+      (p) => p.id === post.id,
+    )
+    expect(ownPost?.category).toBe('ANNOUNCEMENT')
+
+    const publicRes = await app.inject({ method: 'GET', url: `/api/channels/${artistSlug}/posts` })
+    const publicPost = (publicRes.json() as Array<{ id: string; category: string }>).find(
+      (p) => p.id === post.id,
+    )
+    expect(publicPost?.category).toBe('ANNOUNCEMENT')
+  })
+
+  it('rejects an unknown category on create and update', async () => {
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Bad category', category: 'GOSSIP' },
+    })
+    expect(bad.statusCode).toBe(400)
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Fine category' },
+    })
+    const badPatch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/posts/${created.json().id}`,
+      headers: { cookie: artistCookie },
+      payload: { category: 'story' },
+    })
+    expect(badPatch.statusCode).toBe(400)
+  })
 })
