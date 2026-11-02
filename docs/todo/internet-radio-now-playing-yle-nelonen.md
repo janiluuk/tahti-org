@@ -37,6 +37,21 @@ schema or cron changes needed.
   JSON state (checked for `nelonenmedia`-hosted API URLs in the page,
   none found). Also not attempted with real browser network inspection.
 
+## 2026-11-02 browser findings (headless Chromium)
+
+- `www.supla.fi/suomipop` redirects to `/radiosuomipop`, a Next.js app-router
+  page. Its server payload names the channel (`"id":"53"`, Radio Suomipop)
+  and references `https://component-api.nm-services.nelonenmedia.fi/api/v3/component/<id>`
+  (3000, 3021-3027, 300100). The API answers JSON errors naming its required
+  parameters: `app` (`supla` accepted), `client` (`web` accepted), then
+  `role` (`anonymous` rejected). The right `role` value has to come from the
+  Supla web client's own requests; guessing it was stopped.
+- After accepting consent and pressing play, the page made no now-playing
+  request within 12 s, so the song may only be in the component responses.
+- radiorock.fi shows the same consent and component setup.
+- Bauer (NRJ, Radio Nova) is unaffected: their parser already works; their
+  streams moved to `streaming.radioplay.fi` (#1044) for playback.
+
 ## Suggested next step
 
 Before writing more regex parsers blind: use a real browser (Chrome
