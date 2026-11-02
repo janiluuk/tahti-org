@@ -11,6 +11,8 @@ import {
 } from '@tahti/shared'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
+import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { soundPlaybackKey } from '@tahti/shared'
 
 /** Tags are stored as written (trimmed, case kept), and Prisma's array `has`
  * is case-sensitive, so the case-insensitive match needs raw SQL. */
@@ -39,6 +41,7 @@ export async function performSearch(
     type: 'all' | 'tracks' | 'artists' | 'collections'
     count: number
   },
+  viewerUserId: string | null = null,
 ): Promise<SearchResponse> {
   const searchTracks = (q || tag) && type !== 'artists' && type !== 'collections'
   const tagIds = searchTracks && tag ? await publicSoundIdsWithTag(prisma, tag) : null
@@ -61,8 +64,18 @@ export async function performSearch(
             artistName: true,
             durationSec: true,
             bannerUrl: true,
+            mp3Key: true,
+            flacKey: true,
+            accessMode: true,
+            purchaseTierId: true,
+            embedProvider: true,
+            embedUri: true,
             channel: {
-              select: { slug: true, user: { select: { username: true, displayName: true } } },
+              select: {
+                slug: true,
+                userId: true,
+                user: { select: { username: true, displayName: true } },
+              },
             },
           },
         }),
@@ -117,14 +130,30 @@ export async function performSearch(
   )
 
   return {
-    tracks: tracks.map((t) => ({
-      id: t.id,
-      title: t.title,
-      artistName: trackArtistName(t),
-      channelSlug: t.channel.slug,
-      durationSec: t.durationSec,
-      coverUrl: t.bannerUrl,
-    })),
+    tracks: await Promise.all(
+      tracks.map(async (t) => {
+        const { url, gate } = await resolveGatedPlaybackUrl(prisma, {
+          playbackKey: soundPlaybackKey(t),
+          artistUserId: t.channel.userId,
+          accessMode: t.accessMode,
+          purchaseTierId: t.purchaseTierId,
+          viewerUserId,
+        })
+        return {
+          id: t.id,
+          title: t.title,
+          artistName: trackArtistName(t),
+          artistUsername: t.artistName ? null : t.channel.user.username,
+          channelSlug: t.channel.slug,
+          durationSec: t.durationSec,
+          coverUrl: t.bannerUrl,
+          audioUrl: url,
+          gate,
+          embedProvider: t.embedProvider,
+          embedUri: t.embedUri,
+        }
+      }),
+    ),
     artists: artists.map((a) => ({
       username: a.username,
       displayName: userName(a),
@@ -155,7 +184,11 @@ const searchRoute: FastifyPluginAsync = async (fastify) => {
       if (!parsed.data.q && !parsed.data.tag) {
         return reply.status(400).send({ error: 'q or tag is required' })
       }
-      const result = await performSearch(fastify.prisma, parsed.data)
+      const result = await performSearch(
+        fastify.prisma,
+        parsed.data,
+        request.sessionUser?.id ?? null,
+      )
       return reply.send(result)
     },
   )

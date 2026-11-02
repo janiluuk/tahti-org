@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { PlaybackGateSchema } from './responses/channels.js'
 
 /** At least one of `q` and `tag` is required (the REST route answers 400
  * otherwise). `tag` narrows tracks only; artists and collections still match
@@ -22,6 +23,13 @@ export const SearchTrackResultSchema = z.object({
   channelSlug: z.string(),
   durationSec: z.number().int().nullable(),
   coverUrl: z.string().nullable(),
+  /** Credited channel owner's username, null for a guest credit. */
+  artistUsername: z.string().nullable().optional(),
+  /** Stream for this viewer, null when gated or embed-only. */
+  audioUrl: z.string().nullable().optional(),
+  gate: PlaybackGateSchema.optional(),
+  embedProvider: z.string().nullable().optional(),
+  embedUri: z.string().nullable().optional(),
 })
 
 export const SearchArtistResultSchema = z.object({
