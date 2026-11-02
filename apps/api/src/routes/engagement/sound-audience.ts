@@ -49,7 +49,8 @@ const soundAudienceRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const query = SoundAudienceQuerySchema.safeParse(request.query)
       if (!query.success) return reply.status(400).send({ error: 'Invalid query' })
-      const { limit } = query.data
+      const { limit, offset, tab } = query.data
+      const want = (name: typeof tab) => !tab || tab === name
       const viewer = request.sessionUser
 
       const sound = await fastify.prisma.sound.findFirst({
@@ -81,39 +82,50 @@ const soundAudienceRoutes: FastifyPluginAsync = async (fastify) => {
 
       const [collections, collectionTotal, likes, likeTotal, reposts, repostTotal, playGroups] =
         await Promise.all([
-          fastify.prisma.collection.findMany({
-            where: collectionWhere,
-            orderBy: { updatedAt: 'desc' },
-            take: limit,
-            select: {
-              slug: true,
-              name: true,
-              coverUrl: true,
-              user: { select: { username: true, displayName: true } },
-              _count: { select: { items: true } },
-            },
-          }),
-          fastify.prisma.collection.count({ where: collectionWhere }),
-          fastify.prisma.soundLike.findMany({
-            where: likeWhere,
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            select: personSelect,
-          }),
-          fastify.prisma.soundLike.count({ where: likeWhere }),
-          fastify.prisma.soundRepost.findMany({
-            where: repostWhere,
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            select: personSelect,
-          }),
-          fastify.prisma.soundRepost.count({ where: repostWhere }),
-          fastify.prisma.listenSession.groupBy({
-            by: ['byUserId'],
-            where: playWhere,
-            _count: { _all: true },
-            _max: { startedAt: true },
-          }),
+          !want('collections')
+            ? []
+            : fastify.prisma.collection.findMany({
+                where: collectionWhere,
+                orderBy: { updatedAt: 'desc' },
+                skip: offset,
+                take: limit,
+                select: {
+                  slug: true,
+                  name: true,
+                  coverUrl: true,
+                  user: { select: { username: true, displayName: true } },
+                  _count: { select: { items: true } },
+                },
+              }),
+          !want('collections') ? 0 : fastify.prisma.collection.count({ where: collectionWhere }),
+          !want('likes')
+            ? []
+            : fastify.prisma.soundLike.findMany({
+                where: likeWhere,
+                orderBy: { createdAt: 'desc' },
+                skip: offset,
+                take: limit,
+                select: personSelect,
+              }),
+          !want('likes') ? 0 : fastify.prisma.soundLike.count({ where: likeWhere }),
+          !want('reposts')
+            ? []
+            : fastify.prisma.soundRepost.findMany({
+                where: repostWhere,
+                orderBy: { createdAt: 'desc' },
+                skip: offset,
+                take: limit,
+                select: personSelect,
+              }),
+          !want('reposts') ? 0 : fastify.prisma.soundRepost.count({ where: repostWhere }),
+          !want('plays')
+            ? []
+            : fastify.prisma.listenSession.groupBy({
+                by: ['byUserId'],
+                where: playWhere,
+                _count: { _all: true },
+                _max: { startedAt: true },
+              }),
         ])
 
       const listenerIds = playGroups
@@ -150,7 +162,7 @@ const soundAudienceRoutes: FastifyPluginAsync = async (fastify) => {
         reposts: { total: repostTotal, items: reposts.map(person) },
         plays: {
           total: plays.length,
-          items: plays.slice(0, limit).map(({ user, plays: count, at }) => ({
+          items: plays.slice(offset, offset + limit).map(({ user, plays: count, at }) => ({
             username: user.username,
             displayName: safeDisplayName(user.displayName, user.username),
             avatarUrl: user.avatarUrl,
