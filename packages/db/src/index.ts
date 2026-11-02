@@ -40,6 +40,13 @@ if (process.env.NODE_ENV !== 'production') {
 export * from '@prisma/client'
 export { ensureInitialVersion, syncActiveVersionToItem } from './sound-versions.js'
 export {
+  absoluteArtworkUrl,
+  assignPresetCovers,
+  enabledArtworkPresetUrls,
+  pickArtworkUrl,
+  presetCoverFor,
+} from './artwork-presets.js'
+export {
   ensureInitialReleaseTrackVersion,
   syncActiveVersionToTrack,
 } from './release-track-versions.js'

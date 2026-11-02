@@ -6,7 +6,13 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, soundOwnerDefaults, notifyJobOutcome, type JobOutcome } from '@tahti/db'
+import {
+  prisma,
+  soundOwnerDefaults,
+  notifyJobOutcome,
+  type JobOutcome,
+  assignPresetCovers,
+} from '@tahti/db'
 import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { broadcastSessionLogFields } from '@tahti/shared'
@@ -194,6 +200,7 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
         ...(await soundOwnerDefaults(prisma, broadcast.channel.id)),
       },
     })
+    await assignPresetCovers(prisma, 'sound', [sound.id])
 
     await prisma.broadcast.update({
       where: { id: broadcastId },
