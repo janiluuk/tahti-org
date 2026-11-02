@@ -3,8 +3,14 @@
 
 import { z } from 'zod'
 
+export const SoundAudienceTabSchema = z.enum(['collections', 'likes', 'reposts', 'plays'])
+
 export const SoundAudienceQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(30).default(12),
+  /** Skip this many in each list (or in `tab` only), for "Show more". */
+  offset: z.coerce.number().int().min(0).max(10_000).default(0),
+  /** Only fill this list; the others come back empty with total 0. */
+  tab: SoundAudienceTabSchema.optional(),
 })
 
 export const SoundAudiencePersonSchema = z.object({
