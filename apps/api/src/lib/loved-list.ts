@@ -61,7 +61,10 @@ export async function buildLovedList(
         genre: true,
         contentType: true,
         channel: {
-          select: { slug: true, user: { select: { username: true, displayName: true } } },
+          select: {
+            slug: true,
+            user: { select: { username: true, displayName: true, avatarUrl: true } },
+          },
         },
       },
     })
@@ -75,6 +78,7 @@ export async function buildLovedList(
           loves: count,
           title: item.title,
           artistName: trackArtistName(item),
+          artistAvatarUrl: item.artistName ? null : item.channel.user.avatarUrl,
           channelSlug: item.channel.slug,
           bannerUrl: item.bannerUrl,
           genre: item.genre,

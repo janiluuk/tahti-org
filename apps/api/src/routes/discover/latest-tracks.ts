@@ -82,7 +82,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
             select: {
               slug: true,
               userId: true,
-              user: { select: { username: true, displayName: true } },
+              user: { select: { username: true, displayName: true, avatarUrl: true } },
             },
           },
         },
@@ -102,6 +102,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
       const items = await Promise.all(
         rows.map(async (item) => ({
           ...(await toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
+          artistAvatarUrl: item.artistName ? null : item.channel.user.avatarUrl,
           genre: item.genreCustom ?? item.genre,
           peaks: Array.isArray(item.peaks) ? (item.peaks as number[]) : null,
           createdAt: item.createdAt.toISOString(),

@@ -37,6 +37,8 @@ export interface TopListEntry {
   listens: number
   title: string
   artistName: string
+  /** The channel owner's avatar when they are the credited artist. */
+  artistAvatarUrl: string | null
   channelSlug: string
   bannerUrl: string | null
   genre: string | null
@@ -78,7 +80,12 @@ async function rankedEntriesSince(
       bannerUrl: true,
       genre: true,
       contentType: true,
-      channel: { select: { slug: true, user: { select: { username: true, displayName: true } } } },
+      channel: {
+        select: {
+          slug: true,
+          user: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      },
     },
   })
 
@@ -88,6 +95,7 @@ async function rankedEntriesSince(
       listens: countById.get(item.id) ?? 0,
       title: item.title,
       artistName: trackArtistName(item),
+      artistAvatarUrl: item.artistName ? null : item.channel.user.avatarUrl,
       channelSlug: item.channel.slug,
       bannerUrl: item.bannerUrl,
       genre: item.genre,
