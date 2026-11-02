@@ -96,6 +96,17 @@ export const CommunityStorySchema = z.object({
 
 export type CommunityStory = z.infer<typeof CommunityStorySchema>
 
+/** One community story in full, for reading it in a dialog. */
+export const CommunityStoryDetailSchema = CommunityStorySchema.extend({
+  /** The post as the artist wrote it (plain text or light Markdown). */
+  body: z.string(),
+  images: z.array(z.string()),
+  linkUrl: z.string().nullable(),
+  linkLabel: z.string().nullable(),
+})
+
+export type CommunityStoryDetail = z.infer<typeof CommunityStoryDetailSchema>
+
 export const CommunityStoriesResponseSchema = z.object({
   items: z.array(CommunityStorySchema),
   nextCursor: z.string().nullable(),
