@@ -4,8 +4,10 @@
 import type { FastifyInstance } from 'fastify'
 import collectionRoutes from '../routes/collections/collections.js'
 import collectionCoverRoutes from '../routes/collections/cover.js'
+import collaborativeRemoveRoutes from '../routes/collections/collaborative-remove.js'
 
 export async function registerCollectionRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(collectionRoutes)
   await fastify.register(collectionCoverRoutes)
+  await fastify.register(collaborativeRemoveRoutes)
 }
