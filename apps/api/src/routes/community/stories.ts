@@ -73,7 +73,27 @@ const communityStoriesRoute: FastifyPluginAsync = async (fastify) => {
           body: true,
           images: true,
           publishAt: true,
-          user: { select: { username: true, displayName: true, avatarUrl: true } },
+          user: {
+            select: {
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              channel: {
+                select: {
+                  sounds: {
+                    where: {
+                      isPublic: true,
+                      status: 'READY',
+                      bannerUrl: { not: null },
+                    },
+                    orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
+                    take: 1,
+                    select: { bannerUrl: true },
+                  },
+                },
+              },
+            },
+          },
         },
       })
 
@@ -83,7 +103,7 @@ const communityStoriesRoute: FastifyPluginAsync = async (fastify) => {
         category: p.category,
         title: p.title,
         excerpt: postExcerpt(p.body, COMMUNITY_STORY_EXCERPT_MAX),
-        imageUrl: p.images[0] ?? null,
+        imageUrl: p.images[0] ?? p.user.channel?.sounds[0]?.bannerUrl ?? null,
         publishAt: p.publishAt.toISOString(),
         url: `/u/${p.user.username}`,
         author: {

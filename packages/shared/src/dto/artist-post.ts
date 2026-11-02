@@ -83,6 +83,7 @@ export const CommunityStorySchema = z.object({
   category: ArtistPostCategorySchema,
   title: z.string().nullable(),
   excerpt: z.string(),
+  /** The post's first image, else the cover of the artist's newest public track. */
   imageUrl: z.string().nullable(),
   publishAt: z.string().datetime(),
   url: z.string(),
