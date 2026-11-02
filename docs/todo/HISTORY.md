@@ -837,3 +837,12 @@ Post-merge: confirm the deploy removed `tahti-stack-web-1`.
 ### 2026-10-28 — Orchestrator respawns LIVE channels lost across a restart (incident fix)
 
 After the 2026-10-28 deploy, Tahti Radio / Tahti Selects stayed LIVE over a 404 HLS for ~8.5 h. Boot reconcile now respawns Liquidsoap for LIVE channels with an open broadcast whose container is gone (rotation template if curated items, else channel; sidecars untouched). `spawnLiquidsoapContainer` always checks Docker, so a stale in-memory entry no longer makes `/spawn` a silent no-op. The STREAM-005 watchdog treats missing segments as stale after a 120 s grace instead of skipping. [#1028](https://github.com/janiluuk/tahti-org/pull/1028). Leftover: what removed the containers during the deploy is unknown.
+
+### 2026-11-02 — Next.js web removal confirmed; community stories done (`remove-next-web.md`, `community-stories.md`)
+
+On vimage the production stack has no `tahti-stack-web-1` container any more (checked over ssh), so the
+legacy web removal is complete. Community stories: the `ArtistPost.category` migration is live
+(`GET /api/v1/community/stories` answers on production) and the web half shipped in tahti-player
+(#1726, #1733, #1742). Follow-ups since: newest public track cover as the story image (#1035) and
+`GET /api/v1/community/stories/:id` for reading a story in full (#1040).
+

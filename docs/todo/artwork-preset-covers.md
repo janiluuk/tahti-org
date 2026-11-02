@@ -14,8 +14,10 @@ none, and are listed publicly for the cover picker.
 
 Left:
 
-- [ ] Run the backfill on production after deploy (dry run first).
-- [ ] Worker-created sounds (SoundCloud / hearthis / Drive imports, broadcasts)
-      rely on the backfill; hook them at create if they should get one immediately.
+- [ ] Run the backfill on production after deploy (dry run first). 2026-11-02:
+      the dry run on vimage reports 22 sounds, 1 collection and 3 channel avatars
+      to fill; the real run needs the operator.
+- [x] Worker-created sounds (SoundCloud / hearthis / Drive imports, broadcasts)
+      get a preset at create (#1041; helpers moved to `@tahti/db`).
 - [ ] Accounts created with a generated SVG avatar keep it (only empty avatars
       get a preset).
