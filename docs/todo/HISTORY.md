@@ -846,3 +846,12 @@ legacy web removal is complete. Community stories: the `ArtistPost.category` mig
 (#1726, #1733, #1742). Follow-ups since: newest public track cover as the story image (#1035) and
 `GET /api/v1/community/stories/:id` for reading a story in full (#1040).
 
+### 2026-11-02 — Listening parties API folded (`listening-parties.md`)
+
+Merged as #1029 and live on production (`GET /api/channels/:slug/listening-parties` answers;
+the web half is tahti-player #1704). Request bodies stay validated in the handlers with the
+OpenAPI spec typing responses only, like every other route. Later projects, not started:
+server playout into the channel HLS output (instead of client-side playback), formats /
+pre-orders / physical goods, and a party-only chat slow mode (tracked in tahti-player
+`docs/todo/listening-party.md`).
+
