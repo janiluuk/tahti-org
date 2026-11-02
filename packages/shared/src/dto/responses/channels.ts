@@ -239,6 +239,8 @@ export const TahtiSelectsGalleryResponseSchema = z.object({
 /** Latest tracks also carry what a track row shows: genre, waveform, the
  * download flag and public totals. */
 export const LatestTrackItemSchema = TahtiSelectsGalleryItemSchema.extend({
+  /** The channel owner's avatar when they are the credited artist. */
+  artistAvatarUrl: z.string().nullable().optional(),
   genre: z.string().nullable(),
   peaks: z.array(z.number()).nullable(),
   createdAt: z.string(),
