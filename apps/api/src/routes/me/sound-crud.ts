@@ -14,7 +14,7 @@ import {
   SoundFacetsSchema,
   SoundIdsSchema,
   SoundListFilterSchema,
-  SoundListPageSchema,
+  SoundListResponseSchema,
   SoundListQuerySchema,
   SoundProcessingStatusSchema,
   SoundRecentSchema,
@@ -166,8 +166,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['channel'],
         description:
           'List channel sounds with metadata. Pass `limit` for a paged `{ items, total }` response; omit it for the legacy array (capped at 100).',
-        // Documented as the paged shape; bare GET without `limit` still returns the legacy array.
-        response: openApiResponse(SoundListPageSchema, 'SoundListPage'),
+        response: openApiResponse(SoundListResponseSchema, 'SoundListResponse'),
       },
     },
     async (request, reply) => {

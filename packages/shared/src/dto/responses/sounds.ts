@@ -31,6 +31,11 @@ export const SoundListPageSchema = z.object({
 
 export type SoundListPage = z.infer<typeof SoundListPageSchema>
 
+/** GET /api/me/sound: the paged object with `limit`, the legacy array
+ * without it. Both shapes must be in the response schema, or Fastify's
+ * serializer rejects the legacy array with a 500. */
+export const SoundListResponseSchema = z.union([SoundListPageSchema, SoundListSchema])
+
 export const SoundIdsSchema = z.object({
   ids: z.array(z.string()),
   total: z.number().int().nonnegative(),
