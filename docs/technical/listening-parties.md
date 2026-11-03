@@ -10,16 +10,7 @@ project.
 
 ## Decisions
 
-| Decision | Why |
-| --- | --- |
-| Own `ListeningParty` model (schema `channel`), not `ScheduledLiveShow` + `releaseId` | A scheduled show needs a `LiveShowSeries`; a party belongs to a release. |
-| No server playout. The server owns the timeline, clients play the tracks themselves and seek to the offset | Shared timing and late join without a Liquidsoap container per party. Playout into the channel's HLS is a later project. |
-| State is derived, never stored | `canceledAt` → `CANCELED`; `now < startAt` → `SCHEDULED`; `now < startAt + Σ durationSec` → `LIVE`; else `ENDED`. Nothing can go stale when a track is re-timed. |
-| Tracks play once in `ReleaseTrack.position` order, no gaps | Intervals are half-open: at an exact boundary the next track plays at offset 0; at `endAt` the party has ended. |
-| Pre-release tracks stream only through the party | A release that is not `PUBLISHED`, or whose `releaseDate` is ahead, streams only from the party stream route, only while `LIVE`, and only for the current or an earlier track. |
-| Reuse the artist's `PurchaseTier`s | Active tiers, only while the channel's store is on and (with Stripe on) the artist can take charges. Checkout stays on `POST /api/v1/u/:username/purchase-tiers/:tierId/checkout`. |
-| Reuse the host channel's chat | Moderation, bans and announcements already exist there. |
-| Names via `safeDisplayName` | Host and channel names fall back to the username. Credits whose name contains an email address are dropped. |
+Moved to [`../DECISIONS.md` → Listening parties](../DECISIONS.md#listening-parties).
 
 ## Timeline
 
