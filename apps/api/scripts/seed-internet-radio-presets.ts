@@ -57,7 +57,7 @@ const PRESETS = [
     iconUrl: 'https://listenapi.planetradio.co.uk/cdn/logos/1-1/450x450/334.jpg',
     programmingUrl: 'https://www.radioplay.fi/nrj',
     streamUrl:
-      'https://stream-redirect.bauermedia.fi/nrj/nrj_64.aac?aw_0_1st.bauer_loggedin=false&aw_0_1st.playerid=BMUK_tunein',
+      'https://streaming.radioplay.fi/nrj/nrj_64.aac?aw_0_1st.bauer_loggedin=false&aw_0_1st.playerid=BMUK_tunein',
     enabled: true,
   },
   {
@@ -67,7 +67,7 @@ const PRESETS = [
     iconUrl: 'https://assets.planetradio.co.uk/img/ConfigLockScreenImageUrl/254.jpg',
     programmingUrl: 'https://www.radioplay.fi/radio-nova',
     streamUrl:
-      'https://stream-redirect.bauermedia.fi/radionova/radionova_64.aac?aw_0_1st.bauer_loggedin=false&aw_0_1st.playerid=BMUK_tunein',
+      'https://streaming.radioplay.fi/radionova/radionova_64.aac?aw_0_1st.bauer_loggedin=false&aw_0_1st.playerid=BMUK_tunein',
     enabled: true,
   },
 ]

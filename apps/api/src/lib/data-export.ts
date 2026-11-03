@@ -91,7 +91,14 @@ export async function buildActivityExport(
     prisma.artistPost.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'asc' },
-      select: { title: true, body: true, linkUrl: true, publishAt: true, createdAt: true },
+      select: {
+        title: true,
+        body: true,
+        linkUrl: true,
+        category: true,
+        publishAt: true,
+        createdAt: true,
+      },
     }),
     prisma.artistEvent.findMany({
       where: { userId: user.id },

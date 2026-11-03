@@ -153,6 +153,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           images: p.images,
           linkUrl: p.linkUrl,
           linkLabel: p.linkLabel,
+          category: p.category,
           url: `/u/${p.user.username}`,
         })),
         ...tracks.map((t): FeedItem => {

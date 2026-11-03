@@ -4,7 +4,7 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { notifyJobOutcome, prisma, soundOwnerDefaults } from '@tahti/db'
+import { notifyJobOutcome, prisma, soundOwnerDefaults, assignPresetCovers } from '@tahti/db'
 import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { extensionFromDriveFile, mapGenre } from '@tahti/shared'
 import { decryptStreamKey } from '../lib/stream-key-enc.js'
@@ -113,6 +113,7 @@ export async function processSoundcloudImportJob(job: Job): Promise<void> {
       },
       select: { id: true },
     })
+    await assignPresetCovers(prisma, 'sound', [sound.id])
 
     await prisma.cloudImportJob.update({
       where: { id: cloudImportJobId },

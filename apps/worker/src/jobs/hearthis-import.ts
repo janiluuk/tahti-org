@@ -4,7 +4,7 @@
 import type { Job } from 'bullmq'
 import { randomBytes } from 'node:crypto'
 import { Readable } from 'node:stream'
-import { notifyJobOutcome, prisma, soundOwnerDefaults } from '@tahti/db'
+import { notifyJobOutcome, prisma, soundOwnerDefaults, assignPresetCovers } from '@tahti/db'
 import { isFinalAttempt } from '../lib/sound-processing-error.js'
 import { extensionFromDriveFile } from '@tahti/shared'
 import { createHearthisClient } from '@tahti/hearthis'
@@ -99,6 +99,7 @@ export async function processHearthisImportJob(job: Job): Promise<void> {
       },
       select: { id: true },
     })
+    await assignPresetCovers(prisma, 'sound', [sound.id])
 
     await prisma.cloudImportJob.update({
       where: { id: cloudImportJobId },

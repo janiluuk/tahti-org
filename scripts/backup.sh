@@ -20,6 +20,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKUP_STATE_DIR="${BACKUP_STATE_DIR:-/var/lib/tahti-backup}"
 CMD="${1:-all}"
 
 log_ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
@@ -155,7 +156,7 @@ backup_push_vimage6() {
   local VIMAGE6_HOST VIMAGE6_KEY VIMAGE6_REMOTE_DIR LOCAL_BACKUP_DIR LOCAL_MIRROR_DIR RSYNC_SSH RESULT
   VIMAGE6_HOST="${VIMAGE6_BACKUP_HOST:-jani@192.168.2.105}"
   VIMAGE6_KEY="${VIMAGE6_BACKUP_KEY:-/root/.ssh/vimage6_backup_ed25519}"
-  VIMAGE6_REMOTE_DIR="${VIMAGE6_BACKUP_DIR:-/home/jani/tahti-backups/tahti}"
+  VIMAGE6_REMOTE_DIR="${VIMAGE6_BACKUP_DIR:-tahti}"
   LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
   LOCAL_MIRROR_DIR="${LOCAL_MIRROR_DIR:-/share/disk2/tahti-backups/minio-mirror}"
 
@@ -168,12 +169,14 @@ backup_push_vimage6() {
   # The /share/disk2 copy above is still on the same host as the primary
   # Postgres/MinIO volumes, so it alone wouldn't survive a whole-host loss.
   # The receiving key on vimage6 is restricted (rrsync -wo, no shell, no
-  # port/agent forwarding) to /home/jani/tahti-backups/tahti.
+  # port/agent forwarding, write-only) to /home/jani/tahti-backups, so remote
+  # paths are relative to that root: an absolute path lands doubled under it.
   RSYNC_SSH="ssh -i ${VIMAGE6_KEY} -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10"
 
   if [[ -d "$LOCAL_BACKUP_DIR" ]]; then
     if RESULT=$(rsync -az -e "$RSYNC_SSH" "${LOCAL_BACKUP_DIR}/" "${VIMAGE6_HOST}:${VIMAGE6_REMOTE_DIR}/pg/" 2>&1); then
       log "Postgres dumps synced to vimage6:${VIMAGE6_REMOTE_DIR}/pg/"
+      mkdir -p "$BACKUP_STATE_DIR" && date +%s > "${BACKUP_STATE_DIR}/vimage6-last-push"
     else
       log "WARNING: vimage6 postgres sync failed: $RESULT"
     fi
@@ -191,7 +194,7 @@ backup_push_vimage6() {
 backup_restore_test() {
   local LOG_PREFIX="[$(log_ts)] [restore-test]"
   local TEMP_CONTAINER ALERT_EMAIL MINIO_ALIAS BACKUP_BUCKET EXPECTED_MIN_ROWS
-  local LATEST_KEY TABLE_COUNT USER_COUNT RESULT_FILE
+  local LATEST_KEY LATEST_LOCAL LOCAL_BACKUP_DIR TABLE_COUNT USER_COUNT RESULT_FILE
 
   log() { echo "$LOG_PREFIX $*"; }
   fail() {
@@ -207,21 +210,32 @@ backup_restore_test() {
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
   BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
 
-  cleanup() { docker rm -f "$TEMP_CONTAINER" &>/dev/null || true; }
-  trap cleanup EXIT
+  # The trap runs after this function returns, when its locals are gone, so
+  # it carries the container name itself.
+  trap "docker rm -f '${TEMP_CONTAINER}' >/dev/null 2>&1 || true" EXIT
 
   log "Starting weekly restore verification"
 
-  LATEST_KEY=$(mc ls "${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/" \
-    --json 2>/dev/null | python3 -c "
+  # The local dump is the authoritative copy (MinIO only gets one when an mc
+  # alias is configured), so restore the newest local file; fall back to MinIO.
+  LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
+  LATEST_LOCAL=$(find "$LOCAL_BACKUP_DIR" -maxdepth 1 -name '*.sql.gz' -printf '%T@ %p\n' 2>/dev/null \
+    | sort -n | tail -1 | cut -d' ' -f2-)
+  if [[ -n "$LATEST_LOCAL" ]]; then
+    LATEST_KEY="$LATEST_LOCAL"
+    read_backup() { cat "$LATEST_LOCAL"; }
+  else
+    LATEST_KEY=$(mc ls "${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/" \
+      --json 2>/dev/null | python3 -c "
 import sys, json
 files = [json.loads(l) for l in sys.stdin if l.strip()]
 if not files: exit(1)
 latest = max(files, key=lambda f: f.get('lastModified',''))
 print(latest.get('key','').lstrip('/'))
-" 2>/dev/null) || fail "Could not list backups — mc alias may not be configured"
-
-  [[ -n "$LATEST_KEY" ]] || fail "No backup files found in ${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/"
+" 2>/dev/null) || fail "No local dump in ${LOCAL_BACKUP_DIR} and no MinIO copy to list"
+    [[ -n "$LATEST_KEY" ]] || fail "No backup files found in ${LOCAL_BACKUP_DIR} or ${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/"
+    read_backup() { mc cat "${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/${LATEST_KEY}"; }
+  fi
   log "Latest backup: $LATEST_KEY"
 
   log "Starting temporary postgres container..."
@@ -240,9 +254,10 @@ print(latest.get('key','').lstrip('/'))
   log "Temp postgres ready"
 
   log "Restoring $LATEST_KEY..."
-  mc cat "${MINIO_ALIAS}/${BACKUP_BUCKET}/${LATEST_KEY}" \
+  read_backup \
     | gunzip \
-    | docker exec -i "$TEMP_CONTAINER" psql -U tahti -d tahti_test -q
+    | docker exec -i "$TEMP_CONTAINER" psql -U tahti -d tahti_test -q \
+    || fail "Restoring ${LATEST_KEY} failed"
 
   log "Restore complete"
 
@@ -282,15 +297,14 @@ backup_status() {
 
   # Best-effort — informational only, does not affect exit code (local disk
   # copy stays the authoritative signal for paging, see below).
-  if [[ -f "$VIMAGE6_KEY" ]]; then
-    VIMAGE6_LATEST=$(ssh -i "$VIMAGE6_KEY" -o BatchMode=yes -o ConnectTimeout=5 "$VIMAGE6_HOST" \
-      "find '${VIMAGE6_REMOTE_DIR}/pg' -maxdepth 1 -name '*.sql.gz' -printf '%T@\n' 2>/dev/null | sort -n | tail -1" 2>/dev/null || true)
-    if [[ -n "$VIMAGE6_LATEST" ]]; then
-      VIMAGE6_AGE_HOURS=$(awk -v t="$VIMAGE6_LATEST" 'BEGIN { print (systime() - t) / 3600 }')
-      echo "vimage6_postgres_backup_age_hours=${VIMAGE6_AGE_HOURS}"
-    else
-      echo "vimage6_postgres_backup_age_hours=missing"
-    fi
+  # The vimage6 key is write-only (rrsync -wo), so the age comes from the
+  # last successful push recorded by backup_push_vimage6.
+  if [[ -s "${BACKUP_STATE_DIR}/vimage6-last-push" ]]; then
+    VIMAGE6_LATEST=$(cat "${BACKUP_STATE_DIR}/vimage6-last-push")
+    VIMAGE6_AGE_HOURS=$(awk -v t="$VIMAGE6_LATEST" 'BEGIN { print (systime() - t) / 3600 }')
+    echo "vimage6_postgres_backup_age_hours=${VIMAGE6_AGE_HOURS}"
+  elif [[ -f "$VIMAGE6_KEY" ]]; then
+    echo "vimage6_postgres_backup_age_hours=missing reason=no_successful_push"
   else
     echo "vimage6_postgres_backup_age_hours=missing reason=no_key"
   fi

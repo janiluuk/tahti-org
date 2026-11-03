@@ -14,6 +14,9 @@ export const TopListEntrySchema = z.object({
   listens: z.number().int(),
   title: z.string(),
   artistName: z.string(),
+  /** The channel owner's avatar when they are the credited artist. Optional
+   * so lists cached before this field still serialize. */
+  artistAvatarUrl: z.string().nullable().optional(),
   channelSlug: z.string(),
   bannerUrl: z.string().nullable(),
   genre: z.string().nullable(),

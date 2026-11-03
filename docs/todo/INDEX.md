@@ -15,13 +15,12 @@ One file per in-progress task. When a task ships, fold it into
 
 | Status  | File                                                                                   | One-line                                                                                                                                                                |
 | ------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partial | [library-management-port.md](library-management-port.md)                               | Port theDAW library management onto cloud Sounds: paged list, facets, stats, bulk delete/patch (player UI in sibling todo)                                              |
 | partial | [api-player-gap-mapping.md](api-player-gap-mapping.md)                                 | Cross-repo API ↔ player: batches 1–14 (catalog honesty, comments/mentions/social OpenAPI); leftover real Bandcamp import + prod HLS cutover                             |
 | partial | [api-redis-stall-resilience.md](api-redis-stall-resilience.md)                         | Redis command timeout + short bypass after a timeout so a stalled Redis can't hold API requests; latency and disk alerts. Left: deploy, and move Redis off vimage's HDD |
 | open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                        |
 | open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                             |
 | open    | [admin-cli-consolidation.md](admin-cli-consolidation.md)                               | Fold the operator scripts in `scripts/` into one `tahti-admin` CLI; `scripts/stack-env.sh` is the first piece                                                           |
-| partial | [remove-next-web.md](remove-next-web.md)                                               | Legacy Next.js `apps/web` removed; left: confirm prod deploy dropped the `tahti-stack-web-1` container                                                                  |
-| partial | [listening-parties.md](listening-parties.md)                                           | Listening Party API: model, timeline, routes, pre-release stream gate, chat "Now playing" job; web half in tahti-player                                                 |
 
 ## Roadmap & planning (broader than a single task)
 

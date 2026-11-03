@@ -175,11 +175,182 @@ export const SOUND_METADATA_DEFAULTS = {
 /** Sort options for GET /api/me/sound (defaults to `newest`). */
 export const SOUND_LIST_SORTS = ['newest', 'oldest', 'title', 'duration', 'bpm', 'genre'] as const
 
-export const SoundListQuerySchema = z.object({
+/** Embed / native source filter for the artist's own sound list.
+ * Values match `SoundEmbedProvider` plus the synthetic `native` (no embed). */
+export const SOUND_LIST_SOURCES = [
+  'native',
+  'HEARTHIS',
+  'MIXCLOUD',
+  'SPOTIFY',
+  'YOUTUBE',
+  'APPLE',
+  'GENERIC',
+  'MIKSERI',
+] as const
+
+export const SOUND_LIST_STATUSES = ['PENDING', 'PROCESSING', 'READY', 'ERROR'] as const
+
+/** Page size ceiling for GET /api/me/sound when `limit` is set. */
+export const SOUND_LIST_MAX_LIMIT = 100
+
+/** Default page size when the client asks for a paged list without `limit`. */
+export const SOUND_LIST_DEFAULT_LIMIT = 50
+
+/** Ceiling on GET /api/me/sound/ids (select-all). */
+export const SOUND_LIST_MAX_IDS = 50_000
+
+/** Ceiling on the `ids` form of POST /api/me/sound/bulk-delete. */
+export const SOUND_BULK_MAX_IDS = 5_000
+
+/** How many per-id failures one bulk-delete / bulk-patch response carries. */
+export const SOUND_BULK_MAX_ERRORS = 50
+
+const BoolQuery = z
+  .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
+  .transform((v) => v === true || v === 'true' || v === '1')
+
+const DateQuery = z
+  .string()
+  .trim()
+  .refine(
+    (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) || !Number.isNaN(Date.parse(v)),
+    'expected YYYY-MM-DD or an ISO datetime',
+  )
+
+/** Shared filter fields for list / ids / facets / stats / bulk-by-filter. */
+export const SoundListFilterSchema = z.object({
+  q: z.string().trim().max(200).optional(),
+  contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
+  source: z.enum(SOUND_LIST_SOURCES).optional(),
+  status: z.enum(SOUND_LIST_STATUSES).optional(),
+  uploadedFrom: DateQuery.optional(),
+  uploadedTo: DateQuery.optional(),
+  genre: z.string().trim().max(80).optional(),
+  tag: z.string().trim().max(40).optional(),
+  bpmMin: z.coerce.number().int().min(40).max(300).optional(),
+  bpmMax: z.coerce.number().int().min(40).max(300).optional(),
+  key: z.string().trim().max(12).optional(),
+  isPublic: BoolQuery.optional(),
+  isFallback: BoolQuery.optional(),
+  pinned: BoolQuery.optional(),
+})
+
+export type SoundListFilter = z.infer<typeof SoundListFilterSchema>
+
+export const SoundListQuerySchema = SoundListFilterSchema.extend({
   sort: z.enum(SOUND_LIST_SORTS).optional(),
+  limit: z.coerce.number().int().min(1).max(SOUND_LIST_MAX_LIMIT).optional(),
+  offset: z.coerce.number().int().min(0).max(1_000_000).optional(),
 })
 
 export type SoundListQuery = z.infer<typeof SoundListQuerySchema>
+
+/** Facet fields the Sounds list can ask counts for. */
+export const SOUND_FACET_FIELDS = [
+  'genre',
+  'tag',
+  'contentType',
+  'source',
+  'status',
+  'uploadedYear',
+] as const
+
+export const SoundFacetsQuerySchema = SoundListFilterSchema.extend({
+  fields: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((raw) =>
+      raw
+        .split(',')
+        .map((f) => f.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.enum(SOUND_FACET_FIELDS)).min(1).max(SOUND_FACET_FIELDS.length)),
+})
+
+export type SoundFacetsQuery = z.infer<typeof SoundFacetsQuerySchema>
+
+/** Bulk delete: exactly one of `ids` or `filter` (+ confirmTotal). */
+export const SoundBulkDeleteSchema = z
+  .object({
+    ids: z.array(z.string().min(1)).min(1).max(SOUND_BULK_MAX_IDS).optional(),
+    filter: SoundListFilterSchema.optional(),
+    confirmTotal: z.number().int().min(0).optional(),
+    /** Required when `filter` matches every sound (empty filter). */
+    all: z.boolean().optional(),
+  })
+  .superRefine((body, ctx) => {
+    const hasIds = body.ids != null
+    const hasFilter = body.filter != null
+    if (hasIds === hasFilter) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "send exactly one of 'ids' or 'filter'",
+      })
+    }
+    if (hasFilter && body.confirmTotal == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "'confirmTotal' is required with 'filter'",
+        path: ['confirmTotal'],
+      })
+    }
+  })
+
+export type SoundBulkDeleteInput = z.infer<typeof SoundBulkDeleteSchema>
+
+/** Fields allowed in a bulk metadata patch (no title / tracklist / URLs). */
+export const SoundBulkPatchFieldsSchema = z
+  .object({
+    genre: z.string().max(80).nullable().optional(),
+    genreCustom: z.string().max(80).nullable().optional(),
+    tags: z.array(z.string().max(40).trim()).max(20).optional(),
+    subGenres: z.array(z.string().max(40).trim()).max(12).optional(),
+    contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
+    isPublic: z.boolean().optional(),
+    isFallback: z.boolean().optional(),
+    downloadsEnabled: z.boolean().optional(),
+    commentsEnabled: z.boolean().optional(),
+    license: z.enum(SOUND_LICENSES).optional(),
+    releasedAt: z.string().datetime().nullable().optional(),
+  })
+  .strict()
+
+export const SoundBulkPatchSchema = z
+  .object({
+    ids: z.array(z.string().min(1)).min(1).max(SOUND_BULK_MAX_IDS).optional(),
+    filter: SoundListFilterSchema.optional(),
+    confirmTotal: z.number().int().min(0).optional(),
+    all: z.boolean().optional(),
+    patch: SoundBulkPatchFieldsSchema,
+  })
+  .superRefine((body, ctx) => {
+    const hasIds = body.ids != null
+    const hasFilter = body.filter != null
+    if (hasIds === hasFilter) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "send exactly one of 'ids' or 'filter'",
+      })
+    }
+    if (hasFilter && body.confirmTotal == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "'confirmTotal' is required with 'filter'",
+        path: ['confirmTotal'],
+      })
+    }
+    if (Object.keys(body.patch).length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'patch must include at least one field',
+        path: ['patch'],
+      })
+    }
+  })
+
+export type SoundBulkPatchInput = z.infer<typeof SoundBulkPatchSchema>
 
 /** Manual-sort reorder for the public "Tracks" tab (all sound items for a channel). */
 export const ReorderSoundsSchema = z.object({
