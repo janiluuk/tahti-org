@@ -634,7 +634,8 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (patchBody.contentType !== undefined) data.contentType = patchBody.contentType
       if (patchBody.isPublic !== undefined) data.isPublic = patchBody.isPublic
       if (patchBody.isFallback !== undefined) data.isFallback = patchBody.isFallback
-      if (patchBody.downloadsEnabled !== undefined) data.downloadsEnabled = patchBody.downloadsEnabled
+      if (patchBody.downloadsEnabled !== undefined)
+        data.downloadsEnabled = patchBody.downloadsEnabled
       if (patchBody.commentsEnabled !== undefined) data.commentsEnabled = patchBody.commentsEnabled
       if (patchBody.license !== undefined) data.license = patchBody.license
       if (patchBody.releasedAt !== undefined) {

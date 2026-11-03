@@ -49,21 +49,18 @@ describe('SoundBulkDeleteSchema', () => {
   it('requires exactly one of ids or filter', () => {
     expect(SoundBulkDeleteSchema.safeParse({}).success).toBe(false)
     expect(
-      SoundBulkDeleteSchema.safeParse({ ids: ['a'], filter: { q: 'x' }, confirmTotal: 1 })
-        .success,
+      SoundBulkDeleteSchema.safeParse({ ids: ['a'], filter: { q: 'x' }, confirmTotal: 1 }).success,
     ).toBe(false)
     expect(SoundBulkDeleteSchema.safeParse({ ids: ['a'] }).success).toBe(true)
-    expect(
-      SoundBulkDeleteSchema.safeParse({ filter: { q: 'x' }, confirmTotal: 1 }).success,
-    ).toBe(true)
+    expect(SoundBulkDeleteSchema.safeParse({ filter: { q: 'x' }, confirmTotal: 1 }).success).toBe(
+      true,
+    )
   })
 })
 
 describe('SoundBulkPatchSchema', () => {
   it('requires a non-empty patch', () => {
-    expect(
-      SoundBulkPatchSchema.safeParse({ ids: ['a'], patch: {} }).success,
-    ).toBe(false)
+    expect(SoundBulkPatchSchema.safeParse({ ids: ['a'], patch: {} }).success).toBe(false)
     expect(
       SoundBulkPatchSchema.safeParse({
         ids: ['a'],

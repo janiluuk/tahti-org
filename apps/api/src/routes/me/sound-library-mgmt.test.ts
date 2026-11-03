@@ -33,15 +33,9 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     channelId = artist.channel!.id
     cookie = await sessionCookieFor(prisma, artist.id)
 
-    soundA = (
-      await createReadySound(prisma, channelId, 'Alpha House')
-    ).id
-    soundB = (
-      await createReadySound(prisma, channelId, 'Beta Techno')
-    ).id
-    soundC = (
-      await createReadySound(prisma, channelId, 'Gamma Ambient')
-    ).id
+    soundA = (await createReadySound(prisma, channelId, 'Alpha House')).id
+    soundB = (await createReadySound(prisma, channelId, 'Beta Techno')).id
+    soundC = (await createReadySound(prisma, channelId, 'Gamma Ambient')).id
 
     await prisma.sound.update({
       where: { id: soundA },
@@ -115,7 +109,10 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json() as {
       total: number
-      facets: { genre: Array<{ value: string; count: number }>; tag: Array<{ value: string; count: number }> }
+      facets: {
+        genre: Array<{ value: string; count: number }>
+        tag: Array<{ value: string; count: number }>
+      }
     }
     expect(body.total).toBeGreaterThanOrEqual(3)
     expect(body.facets.genre.some((g) => g.value === 'House' && g.count >= 1)).toBe(true)
