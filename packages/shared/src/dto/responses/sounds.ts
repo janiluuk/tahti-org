@@ -23,6 +23,66 @@ export const SoundViewSchema = z
 
 export const SoundListSchema = z.array(SoundViewSchema)
 
+/** Paged artist sound list — returned by GET /api/me/sound when `limit` is set. */
+export const SoundListPageSchema = z.object({
+  items: z.array(SoundViewSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export type SoundListPage = z.infer<typeof SoundListPageSchema>
+
+export const SoundIdsSchema = z.object({
+  ids: z.array(z.string()),
+  total: z.number().int().nonnegative(),
+})
+
+export type SoundIds = z.infer<typeof SoundIdsSchema>
+
+export const SoundFacetValueSchema = z.object({
+  value: z.string(),
+  count: z.number().int().nonnegative(),
+})
+
+export const SoundFacetsSchema = z.object({
+  facets: z.record(z.string(), z.array(SoundFacetValueSchema)),
+  total: z.number().int().nonnegative(),
+})
+
+export type SoundFacets = z.infer<typeof SoundFacetsSchema>
+
+export const SoundStatsSchema = z.object({
+  total: z.number().int().nonnegative(),
+  durationSec: z.number().int().nonnegative(),
+  publicCount: z.number().int().nonnegative(),
+  privateCount: z.number().int().nonnegative(),
+  processingCount: z.number().int().nonnegative(),
+  errorCount: z.number().int().nonnegative(),
+  readyCount: z.number().int().nonnegative(),
+})
+
+export type SoundStats = z.infer<typeof SoundStatsSchema>
+
+export const SoundBulkFailureSchema = z.object({
+  id: z.string(),
+  error: z.string(),
+})
+
+export const SoundBulkDeleteResultSchema = z.object({
+  deleted: z.number().int().nonnegative(),
+  failed: z.array(SoundBulkFailureSchema),
+  totalMatched: z.number().int().nonnegative(),
+})
+
+export type SoundBulkDeleteResult = z.infer<typeof SoundBulkDeleteResultSchema>
+
+export const SoundBulkPatchResultSchema = z.object({
+  updated: z.number().int().nonnegative(),
+  failed: z.array(SoundBulkFailureSchema),
+  totalMatched: z.number().int().nonnegative(),
+})
+
+export type SoundBulkPatchResult = z.infer<typeof SoundBulkPatchResultSchema>
+
 /** Cheap total-count response, used by dashboard tiles that only need a
  * number rather than the full list (PERF: avoids GET /api/me/sound's
  * full-metadata payload just to read `.length`). */
