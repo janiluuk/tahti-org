@@ -6,16 +6,26 @@ import { Prisma } from '@tahti/db'
 import { createHearthisClient } from '@tahti/hearthis'
 import {
   CountSchema,
-  SoundProcessingStatusSchema,
-  SoundListSchema,
+  SoundBulkDeleteResultSchema,
+  SoundBulkDeleteSchema,
+  SoundBulkPatchResultSchema,
+  SoundBulkPatchSchema,
+  SoundFacetsQuerySchema,
+  SoundFacetsSchema,
+  SoundIdsSchema,
+  SoundListFilterSchema,
+  SoundListPageSchema,
   SoundListQuerySchema,
+  SoundProcessingStatusSchema,
   SoundRecentSchema,
+  SoundStatsSchema,
   SoundViewSchema,
   IdParamSchema,
   ReorderSoundsSchema,
   openApiResponse,
   parseRouteParams,
   safeDisplayName,
+  type SoundListFilter,
 } from '@tahti/shared'
 import { notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
@@ -25,6 +35,16 @@ import {
   metadataPatchFromBody,
   serializeSound,
 } from '../../lib/sound-metadata.js'
+import {
+  SOUND_BULK_MAX_ERRORS,
+  SOUND_BULK_MAX_IDS,
+  SOUND_LIST_MAX_IDS,
+  SOUND_LIST_MAX_LIMIT,
+  pageLimit,
+  soundFilterNarrows,
+  soundListWhere,
+  wantsPagedSoundList,
+} from '../../lib/sound-list-query.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
 import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import {
@@ -37,6 +57,106 @@ import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
 
 const hearthis = createHearthisClient()
 
+type SoundListRow = {
+  id: string
+  _count: { likes: number; listenEvents: number; comments: number }
+} & Record<string, unknown>
+
+async function serializeSoundRows(
+  prisma: { download: { groupBy: (...args: never[]) => Promise<unknown> } } & object,
+  items: SoundListRow[],
+) {
+  const client = prisma as import('@tahti/db').PrismaClient
+  const downloadCounts = items.length
+    ? await client.download.groupBy({
+        by: ['soundId'],
+        where: { soundId: { in: items.map((i) => i.id) }, countedAt: { not: null } },
+        _count: { _all: true },
+      })
+    : []
+  const downloadsBySoundId = new Map(
+    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+  )
+  return items.map(({ _count, ...item }) => ({
+    ...serializeSound(item),
+    likeCount: _count.likes,
+    commentCount: _count.comments,
+    playCount: _count.listenEvents,
+    downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+  }))
+}
+
+async function resolveBulkIds(
+  fastify: { prisma: import('@tahti/db').PrismaClient },
+  channelId: string,
+  body: {
+    ids?: string[]
+    filter?: SoundListFilter
+    confirmTotal?: number
+    all?: boolean
+  },
+): Promise<
+  | { ok: true; ids: string[]; totalMatched: number }
+  | { ok: false; status: 400 | 409; body: Record<string, unknown> }
+> {
+  if (body.ids) {
+    if (body.ids.length > SOUND_BULK_MAX_IDS) {
+      return {
+        ok: false,
+        status: 400,
+        body: {
+          error: `at most ${SOUND_BULK_MAX_IDS} ids per request; use the filter form for more`,
+        },
+      }
+    }
+    const ids = [...new Set(body.ids)]
+    const owned = await fastify.prisma.sound.findMany({
+      where: { channelId, id: { in: ids } },
+      select: { id: true },
+    })
+    const ownedSet = new Set(owned.map((r) => r.id))
+    return {
+      ok: true,
+      ids: ids.filter((id) => ownedSet.has(id)),
+      totalMatched: ids.filter((id) => ownedSet.has(id)).length,
+    }
+  }
+
+  const filter = body.filter ?? {}
+  if (!soundFilterNarrows(filter) && !body.all) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'an empty filter matches the whole library; resend with "all": true to confirm',
+      },
+    }
+  }
+  if (body.confirmTotal == null) {
+    return { ok: false, status: 400, body: { error: "'confirmTotal' is required with 'filter'" } }
+  }
+
+  const where = soundListWhere(channelId, filter)
+  const matched = await fastify.prisma.sound.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: body.confirmTotal + 1,
+    select: { id: true },
+  })
+  if (matched.length !== body.confirmTotal) {
+    const totalMatched = await fastify.prisma.sound.count({ where })
+    return {
+      ok: false,
+      status: 409,
+      body: {
+        error: `the library changed: ${totalMatched} sounds match, not ${body.confirmTotal}. Re-read the count and try again.`,
+        totalMatched,
+      },
+    }
+  }
+  return { ok: true, ids: matched.map((r) => r.id), totalMatched: matched.length }
+}
+
 const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/sound',
@@ -44,8 +164,10 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'M22: list channel sound items with metadata',
-        response: openApiResponse(SoundListSchema, 'SoundList'),
+        description:
+          'List channel sounds with metadata. Pass `limit` for a paged `{ items, total }` response; omit it for the legacy array (capped at 100).',
+        // Documented as the paged shape; bare GET without `limit` still returns the legacy array.
+        response: openApiResponse(SoundListPageSchema, 'SoundListPage'),
       },
     },
     async (request, reply) => {
@@ -56,40 +178,38 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
         })
       }
+      const query = parsedQuery.data
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
         select: { id: true },
       })
-      if (!channel) return reply.send([])
+      if (!channel) {
+        return reply.send(wantsPagedSoundList(query) ? { items: [], total: 0 } : [])
+      }
 
-      const items = await fastify.prisma.sound.findMany({
-        where: { channelId: channel.id },
-        orderBy: SOUND_LIST_ORDER_BY[parsedQuery.data.sort ?? 'newest'],
-        take: 100,
-        select: {
-          ...soundMetadataSelect,
-          _count: { select: { likes: true, listenEvents: true, comments: true } },
-        },
-      })
-      const downloadCounts = items.length
-        ? await fastify.prisma.download.groupBy({
-            by: ['soundId'],
-            where: { soundId: { in: items.map((i) => i.id) }, countedAt: { not: null } },
-            _count: { _all: true },
-          })
-        : []
-      const downloadsBySoundId = new Map(
-        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
-      )
-      return reply.send(
-        items.map(({ _count, ...item }) => ({
-          ...serializeSound(item),
-          likeCount: _count.likes,
-          commentCount: _count.comments,
-          playCount: _count.listenEvents,
-          downloadCount: downloadsBySoundId.get(item.id) ?? 0,
-        })),
-      )
+      const where = soundListWhere(channel.id, query)
+      const orderBy = SOUND_LIST_ORDER_BY[query.sort ?? 'newest']
+      const paged = wantsPagedSoundList(query)
+      const take = paged ? pageLimit(query.limit) : SOUND_LIST_MAX_LIMIT
+      const offset = paged ? (query.offset ?? 0) : 0
+
+      const [items, total] = await Promise.all([
+        fastify.prisma.sound.findMany({
+          where,
+          orderBy,
+          take,
+          skip: offset,
+          select: {
+            ...soundMetadataSelect,
+            _count: { select: { likes: true, listenEvents: true, comments: true } },
+          },
+        }),
+        paged ? fastify.prisma.sound.count({ where }) : Promise.resolve(-1),
+      ])
+
+      const serialized = await serializeSoundRows(fastify.prisma, items as SoundListRow[])
+      if (paged) return reply.send({ items: serialized, total })
+      return reply.send(serialized)
     },
   )
 
@@ -196,6 +316,353 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           : Promise.resolve([]),
       ])
       return reply.send({ processing, settled })
+    },
+  )
+
+  fastify.get(
+    '/api/me/sound/ids',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Every matching sound id for select-all (same filters as the list)',
+        response: openApiResponse(SoundIdsSchema, 'SoundIds'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsedQuery = SoundListFilterSchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send({ ids: [], total: 0 })
+
+      const where = soundListWhere(channel.id, parsedQuery.data)
+      const total = await fastify.prisma.sound.count({ where })
+      if (total > SOUND_LIST_MAX_IDS) {
+        return reply.status(413).send({
+          error: `too many matches (${total}); refine the filter (max ${SOUND_LIST_MAX_IDS})`,
+          totalMatched: total,
+        })
+      }
+      const rows = await fastify.prisma.sound.findMany({
+        where,
+        orderBy: SOUND_LIST_ORDER_BY.newest,
+        select: { id: true },
+      })
+      return reply.send({ ids: rows.map((r) => r.id), total })
+    },
+  )
+
+  fastify.get(
+    '/api/me/sound/facets',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Value counts per field for the current sound-list filter',
+        response: openApiResponse(SoundFacetsSchema, 'SoundFacets'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsedQuery = SoundFacetsQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const { fields, ...filter } = parsedQuery.data
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send({ facets: {}, total: 0 })
+
+      const baseWhere = soundListWhere(channel.id, filter)
+      const total = await fastify.prisma.sound.count({ where: baseWhere })
+      const facets: Record<string, Array<{ value: string; count: number }>> = {}
+
+      for (const field of fields) {
+        const omit: keyof SoundListFilter | undefined =
+          field === 'uploadedYear'
+            ? undefined
+            : field === 'tag'
+              ? 'tag'
+              : field === 'genre'
+                ? 'genre'
+                : field === 'contentType'
+                  ? 'contentType'
+                  : field === 'source'
+                    ? 'source'
+                    : field === 'status'
+                      ? 'status'
+                      : undefined
+        const where = soundListWhere(channel.id, filter, omit)
+        if (field === 'genre') {
+          const rows = await fastify.prisma.sound.groupBy({
+            by: ['genre'],
+            where,
+            _count: { _all: true },
+            orderBy: { _count: { genre: 'desc' } },
+            take: 100,
+          })
+          facets.genre = rows
+            .filter((r) => r.genre)
+            .map((r) => ({ value: r.genre!, count: r._count._all }))
+        } else if (field === 'contentType') {
+          const rows = await fastify.prisma.sound.groupBy({
+            by: ['contentType'],
+            where,
+            _count: { _all: true },
+            orderBy: { _count: { contentType: 'desc' } },
+          })
+          facets.contentType = rows.map((r) => ({
+            value: r.contentType,
+            count: r._count._all,
+          }))
+        } else if (field === 'status') {
+          const rows = await fastify.prisma.sound.groupBy({
+            by: ['status'],
+            where,
+            _count: { _all: true },
+            orderBy: { _count: { status: 'desc' } },
+          })
+          facets.status = rows.map((r) => ({ value: r.status, count: r._count._all }))
+        } else if (field === 'source') {
+          const rows = await fastify.prisma.sound.groupBy({
+            by: ['embedProvider'],
+            where,
+            _count: { _all: true },
+            orderBy: { _count: { embedProvider: 'desc' } },
+          })
+          facets.source = rows.map((r) => ({
+            value: r.embedProvider ?? 'native',
+            count: r._count._all,
+          }))
+        } else if (field === 'tag') {
+          const tagged = await fastify.prisma.sound.findMany({
+            where,
+            select: { tags: true },
+            take: 5_000,
+          })
+          const counts = new Map<string, number>()
+          for (const row of tagged) {
+            for (const tag of row.tags) {
+              counts.set(tag, (counts.get(tag) ?? 0) + 1)
+            }
+          }
+          facets.tag = [...counts.entries()]
+            .map(([value, count]) => ({ value, count }))
+            .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+            .slice(0, 100)
+        } else if (field === 'uploadedYear') {
+          const matched = await fastify.prisma.sound.findMany({
+            where,
+            select: { createdAt: true },
+            take: 20_000,
+          })
+          const yearCounts = new Map<string, number>()
+          for (const row of matched) {
+            const y = String(row.createdAt.getUTCFullYear())
+            yearCounts.set(y, (yearCounts.get(y) ?? 0) + 1)
+          }
+          facets.uploadedYear = [...yearCounts.entries()]
+            .map(([value, count]) => ({ value, count }))
+            .sort((a, b) => Number(b.value) - Number(a.value))
+        }
+      }
+
+      return reply.send({ facets, total })
+    },
+  )
+
+  fastify.get(
+    '/api/me/sound/stats',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Totals for the current sound-list filter',
+        response: openApiResponse(SoundStatsSchema, 'SoundStats'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsedQuery = SoundListFilterSchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) {
+        return reply.send({
+          total: 0,
+          durationSec: 0,
+          publicCount: 0,
+          privateCount: 0,
+          processingCount: 0,
+          errorCount: 0,
+          readyCount: 0,
+        })
+      }
+
+      const where = soundListWhere(channel.id, parsedQuery.data)
+      const [total, durationAgg, publicCount, processingCount, errorCount, readyCount] =
+        await Promise.all([
+          fastify.prisma.sound.count({ where }),
+          fastify.prisma.sound.aggregate({ where, _sum: { durationSec: true } }),
+          fastify.prisma.sound.count({ where: { ...where, isPublic: true } }),
+          fastify.prisma.sound.count({
+            where: { ...where, status: { in: ['PENDING', 'PROCESSING'] } },
+          }),
+          fastify.prisma.sound.count({ where: { ...where, status: 'ERROR' } }),
+          fastify.prisma.sound.count({ where: { ...where, status: 'READY' } }),
+        ])
+
+      return reply.send({
+        total,
+        durationSec: durationAgg._sum.durationSec ?? 0,
+        publicCount,
+        privateCount: Math.max(0, total - publicCount),
+        processingCount,
+        errorCount,
+        readyCount,
+      })
+    },
+  )
+
+  fastify.post(
+    '/api/me/sound/bulk-delete',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Delete many sounds. Send `ids`, or `filter` + `confirmTotal` (server re-counts; 409 on drift).',
+        response: openApiResponse(SoundBulkDeleteResultSchema, 'SoundBulkDeleteResult'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = SoundBulkDeleteSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid body',
+        })
+      }
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(403).send({ error: 'You need a channel to do this' })
+
+      const resolved = await resolveBulkIds(fastify, channel.id, parsed.data)
+      if (!resolved.ok) return reply.status(resolved.status).send(resolved.body)
+
+      let deleted = 0
+      const failed: Array<{ id: string; error: string }> = []
+      for (const id of resolved.ids) {
+        try {
+          await fastify.prisma.sound.delete({ where: { id } })
+          deleted += 1
+        } catch (err) {
+          if (failed.length < SOUND_BULK_MAX_ERRORS) {
+            const message =
+              err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003'
+                ? 'linked Mixcloud upload — disconnect that first'
+                : err instanceof Error
+                  ? err.message
+                  : 'delete failed'
+            failed.push({ id, error: message })
+          }
+        }
+      }
+
+      return reply.send({
+        deleted,
+        failed,
+        totalMatched: resolved.totalMatched,
+      })
+    },
+  )
+
+  fastify.post(
+    '/api/me/sound/bulk-patch',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Patch shared metadata on many sounds. Send `ids`, or `filter` + `confirmTotal`.',
+        response: openApiResponse(SoundBulkPatchResultSchema, 'SoundBulkPatchResult'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = SoundBulkPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid body',
+        })
+      }
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(403).send({ error: 'You need a channel to do this' })
+
+      const resolved = await resolveBulkIds(fastify, channel.id, parsed.data)
+      if (!resolved.ok) return reply.status(resolved.status).send(resolved.body)
+
+      const patchBody = { ...parsed.data.patch }
+      const data: Record<string, unknown> = {}
+      if (patchBody.genre !== undefined) data.genre = patchBody.genre
+      if (patchBody.genreCustom !== undefined) data.genreCustom = patchBody.genreCustom
+      if (patchBody.tags !== undefined) data.tags = patchBody.tags
+      if (patchBody.subGenres !== undefined) data.subGenres = patchBody.subGenres
+      if (patchBody.contentType !== undefined) data.contentType = patchBody.contentType
+      if (patchBody.isPublic !== undefined) data.isPublic = patchBody.isPublic
+      if (patchBody.isFallback !== undefined) data.isFallback = patchBody.isFallback
+      if (patchBody.downloadsEnabled !== undefined)
+        data.downloadsEnabled = patchBody.downloadsEnabled
+      if (patchBody.commentsEnabled !== undefined) data.commentsEnabled = patchBody.commentsEnabled
+      if (patchBody.license !== undefined) data.license = patchBody.license
+      if (patchBody.releasedAt !== undefined) {
+        data.releasedAt = patchBody.releasedAt ? new Date(patchBody.releasedAt) : null
+      }
+
+      let updated = 0
+      const failed: Array<{ id: string; error: string }> = []
+      for (const id of resolved.ids) {
+        try {
+          await fastify.prisma.sound.update({ where: { id }, data })
+          updated += 1
+        } catch (err) {
+          if (failed.length < SOUND_BULK_MAX_ERRORS) {
+            failed.push({
+              id,
+              error: err instanceof Error ? err.message : 'update failed',
+            })
+          }
+        }
+      }
+
+      return reply.send({
+        updated,
+        failed,
+        totalMatched: resolved.totalMatched,
+      })
     },
   )
 
