@@ -10,6 +10,21 @@ pnpm install --frozen-lockfile
 pnpm --filter @tahti/db db:generate
 ```
 
+Then apply the schema and run the gates:
+
+```bash
+pnpm --filter @tahti/db db:migrate:test   # prisma db push
+pnpm format && pnpm ci:check && pnpm test
+```
+
+Bash e2e against a running dev API (`:3001`):
+
+```bash
+API_URL=http://localhost:3001 pnpm test:e2e
+SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/tahti \
+  API_URL=http://localhost:3001 pnpm test:e2e:journeys
+```
+
 For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`). The stack has no web UI; the app is the tahti-player SPA (`infra/docker-compose.tahti-web.yml`, `:17778`).
 
 ## Commands

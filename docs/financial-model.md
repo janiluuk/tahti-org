@@ -198,3 +198,29 @@ Y1 needs a ~€20k bridge from foundation grants. Tempo (Business Finland) up to
 | Active members by Y3 | 4,000 |
 
 A small, sustainable Finnish nonprofit on Finnish infrastructure. ~€312k to artists across grants and direct fan-subs over 3 years, with a fair director wage, an honest story for foundations, no entanglement with global CDNs or US cloud, and no equity to anyone.
+
+## Headline numbers (base case)
+
+Moved from the root README. Totals differ slightly from the v7 cumulative table above; both are kept as they were.
+
+|                                        | Y1           | Y2           | Y3            | 3-yr cum.     |
+| -------------------------------------- | ------------ | ------------ | ------------- | ------------- |
+| Members                                | 200          | 1,200        | 4,000         | -             |
+| Total org revenue                      | €35,426      | €107,700     | €290,872      | €433,998      |
+| Total costs (incl. director salary)    | €54,572      | €86,092      | €148,220      | €288,884      |
+| **Org surplus**                        | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
+| **Artist grant pool (90% of surplus)** | **€0**       | **€19,447**  | **€129,737**  | **€149,184**  |
+| **Fan-sub direct to artists**          | €1,622       | €22,705      | €138,394      | €162,721      |
+| **Total artist money**                 | €1,622       | €42,152      | €268,131      | **€311,905**  |
+| Director compensation                  | €30,000      | €40,000      | €45,000       | €115,000      |
+
+Break-even threshold: ~600 members in Y1 absent grant funding, ~775 in Y2, ~1,100 in Y3 (Y3 jump is the 10 Gbps fiber upgrade).
+
+## Three things that must go right
+
+1. A founding grant of €20-25k lands in Year 1 (Tempo, Koneen, or SKR).
+2. The org reaches at least 100 members by end of Year 1 (200 modeled).
+3. The director does not burn out or quit.
+
+If all three: Tahti is operationally self-funding by Y2 and distributes meaningful grants by Y3.
+If any one fails: the org pauses, retrenches, or terminates. See [`business-evaluation.md`](business-evaluation.md) for honest scenarios.

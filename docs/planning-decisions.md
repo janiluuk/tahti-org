@@ -803,21 +803,7 @@ Date decided: 2026-09-11
 
 ## Decision log
 
-Record decisions here as they are made, in date order.
-
-| #   | Topic                  | Decision summary                                                                                                                           | Date       | Owner       |
-| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------- |
-| 4   | Auth library           | Custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`.                                 | 2026-06-03 | Dev         |
-| 5   | Upload resumability    | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`.                                                 | 2026-06-03 | Dev         |
-| 9   | Subdomain routing      | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred.                                                                             | 2026-06-03 | Dev         |
-| 11  | AGM voting legality    | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment.                                         | 2026-06-03 | Dev / Board |
-| 8   | Grant formula          | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev         |
-| 10  | Stripe Connect KYC gap | **A** — block Checkout until `charges_enabled`; tiers editable during KYC with a banner. (Live Stripe wiring still pending.)               | 2026-06-03 | Dev         |
-
-> Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
-> were decided implicitly by implementation and are recorded here for the audit
-> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 12–15) still need explicit
-> resolution before their milestones.
+Moved to [`DECISIONS.md`](DECISIONS.md) (one table for every settled decision, owners Dev / Board as in the topic blocks above). Open topics are listed there under "Still open".
 
 ---
 
@@ -825,6 +811,6 @@ Record decisions here as they are made, in date order.
 
 1. Work through topics 1–3 first — they block all Phase 4 work.
 2. For each topic: fill the **Decision** block, then update the referenced spec files.
-3. When a decision is made, change **Status** from `OPEN` to `DECIDED` and add a row to the decision log.
+3. When a decision is made, change **Status** from `OPEN` to `DECIDED` and add a row to [`DECISIONS.md`](DECISIONS.md).
 4. If a topic becomes irrelevant, mark it `N/A` with a one-line explanation.
 5. Commit this file with every decision update — it's the audit trail for why things were built the way they were.

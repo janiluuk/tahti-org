@@ -6,7 +6,8 @@ document is the contract for exact parameters, response schemas, and examples.
 - Public reference UI: [`https://api.tahti.live/`](https://api.tahti.live/)
 - Public OpenAPI: `GET https://api.tahti.live/api/openapi.json`
 - Local API: `http://localhost:3001`
-- Full operations reference: `GET /docs` (HTTP basic auth)
+- Full operations reference: `GET /docs` (HTTP basic auth; credential rotation in [`ops/RUNBOOK.md`](../../ops/RUNBOOK.md))
+- Every merge to `main` exports `openapi.json` and `openapi.public.json` as release artifacts ([`ops/DEPLOY.md`](../../ops/DEPLOY.md#ci-releases-and-automatic-deploys))
 - Generated TypeScript client: [`packages/api-client`](../../packages/api-client/)
 
 ## Conventions

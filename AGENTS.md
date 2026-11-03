@@ -11,6 +11,7 @@ linked docs; do not invent product rules that contradict them.
 4. **[`docs/project-roadmap.md`](docs/project-roadmap.md)** — build audit + phase status (source of truth for `[x]` / `[~]` / `[ ]`).
 5. **[`docs/features.md`](docs/features.md)** — what is implemented today on the product surface.
 6. **[`docs/testing.md`](docs/testing.md)** — how to run Vitest, smoke, and journey e2e.
+7. **[`docs/DECISIONS.md`](docs/DECISIONS.md)** - settled decisions; check before re-opening a fork. Add a row when you settle one.
 
 ## Always-on Cursor rules
 
