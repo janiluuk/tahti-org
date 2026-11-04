@@ -110,11 +110,18 @@ describe('M37 — per-track insights', () => {
       totalDownloads: number
       totalPlays: number
       countries: Array<{ countryCode: string; count: number }>
+      hourlyUsers: number[]
+      dayOfWeekUsers: number[]
+      dailyUsers: Array<{ date: string; users: number }>
     }
     expect(body.title).toBe('Insights Test Track')
     expect(body.totalDownloads).toBe(2)
     expect(body.totalPlays).toBe(2)
     expect(body.countries.map((c) => c.countryCode).sort()).toEqual(['FI', 'SE'])
+    expect(body.hourlyUsers).toHaveLength(24)
+    expect(body.dayOfWeekUsers).toHaveLength(7)
+    expect(body.dailyUsers.length).toBeGreaterThan(0)
+    expect(body.dailyUsers.every((d) => typeof d.users === 'number')).toBe(true)
   })
 
   it('GET /api/me/release-tracks/:id/insights returns totals + country breakdown', async () => {

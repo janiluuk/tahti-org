@@ -23,6 +23,25 @@ export const TrackInsightsResponseSchema = z.object({
       count: z.number().int().nonnegative(),
     }),
   ),
+  /** Unique listeners (fingerprints) per UTC hour, index 0 = 00:00. */
+  hourlyUsers: z.array(z.number().int().nonnegative()).length(24),
+  /** Unique listeners per weekday, Monday-first (same order as History). */
+  dayOfWeekUsers: z.tuple([
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+    z.number().int().nonnegative(),
+  ]),
+  /** Unique listeners per UTC calendar day in the period window. */
+  dailyUsers: z.array(
+    z.object({
+      date: z.string(),
+      users: z.number().int().nonnegative(),
+    }),
+  ),
 })
 
 export type TrackInsightsResponse = z.infer<typeof TrackInsightsResponseSchema>
