@@ -168,6 +168,35 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // DELETE /api/me/newsletter/drafts/:draftId — remove a draft or past send
+  fastify.delete(
+    '/api/me/newsletter/drafts/:draftId',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(DraftIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { draftId } = routeParams
+
+      const draft = await fastify.prisma.newsletterDraft.findFirst({
+        where: { id: draftId, userId: user.id },
+        select: { id: true, state: true },
+      })
+      if (!draft) return reply.status(404).send({ error: 'Draft not found' })
+      if (draft.state === 'QUEUED') {
+        return reply.status(409).send({ error: 'Wait for the send to finish before removing it' })
+      }
+
+      await fastify.prisma.newsletterDraft.delete({ where: { id: draft.id } })
+      return reply.status(204).send()
+    },
+  )
+
   // POST /api/me/newsletter/send/:draftId — queue for delivery
   fastify.post(
     '/api/me/newsletter/send/:draftId',

@@ -76,6 +76,32 @@ describe('M13/M19 — newsletter drafts', () => {
     expect(res.json().subscribersOnly).toBe(false)
   })
 
+  it('deletes a draft the artist owns', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/me/newsletter/drafts',
+      headers: { cookie },
+      payload: { subject: 'Remove me', bodyMd: 'Gone soon' },
+    })
+    expect(created.statusCode).toBe(201)
+    const draftId = created.json().id as string
+
+    const removed = await app.inject({
+      method: 'DELETE',
+      url: `/api/me/newsletter/drafts/${draftId}`,
+      headers: { cookie },
+    })
+    expect(removed.statusCode).toBe(204)
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/newsletter/drafts',
+      headers: { cookie },
+    })
+    const rows = list.json().drafts as Array<{ id: string }>
+    expect(rows.some((row) => row.id === draftId)).toBe(false)
+  })
+
   it('rejects drafts without subject or body', async () => {
     const noSubject = await app.inject({
       method: 'POST',

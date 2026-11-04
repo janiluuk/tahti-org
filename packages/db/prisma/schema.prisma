@@ -1061,6 +1061,12 @@ model User {
   soundLikes                     SoundLike[]
   collectionSubscriptions        CollectionSubscription[]
   collectionItemsAdded           CollectionItem[]                @relation("CollectionItemAddedBy")
+  artistGroupsCreated            ArtistGroup[]                   @relation("ArtistGroupCreator")
+  artistGroupMemberships         ArtistGroupMember[]
+  artistGroupJoinRequests        ArtistGroupJoinRequest[]        @relation("ArtistGroupJoinRequester")
+  artistGroupJoinRequestsHandled ArtistGroupJoinRequest[]        @relation("ArtistGroupJoinResolver")
+  artistGroupSubmissions         ArtistGroupSoundSubmission[]    @relation("ArtistGroupSubmitter")
+  artistGroupSubmissionsHandled  ArtistGroupSoundSubmission[]    @relation("ArtistGroupSubmissionResolver")
   soundReposts                   SoundRepost[]
   trackReactions                 TrackReaction[]
   jamSessionsHosted              JamSession[]
@@ -2240,6 +2246,7 @@ model Sound {
   mixUpload            MixUpload?
   cloudImportJob       CloudImportJob?
   collectionItems      CollectionItem[]
+  groupSubmissions     ArtistGroupSoundSubmission[]
   versions             SoundVersion[]
   curatedRotationItems CuratedRotationItem[]
   radioSubmissions     RadioTrackSubmissionItem[]
@@ -4014,6 +4021,7 @@ model Collection {
   subscribers             CollectionSubscription[]
   channelsUsingAsFallback Channel[]                @relation("ChannelActiveFallbackCollection")
   jamSessions             JamSession[]
+  artistGroup             ArtistGroup?
 
   @@index([userId, isPublic])
   @@index([userId, publicProfileOrder])
@@ -4122,6 +4130,118 @@ model CollectionSubscription {
 
   @@id([userId, collectionId])
   @@index([collectionId])
+  @@schema("media")
+}
+
+// ── Artist groups ────────────────────────────────────────────────────────────
+// A group is a member-gated shared playlist: it owns exactly one PLAYLIST
+// Collection (never `collaborative`, so the open collaborative-add route can't
+// reach it) and every add goes through the group's member/submit rules.
+
+enum ArtistGroupJoinPolicy {
+  OPEN
+  REQUEST
+
+  @@schema("media")
+}
+
+enum ArtistGroupSubmitPolicy {
+  OPEN
+  APPROVE
+
+  @@schema("media")
+}
+
+enum ArtistGroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+
+  @@schema("media")
+}
+
+enum ArtistGroupRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("media")
+}
+
+model ArtistGroup {
+  id              String                  @id @default(cuid())
+  slug            String                  @unique
+  name            String
+  description     String?
+  coverUrl        String?
+  // Object key when the cover was uploaded through our own flow — same
+  // convention as Collection.coverKey.
+  coverKey        String?
+  createdByUserId String
+  createdBy       User                    @relation("ArtistGroupCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  isPublic        Boolean                 @default(true)
+  joinPolicy      ArtistGroupJoinPolicy   @default(OPEN)
+  submitPolicy    ArtistGroupSubmitPolicy @default(OPEN)
+  collectionId    String                  @unique
+  collection      Collection              @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  members      ArtistGroupMember[]
+  joinRequests ArtistGroupJoinRequest[]
+  submissions  ArtistGroupSoundSubmission[]
+
+  @@index([isPublic, createdAt])
+  @@schema("media")
+}
+
+model ArtistGroupMember {
+  groupId  String
+  group    ArtistGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     ArtistGroupRole @default(MEMBER)
+  joinedAt DateTime        @default(now())
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@schema("media")
+}
+
+model ArtistGroupJoinRequest {
+  id               String                   @id @default(cuid())
+  groupId          String
+  group            ArtistGroup              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User                     @relation("ArtistGroupJoinRequester", fields: [userId], references: [id], onDelete: Cascade)
+  status           ArtistGroupRequestStatus @default(PENDING)
+  createdAt        DateTime                 @default(now())
+  resolvedAt       DateTime?
+  resolvedByUserId String?
+  resolvedBy       User?                    @relation("ArtistGroupJoinResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, userId])
+  @@index([groupId, status])
+  @@schema("media")
+}
+
+model ArtistGroupSoundSubmission {
+  id                String                   @id @default(cuid())
+  groupId           String
+  group             ArtistGroup              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  soundId           String
+  sound             Sound                    @relation(fields: [soundId], references: [id], onDelete: Cascade)
+  submittedByUserId String
+  submittedBy       User                     @relation("ArtistGroupSubmitter", fields: [submittedByUserId], references: [id], onDelete: Cascade)
+  note              String?
+  status            ArtistGroupRequestStatus @default(PENDING)
+  createdAt         DateTime                 @default(now())
+  resolvedAt        DateTime?
+  resolvedByUserId  String?
+  resolvedBy        User?                    @relation("ArtistGroupSubmissionResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, soundId])
+  @@index([groupId, status])
   @@schema("media")
 }
 

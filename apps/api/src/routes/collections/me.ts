@@ -239,8 +239,14 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
+        include: { artistGroup: { select: { id: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      if (col.artistGroup && body.collaborative) {
+        return reply
+          .status(409)
+          .send({ error: 'A group playlist only takes tracks from group members' })
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: Record<string, any> = {}
@@ -296,8 +302,14 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
+        include: { artistGroup: { select: { id: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      if (col.artistGroup) {
+        return reply
+          .status(409)
+          .send({ error: 'This playlist belongs to a group. Delete the group instead.' })
+      }
       await fastify.prisma.collection.delete({ where: { id: col.id } })
       return reply.status(204).send()
     },
