@@ -101,6 +101,8 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
           license: true,
           releasedAt: true,
           peaks: true,
+          embedProvider: true,
+          embedUri: true,
           mp3Key: true,
           flacKey: true,
           accessMode: true,
