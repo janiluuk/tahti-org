@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import type { Prisma, PrismaClient } from '@tahti/db'
+import { notifyFollowersOfListeningParty } from '@tahti/db'
 import {
   CreateListeningPartyBodySchema,
   IdParamSchema,
@@ -14,6 +15,7 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  safeDisplayName,
   UpdateListeningPartyBodySchema,
 } from '@tahti/shared'
 import type { ZodError } from 'zod'
@@ -163,6 +165,15 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: partyId },
         select: listeningPartySelect,
       })
+      await notifyFollowersOfListeningParty(
+        fastify.prisma,
+        {
+          id: user.id,
+          username: user.username,
+          displayName: safeDisplayName(user.displayName, user.username),
+        },
+        { id: party.id, startAt: party.startAt, release: { title: party.release.title } },
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'listening party notice failed'))
       return reply.status(201).send(await buildListeningPartyDto(fastify.prisma, party, now))
     },
   )
