@@ -72,6 +72,14 @@ describe('DELETE /api/me/groups/:slug/members/:username', () => {
     const res = await remove('admin', 'member')
     expect(res.statusCode).toBe(204)
     expect(await roleOf('member')).toBeNull()
+    const notice = await prisma.notification.findFirst({
+      where: { userId: ids.member!, type: 'GROUP_MEMBER_REMOVED' },
+    })
+    expect(notice).toMatchObject({
+      actorUserId: ids.admin,
+      title: 'You were removed from Members Remove Crew',
+      url: `/groups/${slug}`,
+    })
   })
 
   it('does not let a member remove anyone', async () => {

@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
+import { notifyGroupMemberRemoved } from '../../lib/group-notices.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { zodError } from '../collections/helpers.js'
 import { canManageGroup, loadGroupForUser, publicUser } from './helpers.js'
@@ -93,6 +94,9 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
       await fastify.prisma.artistGroupMember.delete({
         where: { groupId_userId: { groupId: loaded.group.id, userId: target.userId } },
       })
+      await notifyGroupMemberRemoved(fastify.prisma, loaded.group, target.userId, user.id).catch(
+        (err: unknown) => fastify.log.warn({ err }, 'group removal notice failed'),
+      )
       return reply.status(204).send()
     },
   )
