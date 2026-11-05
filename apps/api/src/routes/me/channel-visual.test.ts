@@ -43,6 +43,9 @@ describe('PATCH /api/me/channel/visual — backdrop fields', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
+    expect(body.showSiteSidebar).toBe(false)
+    expect(body.showSiteBottomBar).toBe(false)
+    expect(body.showSiteHeader).toBe(true)
     expect(body.useBackgroundGradient).toBe(false)
     expect(body.backgroundVisualPreset).toBeNull()
     expect(body.backgroundVisualSettingsJson).toBeNull()
@@ -93,6 +96,56 @@ describe('PATCH /api/me/channel/visual — backdrop fields', () => {
       url: '/api/me/channel/visual',
       headers: { cookie },
       payload: { backgroundVisualPreset: 'NOT_A_REAL_PRESET' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+  it('persists site chrome through owner reload and anonymous public reads', async () => {
+    const payload = {
+      showSiteSidebar: true,
+      showSiteBottomBar: true,
+      showSiteHeader: false,
+      topBarText: 'Artist home',
+    }
+    const saved = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload,
+    })
+    expect(saved.statusCode).toBe(200)
+    expect(saved.json()).toMatchObject(payload)
+    const reloaded = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+    })
+    expect(reloaded.json()).toMatchObject(payload)
+    const channel = await prisma.channel.findFirstOrThrow({
+      where: { user: { email: `${PREFIX}artist@example.com` } },
+      select: { slug: true },
+    })
+    const publicPage = await app.inject({ method: 'GET', url: `/api/channels/${channel.slug}` })
+    expect(publicPage.statusCode).toBe(200)
+    expect(publicPage.json()).toMatchObject(payload)
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { showSiteSidebar: false, showSiteBottomBar: false, showSiteHeader: true },
+    })
+    expect(cleared.json()).toMatchObject({
+      showSiteSidebar: false,
+      showSiteBottomBar: false,
+      showSiteHeader: true,
+    })
+  })
+
+  it('rejects invalid site visibility values', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { showSiteHeader: 'false' },
     })
     expect(res.statusCode).toBe(400)
   })

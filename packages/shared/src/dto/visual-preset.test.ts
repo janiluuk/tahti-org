@@ -127,3 +127,21 @@ describe('ChannelVisualPatchSchema look extras', () => {
     ).toBe(false)
   })
 })
+
+describe('artist site chrome', () => {
+  it('preserves both enabled and disabled settings', () => {
+    for (const enabled of [true, false]) {
+      const patch = {
+        showSiteSidebar: enabled,
+        showSiteBottomBar: enabled,
+        showSiteHeader: enabled,
+      }
+      expect(ChannelVisualPatchSchema.parse(patch)).toEqual(patch)
+    }
+  })
+  it('rejects non-boolean visibility settings', () => {
+    for (const key of ['showSiteSidebar', 'showSiteBottomBar', 'showSiteHeader']) {
+      expect(ChannelVisualPatchSchema.safeParse({ [key]: 'false' }).success).toBe(false)
+    }
+  })
+})

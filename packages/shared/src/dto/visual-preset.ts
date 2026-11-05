@@ -338,6 +338,9 @@ export const ChannelVisualPatchSchema = z
     /** Shown instead of the generic Tahti top bar when this channel is
      * viewed via its verified custom domain. Null/empty = artist name + avatar. */
     topBarText: z.string().max(120).nullable().optional(),
+    showSiteSidebar: z.boolean().optional(),
+    showSiteBottomBar: z.boolean().optional(),
+    showSiteHeader: z.boolean().optional(),
     /** When true, `playerColorSchemeJson` colors the player/visualizer
      * independently of the header color scheme. */
     usePlayerGradient: z.boolean().optional(),
@@ -388,6 +391,9 @@ export const CHANNEL_VISUAL_SELECT = {
   slideshowTransitionMs: true,
   slideshowAutoplay: true,
   topBarText: true,
+  showSiteSidebar: true,
+  showSiteBottomBar: true,
+  showSiteHeader: true,
   usePlayerGradient: true,
   playerColorSchemeJson: true,
   useBackgroundGradient: true,
