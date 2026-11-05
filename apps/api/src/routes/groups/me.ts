@@ -15,6 +15,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
+import { notifyGroupJoinRequested } from '../../lib/group-notices.js'
 import { zodError } from '../collections/helpers.js'
 import {
   COLLECTION_SLUG_PREFIX,
@@ -233,12 +234,21 @@ const meGroupRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(201).send({ status: 'JOINED', role: 'MEMBER' })
       }
 
+      const alreadyPending = await fastify.prisma.artistGroupJoinRequest.findFirst({
+        where: { groupId: group.id, userId: user.id, status: 'PENDING' },
+        select: { id: true },
+      })
       const pendingRequest = await fastify.prisma.artistGroupJoinRequest.upsert({
         where: { groupId_userId: { groupId: group.id, userId: user.id } },
         create: { groupId: group.id, userId: user.id },
         update: { status: 'PENDING', resolvedAt: null, resolvedByUserId: null },
         select: { id: true, status: true },
       })
+      if (!alreadyPending) {
+        await notifyGroupJoinRequested(fastify.prisma, group, user.id).catch((err: unknown) =>
+          fastify.log.warn({ err }, 'group join request notice failed'),
+        )
+      }
       return reply.status(202).send({ status: 'REQUESTED', requestId: pendingRequest.id })
     } catch (err) {
       if (isUniqueConstraintError(err)) {
