@@ -149,4 +149,41 @@ describe('PATCH /api/me/channel/visual — backdrop fields', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+  it('saves the page layout and serves it to visitors', async () => {
+    const pageLayout = [
+      { id: 'hero', type: 'hero', visible: true },
+      { id: 'headerStats', type: 'headerStats', visible: false },
+    ]
+    const saved = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { pageLayout },
+    })
+    expect(saved.statusCode).toBe(200)
+    expect(JSON.parse(saved.json().pageLayoutJson)).toEqual(pageLayout)
+    const channel = await prisma.channel.findFirstOrThrow({
+      where: { user: { email: `${PREFIX}artist@example.com` } },
+      select: { slug: true },
+    })
+    const publicPage = await app.inject({ method: 'GET', url: `/api/channels/${channel.slug}` })
+    expect(JSON.parse(publicPage.json().pageLayoutJson)).toEqual(pageLayout)
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { pageLayout: null },
+    })
+    expect(cleared.json().pageLayoutJson).toBeNull()
+  })
+
+  it('rejects a malformed page layout', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { pageLayout: [{ id: 'hero', type: 'hero' }] },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 })

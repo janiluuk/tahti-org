@@ -119,6 +119,9 @@ export const PublicChannelViewSchema = z.object({
   showSiteBottomBar: z.boolean().optional(),
   showSiteHeader: z.boolean().optional(),
   channelLinksJson: z.string().nullable().optional(),
+  /** Channel page layout saved by the Channel Designer (JSON array of
+   * `ChannelPageLayoutItem`); null means the player's default. */
+  pageLayoutJson: z.string().nullable().optional(),
   user: PublicChannelUserSchema,
   // STREAM-012: current rotation track, resolved from Liquidsoap telnet metadata
   // by the orchestrator poller. Null while nobody has synced yet, or while a

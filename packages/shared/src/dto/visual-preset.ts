@@ -291,6 +291,35 @@ export const ChannelLinkSchema = z.object({
 
 export type ChannelLink = z.infer<typeof ChannelLinkSchema>
 
+/** One block of the public channel page layout the Channel Designer saves
+ * (which sections show, their order, size and offset, and the Identity
+ * toggles). The player owns the meaning of `type`; the API only bounds it. */
+export const ChannelPageLayoutItemSchema = z.object({
+  id: z.string().trim().min(1).max(64),
+  type: z.string().trim().min(1).max(32),
+  visible: z.boolean(),
+  embedInstanceId: z.string().max(64).optional(),
+  playlistSlug: z.string().max(128).optional(),
+  playlistDisplay: z.enum(['tracklist', 'cards']).optional(),
+  width: z.enum(['full', 'wide', 'compact']).optional(),
+  offsetX: z.number().finite().min(-4000).max(4000).optional(),
+  offsetY: z.number().finite().min(-4000).max(4000).optional(),
+  navigationTabs: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(64),
+        label: z.string().trim().max(60),
+        itemIds: z.array(z.string().max(64)).max(60),
+      }),
+    )
+    .max(12)
+    .optional(),
+  feedFilters: z.array(z.string().max(32)).max(20).optional(),
+  feedDisplay: z.enum(['tracklist', 'cards', 'both']).optional(),
+})
+
+export type ChannelPageLayoutItem = z.infer<typeof ChannelPageLayoutItemSchema>
+
 /** Validates a stored color-scheme JSON string (null/empty clears). */
 function colorSchemeJsonField() {
   return z
@@ -359,6 +388,9 @@ export const ChannelVisualPatchSchema = z
     playerOverlayAlign: z.enum(CHANNEL_TEXT_LAYER_ALIGNMENTS).optional(),
     /** Outbound link buttons; null clears. Stored as `channelLinksJson`. */
     channelLinks: z.array(ChannelLinkSchema).max(20).nullable().optional(),
+    /** Public channel page layout; null clears back to the player's
+     * default. Stored as `pageLayoutJson`. */
+    pageLayout: z.array(ChannelPageLayoutItemSchema).max(60).nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const url = data.videoBackgroundUrl
@@ -406,6 +438,7 @@ export const CHANNEL_VISUAL_SELECT = {
   playerOverlayText: true,
   playerOverlayAlign: true,
   channelLinksJson: true,
+  pageLayoutJson: true,
 } as const
 
 export const ReleaseVisualPatchSchema = z.object({

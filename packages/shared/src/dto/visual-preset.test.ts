@@ -145,3 +145,50 @@ describe('artist site chrome', () => {
     }
   })
 })
+
+describe('channel page layout', () => {
+  const layout = [
+    { id: 'hero', type: 'hero', visible: true },
+    { id: 'headerStats', type: 'headerStats', visible: false },
+    {
+      id: 'pl-1',
+      type: 'playlist',
+      visible: true,
+      playlistSlug: 'night-drive',
+      playlistDisplay: 'cards',
+      width: 'compact',
+      offsetX: 12,
+      offsetY: -4,
+    },
+    {
+      id: 'nav',
+      type: 'navigation',
+      visible: true,
+      navigationTabs: [{ id: 't1', label: 'Music', itemIds: ['pl-1'] }],
+    },
+  ]
+
+  it('accepts a designer layout and null', () => {
+    expect(ChannelVisualPatchSchema.parse({ pageLayout: layout })).toEqual({
+      pageLayout: layout,
+    })
+    expect(ChannelVisualPatchSchema.parse({ pageLayout: null })).toEqual({ pageLayout: null })
+  })
+
+  it('rejects malformed items and oversized layouts', () => {
+    expect(
+      ChannelVisualPatchSchema.safeParse({ pageLayout: [{ id: 'x', type: 'hero' }] }).success,
+    ).toBe(false)
+    expect(
+      ChannelVisualPatchSchema.safeParse({
+        pageLayout: [{ id: 'x', type: 'hero', visible: true, width: 'huge' }],
+      }).success,
+    ).toBe(false)
+    const tooMany = Array.from({ length: 61 }, (_, i) => ({
+      id: `b${i}`,
+      type: 'embed',
+      visible: true,
+    }))
+    expect(ChannelVisualPatchSchema.safeParse({ pageLayout: tooMany }).success).toBe(false)
+  })
+})
