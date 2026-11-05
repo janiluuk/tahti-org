@@ -200,6 +200,46 @@ describe('GET /api/tracks/:id', () => {
     expect(res.json().isAiGenerated).toBe(true)
   })
 
+  it('tells the page how to play a track imported as an embed', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Embedded Mix',
+        rawKey: 'raw/track-get-testuser/embed.mp3',
+        status: 'READY',
+        isPublic: true,
+        source: 'MIXCLOUD_EMBED',
+        embedProvider: 'MIXCLOUD',
+        embedUri: '/track-get-testuser/embedded-mix/',
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({
+      embedProvider: 'MIXCLOUD',
+      embedUri: '/track-get-testuser/embedded-mix/',
+      audioUrl: null,
+    })
+  })
+
+  it('has no embed fields for an uploaded track', async () => {
+    const item = await prisma.sound.create({
+      data: {
+        channelId,
+        title: 'Uploaded Track',
+        rawKey: 'raw/track-get-testuser/up.mp3',
+        mp3Key: 'mp3/track-get-testuser/up.mp3',
+        fileSizeBytes: 0,
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+
+    const res = await app.inject({ method: 'GET', url: `/api/tracks/${item.id}` })
+    expect(res.json()).toMatchObject({ embedProvider: null, embedUri: null })
+  })
+
   it('tells the track page when the artist switched downloads off', async () => {
     const item = await prisma.sound.create({
       data: {

@@ -181,6 +181,13 @@ export const PublicTrackDetailSchema = z
     /** [0..255] amplitude buckets for the real waveform — null for tracks
      * ingested before M27 or without a decodable audio file. */
     peaks: z.array(z.number()).nullable(),
+    /** Set for tracks imported as an embed (Spotify, Mixcloud, hearthis.at,
+     * ...): the page plays them through the provider's widget, since
+     * `audioUrl` is null. */
+    embedProvider: z
+      .enum(['SPOTIFY', 'MIXCLOUD', 'YOUTUBE', 'APPLE', 'GENERIC', 'HEARTHIS', 'MIKSERI'])
+      .nullable(),
+    embedUri: z.string().nullable(),
     /** Where the track was recorded - only a verified venue (one with a
      * public page), else null. */
     venue: z.object({ name: z.string(), slug: z.string() }).nullable(),
