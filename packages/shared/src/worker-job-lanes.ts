@@ -63,6 +63,7 @@ export const WORKER_JOB_LANES = {
     'jam-session-expire',
     'missed-live-show-scan',
     'listening-party-announce',
+    'listening-party-reminders',
   ],
   'edge-log': ['hls-caddy-egress-sync'],
 } as const

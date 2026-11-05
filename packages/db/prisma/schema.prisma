@@ -2032,6 +2032,9 @@ model ListeningParty {
   /// conditional update so each track start is announced at most once, even
   /// with several workers ticking.
   announcedPosition Int?
+  /// When the worker sent the "starting now" reminders; claimed with a
+  /// conditional update so they go out once.
+  remindersSentAt   DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
