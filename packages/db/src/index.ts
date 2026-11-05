@@ -103,6 +103,10 @@ export {
   type ActiveRestriction,
 } from './live-show-recurrence.js'
 export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaults.js'
+export {
+  notifyFollowersOfListeningParty,
+  type ListeningPartyRef,
+} from './listening-party-notices.js'
 export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
 export { actorDisplayName } from './display-name.js'
 export { availableUserWhere } from './available-user.js'
