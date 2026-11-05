@@ -11,7 +11,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
-import { notifyGroupMemberRemoved } from '../../lib/group-notices.js'
+import { notifyGroupMemberRemoved, notifyGroupRoleChanged } from '../../lib/group-notices.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { zodError } from '../collections/helpers.js'
 import { canManageGroup, loadGroupForUser, publicUser } from './helpers.js'
@@ -140,6 +140,15 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
           user: { select: { username: true, displayName: true, avatarUrl: true } },
         },
       })
+      if (target.role !== updated.role) {
+        await notifyGroupRoleChanged(
+          fastify.prisma,
+          loaded.group,
+          target.userId,
+          updated.role,
+          user.id,
+        ).catch((err: unknown) => fastify.log.warn({ err }, 'group role notice failed'))
+      }
       return reply.send({
         ...publicUser(updated.user),
         avatarUrl: updated.user.avatarUrl,
@@ -203,6 +212,9 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
           data: { userId: target.userId },
         }),
       ])
+      await notifyGroupRoleChanged(fastify.prisma, group, target.userId, 'OWNER', user.id).catch(
+        (err: unknown) => fastify.log.warn({ err }, 'group handover notice failed'),
+      )
       return reply.send({ slug: group.slug, owner: parsed.data.username, role: 'ADMIN' })
     },
   )

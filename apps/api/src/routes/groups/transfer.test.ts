@@ -87,6 +87,10 @@ describe('POST /api/me/groups/:slug/transfer', () => {
     })
     expect(group.createdByUserId).toBe(ids.heir)
     expect(group.collection.userId).toBe(ids.heir)
+    const notice = await prisma.notification.findFirst({
+      where: { userId: ids.heir!, type: 'GROUP_ROLE_CHANGED' },
+    })
+    expect(notice?.title).toBe('You now own Transfer Crew')
     expect((await transfer('owner', 'heir')).statusCode).toBe(403)
   })
 })
