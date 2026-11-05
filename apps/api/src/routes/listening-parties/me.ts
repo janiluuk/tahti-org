@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import type { Prisma, PrismaClient } from '@tahti/db'
-import { notifyFollowersOfListeningParty } from '@tahti/db'
+import { notifyFollowersOfListeningParty, notifyListeningPartyChanged } from '@tahti/db'
 import {
   CreateListeningPartyBodySchema,
   IdParamSchema,
@@ -81,6 +81,23 @@ async function loadHostedParty(
 }
 
 const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
+  async function tellReminded(
+    host: { id: string; username: string; displayName: string },
+    party: ListeningPartyRow,
+    change: 'MOVED' | 'CANCELED',
+  ) {
+    await notifyListeningPartyChanged(
+      fastify.prisma,
+      {
+        id: host.id,
+        username: host.username,
+        displayName: safeDisplayName(host.displayName, host.username),
+      },
+      { id: party.id, startAt: party.startAt, release: { title: party.release.title } },
+      change,
+    ).catch((err: unknown) => fastify.log.warn({ err }, 'listening party change notice failed'))
+  }
+
   fastify.post(
     '/api/me/listening-parties',
     {
@@ -272,6 +289,9 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: party.id },
         select: listeningPartySelect,
       })
+      if (startAt && startAt.getTime() !== party.startAt.getTime()) {
+        await tellReminded(user, updated, 'MOVED')
+      }
       return reply.send(await buildListeningPartyDto(fastify.prisma, updated, now))
     },
   )
@@ -305,6 +325,7 @@ const meListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
         data: { canceledAt: now },
         select: listeningPartySelect,
       })
+      if (state === 'SCHEDULED') await tellReminded(user, canceled, 'CANCELED')
       return reply.send(await buildListeningPartyDto(fastify.prisma, canceled, now))
     },
   )
