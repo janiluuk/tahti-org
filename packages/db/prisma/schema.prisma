@@ -1062,6 +1062,7 @@ model User {
   purchasesAsBuyer               Purchase[]
   releases                       Release[]
   hostedListeningParties         ListeningParty[]
+  listeningPartyReminders        ListeningPartyReminder[]
   revelatorRoyaltyReports        RevelatorRoyaltyReport[]
   mixUploads                     MixUpload[]
   cloudImportJobs                CloudImportJob[]
@@ -2034,8 +2035,24 @@ model ListeningParty {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  reminders ListeningPartyReminder[]
+
   @@index([channelId, startAt])
   @@index([releaseId])
+  @@schema("channel")
+}
+
+/// A listener asked to be told when a listening party starts (and if it moves
+/// or is cancelled before then).
+model ListeningPartyReminder {
+  partyId   String
+  party     ListeningParty @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@id([partyId, userId])
+  @@index([userId])
   @@schema("channel")
 }
 
