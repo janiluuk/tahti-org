@@ -2,9 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { GroupMemberParamsSchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  GroupMemberParamsSchema,
+  PatchGroupMemberSchema,
+  SlugParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
+import { zodError } from '../collections/helpers.js'
 import { canManageGroup, loadGroupForUser, publicUser } from './helpers.js'
 
 const MEMBER_LIST_LIMIT = 500
@@ -86,6 +92,54 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
         where: { groupId_userId: { groupId: loaded.group.id, userId: target.userId } },
       })
       return reply.status(204).send()
+    },
+  )
+
+  // PATCH /api/me/groups/:slug/members/:username — the owner makes a member
+  // an admin, or an admin a member again.
+  fastify.patch(
+    '/api/me/groups/:slug/members/:username',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(GroupMemberParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = PatchGroupMemberSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const loaded = await loadGroupForUser(fastify, routeParams.slug, user.id)
+      if (!loaded || !loaded.role) return reply.status(404).send({ error: 'Group not found' })
+      if (loaded.role !== 'OWNER') {
+        return reply.status(403).send({ error: 'Only the group owner can change roles' })
+      }
+
+      const target = await fastify.prisma.artistGroupMember.findFirst({
+        where: {
+          groupId: loaded.group.id,
+          user: { username: routeParams.username, ...availableUserWhere },
+        },
+        select: { userId: true, role: true, joinedAt: true },
+      })
+      if (!target) return reply.status(404).send({ error: 'Member not found' })
+      if (target.role === 'OWNER') {
+        return reply.status(409).send({ error: 'Hand the group over to change your own role' })
+      }
+
+      const updated = await fastify.prisma.artistGroupMember.update({
+        where: { groupId_userId: { groupId: loaded.group.id, userId: target.userId } },
+        data: { role: parsed.data.role },
+        select: {
+          role: true,
+          joinedAt: true,
+          user: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      })
+      return reply.send({
+        ...publicUser(updated.user),
+        avatarUrl: updated.user.avatarUrl,
+        role: updated.role,
+        joinedAt: updated.joinedAt,
+      })
     },
   )
 }
