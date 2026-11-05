@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { PublicGroupListQuerySchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { availableUserWhere } from '../../lib/listed-artist.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { zodError } from '../collections/helpers.js'
 import { groupSummary, groupSummaryInclude, publicUser } from './helpers.js'
 
@@ -16,9 +17,18 @@ const publicGroupRoutes: FastifyPluginAsync = async (fastify) => {
     if (!parsed.success) return zodError(reply, parsed.error)
     const { q, limit = DEFAULT_LIMIT, offset = 0 } = parsed.data
 
+    const viewerId = request.sessionUser?.id
+    // A block either way between the viewer and a group's founder hides the
+    // group, as joining it already does.
     const where = {
       isPublic: true,
-      createdBy: availableUserWhere,
+      createdBy: viewerId
+        ? {
+            ...availableUserWhere,
+            blocksMade: { none: { blockedUserId: viewerId } },
+            blocksReceived: { none: { blockerUserId: viewerId } },
+          }
+        : availableUserWhere,
       ...(q ? { name: { contains: q, mode: 'insensitive' as const } } : {}),
     }
     const [groups, total] = await Promise.all([
@@ -44,7 +54,13 @@ const publicGroupRoutes: FastifyPluginAsync = async (fastify) => {
       include: {
         ...groupSummaryInclude,
         createdBy: {
-          select: { username: true, displayName: true, deletedAt: true, suspendedAt: true },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            deletedAt: true,
+            suspendedAt: true,
+          },
         },
         members: {
           orderBy: { joinedAt: 'asc' },
@@ -65,6 +81,13 @@ const publicGroupRoutes: FastifyPluginAsync = async (fastify) => {
         })
       : null
     if (!group.isPublic && !viewerMembership) {
+      return reply.status(404).send({ error: 'Group not found' })
+    }
+    if (
+      viewer &&
+      !viewerMembership &&
+      (await isBlockedEitherWay(fastify.prisma, group.createdBy.id, viewer.id))
+    ) {
       return reply.status(404).send({ error: 'Group not found' })
     }
     const joinRequestPending =
