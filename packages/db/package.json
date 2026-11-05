@@ -10,7 +10,7 @@
   },
   "scripts": {
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate deploy",
+    "db:migrate": "sh prisma/migrate-deploy.sh",
     "db:migrate:test": "prisma db push --accept-data-loss",
     "db:studio": "prisma studio",
     "lint": "eslint src --ext .ts --max-warnings 0",
