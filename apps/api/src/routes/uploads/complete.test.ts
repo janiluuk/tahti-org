@@ -13,6 +13,11 @@ vi.mock('../../lib/minio.js', () => ({
   s3: {},
 }))
 
+const { readObjectPrefix } = vi.hoisted(() => ({
+  readObjectPrefix: vi.fn().mockResolvedValue(null),
+}))
+vi.mock('../../lib/object-prefix.js', () => ({ readObjectPrefix }))
+
 vi.mock('../../lib/queue.js', () => ({
   enqueueTranscode: vi.fn().mockResolvedValue(undefined),
   mediaQueue: {},
@@ -93,6 +98,31 @@ describe('POST /api/uploads/complete', () => {
       },
     })
     expect(res.statusCode).toBe(403)
+  })
+
+  it('refuses a file that is not audio, and creates no Sound', async () => {
+    readObjectPrefix.mockResolvedValueOnce(new TextEncoder().encode('%PDF-1.7 not a song'))
+    const uploadId = `raw/${channelSlug}/sneaky.mp3`
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: { uploadId, etag: 'etag123', title: 'Sneaky' },
+    })
+    expect(res.statusCode).toBe(415)
+    expect(res.json()).toMatchObject({ error: 'not_audio' })
+    expect(await prisma.sound.count({ where: { rawKey: uploadId } })).toBe(0)
+  })
+
+  it('accepts a file that starts like audio', async () => {
+    readObjectPrefix.mockResolvedValueOnce(Uint8Array.from([0x49, 0x44, 0x33, 4, 0, 0]))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: { uploadId: `raw/${channelSlug}/real.mp3`, etag: 'etag123', title: 'Real' },
+    })
+    expect(res.statusCode).toBe(201)
   })
 
   it('creates Sound and enqueues job', async () => {

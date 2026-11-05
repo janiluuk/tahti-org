@@ -3,13 +3,20 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { soundDefaultsFromOwner } from '@tahti/db'
-import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponses } from '@tahti/shared'
+import {
+  AUDIO_SNIFF_BYTES,
+  CompleteUploadResponseSchema,
+  CompleteUploadSchema,
+  openApiResponses,
+  sniffAudioContainer,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/sound-metadata.js'
 import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { headObjectSize } from '../../lib/minio.js'
+import { readObjectPrefix } from '../../lib/object-prefix.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -22,7 +29,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         tags: ['imports'],
         summary: 'Complete a local audio upload',
         description:
-          'Creates the Sound and enqueues transcode after the presigned PUT. Answers 201. Follows POST /api/uploads/prepare.',
+          'Creates the Sound and enqueues transcode after the presigned PUT. Answers 201, or 415 `not_audio` when the uploaded bytes are not an audio container. Follows POST /api/uploads/prepare.',
         response: openApiResponses([
           { status: 201, schema: CompleteUploadResponseSchema, name: 'CompleteUpload' },
         ]),
@@ -60,6 +67,17 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
 
       if (metadata?.venueId && !(await canAttachVenue(fastify.prisma, metadata.venueId, user.id))) {
         return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
+
+      // The presigned PUT takes any bytes; refuse a file that isn't audio
+      // before it becomes a Sound. Storage errors fall through, as before:
+      // the transcoder fails an unreadable file.
+      const head = await readObjectPrefix(uploadId, AUDIO_SNIFF_BYTES)
+      if (head && head.length > 0 && !sniffAudioContainer(head)) {
+        return reply.status(415).send({
+          error: 'not_audio',
+          message: 'This file is not an audio file. Upload MP3, WAV, FLAC, AAC/M4A, OGG or AIFF.',
+        })
       }
 
       const fileSizeBytes = (await headObjectSize(uploadId)) ?? 0
