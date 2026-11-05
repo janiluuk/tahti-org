@@ -15,7 +15,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
-import { notifyGroupJoinRequested } from '../../lib/group-notices.js'
+import { notifyGroupJoinRequested, notifyGroupJoinResolved } from '../../lib/group-notices.js'
 import { zodError } from '../collections/helpers.js'
 import {
   COLLECTION_SLUG_PREFIX,
@@ -364,6 +364,13 @@ const meGroupRoutes: FastifyPluginAsync = async (fastify) => {
           })
         }
       })
+      await notifyGroupJoinResolved(
+        fastify.prisma,
+        group,
+        joinRequest.userId,
+        approve,
+        user.id,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'group join answer notice failed'))
       return reply.send({ id: joinRequest.id, status })
     },
   )
