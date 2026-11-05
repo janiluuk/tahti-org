@@ -116,3 +116,22 @@ export async function notifyGroupSubmissionResolved(
     },
   })
 }
+
+/** Tells someone a group admin took them out of a group. */
+export async function notifyGroupMemberRemoved(
+  prisma: PrismaClient,
+  group: GroupRef,
+  removedUserId: string,
+  actorUserId: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: removedUserId,
+      type: 'GROUP_MEMBER_REMOVED',
+      actorUserId,
+      title: `You were removed from ${group.name}`,
+      body: 'A group admin took you out of the group. Tracks you added stay in its playlist.',
+      url: `/groups/${group.slug}`,
+    },
+  })
+}
