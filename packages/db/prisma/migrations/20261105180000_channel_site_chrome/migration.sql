@@ -1,4 +1,4 @@
-ALTER TABLE "Channel"
+ALTER TABLE "channel"."Channel"
   ADD COLUMN "showSiteSidebar" BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN "showSiteBottomBar" BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN "showSiteHeader" BOOLEAN NOT NULL DEFAULT true;

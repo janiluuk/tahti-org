@@ -1,1 +1,1 @@
-ALTER TABLE "Channel" ADD COLUMN "pageLayoutJson" TEXT;
+ALTER TABLE "channel"."Channel" ADD COLUMN "pageLayoutJson" TEXT;
