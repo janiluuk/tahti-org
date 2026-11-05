@@ -146,3 +146,24 @@ export type PublicArtistGroupDetail = z.infer<typeof PublicArtistGroupDetailSche
 export const GroupMembershipResponseSchema = z.array(GroupMembershipEntrySchema)
 
 export type GroupMembershipEntry = z.infer<typeof GroupMembershipEntrySchema>
+
+export const GroupMemberParamsSchema = z.object({
+  slug: z.string().min(1).max(64),
+  username: z.string().min(1).max(64),
+})
+
+/** One member of a group, as other members see them. */
+export const GroupMemberSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  role: z.enum(ARTIST_GROUP_ROLES),
+  joinedAt: z.coerce.date().or(z.string()),
+})
+
+export type GroupMember = z.infer<typeof GroupMemberSchema>
+
+export const GroupMemberListSchema = z.object({
+  items: z.array(GroupMemberSchema),
+  total: z.number().int(),
+})
