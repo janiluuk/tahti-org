@@ -2,10 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
+import { GroupMemberParamsSchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
-import { loadGroupForUser, publicUser } from './helpers.js'
+import { canManageGroup, loadGroupForUser, publicUser } from './helpers.js'
 
 const MEMBER_LIST_LIMIT = 500
 const ROLE_ORDER = { OWNER: 0, ADMIN: 1, MEMBER: 2 } as const
@@ -47,6 +47,45 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
         }))
         .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role])
       return reply.send({ items, total })
+    },
+  )
+
+  // DELETE /api/me/groups/:slug/members/:username — an admin removes a
+  // member. Only the owner removes an admin; nobody removes the owner (they
+  // delete the group or hand it over). Leaving yourself is .../members/me.
+  fastify.delete(
+    '/api/me/groups/:slug/members/:username',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(GroupMemberParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const loaded = await loadGroupForUser(fastify, routeParams.slug, user.id)
+      if (!loaded || !loaded.role) return reply.status(404).send({ error: 'Group not found' })
+      if (!canManageGroup(loaded.role)) {
+        return reply.status(403).send({ error: 'Only group admins can remove members' })
+      }
+
+      const target = await fastify.prisma.artistGroupMember.findFirst({
+        where: { groupId: loaded.group.id, user: { username: routeParams.username } },
+        select: { userId: true, role: true },
+      })
+      if (!target) return reply.status(404).send({ error: 'Member not found' })
+      if (target.userId === user.id) {
+        return reply.status(409).send({ error: 'Leave the group instead of removing yourself' })
+      }
+      if (target.role === 'OWNER') {
+        return reply.status(403).send({ error: 'The group owner cannot be removed' })
+      }
+      if (target.role === 'ADMIN' && loaded.role !== 'OWNER') {
+        return reply.status(403).send({ error: 'Only the group owner can remove an admin' })
+      }
+
+      await fastify.prisma.artistGroupMember.delete({
+        where: { groupId_userId: { groupId: loaded.group.id, userId: target.userId } },
+      })
+      return reply.status(204).send()
     },
   )
 }
