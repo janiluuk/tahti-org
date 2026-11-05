@@ -21,6 +21,10 @@ describe('notificationKindOf', () => {
     ]) {
       expect(notificationKindOf(type)).toBe('music')
     }
+    expect(notificationKindOf('GROUP_JOIN_REQUESTED')).toBe('social')
+    expect(notificationKindOf('GROUP_DELETED')).toBe('social')
+    expect(notificationKindOf('LISTENING_PARTY_SCHEDULED')).toBe('music')
+    expect(notificationKindOf('LISTENING_PARTY_CHANGED')).toBe('music')
     expect(notificationKindOf('FAN_SUB_CANCELED')).toBe('money')
     expect(notificationKindOf('GRANT_AWARDED')).toBe('money')
     expect(notificationKindOf('MEMBERSHIP_ENDED')).toBe('money')
