@@ -35,6 +35,9 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
       slideshowTransitionMs,
       slideshowAutoplay,
       topBarText,
+      showSiteSidebar,
+      showSiteBottomBar,
+      showSiteHeader,
       usePlayerGradient,
       playerColorSchemeJson,
       useBackgroundGradient,
@@ -104,6 +107,9 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
         ...(slideshowTransitionMs !== undefined ? { slideshowTransitionMs } : {}),
         ...(slideshowAutoplay !== undefined ? { slideshowAutoplay } : {}),
         ...(topBarText !== undefined ? { topBarText: topBarText || null } : {}),
+        ...(showSiteSidebar !== undefined ? { showSiteSidebar } : {}),
+        ...(showSiteBottomBar !== undefined ? { showSiteBottomBar } : {}),
+        ...(showSiteHeader !== undefined ? { showSiteHeader } : {}),
         ...(usePlayerGradient !== undefined ? { usePlayerGradient } : {}),
         ...(playerColorSchemeJson !== undefined
           ? { playerColorSchemeJson: playerColorSchemeJson || null }
