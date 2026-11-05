@@ -135,3 +135,40 @@ export async function notifyGroupMemberRemoved(
     },
   })
 }
+
+const ROLE_CHANGE_COPY = {
+  OWNER: {
+    title: (name: string) => `You now own ${name}`,
+    body: 'The owner handed the group to you.',
+  },
+  ADMIN: {
+    title: (name: string) => `You are now an admin of ${name}`,
+    body: 'You can answer join requests and track submissions, and remove members.',
+  },
+  MEMBER: {
+    title: (name: string) => `You are no longer an admin of ${name}`,
+    body: 'You stay in the group as a member.',
+  },
+} as const
+
+/** Tells a member their role in a group changed: made admin, back to member,
+ * or handed the group. */
+export async function notifyGroupRoleChanged(
+  prisma: PrismaClient,
+  group: GroupRef,
+  memberUserId: string,
+  role: keyof typeof ROLE_CHANGE_COPY,
+  actorUserId: string,
+): Promise<void> {
+  const copy = ROLE_CHANGE_COPY[role]
+  await prisma.notification.create({
+    data: {
+      userId: memberUserId,
+      type: 'GROUP_ROLE_CHANGED',
+      actorUserId,
+      title: copy.title(group.name),
+      body: copy.body,
+      url: `/studio/groups/${group.slug}`,
+    },
+  })
+}

@@ -65,6 +65,21 @@ describe('PATCH /api/me/groups/:slug/members/:username', () => {
     expect(up.json()).toMatchObject({ username: `${PREFIX}member`, role: 'ADMIN' })
     const down = await setRole('owner', 'member', 'MEMBER')
     expect(down.json()).toMatchObject({ role: 'MEMBER' })
+    const notices = await prisma.notification.findMany({
+      where: { userId: ids.member!, type: 'GROUP_ROLE_CHANGED' },
+      orderBy: { createdAt: 'asc' },
+      select: { title: true },
+    })
+    expect(notices.map((n) => n.title)).toEqual([
+      'You are now an admin of Members Role Crew',
+      'You are no longer an admin of Members Role Crew',
+    ])
+  })
+
+  it('sends nothing when the role does not change', async () => {
+    const before = await prisma.notification.count({ where: { userId: ids.admin! } })
+    expect((await setRole('owner', 'admin', 'ADMIN')).statusCode).toBe(200)
+    expect(await prisma.notification.count({ where: { userId: ids.admin! } })).toBe(before)
   })
 
   it('keeps role changes to the owner', async () => {
