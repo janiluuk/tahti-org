@@ -131,3 +131,12 @@ export const ListeningPartySummaryListSchema = z.object({
   items: z.array(ListeningPartySummaryDtoSchema),
 })
 export type ListeningPartySummaryList = z.infer<typeof ListeningPartySummaryListSchema>
+
+/** GET/POST/DELETE /api/v1/listening-parties/:id/reminder — whether the
+ * signed-in viewer asked to be reminded, and how many people did. */
+export const ListeningPartyReminderSchema = z.object({
+  reminded: z.boolean(),
+  count: z.number().int().nonnegative(),
+})
+
+export type ListeningPartyReminder = z.infer<typeof ListeningPartyReminderSchema>
