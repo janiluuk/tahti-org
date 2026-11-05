@@ -6,9 +6,11 @@ import {
   GroupMemberParamsSchema,
   PatchGroupMemberSchema,
   SlugParamSchema,
+  TransferArtistGroupSchema,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { zodError } from '../collections/helpers.js'
 import { canManageGroup, loadGroupForUser, publicUser } from './helpers.js'
@@ -140,6 +142,64 @@ const groupMemberRoutes: FastifyPluginAsync = async (fastify) => {
         role: updated.role,
         joinedAt: updated.joinedAt,
       })
+    },
+  )
+
+  // POST /api/me/groups/:slug/transfer — the owner hands the group to another
+  // member, who becomes OWNER while the old owner stays on as ADMIN. The
+  // group playlist and the group's founder link move too, so the group
+  // survives the old owner deleting their account.
+  fastify.post(
+    '/api/me/groups/:slug/transfer',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = TransferArtistGroupSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const loaded = await loadGroupForUser(fastify, routeParams.slug, user.id)
+      if (!loaded || !loaded.role) return reply.status(404).send({ error: 'Group not found' })
+      if (loaded.role !== 'OWNER') {
+        return reply.status(403).send({ error: 'Only the group owner can hand the group over' })
+      }
+      const { group } = loaded
+
+      const target = await fastify.prisma.artistGroupMember.findFirst({
+        where: {
+          groupId: group.id,
+          user: { username: parsed.data.username, ...availableUserWhere },
+        },
+        select: { userId: true },
+      })
+      if (!target) return reply.status(404).send({ error: 'Member not found' })
+      if (target.userId === user.id) {
+        return reply.status(409).send({ error: 'You already own this group' })
+      }
+      if (await isBlockedEitherWay(fastify.prisma, user.id, target.userId)) {
+        return reply.status(409).send({ error: 'This person cannot take over the group' })
+      }
+
+      await fastify.prisma.$transaction([
+        fastify.prisma.artistGroupMember.update({
+          where: { groupId_userId: { groupId: group.id, userId: user.id } },
+          data: { role: 'ADMIN' },
+        }),
+        fastify.prisma.artistGroupMember.update({
+          where: { groupId_userId: { groupId: group.id, userId: target.userId } },
+          data: { role: 'OWNER' },
+        }),
+        fastify.prisma.artistGroup.update({
+          where: { id: group.id },
+          data: { createdByUserId: target.userId },
+        }),
+        fastify.prisma.collection.update({
+          where: { id: group.collectionId },
+          data: { userId: target.userId },
+        }),
+      ])
+      return reply.send({ slug: group.slug, owner: parsed.data.username, role: 'ADMIN' })
     },
   )
 }
