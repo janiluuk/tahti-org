@@ -50,3 +50,47 @@ export async function notifyFollowersOfListeningParty(
   })
   return followers.length
 }
+
+/** Everyone who asked to be reminded of a party and can still be told:
+ * available accounts with no block either way with the host. */
+async function remindedUserIds(
+  prisma: PrismaClient,
+  partyId: string,
+  hostUserId: string,
+): Promise<string[]> {
+  const rows = await prisma.listeningPartyReminder.findMany({
+    where: {
+      partyId,
+      userId: { not: hostUserId },
+      user: {
+        ...availableUserWhere,
+        blocksMade: { none: { blockedUserId: hostUserId } },
+        blocksReceived: { none: { blockerUserId: hostUserId } },
+      },
+    },
+    select: { userId: true },
+  })
+  return rows.map((r) => r.userId)
+}
+
+/** Tells those who asked to be reminded that the party has started. Returns
+ * how many were told. */
+export async function notifyListeningPartyStarting(
+  prisma: PrismaClient,
+  host: Host,
+  party: ListeningPartyRef,
+): Promise<number> {
+  const ids = await remindedUserIds(prisma, party.id, host.id)
+  if (ids.length === 0) return 0
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'LISTENING_PARTY_STARTING' as const,
+      actorUserId: host.id,
+      title: `${actorDisplayName(host)}'s listening party is starting`,
+      body: `"${party.release.title}" is playing now. Join in.`,
+      url: `/party/${party.id}`,
+    })),
+  })
+  return ids.length
+}

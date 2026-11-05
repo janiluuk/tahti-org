@@ -45,6 +45,7 @@ import { processMentionDigestJob } from './jobs/mention-digest.js'
 import { processWeeklyRecaps } from './lib/weekly-recap.js'
 import { processPostPublishNotifyJob } from './jobs/post-publish-notify.js'
 import { processListeningPartyAnnounceJob } from './jobs/listening-party-announce.js'
+import { processListeningPartyRemindersJob } from './jobs/listening-party-reminders.js'
 import { processListenSessionCloseJob } from './jobs/listen-session-close.js'
 import { expireAbandonedJams } from './jobs/jam-session-expire.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
@@ -206,6 +207,12 @@ const worker = new Worker(
         const summary = await processListeningPartyAnnounceJob(prisma)
         if (summary.announced > 0 || summary.failed > 0) {
           console.log('[worker] listening-party-announce:', JSON.stringify(summary))
+        }
+        return summary
+      } else if (job.name === 'listening-party-reminders') {
+        const summary = await processListeningPartyRemindersJob(prisma)
+        if (summary.told > 0) {
+          console.log('[worker] listening-party-reminders:', JSON.stringify(summary))
         }
         return summary
       } else if (job.name === 'weekly-monday') {

@@ -82,6 +82,13 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
       'Post "Now playing n/N · Title" in the host channel chat when a live listening party moves to a new track (once per track)',
   },
   {
+    name: 'listening-party-reminders',
+    pattern: '* * * * *',
+    jobId: 'listening-party-reminders-cron',
+    description:
+      'Tell listeners who asked to be reminded that a listening party just started (once per party)',
+  },
+  {
     name: 'hls-caddy-egress-sync',
     pattern: '* * * * *',
     jobId: 'hls-caddy-egress-sync-cron',

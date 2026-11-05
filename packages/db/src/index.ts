@@ -105,6 +105,7 @@ export {
 export { soundDefaultsFromOwner, soundOwnerDefaults } from './sound-owner-defaults.js'
 export {
   notifyFollowersOfListeningParty,
+  notifyListeningPartyStarting,
   type ListeningPartyRef,
 } from './listening-party-notices.js'
 export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
