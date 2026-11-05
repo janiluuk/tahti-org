@@ -94,3 +94,33 @@ export async function notifyListeningPartyStarting(
   })
   return ids.length
 }
+
+/** Tells those who asked to be reminded that the party moved to a new time
+ * or was cancelled. Returns how many were told. */
+export async function notifyListeningPartyChanged(
+  prisma: PrismaClient,
+  host: Host,
+  party: ListeningPartyRef,
+  change: 'MOVED' | 'CANCELED',
+): Promise<number> {
+  const ids = await remindedUserIds(prisma, party.id, host.id)
+  if (ids.length === 0) return 0
+  const name = actorDisplayName(host)
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'LISTENING_PARTY_CHANGED' as const,
+      actorUserId: host.id,
+      title:
+        change === 'MOVED'
+          ? `${name}'s listening party moved`
+          : `${name} cancelled their listening party`,
+      body:
+        change === 'MOVED'
+          ? `"${party.release.title}" now starts ${partyStartLabel(party.startAt)}. Your reminder still stands.`
+          : `"${party.release.title}" won't happen as planned.`,
+      url: `/party/${party.id}`,
+    })),
+  })
+  return ids.length
+}
