@@ -45,3 +45,26 @@ export async function notifyGroupJoinRequested(
   })
   return ids.length
 }
+
+/** Tells someone that a group admin approved or declined their request to
+ * join. */
+export async function notifyGroupJoinResolved(
+  prisma: PrismaClient,
+  group: GroupRef,
+  requesterUserId: string,
+  approved: boolean,
+  actorUserId: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: requesterUserId,
+      type: 'GROUP_JOIN_RESOLVED',
+      actorUserId,
+      title: approved ? `You joined ${group.name}` : 'Your request to join was declined',
+      body: approved
+        ? `Your request to join ${group.name} was approved.`
+        : `${group.name} declined your request to join.`,
+      url: `/groups/${group.slug}`,
+    },
+  })
+}
