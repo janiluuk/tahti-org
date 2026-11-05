@@ -172,3 +172,8 @@ export const GroupMemberListSchema = z.object({
 export const PatchGroupMemberSchema = z.object({
   role: z.enum(['ADMIN', 'MEMBER']),
 })
+
+/** Owner only: hand the group, and its playlist, to another member. */
+export const TransferArtistGroupSchema = z.object({
+  username: z.string().trim().min(1).max(64),
+})
