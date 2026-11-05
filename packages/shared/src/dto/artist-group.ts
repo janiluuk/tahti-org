@@ -167,3 +167,8 @@ export const GroupMemberListSchema = z.object({
   items: z.array(GroupMemberSchema),
   total: z.number().int(),
 })
+
+/** Owner only: make a member an admin or an admin a member again. */
+export const PatchGroupMemberSchema = z.object({
+  role: z.enum(['ADMIN', 'MEMBER']),
+})
