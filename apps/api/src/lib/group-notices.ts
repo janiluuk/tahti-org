@@ -68,3 +68,26 @@ export async function notifyGroupJoinResolved(
     },
   })
 }
+
+/** Tells a group's owner and admins that a member submitted a track for the
+ * group playlist. Returns how many were told. */
+export async function notifyGroupSubmissionReceived(
+  prisma: PrismaClient,
+  group: GroupRef,
+  submitterUserId: string,
+  soundTitle: string,
+): Promise<number> {
+  const ids = await groupManagerIds(prisma, group.id, submitterUserId)
+  if (ids.length === 0) return 0
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'GROUP_SUBMISSION_RECEIVED' as const,
+      actorUserId: submitterUserId,
+      title: 'A track is waiting for your group',
+      body: `"${soundTitle}" was submitted to ${group.name}.`,
+      url: `/studio/groups/${group.slug}`,
+    })),
+  })
+  return ids.length
+}

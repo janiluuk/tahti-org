@@ -13,6 +13,7 @@ import {
   safeDisplayName,
 } from '@tahti/shared'
 import { notifyPlaylistOfNewTrack } from '@tahti/db'
+import { notifyGroupSubmissionReceived } from '../../lib/group-notices.js'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
@@ -175,6 +176,9 @@ const meGroupSoundRoutes: FastifyPluginAsync = async (fastify) => {
             },
             select: { id: true, soundId: true, status: true, note: true, createdAt: true },
           })
+          await notifyGroupSubmissionReceived(fastify.prisma, group, user.id, sound.title).catch(
+            (err: unknown) => fastify.log.warn({ err }, 'group submission notice failed'),
+          )
           return reply.status(202).send({ status: 'PENDING', submission })
         }
 
