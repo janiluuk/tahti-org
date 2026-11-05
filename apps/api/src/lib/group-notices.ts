@@ -91,3 +91,28 @@ export async function notifyGroupSubmissionReceived(
   })
   return ids.length
 }
+
+/** Tells a member whether the track they submitted made it into the group
+ * playlist. */
+export async function notifyGroupSubmissionResolved(
+  prisma: PrismaClient,
+  group: GroupRef,
+  submitterUserId: string,
+  soundTitle: string,
+  approved: boolean,
+  actorUserId: string,
+): Promise<void> {
+  if (submitterUserId === actorUserId) return
+  await prisma.notification.create({
+    data: {
+      userId: submitterUserId,
+      type: 'GROUP_SUBMISSION_RESOLVED',
+      actorUserId,
+      title: approved ? 'Your track is in the group playlist' : 'Your track was not added',
+      body: approved
+        ? `"${soundTitle}" was added to ${group.name}.`
+        : `${group.name} declined "${soundTitle}".`,
+      url: `/groups/${group.slug}`,
+    },
+  })
+}
