@@ -86,6 +86,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       playerOverlayText: true,
       playerOverlayAlign: true,
       channelLinksJson: true,
+      pageLayoutJson: true,
       topBarText: true,
       showSiteSidebar: true,
       showSiteBottomBar: true,

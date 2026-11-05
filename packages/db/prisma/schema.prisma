@@ -1629,6 +1629,8 @@ model Channel {
   playerOverlayAlign            ChannelTextLayerAlign @default(CENTER)
   // Outbound social/link buttons on the channel page (JSON array of {label,url}).
   channelLinksJson              String?
+  // Channel Designer page layout (JSON array; see ChannelPageLayoutItemSchema).
+  pageLayoutJson                String?
   nextBroadcastAt               DateTime? // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote             String? // e.g. "Weekly show — Thursdays 22:00 EET"
   /// The show the next broadcast belongs to; its type, mode, description and artwork are read from it.

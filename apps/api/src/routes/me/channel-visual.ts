@@ -50,6 +50,7 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
       playerOverlayText,
       playerOverlayAlign,
       channelLinks,
+      pageLayout,
     } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -142,6 +143,12 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
           ? {
               channelLinksJson:
                 channelLinks && channelLinks.length > 0 ? JSON.stringify(channelLinks) : null,
+            }
+          : {}),
+        ...(pageLayout !== undefined
+          ? {
+              pageLayoutJson:
+                pageLayout && pageLayout.length > 0 ? JSON.stringify(pageLayout) : null,
             }
           : {}),
       },
