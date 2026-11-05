@@ -768,6 +768,26 @@ enum NotificationType {
   CONTENT_REPORTED
   /// The board moved a feature request you proposed or voted for.
   FEATURE_REQUEST_UPDATED
+  /// Group admins: someone asked to join a group you run.
+  GROUP_JOIN_REQUESTED
+  /// A group admin approved or declined your request to join.
+  GROUP_JOIN_RESOLVED
+  /// Group admins: a member submitted a track to the group playlist.
+  GROUP_SUBMISSION_RECEIVED
+  /// A group admin approved or declined the track you submitted.
+  GROUP_SUBMISSION_RESOLVED
+  /// A group admin removed you from a group.
+  GROUP_MEMBER_REMOVED
+  /// Your role in a group changed (admin, member, or you now own it).
+  GROUP_ROLE_CHANGED
+  /// The owner deleted a group you were in.
+  GROUP_DELETED
+  /// An artist you follow scheduled a listening party.
+  LISTENING_PARTY_SCHEDULED
+  /// A listening party you asked to be reminded of is starting.
+  LISTENING_PARTY_STARTING
+  /// A listening party you asked to be reminded of moved or was cancelled.
+  LISTENING_PARTY_CHANGED
 
   @@schema("core")
 }
