@@ -172,3 +172,26 @@ export async function notifyGroupRoleChanged(
     },
   })
 }
+
+/** Tells the members of a group the owner just deleted. Takes the member ids
+ * read before the delete, since the membership rows go with the group. */
+export async function notifyGroupDeleted(
+  prisma: PrismaClient,
+  groupName: string,
+  memberUserIds: string[],
+  actorUserId: string,
+): Promise<number> {
+  const ids = memberUserIds.filter((id) => id !== actorUserId)
+  if (ids.length === 0) return 0
+  await prisma.notification.createMany({
+    data: ids.map((userId) => ({
+      userId,
+      type: 'GROUP_DELETED' as const,
+      actorUserId,
+      title: `${groupName} was deleted`,
+      body: 'The owner deleted the group and its shared playlist. Your own tracks are not affected.',
+      url: '/groups',
+    })),
+  })
+  return ids.length
+}

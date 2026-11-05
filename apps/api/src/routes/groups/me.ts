@@ -15,7 +15,11 @@ import { requireAuth } from '../../plugins/auth.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
-import { notifyGroupJoinRequested, notifyGroupJoinResolved } from '../../lib/group-notices.js'
+import {
+  notifyGroupDeleted,
+  notifyGroupJoinRequested,
+  notifyGroupJoinResolved,
+} from '../../lib/group-notices.js'
 import { zodError } from '../collections/helpers.js'
 import {
   COLLECTION_SLUG_PREFIX,
@@ -200,7 +204,17 @@ const meGroupRoutes: FastifyPluginAsync = async (fastify) => {
     }
     // The playlist owns the group row (cascade), so one delete takes both,
     // along with members, requests and submissions.
+    const members = await fastify.prisma.artistGroupMember.findMany({
+      where: { groupId: loaded.group.id, user: availableUserWhere },
+      select: { userId: true },
+    })
     await fastify.prisma.collection.delete({ where: { id: loaded.group.collectionId } })
+    await notifyGroupDeleted(
+      fastify.prisma,
+      loaded.group.name,
+      members.map((m) => m.userId),
+      user.id,
+    ).catch((err: unknown) => fastify.log.warn({ err }, 'group deleted notice failed'))
     return reply.status(204).send()
   })
 
