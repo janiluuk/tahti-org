@@ -253,14 +253,29 @@ jobs:
       # Pinned static build (FFmpeg 6.1, same as Ubuntu 24.04's package) from
       # GitHub releases: apt pulls ~60 packages from the Azure Ubuntu mirror,
       # which has stalled shards until the job timed out.
+      - name: Cache ffmpeg download
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/ffmpeg-dl
+          key: ffmpeg-static-b6.1.1-linux-x64-bfe8a8fc-25d9b6cc
+
       - name: Install ffmpeg
         timeout-minutes: 5
         run: |
           base=https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1
+          dl="$RUNNER_TEMP/ffmpeg-dl"
           dir="$RUNNER_TEMP/ffmpeg"
-          mkdir -p "$dir" && cd "$dir"
-          curl -fsSL --retry 3 -o ffmpeg.gz "$base/ffmpeg-linux-x64.gz"
-          curl -fsSL --retry 3 -o ffprobe.gz "$base/ffprobe-linux-x64.gz"
+          mkdir -p "$dl" "$dir"
+          # GitHub release downloads sometimes answer 504 for a minute; the
+          # cache above skips them on most runs, and the retries ride out the
+          # rest.
+          if [ "${{ steps.ffmpeg-cache.outputs.cache-hit }}" != "true" ]; then
+            curl -fsSL --retry 6 --retry-delay 10 --retry-all-errors -o "$dl/ffmpeg.gz" "$base/ffmpeg-linux-x64.gz"
+            curl -fsSL --retry 6 --retry-delay 10 --retry-all-errors -o "$dl/ffprobe.gz" "$base/ffprobe-linux-x64.gz"
+          fi
+          cd "$dir"
+          cp "$dl/ffmpeg.gz" "$dl/ffprobe.gz" .
           echo "bfe8a8fc511530457b528c48d77b5737527b504a3797a9bc4866aeca69c2dffa  ffmpeg.gz" | sha256sum -c -
           echo "25d9b6ccb05e3d9de9e04e31e2506d8dd7f9f0418981965ac6df12e8d3afd067  ffprobe.gz" | sha256sum -c -
           gunzip ffmpeg.gz ffprobe.gz
