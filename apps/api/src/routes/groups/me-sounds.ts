@@ -13,7 +13,10 @@ import {
   safeDisplayName,
 } from '@tahti/shared'
 import { notifyPlaylistOfNewTrack } from '@tahti/db'
-import { notifyGroupSubmissionReceived } from '../../lib/group-notices.js'
+import {
+  notifyGroupSubmissionReceived,
+  notifyGroupSubmissionResolved,
+} from '../../lib/group-notices.js'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
@@ -353,6 +356,14 @@ const meGroupSoundRoutes: FastifyPluginAsync = async (fastify) => {
             { title: submission.sound.title },
           ).catch((err: unknown) => fastify.log.warn({ err }, 'group-add notification failed'))
         }
+        await notifyGroupSubmissionResolved(
+          fastify.prisma,
+          group,
+          submission.submittedByUserId,
+          submission.sound.title,
+          true,
+          user.id,
+        ).catch((err: unknown) => fastify.log.warn({ err }, 'group submission answer failed'))
         return reply.send({ id: submission.id, status: 'APPROVED', itemId: item.id })
       } catch (err) {
         if (isUniqueConstraintError(err)) {
@@ -380,6 +391,14 @@ const meGroupSoundRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: found.submission.id },
         data: { status: 'REJECTED', resolvedAt: new Date(), resolvedByUserId: user.id },
       })
+      await notifyGroupSubmissionResolved(
+        fastify.prisma,
+        found.group,
+        found.submission.submittedByUserId,
+        found.submission.sound.title,
+        false,
+        user.id,
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'group submission answer failed'))
       return reply.send({ id: found.submission.id, status: 'REJECTED' })
     },
   )
