@@ -104,7 +104,6 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           ...(await toGatedGalleryItem(fastify.prisma, item, viewerUserId)),
           artistAvatarUrl: item.artistName ? null : item.channel.user.avatarUrl,
           genre: item.genreCustom ?? item.genre,
-          peaks: Array.isArray(item.peaks) ? (item.peaks as number[]) : null,
           createdAt: item.createdAt.toISOString(),
           downloadsEnabled: item.downloadsEnabled,
           likeCount: item._count.likes,

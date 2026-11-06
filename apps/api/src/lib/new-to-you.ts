@@ -167,7 +167,17 @@ export async function buildNewToYou(
   scored.sort((a, b) => b.score - a.score)
   const picked = scored.slice(0, limit).map((s) => s.item)
 
-  const items = await Promise.all(picked.map((item) => toGatedGalleryItem(prisma, item, userId)))
+  // Peaks are fetched for the picked rows only, not the whole candidate pool.
+  const peakRows = await prisma.sound.findMany({
+    where: { id: { in: picked.map((item) => item.id) } },
+    select: { id: true, peaks: true },
+  })
+  const peaksById = new Map(peakRows.map((row) => [row.id, row.peaks]))
+  const items = await Promise.all(
+    picked.map((item) =>
+      toGatedGalleryItem(prisma, { ...item, peaks: peaksById.get(item.id) ?? null }, userId),
+    ),
+  )
 
   return { preferenceGenres, items }
 }

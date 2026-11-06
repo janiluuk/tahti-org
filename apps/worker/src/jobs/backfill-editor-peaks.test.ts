@@ -54,6 +54,27 @@ describe('processBackfillEditorPeaksJob', () => {
     })
   })
 
+  it('stores an empty waveform when the audio yields none, so the sweep stops retrying it', async () => {
+    prismaMock.sound.findUnique.mockResolvedValue({
+      id: 's1',
+      status: 'READY',
+      durationSec: 233,
+      editorPeaks: { coarse: [] },
+      peaks: null,
+      rawKey: null,
+      flacKey: null,
+      mp3Key: 'mp3/s1.mp3',
+      sourceChannels: 2,
+      channel: { slug: 'minh' },
+    })
+    rowPeaks.mockResolvedValue(null)
+    await processBackfillEditorPeaksJob(job)
+    expect(prismaMock.sound.update).toHaveBeenCalledWith({
+      where: { id: 's1' },
+      data: expect.objectContaining({ peaks: [] }),
+    })
+  })
+
   it('does nothing when both kinds of peaks are already there', async () => {
     prismaMock.sound.findUnique.mockResolvedValue({
       id: 's1',

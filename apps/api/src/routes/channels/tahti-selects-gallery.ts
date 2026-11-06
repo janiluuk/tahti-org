@@ -47,6 +47,7 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
                 flacKey: true,
                 accessMode: true,
                 purchaseTierId: true,
+                peaks: true,
                 channel: {
                   select: {
                     slug: true,

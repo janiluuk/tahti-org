@@ -72,6 +72,7 @@ export type GallerySoundRow = {
   flacKey: string | null
   accessMode: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
   purchaseTierId: string | null
+  peaks?: unknown
   channel: {
     slug: string
     userId: string
@@ -101,5 +102,6 @@ export async function toGatedGalleryItem(
     durationSec: item.durationSec,
     audioUrl: url,
     gate,
+    peaks: Array.isArray(item.peaks) ? (item.peaks as number[]) : null,
   }
 }

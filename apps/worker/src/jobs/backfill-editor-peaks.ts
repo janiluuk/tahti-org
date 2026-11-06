@@ -54,7 +54,9 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
     const editorPeaks =
       (item.editorPeaks as unknown as PeaksPyramid | null) ??
       (await extractEditorPeaksPyramid(rawPath, durationSec))
-    const rowPeaks = wantsRowPeaks ? await extractWaveformPeaks(rawPath) : null
+    // An empty array marks "tried, audio gave no waveform" so the daily sweep
+    // stops picking this row; the next transcode of new audio overwrites it.
+    const rowPeaks = wantsRowPeaks ? ((await extractWaveformPeaks(rawPath)) ?? []) : null
     if (!editorPeaks) {
       if (rowPeaks) {
         await prisma.sound.update({ where: { id: itemId }, data: { peaks: rowPeaks } })

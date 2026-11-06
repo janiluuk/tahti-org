@@ -29,6 +29,7 @@ describe('Tahti Selects drops tracks the artist withdrew', () => {
       username: 'selects-private-artist',
     })
     const kept = await createReadySound(prisma, artist.channel!.id, 'Still selected')
+    await prisma.sound.update({ where: { id: kept.id }, data: { peaks: [9, 250, 40] } })
     const withdrawn = await createReadySound(prisma, artist.channel!.id, 'Withdrawn by artist')
     await prisma.sound.update({ where: { id: withdrawn.id }, data: { isPublic: false } })
     await prisma.curatedRotationItem.createMany({
@@ -53,6 +54,7 @@ describe('Tahti Selects drops tracks the artist withdrew', () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/tahti-selects/gallery' })
     expect(res.statusCode).toBe(200)
     expect(res.json().items.map((i: { title: string }) => i.title)).toEqual(['Still selected'])
+    expect(res.json().items[0].peaks).toEqual([9, 250, 40])
   })
 
   it('leaves a private track out of the rotation and the upcoming list', async () => {

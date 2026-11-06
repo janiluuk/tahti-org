@@ -45,6 +45,15 @@ describe('processSweepEditorPeaksBackfillJob', () => {
     )
   })
 
+  it('skips sounds without audio so embed-only rows cannot stall the oldest-first sweep', async () => {
+    prismaMock.sound.findMany.mockResolvedValue([])
+    await processSweepEditorPeaksBackfillJob({} as Job)
+    const { where } = prismaMock.sound.findMany.mock.calls[0]![0]
+    expect(where.AND).toEqual([
+      { OR: [{ flacKey: { not: null } }, { rawKey: { not: null } }, { mp3Key: { not: null } }] },
+    ])
+  })
+
   it('returns zero when nothing needs backfill', async () => {
     prismaMock.sound.findMany.mockResolvedValue([])
     const summary = await processSweepEditorPeaksBackfillJob({} as Job)
