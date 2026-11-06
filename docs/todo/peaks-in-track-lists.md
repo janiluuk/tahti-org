@@ -2,7 +2,7 @@
 
 **Status:** partial
 
-Every list the web app draws as waveform rows should carry `Sound.peaks` (600 buckets, 0..255) so the browser never downloads and decodes audio for a row. Paired player PR: tahti-player `feat/slices-d-server-peaks`.
+Every list the web app draws as waveform rows should carry `Sound.peaks` (600 buckets, 0..255) so the browser never downloads and decodes audio for a row. Paired player PR: janiluuk/tahti-player#1883 (API PR: #1078).
 
 ## Done
 
