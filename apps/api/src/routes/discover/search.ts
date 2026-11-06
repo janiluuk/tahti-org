@@ -70,6 +70,7 @@ export async function performSearch(
             purchaseTierId: true,
             embedProvider: true,
             embedUri: true,
+            peaks: true,
             channel: {
               select: {
                 slug: true,
@@ -151,6 +152,7 @@ export async function performSearch(
           gate,
           embedProvider: t.embedProvider,
           embedUri: t.embedUri,
+          peaks: Array.isArray(t.peaks) ? (t.peaks as number[]) : null,
         }
       }),
     ),

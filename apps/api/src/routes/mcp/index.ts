@@ -36,7 +36,8 @@ function buildServer(request: FastifyRequest): McpServer {
     },
     async (args) => {
       const result = await performSearch(request.server.prisma, args)
-      return { content: [{ type: 'text', text: JSON.stringify(result) }] }
+      const tracks = result.tracks.map(({ peaks: _peaks, ...track }) => track)
+      return { content: [{ type: 'text', text: JSON.stringify({ ...result, tracks }) }] }
     },
   )
 

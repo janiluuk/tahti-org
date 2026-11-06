@@ -30,6 +30,8 @@ export const SearchTrackResultSchema = z.object({
   gate: PlaybackGateSchema.optional(),
   embedProvider: z.string().nullable().optional(),
   embedUri: z.string().nullable().optional(),
+  /** [0..255] amplitude buckets for the row waveform; null until transcoded. */
+  peaks: z.array(z.number()).nullable().optional(),
 })
 
 export const SearchArtistResultSchema = z.object({
