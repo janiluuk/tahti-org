@@ -28,7 +28,7 @@ describe('GET /api/v1/search track playback', () => {
     }
     await prisma.sound.createMany({
       data: [
-        { ...base, title: `${WORD} free`, mp3Key: `mp3/${PREFIX}free.mp3` },
+        { ...base, title: `${WORD} free`, mp3Key: `mp3/${PREFIX}free.mp3`, peaks: [12, 240, 80] },
         {
           ...base,
           title: `${WORD} members`,
@@ -64,5 +64,13 @@ describe('GET /api/v1/search track playback', () => {
       embedProvider: 'HEARTHIS',
       embedUri: '1234567',
     })
+  })
+
+  it('returns the stored row waveform so the list never decodes audio', async () => {
+    const res = await app.inject({ method: 'GET', url: `/api/v1/search?q=${WORD}&type=tracks` })
+    const { tracks } = SearchResponseSchema.parse(res.json())
+    const byTitle = new Map(tracks.map((t) => [t.title, t]))
+    expect(byTitle.get(`${WORD} free`)?.peaks).toEqual([12, 240, 80])
+    expect(byTitle.get(`${WORD} members`)?.peaks).toBeNull()
   })
 })

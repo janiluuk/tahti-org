@@ -23,13 +23,18 @@ const defaultJobOptions = {
   removeOnFail: { count: 1000 },
 }
 
-/** PERF-04: enqueue the peaks backfill for READY sounds missing editor peaks
- * or the track-row waveform. */
+/** PERF-04: enqueue the peaks backfill for READY sounds with audio that are
+ * missing editor peaks or the track-row waveform. */
 export async function processSweepEditorPeaksBackfillJob(_job: Job): Promise<{ enqueued: number }> {
   const items = await prisma.sound.findMany({
     where: {
       status: 'READY',
       OR: [{ editorPeaks: { equals: Prisma.DbNull } }, { peaks: { equals: Prisma.DbNull } }],
+      // Oldest-first with a small batch: rows the job can never fill (embed-only
+      // sounds have no audio) would otherwise hold the head of the sweep forever.
+      AND: [
+        { OR: [{ flacKey: { not: null } }, { rawKey: { not: null } }, { mp3Key: { not: null } }] },
+      ],
     },
     select: { id: true },
     take: BATCH_SIZE,

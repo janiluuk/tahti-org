@@ -87,6 +87,7 @@ describe('/api/discover/new-to-you', () => {
         status: 'READY',
         isPublic: true,
         mp3Key: `${PREFIX}genre.mp3`,
+        peaks: [4, 180, 60],
         releasedAt: new Date('2025-06-01'),
       },
     })
@@ -156,5 +157,17 @@ describe('/api/discover/new-to-you', () => {
     // Followed (+100) and genre (+50) should outrank a newer unrelated track
     expect(ids.indexOf(followedMatchId)).toBeLessThan(ids.indexOf(otherId))
     expect(ids.indexOf(genreMatchId)).toBeLessThan(ids.indexOf(otherId))
+  })
+
+  it("carries each picked track's stored row waveform", async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/discover/new-to-you',
+      headers: { cookie: listenerCookie },
+    })
+    const body = res.json() as { items: Array<{ soundId: string; peaks: number[] | null }> }
+    const byId = new Map(body.items.map((i) => [i.soundId, i]))
+    expect(byId.get(genreMatchId)?.peaks).toEqual([4, 180, 60])
+    expect(byId.get(otherId)?.peaks).toBeNull()
   })
 })

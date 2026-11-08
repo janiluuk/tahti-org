@@ -236,6 +236,8 @@ export const TahtiSelectsGalleryItemSchema = z.object({
   durationSec: z.number().int().nullable(),
   audioUrl: z.string().nullable(),
   gate: PlaybackGateSchema.optional(),
+  /** [0..255] amplitude buckets for the row waveform; null until transcoded. */
+  peaks: z.array(z.number()).nullable().optional(),
 })
 
 export const TahtiSelectsGalleryResponseSchema = z.object({
