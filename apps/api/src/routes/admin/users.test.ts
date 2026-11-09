@@ -50,6 +50,46 @@ describe('M21-B — admin users API', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json() as { users: Array<{ username: string }> }
     expect(body.users.some((u) => u.username === 'admin-users-target')).toBe(true)
+    expect(body.users.every((u) => 'avatarUrl' in u)).toBe(true)
+  })
+
+  it('filters by account role the way the web counts it', async () => {
+    const studio = await createTestArtist(prisma, {
+      email: `${PREFIX}studio@example.com`,
+      username: 'admin-users-studio',
+    })
+    await prisma.user.update({ where: { id: studio.id }, data: { tier: 'STUDIO' } })
+    const freeWithChannel = await createTestArtist(prisma, {
+      email: `${PREFIX}freechan@example.com`,
+      username: 'admin-users-freechan',
+    })
+    await prisma.user.update({ where: { id: freeWithChannel.id }, data: { tier: 'FREE' } })
+    await prisma.user.create({
+      data: {
+        email: `${PREFIX}listener@example.com`,
+        username: 'admin-users-listener',
+        displayName: 'Listener',
+        passwordHash: 'x',
+        tier: 'FREE',
+      },
+    })
+    const names = async (role: string) => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/admin/users?role=${role}&search=admin-users-&limit=100`,
+        headers: { cookie: boardCookie },
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as { total: number; users: Array<{ username: string }> }
+      expect(body.total).toBe(body.users.length)
+      return body.users.map((u) => u.username).sort()
+    }
+    expect(await names('BOARD')).toEqual(['admin-users-board'])
+    expect(await names('ARTIST')).toEqual(
+      expect.arrayContaining(['admin-users-studio', 'admin-users-freechan']),
+    )
+    expect(await names('ARTIST')).not.toContain('admin-users-board')
+    expect(await names('LISTENER')).toEqual(['admin-users-listener'])
   })
 
   it('PATCH writes USER_TIER_CHANGE when the account tier changes', async () => {
