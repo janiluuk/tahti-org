@@ -186,7 +186,8 @@ export async function processSoundBroadcastJob(job: Job): Promise<void> {
         releasedAt: startedAt,
         // Broadcasting Setup step 3 "auto-sound" toggle: off means the recording is
         // saved as a draft for the artist to polish & publish manually (sound-editor.tsx).
-        isPublic: broadcast.autoPublish,
+        // A PRIVATE session's recording stays a draft too: only the artist heard it.
+        isPublic: broadcast.autoPublish && broadcast.visibility !== 'PRIVATE',
         isFallback: true,
         fallbackOrder: rotationCount,
         useDetectedBpmKey: true,

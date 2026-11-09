@@ -18,12 +18,14 @@ import {
   resolveColorScheme,
   soundPlaybackKey,
   type ColorScheme,
+  type BroadcastVisibility,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
+import { privateLiveBroadcastSelect } from '@tahti/db'
 
 const RECENTLY_PLAYED_LIMIT = 10
 const UPCOMING_LIMIT = 10
@@ -439,7 +441,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           title: string | null
           description: string | null
           artworkUrl: string | null
-          visibility: 'PUBLIC' | 'FAN_ONLY'
+          visibility: BroadcastVisibility
         }[]
       }) => {
         const broadcast = r.broadcasts?.[0]
@@ -455,7 +457,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           showType: r.showType,
           title: publicBroadcast?.title ?? null,
           description: publicBroadcast?.description ?? null,
-          coverUrl: publicBroadcast?.artworkUrl ?? null,
+          coverUrl: publicBroadcast ? (publicBroadcast.artworkUrl ?? channel.user.avatarUrl) : null,
           recording: recordingItem
             ? {
                 soundId: recordingItem.id,
@@ -504,15 +506,20 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: request.params.channelSlug },
         select: {
+          userId: true,
           nowPlayingTitle: true,
           nowPlayingArtistName: true,
           nowPlayingArtistUsername: true,
           nowPlayingArtworkUrl: true,
           nowPlayingDurationSec: true,
           nowPlayingUpdatedAt: true,
+          broadcasts: privateLiveBroadcastSelect,
         },
       })
       if (!channel) return reply.status(404).send({ error: 'Show not found' })
+      if (channel.broadcasts.length > 0 && request.sessionUser?.id !== channel.userId) {
+        return reply.send({ track: null })
+      }
 
       const fresh =
         channel.nowPlayingUpdatedAt != null &&

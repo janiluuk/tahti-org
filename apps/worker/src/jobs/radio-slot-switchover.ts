@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Job } from 'bullmq'
-import { availableUserWhere, type PrismaClient } from '@tahti/db'
+import { availableUserWhere, notPrivateLiveChannelWhere, type PrismaClient } from '@tahti/db'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { restartChannelLiquidsoap, spawnOrchestratorChannel } from '../lib/orchestrator.js'
 
@@ -67,7 +67,7 @@ export async function processRadioSlotSwitchoverJob(
     where: {
       startAt: { lte: now },
       endAt: { gt: now },
-      channel: { user: availableUserWhere },
+      channel: { user: availableUserWhere, ...notPrivateLiveChannelWhere },
     },
     orderBy: { startAt: 'asc' },
     select: { channel: { select: { slug: true } } },

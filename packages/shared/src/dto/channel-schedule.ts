@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
-import { BroadcastShowTypeSchema, BroadcastVisibilitySchema } from './broadcast-preflight.js'
+import { BroadcastShowTypeSchema, ScheduledShowVisibilitySchema } from './broadcast-preflight.js'
 
 export const ChannelSchedulePatchSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable().optional(),
@@ -34,7 +34,7 @@ export const CreateLiveShowSeriesSchema = z.object({
   /** SINGLE: a one-off show; SERIES: a continuing series of episodes. */
   mode: z.enum(['SINGLE', 'SERIES']).default('SERIES'),
   showType: BroadcastShowTypeSchema.default('LIVE_SET'),
-  visibility: BroadcastVisibilitySchema.default('PUBLIC'),
+  visibility: ScheduledShowVisibilitySchema.default('PUBLIC'),
   autoPublish: z.boolean().default(true),
   episodeNumberEnabled: z.boolean().default(true),
   nextEpisodeNumber: z.number().int().min(1).max(100_000).default(1),
@@ -131,7 +131,7 @@ export const ScheduledLiveShowViewSchema = z.object({
   location: z.string().nullable(),
   artworkUrl: z.string().nullable(),
   showType: BroadcastShowTypeSchema,
-  visibility: BroadcastVisibilitySchema,
+  visibility: ScheduledShowVisibilitySchema,
   autoPublish: z.boolean(),
 })
 

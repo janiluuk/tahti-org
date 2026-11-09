@@ -281,6 +281,8 @@ enum BroadcastSource {
 enum BroadcastVisibility {
   PUBLIC
   FAN_ONLY
+  /// Only the owning artist can hear it (test runs). Never listed, relayed or auto-published.
+  PRIVATE
 
   @@schema("channel")
 }
@@ -1744,9 +1746,9 @@ model Channel {
   // viewed via its verified custom domain (see routes/channels/custom-domain.ts).
   // Null/empty falls back to the artist's display name + avatar.
   topBarText                String?
-  showSiteSidebar           Boolean @default(false)
-  showSiteBottomBar         Boolean @default(false)
-  showSiteHeader            Boolean @default(true)
+  showSiteSidebar           Boolean      @default(false)
+  showSiteBottomBar         Boolean      @default(false)
+  showSiteHeader            Boolean      @default(true)
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
@@ -1754,6 +1756,7 @@ model Channel {
   broadcasts             Broadcast[]
   liveShowSeries         LiveShowSeries[]
   scheduledLiveShows     ScheduledLiveShow[]
+  broadcastShowDraft     BroadcastShowDraft?
   missedLiveShowFlags    MissedLiveShowFlag[]
   announcements          ChannelAnnouncement[]
   chatBans               ChatBan[]
@@ -1928,16 +1931,19 @@ model Broadcast {
   artworkUrl    String?
   /// Booked slot this session is linked to (set when going live in the T−30m window).
 
-  radioSlotBookingId  String?
-  radioSlotBooking    RadioSlotBooking?          @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
-  scheduledLiveShowId String?                    @unique
-  scheduledLiveShow   ScheduledLiveShow?         @relation(fields: [scheduledLiveShowId], references: [id], onDelete: SetNull)
-  visibility          BroadcastVisibility        @default(PUBLIC)
-  autoPublish         Boolean                    @default(true)
+  radioSlotBookingId   String?
+  radioSlotBooking     RadioSlotBooking?          @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
+  scheduledLiveShowId  String?                    @unique
+  scheduledLiveShow    ScheduledLiveShow?         @relation(fields: [scheduledLiveShowId], references: [id], onDelete: SetNull)
+  visibility           BroadcastVisibility        @default(PUBLIC)
+  autoPublish          Boolean                    @default(true)
+  /// Set when the encoder dropped while LIVE; the session stays open for
+  /// BROADCAST_RECONNECT_GRACE_MS so the artist can reconnect into the same show.
+  ingestDisconnectedAt DateTime?
   /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
-  greenRoomEnabled    Boolean                    @default(false)
-  greenRoomInvites    BroadcastGreenRoomInvite[]
-  reactions           BroadcastReaction[]
+  greenRoomEnabled     Boolean                    @default(false)
+  greenRoomInvites     BroadcastGreenRoomInvite[]
+  reactions            BroadcastReaction[]
 
   @@index([channelId, startedAt(sort: Desc)])
   @@index([radioSlotBookingId])
@@ -1945,10 +1951,29 @@ model Broadcast {
 }
 
 /// Reusable defaults for an artist's recurring live programme.
+/// Show info the artist saves before the encoder connects. Applied to the
+/// broadcast row created on ingest connect, then deleted.
+model BroadcastShowDraft {
+  channelId   String               @id
+  channel     Channel              @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  title       String?
+  tagline     String?
+  showType    BroadcastShowType?
+  visibility  BroadcastVisibility?
+  autoPublish Boolean?
+  seriesId    String?
+  series      LiveShowSeries?      @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  artworkUrl  String?
+  updatedAt   DateTime             @updatedAt
+
+  @@index([seriesId])
+  @@schema("channel")
+}
+
 model LiveShowSeries {
-  id                    String              @id @default(cuid())
+  id                    String               @id @default(cuid())
   channelId             String
-  channel               Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel               Channel              @relation(fields: [channelId], references: [id], onDelete: Cascade)
   name                  String
   description           String?
   tagline               String?
@@ -1956,23 +1981,23 @@ model LiveShowSeries {
   /// Wide header image on the show page, separate from the square artwork.
   backdropUrl           String?
   /// SINGLE: a one-off show; SERIES: a continuing series of episodes.
-  mode                  LiveShowMode        @default(SERIES)
-  showType              BroadcastShowType   @default(LIVE_SET)
-  visibility            BroadcastVisibility @default(PUBLIC)
-  autoPublish           Boolean             @default(true)
-  episodeNumberEnabled  Boolean             @default(true)
-  nextEpisodeNumber     Int                 @default(1)
+  mode                  LiveShowMode         @default(SERIES)
+  showType              BroadcastShowType    @default(LIVE_SET)
+  visibility            BroadcastVisibility  @default(PUBLIC)
+  autoPublish           Boolean              @default(true)
+  episodeNumberEnabled  Boolean              @default(true)
+  nextEpisodeNumber     Int                  @default(1)
   /// Preferred length for this show's radio-slot bookings (RadioSlotBooking), hours.
-  intervalHours         Int                 @default(1)
+  intervalHours         Int                  @default(1)
   /// Freeform recurring cadence hint (e.g. "Fridays 20:00") — display only, not scheduling logic.
   scheduleNote          String?
   /// Recurring auto-scheduling: when enabled, a worker job (and an immediate
   /// pass on save) keeps ScheduledLiveShow rows generated up to
   /// recurrenceHorizonDays out, one per selected weekday, at
   /// recurrenceTimeOfDay in recurrenceTimezone.
-  recurrenceEnabled     Boolean             @default(false)
+  recurrenceEnabled     Boolean              @default(false)
   /// 0=Sunday..6=Saturday (JS Date#getDay convention).
-  recurrenceDays        Int[]               @default([])
+  recurrenceDays        Int[]                @default([])
   /// 24h "HH:mm", interpreted in recurrenceTimezone.
   recurrenceTimeOfDay   String?
   recurrenceDurationMin Int?
@@ -1980,12 +2005,13 @@ model LiveShowSeries {
   /// generation is timezone/DST-aware, unlike the naive datetime-local inputs
   /// used elsewhere on this page.
   recurrenceTimezone    String?
-  recurrenceHorizonDays Int                 @default(28)
+  recurrenceHorizonDays Int                  @default(28)
   scheduledShows        ScheduledLiveShow[]
-  nextBroadcastFor      Channel[]           @relation("ChannelNextBroadcastShow")
+  showDrafts            BroadcastShowDraft[]
+  nextBroadcastFor      Channel[]            @relation("ChannelNextBroadcastShow")
   episodes              LiveShowEpisode[]
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")

@@ -12,8 +12,9 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
+import { endExpiredReconnectingBroadcasts } from '@tahti/shared/broadcast-end'
 import { config } from '../../config.js'
-import { TAHTI_RADIO_SLUG } from '@tahti/shared'
+import { BROADCAST_RECONNECT_GRACE_MS, TAHTI_RADIO_SLUG } from '@tahti/shared'
 import {
   cleanupUsersByEmailPrefix,
   allocateMemberNumber,
@@ -215,7 +216,19 @@ describe('Tahti Radio live-show journey', () => {
       payload: { mount: `/live/${djChannel.slug}` },
     })
     expect(disconnect.statusCode).toBe(200)
-    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(broadcast.id)
+    const held = await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })
+    expect(held.endedAt).toBeNull()
+    expect(held.ingestDisconnectedAt).toBeTruthy()
+
+    // The encoder never comes back: the worker's reconnect-expiry sweep ends the show
+    // and hands the recording to the finalize job.
+    const expired = await endExpiredReconnectingBroadcasts(
+      prisma,
+      new Date(Date.now() + BROADCAST_RECONNECT_GRACE_MS + 1000),
+    )
+    expect(expired).toContainEqual(
+      expect.objectContaining({ broadcastId: broadcast.id, autoRecordEnabled: true }),
+    )
 
     const ended = await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })
     expect(ended.endedAt).toBeTruthy()

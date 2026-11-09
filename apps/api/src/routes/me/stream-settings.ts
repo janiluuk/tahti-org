@@ -7,7 +7,7 @@ import {
   IcecastPassRotateResponseSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
-  StreamSignalStatusResponseSchema,
+  MeStreamSignalStatusResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
@@ -19,6 +19,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 import { fetchMountSignalStatus } from '../../lib/icecast-status.js'
+import { channelIngestState } from '../../lib/broadcast-ingest.js'
 import {
   parseIngestHostList,
   resolveIcecastIngestHosts,
@@ -104,8 +105,9 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Broadcasting Setup step 2: live signal check against Icecast status JSON',
-        response: openApiResponse(StreamSignalStatusResponseSchema, 'StreamSignalStatus'),
+        description:
+          'Broadcasting Setup step 2: live signal check against Icecast status JSON, plus the encoder session state (ingest: connected | reconnecting | disconnected)',
+        response: openApiResponse(MeStreamSignalStatusResponseSchema, 'StreamSignalStatus'),
       },
     },
     async (request, reply) => {
@@ -113,13 +115,16 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { liveSourceMount: true },
+        select: { id: true, state: true, liveSourceMount: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const status = await fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)
-      return reply.send(status)
+      const [status, ingest] = await Promise.all([
+        fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount),
+        channelIngestState(fastify.prisma, channel),
+      ])
+      return reply.send({ ...status, ...ingest })
     },
   )
 

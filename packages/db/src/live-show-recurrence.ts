@@ -17,7 +17,7 @@
 // on @tahti/db and importing it back would create a package cycle. Callers
 // compute occurrences with @tahti/shared and pass them in.
 
-import type { PrismaClient } from '@prisma/client'
+import type { BroadcastVisibility, PrismaClient } from '@prisma/client'
 
 export type RecurringSeriesInput = {
   id: string
@@ -31,7 +31,7 @@ export type RecurringSeriesInput = {
   tagline: string | null
   artworkUrl: string | null
   showType: 'LIVE_SET' | 'TALK'
-  visibility: 'PUBLIC' | 'FAN_ONLY'
+  visibility: BroadcastVisibility
   autoPublish: boolean
   /** Preferred show length in minutes — written to ScheduledLiveShow.endAt. */
   durationMin?: number | null

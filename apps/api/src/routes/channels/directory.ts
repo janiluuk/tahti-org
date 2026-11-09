@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { privateLiveBroadcastSelect } from '@tahti/db'
 import {
   ChannelDirectoryResponseSchema,
   openApiResponse,
@@ -35,11 +36,15 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
             slug: true,
             state: true,
             fallbackEnabled: true,
+            broadcasts: privateLiveBroadcastSelect,
             user: {
               select: { username: true, displayName: true, avatarUrl: true, socialLinks: true },
             },
           },
         })
+
+        const isPublicLive = (ch: (typeof channels)[number]) =>
+          ch.state === 'LIVE' && ch.broadcasts.length === 0
 
         return {
           items: channels.map((ch) => ({
@@ -48,9 +53,9 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
             displayName: userName(ch.user),
             avatarUrl: ch.user.avatarUrl,
             genres: parseSocialLinksGenres(ch.user.socialLinks),
-            isActive: ch.state === 'LIVE' || ch.fallbackEnabled,
+            isActive: isPublicLive(ch) || ch.fallbackEnabled,
             artistRoles: parseSocialLinksArtistRoles(ch.user.socialLinks),
-            hasActiveShows: ch.state === 'LIVE',
+            hasActiveShows: isPublicLive(ch),
           })),
         }
       })

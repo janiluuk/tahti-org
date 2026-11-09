@@ -7,7 +7,8 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
-import { endBroadcast } from '@tahti/shared/broadcast-end'
+import { endBroadcast, endExpiredReconnectingBroadcasts } from '@tahti/shared/broadcast-end'
+import { BROADCAST_RECONNECT_GRACE_MS } from '@tahti/shared'
 import { forceChannelOffline } from '../../lib/force-channel-offline.js'
 
 vi.mock('../../lib/queue.js', async (importOriginal) => {
@@ -35,6 +36,8 @@ const LIVE_SOURCE_PASS = 'live-hours-ice-pass'
 const HOUR_MS = 60 * 60 * 1000
 
 const form = { 'content-type': 'application/x-www-form-urlencoded' }
+
+const afterGrace = () => new Date(Date.now() + BROADCAST_RECONNECT_GRACE_MS + 1000)
 
 describe('Channel.totalLiveHours', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -104,7 +107,7 @@ describe('Channel.totalLiveHours', () => {
     await app.close()
   })
 
-  it('adds the live time of a session ended by RTMP on_done', async () => {
+  it('adds the live time up to the RTMP on_done of a show that never reconnected', async () => {
     await openLiveBroadcast(2 * HOUR_MS)
 
     const res = await app.inject({
@@ -114,10 +117,13 @@ describe('Channel.totalLiveHours', () => {
       payload: `name=${encodeURIComponent(STREAM_KEY)}`,
     })
     expect(res.statusCode).toBe(200)
+    expect(await totalLiveHours()).toBe(0)
+
+    await endExpiredReconnectingBroadcasts(prisma, afterGrace())
     expect(await totalLiveHours()).toBeCloseTo(2, 2)
   })
 
-  it('adds the live time of a session ended by Icecast disconnect', async () => {
+  it('adds the live time up to the Icecast disconnect of a show that never reconnected', async () => {
     await openLiveBroadcast(90 * 60 * 1000)
 
     const res = await app.inject({
@@ -127,6 +133,8 @@ describe('Channel.totalLiveHours', () => {
       payload: `mount=/live/${SLUG}`,
     })
     expect(res.statusCode).toBe(200)
+
+    await endExpiredReconnectingBroadcasts(prisma, afterGrace())
     expect(await totalLiveHours()).toBeCloseTo(1.5, 2)
   })
 

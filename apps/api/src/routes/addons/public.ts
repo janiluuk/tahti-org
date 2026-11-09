@@ -8,7 +8,7 @@
 // for a listener's own Discover page).
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
-import type { Addon } from '@tahti/db'
+import { privateLiveBroadcastSelect, type Addon } from '@tahti/db'
 import {
   AddonBundleHashParamSchema,
   AddonRenderListSchema,
@@ -62,6 +62,7 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           slug: true,
           state: true,
+          broadcasts: privateLiveBroadcastSelect,
           user: { select: { username: true, displayName: true } },
         },
       })
@@ -75,7 +76,7 @@ const addonPublicRoutes: FastifyPluginAsync = async (fastify) => {
       const context = {
         channelSlug: channel.slug,
         displayName: userName(channel.user),
-        isLive: channel.state === 'LIVE',
+        isLive: channel.state === 'LIVE' && channel.broadcasts.length === 0,
       }
 
       const fromInstalls = await Promise.all(

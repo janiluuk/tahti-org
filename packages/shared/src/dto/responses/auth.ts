@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { IngestStateSchema } from './stream.js'
 
 export const AuthMeResponseSchema = z.object({
   id: z.string(),
@@ -27,6 +28,8 @@ export const AuthMeResponseSchema = z.object({
       nextBroadcastAt: z.coerce.date().nullable(),
       customDomain: z.string().nullable(),
       customDomainVerified: z.boolean(),
+      ingest: IngestStateSchema,
+      reconnectDeadline: z.string().nullable(),
     })
     .nullable(),
   storage: z.object({

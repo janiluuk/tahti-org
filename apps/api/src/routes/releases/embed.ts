@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { privateLiveBroadcastSelect } from '@tahti/db'
 import {
   IdParamSchema,
   ChannelEmbedViewSchema,
@@ -195,19 +196,21 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           slug: true,
           state: true,
+          broadcasts: privateLiveBroadcastSelect,
           user: { select: { username: true, displayName: true, avatarUrl: true } },
         },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
+      const state = channel.broadcasts.length > 0 ? 'OFFLINE' : channel.state
       return reply.send({
         slug: channel.slug,
-        state: channel.state,
+        state,
         artist: withSafeName(channel.user),
         embedUrl: `${config.appUrl}/embed/c/${slug}`,
         profileUrl: resolveArtistUrl(channel.user.username),
-        hlsUrl: channel.state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
+        hlsUrl: state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
       })
     },
   )

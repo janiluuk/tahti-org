@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AuthMeResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { computeUserStorageUsedBytes } from '../../lib/user-storage.js'
+import { channelIngestState } from '../../lib/broadcast-ingest.js'
 
 const meRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -27,6 +28,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
         select: {
+          id: true,
           slug: true,
           state: true,
           goneLiveAt: true,
@@ -35,6 +37,15 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
           customDomainVerified: true,
         },
       })
+
+      let channelView = null
+      if (channel) {
+        const { id, ...fields } = channel
+        channelView = {
+          ...fields,
+          ...(await channelIngestState(fastify.prisma, { id, ...fields })),
+        }
+      }
 
       const storageInfo = await fastify.prisma.user.findUnique({
         where: { id: user.id },
@@ -55,7 +66,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
         isMember: user.isMember,
         isBoard: user.isBoard,
         membership,
-        channel,
+        channel: channelView,
         storage: {
           usedBytes: usedBytes.toString(),
           ...(showSoftTarget

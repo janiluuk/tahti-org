@@ -60,22 +60,25 @@ const meGoLiveRoutes: FastifyPluginAsync = async (fastify) => {
         meta: { slug: channel.slug, broadcastId: broadcast.id },
       })
 
-      queueChannelLiveSocialPost(fastify.prisma, user.id, channel.id, channel.slug).catch(
-        (err: unknown) =>
-          fastify.log.warn({ err, slug: channel.slug }, 'channel live social post failed'),
-      )
+      // A PRIVATE session is a test run only the artist hears: nobody is told it started.
+      if (broadcast.visibility !== 'PRIVATE') {
+        queueChannelLiveSocialPost(fastify.prisma, user.id, channel.id, channel.slug).catch(
+          (err: unknown) =>
+            fastify.log.warn({ err, slug: channel.slug }, 'channel live social post failed'),
+        )
 
-      notifyFollowersOfLiveChannel(
-        fastify.prisma,
-        {
-          id: user.id,
-          username: user.username,
-          displayName: safeDisplayName(user.displayName, user.username),
-        },
-        { slug: channel.slug },
-      ).catch((err: unknown) =>
-        fastify.log.warn({ err, slug: channel.slug }, 'go-live follower notification failed'),
-      )
+        notifyFollowersOfLiveChannel(
+          fastify.prisma,
+          {
+            id: user.id,
+            username: user.username,
+            displayName: safeDisplayName(user.displayName, user.username),
+          },
+          { slug: channel.slug },
+        ).catch((err: unknown) =>
+          fastify.log.warn({ err, slug: channel.slug }, 'go-live follower notification failed'),
+        )
+      }
 
       enqueueWarmSoundFallbackCache(channel.id).catch((err: unknown) =>
         fastify.log.error(
