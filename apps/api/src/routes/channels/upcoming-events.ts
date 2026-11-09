@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { serializeArtistEvent } from '../../lib/artist-event.js'
 import {
   UpcomingEventListSchema,
   UpcomingEventsQuerySchema,
@@ -27,7 +28,7 @@ const upcomingEventsRoute: FastifyPluginAsync = async (fastify) => {
       if (!parsed.success) return reply.status(400).send({ error: 'Invalid query' })
 
       const events = await fastify.prisma.artistEvent.findMany({
-        where: { startAt: { gte: new Date() }, user: availableUserWhere },
+        where: { startAt: { gte: new Date() }, status: 'PUBLISHED', user: availableUserWhere },
         orderBy: { startAt: 'asc' },
         take: parsed.data.limit,
         include: {
@@ -43,9 +44,8 @@ const upcomingEventsRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send(
-        events.map(({ user, userId: _userId, createdAt: _createdAt, ...event }) => ({
-          ...event,
-          startAt: event.startAt.toISOString(),
+        events.map(({ user, ...event }) => ({
+          ...serializeArtistEvent(event),
           artistDisplayName: safeDisplayName(user.displayName, user.username),
           artistUsername: user.username,
           channelSlug: user.channel?.slug ?? null,

@@ -14,18 +14,23 @@ import {
   safeDisplayName,
   UpdateArtistEventSchema,
 } from '@tahti/shared'
+import { serializeArtistEvent as serialize } from '../../lib/artist-event.js'
 import { requireAuth } from '../../plugins/auth.js'
 
-function serialize(event: {
-  id: string
-  title: string
-  description: string | null
-  place: string
-  location: string
-  eventUrl: string | null
-  startAt: Date
-}) {
-  return { ...event, startAt: event.startAt.toISOString() }
+async function notifyNewEvent(
+  fastify: Parameters<FastifyPluginAsync>[0],
+  user: { id: string; username: string; displayName: string | null },
+  event: { id: string; title: string; startAt: Date; place: string; location: string },
+) {
+  await notifyFollowersOfNewEvent(
+    fastify.prisma,
+    {
+      id: user.id,
+      username: user.username,
+      displayName: safeDisplayName(user.displayName, user.username),
+    },
+    event,
+  ).catch((err: unknown) => fastify.log.warn({ err }, 'new-event notification failed'))
 }
 
 const meEventRoutes: FastifyPluginAsync = async (fastify) => {
@@ -71,6 +76,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const body = parsed.data
 
+      const published = body.status === 'PUBLISHED'
       const event = await fastify.prisma.artistEvent.create({
         data: {
           userId: user.id,
@@ -79,19 +85,16 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           place: body.place,
           location: body.location,
           eventUrl: body.eventUrl || null,
+          ticketUrl: body.ticketUrl || null,
+          imageUrl: body.imageUrl || null,
           startAt: new Date(body.startAt),
+          endAt: body.endAt ? new Date(body.endAt) : null,
+          status: body.status,
+          publishedAt: published ? new Date() : null,
         },
       })
 
-      await notifyFollowersOfNewEvent(
-        fastify.prisma,
-        {
-          id: user.id,
-          username: user.username,
-          displayName: safeDisplayName(user.displayName, user.username),
-        },
-        event,
-      ).catch((err: unknown) => fastify.log.warn({ err }, 'new-event notification failed'))
+      if (published) await notifyNewEvent(fastify, user, event)
 
       return reply.status(201).send(serialize(event))
     },
@@ -122,9 +125,15 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
 
       const event = await fastify.prisma.artistEvent.findFirst({
         where: { id: routeParams.id, userId: user.id },
-        select: { id: true },
+        select: { id: true, startAt: true, endAt: true },
       })
       if (!event) return reply.status(404).send({ error: 'Event not found' })
+      const nextStart = body.startAt ? new Date(body.startAt) : event.startAt
+      const nextEnd =
+        body.endAt === undefined ? event.endAt : body.endAt ? new Date(body.endAt) : null
+      if (nextEnd && nextEnd <= nextStart) {
+        return reply.status(400).send({ error: 'endAt must be after startAt' })
+      }
 
       const updated = await fastify.prisma.artistEvent.update({
         where: { id: event.id },
@@ -134,8 +143,69 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           place: body.place,
           location: body.location,
           eventUrl: body.eventUrl === undefined ? undefined : body.eventUrl || null,
+          ticketUrl: body.ticketUrl === undefined ? undefined : body.ticketUrl || null,
+          imageUrl: body.imageUrl === undefined ? undefined : body.imageUrl || null,
           startAt: body.startAt === undefined ? undefined : new Date(body.startAt),
+          endAt: body.endAt === undefined ? undefined : body.endAt ? new Date(body.endAt) : null,
         },
+      })
+      return reply.send(serialize(updated))
+    },
+  )
+
+  // POST /api/me/events/:id/publish — a draft goes public; followers hear about it once
+  fastify.post(
+    '/api/me/events/:id/publish',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArtistEventSchema, 'ArtistEvent'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const event = await fastify.prisma.artistEvent.findFirst({
+        where: { id: routeParams.id, userId: user.id },
+      })
+      if (!event) return reply.status(404).send({ error: 'Event not found' })
+      if (event.status === 'PUBLISHED') return reply.send(serialize(event))
+
+      const updated = await fastify.prisma.artistEvent.update({
+        where: { id: event.id },
+        data: { status: 'PUBLISHED', publishedAt: event.publishedAt ?? new Date() },
+      })
+      if (!event.publishedAt) await notifyNewEvent(fastify, user, updated)
+      return reply.send(serialize(updated))
+    },
+  )
+
+  // POST /api/me/events/:id/cancel — stays listed with a Cancelled badge
+  fastify.post(
+    '/api/me/events/:id/cancel',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArtistEventSchema, 'ArtistEvent'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const event = await fastify.prisma.artistEvent.findFirst({
+        where: { id: routeParams.id, userId: user.id },
+      })
+      if (!event) return reply.status(404).send({ error: 'Event not found' })
+
+      const updated = await fastify.prisma.artistEvent.update({
+        where: { id: event.id },
+        data: { status: 'CANCELLED' },
       })
       return reply.send(serialize(updated))
     },

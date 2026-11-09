@@ -1147,19 +1147,33 @@ model User {
 // Simple "I'm playing here" listing on an artist's profile — freeform place/location,
 // deliberately not linked to the structured Venue directory (that's a heavier, board-
 // reviewed system; this is just the artist's own show calendar).
+enum ArtistEventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+
+  @@schema("core")
+}
+
 model ArtistEvent {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   description String?
   place       String
   location    String
   eventUrl    String?
+  ticketUrl   String?
+  imageUrl    String?
   startAt     DateTime
-  createdAt   DateTime @default(now())
+  endAt       DateTime?
+  status      ArtistEventStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
 
   @@index([userId, startAt])
+  @@index([status, startAt])
   @@schema("core")
 }
 
