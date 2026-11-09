@@ -1176,6 +1176,7 @@ model ArtistEvent {
   createdAt   DateTime          @default(now())
 
   participants ArtistEventParticipant[]
+  socialPosts  SocialPost[]
 
   @@index([userId, startAt])
   @@index([status, startAt])
@@ -1359,6 +1360,8 @@ model SocialPost {
   trigger    String
   releaseId  String?
   channelId  String?
+  eventId    String?
+  event      ArtistEvent?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
   message    String
   state      SocialPostState @default(PENDING)
   externalId String?
@@ -1368,6 +1371,7 @@ model SocialPost {
   sentAt     DateTime?
 
   @@index([userId, createdAt])
+  @@index([eventId])
   @@schema("core")
 }
 

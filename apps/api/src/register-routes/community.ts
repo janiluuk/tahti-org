@@ -8,6 +8,7 @@ import mentionRoutes from '../routes/me/mentions.js'
 import radioRoutes from '../routes/radio/index.js'
 import venueRoutes from '../routes/venues/venues.js'
 import eventParticipantRoutes from '../routes/me/event-participants.js'
+import eventShareRoutes from '../routes/me/event-shares.js'
 import meEventRoutes from '../routes/me/events.js'
 import channelEventsRoute from '../routes/channels/events.js'
 import eventCalendarRoutes from '../routes/channels/event-calendar.js'
@@ -41,6 +42,7 @@ export async function registerCommunityRoutes(fastify: FastifyInstance): Promise
   await fastify.register(venueRoutes)
   await fastify.register(meEventRoutes)
   await fastify.register(eventParticipantRoutes)
+  await fastify.register(eventShareRoutes)
   await fastify.register(channelEventsRoute)
   await fastify.register(upcomingEventsRoute)
   await fastify.register(eventCalendarRoutes)

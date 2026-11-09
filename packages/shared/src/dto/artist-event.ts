@@ -141,3 +141,19 @@ export const ArtistEventInviteSchema = z.object({
 })
 
 export const ArtistEventInviteListSchema = z.array(ArtistEventInviteSchema)
+
+export const ArtistEventShareSchema = z.object({
+  id: z.string(),
+  platform: EventShareTargetSchema,
+  state: z.enum(['PENDING', 'SENT', 'FAILED']),
+  error: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  sentAt: z.string().datetime().nullable(),
+})
+
+export const ArtistEventShareListSchema = z.array(ArtistEventShareSchema)
+
+export const ArtistEventShareParamSchema = z.object({
+  id: z.string().trim().min(1).max(64),
+  postId: z.string().trim().min(1).max(64),
+})
