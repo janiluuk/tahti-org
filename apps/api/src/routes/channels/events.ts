@@ -8,6 +8,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { PUBLIC_EVENT_STATUSES, serializeArtistEvent } from '../../lib/artist-event.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 
 // GET /api/channels/:slug/events — public, upcoming events only
@@ -35,13 +36,14 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
         where: {
           userId: channel.userId,
           startAt: { gte: new Date() },
+          status: { in: [...PUBLIC_EVENT_STATUSES] },
           user: availableUserWhere,
         },
         orderBy: { startAt: 'asc' },
         take: 20,
       })
 
-      return reply.send(events.map((e) => ({ ...e, startAt: e.startAt.toISOString() })))
+      return reply.send(events.map(serializeArtistEvent))
     },
   )
 }
