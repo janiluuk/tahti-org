@@ -14,7 +14,11 @@ import {
   safeDisplayName,
   UpdateArtistEventSchema,
 } from '@tahti/shared'
-import { serializeArtistEvent as serialize } from '../../lib/artist-event.js'
+import {
+  notifyTaggedParticipants,
+  participantInclude,
+  serializeArtistEvent,
+} from '../../lib/artist-event.js'
 import { requireAuth } from '../../plugins/auth.js'
 
 async function notifyNewEvent(
@@ -33,6 +37,9 @@ async function notifyNewEvent(
   ).catch((err: unknown) => fastify.log.warn({ err }, 'new-event notification failed'))
 }
 
+const serialize = (event: Parameters<typeof serializeArtistEvent>[0]) =>
+  serializeArtistEvent(event, { acceptedOnly: false })
+
 const meEventRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/events — all of the artist's own events, soonest first
   fastify.get(
@@ -49,6 +56,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
       const events = await fastify.prisma.artistEvent.findMany({
         where: { userId: user.id },
         orderBy: { startAt: 'asc' },
+        include: participantInclude,
       })
       return reply.send(events.map(serialize))
     },
@@ -92,6 +100,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           status: body.status,
           publishedAt: published ? new Date() : null,
         },
+        include: participantInclude,
       })
 
       if (published) await notifyNewEvent(fastify, user, event)
@@ -148,6 +157,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           startAt: body.startAt === undefined ? undefined : new Date(body.startAt),
           endAt: body.endAt === undefined ? undefined : body.endAt ? new Date(body.endAt) : null,
         },
+        include: participantInclude,
       })
       return reply.send(serialize(updated))
     },
@@ -170,6 +180,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
 
       const event = await fastify.prisma.artistEvent.findFirst({
         where: { id: routeParams.id, userId: user.id },
+        include: participantInclude,
       })
       if (!event) return reply.status(404).send({ error: 'Event not found' })
       if (event.status === 'PUBLISHED') return reply.send(serialize(event))
@@ -177,8 +188,14 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
       const updated = await fastify.prisma.artistEvent.update({
         where: { id: event.id },
         data: { status: 'PUBLISHED', publishedAt: event.publishedAt ?? new Date() },
+        include: participantInclude,
       })
-      if (!event.publishedAt) await notifyNewEvent(fastify, user, updated)
+      if (!event.publishedAt) {
+        await notifyNewEvent(fastify, user, updated)
+        await notifyTaggedParticipants(fastify.prisma, user, updated).catch((err: unknown) =>
+          fastify.log.warn({ err }, 'event tag notification failed'),
+        )
+      }
       return reply.send(serialize(updated))
     },
   )
@@ -206,6 +223,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
       const updated = await fastify.prisma.artistEvent.update({
         where: { id: event.id },
         data: { status: 'CANCELLED' },
+        include: participantInclude,
       })
       return reply.send(serialize(updated))
     },

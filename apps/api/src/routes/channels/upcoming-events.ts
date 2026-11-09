@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { serializeArtistEvent } from '../../lib/artist-event.js'
+import { participantInclude, serializeArtistEvent } from '../../lib/artist-event.js'
 import {
   UpcomingEventListSchema,
   UpcomingEventsQuerySchema,
@@ -32,6 +32,7 @@ const upcomingEventsRoute: FastifyPluginAsync = async (fastify) => {
         orderBy: { startAt: 'asc' },
         take: parsed.data.limit,
         include: {
+          ...participantInclude,
           user: {
             select: {
               username: true,
