@@ -92,6 +92,17 @@ export type ArtistEventView = z.infer<typeof ArtistEventSchema>
 
 export const ArtistEventListSchema = z.array(ArtistEventSchema)
 
+export const EventCalendarQuerySchema = z
+  .object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
+    artist: z.string().trim().min(1).max(64).optional(),
+  })
+  .refine((q) => new Date(q.to) > new Date(q.from), { message: 'to must be after from' })
+  .refine((q) => new Date(q.to).getTime() - new Date(q.from).getTime() <= 92 * 86_400_000, {
+    message: 'range is at most 92 days',
+  })
+
 export const UpcomingEventsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 })

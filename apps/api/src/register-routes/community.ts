@@ -10,6 +10,7 @@ import venueRoutes from '../routes/venues/venues.js'
 import eventParticipantRoutes from '../routes/me/event-participants.js'
 import meEventRoutes from '../routes/me/events.js'
 import channelEventsRoute from '../routes/channels/events.js'
+import eventCalendarRoutes from '../routes/channels/event-calendar.js'
 import upcomingEventsRoute from '../routes/channels/upcoming-events.js'
 import channelScheduleRoute from '../routes/channels/schedule.js'
 import mePostRoutes from '../routes/me/posts.js'
@@ -42,6 +43,7 @@ export async function registerCommunityRoutes(fastify: FastifyInstance): Promise
   await fastify.register(eventParticipantRoutes)
   await fastify.register(channelEventsRoute)
   await fastify.register(upcomingEventsRoute)
+  await fastify.register(eventCalendarRoutes)
   await fastify.register(channelScheduleRoute)
   await fastify.register(mePostRoutes)
   await fastify.register(channelPostsRoute)
