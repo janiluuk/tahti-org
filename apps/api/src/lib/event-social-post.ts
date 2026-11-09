@@ -38,6 +38,7 @@ export async function queueEventSocialPosts(
         userId,
         platform: conn.platform,
         trigger: 'event_published',
+        eventId: event.id,
         message: eventSocialMessage(event),
       },
     })

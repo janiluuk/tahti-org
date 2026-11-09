@@ -137,4 +137,57 @@ describe('sharing a published event to Mastodon and Bluesky', () => {
     })
     expect(ok.statusCode).toBe(200)
   })
+
+  it('lists the event shares and retries a failed one', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/me/events',
+      headers: { cookie },
+      payload: {
+        title: 'Status set',
+        place: 'Kaiku',
+        location: 'Helsinki',
+        startAt: later(15),
+        shareTo: ['MASTODON'],
+      },
+    })
+    const id = (created.json() as { id: string }).id
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/me/events/${id}/shares`,
+      headers: { cookie },
+    })
+    const shares = list.json() as Array<{ id: string; platform: string; state: string }>
+    expect(shares).toMatchObject([{ platform: 'MASTODON', state: 'PENDING' }])
+
+    const pending = await app.inject({
+      method: 'POST',
+      url: `/api/me/events/${id}/shares/${shares[0]!.id}/retry`,
+      headers: { cookie },
+    })
+    expect(pending.statusCode).toBe(409)
+
+    await prisma.socialPost.update({
+      where: { id: shares[0]!.id },
+      data: { state: 'FAILED', error: 'boom' },
+    })
+    const retried = await app.inject({
+      method: 'POST',
+      url: `/api/me/events/${id}/shares/${shares[0]!.id}/retry`,
+      headers: { cookie },
+    })
+    expect(retried.json()).toMatchObject({ state: 'PENDING', error: null })
+
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: `${PREFIX}other`,
+    })
+    const otherCookie = await sessionCookieFor(prisma, other.id)
+    const hidden = await app.inject({
+      method: 'GET',
+      url: `/api/me/events/${id}/shares`,
+      headers: { cookie: otherCookie },
+    })
+    expect(hidden.statusCode).toBe(404)
+  })
 })
