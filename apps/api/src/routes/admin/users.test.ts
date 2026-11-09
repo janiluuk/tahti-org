@@ -50,6 +50,7 @@ describe('M21-B — admin users API', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json() as { users: Array<{ username: string }> }
     expect(body.users.some((u) => u.username === 'admin-users-target')).toBe(true)
+    expect(body.users.every((u) => 'avatarUrl' in u)).toBe(true)
   })
 
   it('filters by account role the way the web counts it', async () => {

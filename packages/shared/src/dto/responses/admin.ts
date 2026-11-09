@@ -146,6 +146,7 @@ export const AdminUserListItemSchema = z.object({
   displayName: z.string(),
   email: z.string(),
   username: z.string(),
+  avatarUrl: z.string().nullable(),
   tier: z.string(),
   isMember: z.boolean(),
   isBoard: z.boolean(),
