@@ -9,11 +9,14 @@ import {
   UserMediaCompleteSchema,
   UserMediaFileListSchema,
   UserMediaFileSchema,
+  UserMediaPurgeResultSchema,
+  UserMediaUnusedSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
+import { findUsedMediaKeys } from '../../lib/user-media-usage.js'
 import {
   deleteUserMediaObject,
   listUserMediaObjects,
@@ -132,6 +135,64 @@ const meMediaRoutes: FastifyPluginAsync = async (fastify) => {
         url,
         createdAt: new Date().toISOString(),
       })
+    },
+  )
+
+  const unusedMedia = async (userId: string, username: string) => {
+    const objects = await listUserMediaObjects(`media/${username}/`)
+    const used = await findUsedMediaKeys(
+      fastify.prisma,
+      userId,
+      objects.map((object) => object.key),
+    )
+    return objects.filter((object) => !used.has(object.key))
+  }
+
+  // GET /api/me/media/unused — uploads no row of yours points at any more
+  fastify.get(
+    '/api/me/media/unused',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Your generic media uploads that nothing you own (profile, channel, posts, releases, …) still uses',
+        response: openApiResponse(UserMediaUnusedSchema, 'UserMediaUnused'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const unused = await unusedMedia(user.id, user.username)
+      return reply.send({
+        count: unused.length,
+        totalBytes: unused.reduce((sum, object) => sum + object.sizeBytes, 0),
+        ids: unused.map((object) => object.key),
+      })
+    },
+  )
+
+  // POST /api/me/media/purge-unused — delete every unused upload
+  fastify.post(
+    '/api/me/media/purge-unused',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Delete your generic media uploads that nothing you own still uses',
+        response: openApiResponse(UserMediaPurgeResultSchema, 'UserMediaPurgeResult'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const unused = await unusedMedia(user.id, user.username)
+      let deleted = 0
+      let freedBytes = 0
+      for (const object of unused) {
+        await deleteUserMediaObject(object.key)
+        deleted += 1
+        freedBytes += object.sizeBytes
+      }
+      return reply.send({ deleted, freedBytes })
     },
   )
 
