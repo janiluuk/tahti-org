@@ -4,11 +4,13 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { Prisma } from '@tahti/db'
 import {
+  ArtistEventIdParamSchema,
   EventCalendarQuerySchema,
   openApiResponse,
   parseRouteParams,
   safeDisplayName,
   UpcomingEventListSchema,
+  UpcomingEventSchema,
   UsernameParamSchema,
 } from '@tahti/shared'
 import {
@@ -131,6 +133,32 @@ const eventCalendarRoutes: FastifyPluginAsync = async (fastify) => {
         include: hostInclude,
       })
       return reply.send(rows.map(toCalendarEvent))
+    },
+  )
+
+  // GET /api/v1/events/:id — one public event (the web event page)
+  fastify.get(
+    '/api/v1/events/:id',
+    {
+      schema: {
+        tags: ['channel'],
+        description: 'One published or cancelled event with its host and accepted tags.',
+        response: openApiResponse(UpcomingEventSchema, 'UpcomingEvent'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(ArtistEventIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const row = await fastify.prisma.artistEvent.findFirst({
+        where: {
+          id: routeParams.id,
+          status: { in: [...PUBLIC_EVENT_STATUSES] },
+          user: availableUserWhere,
+        },
+        include: hostInclude,
+      })
+      if (!row) return reply.status(404).send({ error: 'Event not found' })
+      return reply.send(toCalendarEvent(row))
     },
   )
 

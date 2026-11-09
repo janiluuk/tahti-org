@@ -124,4 +124,17 @@ describe('event calendar and iCalendar feeds', () => {
     expect(res.body).not.toContain('Called off')
     expect(res.body).not.toContain('Draft only')
   })
+
+  it('serves one public event by id and hides drafts', async () => {
+    const res = await app.inject({ method: 'GET', url: `/api/v1/events/${ids['Week two']}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ title: 'Week two', status: 'PUBLISHED' })
+    const draft = await app.inject({ method: 'GET', url: `/api/v1/events/${ids['Draft only']}` })
+    expect(draft.statusCode).toBe(404)
+    const cancelled = await app.inject({
+      method: 'GET',
+      url: `/api/v1/events/${ids['Called off']}`,
+    })
+    expect(cancelled.json()).toMatchObject({ status: 'CANCELLED' })
+  })
 })

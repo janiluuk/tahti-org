@@ -118,6 +118,10 @@ export type UpcomingEventView = z.infer<typeof UpcomingEventSchema>
 
 export const UpcomingEventListSchema = z.array(UpcomingEventSchema)
 
+export const ArtistEventIdParamSchema = z.object({
+  id: z.string().trim().min(1).max(64),
+})
+
 export const ArtistEventInviteSchema = z.object({
   event: ArtistEventSchema,
   host: z.object({
