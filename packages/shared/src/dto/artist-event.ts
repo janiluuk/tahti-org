@@ -33,8 +33,15 @@ const endsAfterStart = (body: { startAt?: string; endAt?: string | null }) =>
 
 export const ArtistEventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED'])
 
+export const EventShareTargetSchema = z.enum(['MASTODON', 'BLUESKY'])
+
+const shareTo = z.array(EventShareTargetSchema).max(2).default([])
+
+export const PublishArtistEventSchema = z.object({ shareTo }).default({ shareTo: [] })
+
 export const CreateArtistEventSchema = ArtistEventFieldsSchema.extend({
   status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),
+  shareTo,
 }).refine(endsAfterStart, { message: 'endAt must be after startAt', path: ['endAt'] })
 
 export type CreateArtistEventInput = z.infer<typeof CreateArtistEventSchema>

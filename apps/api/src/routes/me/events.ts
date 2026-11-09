@@ -11,6 +11,7 @@ import {
   openApiResponse,
   openApiResponses,
   parseRouteParams,
+  PublishArtistEventSchema,
   safeDisplayName,
   UpdateArtistEventSchema,
 } from '@tahti/shared'
@@ -19,6 +20,7 @@ import {
   participantInclude,
   serializeArtistEvent,
 } from '../../lib/artist-event.js'
+import { queueEventSocialPosts } from '../../lib/event-social-post.js'
 import { requireAuth } from '../../plugins/auth.js'
 
 async function notifyNewEvent(
@@ -41,6 +43,16 @@ const serialize = (event: Parameters<typeof serializeArtistEvent>[0]) =>
   serializeArtistEvent(event, { acceptedOnly: false })
 
 const meEventRoutes: FastifyPluginAsync = async (fastify) => {
+  const shareEvent = (
+    userId: string,
+    event: { id: string; title: string; place: string; location: string; startAt: Date },
+    targets: Array<'MASTODON' | 'BLUESKY'>,
+  ) =>
+    queueEventSocialPosts(fastify.prisma, userId, event, targets).catch((err: unknown) => {
+      fastify.log.warn({ err }, 'event social post failed')
+      return []
+    })
+
   // GET /api/me/events — all of the artist's own events, soonest first
   fastify.get(
     '/api/me/events',
@@ -103,7 +115,10 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         include: participantInclude,
       })
 
-      if (published) await notifyNewEvent(fastify, user, event)
+      if (published) {
+        await notifyNewEvent(fastify, user, event)
+        await shareEvent(user.id, event, body.shareTo)
+      }
 
       return reply.status(201).send(serialize(event))
     },
@@ -178,6 +193,12 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
+      const publishBody = PublishArtistEventSchema.safeParse(request.body ?? undefined)
+      if (!publishBody.success) {
+        return reply
+          .status(400)
+          .send({ error: publishBody.error.issues[0]?.message ?? 'Invalid request body' })
+      }
       const event = await fastify.prisma.artistEvent.findFirst({
         where: { id: routeParams.id, userId: user.id },
         include: participantInclude,
@@ -195,6 +216,7 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         await notifyTaggedParticipants(fastify.prisma, user, updated).catch((err: unknown) =>
           fastify.log.warn({ err }, 'event tag notification failed'),
         )
+        await shareEvent(user.id, updated, publishBody.data.shareTo)
       }
       return reply.send(serialize(updated))
     },
