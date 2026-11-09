@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import { notPrivateLiveChannelWhere, type PrismaClient } from '@tahti/db'
 import { userName } from './safe-names.js'
 
 /** Record a Tahti Radio feature event and update channel rotation timestamp. */
@@ -25,6 +25,7 @@ export async function listRadioEligibleChannels(prisma: PrismaClient) {
       state: 'LIVE',
       metaStreamOptOut: false,
       user: { isMember: true },
+      ...notPrivateLiveChannelWhere,
     },
     select: {
       id: true,

@@ -36,8 +36,8 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '* * * * *',
     jobId: 'light-minute-tick-cron',
     description:
-      'Every minute (light lane): M20 free-tier live cap tick, M34 notify followers when a scheduled post crosses its publishAt',
-    subTasks: ['broadcast-cap-tick', 'post-publish-notify'],
+      'Every minute (light lane): M20 free-tier live cap tick, M34 notify followers when a scheduled post crosses its publishAt, end live shows whose encoder did not reconnect in time',
+    subTasks: ['broadcast-cap-tick', 'post-publish-notify', 'broadcast-reconnect-expiry'],
   },
   {
     name: 'media-ten-minute-tick',

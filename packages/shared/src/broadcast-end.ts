@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
+import { BROADCAST_RECONNECT_GRACE_MS } from './broadcast-session.js'
 
 const MS_PER_HOUR = 60 * 60 * 1000
 
@@ -22,12 +23,20 @@ export async function endBroadcast(
   prisma: PrismaClient,
   broadcastId: string,
   endedAt: Date = new Date(),
+  guard: { ingestDisconnectedBefore?: Date } = {},
 ): Promise<boolean> {
   return prisma.$transaction(async (tx) => {
     // The `endedAt: null` guard makes the close and the increment happen at most once,
-    // even when two end paths race for the same session.
+    // even when two end paths race for the same session. The optional ingest guard
+    // keeps a session the encoder has just reconnected to from being closed.
     const closed = await tx.broadcast.updateMany({
-      where: { id: broadcastId, endedAt: null },
+      where: {
+        id: broadcastId,
+        endedAt: null,
+        ...(guard.ingestDisconnectedBefore
+          ? { ingestDisconnectedAt: { lte: guard.ingestDisconnectedBefore } }
+          : {}),
+      },
       data: { endedAt },
     })
     if (closed.count === 0) return false
@@ -59,4 +68,45 @@ export async function endOpenBroadcasts(
   for (const { id } of open) {
     await endBroadcast(prisma, id, endedAt)
   }
+}
+
+/**
+ * Ends sessions whose encoder dropped while LIVE and didn't reconnect within
+ * BROADCAST_RECONNECT_GRACE_MS, and takes their channels OFFLINE. Returns the
+ * ended sessions so the caller can queue their recordings.
+ */
+export async function endExpiredReconnectingBroadcasts(
+  prisma: PrismaClient,
+  now: Date = new Date(),
+): Promise<Array<{ broadcastId: string; channelId: string; autoRecordEnabled: boolean }>> {
+  const cutoff = new Date(now.getTime() - BROADCAST_RECONNECT_GRACE_MS)
+  const expired = await prisma.broadcast.findMany({
+    where: { endedAt: null, ingestDisconnectedAt: { lte: cutoff } },
+    select: {
+      id: true,
+      channelId: true,
+      ingestDisconnectedAt: true,
+      channel: { select: { autoRecordEnabled: true } },
+    },
+  })
+  const ended: Array<{ broadcastId: string; channelId: string; autoRecordEnabled: boolean }> = []
+  for (const broadcast of expired) {
+    // The show ended when the encoder dropped; the grace period isn't live time.
+    const endedAt = broadcast.ingestDisconnectedAt!
+    if (
+      !(await endBroadcast(prisma, broadcast.id, endedAt, { ingestDisconnectedBefore: cutoff }))
+    ) {
+      continue
+    }
+    await prisma.channel.update({
+      where: { id: broadcast.channelId },
+      data: { state: 'OFFLINE', goneLiveAt: null },
+    })
+    ended.push({
+      broadcastId: broadcast.id,
+      channelId: broadcast.channelId,
+      autoRecordEnabled: broadcast.channel.autoRecordEnabled,
+    })
+  }
+  return ended
 }

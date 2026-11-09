@@ -112,4 +112,5 @@ export {
 export type { SoundOwnerDefaults } from './sound-owner-defaults.js'
 export { actorDisplayName } from './display-name.js'
 export { availableUserWhere } from './available-user.js'
+export { notPrivateLiveChannelWhere, privateLiveBroadcastSelect } from './private-broadcast.js'
 export { notifyJobOutcome, type JobOutcome } from './job-notices.js'

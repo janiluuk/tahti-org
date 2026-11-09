@@ -128,7 +128,10 @@ describe('processRadioSlotSwitchoverJob', () => {
     expect(mockFindFirstBooking).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          channel: { user: { deletedAt: null, suspendedAt: null } },
+          channel: {
+            user: { deletedAt: null, suspendedAt: null },
+            broadcasts: { none: { endedAt: null, visibility: 'PRIVATE' } },
+          },
         }),
       }),
     )

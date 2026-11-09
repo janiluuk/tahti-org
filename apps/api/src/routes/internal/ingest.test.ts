@@ -9,6 +9,8 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
+import { endExpiredReconnectingBroadcasts } from '@tahti/shared/broadcast-end'
+import { BROADCAST_RECONNECT_GRACE_MS } from '@tahti/shared'
 import { sessionCookieFor } from '../../test/helpers.js'
 
 const { enqueueFinalizeBroadcastRecording, enqueueWarmSoundFallbackCache } = vi.hoisted(() => ({
@@ -28,6 +30,8 @@ vi.mock('../../lib/queue.js', async (importOriginal) => {
 const PREFIX = 'ingest-test-'
 const SLUG = 'ingest-artist'
 const STREAM_KEY = `${SLUG}__ingest-secret`
+
+const afterGrace = () => new Date(Date.now() + BROADCAST_RECONNECT_GRACE_MS + 1000)
 
 describe('internal ingest (RTMP + Icecast)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -257,7 +261,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(res.statusCode).toBe(409)
   })
 
-  it('ends broadcast on RTMP on_done and enqueues partial sound finalize when it had gone live', async () => {
+  it('holds a live RTMP show on on_done and ends it once the reconnect grace runs out', async () => {
     await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
@@ -278,19 +282,21 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
     expect(done.statusCode).toBe(200)
 
+    const held = await prisma.broadcast.findFirstOrThrow({
+      where: { channelId, endedAt: null },
+    })
+    expect(held.ingestDisconnectedAt).toBeTruthy()
+    expect((await prisma.channel.findUnique({ where: { id: channelId } }))?.state).toBe('LIVE')
+
+    const ended = await endExpiredReconnectingBroadcasts(prisma, afterGrace())
+    expect(ended).toEqual([{ broadcastId: held.id, channelId, autoRecordEnabled: true }])
+
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('OFFLINE')
     const open = await prisma.broadcast.findFirst({
       where: { channelId, endedAt: null },
     })
     expect(open).toBeNull()
-
-    const ended = await prisma.broadcast.findFirst({
-      where: { channelId },
-      orderBy: { startedAt: 'desc' },
-    })
-    expect(ended?.endedAt).toBeTruthy()
-    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
   })
 
   it('ends a preview-only RTMP session on on_done without enqueuing sound finalize', async () => {
@@ -316,7 +322,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
   })
 
-  it('ends broadcast on Icecast disconnect and enqueues partial sound finalize when it had gone live', async () => {
+  it('holds a live Icecast show on disconnect and ends it once the reconnect grace runs out', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
 
     await app.inject({
@@ -339,12 +345,16 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
     expect(disconnect.statusCode).toBe(200)
 
-    const ended = await prisma.broadcast.findFirst({
+    const held = await prisma.broadcast.findFirstOrThrow({
       where: { channelId },
       orderBy: { startedAt: 'desc' },
     })
-    expect(ended?.endedAt).toBeTruthy()
-    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
+    expect(held.endedAt).toBeNull()
+    expect(held.ingestDisconnectedAt).toBeTruthy()
+
+    await endExpiredReconnectingBroadcasts(prisma, afterGrace())
+    const ended = await prisma.broadcast.findUniqueOrThrow({ where: { id: held.id } })
+    expect(ended.endedAt).toEqual(held.ingestDisconnectedAt)
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({
@@ -373,7 +383,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
   })
 
-  it('M35: does not enqueue sound finalize when the channel has auto-record turned off', async () => {
+  it('M35: reports auto-record off for a live show that never reconnected', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
     await prisma.channel.update({ where: { id: channelId }, data: { autoRecordEnabled: false } })
 
@@ -396,6 +406,10 @@ describe('internal ingest (RTMP + Icecast)', () => {
       payload: `name=${encodeURIComponent(STREAM_KEY)}`,
     })
     expect(done.statusCode).toBe(200)
+
+    const ended = await endExpiredReconnectingBroadcasts(prisma, afterGrace())
+    expect(ended).toHaveLength(1)
+    expect(ended[0]!.autoRecordEnabled).toBe(false)
 
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('OFFLINE')

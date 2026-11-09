@@ -28,7 +28,11 @@ import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processSoundBroadcastJob } from './jobs/sound-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
-import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
+import {
+  processBroadcastCapTick,
+  processBroadcastReconnectExpiry,
+  processWeeklyBroadcastReset,
+} from './jobs/broadcast-cap.js'
 import { processTahtiSelectsDrawJob } from './jobs/tahti-selects-draw.js'
 import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
@@ -199,6 +203,7 @@ const worker = new Worker(
         return await runCronTasks(
           {
             'broadcast-cap-tick': () => processBroadcastCapTick(prisma),
+            'broadcast-reconnect-expiry': () => processBroadcastReconnectExpiry(prisma),
             'post-publish-notify': () => processPostPublishNotifyJob(job),
           },
           { parallel: true },

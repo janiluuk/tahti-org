@@ -146,7 +146,7 @@ export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<numbe
         where: { endedAt: null },
         orderBy: { startedAt: 'desc' },
         take: 1,
-        select: { wentLiveAt: true },
+        select: { wentLiveAt: true, ingestDisconnectedAt: true },
       },
     },
   })
@@ -159,6 +159,7 @@ export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<numbe
     const openBroadcast = ch.broadcasts[0]
     if (isFallbackOnlyLiveSession(ch.state, openBroadcast)) continue
     if (ch.state === 'PREVIEW' && !openBroadcast) continue
+    if (openBroadcast?.ingestDisconnectedAt) continue
 
     await ensureWeeklyReset(prisma, ch.userId, ch.user.weeklyLiveResetAt)
     await prisma.user.update({

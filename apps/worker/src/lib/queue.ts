@@ -32,6 +32,24 @@ export async function enqueueSoundBroadcast(broadcastId: string): Promise<void> 
   }
 }
 
+/** Same job and id as apps/api/src/lib/queue.ts's helper, so either side enqueues it once. */
+export async function enqueueFinalizeBroadcastRecording(broadcastId: string): Promise<void> {
+  const queue = new Queue('media', { connection, defaultJobOptions })
+  try {
+    await queue.add(
+      'finalize-broadcast-recording',
+      { broadcastId },
+      {
+        jobId: `finalize-broadcast-${broadcastId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 15_000 },
+      },
+    )
+  } finally {
+    await queue.close()
+  }
+}
+
 export async function enqueueWarmSoundFallbackCache(channelId: string): Promise<void> {
   const queue = new Queue('media', { connection, defaultJobOptions })
   try {

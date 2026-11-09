@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { notPrivateLiveChannelWhere } from '@tahti/db'
 import { ChannelListResponseSchema, openApiResponse, parseSocialLinksGenres } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { config } from '../../config.js'
@@ -54,7 +55,12 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
           // goneLiveAt filter here, a rotation-only channel would show up
           // labeled "Live now" on Discover instead of "Replay".
           fastify.prisma.channel.findMany({
-            where: { state: 'LIVE', goneLiveAt: { not: null }, user: { deletedAt: null } },
+            where: {
+              state: 'LIVE',
+              goneLiveAt: { not: null },
+              user: { deletedAt: null },
+              ...notPrivateLiveChannelWhere,
+            },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,

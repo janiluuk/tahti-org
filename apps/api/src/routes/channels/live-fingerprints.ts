@@ -30,7 +30,7 @@ const liveFingerprintsRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, state: true },
+        select: { id: true, userId: true, state: true },
       })
       if (!channel) {
         return reply.status(404).send({ error: 'Channel not found' })
@@ -42,8 +42,11 @@ const liveFingerprintsRoute: FastifyPluginAsync = async (fastify) => {
       const broadcast = await fastify.prisma.broadcast.findFirst({
         where: { channelId: channel.id, endedAt: null },
         orderBy: { startedAt: 'desc' },
-        select: { id: true },
+        select: { id: true, visibility: true },
       })
+      if (broadcast?.visibility === 'PRIVATE' && request.sessionUser?.id !== channel.userId) {
+        return reply.status(404).send({ error: 'Channel is not live' })
+      }
       if (!broadcast) {
         return reply.status(404).send({ error: 'No active broadcast' })
       }

@@ -33,6 +33,7 @@ From the [`planning-decisions.md`](planning-decisions.md) decision log and topic
 
 | Date | Decision | Why | Link |
 | --- | --- | --- | --- |
+| 2026-11-10 | **Encoder drops while LIVE hold the show for 2 minutes** (`BROADCAST_RECONNECT_GRACE_MS`) and are exposed as `ingest: connected / reconnecting / disconnected`; `ChannelState` stays `OFFLINE / PREVIEW / LIVE`. **`PRIVATE` broadcast visibility** means only the owner can hear it. | `LIVE` already doubles as the 24/7 fallback state, and many jobs and listings key off it; a separate field avoids rippling a new enum value through them. No grace existed before (disconnect ended the show at once). | [go-live-api.md](todo/go-live-api.md) |
 | 2026-06-03 | **Auth:** custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`. | Lucia is maintenance-only. Recorded retroactively from shipped MVP code. | [Topic 4](planning-decisions.md#topic-4--auth-library-lucia-deprecated-vs-better-auth-vs-next-auth) |
 | 2026-06-03 | **Uploads:** S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`. | MinIO supports it natively; no extra service. Recorded retroactively. | [Topic 5](planning-decisions.md#topic-5--upload-resumability-tus-vs-s3-multipart) |
 | 2026-06-03 | **Channel URLs:** path-based `/c/<slug>` for MVP; subdomains deferred. | Avoids wildcard TLS / DNS challenge for MVP. Recorded retroactively. | [Topic 9](planning-decisions.md#topic-9--nextjs-subdomain-routing-channel-slugs-as-subdomains) |

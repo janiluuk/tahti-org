@@ -24,3 +24,34 @@ export function broadcastSessionLogFields(opts: {
     ...(opts.source ? { source: opts.source } : {}),
   }
 }
+
+/** How long a LIVE session stays open after the encoder drops, waiting for it to reconnect. */
+export const BROADCAST_RECONNECT_GRACE_MS = 2 * 60 * 1000
+
+export type IngestState = 'connected' | 'reconnecting' | 'disconnected'
+
+/**
+ * Encoder state for a channel. `channelState` alone can't answer this: the 24/7
+ * fallback rotation keeps a channel LIVE with a placeholder broadcast that never
+ * went live, and a dropped encoder keeps a real show LIVE during the grace period.
+ */
+export function ingestStateFor(
+  channelState: string,
+  openBroadcast: { wentLiveAt: Date | null; ingestDisconnectedAt: Date | null } | null | undefined,
+): { ingest: IngestState; reconnectDeadline: Date | null } {
+  if (channelState === 'OFFLINE' || !openBroadcast) {
+    return { ingest: 'disconnected', reconnectDeadline: null }
+  }
+  if (openBroadcast.ingestDisconnectedAt) {
+    return {
+      ingest: 'reconnecting',
+      reconnectDeadline: new Date(
+        openBroadcast.ingestDisconnectedAt.getTime() + BROADCAST_RECONNECT_GRACE_MS,
+      ),
+    }
+  }
+  if (channelState === 'PREVIEW' || openBroadcast.wentLiveAt) {
+    return { ingest: 'connected', reconnectDeadline: null }
+  }
+  return { ingest: 'disconnected', reconnectDeadline: null }
+}

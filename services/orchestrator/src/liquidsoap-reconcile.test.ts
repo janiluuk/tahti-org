@@ -46,6 +46,7 @@ vi.mock('@tahti/db', () => ({
       findMany: (...a: unknown[]) => findMany(...a),
       findUnique: (...a: unknown[]) => findUnique(...a),
     },
+    broadcast: { findUnique: async () => null },
   },
 }))
 

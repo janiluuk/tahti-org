@@ -14,6 +14,7 @@ import { liveHlsUrl } from '../../lib/stream-quality.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { trackArtistName } from '../../lib/safe-names.js'
+import { privateLiveBroadcastSelect } from '@tahti/db'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -41,9 +42,36 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         computeChannelView(fastify, slug),
       )
       if (!result) return reply.status(404).send({ error: 'Channel not found' })
-      return reply.send(result)
+      const { ownerId, privateLive, ...view } = result
+      if (privateLive && request.sessionUser?.id !== ownerId) {
+        return reply.send(hidePrivateLive(view))
+      }
+      return reply.send(view)
     },
   )
+}
+
+type ChannelView = Omit<
+  NonNullable<Awaited<ReturnType<typeof computeChannelView>>>,
+  'ownerId' | 'privateLive'
+>
+
+/** A PRIVATE session is only for its artist: everyone else sees the channel as off air. */
+function hidePrivateLive(view: ChannelView): ChannelView {
+  return {
+    ...view,
+    state: 'OFFLINE',
+    hlsUrl: null,
+    signalConnected: false,
+    nowPlaying: null,
+    nowPlayingNext: null,
+    nowPlayingTitle: null,
+    nowPlayingArtistName: null,
+    nowPlayingArtistUsername: null,
+    nowPlayingArtworkUrl: null,
+    nowPlayingDurationSec: null,
+    nowPlayingUpdatedAt: null,
+  }
 }
 
 async function computeChannelView(fastify: FastifyInstance, slug: string) {
@@ -52,8 +80,10 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
     where: { slug, user: { suspendedAt: null } },
     select: {
       id: true,
+      userId: true,
       slug: true,
       state: true,
+      broadcasts: privateLiveBroadcastSelect,
       channelKind: true,
       liveSourceMount: true,
       nextBroadcastAt: true,
@@ -135,7 +165,7 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
   const { showJoinDate, createdAt, ...userRest } = channel.user
   // Internal Icecast mount path -- never leak it in the public payload.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { liveSourceMount, ...channelRest } = channel
+  const { liveSourceMount, userId, broadcasts, ...channelRest } = channel
 
   // Stale poller data (orchestrator down, channel not actually running) is
   // worse than none — a "now playing" that hasn't moved in minutes reads as
@@ -200,6 +230,8 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
 
   return {
     ...channelRest,
+    ownerId: userId,
+    privateLive: broadcasts.length > 0,
     publicPlays,
     user: {
       ...userRest,

@@ -53,6 +53,15 @@ export const StreamSignalStatusResponseSchema = z.object({
   listeners: z.number().nullable(),
 })
 
+/** connected: encoder sending; reconnecting: encoder dropped mid-show, session held open
+ * until reconnectDeadline; disconnected: no encoder session (rotation or offline). */
+export const IngestStateSchema = z.enum(['connected', 'reconnecting', 'disconnected'])
+
+export const MeStreamSignalStatusResponseSchema = StreamSignalStatusResponseSchema.extend({
+  ingest: IngestStateSchema,
+  reconnectDeadline: z.string().nullable(),
+})
+
 export const IcecastPassRotateResponseSchema = z.object({
   liveSourcePass: z.string(),
 })

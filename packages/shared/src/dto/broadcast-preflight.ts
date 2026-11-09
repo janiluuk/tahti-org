@@ -3,9 +3,13 @@
 
 import { z } from 'zod'
 
-export const BroadcastVisibilitySchema = z.enum(['PUBLIC', 'FAN_ONLY'])
+/** PRIVATE: only the owning artist can hear the session (test runs). */
+export const BroadcastVisibilitySchema = z.enum(['PUBLIC', 'FAN_ONLY', 'PRIVATE'])
 
 export type BroadcastVisibility = z.infer<typeof BroadcastVisibilitySchema>
+
+/** Series and scheduled shows are listed on the public schedule, so they can't be PRIVATE. */
+export const ScheduledShowVisibilitySchema = z.enum(['PUBLIC', 'FAN_ONLY'])
 
 /** Live session format — music/DJ set vs spoken talk (solo or with guests). */
 export const BroadcastShowTypeSchema = z.enum(['LIVE_SET', 'TALK'])
@@ -21,8 +25,19 @@ export const PatchBroadcastPreflightSchema = z.object({
   showType: BroadcastShowTypeSchema.optional(),
   visibility: BroadcastVisibilitySchema.optional(),
   autoPublish: z.boolean().optional(),
-  seriesId: z.string().optional(),
+  /** null clears a series picked in the pre-session draft. */
+  seriesId: z.string().min(1).nullable().optional(),
+  /** Per-broadcast cover from `POST /api/me/media/prepare` + `/complete`; null clears it. */
+  artworkUrl: z.string().url().max(2_000).nullable().optional(),
 })
+
+/** Fields that can't change once the session is public. */
+export const LIVE_LOCKED_PREFLIGHT_FIELDS = ['showType', 'visibility', 'seriesId'] as const
+
+/** NONE: no encoder session yet, edits go to the pre-session draft. */
+export const BroadcastSessionStateSchema = z.enum(['NONE', 'PREVIEW', 'LIVE'])
+
+export type BroadcastSessionState = z.infer<typeof BroadcastSessionStateSchema>
 
 export type PatchBroadcastPreflightInput = z.infer<typeof PatchBroadcastPreflightSchema>
 
@@ -51,12 +66,18 @@ export const PlannedLiveShowSchema = z.object({
 })
 
 export const BroadcastPreflightViewSchema = z.object({
+  session: BroadcastSessionStateSchema,
   title: z.string().nullable(),
   visibility: BroadcastVisibilitySchema,
   autoPublish: z.boolean(),
   showType: BroadcastShowTypeSchema,
   episodeNumber: z.number().int().min(1).nullable(),
   tagline: z.string().nullable(),
+  seriesId: z.string().nullable(),
+  /** Cover set for this broadcast; null when unset. */
+  artworkUrl: z.string().nullable(),
+  /** artworkUrl, falling back to the artist's profile avatar. */
+  coverUrl: z.string().nullable(),
   plannedRadioShow: PlannedRadioShowSchema.nullable(),
   plannedLiveShow: PlannedLiveShowSchema.nullable(),
 })

@@ -433,8 +433,16 @@ export async function spawnLiquidsoapContainer(
   // for every regular channel (override is null), matching prior behavior exactly.
   const inputUrl = liveInputUrl(source, channel.liveInputOverrideSlug ?? slug)
 
+  const session = await prisma.broadcast.findUnique({
+    where: { id: broadcastId },
+    select: { visibility: true, endedAt: true },
+  })
+  // A PRIVATE session is only for the artist to hear, so nothing is pushed to
+  // external multistream platforms while it is open.
+  const privateSession = session?.visibility === 'PRIVATE' && session.endedAt === null
+
   // Decrypt RTMP stream keys
-  const targets = channel.rtmpTargets.map((t) => ({
+  const targets = (privateSession ? [] : channel.rtmpTargets).map((t) => ({
     id: t.id,
     provider: t.provider,
     rtmpUrl: t.rtmpUrl,

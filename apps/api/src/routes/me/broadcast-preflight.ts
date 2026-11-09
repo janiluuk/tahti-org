@@ -4,265 +4,105 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   BroadcastPreflightViewSchema,
+  LIVE_LOCKED_PREFLIGHT_FIELDS,
   PatchBroadcastPreflightSchema,
-  RADIO_SHOW_GO_LIVE_EARLY_MS,
   openApiResponse,
-  plannedRadioShowTitle,
   type BroadcastPreflightView,
-  type BroadcastShowType,
+  type BroadcastSessionState,
+  type PatchBroadcastPreflightInput,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import {
+  attachSeriesToBroadcast,
+  ensurePlannedShowFilled,
+  findPlannedBooking,
+  findShowSession,
+  isOwnMediaUrl,
+  updateBroadcastShowInfo,
+  type BroadcastShowRow,
+} from '../../lib/broadcast-show-info.js'
+import { rerenderMirrorsForSession } from '../../lib/broadcast-ingest.js'
 
-type BroadcastRow = {
-  id: string
+type DraftRow = {
   title: string | null
-  visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoPublish: boolean
-  showType: BroadcastShowType
-  episodeNumber: number | null
   tagline: string | null
-  artworkUrl: string | null
-  radioSlotBookingId: string | null
-  scheduledLiveShowId: string | null
-}
-
-type ScheduledLiveShowRow = {
-  id: string
-  seriesId: string
-  startAt: Date
-  episodeNumber: number | null
-  title: string
-  description: string | null
-  tagline: string | null
-  showType: BroadcastShowType
-  visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoPublish: boolean
+  showType: BroadcastShowRow['showType'] | null
+  visibility: BroadcastShowRow['visibility'] | null
+  autoPublish: boolean | null
+  seriesId: string | null
   artworkUrl: string | null
 }
 
-type LiveShowSeriesAttachRow = {
-  id: string
-  name: string
-  description: string | null
-  tagline: string | null
-  artworkUrl: string | null
-  showType: BroadcastShowType
-  visibility: 'PUBLIC' | 'FAN_ONLY'
-  autoPublish: boolean
-  episodeNumberEnabled: boolean
-  nextEpisodeNumber: number
-}
+const LIVE_LOCKED_MESSAGE = "Show type, visibility and series can't change while you're live"
 
-function seriesAttachDb(client: unknown) {
-  return client as {
-    liveShowSeries: {
-      findFirst(args: object): Promise<LiveShowSeriesAttachRow | null>
-      update(args: object): Promise<unknown>
-    }
-    scheduledLiveShow: {
-      create(args: object): Promise<ScheduledLiveShowRow>
-    }
-    broadcast: {
-      update(args: object): Promise<BroadcastRow>
-    }
-  }
-}
-
-function scheduledShowDb(client: unknown) {
-  return client as {
-    scheduledLiveShow: {
-      findFirst(args: object): Promise<ScheduledLiveShowRow | null>
-    }
-  }
-}
-
-const broadcastSelect = {
-  id: true,
-  title: true,
-  visibility: true,
-  autoPublish: true,
-  showType: true,
-  episodeNumber: true,
-  tagline: true,
-  radioSlotBookingId: true,
-  scheduledLiveShowId: true,
-  artworkUrl: true,
-} as const
-
-function toView(
-  broadcast: Pick<
-    BroadcastRow,
-    'title' | 'visibility' | 'autoPublish' | 'showType' | 'episodeNumber' | 'tagline'
-  >,
+function sessionView(
+  session: BroadcastSessionState,
+  broadcast: BroadcastShowRow,
+  avatarUrl: string | null,
   planned: BroadcastPreflightView['plannedRadioShow'],
-  plannedLiveShow: BroadcastPreflightView['plannedLiveShow'] = null,
+  plannedLiveShow: BroadcastPreflightView['plannedLiveShow'],
 ): BroadcastPreflightView {
   return {
+    session,
     title: broadcast.title,
     visibility: broadcast.visibility,
     autoPublish: broadcast.autoPublish,
     showType: broadcast.showType,
     episodeNumber: broadcast.episodeNumber,
     tagline: broadcast.tagline,
+    seriesId: broadcast.scheduledLiveShow?.seriesId ?? null,
+    artworkUrl: broadcast.artworkUrl,
+    coverUrl: broadcast.artworkUrl ?? avatarUrl,
     plannedRadioShow: planned,
     plannedLiveShow,
   }
 }
 
+function draftView(
+  draft: DraftRow | null,
+  defaults: { autoPublish: boolean; avatarUrl: string | null },
+  planned: BroadcastPreflightView['plannedRadioShow'],
+): BroadcastPreflightView {
+  const artworkUrl = draft?.artworkUrl ?? null
+  return {
+    session: 'NONE',
+    title: draft?.title ?? null,
+    visibility: draft?.visibility ?? 'PUBLIC',
+    autoPublish: draft?.autoPublish ?? defaults.autoPublish,
+    showType: draft?.showType ?? planned?.showType ?? 'LIVE_SET',
+    episodeNumber: planned?.episodeNumber ?? null,
+    tagline: draft?.tagline ?? planned?.tagline ?? null,
+    seriesId: draft?.seriesId ?? null,
+    artworkUrl,
+    coverUrl: artworkUrl ?? defaults.avatarUrl,
+    plannedRadioShow: planned,
+    plannedLiveShow: null,
+  }
+}
+
+function changesLockedField(body: PatchBroadcastPreflightInput, broadcast: BroadcastShowRow) {
+  const current = {
+    showType: broadcast.showType,
+    visibility: broadcast.visibility,
+    seriesId: broadcast.scheduledLiveShow?.seriesId ?? null,
+  }
+  return LIVE_LOCKED_PREFLIGHT_FIELDS.some(
+    (field) => body[field] !== undefined && body[field] !== current[field],
+  )
+}
+
 const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
-  const showDb = scheduledShowDb(fastify.prisma)
-  async function findPlannedBooking(channelId: string, now: Date) {
-    const windowStart = new Date(now.getTime() + RADIO_SHOW_GO_LIVE_EARLY_MS)
-    // Active window: startAt - 30m <= now < endAt  ⟺  startAt <= now+30m AND endAt > now
-    const booking = await fastify.prisma.radioSlotBooking.findFirst({
-      where: {
-        channelId,
-        startAt: { lte: windowStart },
-        endAt: { gt: now },
-      },
-      orderBy: { startAt: 'asc' },
-      select: { id: true, startAt: true, endAt: true, note: true, showType: true },
-    })
-    if (!booking) return null
+  const channelSelect = {
+    id: true,
+    slug: true,
+    state: true,
+    autoPublishBroadcast: true,
+    user: { select: { avatarUrl: true } },
+  } as const
 
-    const priorCount = await fastify.prisma.radioSlotBooking.count({
-      where: { channelId, startAt: { lt: booking.startAt } },
-    })
-    return {
-      bookingId: booking.id,
-      startAt: booking.startAt.toISOString(),
-      endAt: booking.endAt.toISOString(),
-      episodeNumber: priorCount + 1,
-      tagline: booking.note,
-      showType: booking.showType as BroadcastShowType,
-    }
-  }
-
-  async function ensurePlannedShowFilled(
-    channelId: string,
-    broadcast: BroadcastRow,
-  ): Promise<{
-    broadcast: BroadcastRow
-    planned: BroadcastPreflightView['plannedRadioShow']
-    plannedLiveShow: BroadcastPreflightView['plannedLiveShow']
-  }> {
-    const planned = await findPlannedBooking(channelId, new Date())
-    if (!planned) {
-      const now = new Date()
-      const scheduled = await showDb.scheduledLiveShow.findFirst({
-        where: {
-          channelId,
-          canceledAt: null,
-          broadcast: null,
-          startAt: {
-            lte: new Date(now.getTime() + RADIO_SHOW_GO_LIVE_EARLY_MS),
-            gt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
-          },
-        },
-        orderBy: { startAt: 'asc' },
-      })
-      if (!scheduled) return { broadcast, planned: null, plannedLiveShow: null }
-
-      const updated = broadcast.scheduledLiveShowId
-        ? broadcast
-        : ((await fastify.prisma.broadcast.update({
-            where: { id: broadcast.id },
-            data: {
-              scheduledLiveShowId: scheduled.id,
-              title: broadcast.title ?? scheduled.title,
-              description: scheduled.description,
-              episodeNumber: broadcast.episodeNumber ?? scheduled.episodeNumber,
-              tagline: broadcast.tagline ?? scheduled.tagline,
-              showType: scheduled.showType,
-              visibility: scheduled.visibility,
-              autoPublish: scheduled.autoPublish,
-              artworkUrl: scheduled.artworkUrl,
-            } as never,
-            select: broadcastSelect as never,
-          })) as unknown as BroadcastRow)
-
-      const next = await showDb.scheduledLiveShow.findFirst({
-        where: {
-          channelId,
-          canceledAt: null,
-          broadcast: null,
-          startAt: { gt: now },
-        },
-        orderBy: { startAt: 'asc' },
-        select: { startAt: true, title: true },
-      })
-      await fastify.prisma.channel.update({
-        where: { id: channelId },
-        data: {
-          nextBroadcastAt: next?.startAt ?? null,
-          nextBroadcastNote: next?.title ?? null,
-        },
-      })
-
-      return {
-        broadcast: updated,
-        planned: null,
-        plannedLiveShow: {
-          scheduledShowId: scheduled.id,
-          seriesId: scheduled.seriesId,
-          startAt: scheduled.startAt.toISOString(),
-          episodeNumber: scheduled.episodeNumber,
-          title: scheduled.title,
-          tagline: updated.tagline,
-          showType: updated.showType,
-          artworkUrl: updated.artworkUrl,
-        },
-      }
-    }
-
-    // Already linked to this (or any) booking — keep artist edits, just expose planned meta.
-    if (broadcast.radioSlotBookingId) {
-      return {
-        broadcast,
-        plannedLiveShow: null,
-        planned: {
-          ...planned,
-          tagline: broadcast.tagline ?? planned.tagline,
-          episodeNumber: broadcast.episodeNumber ?? planned.episodeNumber,
-          showType: broadcast.showType,
-        },
-      }
-    }
-
-    const tagline = broadcast.tagline ?? planned.tagline
-    const episodeNumber = broadcast.episodeNumber ?? planned.episodeNumber
-    const showType = planned.showType
-    const title = broadcast.title ?? plannedRadioShowTitle(episodeNumber, tagline, showType)
-
-    const updated = await fastify.prisma.broadcast.update({
-      where: { id: broadcast.id },
-      data: {
-        radioSlotBookingId: planned.bookingId,
-        episodeNumber,
-        tagline,
-        showType,
-        title,
-      },
-      select: broadcastSelect,
-    })
-
-    return {
-      broadcast: updated,
-      plannedLiveShow: null,
-      planned: {
-        bookingId: planned.bookingId,
-        startAt: planned.startAt,
-        endAt: planned.endAt,
-        episodeNumber,
-        tagline,
-        showType,
-      },
-    }
-  }
-
-  // GET /api/me/channel/preflight — show name / visibility / auto-sound for the
-  // active (PREVIEW or LIVE) broadcast session. Broadcasting Setup step 3.
-  // When a Tahti Radio slot is in the go-live window, auto-fills episode # + tagline.
+  // GET /api/me/channel/preflight — show info for the open PREVIEW/LIVE session, or the
+  // pre-session draft (session: NONE) before the encoder connects. When a Tahti Radio
+  // slot is in the go-live window, auto-fills episode # + tagline.
   fastify.get(
     '/api/me/channel/preflight',
     {
@@ -276,41 +116,41 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true, autoPublishBroadcast: true },
+        select: channelSelect,
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const broadcast = await fastify.prisma.broadcast.findFirst({
-        where: { channelId: channel.id, endedAt: null },
-        orderBy: { startedAt: 'desc' },
-        select: broadcastSelect,
-      })
-
+      const { session, broadcast } = await findShowSession(fastify.prisma, channel)
       if (!broadcast) {
-        const planned = await findPlannedBooking(channel.id, new Date())
+        const [planned, draft] = await Promise.all([
+          findPlannedBooking(fastify.prisma, channel.id, new Date()),
+          fastify.prisma.broadcastShowDraft.findUnique({ where: { channelId: channel.id } }),
+        ])
         return reply.send(
-          toView(
-            {
-              title: null,
-              visibility: 'PUBLIC',
-              autoPublish: channel.autoPublishBroadcast,
-              showType: planned?.showType ?? 'LIVE_SET',
-              episodeNumber: planned?.episodeNumber ?? null,
-              tagline: planned?.tagline ?? null,
-            },
+          draftView(
+            draft,
+            { autoPublish: channel.autoPublishBroadcast, avatarUrl: channel.user.avatarUrl },
             planned,
-            null,
           ),
         )
       }
 
-      const filled = await ensurePlannedShowFilled(channel.id, broadcast)
-      return reply.send(toView(filled.broadcast, filled.planned, filled.plannedLiveShow))
+      const filled = await ensurePlannedShowFilled(fastify.prisma, channel.id, broadcast)
+      return reply.send(
+        sessionView(
+          session,
+          filled.broadcast,
+          channel.user.avatarUrl,
+          filled.planned,
+          filled.plannedLiveShow,
+        ),
+      )
     },
   )
 
-  // PATCH /api/me/channel/preflight — set show name / visibility / auto-sound
-  // on the active broadcast session before going live.
+  // PATCH /api/me/channel/preflight — partial update. Before the encoder connects it
+  // saves the pre-session draft; with a PREVIEW session it edits the session; while
+  // LIVE, show type, visibility and series are locked.
   fastify.patch(
     '/api/me/channel/preflight',
     {
@@ -330,131 +170,98 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
       if (Object.keys(body).length === 0) {
         return reply.status(400).send({ error: 'Nothing to update' })
       }
+      if (body.artworkUrl && !isOwnMediaUrl(body.artworkUrl, user.username)) {
+        return reply
+          .status(400)
+          .send({ error: 'artworkUrl must be an image uploaded with /api/me/media' })
+      }
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true },
+        select: channelSelect,
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      let broadcast = (await fastify.prisma.broadcast.findFirst({
-        where: { channelId: channel.id, endedAt: null },
-        orderBy: { startedAt: 'desc' },
-        select: broadcastSelect as never,
-      })) as unknown as BroadcastRow | null
-      if (!broadcast) return reply.status(409).send({ error: 'No active broadcast session' })
+      const { session, broadcast } = await findShowSession(fastify.prisma, channel)
 
-      if (body.seriesId) {
-        if (broadcast.scheduledLiveShowId) {
-          return reply.status(409).send({ error: 'This broadcast is already assigned to a series' })
-        }
-        const attached = await fastify.prisma.$transaction(async (tx) => {
-          const transactionDb = seriesAttachDb(tx)
-          const series = await transactionDb.liveShowSeries.findFirst({
+      if (!broadcast) {
+        if (body.seriesId) {
+          const series = await fastify.prisma.liveShowSeries.findFirst({
             where: { id: body.seriesId, channelId: channel.id },
+            select: { id: true },
           })
-          if (!series) return null
-          const episodeNumber = series.episodeNumberEnabled ? series.nextEpisodeNumber : null
-          const scheduled = await transactionDb.scheduledLiveShow.create({
-            data: {
-              channelId: channel.id,
-              seriesId: series.id,
-              startAt: new Date(),
-              episodeNumber,
-              title: series.episodeNumberEnabled ? `${series.name} #${episodeNumber}` : series.name,
-              description: series.description,
-              tagline: series.tagline,
-              showType: series.showType,
-              visibility: series.visibility,
-              autoPublish: series.autoPublish,
-              artworkUrl: series.artworkUrl,
-            },
-          })
-          if (series.episodeNumberEnabled) {
-            await transactionDb.liveShowSeries.update({
-              where: { id: series.id },
-              data: { nextEpisodeNumber: { increment: 1 } },
-            })
-          }
-          const updated = await transactionDb.broadcast.update({
-            where: { id: broadcast!.id },
-            data: {
-              scheduledLiveShowId: scheduled.id,
-              title: scheduled.title,
-              description: scheduled.description,
-              episodeNumber: scheduled.episodeNumber,
-              tagline: scheduled.tagline,
-              showType: scheduled.showType,
-              visibility: scheduled.visibility,
-              autoPublish: scheduled.autoPublish,
-              artworkUrl: scheduled.artworkUrl,
-            },
-            select: broadcastSelect,
-          })
-          return { updated, scheduled }
-        })
-        if (!attached) return reply.status(404).send({ error: 'Series not found' })
-        return reply.send(
-          toView(attached.updated, null, {
-            scheduledShowId: attached.scheduled.id,
-            seriesId: body.seriesId,
-            startAt: attached.scheduled.startAt.toISOString(),
-            episodeNumber: attached.scheduled.episodeNumber,
-            title: attached.scheduled.title,
-            tagline: attached.scheduled.tagline,
-            showType: attached.scheduled.showType,
-            artworkUrl: attached.scheduled.artworkUrl,
+          if (!series) return reply.status(404).send({ error: 'Series not found' })
+        }
+        const fields = {
+          title: body.title,
+          tagline: body.tagline,
+          showType: body.showType,
+          visibility: body.visibility,
+          autoPublish: body.autoPublish,
+          seriesId: body.seriesId,
+          artworkUrl: body.artworkUrl,
+        }
+        const [draft, planned] = await Promise.all([
+          fastify.prisma.broadcastShowDraft.upsert({
+            where: { channelId: channel.id },
+            create: { channelId: channel.id, ...fields },
+            update: fields,
           }),
+          findPlannedBooking(fastify.prisma, channel.id, new Date()),
+        ])
+        return reply.send(
+          draftView(
+            draft,
+            { autoPublish: channel.autoPublishBroadcast, avatarUrl: channel.user.avatarUrl },
+            planned,
+          ),
         )
       }
 
-      // Link planned show first so tagline edits persist against the booking.
-      const filled = await ensurePlannedShowFilled(channel.id, broadcast)
-      broadcast = filled.broadcast
-
-      const data: {
-        title?: string
-        tagline?: string | null
-        showType?: BroadcastShowType
-        visibility?: 'PUBLIC' | 'FAN_ONLY'
-        autoPublish?: boolean
-      } = {}
-      if (body.visibility !== undefined) data.visibility = body.visibility
-      if (body.autoPublish !== undefined) data.autoPublish = body.autoPublish
-      if (body.showType !== undefined) data.showType = body.showType
-
-      const nextShowType = body.showType ?? broadcast.showType
-      const nextTagline = body.tagline !== undefined ? body.tagline : broadcast.tagline
-
-      if (body.tagline !== undefined || body.showType !== undefined) {
-        if (body.tagline !== undefined) data.tagline = body.tagline
-        const ep = broadcast.episodeNumber
-        if (ep != null) {
-          const prevAuto = plannedRadioShowTitle(ep, broadcast.tagline, broadcast.showType)
-          if (!broadcast.title || broadcast.title === prevAuto) {
-            data.title = plannedRadioShowTitle(ep, nextTagline, nextShowType)
-          }
-        }
+      if (session === 'LIVE' && changesLockedField(body, broadcast)) {
+        return reply.status(409).send({ error: LIVE_LOCKED_MESSAGE })
       }
-      if (body.title !== undefined) data.title = body.title
 
-      const updated = (await fastify.prisma.broadcast.update({
-        where: { id: broadcast.id },
-        data,
-        select: broadcastSelect as never,
-      })) as unknown as BroadcastRow
+      const attachedSeriesId = broadcast.scheduledLiveShow?.seriesId ?? null
+      if (body.seriesId === null && attachedSeriesId) {
+        return reply
+          .status(409)
+          .send({ error: "A series can't be removed once the encoder is connected" })
+      }
 
-      if (
-        (body.tagline !== undefined || body.showType !== undefined) &&
-        updated.radioSlotBookingId
-      ) {
-        await fastify.prisma.radioSlotBooking.update({
-          where: { id: updated.radioSlotBookingId },
-          data: {
-            ...(body.tagline !== undefined ? { note: body.tagline } : {}),
-            ...(body.showType !== undefined ? { showType: body.showType } : {}),
-          },
-        })
+      let filled: Awaited<ReturnType<typeof ensurePlannedShowFilled>>
+      if (body.seriesId && body.seriesId !== attachedSeriesId) {
+        if (broadcast.scheduledLiveShowId) {
+          return reply.status(409).send({ error: 'This broadcast is already assigned to a series' })
+        }
+        const attached = await attachSeriesToBroadcast(
+          fastify.prisma,
+          channel.id,
+          broadcast.id,
+          body.seriesId,
+        )
+        if (!attached) return reply.status(404).send({ error: 'Series not found' })
+        filled = {
+          broadcast: attached.broadcast,
+          planned: null,
+          plannedLiveShow: attached.plannedLiveShow,
+        }
+      } else {
+        // Link the planned show first so tagline edits persist against the booking.
+        filled = await ensurePlannedShowFilled(fastify.prisma, channel.id, broadcast)
+      }
+
+      const updated = await updateBroadcastShowInfo(fastify.prisma, filled.broadcast, {
+        title: body.title,
+        tagline: body.tagline,
+        showType: body.showType,
+        visibility: body.visibility,
+        autoPublish: body.autoPublish,
+        artworkUrl: body.artworkUrl,
+      })
+
+      if ((broadcast.visibility === 'PRIVATE') !== (updated.visibility === 'PRIVATE')) {
+        await rerenderMirrorsForSession(fastify.prisma, fastify.log, channel, broadcast.id)
       }
 
       const planned = filled.planned
@@ -466,7 +273,9 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
           }
         : null
 
-      return reply.send(toView(updated, planned, filled.plannedLiveShow))
+      return reply.send(
+        sessionView(session, updated, channel.user.avatarUrl, planned, filled.plannedLiveShow),
+      )
     },
   )
 }

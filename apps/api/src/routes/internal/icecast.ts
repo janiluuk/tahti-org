@@ -17,6 +17,12 @@ import {
 } from '@tahti/shared'
 import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
 import { initGreenRoomForBroadcast } from '../../lib/green-room.js'
+import {
+  holdLiveSessionForReconnect,
+  rerenderMirrorsForSession,
+  resumeReconnectingSession,
+} from '../../lib/broadcast-ingest.js'
+import { applyShowDraftOnConnect } from '../../lib/broadcast-show-info.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -52,6 +58,7 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
           state: true,
           userId: true,
           autoPublishBroadcast: true,
+          autoRecordEnabled: true,
           user: { select: { tier: true } },
         },
       })
@@ -77,6 +84,28 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send('weekly_cap')
       }
 
+      const resumedId = await resumeReconnectingSession(
+        fastify.prisma,
+        fastify.log,
+        { id: channel.id, slug, autoRecordEnabled: channel.autoRecordEnabled },
+        'ICECAST',
+      )
+      if (resumedId) {
+        spawnChannelLiquidsoap(channel.id, slug, resumedId).catch((err: unknown) =>
+          fastify.log.error({ err }, 'orchestrator spawn failed (icecast reconnect)'),
+        )
+        fastify.log.info(
+          broadcastSessionLogFields({
+            broadcastId: resumedId,
+            channelId: channel.id,
+            slug,
+            source: 'ICECAST',
+          }),
+          'icecast source reconnected to live show',
+        )
+        return reply.status(200).send('ok')
+      }
+
       // A fallback-rotation placeholder (or an abnormally-terminated previous session)
       // may still be open for this channel — close it out before starting a new one so
       // go-live's unordered findFirst({ endedAt: null }) can't grab the wrong row.
@@ -90,6 +119,15 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      const visibility = await applyShowDraftOnConnect(
+        fastify.prisma,
+        channel.id,
+        broadcast.id,
+      ).catch((err: unknown) => {
+        fastify.log.warn({ err, broadcastId: broadcast.id }, 'show info draft apply failed')
+        return null
+      })
+
       // Connecting only puts the channel in private PREVIEW — only the artist can hear it
       // in the studio until they explicitly promote to LIVE via /api/me/channel/go-live.
       await fastify.prisma.channel.update({
@@ -101,9 +139,18 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.warn({ err, broadcastId: broadcast.id }, 'green room init failed'),
       )
 
-      spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
-        fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
-      )
+      spawnChannelLiquidsoap(channel.id, slug, broadcast.id)
+        .then(() =>
+          visibility === 'PRIVATE'
+            ? rerenderMirrorsForSession(
+                fastify.prisma,
+                fastify.log,
+                { id: channel.id, slug },
+                broadcast.id,
+              )
+            : undefined,
+        )
+        .catch((err: unknown) => fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'))
 
       fastify.log.info(
         broadcastSessionLogFields({
@@ -131,10 +178,24 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, autoRecordEnabled: true },
+        select: { id: true, state: true, autoRecordEnabled: true },
       })
 
       if (!channel) return reply.status(200).send('ok')
+
+      const heldId = await holdLiveSessionForReconnect(fastify.prisma, channel)
+      if (heldId) {
+        fastify.log.info(
+          broadcastSessionLogFields({
+            broadcastId: heldId,
+            channelId: channel.id,
+            slug,
+            source: 'ICECAST',
+          }),
+          'icecast source lost; live show waiting for reconnect',
+        )
+        return reply.status(200).send('ok')
+      }
 
       const broadcast = await fastify.prisma.broadcast.findFirst({
         where: { channelId: channel.id, endedAt: null },

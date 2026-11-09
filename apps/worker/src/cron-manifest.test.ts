@@ -64,6 +64,7 @@ describe('WORKER_CRON_JOBS', () => {
     expect(byName.get('light-minute-tick')?.subTasks).toEqual([
       'broadcast-cap-tick',
       'post-publish-notify',
+      'broadcast-reconnect-expiry',
     ])
     expect(byName.get('media-ten-minute-tick')?.subTasks).toEqual([
       'sidecar-cleanup',
