@@ -16,6 +16,7 @@ export const AdminUserListQuerySchema = z.object({
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
   channelState: z.enum(['LIVE', 'OFFLINE']).optional(),
+  role: z.enum(['BOARD', 'ARTIST', 'LISTENER']).optional(),
   search: z.string().trim().max(64).optional(),
   sort: z.enum(['memberNumber', 'displayName', 'createdAt']).default('memberNumber'),
   order: z.enum(['asc', 'desc']).default('asc'),

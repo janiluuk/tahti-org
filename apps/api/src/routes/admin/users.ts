@@ -81,14 +81,26 @@ function buildUserWhere(query: {
   isMember?: boolean
   isBoard?: boolean
   channelState?: 'LIVE' | 'OFFLINE'
+  role?: 'BOARD' | 'ARTIST' | 'LISTENER'
   search?: string
 }): Prisma.UserWhereInput {
   const where: Prisma.UserWhereInput = {}
+  const and: Prisma.UserWhereInput[] = []
+  // Same split as the web's account role: board first, then anyone with an
+  // artist tier or a channel, else listener.
+  if (query.role === 'BOARD') and.push({ isBoard: true })
+  if (query.role === 'ARTIST') {
+    and.push({ isBoard: false })
+    and.push({ OR: [{ tier: { in: ['ARTIST', 'STUDIO'] } }, { channel: { isNot: null } }] })
+  }
+  if (query.role === 'LISTENER') {
+    and.push({ isBoard: false, tier: 'FREE', channel: { is: null } })
+  }
   if (query.tier) where.tier = query.tier
   if (query.isMember !== undefined) where.isMember = query.isMember
   if (query.isBoard !== undefined) where.isBoard = query.isBoard
   if (query.channelState) {
-    where.channel = { state: query.channelState }
+    and.push({ channel: { state: query.channelState } })
   }
   if (query.search) {
     const q = query.search
@@ -98,6 +110,7 @@ function buildUserWhere(query: {
       { username: { contains: q, mode: 'insensitive' } },
     ]
   }
+  if (and.length > 0) where.AND = and
   return where
 }
 
