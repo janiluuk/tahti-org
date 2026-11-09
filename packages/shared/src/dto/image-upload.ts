@@ -83,3 +83,14 @@ export const ChannelBackdropUploadCompleteSchema = z.object({
 export const ChannelBackdropUploadCompleteResponseSchema = z.object({
   videoBackgroundUrl: z.string(),
 })
+
+export const UserMediaUnusedSchema = z.object({
+  count: z.number().int().nonnegative(),
+  totalBytes: z.number().nonnegative(),
+  ids: z.array(z.string()),
+})
+
+export const UserMediaPurgeResultSchema = z.object({
+  deleted: z.number().int().nonnegative(),
+  freedBytes: z.number().nonnegative(),
+})
