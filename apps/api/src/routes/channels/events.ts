@@ -8,7 +8,11 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { PUBLIC_EVENT_STATUSES, serializeArtistEvent } from '../../lib/artist-event.js'
+import {
+  participantInclude,
+  PUBLIC_EVENT_STATUSES,
+  serializeArtistEvent,
+} from '../../lib/artist-event.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 
 // GET /api/channels/:slug/events — public, upcoming events only
@@ -34,16 +38,20 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
 
       const events = await fastify.prisma.artistEvent.findMany({
         where: {
-          userId: channel.userId,
+          OR: [
+            { userId: channel.userId },
+            { participants: { some: { userId: channel.userId, status: 'ACCEPTED' } } },
+          ],
           startAt: { gte: new Date() },
           status: { in: [...PUBLIC_EVENT_STATUSES] },
           user: availableUserWhere,
         },
         orderBy: { startAt: 'asc' },
         take: 20,
+        include: participantInclude,
       })
 
-      return reply.send(events.map(serializeArtistEvent))
+      return reply.send(events.map((event) => serializeArtistEvent(event)))
     },
   )
 }

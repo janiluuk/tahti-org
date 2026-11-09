@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { safeDisplayName } from '@tahti/shared'
+
 export type ArtistEventRow = {
   id: string
   title: string
@@ -16,7 +18,50 @@ export type ArtistEventRow = {
   publishedAt: Date | null
 }
 
-export function serializeArtistEvent(event: ArtistEventRow) {
+export type ArtistEventParticipantRow = {
+  role: 'PERFORMER' | 'HOST' | 'GUEST'
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  user: {
+    username: string
+    displayName: string | null
+    avatarUrl: string | null
+    channel: { slug: string } | null
+  }
+}
+
+// What every event read selects for its participants.
+export const participantInclude = {
+  participants: {
+    orderBy: { createdAt: 'asc' as const },
+    select: {
+      role: true,
+      status: true,
+      user: {
+        select: {
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          channel: { select: { slug: true } },
+        },
+      },
+    },
+  },
+}
+
+export function serializeArtistEvent(
+  event: ArtistEventRow & { participants?: ArtistEventParticipantRow[] },
+  options: { acceptedOnly?: boolean } = { acceptedOnly: true },
+) {
+  const participants = (event.participants ?? [])
+    .filter((p) => !options.acceptedOnly || p.status === 'ACCEPTED')
+    .map((p) => ({
+      username: p.user.username,
+      displayName: safeDisplayName(p.user.displayName, p.user.username),
+      avatarUrl: p.user.avatarUrl,
+      channelSlug: p.user.channel?.slug ?? null,
+      role: p.role,
+      status: p.status,
+    }))
   return {
     id: event.id,
     title: event.title,
@@ -30,9 +75,61 @@ export function serializeArtistEvent(event: ArtistEventRow) {
     endAt: event.endAt ? event.endAt.toISOString() : null,
     status: event.status,
     publishedAt: event.publishedAt ? event.publishedAt.toISOString() : null,
+    participants,
   }
 }
 
 // Events listeners may see: published ones, and cancelled ones so a
 // cancellation stays visible instead of the event silently disappearing.
 export const PUBLIC_EVENT_STATUSES = ['PUBLISHED', 'CANCELLED'] as const
+
+type TagNotifierPrisma = {
+  artistEventParticipant: {
+    findMany: (args: {
+      where: { eventId: string; status: 'PENDING'; userId?: { in: string[] } }
+      select: { userId: true }
+    }) => Promise<Array<{ userId: string }>>
+  }
+  notification: {
+    createMany: (args: {
+      data: Array<{
+        userId: string
+        type: 'EVENT_TAGGED'
+        actorUserId: string
+        title: string
+        body: string
+        url: string
+      }>
+    }) => Promise<unknown>
+  }
+}
+
+// Tell tagged people about a published event; `onlyUserIds` limits it to
+// people just added to an event that was already public.
+export async function notifyTaggedParticipants(
+  prisma: TagNotifierPrisma,
+  host: { id: string; username: string; displayName: string | null },
+  event: { id: string; title: string; place: string; location: string },
+  onlyUserIds?: string[],
+) {
+  const pending = await prisma.artistEventParticipant.findMany({
+    where: {
+      eventId: event.id,
+      status: 'PENDING',
+      ...(onlyUserIds ? { userId: { in: onlyUserIds } } : {}),
+    },
+    select: { userId: true },
+  })
+  if (pending.length === 0) return
+  const name = safeDisplayName(host.displayName, host.username)
+  await prisma.notification.createMany({
+    data: pending.map((p) => ({
+      userId: p.userId,
+      type: 'EVENT_TAGGED' as const,
+      actorUserId: host.id,
+      title: `${name} tagged you on an event`,
+      body: `${event.title} · ${event.place}, ${event.location}`,
+      url: '/studio/events?tab=invites',
+    })),
+  })
+}

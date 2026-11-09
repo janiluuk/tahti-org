@@ -788,6 +788,8 @@ enum NotificationType {
   LISTENING_PARTY_STARTING
   /// A listening party you asked to be reminded of moved or was cancelled.
   LISTENING_PARTY_CHANGED
+  /// Another artist tagged you on one of their events; accept to show it on your channel.
+  EVENT_TAGGED
 
   @@schema("core")
 }
@@ -1121,6 +1123,7 @@ model User {
   radioSubmissionBatches         RadioTrackSubmissionBatch[]     @relation("RadioSubmissionSubmitter")
   radioSubmissionsReviewed       RadioTrackSubmissionItem[]      @relation("RadioSubmissionReviewer")
   events                         ArtistEvent[]
+  eventTags                      ArtistEventParticipant[]        @relation("ArtistEventTags")
   posts                          ArtistPost[]
   embeds                         ArtistEmbed[]
   comments                       Comment[]
@@ -1172,8 +1175,43 @@ model ArtistEvent {
   publishedAt DateTime?
   createdAt   DateTime          @default(now())
 
+  participants ArtistEventParticipant[]
+
   @@index([userId, startAt])
   @@index([status, startAt])
+  @@schema("core")
+}
+
+enum ArtistEventParticipantRole {
+  PERFORMER
+  HOST
+  GUEST
+
+  @@schema("core")
+}
+
+enum ArtistEventParticipantStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+
+  @@schema("core")
+}
+
+// Someone the event's artist tagged. Shown publicly (and on their own
+// channel) only after they accept.
+model ArtistEventParticipant {
+  id        String                       @id @default(cuid())
+  eventId   String
+  event     ArtistEvent                  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User                         @relation("ArtistEventTags", fields: [userId], references: [id], onDelete: Cascade)
+  role      ArtistEventParticipantRole   @default(PERFORMER)
+  status    ArtistEventParticipantStatus @default(PENDING)
+  createdAt DateTime                     @default(now())
+
+  @@unique([eventId, userId])
+  @@index([userId, status])
   @@schema("core")
 }
 

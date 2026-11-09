@@ -47,6 +47,31 @@ export const UpdateArtistEventSchema = ArtistEventFieldsSchema.partial()
 
 export type UpdateArtistEventInput = z.infer<typeof UpdateArtistEventSchema>
 
+export const ArtistEventParticipantRoleSchema = z.enum(['PERFORMER', 'HOST', 'GUEST'])
+export const ArtistEventParticipantStatusSchema = z.enum(['PENDING', 'ACCEPTED', 'DECLINED'])
+
+export const ArtistEventParticipantSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  channelSlug: z.string().nullable(),
+  role: ArtistEventParticipantRoleSchema,
+  status: ArtistEventParticipantStatusSchema,
+})
+
+export type ArtistEventParticipantView = z.infer<typeof ArtistEventParticipantSchema>
+
+export const SetArtistEventParticipantsSchema = z.object({
+  participants: z
+    .array(
+      z.object({
+        username: z.string().trim().min(1).max(64),
+        role: ArtistEventParticipantRoleSchema.default('PERFORMER'),
+      }),
+    )
+    .max(20),
+})
+
 export const ArtistEventSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -60,6 +85,7 @@ export const ArtistEventSchema = z.object({
   endAt: z.string().datetime().nullable(),
   status: ArtistEventStatusSchema,
   publishedAt: z.string().datetime().nullable(),
+  participants: z.array(ArtistEventParticipantSchema),
 })
 
 export type ArtistEventView = z.infer<typeof ArtistEventSchema>
@@ -80,3 +106,16 @@ export const UpcomingEventSchema = ArtistEventSchema.extend({
 export type UpcomingEventView = z.infer<typeof UpcomingEventSchema>
 
 export const UpcomingEventListSchema = z.array(UpcomingEventSchema)
+
+export const ArtistEventInviteSchema = z.object({
+  event: ArtistEventSchema,
+  host: z.object({
+    username: z.string(),
+    displayName: z.string(),
+    channelSlug: z.string().nullable(),
+  }),
+  role: ArtistEventParticipantRoleSchema,
+  status: ArtistEventParticipantStatusSchema,
+})
+
+export const ArtistEventInviteListSchema = z.array(ArtistEventInviteSchema)
