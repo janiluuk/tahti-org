@@ -71,6 +71,42 @@ describe("admin sound edit — board access to any channel's tracks", () => {
     expect(row.title).toBe('Original title')
   })
 
+  it('pages the admin sound list when limit is set', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/admin/channels/${channelSlug}/sound?limit=10&q=Original`,
+      headers: { cookie: boardCookie },
+    })
+    expect(list.statusCode).toBe(200)
+    const body = list.json() as { items: Array<{ id: string }>; total: number }
+    expect(body.total).toBeGreaterThanOrEqual(1)
+    expect(body.items.some((i) => i.id === soundId)).toBe(true)
+  })
+
+  it('deletes a sound for a board member and writes an audit row', async () => {
+    const doomed = await createReadySound(
+      prisma,
+      (
+        await prisma.channel.findUniqueOrThrow({
+          where: { slug: channelSlug },
+          select: { id: true },
+        })
+      ).id,
+      'Board delete me',
+    )
+    const del = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/channels/${channelSlug}/sound/${doomed.id}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(del.statusCode).toBe(204)
+    expect(await prisma.sound.findUnique({ where: { id: doomed.id } })).toBeNull()
+    const audit = await prisma.auditLog.findFirst({
+      where: { action: 'SOUND_ADMIN_DELETE', targetId: doomed.id },
+    })
+    expect(audit).toBeTruthy()
+  })
+
   it('patches metadata for a track the board member does not own', async () => {
     const patch = await app.inject({
       method: 'PATCH',

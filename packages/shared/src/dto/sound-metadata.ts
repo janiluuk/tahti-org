@@ -217,6 +217,19 @@ const DateQuery = z
     'expected YYYY-MM-DD or an ISO datetime',
   )
 
+/** Comma-separated tag list for AND filtering (`tags=a,b` → has every tag). */
+const TagsQuery = z
+  .string()
+  .trim()
+  .transform((raw) =>
+    raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 20),
+  )
+  .pipe(z.array(z.string().max(40)).max(20))
+
 /** Shared filter fields for list / ids / facets / stats / bulk-by-filter. */
 export const SoundListFilterSchema = z.object({
   q: z.string().trim().max(200).optional(),
@@ -227,6 +240,8 @@ export const SoundListFilterSchema = z.object({
   uploadedTo: DateQuery.optional(),
   genre: z.string().trim().max(80).optional(),
   tag: z.string().trim().max(40).optional(),
+  /** AND of tags (keep single `tag` for one-value filters / facets omit). */
+  tags: TagsQuery.optional(),
   bpmMin: z.coerce.number().int().min(40).max(300).optional(),
   bpmMax: z.coerce.number().int().min(40).max(300).optional(),
   key: z.string().trim().max(12).optional(),
@@ -253,6 +268,7 @@ export const SOUND_FACET_FIELDS = [
   'source',
   'status',
   'uploadedYear',
+  'musicalKey',
 ] as const
 
 export const SoundFacetsQuerySchema = SoundListFilterSchema.extend({
@@ -300,7 +316,9 @@ export const SoundBulkDeleteSchema = z
 
 export type SoundBulkDeleteInput = z.infer<typeof SoundBulkDeleteSchema>
 
-/** Fields allowed in a bulk metadata patch (no title / tracklist / URLs). */
+/** Fields allowed in a bulk metadata patch (no title / tracklist / URLs).
+ * `tags: []` clears tags on every matched sound (replace semantics).
+ * `pinned` maps to `pinnedAt` on the server (same as single PATCH). */
 export const SoundBulkPatchFieldsSchema = z
   .object({
     genre: z.string().max(80).nullable().optional(),
@@ -310,6 +328,7 @@ export const SoundBulkPatchFieldsSchema = z
     contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
     isPublic: z.boolean().optional(),
     isFallback: z.boolean().optional(),
+    pinned: z.boolean().optional(),
     downloadsEnabled: z.boolean().optional(),
     commentsEnabled: z.boolean().optional(),
     license: z.enum(SOUND_LICENSES).optional(),

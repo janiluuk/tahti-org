@@ -70,8 +70,12 @@ export function soundListWhere(
   const where: Prisma.SoundWhereInput = { channelId }
   const and: Prisma.SoundWhereInput[] = []
 
-  const use = <K extends keyof SoundListFilter>(key: K): SoundListFilter[K] | undefined =>
-    omit === key ? undefined : filter[key]
+  const use = <K extends keyof SoundListFilter>(key: K): SoundListFilter[K] | undefined => {
+    if (omit === key) return undefined
+    // Faceting on tag also drops the multi-tag AND filter.
+    if (omit === 'tag' && key === 'tags') return undefined
+    return filter[key]
+  }
 
   const q = use('q')?.trim()
   if (q) {
@@ -119,7 +123,12 @@ export function soundListWhere(
   }
 
   const tag = use('tag')
-  if (tag) where.tags = { has: tag }
+  const tags = use('tags')
+  if (tags && tags.length > 0) {
+    where.tags = { hasEvery: tags }
+  } else if (tag) {
+    where.tags = { has: tag }
+  }
 
   const bpmMin = use('bpmMin')
   const bpmMax = use('bpmMax')

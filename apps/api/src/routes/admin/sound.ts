@@ -3,7 +3,8 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
-  SoundListSchema,
+  SoundListQuerySchema,
+  SoundListResponseSchema,
   SoundViewSchema,
   ChannelSoundParamsSchema,
   SlugParamSchema,
@@ -17,6 +18,8 @@ import {
   metadataPatchFromBody,
   serializeSound,
 } from '../../lib/sound-metadata.js'
+import { pageLimit, soundListWhere } from '../../lib/sound-list-query.js'
+import { SOUND_LIST_ORDER_BY } from '../me/sound-helpers.js'
 import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
 import { auditLog } from '../../lib/audit.js'
@@ -47,13 +50,21 @@ const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: "Board access to any channel's sound items, for moderation edits",
-        response: openApiResponse(SoundListSchema, 'SoundList'),
+        description:
+          "Board access to any channel's sound items. With `limit`, returns `{ items, total }` using the same filters as `/api/me/sound`; bare GET keeps the legacy array (capped at 200).",
+        response: openApiResponse(SoundListResponseSchema, 'SoundListResponse'),
       },
     },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const parsedQuery = SoundListQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
@@ -61,13 +72,65 @@ const adminSoundRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const items = await fastify.prisma.sound.findMany({
-        where: { channelId: channel.id },
-        orderBy: { createdAt: 'desc' },
-        take: 200,
-        select: soundMetadataSelect,
+      const { sort, limit, offset, ...filter } = parsedQuery.data
+      const where = soundListWhere(channel.id, filter)
+      const orderBy = SOUND_LIST_ORDER_BY[sort ?? 'newest'] ?? SOUND_LIST_ORDER_BY.newest
+
+      if (limit == null) {
+        const items = await fastify.prisma.sound.findMany({
+          where,
+          orderBy,
+          take: 200,
+          select: soundMetadataSelect,
+        })
+        return reply.send(items.map((i) => serializeSound(i)))
+      }
+
+      const take = pageLimit(limit)
+      const skip = offset ?? 0
+      const [total, rows] = await Promise.all([
+        fastify.prisma.sound.count({ where }),
+        fastify.prisma.sound.findMany({
+          where,
+          orderBy,
+          take,
+          skip,
+          select: soundMetadataSelect,
+        }),
+      ])
+      return reply.send({ items: rows.map((i) => serializeSound(i)), total })
+    },
+  )
+
+  fastify.delete(
+    '/api/admin/channels/:slug/sound/:itemId',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Board: permanently delete one sound on a channel (audited)',
+      },
+    },
+    async (request, reply) => {
+      const actor = request.sessionUser!
+      const routeParams = parseRouteParams(ChannelSoundParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug, itemId } = routeParams
+
+      const item = await fastify.prisma.sound.findFirst({
+        where: { id: itemId, channel: { slug } },
+        select: { id: true, title: true, channelId: true },
       })
-      return reply.send(items.map((i) => serializeSound(i)))
+      if (!item) return reply.status(404).send({ error: 'Sound item not found' })
+
+      await fastify.prisma.sound.delete({ where: { id: item.id } })
+      await auditLog(fastify.prisma, {
+        action: 'SOUND_ADMIN_DELETE',
+        actorId: actor.id,
+        targetId: itemId,
+        meta: { slug, title: item.title, channelId: item.channelId },
+      })
+      return reply.status(204).send()
     },
   )
 

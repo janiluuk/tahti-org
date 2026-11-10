@@ -161,6 +161,136 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(a.tags).toEqual(['bulk'])
   })
 
+  it('bulk-patches pinned and clears tags with tags: []', async () => {
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { tags: ['keep-me'], pinnedAt: null },
+    })
+    const pin = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { pinned: true } },
+    })
+    expect(pin.statusCode).toBe(200)
+    expect(pin.json()).toMatchObject({ updated: 1, failed: [] })
+    const pinned = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(pinned.pinnedAt).toBeTruthy()
+
+    const clear = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { tags: [], pinned: false } },
+    })
+    expect(clear.statusCode).toBe(200)
+    const cleared = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(cleared.tags).toEqual([])
+    expect(cleared.pinnedAt).toBeNull()
+  })
+
+  it('reports foreign ids in failed[] on bulk-by-ids', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: {
+        ids: [soundA, 'sound_not_yours_or_missing'],
+        patch: { genre: 'House' },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      updated: number
+      totalMatched: number
+      failed: Array<{ id: string; error: string }>
+    }
+    expect(body.updated).toBe(1)
+    expect(body.totalMatched).toBe(1)
+    expect(body.failed).toEqual([
+      { id: 'sound_not_yours_or_missing', error: 'not found or not owned' },
+    ])
+  })
+
+  it('refuses to exceed the fallback rotation via bulk-patch', async () => {
+    const { MAX_FALLBACK_ITEMS } = await import('@tahti/shared')
+    const fillerIds: string[] = []
+    for (let i = 0; i < MAX_FALLBACK_ITEMS; i++) {
+      const id = (await createReadySound(prisma, channelId, `Fallback ${i}`)).id
+      fillerIds.push(id)
+      await prisma.sound.update({ where: { id }, data: { isFallback: true } })
+    }
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: {
+        ids: [soundA, soundC],
+        patch: { isFallback: true },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      updated: number
+      failed: Array<{ id: string; error: string }>
+    }
+    expect(body.updated).toBe(0)
+    expect(body.failed).toHaveLength(2)
+    expect(body.failed.every((f) => f.error.includes('Rotation is full'))).toBe(true)
+
+    await prisma.sound.deleteMany({ where: { id: { in: fillerIds } } })
+  })
+
+  it('assigns preset covers on backfill for sounds without a banner', async () => {
+    await prisma.artworkPreset.deleteMany({})
+    await prisma.artworkPreset.create({
+      data: { url: '/presets/cover-a.png', enabled: true, position: 0 },
+    })
+    await prisma.sound.update({ where: { id: soundA }, data: { bannerUrl: null } })
+    await prisma.sound.update({
+      where: { id: soundC },
+      data: { bannerUrl: 'https://cdn.example/existing.jpg' },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/covers/backfill',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { assigned: number; totalMatched: number }
+    expect(body.totalMatched).toBeGreaterThanOrEqual(1)
+    expect(body.assigned).toBeGreaterThanOrEqual(1)
+
+    const a = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(a.bannerUrl).toBeTruthy()
+    const c = await prisma.sound.findUniqueOrThrow({ where: { id: soundC } })
+    expect(c.bannerUrl).toBe('https://cdn.example/existing.jpg')
+  })
+
+  it('uploadedYear facet omits uploadedFrom/To so year buckets stay open', async () => {
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { createdAt: new Date('2023-06-15T12:00:00.000Z') },
+    })
+    await prisma.sound.update({
+      where: { id: soundC },
+      data: { createdAt: new Date('2025-03-01T12:00:00.000Z') },
+    })
+    const filtered = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound/facets?fields=uploadedYear&uploadedFrom=2025-01-01&uploadedTo=2025-12-31',
+      headers: { cookie },
+    })
+    expect(filtered.statusCode).toBe(200)
+    const filteredBody = filtered.json() as {
+      facets: { uploadedYear: Array<{ value: string; count: number }> }
+    }
+    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(true)
+    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2025')).toBe(true)
+  })
+
   it('refuses filter bulk-delete without confirmTotal / all', async () => {
     const missingConfirm = await app.inject({
       method: 'POST',

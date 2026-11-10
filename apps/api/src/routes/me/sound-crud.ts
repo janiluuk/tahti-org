@@ -6,10 +6,13 @@ import { Prisma } from '@tahti/db'
 import { createHearthisClient } from '@tahti/hearthis'
 import {
   CountSchema,
+  SoundBulkConflictSchema,
   SoundBulkDeleteResultSchema,
   SoundBulkDeleteSchema,
   SoundBulkPatchResultSchema,
   SoundBulkPatchSchema,
+  SoundCoversBackfillResultSchema,
+  SoundErrorMessageSchema,
   SoundFacetsQuerySchema,
   SoundFacetsSchema,
   SoundIdsSchema,
@@ -22,7 +25,9 @@ import {
   SoundViewSchema,
   IdParamSchema,
   ReorderSoundsSchema,
+  openApiBody,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
   safeDisplayName,
   type SoundListFilter,
@@ -52,6 +57,7 @@ import {
   fallbackCount,
   oldestFallbackItem,
 } from '../../lib/fallback-rotation.js'
+import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
 
@@ -96,7 +102,12 @@ async function resolveBulkIds(
     all?: boolean
   },
 ): Promise<
-  | { ok: true; ids: string[]; totalMatched: number }
+  | {
+      ok: true
+      ids: string[]
+      totalMatched: number
+      failed: Array<{ id: string; error: string }>
+    }
   | { ok: false; status: 400 | 409; body: Record<string, unknown> }
 > {
   if (body.ids) {
@@ -115,10 +126,16 @@ async function resolveBulkIds(
       select: { id: true },
     })
     const ownedSet = new Set(owned.map((r) => r.id))
+    const ownedIds = ids.filter((id) => ownedSet.has(id))
+    const failed = ids
+      .filter((id) => !ownedSet.has(id))
+      .slice(0, SOUND_BULK_MAX_ERRORS)
+      .map((id) => ({ id, error: 'not found or not owned' }))
     return {
       ok: true,
-      ids: ids.filter((id) => ownedSet.has(id)),
-      totalMatched: ids.filter((id) => ownedSet.has(id)).length,
+      ids: ownedIds,
+      totalMatched: ownedIds.length,
+      failed,
     }
   }
 
@@ -154,7 +171,12 @@ async function resolveBulkIds(
       },
     }
   }
-  return { ok: true, ids: matched.map((r) => r.id), totalMatched: matched.length }
+  return {
+    ok: true,
+    ids: matched.map((r) => r.id),
+    totalMatched: matched.length,
+    failed: [],
+  }
 }
 
 const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
@@ -165,7 +187,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'List channel sounds with metadata. Pass `limit` for a paged `{ items, total }` response; omit it for the legacy array (capped at 100).',
+          'List channel sounds with metadata. Dual response: pass `limit` for a paged `{ items, total }` object; omit `limit` for the legacy array (capped at 100).',
         response: openApiResponse(SoundListResponseSchema, 'SoundListResponse'),
       },
     },
@@ -324,8 +346,13 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Every matching sound id for select-all (same filters as the list)',
-        response: openApiResponse(SoundIdsSchema, 'SoundIds'),
+        description:
+          'Every matching sound id for select-all (same filters as the list). Returns 413 with totalMatched when the match count exceeds the ids cap.',
+        response: openApiResponses([
+          { status: 200, schema: SoundIdsSchema, name: 'SoundIds' },
+          { status: 400, schema: SoundErrorMessageSchema, name: 'SoundIdsBadRequest' },
+          { status: 413, schema: SoundBulkConflictSchema, name: 'SoundIdsTooLarge' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -402,8 +429,15 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
                     ? 'source'
                     : field === 'status'
                       ? 'status'
-                      : undefined
-        const where = soundListWhere(channel.id, filter, omit)
+                      : field === 'musicalKey'
+                        ? 'key'
+                        : undefined
+        // Year buckets must ignore the date range that would collapse them to one year.
+        const facetFilter =
+          field === 'uploadedYear'
+            ? { ...filter, uploadedFrom: undefined, uploadedTo: undefined }
+            : filter
+        const where = soundListWhere(channel.id, facetFilter, omit)
         if (field === 'genre') {
           const [presetRows, customRows] = await Promise.all([
             fastify.prisma.sound.groupBy({
@@ -465,35 +499,57 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
             count: r._count._all,
           }))
         } else if (field === 'tag') {
-          const tagged = await fastify.prisma.sound.findMany({
+          // Full matching set via SQL unnest — no 5k sample cap.
+          const matchedIds = await fastify.prisma.sound.findMany({
             where,
-            select: { tags: true },
-            take: 5_000,
+            select: { id: true },
           })
-          const counts = new Map<string, number>()
-          for (const row of tagged) {
-            for (const tag of row.tags) {
-              counts.set(tag, (counts.get(tag) ?? 0) + 1)
-            }
+          if (matchedIds.length === 0) {
+            facets.tag = []
+          } else {
+            const rows = await fastify.prisma.$queryRaw<Array<{ value: string; count: number }>>`
+              SELECT t.tag AS value, COUNT(*)::int AS count
+              FROM channel."Sound" s
+              CROSS JOIN LATERAL unnest(s.tags) AS t(tag)
+              WHERE s.id IN (${Prisma.join(matchedIds.map((r) => r.id))})
+              GROUP BY t.tag
+              ORDER BY count DESC, value ASC
+              LIMIT 100
+            `
+            facets.tag = rows.map((r) => ({ value: r.value, count: r.count }))
           }
-          facets.tag = [...counts.entries()]
-            .map(([value, count]) => ({ value, count }))
-            .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-            .slice(0, 100)
         } else if (field === 'uploadedYear') {
-          const matched = await fastify.prisma.sound.findMany({
+          const matchedIds = await fastify.prisma.sound.findMany({
             where,
-            select: { createdAt: true },
-            take: 20_000,
+            select: { id: true },
           })
-          const yearCounts = new Map<string, number>()
-          for (const row of matched) {
-            const y = String(row.createdAt.getUTCFullYear())
-            yearCounts.set(y, (yearCounts.get(y) ?? 0) + 1)
+          if (matchedIds.length === 0) {
+            facets.uploadedYear = []
+          } else {
+            const rows = await fastify.prisma.$queryRaw<Array<{ value: string; count: number }>>`
+              SELECT EXTRACT(YEAR FROM s."createdAt" AT TIME ZONE 'UTC')::int::text AS value,
+                     COUNT(*)::int AS count
+              FROM channel."Sound" s
+              WHERE s.id IN (${Prisma.join(matchedIds.map((r) => r.id))})
+              GROUP BY 1
+              ORDER BY value DESC
+            `
+            facets.uploadedYear = rows.map((r) => ({ value: r.value, count: r.count }))
           }
-          facets.uploadedYear = [...yearCounts.entries()]
-            .map(([value, count]) => ({ value, count }))
-            .sort((a, b) => Number(b.value) - Number(a.value))
+        } else if (field === 'musicalKey') {
+          const rows = await fastify.prisma.sound.groupBy({
+            by: ['musicalKey'],
+            where: { ...where, musicalKey: { not: null } },
+            _count: { _all: true },
+            orderBy: { _count: { musicalKey: 'desc' } },
+            take: 100,
+          })
+          facets.musicalKey = rows
+            .filter((r) => r.musicalKey)
+            .map((r) => ({
+              value: r.musicalKey as string,
+              count: r._count._all,
+            }))
         }
       }
 
@@ -567,8 +623,14 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Delete many sounds. Send `ids`, or `filter` + `confirmTotal` (server re-counts; 409 on drift).',
-        response: openApiResponse(SoundBulkDeleteResultSchema, 'SoundBulkDeleteResult'),
+          'Delete many sounds. Send `ids`, or `filter` + `confirmTotal` (server re-counts; 409 on drift). Missing or foreign ids land in `failed[]`.',
+        body: openApiBody(SoundBulkDeleteSchema, 'SoundBulkDelete'),
+        response: openApiResponses([
+          { status: 200, schema: SoundBulkDeleteResultSchema, name: 'SoundBulkDeleteResult' },
+          { status: 400, schema: SoundErrorMessageSchema, name: 'SoundBulkDeleteBadRequest' },
+          { status: 403, schema: SoundErrorMessageSchema, name: 'SoundBulkDeleteForbidden' },
+          { status: 409, schema: SoundBulkConflictSchema, name: 'SoundBulkDeleteConflict' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -589,10 +651,18 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!resolved.ok) return reply.status(resolved.status).send(resolved.body)
 
       let deleted = 0
-      const failed: Array<{ id: string; error: string }> = []
+      const failed: Array<{ id: string; error: string }> = [...resolved.failed]
       for (const id of resolved.ids) {
         try {
-          await fastify.prisma.sound.delete({ where: { id } })
+          const result = await fastify.prisma.sound.deleteMany({
+            where: { id, channelId: channel.id },
+          })
+          if (result.count === 0) {
+            if (failed.length < SOUND_BULK_MAX_ERRORS) {
+              failed.push({ id, error: 'not found or not owned' })
+            }
+            continue
+          }
           deleted += 1
         } catch (err) {
           if (failed.length < SOUND_BULK_MAX_ERRORS) {
@@ -622,8 +692,14 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Patch shared metadata on many sounds. Send `ids`, or `filter` + `confirmTotal`.',
-        response: openApiResponse(SoundBulkPatchResultSchema, 'SoundBulkPatchResult'),
+          'Patch shared metadata on many sounds. Send `ids`, or `filter` + `confirmTotal`. `tags: []` clears tags. `pinned` sets/clears pinnedAt. `isFallback: true` respects MAX_FALLBACK_ITEMS (excess ids fail). Going private→public notifies followers once per track.',
+        body: openApiBody(SoundBulkPatchSchema, 'SoundBulkPatch'),
+        response: openApiResponses([
+          { status: 200, schema: SoundBulkPatchResultSchema, name: 'SoundBulkPatchResult' },
+          { status: 400, schema: SoundErrorMessageSchema, name: 'SoundBulkPatchBadRequest' },
+          { status: 403, schema: SoundErrorMessageSchema, name: 'SoundBulkPatchForbidden' },
+          { status: 409, schema: SoundBulkConflictSchema, name: 'SoundBulkPatchConflict' },
+        ]),
       },
     },
     async (request, reply) => {
@@ -652,6 +728,9 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (patchBody.contentType !== undefined) data.contentType = patchBody.contentType
       if (patchBody.isPublic !== undefined) data.isPublic = patchBody.isPublic
       if (patchBody.isFallback !== undefined) data.isFallback = patchBody.isFallback
+      if (patchBody.pinned !== undefined) {
+        data.pinnedAt = patchBody.pinned ? new Date() : null
+      }
       if (patchBody.downloadsEnabled !== undefined)
         data.downloadsEnabled = patchBody.downloadsEnabled
       if (patchBody.commentsEnabled !== undefined) data.commentsEnabled = patchBody.commentsEnabled
@@ -660,12 +739,63 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         data.releasedAt = patchBody.releasedAt ? new Date(patchBody.releasedAt) : null
       }
 
+      const existing = await fastify.prisma.sound.findMany({
+        where: { channelId: channel.id, id: { in: resolved.ids } },
+        select: { id: true, title: true, isFallback: true, isPublic: true },
+      })
+      const byId = new Map(existing.map((row) => [row.id, row]))
+
+      let freeFallbackSlots = Number.POSITIVE_INFINITY
+      if (patchBody.isFallback === true) {
+        const currentFallbacks = await fallbackCount(fastify.prisma, channel.id)
+        freeFallbackSlots = Math.max(0, MAX_FALLBACK_ITEMS - currentFallbacks)
+      }
+
       let updated = 0
-      const failed: Array<{ id: string; error: string }> = []
+      const failed: Array<{ id: string; error: string }> = [...resolved.failed]
+      const notifyQueue: Array<{ id: string; title: string }> = []
+      const artist = {
+        ...user,
+        displayName: safeDisplayName(user.displayName, user.username),
+      }
+
       for (const id of resolved.ids) {
+        const row = byId.get(id)
+        if (!row) {
+          if (failed.length < SOUND_BULK_MAX_ERRORS) {
+            failed.push({ id, error: 'not found or not owned' })
+          }
+          continue
+        }
+
+        if (patchBody.isFallback === true && !row.isFallback) {
+          if (freeFallbackSlots <= 0) {
+            if (failed.length < SOUND_BULK_MAX_ERRORS) {
+              failed.push({
+                id,
+                error: `Rotation is full (max ${MAX_FALLBACK_ITEMS})`,
+              })
+            }
+            continue
+          }
+          freeFallbackSlots -= 1
+        }
+
         try {
-          await fastify.prisma.sound.update({ where: { id }, data })
+          const result = await fastify.prisma.sound.updateMany({
+            where: { id, channelId: channel.id },
+            data,
+          })
+          if (result.count === 0) {
+            if (failed.length < SOUND_BULK_MAX_ERRORS) {
+              failed.push({ id, error: 'not found or not owned' })
+            }
+            continue
+          }
           updated += 1
+          if (patchBody.isPublic === true && !row.isPublic) {
+            notifyQueue.push({ id: row.id, title: row.title })
+          }
         } catch (err) {
           if (failed.length < SOUND_BULK_MAX_ERRORS) {
             failed.push({
@@ -676,11 +806,50 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      for (const item of notifyQueue) {
+        await notifyFollowersOfNewTrack(fastify.prisma, artist, item).catch((e) =>
+          fastify.log.warn(e, 'new-track notification failed'),
+        )
+      }
+
       return reply.send({
         updated,
         failed,
         totalMatched: resolved.totalMatched,
       })
+    },
+  )
+
+  fastify.post(
+    '/api/me/sound/covers/backfill',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Assign an enabled artwork preset to each of your sounds that still has no banner. Safe to re-run; sounds with a cover are skipped.',
+        response: openApiResponse(SoundCoversBackfillResultSchema, 'SoundCoversBackfillResult'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(403).send({ error: 'You need a channel to do this' })
+
+      const missing = await fastify.prisma.sound.findMany({
+        where: { channelId: channel.id, bannerUrl: null },
+        select: { id: true },
+        take: SOUND_BULK_MAX_IDS,
+      })
+      const assigned = await assignPresetCovers(
+        fastify.prisma,
+        'sound',
+        missing.map((row) => row.id),
+      )
+      return reply.send({ assigned, totalMatched: missing.length })
     },
   )
 
