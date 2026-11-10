@@ -101,6 +101,10 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
   })
 
   it('returns facets for genre and tag', async () => {
+    await prisma.sound.update({
+      where: { id: soundC },
+      data: { genre: 'Other', genreCustom: 'IDM' },
+    })
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/sound/facets?fields=genre,tag',
@@ -116,6 +120,7 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     }
     expect(body.total).toBeGreaterThanOrEqual(3)
     expect(body.facets.genre.some((g) => g.value === 'House' && g.count >= 1)).toBe(true)
+    expect(body.facets.genre.some((g) => g.value === 'IDM' && g.count >= 1)).toBe(true)
     expect(body.facets.tag.some((t) => t.value === 'peak' && t.count >= 2)).toBe(true)
   })
 
