@@ -269,7 +269,7 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(c.bannerUrl).toBe('https://cdn.example/existing.jpg')
   })
 
-  it('uploadedYear facet buckets omit years outside uploadedFrom/To', async () => {
+  it('uploadedYear facet omits uploadedFrom/To so year buckets stay open', async () => {
     await prisma.sound.update({
       where: { id: soundA },
       data: { createdAt: new Date('2023-06-15T12:00:00.000Z') },
@@ -278,18 +278,6 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
       where: { id: soundC },
       data: { createdAt: new Date('2025-03-01T12:00:00.000Z') },
     })
-    const allYears = await app.inject({
-      method: 'GET',
-      url: '/api/me/sound/facets?fields=uploadedYear',
-      headers: { cookie },
-    })
-    expect(allYears.statusCode).toBe(200)
-    const allBody = allYears.json() as {
-      facets: { uploadedYear: Array<{ value: string; count: number }> }
-    }
-    expect(allBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(true)
-    expect(allBody.facets.uploadedYear.some((y) => y.value === '2025')).toBe(true)
-
     const filtered = await app.inject({
       method: 'GET',
       url: '/api/me/sound/facets?fields=uploadedYear&uploadedFrom=2025-01-01&uploadedTo=2025-12-31',
@@ -299,8 +287,8 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     const filteredBody = filtered.json() as {
       facets: { uploadedYear: Array<{ value: string; count: number }> }
     }
-    expect(filteredBody.facets.uploadedYear.every((y) => y.value === '2025')).toBe(true)
-    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(false)
+    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(true)
+    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2025')).toBe(true)
   })
 
   it('bulk private→public notifies followers once per track', async () => {
