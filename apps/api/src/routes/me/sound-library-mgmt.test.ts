@@ -161,6 +161,86 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(a.tags).toEqual(['bulk'])
   })
 
+  it('reports foreign ids in failed[] on bulk-by-ids', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: {
+        ids: [soundA, 'sound_not_yours_or_missing'],
+        patch: { genre: 'House' },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      updated: number
+      totalMatched: number
+      failed: Array<{ id: string; error: string }>
+    }
+    expect(body.updated).toBe(1)
+    expect(body.totalMatched).toBe(1)
+    expect(body.failed).toEqual([
+      { id: 'sound_not_yours_or_missing', error: 'not found or not owned' },
+    ])
+  })
+
+  it('refuses to exceed the fallback rotation via bulk-patch', async () => {
+    const { MAX_FALLBACK_ITEMS } = await import('@tahti/shared')
+    const fillerIds: string[] = []
+    for (let i = 0; i < MAX_FALLBACK_ITEMS; i++) {
+      const id = (await createReadySound(prisma, channelId, `Fallback ${i}`)).id
+      fillerIds.push(id)
+      await prisma.sound.update({ where: { id }, data: { isFallback: true } })
+    }
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: {
+        ids: [soundA, soundC],
+        patch: { isFallback: true },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      updated: number
+      failed: Array<{ id: string; error: string }>
+    }
+    expect(body.updated).toBe(0)
+    expect(body.failed).toHaveLength(2)
+    expect(body.failed.every((f) => f.error.includes('Rotation is full'))).toBe(true)
+
+    await prisma.sound.deleteMany({ where: { id: { in: fillerIds } } })
+  })
+
+  it('assigns preset covers on backfill for sounds without a banner', async () => {
+    await prisma.artworkPreset.deleteMany({})
+    await prisma.artworkPreset.create({
+      data: { url: '/presets/cover-a.png', enabled: true, position: 0 },
+    })
+    await prisma.sound.update({ where: { id: soundA }, data: { bannerUrl: null } })
+    await prisma.sound.update({
+      where: { id: soundC },
+      data: { bannerUrl: 'https://cdn.example/existing.jpg' },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/covers/backfill',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { assigned: number; totalMatched: number }
+    expect(body.totalMatched).toBeGreaterThanOrEqual(1)
+    expect(body.assigned).toBeGreaterThanOrEqual(1)
+
+    const a = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(a.bannerUrl).toBeTruthy()
+    const c = await prisma.sound.findUniqueOrThrow({ where: { id: soundC } })
+    expect(c.bannerUrl).toBe('https://cdn.example/existing.jpg')
+  })
+
   it('refuses filter bulk-delete without confirmTotal / all', async () => {
     const missingConfirm = await app.inject({
       method: 'POST',

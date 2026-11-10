@@ -47,6 +47,11 @@ export function openApiResponse(
   return { 200: zodToOpenApiJson(schema, name) }
 }
 
+/** Request body schema for Fastify route `schema.body`. */
+export function openApiBody(schema: z.ZodTypeAny, name: string): Record<string, unknown> {
+  return zodToOpenApiJson(schema, name)
+}
+
 /** Multiple success status codes (e.g. 200 checkout URL vs 201 dev activation). */
 export function openApiResponses(
   entries: Array<{ status: number; schema: z.ZodTypeAny; name: string }>,

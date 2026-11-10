@@ -88,6 +88,27 @@ export const SoundBulkPatchResultSchema = z.object({
 
 export type SoundBulkPatchResult = z.infer<typeof SoundBulkPatchResultSchema>
 
+/** 409 when bulk filter `confirmTotal` drifts from the live match count. */
+export const SoundBulkConflictSchema = z.object({
+  error: z.string(),
+  totalMatched: z.number().int().nonnegative().optional(),
+})
+
+export type SoundBulkConflict = z.infer<typeof SoundBulkConflictSchema>
+
+/** Shared `{ error }` body for 400/403 on sound routes. */
+export const SoundErrorMessageSchema = z.object({
+  error: z.string(),
+})
+
+/** POST /api/me/sound/covers/backfill — assign preset covers to sounds with none. */
+export const SoundCoversBackfillResultSchema = z.object({
+  assigned: z.number().int().nonnegative(),
+  totalMatched: z.number().int().nonnegative(),
+})
+
+export type SoundCoversBackfillResult = z.infer<typeof SoundCoversBackfillResultSchema>
+
 /** Cheap total-count response, used by dashboard tiles that only need a
  * number rather than the full list (PERF: avoids GET /api/me/sound's
  * full-metadata payload just to read `.length`). */
