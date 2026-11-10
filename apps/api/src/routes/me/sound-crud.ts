@@ -835,7 +835,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Assign an enabled artwork preset to each of your sounds that still has no banner. Safe to re-run; sounds with a cover are skipped.',
+          'Fill missing banners: try the provider cover for hearthis.at embeds, then assign an enabled artwork preset to anything still empty. Safe to re-run; sounds with a cover are skipped.',
         response: openApiResponse(SoundCoversBackfillResultSchema, 'SoundCoversBackfillResult'),
       },
     },
@@ -849,15 +849,35 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       const missing = await fastify.prisma.sound.findMany({
         where: { channelId: channel.id, bannerUrl: null },
-        select: { id: true },
+        select: { id: true, embedProvider: true, embedSourceUrl: true },
         take: SOUND_BULK_MAX_IDS,
       })
-      const assigned = await assignPresetCovers(
-        fastify.prisma,
-        'sound',
-        missing.map((row) => row.id),
-      )
-      return reply.send({ assigned, totalMatched: missing.length })
+      let fromProvider = 0
+      const stillMissing: string[] = []
+      for (const row of missing) {
+        if (row.embedProvider === 'HEARTHIS' && row.embedSourceUrl) {
+          try {
+            const track = await hearthis.getTrackByUrl(row.embedSourceUrl)
+            const cover = track.artwork_url_retina ?? track.artwork_url ?? null
+            if (cover) {
+              await fastify.prisma.sound.update({
+                where: { id: row.id },
+                data: { bannerUrl: cover },
+              })
+              fromProvider += 1
+              continue
+            }
+          } catch {
+            // Provider lookup failed — fall through to a preset.
+          }
+        }
+        stillMissing.push(row.id)
+      }
+      const fromPresets = await assignPresetCovers(fastify.prisma, 'sound', stillMissing)
+      return reply.send({
+        assigned: fromProvider + fromPresets,
+        totalMatched: missing.length,
+      })
     },
   )
 
