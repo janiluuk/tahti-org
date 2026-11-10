@@ -405,16 +405,35 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
                       : undefined
         const where = soundListWhere(channel.id, filter, omit)
         if (field === 'genre') {
-          const rows = await fastify.prisma.sound.groupBy({
-            by: ['genre'],
-            where,
-            _count: { _all: true },
-            orderBy: { _count: { genre: 'desc' } },
-            take: 100,
-          })
-          facets.genre = rows
-            .filter((r) => r.genre)
-            .map((r) => ({ value: r.genre!, count: r._count._all }))
+          const [presetRows, customRows] = await Promise.all([
+            fastify.prisma.sound.groupBy({
+              by: ['genre'],
+              where,
+              _count: { _all: true },
+              orderBy: { _count: { genre: 'desc' } },
+              take: 100,
+            }),
+            fastify.prisma.sound.groupBy({
+              by: ['genreCustom'],
+              where: { ...where, genreCustom: { not: null } },
+              _count: { _all: true },
+              orderBy: { _count: { genreCustom: 'desc' } },
+              take: 100,
+            }),
+          ])
+          const counts = new Map<string, number>()
+          for (const row of presetRows) {
+            if (!row.genre) continue
+            counts.set(row.genre, (counts.get(row.genre) ?? 0) + row._count._all)
+          }
+          for (const row of customRows) {
+            if (!row.genreCustom) continue
+            counts.set(row.genreCustom, (counts.get(row.genreCustom) ?? 0) + row._count._all)
+          }
+          facets.genre = [...counts.entries()]
+            .map(([value, count]) => ({ value, count }))
+            .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+            .slice(0, 100)
         } else if (field === 'contentType') {
           const rows = await fastify.prisma.sound.groupBy({
             by: ['contentType'],
