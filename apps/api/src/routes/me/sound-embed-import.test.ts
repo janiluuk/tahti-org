@@ -150,4 +150,39 @@ describe('POST /api/me/sound/:id/import-embed', () => {
     expect(res.statusCode).toBe(202)
     expect(res.json()).toEqual({ status: 'importing' })
   })
+
+  it('takes the page URL from the caller for an older embed, when the track id matches', async () => {
+    const sound = await createEmbedSound({ embedSourceUrl: null, embedUri: '14624101' })
+    const url = `/api/me/sound/${sound.id}/import-embed`
+    const missing = await app.inject({ method: 'POST', url, headers: { cookie } })
+    expect(missing.statusCode).toBe(400)
+
+    mockGetTrackByUrl.mockResolvedValueOnce({
+      id: '999',
+      downloadable: '1',
+      download_url: 'https://hearthis.at/dl/999',
+    })
+    const wrong = await app.inject({
+      method: 'POST',
+      url,
+      headers: { cookie },
+      payload: { trackUrl: 'https://hearthis.at/someone/other-track/' },
+    })
+    expect(wrong.statusCode).toBe(400)
+
+    mockGetTrackByUrl.mockResolvedValueOnce({
+      id: '14624101',
+      downloadable: '1',
+      download_url: 'https://hearthis.at/dl/14624101',
+    })
+    const ok = await app.inject({
+      method: 'POST',
+      url,
+      headers: { cookie },
+      payload: { trackUrl: 'https://hearthis.at/someone/some-track/' },
+    })
+    expect(ok.statusCode).toBe(202)
+    const saved = await prisma.sound.findUniqueOrThrow({ where: { id: sound.id } })
+    expect(saved.embedSourceUrl).toBe('https://hearthis.at/someone/some-track/')
+  })
 })

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
 import { Prisma } from '@tahti/db'
 import { createHearthisClient } from '@tahti/hearthis'
 import {
@@ -60,6 +61,13 @@ import {
 import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
+
+const ImportEmbedBodySchema = z.object({
+  trackUrl: z
+    .string()
+    .regex(/^https:\/\/hearthis\.at\/[^/]+\/[^/]+\/?$/, 'Expected a hearthis.at track URL')
+    .optional(),
+})
 
 const hearthis = createHearthisClient()
 
@@ -1048,11 +1056,21 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.sound.findFirst({
         where: { id, channel: { userId: user.id } },
-        select: { id: true, source: true, rawKey: true, embedSourceUrl: true },
+        select: { id: true, source: true, rawKey: true, embedSourceUrl: true, embedUri: true },
       })
       if (!item) return reply.status(404).send({ error: 'Sound item not found' })
-      if (item.source !== 'HEARTHIS_EMBED' || !item.embedSourceUrl) {
+      if (item.source !== 'HEARTHIS_EMBED') {
         return reply.status(400).send({ error: 'This item is not a hearthis.at embed' })
+      }
+      // Embeds imported before the page URL was stored only keep the
+      // hearthis.at track id; the caller may name the page, and it is used
+      // only when that page's track id matches.
+      const bodyUrl = ImportEmbedBodySchema.safeParse(request.body ?? {})
+      const trackUrl = item.embedSourceUrl ?? (bodyUrl.success ? bodyUrl.data.trackUrl : undefined)
+      if (!trackUrl) {
+        return reply
+          .status(400)
+          .send({ error: 'This embed has no hearthis.at page URL; pass trackUrl' })
       }
       if (item.rawKey) {
         return reply.status(409).send({ error: 'This item already has real audio attached' })
@@ -1060,9 +1078,20 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       let track
       try {
-        track = await hearthis.getTrackByUrl(item.embedSourceUrl)
+        track = await hearthis.getTrackByUrl(trackUrl)
       } catch {
         return reply.status(502).send({ error: 'Could not reach hearthis.at' })
+      }
+      if (!item.embedSourceUrl) {
+        if (!item.embedUri || String(track.id) !== String(item.embedUri)) {
+          return reply
+            .status(400)
+            .send({ error: 'That hearthis.at page is not the track this embed plays' })
+        }
+        await fastify.prisma.sound.update({
+          where: { id: item.id },
+          data: { embedSourceUrl: trackUrl },
+        })
       }
       if (track.downloadable !== '1' || !track.download_url) {
         return reply
@@ -1070,7 +1099,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: 'The artist has not enabled downloads for this track on hearthis.at' })
       }
 
-      await enqueueHearthisEmbedLocalization({ soundId: item.id, trackUrl: item.embedSourceUrl })
+      await enqueueHearthisEmbedLocalization({ soundId: item.id, trackUrl })
 
       return reply.status(202).send({ status: 'importing' })
     },
