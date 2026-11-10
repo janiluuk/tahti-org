@@ -38,10 +38,7 @@ describe('SoundListQuerySchema', () => {
   })
 
   it('parses tags as a comma-separated AND list', () => {
-    expect(SoundListQuerySchema.parse({ tags: 'deep,house' }).tags).toEqual([
-      'deep',
-      'house',
-    ])
+    expect(SoundListQuerySchema.parse({ tags: 'deep,house' }).tags).toEqual(['deep', 'house'])
     expect(SoundListQuerySchema.parse({ tag: 'solo' }).tag).toBe('solo')
   })
 })

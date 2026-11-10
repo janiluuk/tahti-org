@@ -84,10 +84,16 @@ describe("admin sound edit — board access to any channel's tracks", () => {
   })
 
   it('deletes a sound for a board member and writes an audit row', async () => {
-    const doomed = await createReadySound(prisma, (await prisma.channel.findUniqueOrThrow({
-      where: { slug: channelSlug },
-      select: { id: true },
-    })).id, 'Board delete me')
+    const doomed = await createReadySound(
+      prisma,
+      (
+        await prisma.channel.findUniqueOrThrow({
+          where: { slug: channelSlug },
+          select: { id: true },
+        })
+      ).id,
+      'Board delete me',
+    )
     const del = await app.inject({
       method: 'DELETE',
       url: `/api/admin/channels/${channelSlug}/sound/${doomed.id}`,
