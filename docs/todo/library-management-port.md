@@ -43,7 +43,7 @@ pairs. PR for the prior 20: #1089.
 | 7   | org    | Harden `uploadedYear` facet (SQL year bucket, not JS 20k scan)                    | ✅ Correct under date filters           |
 | 8   | org    | Admin `DELETE /api/admin/channels/:slug/sound/:itemId` + audit                    | ✅ Board remove + audit + AuditAction   |
 | 9   | org    | Admin list dual GET: `limit`/`offset` + same filters as me/sound                  | ✅ Drop hard `take: 200` for paged      |
-| 10  | org    | Integration tests: uploadedYear date-omit + bulk private→public notify            | ✅ Tests added                          |
+| 10  | org    | Integration tests: uploadedYear date-omit + bulk private→public notify            | ✅ Year date-omit; notify IT deferred   |
 | 11  | player | Honesty toast when bulk `ok` but `failed.length > 0`                              | ✅ Toast shows updated + failed         |
 | 12  | player | Map 409 `totalMatched` to re-confirm dialog                                       | ✅ Sibling UI                           |
 | 13  | player | Surface ids `413` as toolbar `selectionNotice`                                    | ✅ Cap message + refine CTA             |
