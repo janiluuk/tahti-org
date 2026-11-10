@@ -526,9 +526,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           if (matchedIds.length === 0) {
             facets.uploadedYear = []
           } else {
-            const rows = await fastify.prisma.$queryRaw<
-              Array<{ value: string; count: number }>
-            >`
+            const rows = await fastify.prisma.$queryRaw<Array<{ value: string; count: number }>>`
               SELECT EXTRACT(YEAR FROM s."createdAt" AT TIME ZONE 'UTC')::int::text AS value,
                      COUNT(*)::int AS count
               FROM sound s
