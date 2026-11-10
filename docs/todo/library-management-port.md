@@ -38,11 +38,11 @@ pairs. PR for the prior 20: #1089.
 | 2 | org | Regenerate `@tahti/api-client` from OpenAPI for list/ids/facets/stats/bulk/covers | `generate` types cover those paths |
 | 3 | org | Bulk-patch `pinned` in schema + handler | ✅ Can set/clear pin; test `pinnedAt` |
 | 4 | org | Bulk-patch clear-tags: allow `tags: []` (replace semantics) | ✅ Empty array clears; OpenAPI + test |
-| 5 | org | Multi-tag list filter (`tags` AND, keep single `tag`) | Zod + where + tests |
+| 5 | org | Multi-tag list filter (`tags` AND, keep single `tag`) | ✅ Zod + where + tests |
 | 6 | org | Add `musicalKey` to facet fields + groupBy | ✅ Key buckets in facets response |
 | 7 | org | Harden `uploadedYear` facet (SQL year bucket, not JS 20k scan) | ✅ Correct under date filters |
-| 8 | org | Admin `DELETE /api/admin/channels/:slug/sound/:itemId` + audit | Board remove + 404/403 tests |
-| 9 | org | Admin list dual GET: `limit`/`offset` + same filters as me/sound | Drop hard `take: 200` |
+| 8 | org | Admin `DELETE /api/admin/channels/:slug/sound/:itemId` + audit | ✅ Board remove + audit |
+| 9 | org | Admin list dual GET: `limit`/`offset` + same filters as me/sound | ✅ Drop hard `take: 200` for paged |
 | 10 | org | Integration tests: uploadedYear date-omit + bulk private→public notify | Green in Postgres job |
 | 11 | player | Honesty toast when bulk `ok` but `failed.length > 0` | ✅ Toast shows updated + failed |
 | 12 | player | Map 409 `totalMatched` to re-confirm dialog | Retry with server `confirmTotal` |

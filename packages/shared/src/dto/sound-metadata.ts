@@ -217,6 +217,19 @@ const DateQuery = z
     'expected YYYY-MM-DD or an ISO datetime',
   )
 
+/** Comma-separated tag list for AND filtering (`tags=a,b` → has every tag). */
+const TagsQuery = z
+  .string()
+  .trim()
+  .transform((raw) =>
+    raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 20),
+  )
+  .pipe(z.array(z.string().max(40)).max(20))
+
 /** Shared filter fields for list / ids / facets / stats / bulk-by-filter. */
 export const SoundListFilterSchema = z.object({
   q: z.string().trim().max(200).optional(),
@@ -227,6 +240,8 @@ export const SoundListFilterSchema = z.object({
   uploadedTo: DateQuery.optional(),
   genre: z.string().trim().max(80).optional(),
   tag: z.string().trim().max(40).optional(),
+  /** AND of tags (keep single `tag` for one-value filters / facets omit). */
+  tags: TagsQuery.optional(),
   bpmMin: z.coerce.number().int().min(40).max(300).optional(),
   bpmMax: z.coerce.number().int().min(40).max(300).optional(),
   key: z.string().trim().max(12).optional(),

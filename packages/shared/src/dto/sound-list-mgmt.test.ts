@@ -36,6 +36,14 @@ describe('SoundListQuerySchema', () => {
   it('rejects an oversized limit', () => {
     expect(() => SoundListQuerySchema.parse({ limit: '500' })).toThrow()
   })
+
+  it('parses tags as a comma-separated AND list', () => {
+    expect(SoundListQuerySchema.parse({ tags: 'deep,house' }).tags).toEqual([
+      'deep',
+      'house',
+    ])
+    expect(SoundListQuerySchema.parse({ tag: 'solo' }).tag).toBe('solo')
+  })
 })
 
 describe('SoundFacetsQuerySchema', () => {

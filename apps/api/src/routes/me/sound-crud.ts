@@ -509,7 +509,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           } else {
             const rows = await fastify.prisma.$queryRaw<Array<{ value: string; count: number }>>`
               SELECT t.tag AS value, COUNT(*)::int AS count
-              FROM sound s
+              FROM "Sound" s
               CROSS JOIN LATERAL unnest(s.tags) AS t(tag)
               WHERE s.id IN (${Prisma.join(matchedIds.map((r) => r.id))})
               GROUP BY t.tag
@@ -529,7 +529,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
             const rows = await fastify.prisma.$queryRaw<Array<{ value: string; count: number }>>`
               SELECT EXTRACT(YEAR FROM s."createdAt" AT TIME ZONE 'UTC')::int::text AS value,
                      COUNT(*)::int AS count
-              FROM sound s
+              FROM "Sound" s
               WHERE s.id IN (${Prisma.join(matchedIds.map((r) => r.id))})
               GROUP BY 1
               ORDER BY value DESC
