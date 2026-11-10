@@ -68,4 +68,19 @@ describe('SoundBulkPatchSchema', () => {
       }).success,
     ).toBe(true)
   })
+
+  it('allows tags: [] to clear tags and pinned boolean', () => {
+    expect(
+      SoundBulkPatchSchema.safeParse({
+        ids: ['a'],
+        patch: { tags: [] },
+      }).success,
+    ).toBe(true)
+    expect(
+      SoundBulkPatchSchema.safeParse({
+        ids: ['a'],
+        patch: { pinned: true },
+      }).success,
+    ).toBe(true)
+  })
 })

@@ -253,6 +253,7 @@ export const SOUND_FACET_FIELDS = [
   'source',
   'status',
   'uploadedYear',
+  'musicalKey',
 ] as const
 
 export const SoundFacetsQuerySchema = SoundListFilterSchema.extend({
@@ -300,7 +301,9 @@ export const SoundBulkDeleteSchema = z
 
 export type SoundBulkDeleteInput = z.infer<typeof SoundBulkDeleteSchema>
 
-/** Fields allowed in a bulk metadata patch (no title / tracklist / URLs). */
+/** Fields allowed in a bulk metadata patch (no title / tracklist / URLs).
+ * `tags: []` clears tags on every matched sound (replace semantics).
+ * `pinned` maps to `pinnedAt` on the server (same as single PATCH). */
 export const SoundBulkPatchFieldsSchema = z
   .object({
     genre: z.string().max(80).nullable().optional(),
@@ -310,6 +313,7 @@ export const SoundBulkPatchFieldsSchema = z
     contentType: z.enum(SOUND_CONTENT_TYPES).optional(),
     isPublic: z.boolean().optional(),
     isFallback: z.boolean().optional(),
+    pinned: z.boolean().optional(),
     downloadsEnabled: z.boolean().optional(),
     commentsEnabled: z.boolean().optional(),
     license: z.enum(SOUND_LICENSES).optional(),

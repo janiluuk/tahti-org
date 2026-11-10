@@ -161,6 +161,34 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(a.tags).toEqual(['bulk'])
   })
 
+  it('bulk-patches pinned and clears tags with tags: []', async () => {
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { tags: ['keep-me'], pinnedAt: null },
+    })
+    const pin = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { pinned: true } },
+    })
+    expect(pin.statusCode).toBe(200)
+    expect(pin.json()).toMatchObject({ updated: 1, failed: [] })
+    const pinned = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(pinned.pinnedAt).toBeTruthy()
+
+    const clear = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { tags: [], pinned: false } },
+    })
+    expect(clear.statusCode).toBe(200)
+    const cleared = await prisma.sound.findUniqueOrThrow({ where: { id: soundA } })
+    expect(cleared.tags).toEqual([])
+    expect(cleared.pinnedAt).toBeNull()
+  })
+
   it('reports foreign ids in failed[] on bulk-by-ids', async () => {
     const res = await app.inject({
       method: 'POST',
