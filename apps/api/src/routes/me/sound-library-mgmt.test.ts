@@ -269,6 +269,92 @@ describe('library management — paged list, ids, facets, stats, bulk', () => {
     expect(c.bannerUrl).toBe('https://cdn.example/existing.jpg')
   })
 
+  it('uploadedYear facet buckets omit years outside uploadedFrom/To', async () => {
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { createdAt: new Date('2023-06-15T12:00:00.000Z') },
+    })
+    await prisma.sound.update({
+      where: { id: soundC },
+      data: { createdAt: new Date('2025-03-01T12:00:00.000Z') },
+    })
+    const allYears = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound/facets?fields=uploadedYear',
+      headers: { cookie },
+    })
+    expect(allYears.statusCode).toBe(200)
+    const allBody = allYears.json() as {
+      facets: { uploadedYear: Array<{ value: string; count: number }> }
+    }
+    expect(allBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(true)
+    expect(allBody.facets.uploadedYear.some((y) => y.value === '2025')).toBe(true)
+
+    const filtered = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound/facets?fields=uploadedYear&uploadedFrom=2025-01-01&uploadedTo=2025-12-31',
+      headers: { cookie },
+    })
+    expect(filtered.statusCode).toBe(200)
+    const filteredBody = filtered.json() as {
+      facets: { uploadedYear: Array<{ value: string; count: number }> }
+    }
+    expect(filteredBody.facets.uploadedYear.every((y) => y.value === '2025')).toBe(true)
+    expect(filteredBody.facets.uploadedYear.some((y) => y.value === '2023')).toBe(false)
+  })
+
+  it('bulk private→public notifies followers once per track', async () => {
+    const artist = await prisma.user.findFirstOrThrow({
+      where: { email: `${PREFIX}artist@example.com` },
+      select: { id: true },
+    })
+    const follower = await createTestArtist(prisma, {
+      email: `${PREFIX}follower@example.com`,
+      username: `${PREFIX}follower`,
+    })
+    await prisma.artistFollow.create({
+      data: { artistUserId: artist.id, followerUserId: follower.id },
+    })
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { isPublic: false },
+    })
+    await prisma.notification.deleteMany({
+      where: { type: 'NEW_TRACK', url: `/t/${soundA}` },
+    })
+
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { isPublic: true } },
+    })
+    expect(first.statusCode).toBe(200)
+    expect(first.json()).toMatchObject({ updated: 1, failed: [] })
+
+    const notes = await prisma.notification.findMany({
+      where: { userId: follower.id, type: 'NEW_TRACK', url: `/t/${soundA}` },
+    })
+    expect(notes).toHaveLength(1)
+
+    await prisma.sound.update({
+      where: { id: soundA },
+      data: { isPublic: false },
+    })
+    const second = await app.inject({
+      method: 'POST',
+      url: '/api/me/sound/bulk-patch',
+      headers: { cookie },
+      payload: { ids: [soundA], patch: { isPublic: true } },
+    })
+    expect(second.statusCode).toBe(200)
+    expect(
+      await prisma.notification.count({
+        where: { userId: follower.id, type: 'NEW_TRACK', url: `/t/${soundA}` },
+      }),
+    ).toBe(1)
+  })
+
   it('refuses filter bulk-delete without confirmTotal / all', async () => {
     const missingConfirm = await app.inject({
       method: 'POST',
