@@ -11,7 +11,12 @@ export type EmbedCoverSource = {
 
 export type EmbedCoverOptions = {
   fetch?: typeof fetch
+  timeoutMs?: number
 }
+
+export const EMBED_COVER_LOOKUP_TIMEOUT_MS = 5_000
+export const EMBED_COVER_LOOKUP_CAP = 25
+export const EMBED_COVER_LOOKUP_BUDGET_MS = 20_000
 
 type MixcloudPictures = Partial<
   Record<'640wx640h' | 'extra_large' | 'large' | 'medium' | 'thumbnail', string>
@@ -131,7 +136,10 @@ export async function lookupEmbedProviderCover(
   row: EmbedCoverSource,
   options: EmbedCoverOptions = {},
 ): Promise<string | null> {
-  const doFetch = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
+  const baseFetch = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
+  const timeoutMs = options.timeoutMs ?? EMBED_COVER_LOOKUP_TIMEOUT_MS
+  const doFetch: typeof fetch = (input, init) =>
+    baseFetch(input, { ...init, signal: AbortSignal.timeout(timeoutMs) })
   try {
     if (bandcampPageUrl(row)) return await bandcampCover(row, doFetch)
     switch (row.embedProvider) {
@@ -147,4 +155,49 @@ export async function lookupEmbedProviderCover(
   } catch {
     return null
   }
+}
+
+export function hasEmbedProviderCoverLookup(row: EmbedCoverSource): boolean {
+  if (bandcampPageUrl(row)) return true
+  switch (row.embedProvider) {
+    case 'HEARTHIS':
+      return trimmed(row.embedSourceUrl) !== null
+    case 'MIXCLOUD':
+      return mixcloudCloudcastKey(row) !== null
+    case 'SPOTIFY':
+      return spotifyPageUrl(row) !== null
+    default:
+      return false
+  }
+}
+
+export type EmbedCoverBatchOptions = EmbedCoverOptions & {
+  cap?: number
+  budgetMs?: number
+  now?: () => number
+}
+
+/**
+ * Provider covers for up to `cap` rows, stopping early once `budgetMs` has
+ * passed, so one backfill request never hangs on slow providers. Rows past
+ * the cap or the budget are left for presets (or the next run).
+ */
+export async function resolveEmbedProviderCovers<T extends EmbedCoverSource & { id: string }>(
+  rows: T[],
+  options: EmbedCoverBatchOptions = {},
+): Promise<{ covers: Map<string, string>; looked: number; skipped: number }> {
+  const cap = options.cap ?? EMBED_COVER_LOOKUP_CAP
+  const budgetMs = options.budgetMs ?? EMBED_COVER_LOOKUP_BUDGET_MS
+  const now = options.now ?? Date.now
+  const deadline = now() + budgetMs
+  const covers = new Map<string, string>()
+  const candidates = rows.filter(hasEmbedProviderCoverLookup)
+  let looked = 0
+  for (const row of candidates) {
+    if (looked >= cap || now() >= deadline) break
+    looked += 1
+    const cover = await lookupEmbedProviderCover(row, options)
+    if (cover) covers.set(row.id, cover)
+  }
+  return { covers, looked, skipped: candidates.length - looked }
 }
