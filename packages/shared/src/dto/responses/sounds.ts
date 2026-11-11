@@ -18,6 +18,14 @@ export const SoundViewSchema = z
     sourceBitDepth: z.number().int().nullable().optional(),
     sourceChannels: z.number().int().nullable().optional(),
     downloadsEnabled: z.boolean().optional(),
+    bannerUrl: z.string().nullable().optional(),
+    /** Set for tracks imported as an embed (SPOTIFY, MIXCLOUD, HEARTHIS,
+     * MIKSERI, ...); the provider's widget plays them. */
+    embedProvider: z.string().nullable().optional(),
+    embedUri: z.string().nullable().optional(),
+    /** The provider page the embed was imported from (hearthis.at track page,
+     * ...). Null for older hearthis.at embeds that only kept the track id. */
+    embedSourceUrl: z.string().nullable().optional(),
   })
   .passthrough()
 
