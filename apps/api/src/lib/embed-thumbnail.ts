@@ -5,7 +5,7 @@ import {
   EMBED_COVER_LOOKUP_TIMEOUT_MS,
   lookupEmbedProviderCover,
   type EmbedCoverOptions,
-} from './embed-provider-cover.js'
+} from '@tahti/shared'
 
 const OEMBED_ENDPOINTS: Array<[RegExp, string]> = [
   [/^(www\.|m\.)?soundcloud\.com$/, 'https://soundcloud.com/oembed?format=json&url='],

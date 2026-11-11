@@ -67,6 +67,24 @@ describe('lookupEmbedProviderCover', () => {
     expect(fetchMock.mock.calls[0]![0]).toBe('https://api.mixcloud.com/dj/mix-one/')
   })
 
+  it('returns the hearthis.at retina artwork from the public API', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        artwork_url: 'https://img.hearthis.at/small.jpg',
+        artwork_url_retina: 'https://img.hearthis.at/retina.jpg',
+      }),
+    )
+    await expect(
+      lookupEmbedProviderCover(
+        row('HEARTHIS', '14624101', 'https://hearthis.at/candana-dj/credo'),
+        {
+          fetch: fetchMock,
+        },
+      ),
+    ).resolves.toBe('https://img.hearthis.at/retina.jpg')
+    expect(fetchMock.mock.calls[0]![0]).toBe('https://api-v2.hearthis.at/candana-dj/credo/')
+  })
+
   it('returns the Spotify oEmbed thumbnail', async () => {
     const fetchMock = vi
       .fn()

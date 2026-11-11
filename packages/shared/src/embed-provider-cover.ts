@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { createHearthisClient } from '@tahti/hearthis'
-
 export type EmbedCoverSource = {
   embedProvider: string | null
   embedUri: string | null
@@ -34,6 +32,13 @@ function parseUrl(value: string | null): URL | null {
   } catch {
     return null
   }
+}
+
+export function hearthisTrackPath(pageUrl: string): string | null {
+  const url = parseUrl(pageUrl)
+  if (!url || !/(^|\.)hearthis\.at$/i.test(url.hostname)) return null
+  const match = /^\/([^/]+)\/([^/]+)\/?$/.exec(url.pathname)
+  return match ? `/${match[1]}/${match[2]}/` : null
 }
 
 export function mixcloudCloudcastKey(row: EmbedCoverSource): string | null {
@@ -91,9 +96,13 @@ async function getJson<T>(doFetch: typeof fetch, url: string): Promise<T | null>
 async function hearthisCover(row: EmbedCoverSource, doFetch: typeof fetch) {
   const pageUrl = trimmed(row.embedSourceUrl)
   if (!pageUrl) return null
-  const client = createHearthisClient({ fetch: doFetch })
-  const track = await client.getTrackByUrl(pageUrl)
-  return track.artwork_url_retina ?? track.artwork_url ?? null
+  const path = hearthisTrackPath(pageUrl)
+  if (!path) return null
+  const track = await getJson<{ artwork_url?: string | null; artwork_url_retina?: string | null }>(
+    doFetch,
+    `https://api-v2.hearthis.at${path}`,
+  )
+  return trimmed(track?.artwork_url_retina) ?? trimmed(track?.artwork_url)
 }
 
 async function mixcloudCover(row: EmbedCoverSource, doFetch: typeof fetch) {

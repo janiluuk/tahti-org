@@ -13,6 +13,7 @@ import { processOpenThemePullRequestJob } from './jobs/open-theme-pull-request.j
 import { processSeparateStemsJob } from './jobs/separate-stems.js'
 import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processLiveShowRecurrenceJob } from './jobs/live-show-recurrence.js'
+import { processEmbedCoverBackfillJob } from './jobs/embed-cover-backfill.js'
 import { processMissedLiveShowScanJob } from './jobs/missed-live-show-scan.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
@@ -268,6 +269,7 @@ const worker = new Worker(
           'tor-exit-list-sync': () => processTorExitListSyncJob(job),
           'download-fraud-scan': () => processDownloadFraudScanJob(job),
           'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
+          'embed-cover-backfill': () => processEmbedCoverBackfillJob(),
         })
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)
