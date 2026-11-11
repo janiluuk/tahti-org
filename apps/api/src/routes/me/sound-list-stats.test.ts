@@ -64,4 +64,29 @@ describe('GET /api/me/sound — public totals per track', () => {
     })
     expect(item._count).toBeUndefined()
   })
+
+  it('lists the embed fields the web soft-fill needs', async () => {
+    await prisma.sound.update({
+      where: { id: soundId },
+      data: {
+        embedProvider: 'HEARTHIS',
+        embedUri: '14624101',
+        embedSourceUrl: 'https://hearthis.at/someone/some-track/',
+        bannerUrl: null,
+      },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/sound?limit=50',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const item = res.json().items.find((s: { id: string }) => s.id === soundId)
+    expect(item).toMatchObject({
+      embedProvider: 'HEARTHIS',
+      embedUri: '14624101',
+      embedSourceUrl: 'https://hearthis.at/someone/some-track/',
+      bannerUrl: null,
+    })
+  })
 })
