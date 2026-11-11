@@ -6,6 +6,10 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-11 — release track stems
+
+Owners and board admins can attach vocals, drums, bass and other stems to a release track (`ReleaseTrackStem`, cascade on track/release delete). Prepare/complete upload serves the source file as playable audio. Stems are included on the owner release, the published smart link, the public profile and the linked track, and hidden when playback of the parent track is gated. Folded `release-track-stems`.
+
 ## 2026-09-23 — booking→show series link (tahti-player god-module-restructure follow-up)
 
 Shipped in [#553](https://github.com/janiluuk/tahti-org/pull/553), the last
@@ -825,6 +829,7 @@ Down lists each silent slug with how long; critical when Tahti Radio or a curate
 channel is silent, otherwise degraded. Cached `LIVE_STREAMS_CHECK_CACHE_MS` (30 s); Prometheus
 gauge `tahti_live_streams_silent`. Follows the 2026-10-28 incident where six LIVE channels had
 no HLS output for ~8.5 h unnoticed. No leftovers.
+
 ### 2026-10-28 — Remove the legacy Next.js web app (`remove-next-web.md`)
 
 Deleted `apps/web` after confirming every public host serves the tahti-player SPA. Also removed
@@ -834,6 +839,7 @@ services, the app/wildcard/custom-domain Caddy blocks, turbo/vitest/Makefile/Doc
 `@tahti/addon-sdk`, `@tahti/api-client` and `/api/v1/custom-domain/resolve`. PR
 [#1030](https://github.com/janiluuk/tahti-org/pull/1030). Leftovers in `remaining-work.md`.
 Post-merge: confirm the deploy removed `tahti-stack-web-1`.
+
 ### 2026-10-28 — Orchestrator respawns LIVE channels lost across a restart (incident fix)
 
 After the 2026-10-28 deploy, Tahti Radio / Tahti Selects stayed LIVE over a 404 HLS for ~8.5 h. Boot reconcile now respawns Liquidsoap for LIVE channels with an open broadcast whose container is gone (rotation template if curated items, else channel; sidecars untouched). `spawnLiquidsoapContainer` always checks Docker, so a stale in-memory entry no longer makes `/spawn` a silent no-op. The STREAM-005 watchdog treats missing segments as stale after a 120 s grace instead of skipping. [#1028](https://github.com/janiluuk/tahti-org/pull/1028). Leftover: what removed the containers during the deploy is unknown.
@@ -854,7 +860,6 @@ OpenAPI spec typing responses only, like every other route. Later projects, not 
 server playout into the channel HLS output (instead of client-side playback), formats /
 pre-orders / physical goods, and a party-only chat slow mode (tracked in tahti-player
 `docs/todo/listening-party.md`).
-
 
 ### 2026-11-11 — Embed thumbnail proxy, event fields, public parties list
 

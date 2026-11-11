@@ -29,6 +29,7 @@ import {
 } from '@tahti/shared'
 import { notifyFollowersOfNewRelease } from '@tahti/db'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { serializeReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
 import { auditLog } from '../../lib/audit.js'
@@ -102,6 +103,18 @@ const meReleaseSelect = {
       credits: true,
       fingerprintMatch: true,
       soundId: true,
+      stems: {
+        orderBy: { role: 'asc' as const },
+        select: {
+          id: true,
+          role: true,
+          status: true,
+          durationSec: true,
+          sourceKey: true,
+          streamKey: true,
+          createdAt: true,
+        },
+      },
     },
   },
   _count: { select: { tracks: true } },
@@ -116,11 +129,12 @@ async function serializeMeRelease(r: MeReleaseRow, artistName: string) {
     artistName,
     artworkUrl,
     tracks: await Promise.all(
-      r.tracks.map(async ({ streamKey, sourceKey, ...track }) => {
+      r.tracks.map(async ({ streamKey, sourceKey, stems, ...track }) => {
         const key = streamKey ?? sourceKey
         return {
           ...track,
           audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+          stems: await Promise.all(stems.map((stem) => serializeReleaseTrackStem(stem))),
         }
       }),
     ),

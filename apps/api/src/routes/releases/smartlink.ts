@@ -15,6 +15,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { serializePublicReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { userName } from '../../lib/safe-names.js'
 
 function displayGenre(item: { genre: string | null; genreCustom: string | null }) {
@@ -75,6 +76,18 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
               credits: true,
               streamKey: true,
               sourceKey: true,
+              stems: {
+                where: { status: 'READY' },
+                orderBy: { role: 'asc' },
+                select: {
+                  id: true,
+                  role: true,
+                  status: true,
+                  durationSec: true,
+                  sourceKey: true,
+                  streamKey: true,
+                },
+              },
             },
           },
           user: {
@@ -190,14 +203,18 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           pLine: release.pLine,
           cLine: release.cLine,
           tracks: await Promise.all(
-            release.tracks.map(async ({ streamKey, sourceKey, soundId, ...track }) => {
+            release.tracks.map(async ({ streamKey, sourceKey, soundId, stems, ...track }) => {
               const key = streamKey ?? sourceKey
               const linked = soundId ? linkedById.get(soundId) : undefined
               if (!linked) {
+                const audioUrl = key ? await presignedGetUrl(key, 60 * 60) : null
                 return {
                   ...track,
                   soundId,
-                  audioUrl: key ? await presignedGetUrl(key, 60 * 60) : null,
+                  audioUrl,
+                  stems: await Promise.all(
+                    stems.map((stem) => serializePublicReleaseTrackStem(stem, true)),
+                  ),
                 }
               }
               const { url, gate } = await resolveGatedPlaybackUrl(fastify.prisma, {
@@ -208,6 +225,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 viewerUserId,
                 ttlSec: 60 * 60,
               })
+              const canPlay = !gate
               return {
                 ...track,
                 soundId,
@@ -220,6 +238,9 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 commentCount: linked._count.comments,
                 playCount: linked._count.listenEvents,
                 downloadCount: downloadsBySoundId.get(linked.id) ?? 0,
+                stems: await Promise.all(
+                  stems.map((stem) => serializePublicReleaseTrackStem(stem, canPlay)),
+                ),
               }
             }),
           ),

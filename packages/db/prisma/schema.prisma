@@ -3897,8 +3897,35 @@ model ReleaseTrack {
   r2SizeBytes      Int?
 
   versions ReleaseTrackVersion[]
+  stems    ReleaseTrackStem[]
 
   @@unique([releaseId, position])
+  @@schema("release")
+}
+
+enum ReleaseStemRole {
+  vocals
+  drums
+  bass
+  other
+
+  @@schema("release")
+}
+
+model ReleaseTrackStem {
+  id             String          @id @default(cuid())
+  releaseTrackId String
+  releaseTrack   ReleaseTrack    @relation(fields: [releaseTrackId], references: [id], onDelete: Cascade)
+  role           ReleaseStemRole
+  sourceKey      String
+  streamKey      String?
+  durationSec    Int?
+  status         TrackStatus     @default(PENDING)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([releaseTrackId, role])
+  @@index([releaseTrackId])
   @@schema("release")
 }
 

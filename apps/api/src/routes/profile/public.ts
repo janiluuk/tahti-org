@@ -17,6 +17,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { serializePublicReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
@@ -30,6 +31,7 @@ interface GatedTrack {
   accessMode?: 'FREE' | 'SUBSCRIBERS_ONLY' | 'PURCHASE'
   purchaseTierId?: string | null
   gate?: { reason: 'SUBSCRIBERS_ONLY' | 'PURCHASE'; tierId?: string } | null
+  stems?: Array<{ playUrl?: string | null; audioUrl?: string | null }>
 }
 
 // Playback gating is resolved here (per-request, per-viewer) rather than
@@ -65,6 +67,12 @@ async function applyPlaybackGates(
       if (!status.allowed) {
         track.playUrl = null
         track.gate = playbackGatePayload(status)
+        if (Array.isArray(track.stems)) {
+          for (const stem of track.stems) {
+            stem.playUrl = null
+            stem.audioUrl = null
+          }
+        }
       }
     }),
   )
@@ -222,11 +230,24 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           tracks: {
             orderBy: { position: 'asc' },
             select: {
+              id: true,
               position: true,
               title: true,
               durationSec: true,
               soundId: true,
               streamKey: true,
+              stems: {
+                where: { status: 'READY' },
+                orderBy: { role: 'asc' },
+                select: {
+                  id: true,
+                  role: true,
+                  status: true,
+                  durationSec: true,
+                  sourceKey: true,
+                  streamKey: true,
+                },
+              },
             },
           },
         },
@@ -400,7 +421,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
             playUrl = await presignedGetUrl(track.streamKey, 3600)
           }
           const access = track.soundId ? accessBySoundId.get(track.soundId) : null
+          const canPlay = true
           return {
+            id: track.id,
             position: track.position,
             title: track.title,
             durationSec: track.durationSec,
@@ -412,6 +435,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
               track.soundId && channelSlug
                 ? resolveChannelUrl(channelSlug, { hash: `sound-item-${track.soundId}` })
                 : null,
+            stems: await Promise.all(
+              track.stems.map((stem) => serializePublicReleaseTrackStem(stem, canPlay)),
+            ),
           }
         }),
       ),

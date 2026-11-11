@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify'
 import meReleaseRoutes from '../routes/releases/me.js'
 import releaseTrackRoutes from '../routes/releases/tracks.js'
 import releaseTrackVersionRoutes from '../routes/releases/track-versions.js'
+import releaseTrackStemRoutes from '../routes/releases/track-stems.js'
 import releaseTrackOrderRoutes from '../routes/releases/track-order.js'
 import releaseDeleteRoutes from '../routes/releases/delete.js'
 import releaseArtworkRoutes from '../routes/releases/artwork.js'
@@ -34,6 +35,7 @@ export async function registerReleaseRoutes(fastify: FastifyInstance): Promise<v
   await fastify.register(meReleaseRoutes)
   await fastify.register(releaseTrackRoutes)
   await fastify.register(releaseTrackVersionRoutes)
+  await fastify.register(releaseTrackStemRoutes)
   await fastify.register(releaseTrackOrderRoutes)
   await fastify.register(releaseDeleteRoutes)
   await fastify.register(releaseArtworkRoutes)

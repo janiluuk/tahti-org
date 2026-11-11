@@ -43,6 +43,10 @@ export const ReleaseTrackVersionParamsSchema = ReleaseIdTrackIdParamsSchema.exte
   versionId: IdParamSchema.shape.id,
 })
 
+export const ReleaseTrackStemParamsSchema = ReleaseIdTrackIdParamsSchema.extend({
+  stemId: IdParamSchema.shape.id,
+})
+
 export const SoundVersionParamsSchema = z.object({
   id: IdParamSchema.shape.id,
   versionId: IdParamSchema.shape.id,
