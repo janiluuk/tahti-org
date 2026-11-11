@@ -59,7 +59,7 @@ import {
   oldestFallbackItem,
 } from '../../lib/fallback-rotation.js'
 import { assignPresetCovers } from '../../lib/artwork-presets.js'
-import { lookupEmbedProviderCover } from '../../lib/embed-provider-cover.js'
+import { resolveEmbedProviderCovers } from '../../lib/embed-provider-cover.js'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
 
@@ -836,7 +836,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description:
-          'Fill missing banners: try the provider cover for hearthis.at, Mixcloud, Spotify and Bandcamp embeds (Mikseri has none), then assign an enabled artwork preset to anything still empty. Safe to re-run; sounds with a cover are skipped.',
+          'Fill missing banners: try the provider cover for hearthis.at, Mixcloud, Spotify and Bandcamp embeds (Mikseri has none; at most 25 lookups, 5 s each, 20 s in total), then assign an enabled artwork preset to anything still empty. Safe to re-run; sounds with a cover are skipped.',
         response: openApiResponse(SoundCoversBackfillResultSchema, 'SoundCoversBackfillResult'),
       },
     },
@@ -853,23 +853,22 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, embedProvider: true, embedUri: true, embedSourceUrl: true },
         take: SOUND_BULK_MAX_IDS,
       })
-      let fromProvider = 0
+      const { covers } = await resolveEmbedProviderCovers(missing)
       const stillMissing: string[] = []
       for (const row of missing) {
-        const cover = row.embedProvider ? await lookupEmbedProviderCover(row) : null
+        const cover = covers.get(row.id)
         if (cover) {
           await fastify.prisma.sound.update({
             where: { id: row.id },
             data: { bannerUrl: cover },
           })
-          fromProvider += 1
-          continue
+        } else {
+          stillMissing.push(row.id)
         }
-        stillMissing.push(row.id)
       }
       const fromPresets = await assignPresetCovers(fastify.prisma, 'sound', stillMissing)
       return reply.send({
-        assigned: fromProvider + fromPresets,
+        assigned: covers.size + fromPresets,
         totalMatched: missing.length,
       })
     },

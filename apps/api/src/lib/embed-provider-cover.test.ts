@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   bandcampPageUrl,
   lookupEmbedProviderCover,
+  resolveEmbedProviderCovers,
   mixcloudCloudcastKey,
   spotifyPageUrl,
 } from './embed-provider-cover.js'
@@ -115,5 +116,49 @@ describe('lookupEmbedProviderCover', () => {
         fetch: notFound,
       }),
     ).resolves.toBeNull()
+  })
+})
+
+describe('resolveEmbedProviderCovers', () => {
+  const spotify = (id: string) => ({
+    id,
+    ...row('SPOTIFY', 'spotify:track:4cOdK2wGLETKBW3PvgPWqT'),
+  })
+
+  it('stops after the lookup cap and skips rows with nothing to look up', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ thumbnail_url: 'https://i.scdn.co/image/abc' }))
+    const rows = [
+      { id: 'm', ...row('MIKSERI', 'https://www.mikseri.net/embed/?type=1&parameter=1') },
+      spotify('a'),
+      spotify('b'),
+      spotify('c'),
+    ]
+    const result = await resolveEmbedProviderCovers(rows, { fetch: fetchMock, cap: 2 })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect([...result.covers.keys()]).toEqual(['a', 'b'])
+    expect(result).toMatchObject({ looked: 2, skipped: 1 })
+  })
+
+  it('stops once the time budget is spent', async () => {
+    let clock = 0
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      clock += 600
+      return jsonResponse({ thumbnail_url: 'https://i.scdn.co/image/abc' })
+    })
+    const result = await resolveEmbedProviderCovers([spotify('a'), spotify('b'), spotify('c')], {
+      fetch: fetchMock,
+      budgetMs: 1_000,
+      now: () => clock,
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(result.skipped).toBe(1)
+  })
+
+  it('passes an abort signal to every provider request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}))
+    await resolveEmbedProviderCovers([spotify('a')], { fetch: fetchMock, timeoutMs: 50 })
+    expect(fetchMock.mock.calls[0]![1].signal).toBeInstanceOf(AbortSignal)
   })
 })
