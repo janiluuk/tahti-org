@@ -11,6 +11,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  ALL_WORKER_LANES,
   AdminWorkersResponseSchema,
   AdminWorkerDetailResponseSchema,
   openApiResponse,
@@ -58,6 +59,18 @@ function summaryFromHash(name: string, hash: Record<string, string>): WorkerSumm
   }
 }
 
+type LaneCoverage = z.infer<typeof AdminWorkersResponseSchema>['laneCoverage']
+
+export function laneCoverage(workers: Pick<WorkerSummary, 'lanes' | 'status'>[]): LaneCoverage {
+  const online = workers.filter((worker) => worker.status === 'online')
+  return ALL_WORKER_LANES.map((lane) => ({
+    lane,
+    onlineWorkers: online.filter(
+      (worker) => worker.lanes.includes(lane) || worker.lanes.includes('all'),
+    ).length,
+  }))
+}
+
 const adminWorkersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/admin/workers',
@@ -65,13 +78,14 @@ const adminWorkersRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        description: 'Board-only: configured worker nodes and their live status',
+        description:
+          'Board-only: configured worker nodes and their live status, plus online workers per lane',
         response: openApiResponse(AdminWorkersResponseSchema, 'AdminWorkersResponse'),
       },
     },
     async (_request, reply) => {
       const client = await getRedisClient()
-      if (!client) return reply.send({ workers: [] })
+      if (!client) return reply.send({ workers: [], laneCoverage: laneCoverage([]) })
 
       const names = await client.sMembers(KNOWN_SET_KEY)
       const workers = await Promise.all(
@@ -81,7 +95,7 @@ const adminWorkersRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       )
       workers.sort((a, b) => a.name.localeCompare(b.name))
-      return reply.send({ workers })
+      return reply.send({ workers, laneCoverage: laneCoverage(workers) })
     },
   )
 

@@ -23,6 +23,7 @@ One file per in-progress task. When a task ships, fold it into
 | open    | [tahti-local-onboarding.md](tahti-local-onboarding.md)                                 | New box tahti.local (192.168.2.107): move MinIO there (LAN remote-service pattern) + add it to the vimage6 monitoring dashboards                                        |
 | open    | [internet-radio-now-playing-yle-nelonen.md](internet-radio-now-playing-yle-nelonen.md) | 2 of 6 stations shipped; Yle needs an app-key, Nelonen Media needs its now-playing API found via browser network inspection                                             |
 | partial | [artist-site-chrome.md](artist-site-chrome.md)                                         | Channel `showSiteSidebar` / `showSiteBottomBar` / `showSiteHeader` (migration, owner PATCH/GET, public channel); left: deploy before the player's artist-site shell     |
+| partial | [worker-lane-handoff.md](worker-lane-handoff.md)                                       | Wrong-lane jobs handed back without spending attempts; stuck PENDING transcodes swept/retryable. Left: deploy, recover 67 stuck sounds, player lane warning             |
 | open    | [admin-cli-consolidation.md](admin-cli-consolidation.md)                               | Fold the operator scripts in `scripts/` into one `tahti-admin` CLI; `scripts/stack-env.sh` is the first piece                                                           |
 
 ## Roadmap & planning (broader than a single task)

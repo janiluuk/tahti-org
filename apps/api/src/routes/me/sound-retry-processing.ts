@@ -11,6 +11,8 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 
+export const STALE_PENDING_RETRY_AFTER_MS = 30 * 60 * 1000
+
 const meSoundRetryProcessingRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/me/sound/:id/retry-processing',
@@ -18,7 +20,8 @@ const meSoundRetryProcessingRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'Run processing again for a sound whose upload failed (status ERROR)',
+        description:
+          'Run processing again for a sound whose upload failed (status ERROR), or that has been PENDING for over 30 minutes',
         response: openApiResponse(SoundRetryProcessingSchema, 'SoundRetryProcessing'),
       },
     },
@@ -37,15 +40,20 @@ const meSoundRetryProcessingRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'This sound has no uploaded file to process' })
       }
 
-      // Conditional on ERROR so a double click or a second tab enqueues only one job.
+      // Conditional so a double click or a second tab enqueues only one job: the
+      // update bumps updatedAt, so a stale PENDING sound stops matching at once.
+      const staleBefore = new Date(Date.now() - STALE_PENDING_RETRY_AFTER_MS)
       const { count } = await fastify.prisma.sound.updateMany({
-        where: { id: item.id, status: 'ERROR' },
+        where: {
+          id: item.id,
+          OR: [{ status: 'ERROR' }, { status: 'PENDING', updatedAt: { lt: staleBefore } }],
+        },
         data: { status: 'PENDING', processingError: null },
       })
       if (count === 0) {
         return reply
           .status(409)
-          .send({ error: 'Only a sound that failed processing can be retried' })
+          .send({ error: 'Only a sound that failed or stalled in processing can be retried' })
       }
 
       await enqueueTranscode(item.id)
