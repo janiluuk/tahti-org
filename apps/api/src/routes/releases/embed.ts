@@ -20,7 +20,11 @@ import {
 } from '@tahti/shared'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { config } from '../../config.js'
-import { linkReachableCollectionWhere, publicCollectionSoundWhere } from '../collections/helpers.js'
+import {
+  linkReachableCollectionWhere,
+  publicCollectionSoundWhere,
+  sortCollectionItems,
+} from '../collections/helpers.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
@@ -236,16 +240,19 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           name: true,
           coverUrl: true,
           coverKey: true,
+          trackSortMode: true,
           user: { select: { username: true, displayName: true } },
           items: {
             where: { sound: publicCollectionSoundWhere },
             orderBy: { position: 'asc' },
             select: {
+              position: true,
               sound: {
                 select: {
                   id: true,
                   title: true,
                   durationSec: true,
+                  createdAt: true,
                   mp3Key: true,
                   flacKey: true,
                   embedProvider: true,
@@ -269,17 +276,20 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         // Only sound-item-backed entries have a single playable file (a release
         // is itself a multi-track grouping) — same limitation as the Manage panel
         // playlist-switch feature (apps/api/src/routes/internal/channel-fallback.ts).
-        tracks: collection.items
-          .filter((i) => i.sound)
-          .map((i) => ({
-            id: i.sound!.id,
-            title: i.sound!.title,
-            durationSec: i.sound!.durationSec,
-            hasStream: !!soundPlaybackKey(i.sound!),
-            embedProvider: i.sound!.embedProvider,
-            embedUri: i.sound!.embedUri,
-            peaks: (i.sound!.peaks as number[] | null) ?? null,
-          })),
+        tracks: sortCollectionItems(
+          collection.items.flatMap((item) =>
+            item.sound ? [{ position: item.position, sound: item.sound, release: null }] : [],
+          ),
+          collection.trackSortMode,
+        ).map((item) => ({
+          id: item.sound.id,
+          title: item.sound.title,
+          durationSec: item.sound.durationSec,
+          hasStream: !!soundPlaybackKey(item.sound),
+          embedProvider: item.sound.embedProvider,
+          embedUri: item.sound.embedUri,
+          peaks: (item.sound.peaks as number[] | null) ?? null,
+        })),
       })
     },
   )

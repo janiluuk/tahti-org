@@ -16,6 +16,19 @@ export const CreateArtistEmbedSchema = z.object({
 
 export type CreateArtistEmbedInput = z.infer<typeof CreateArtistEmbedSchema>
 
+export const UpdateArtistEmbedSchema = z.object({
+  thumbnailUrl: z
+    .string()
+    .trim()
+    .max(2048)
+    .url()
+    .refine((value) => value.startsWith('https://'), {
+      message: 'thumbnailUrl must be an https URL',
+    }),
+})
+
+export type UpdateArtistEmbedInput = z.infer<typeof UpdateArtistEmbedSchema>
+
 export const ArtistEmbedSchema = z.object({
   id: z.string(),
   provider: z.literal('soundcloud'),

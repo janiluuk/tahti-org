@@ -404,7 +404,10 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       title: col.name,
       description: col.description ?? `${col.name} by ${safeUser(col.user).displayName}`,
       link: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
-      items: collectionRssItems(col.items, col.user.username),
+      items: collectionRssItems(
+        sortCollectionItems(col.items, col.trackSortMode),
+        col.user.username,
+      ),
     })
 
     return reply.header('Content-Type', 'application/rss+xml; charset=utf-8').send(xml)

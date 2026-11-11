@@ -6,6 +6,7 @@ import {
   ArtistEmbedListSchema,
   ArtistEmbedSchema,
   CreateArtistEmbedSchema,
+  UpdateArtistEmbedSchema,
   IdParamSchema,
   openApiResponse,
   openApiResponses,
@@ -111,6 +112,40 @@ const meEmbedRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.status(201).send(serialize(embed))
+    },
+  )
+
+  // PATCH /api/me/embeds/:id — store a cover found after create (oEmbed miss)
+  fastify.patch(
+    '/api/me/embeds/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArtistEmbedSchema, 'ArtistEmbed'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = UpdateArtistEmbedSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+
+      const embed = await fastify.prisma.artistEmbed.findFirst({
+        where: { id: routeParams.id, userId: user.id },
+      })
+      if (!embed) return reply.status(404).send({ error: 'Embed not found' })
+
+      const updated = await fastify.prisma.artistEmbed.update({
+        where: { id: embed.id },
+        data: { thumbnailUrl: parsed.data.thumbnailUrl },
+      })
+      return reply.send(serialize(updated))
     },
   )
 

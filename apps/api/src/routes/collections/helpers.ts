@@ -193,15 +193,22 @@ type SortableItem = {
   release: { title: string; releaseDate: Date } | null
 }
 
-/** MANUAL keeps drag-reordered position; TIME/NAME are computed for display, not persisted. */
+/** MANUAL keeps drag-reordered position. TIME/NAME and the _DESC twins are
+ * computed for display, not written back onto position. */
 export function sortCollectionItems<T extends SortableItem>(items: T[], mode: string): T[] {
   const itemTitle = (i: T) => i.sound?.title ?? i.release?.title ?? ''
   const itemTime = (i: T) => i.sound?.createdAt ?? i.release?.releaseDate ?? new Date(0)
   if (mode === 'NAME') {
     return [...items].sort((a, b) => itemTitle(a).localeCompare(itemTitle(b)))
   }
+  if (mode === 'NAME_DESC') {
+    return [...items].sort((a, b) => itemTitle(b).localeCompare(itemTitle(a)))
+  }
   if (mode === 'TIME') {
     return [...items].sort((a, b) => itemTime(a).getTime() - itemTime(b).getTime())
+  }
+  if (mode === 'TIME_DESC') {
+    return [...items].sort((a, b) => itemTime(b).getTime() - itemTime(a).getTime())
   }
   return items
 }

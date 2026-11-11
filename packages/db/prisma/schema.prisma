@@ -829,7 +829,9 @@ enum CollectionStyle {
 enum CollectionTrackSortMode {
   MANUAL
   TIME
+  TIME_DESC
   NAME
+  NAME_DESC
 
   @@schema("media")
 }
