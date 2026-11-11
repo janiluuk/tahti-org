@@ -16,8 +16,15 @@ export const COLLECTION_STYLES = [
   'PLAYLIST',
 ] as const
 
-/** MANUAL respects drag-reordered position; TIME/NAME are computed at display time. */
-export const COLLECTION_TRACK_SORT_MODES = ['MANUAL', 'TIME', 'NAME'] as const
+/** MANUAL respects drag-reordered position. TIME/NAME and their _DESC
+ * twins are computed at display time (oldest/A–Z, newest/Z–A). */
+export const COLLECTION_TRACK_SORT_MODES = [
+  'MANUAL',
+  'TIME',
+  'TIME_DESC',
+  'NAME',
+  'NAME_DESC',
+] as const
 
 export const CreateCollectionSchema = z.object({
   name: z.string().trim().min(1, 'name is required').max(100),
