@@ -4,6 +4,7 @@
 import type { Job } from 'bullmq'
 import { Queue } from 'bullmq'
 import { prisma, Prisma } from '@tahti/db'
+import { clearFinishedJob } from '@tahti/shared'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 const BATCH_SIZE = 24
@@ -13,9 +14,8 @@ const connection = {
   port: parseInt(new URL(REDIS_URL).port || '6379', 10),
 }
 
-// See apps/api/src/lib/queue.ts — gives lane-filtered workers a chance to land
-// on the right worker instead of losing the job on first mismatch, and bounds
-// Redis growth for any job added here that doesn't set its own retention.
+// Same defaults as apps/api/src/lib/queue.ts; the retention bounds Redis growth
+// for any job added here that doesn't set its own.
 const defaultJobOptions = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
@@ -46,11 +46,13 @@ export async function processSweepEditorPeaksBackfillJob(_job: Job): Promise<{ e
   const queue = new Queue('media', { connection, defaultJobOptions })
   try {
     for (const item of items) {
+      const jobId = `backfill-editor-peaks-${item.id}`
+      await clearFinishedJob(queue, jobId)
       await queue.add(
         'backfill-editor-peaks',
         { itemId: item.id },
         {
-          jobId: `backfill-editor-peaks-${item.id}`,
+          jobId,
           removeOnComplete: true,
           removeOnFail: 50,
         },

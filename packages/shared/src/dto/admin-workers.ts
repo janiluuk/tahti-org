@@ -26,8 +26,15 @@ export const AdminWorkerJobEventSchema = z.object({
   errorMessage: z.string().optional(),
 })
 
+/** Online workers per lane; a worker registered without --queues ("all") counts for every lane. */
+export const AdminWorkerLaneCoverageSchema = z.object({
+  lane: z.string(),
+  onlineWorkers: z.number().int().nonnegative(),
+})
+
 export const AdminWorkersResponseSchema = z.object({
   workers: z.array(AdminWorkerSummarySchema),
+  laneCoverage: z.array(AdminWorkerLaneCoverageSchema),
 })
 
 export const AdminWorkerDetailResponseSchema = z.object({

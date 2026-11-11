@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
+import { laneCoverage } from './workers.js'
 import { prisma } from '@tahti/db'
 import {
   createTestArtist,
@@ -63,8 +64,12 @@ describe('GET /api/admin/workers', () => {
       headers: { cookie: boardCookie },
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { workers: unknown[] }
+    const body = res.json() as {
+      workers: unknown[]
+      laneCoverage: { lane: string; onlineWorkers: number }[]
+    }
     expect(Array.isArray(body.workers)).toBe(true)
+    expect(body.laneCoverage.map((row) => row.lane)).toContain('transcode')
   })
 
   it('404s for an unregistered worker name', async () => {
@@ -74,5 +79,22 @@ describe('GET /api/admin/workers', () => {
       headers: { cookie: boardCookie },
     })
     expect(res.statusCode).toBe(404)
+  })
+})
+
+describe('laneCoverage', () => {
+  it('counts online workers per lane, with an unfiltered worker covering every lane', () => {
+    const rows = laneCoverage([
+      { lanes: ['media', 'light', 'dist'], status: 'online' },
+      { lanes: ['transcode'], status: 'offline' },
+      { lanes: ['all'], status: 'online' },
+    ])
+    const byLane = Object.fromEntries(rows.map((row) => [row.lane, row.onlineWorkers]))
+    expect(byLane).toEqual({ transcode: 1, media: 2, dist: 2, light: 2, 'edge-log': 1 })
+  })
+
+  it('reports zero for a lane whose only worker is offline', () => {
+    const rows = laneCoverage([{ lanes: ['transcode'], status: 'offline' }])
+    expect(rows.find((row) => row.lane === 'transcode')?.onlineWorkers).toBe(0)
   })
 })

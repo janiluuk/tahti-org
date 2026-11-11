@@ -70,6 +70,7 @@ describe('WORKER_CRON_JOBS', () => {
       'sidecar-cleanup',
       'sound-fallback-cache-sync',
       'hls-live-prune',
+      'sweep-stuck-sound-transcodes',
     ])
   })
 

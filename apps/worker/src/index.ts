@@ -77,6 +77,9 @@ import {
   pruneStaleWorkers,
 } from './lib/worker-registry.js'
 import { JOB_RETENTION } from './lib/job-retention.js'
+import { handOffToOtherLane, isJobInLanes } from './lib/lane-handoff.js'
+import { markSoundTranscodeFailed } from './lib/sound-transcode-failed.js'
+import { processSweepStuckSoundTranscodesJob } from './jobs/sweep-stuck-sound-transcodes.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -112,11 +115,9 @@ const PRUNE_STALE_WORKERS_MS = 6 * 60 * 60 * 1000
 
 const worker = new Worker(
   'media',
-  async (job) => {
-    if (allowedJobNames.size > 0 && !allowedJobNames.has(job.name)) {
-      // Not our lane — throw so BullMQ retries (per the enqueuer's job options) until a
-      // worker whose --queues covers this job name picks it up instead.
-      throw new Error(`lane-mismatch: ${job.name} is not handled by this worker's --queues`)
+  async (job, token) => {
+    if (!isJobInLanes(allowedJobNames, job.name)) {
+      return await handOffToOtherLane(job, token)
     }
     return await runWithCronLog(job.name, async () => {
       if (job.name === 'transcode-sound') {
@@ -179,6 +180,7 @@ const worker = new Worker(
             'sidecar-cleanup': () => processSidecarCleanupJob(job),
             'sound-fallback-cache-sync': () => processSoundFallbackCacheSyncJob(prisma, job),
             'hls-live-prune': () => processHlsLivePruneJob(job),
+            'sweep-stuck-sound-transcodes': () => processSweepStuckSoundTranscodesJob(),
           },
           { parallel: true },
         )
@@ -299,6 +301,7 @@ const worker = new Worker(
 )
 
 worker.on('active', (job) => {
+  if (!isJobInLanes(allowedJobNames, job.name)) return
   void recordJobEvent(WORKER_NAME, {
     jobId: String(job.id),
     jobName: job.name,
@@ -326,6 +329,9 @@ worker.on('failed', (job, err) => {
       status: 'failed',
       at: Date.now(),
       errorMessage: err.message,
+    })
+    void markSoundTranscodeFailed(job, err).catch((markErr: unknown) => {
+      console.error(`[worker] could not mark sound for failed job ${job.id} as ERROR:`, markErr)
     })
   }
 })

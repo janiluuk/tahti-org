@@ -3,6 +3,7 @@
 
 import { Queue, QueueEvents } from 'bullmq'
 import type { EditList } from '@tahti/audio-edit'
+import { clearFinishedJob } from '@tahti/shared'
 import { config } from '../config.js'
 
 const connection = {
@@ -10,10 +11,9 @@ const connection = {
   port: parseInt(new URL(config.redisUrl).port || '6379', 10),
 }
 
-// Retries give lane-filtered workers (see apps/worker/src/index.ts's --queues
-// handling) a chance to land on a worker that actually handles this job name —
-// without a default, a job with no explicit `attempts` gets exactly 1 try and is
-// lost for good if the worker that first dequeues it isn't in the right lane.
+// Retries cover transient failures inside a job. Lane routing does not use
+// them: a worker hands a job outside its --queues back without spending an
+// attempt (apps/worker/src/lib/lane-handoff.ts).
 //
 // removeOnComplete/removeOnFail bound Redis growth — BullMQ otherwise keeps
 // every finished job (including its payload, e.g. EditList/sourceKey) forever.
@@ -39,11 +39,13 @@ export async function enqueueTranscode(itemId: string): Promise<void> {
 /** Compressed streaming copy for a lossless upload — see StreamingCopyStatus
  * on Sound. Runs after the item is already READY off its FLAC. */
 export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> {
+  const jobId = `encode-streaming-copy-${itemId}`
+  await clearFinishedJob(mediaQueue, jobId)
   await mediaQueue.add(
     'encode-streaming-copy',
     { itemId },
     {
-      jobId: `encode-streaming-copy-${itemId}`,
+      jobId,
       attempts: 3,
       backoff: { type: 'exponential', delay: 10_000 },
     },
@@ -75,11 +77,13 @@ export async function enqueueRenderSoundEdit(payload: RenderSoundEditJob): Promi
 }
 
 export async function enqueueBackfillEditorPeaks(itemId: string): Promise<void> {
+  const jobId = `backfill-editor-peaks-${itemId}`
+  await clearFinishedJob(mediaQueue, jobId)
   await mediaQueue.add(
     'backfill-editor-peaks',
     { itemId },
     {
-      jobId: `backfill-editor-peaks-${itemId}`,
+      jobId,
       removeOnComplete: true,
       removeOnFail: 50,
     },
@@ -182,8 +186,10 @@ export async function enqueueHearthisEmbedLocalization(payload: {
   soundId: string
   trackUrl: string
 }): Promise<void> {
+  const jobId = `hearthis-embed-localize-${payload.soundId}`
+  await clearFinishedJob(mediaQueue, jobId)
   await mediaQueue.add('hearthis-embed-localize', payload, {
-    jobId: `hearthis-embed-localize-${payload.soundId}`,
+    jobId,
     attempts: 3,
     backoff: { type: 'exponential', delay: 15_000 },
   })

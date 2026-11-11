@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
+import { clearFinishedJob } from '@tahti/shared'
 import { JOB_RETENTION } from './job-retention.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -11,8 +12,7 @@ const connection = {
   port: parseInt(new URL(REDIS_URL).port || '6379', 10),
 }
 
-// See apps/api/src/lib/queue.ts — same reasoning: gives lane-filtered workers a
-// chance to land on the right worker instead of losing the job on first mismatch.
+// Same defaults as apps/api/src/lib/queue.ts.
 const defaultJobOptions = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
@@ -81,12 +81,14 @@ export async function enqueueTranscodeSound(itemId: string): Promise<void> {
  * (the worker enqueues its own follow-up jobs without depending on apps/api). */
 export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> {
   const queue = new Queue('media', { connection, defaultJobOptions })
+  const jobId = `encode-streaming-copy-${itemId}`
   try {
+    await clearFinishedJob(queue, jobId)
     await queue.add(
       'encode-streaming-copy',
       { itemId },
       {
-        jobId: `encode-streaming-copy-${itemId}`,
+        jobId,
         attempts: 3,
         backoff: { type: 'exponential', delay: 10_000 },
       },
