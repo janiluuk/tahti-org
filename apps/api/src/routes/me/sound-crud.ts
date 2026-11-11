@@ -59,7 +59,7 @@ import {
   oldestFallbackItem,
 } from '../../lib/fallback-rotation.js'
 import { assignPresetCovers } from '../../lib/artwork-presets.js'
-import { resolveEmbedProviderCovers } from '../../lib/embed-provider-cover.js'
+import { resolveEmbedProviderCovers } from '@tahti/shared'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
 

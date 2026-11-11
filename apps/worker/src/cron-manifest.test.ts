@@ -80,6 +80,7 @@ describe('WORKER_CRON_JOBS', () => {
       'tor-exit-list-sync',
       'download-fraud-scan',
       'live-show-recurrence-generate',
+      'embed-cover-backfill',
     ])
   })
 })
