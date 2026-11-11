@@ -88,7 +88,12 @@ describe('POST /api/me/sound/covers/backfill with provider covers', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toMatchObject({ assigned: 3, totalMatched: 3 })
+    expect(res.json()).toMatchObject({
+      assigned: 3,
+      fromProvider: 2,
+      fromPresets: 1,
+      totalMatched: 3,
+    })
     const rows = await prisma.sound.findMany({
       where: { id: { in: [mixcloud, spotify, mikseri] } },
       select: { id: true, bannerUrl: true },

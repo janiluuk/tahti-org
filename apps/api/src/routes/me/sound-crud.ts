@@ -869,6 +869,8 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const fromPresets = await assignPresetCovers(fastify.prisma, 'sound', stillMissing)
       return reply.send({
         assigned: covers.size + fromPresets,
+        fromProvider: covers.size,
+        fromPresets,
         totalMatched: missing.length,
       })
     },

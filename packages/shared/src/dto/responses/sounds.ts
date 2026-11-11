@@ -112,6 +112,8 @@ export const SoundErrorMessageSchema = z.object({
 /** POST /api/me/sound/covers/backfill — assign preset covers to sounds with none. */
 export const SoundCoversBackfillResultSchema = z.object({
   assigned: z.number().int().nonnegative(),
+  fromProvider: z.number().int().nonnegative(),
+  fromPresets: z.number().int().nonnegative(),
   totalMatched: z.number().int().nonnegative(),
 })
 
