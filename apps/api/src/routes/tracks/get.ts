@@ -12,6 +12,7 @@ import {
 import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { serializePublicReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { trackArtistName, userName } from '../../lib/safe-names.js'
 import {
   shareKeyFromQuery,
@@ -146,7 +147,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
       const playbackKey = soundPlaybackKey({ mp3Key, flacKey })
       const viewerUserId = request.sessionUser?.id ?? null
 
-      const [playback, downloadCount] = await Promise.all([
+      const [playback, downloadCount, releaseTrack] = await Promise.all([
         resolveGatedPlaybackUrl(fastify.prisma, {
           playbackKey,
           artistUserId: channel.userId,
@@ -157,7 +158,32 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         fastify.prisma.download.count({
           where: { soundId: item.id, countedAt: { not: null } },
         }),
+        fastify.prisma.releaseTrack.findFirst({
+          where: {
+            soundId: id,
+            release: { state: 'PUBLISHED', userId: channel.userId },
+          },
+          select: {
+            stems: {
+              where: { status: 'READY' },
+              orderBy: { role: 'asc' },
+              select: {
+                id: true,
+                role: true,
+                status: true,
+                durationSec: true,
+                sourceKey: true,
+                streamKey: true,
+              },
+            },
+          },
+        }),
       ])
+
+      const canPlay = !playback.gate
+      const stems = await Promise.all(
+        (releaseTrack?.stems ?? []).map((stem) => serializePublicReleaseTrackStem(stem, canPlay)),
+      )
 
       return reply.send({
         ...serializeSound(rest),
@@ -183,6 +209,7 @@ const trackGetRoute: FastifyPluginAsync = async (fastify) => {
         purchaseTierPriceCents: purchaseTier?.priceCents ?? null,
         purchaseTierPriceOptional: purchaseTier?.priceOptional ?? false,
         gate: playback.gate,
+        stems,
       })
     },
   )
