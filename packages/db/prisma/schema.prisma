@@ -1176,15 +1176,27 @@ model ArtistEvent {
   imageUrl    String?
   startAt     DateTime
   endAt       DateTime?
-  status      ArtistEventStatus @default(PUBLISHED)
+  timezone    String?
+  venueId     String?
+  venue       Venue?                @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  visibility  ArtistEventVisibility @default(PUBLIC)
+  status      ArtistEventStatus     @default(PUBLISHED)
   publishedAt DateTime?
-  createdAt   DateTime          @default(now())
+  createdAt   DateTime              @default(now())
 
   participants ArtistEventParticipant[]
   socialPosts  SocialPost[]
 
   @@index([userId, startAt])
   @@index([status, startAt])
+  @@index([venueId])
+  @@schema("core")
+}
+
+enum ArtistEventVisibility {
+  PUBLIC
+  FANS
+
   @@schema("core")
 }
 
@@ -4012,6 +4024,7 @@ model Venue {
 
   broadcasts VenueBroadcast[]
   sounds     Sound[]
+  events     ArtistEvent[]
 
   @@index([createdBy])
   @@schema("venue")

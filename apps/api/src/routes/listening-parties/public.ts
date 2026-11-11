@@ -11,6 +11,8 @@ import {
   openApiRedirectResponse,
   openApiResponse,
   parseRouteParams,
+  PUBLIC_LISTENING_PARTIES_MAX,
+  PublicListeningPartiesQuerySchema,
   SlugParamSchema,
 } from '@tahti/shared'
 import { availableUserWhere } from '../../lib/listed-artist.js'
@@ -32,6 +34,52 @@ const PUBLIC_STREAM_TTL_SEC = 60 * 60
 const PRE_RELEASE_STREAM_SLACK_SEC = 120
 
 const publicListeningPartyRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/v1/listening-parties',
+    {
+      schema: {
+        tags: ['listening-parties'],
+        summary: 'Live and upcoming listening parties across channels',
+        description: `LIVE parties first, then SCHEDULED ones soonest first, at most ${PUBLIC_LISTENING_PARTIES_MAX}. Canceled parties and suspended hosts are left out.`,
+        response: openApiResponse(ListeningPartySummaryListSchema, 'ListeningPartySummaryList'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = PublicListeningPartiesQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { limit } = parsed.data
+      const now = new Date()
+      const where = {
+        canceledAt: null,
+        host: availableUserWhere,
+        channel: { user: availableUserWhere },
+      }
+      const [started, upcoming] = await Promise.all([
+        fastify.prisma.listeningParty.findMany({
+          where: {
+            ...where,
+            startAt: { gte: new Date(now.getTime() - PARTY_LOOKBACK_MS), lte: now },
+          },
+          orderBy: { startAt: 'desc' },
+          take: 200,
+          select: listeningPartySelect,
+        }),
+        fastify.prisma.listeningParty.findMany({
+          where: { ...where, startAt: { gt: now } },
+          orderBy: { startAt: 'asc' },
+          take: limit,
+          select: listeningPartySelect,
+        }),
+      ])
+      const live = started.filter((p) => partyTimeline(p, now).state === 'LIVE').reverse()
+      const parties = [...live, ...upcoming].slice(0, limit)
+      const items = await Promise.all(parties.map((p) => buildListeningPartySummary(p, now)))
+      return reply.header('Cache-Control', 'public, max-age=30').send({ items })
+    },
+  )
+
   fastify.get(
     '/api/v1/listening-parties/:id',
     {

@@ -21,6 +21,7 @@ import {
   serializeArtistEvent,
 } from '../../lib/artist-event.js'
 import { queueEventSocialPosts } from '../../lib/event-social-post.js'
+import { UNKNOWN_VENUE_BODY, canAttachVenue } from '../../lib/sound-venue.js'
 import { requireAuth } from '../../plugins/auth.js'
 
 async function notifyNewEvent(
@@ -95,6 +96,9 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
       }
       const body = parsed.data
+      if (body.venueId && !(await canAttachVenue(fastify.prisma, body.venueId, user.id))) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
 
       const published = body.status === 'PUBLISHED'
       const event = await fastify.prisma.artistEvent.create({
@@ -109,13 +113,16 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           imageUrl: body.imageUrl || null,
           startAt: new Date(body.startAt),
           endAt: body.endAt ? new Date(body.endAt) : null,
+          timezone: body.timezone || null,
+          venueId: body.venueId || null,
+          visibility: body.visibility,
           status: body.status,
           publishedAt: published ? new Date() : null,
         },
         include: participantInclude,
       })
 
-      if (published) {
+      if (published && event.visibility === 'PUBLIC') {
         await notifyNewEvent(fastify, user, event)
         await shareEvent(user.id, event, body.shareTo)
       }
@@ -149,9 +156,15 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
 
       const event = await fastify.prisma.artistEvent.findFirst({
         where: { id: routeParams.id, userId: user.id },
-        select: { id: true, startAt: true, endAt: true },
+        select: { id: true, startAt: true, endAt: true, venueId: true },
       })
       if (!event) return reply.status(404).send({ error: 'Event not found' })
+      if (
+        body.venueId &&
+        !(await canAttachVenue(fastify.prisma, body.venueId, user.id, event.venueId))
+      ) {
+        return reply.status(400).send(UNKNOWN_VENUE_BODY)
+      }
       const nextStart = body.startAt ? new Date(body.startAt) : event.startAt
       const nextEnd =
         body.endAt === undefined ? event.endAt : body.endAt ? new Date(body.endAt) : null
@@ -171,6 +184,9 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
           imageUrl: body.imageUrl === undefined ? undefined : body.imageUrl || null,
           startAt: body.startAt === undefined ? undefined : new Date(body.startAt),
           endAt: body.endAt === undefined ? undefined : body.endAt ? new Date(body.endAt) : null,
+          timezone: body.timezone === undefined ? undefined : body.timezone || null,
+          venueId: body.venueId === undefined ? undefined : body.venueId || null,
+          visibility: body.visibility,
         },
         include: participantInclude,
       })
@@ -212,11 +228,13 @@ const meEventRoutes: FastifyPluginAsync = async (fastify) => {
         include: participantInclude,
       })
       if (!event.publishedAt) {
-        await notifyNewEvent(fastify, user, updated)
         await notifyTaggedParticipants(fastify.prisma, user, updated).catch((err: unknown) =>
           fastify.log.warn({ err }, 'event tag notification failed'),
         )
-        await shareEvent(user.id, updated, publishBody.data.shareTo)
+        if (updated.visibility === 'PUBLIC') {
+          await notifyNewEvent(fastify, user, updated)
+          await shareEvent(user.id, updated, publishBody.data.shareTo)
+        }
       }
       return reply.send(serialize(updated))
     },

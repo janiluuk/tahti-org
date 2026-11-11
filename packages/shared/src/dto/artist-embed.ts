@@ -42,3 +42,18 @@ export const ArtistEmbedSchema = z.object({
 export type ArtistEmbedView = z.infer<typeof ArtistEmbedSchema>
 
 export const ArtistEmbedListSchema = z.array(ArtistEmbedSchema)
+
+export const EmbedThumbnailQuerySchema = z.object({
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .url()
+    .refine((value) => value.startsWith('https://'), { message: 'url must be an https URL' }),
+})
+
+export const EmbedThumbnailSchema = z.object({
+  thumbnailUrl: z.string().nullable(),
+})
+
+export type EmbedThumbnailView = z.infer<typeof EmbedThumbnailSchema>

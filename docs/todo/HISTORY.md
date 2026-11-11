@@ -855,3 +855,23 @@ server playout into the channel HLS output (instead of client-side playback), fo
 pre-orders / physical goods, and a party-only chat slow mode (tracked in tahti-player
 `docs/todo/listening-party.md`).
 
+
+### 2026-11-11 — Embed thumbnail proxy, event fields, public parties list
+
+New API shapes the web client asked for (tahti-player `embed-covers-hardening.md`,
+`event-calendar.md`, `listening-parties-discover.md`):
+
+- `GET /api/v1/embeds/thumbnail?url=` → `{ thumbnailUrl }`. Public; SoundCloud and YouTube
+  oEmbed, hearthis.at / Mixcloud / Spotify / Bandcamp through the existing provider-cover
+  lookups. https pages on those hosts only (400 otherwise), 6 h in-process cache, own
+  rate-limit tier (120/min per IP). Replaces the client's direct noembed.com calls.
+- Events: `timezone` (IANA, nullable), `venueId` in / `venue { id, slug, name, city }` out
+  (same pick rule as a sound's venue), `visibility` `PUBLIC | FANS`. FANS events show only to
+  the host, accepted tags and active fan subscribers; never in `.ics` feeds; publishing one
+  skips follower notifications and Mastodon/Bluesky posts. Migration
+  `20261111150000_artist_event_timezone_venue_visibility`.
+- `GET /api/v1/listening-parties?limit=` (1–50, default 20) → `{ items }` with the channel
+  list's summary shape: LIVE first, then SCHEDULED soonest first, no canceled parties or
+  suspended hosts.
+- Admin sound list: contract test that `embedProvider` / `embedUri` / `embedSourceUrl` come
+  back (they already did since #1096).

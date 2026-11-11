@@ -98,6 +98,21 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
+    if (request.url.startsWith('/api/v1/embeds/thumbnail') && request.method === 'GET') {
+      const limit = { max: 120, windowSec: 60, keyPrefix: 'embed-thumbnail' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply
+          .status(429)
+          .send({ error: 'Too many thumbnail lookups', retryAfterSec: resetSec })
+      }
+      return
+    }
+
     if (request.url === '/api/newsletter/subscribe' && request.method === 'POST') {
       const limit = { max: 1, windowSec: 86400, keyPrefix: 'newsletter-subscribe' }
       const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>

@@ -14,6 +14,7 @@ import {
   UsernameParamSchema,
 } from '@tahti/shared'
 import {
+  eventVisibilityWhere,
   participantInclude,
   PUBLIC_EVENT_STATUSES,
   serializeArtistEvent,
@@ -126,7 +127,7 @@ const eventCalendarRoutes: FastifyPluginAsync = async (fastify) => {
           startAt: { gte: new Date(from), lt: new Date(to) },
           status: { in: [...PUBLIC_EVENT_STATUSES] },
           user: availableUserWhere,
-          ...artistWhere,
+          AND: [artistWhere, eventVisibilityWhere(request.sessionUser?.id)],
         },
         orderBy: { startAt: 'asc' },
         take: 500,
@@ -154,6 +155,7 @@ const eventCalendarRoutes: FastifyPluginAsync = async (fastify) => {
           id: routeParams.id,
           status: { in: [...PUBLIC_EVENT_STATUSES] },
           user: availableUserWhere,
+          ...eventVisibilityWhere(request.sessionUser?.id),
         },
         include: hostInclude,
       })
@@ -172,6 +174,7 @@ const eventCalendarRoutes: FastifyPluginAsync = async (fastify) => {
         where: {
           startAt: { gte: now, lt: new Date(now.getTime() + FEED_DAYS * 86_400_000) },
           status: 'PUBLISHED',
+          visibility: 'PUBLIC',
           user: availableUserWhere,
         },
         orderBy: { startAt: 'asc' },
@@ -209,6 +212,7 @@ const eventCalendarRoutes: FastifyPluginAsync = async (fastify) => {
           ],
           startAt: { gte: new Date(now.getTime() - 30 * 86_400_000) },
           status: { in: [...PUBLIC_EVENT_STATUSES] },
+          visibility: 'PUBLIC',
           user: availableUserWhere,
         },
         orderBy: { startAt: 'asc' },

@@ -11,6 +11,17 @@ const httpUrl = (field: string) =>
     .optional()
     .refine((v) => !v || /^https?:\/\//i.test(v), { message: `${field} must be an http(s) URL` })
 
+export function isIanaTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value })
+    return true
+  } catch {
+    return false
+  }
+}
+
+export const ArtistEventVisibilitySchema = z.enum(['PUBLIC', 'FANS'])
+
 const ArtistEventFieldsSchema = z.object({
   title: z.string().trim().min(1, 'title is required').max(160),
   description: z
@@ -26,6 +37,15 @@ const ArtistEventFieldsSchema = z.object({
   imageUrl: httpUrl('imageUrl'),
   startAt: z.string().datetime(),
   endAt: z.string().datetime().nullable().optional(),
+  timezone: z
+    .string()
+    .trim()
+    .max(64)
+    .refine(isIanaTimeZone, { message: 'timezone must be an IANA time zone' })
+    .nullable()
+    .optional(),
+  venueId: z.string().trim().min(1).max(64).nullable().optional(),
+  visibility: ArtistEventVisibilitySchema.optional(),
 })
 
 const endsAfterStart = (body: { startAt?: string; endAt?: string | null }) =>
@@ -90,6 +110,11 @@ export const ArtistEventSchema = z.object({
   imageUrl: z.string().nullable(),
   startAt: z.string().datetime(),
   endAt: z.string().datetime().nullable(),
+  timezone: z.string().nullable(),
+  venue: z
+    .object({ id: z.string(), slug: z.string(), name: z.string(), city: z.string() })
+    .nullable(),
+  visibility: ArtistEventVisibilitySchema,
   status: ArtistEventStatusSchema,
   publishedAt: z.string().datetime().nullable(),
   participants: z.array(ArtistEventParticipantSchema),
