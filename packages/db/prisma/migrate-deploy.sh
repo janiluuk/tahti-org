@@ -9,7 +9,7 @@
 # exits non-zero when the migration is applied or absent, which is fine.
 set -e
 
-RECOVERED_MIGRATIONS="20261105180000_channel_site_chrome"
+RECOVERED_MIGRATIONS="20261105180000_channel_site_chrome 20261110140000_sound_admin_delete_audit"
 
 for name in $RECOVERED_MIGRATIONS; do
   prisma migrate resolve --rolled-back "$name" >/dev/null 2>&1 || true
