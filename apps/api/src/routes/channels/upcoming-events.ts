@@ -2,7 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { participantInclude, serializeArtistEvent } from '../../lib/artist-event.js'
+import {
+  eventVisibilityWhere,
+  participantInclude,
+  serializeArtistEvent,
+} from '../../lib/artist-event.js'
 import {
   UpcomingEventListSchema,
   UpcomingEventsQuerySchema,
@@ -28,7 +32,12 @@ const upcomingEventsRoute: FastifyPluginAsync = async (fastify) => {
       if (!parsed.success) return reply.status(400).send({ error: 'Invalid query' })
 
       const events = await fastify.prisma.artistEvent.findMany({
-        where: { startAt: { gte: new Date() }, status: 'PUBLISHED', user: availableUserWhere },
+        where: {
+          startAt: { gte: new Date() },
+          status: 'PUBLISHED',
+          user: availableUserWhere,
+          ...eventVisibilityWhere(request.sessionUser?.id),
+        },
         orderBy: { startAt: 'asc' },
         take: parsed.data.limit,
         include: {

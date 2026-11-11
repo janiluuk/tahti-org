@@ -33,6 +33,7 @@ import meRestrictionsRoutes from '../routes/me/restrictions.js'
 import meEmbedRoutes from '../routes/me/embeds.js'
 import meRssFeedRoutes from '../routes/me/rss-feed.js'
 import channelEmbedsRoute from '../routes/channels/embeds.js'
+import embedThumbnailRoutes from '../routes/embeds/thumbnail.js'
 
 export async function registerCommunityRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(newsletterPublicRoutes)
@@ -66,4 +67,5 @@ export async function registerCommunityRoutes(fastify: FastifyInstance): Promise
   await fastify.register(meEmbedRoutes)
   await fastify.register(meRssFeedRoutes)
   await fastify.register(channelEmbedsRoute)
+  await fastify.register(embedThumbnailRoutes)
 }

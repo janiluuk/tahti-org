@@ -14,6 +14,9 @@ export type ArtistEventRow = {
   imageUrl: string | null
   startAt: Date
   endAt: Date | null
+  timezone: string | null
+  visibility: 'PUBLIC' | 'FANS'
+  venue?: { id: string; slug: string; name: string; city: string } | null
   status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED'
   publishedAt: Date | null
 }
@@ -31,6 +34,7 @@ export type ArtistEventParticipantRow = {
 
 // What every event read selects for its participants.
 export const participantInclude = {
+  venue: { select: { id: true, slug: true, name: true, city: true } },
   participants: {
     orderBy: { createdAt: 'asc' as const },
     select: {
@@ -73,6 +77,9 @@ export function serializeArtistEvent(
     imageUrl: event.imageUrl,
     startAt: event.startAt.toISOString(),
     endAt: event.endAt ? event.endAt.toISOString() : null,
+    timezone: event.timezone,
+    venue: event.venue ?? null,
+    visibility: event.visibility,
     status: event.status,
     publishedAt: event.publishedAt ? event.publishedAt.toISOString() : null,
     participants,
@@ -82,6 +89,35 @@ export function serializeArtistEvent(
 // Events listeners may see: published ones, and cancelled ones so a
 // cancellation stays visible instead of the event silently disappearing.
 export const PUBLIC_EVENT_STATUSES = ['PUBLISHED', 'CANCELLED'] as const
+
+const FAN_SUB_CANCEL_GRACE_MS = 7 * 24 * 60 * 60 * 1000
+
+export function eventVisibilityWhere(viewerId: string | null | undefined, now = new Date()) {
+  if (!viewerId) return { visibility: 'PUBLIC' as const }
+  return {
+    OR: [
+      { visibility: 'PUBLIC' as const },
+      { userId: viewerId },
+      { participants: { some: { userId: viewerId, status: 'ACCEPTED' as const } } },
+      {
+        user: {
+          fanSubsAsArtist: {
+            some: {
+              subscriberUserId: viewerId,
+              OR: [
+                { state: 'ACTIVE' as const, currentPeriodEnd: { gt: now } },
+                {
+                  state: 'CANCELED' as const,
+                  currentPeriodEnd: { gt: new Date(now.getTime() - FAN_SUB_CANCEL_GRACE_MS) },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  }
+}
 
 type TagNotifierPrisma = {
   artistEventParticipant: {

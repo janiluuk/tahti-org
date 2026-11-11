@@ -83,6 +83,38 @@ describe("admin sound edit — board access to any channel's tracks", () => {
     expect(body.items.some((i) => i.id === soundId)).toBe(true)
   })
 
+  it('returns the embed provider, uri and page URL on the paged list', async () => {
+    await prisma.sound.update({
+      where: { id: soundId },
+      data: {
+        embedProvider: 'MIXCLOUD',
+        embedUri: '/dj/admin-mix/',
+        embedSourceUrl: 'https://www.mixcloud.com/dj/admin-mix/',
+      },
+    })
+    try {
+      const list = await app.inject({
+        method: 'GET',
+        url: `/api/admin/channels/${channelSlug}/sound?limit=10&q=Original`,
+        headers: { cookie: boardCookie },
+      })
+      expect(list.statusCode).toBe(200)
+      const row = (list.json().items as Array<Record<string, unknown>>).find(
+        (i) => i.id === soundId,
+      )
+      expect(row).toMatchObject({
+        embedProvider: 'MIXCLOUD',
+        embedUri: '/dj/admin-mix/',
+        embedSourceUrl: 'https://www.mixcloud.com/dj/admin-mix/',
+      })
+    } finally {
+      await prisma.sound.update({
+        where: { id: soundId },
+        data: { embedProvider: null, embedUri: null, embedSourceUrl: null },
+      })
+    }
+  })
+
   it('deletes a sound for a board member and writes an audit row', async () => {
     const doomed = await createReadySound(
       prisma,

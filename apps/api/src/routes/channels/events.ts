@@ -9,6 +9,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import {
+  eventVisibilityWhere,
   participantInclude,
   PUBLIC_EVENT_STATUSES,
   serializeArtistEvent,
@@ -38,9 +39,14 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
 
       const events = await fastify.prisma.artistEvent.findMany({
         where: {
-          OR: [
-            { userId: channel.userId },
-            { participants: { some: { userId: channel.userId, status: 'ACCEPTED' } } },
+          AND: [
+            {
+              OR: [
+                { userId: channel.userId },
+                { participants: { some: { userId: channel.userId, status: 'ACCEPTED' } } },
+              ],
+            },
+            eventVisibilityWhere(request.sessionUser?.id),
           ],
           startAt: { gte: new Date() },
           status: { in: [...PUBLIC_EVENT_STATUSES] },

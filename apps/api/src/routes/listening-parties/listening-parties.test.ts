@@ -491,4 +491,53 @@ describe('listening parties', () => {
       expect(res.statusCode).toBe(404)
     })
   })
+
+  describe('GET /api/v1/listening-parties', () => {
+    const ours = (items: { id: string }[], ids: string[]) =>
+      items.map((i) => i.id).filter((id) => ids.includes(id))
+
+    it('lists live then scheduled parties across channels, without canceled ones', async () => {
+      const hostRelease = await createRelease(host.id)
+      const otherRelease = await createRelease(other.id)
+      const live = await insertParty(host, hostRelease.id, new Date(Date.now() - 10_000))
+      const otherSooner = await insertParty(other, otherRelease.id, new Date(Date.now() + HOUR))
+      const later = await insertParty(host, hostRelease.id, new Date(Date.now() + 5 * HOUR))
+      const ended = await insertParty(host, hostRelease.id, new Date(Date.now() - 3 * HOUR))
+      const canceled = await insertParty(
+        other,
+        otherRelease.id,
+        new Date(Date.now() + 2 * HOUR),
+        new Date(),
+      )
+
+      const res = await app.inject({ method: 'GET', url: '/api/v1/listening-parties' })
+      expect(res.statusCode).toBe(200)
+      const items = res.json().items as { id: string; state: string; channel: { slug: string } }[]
+      expect(ours(items, [live.id, otherSooner.id, later.id, ended.id, canceled.id])).toEqual([
+        live.id,
+        otherSooner.id,
+        later.id,
+      ])
+      expect(items.find((i) => i.id === live.id)?.state).toBe('LIVE')
+      expect(items.find((i) => i.id === otherSooner.id)?.channel.slug).toBe(other.channel!.slug)
+    })
+
+    it('hides suspended hosts and honours limit', async () => {
+      const otherRelease = await createRelease(other.id)
+      const hidden = await insertParty(other, otherRelease.id, new Date(Date.now() + HOUR))
+      await prisma.user.update({ where: { id: other.id }, data: { suspendedAt: new Date() } })
+      try {
+        const res = await app.inject({ method: 'GET', url: '/api/v1/listening-parties' })
+        expect(ours(res.json().items, [hidden.id])).toEqual([])
+      } finally {
+        await prisma.user.update({ where: { id: other.id }, data: { suspendedAt: null } })
+      }
+
+      const limited = await app.inject({ method: 'GET', url: '/api/v1/listening-parties?limit=1' })
+      expect(limited.statusCode).toBe(200)
+      expect(limited.json().items.length).toBeLessThanOrEqual(1)
+      const bad = await app.inject({ method: 'GET', url: '/api/v1/listening-parties?limit=500' })
+      expect(bad.statusCode).toBe(400)
+    })
+  })
 })

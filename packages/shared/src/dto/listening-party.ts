@@ -15,6 +15,12 @@ export const LISTENING_PARTY_MAX_LEAD_MS = 365 * 24 * 60 * 60 * 1000
 /** Upcoming parties listed on a channel page. */
 export const CHANNEL_LISTENING_PARTIES_LIMIT = 10
 
+export const PUBLIC_LISTENING_PARTIES_MAX = 50
+
+export const PublicListeningPartiesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(PUBLIC_LISTENING_PARTIES_MAX).default(20),
+})
+
 const HostNoteSchema = z.string().trim().max(LISTENING_PARTY_HOST_NOTE_MAX)
 
 export const CreateListeningPartyBodySchema = z.object({
