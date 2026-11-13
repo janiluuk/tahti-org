@@ -34,6 +34,8 @@ describe('artist followers/following list routes', () => {
       username: `${PREFIX}follower`,
       tier: 'ARTIST',
     })
+    // Following lists are off by default; turn on for the public /following cases.
+    await prisma.user.update({ where: { id: follower.id }, data: { showFollowing: true } })
     followerCookie = await sessionCookieFor(prisma, follower.id)
 
     await prisma.artistFollow.create({
@@ -176,6 +178,7 @@ describe('artist followers/following list routes', () => {
       })
       hostId = host.id
       hostUsername = host.username
+      await prisma.user.update({ where: { id: hostId }, data: { showFollowing: true } })
       const emailNamed = await createTestArtist(prisma, {
         email: `${PREFIX}emailnamed@example.com`,
         username: `${PREFIX}emailnamed`,
