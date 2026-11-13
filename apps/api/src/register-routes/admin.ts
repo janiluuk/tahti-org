@@ -41,6 +41,7 @@ import adminFeatureRequestRoutes from '../routes/admin/feature-requests.js'
 import adminAuditRoutes from '../routes/admin/audit.js'
 import adminLogsRoutes from '../routes/admin/logs.js'
 import adminWorkersRoutes from '../routes/admin/workers.js'
+import adminQueueJobsRoutes from '../routes/admin/queue-jobs.js'
 import adminVenueRoutes from '../routes/admin/venues.js'
 import adminBetaRoutes from '../routes/admin/beta.js'
 import adminIntegrationsRoutes from '../routes/admin/integrations.js'
@@ -91,6 +92,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminAuditRoutes)
   await fastify.register(adminLogsRoutes)
   await fastify.register(adminWorkersRoutes)
+  await fastify.register(adminQueueJobsRoutes)
   await fastify.register(adminVenueRoutes)
   await fastify.register(adminBetaRoutes)
   await fastify.register(adminIntegrationsRoutes)

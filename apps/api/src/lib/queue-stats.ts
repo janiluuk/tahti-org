@@ -4,6 +4,7 @@
 import { mediaQueue } from './queue.js'
 
 const TRACKED_JOB_NAMES = [
+  'transcode-sound',
   'newsletter-dispatch',
   'transcode-release-track',
   'mixcloud-upload',
