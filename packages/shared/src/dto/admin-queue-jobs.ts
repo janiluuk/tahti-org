@@ -43,3 +43,41 @@ export const AdminQueueJobListResponseSchema = z.object({
 })
 
 export type AdminQueueJobListResponse = z.infer<typeof AdminQueueJobListResponseSchema>
+
+export const AdminQueueJobIdParamSchema = z.object({
+  id: z.string().min(1).max(128),
+})
+
+export const AdminQueueOkSchema = z.object({
+  ok: z.literal(true),
+})
+
+export const AdminQueuePausedSchema = z.object({
+  paused: z.boolean(),
+})
+
+export const AdminStuckPendingSoundSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.enum(['PENDING', 'PROCESSING']),
+  updatedAt: z.string().datetime(),
+  ownerUsername: z.string().nullable(),
+  rawKey: z.string().nullable(),
+})
+
+export const AdminStuckPendingListResponseSchema = z.object({
+  total: z.number().int().nonnegative(),
+  sounds: z.array(AdminStuckPendingSoundSchema),
+})
+
+export type AdminStuckPendingListResponse = z.infer<typeof AdminStuckPendingListResponseSchema>
+
+export const AdminStuckPendingRequeueBodySchema = z.object({
+  soundId: z.string().min(1).max(64).optional(),
+  all: z.boolean().optional(),
+})
+
+export const AdminStuckPendingRequeueResponseSchema = z.object({
+  enqueued: z.number().int().nonnegative(),
+  ids: z.array(z.string()),
+})
