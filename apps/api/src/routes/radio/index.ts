@@ -159,6 +159,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
               status: true,
               mp3Key: true,
               flacKey: true,
+              peaks: true,
               accessMode: true,
               purchaseTierId: true,
               channel: {
@@ -195,6 +196,11 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             playedAt: row.playedAt.toISOString(),
             soundId: replayable ? sound.id : null,
             audioUrl: url,
+            peaks: replayable
+              ? Array.isArray(sound.peaks)
+                ? (sound.peaks as number[])
+                : null
+              : null,
           }
         }),
       )

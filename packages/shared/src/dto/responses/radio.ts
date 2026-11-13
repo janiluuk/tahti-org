@@ -41,6 +41,8 @@ export const RadioRecentlyPlayedItemSchema = z.object({
   /** Replay link, only when the listener may play the track (access gates
    * apply, same as the track page). */
   audioUrl: z.string().nullable(),
+  /** Stored waveform peaks (0..255), when the sound is still replayable. */
+  peaks: z.array(z.number()).nullable().optional(),
 })
 
 export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)

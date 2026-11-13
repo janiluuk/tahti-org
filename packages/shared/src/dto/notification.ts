@@ -154,6 +154,7 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     title: z.string(),
     bannerUrl: z.string().nullable(),
     audioUrl: z.string().nullable(),
+    peaks: z.array(z.number()).nullable().optional(),
     gate: z
       .object({
         reason: z.enum(['SUBSCRIBERS_ONLY', 'PURCHASE']),
@@ -184,6 +185,7 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     title: z.string(),
     bannerUrl: z.string().nullable(),
     audioUrl: z.string().nullable(),
+    peaks: z.array(z.number()).nullable().optional(),
     channelSlug: z.string(),
     trackArtist: FeedArtistSchema,
     url: z.string(),
