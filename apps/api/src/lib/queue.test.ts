@@ -17,6 +17,7 @@ import {
   enqueueBackfillEditorPeaks,
   enqueueEncodeStreamingCopy,
   enqueueHearthisEmbedLocalization,
+  enqueueHearthisExport,
 } from './queue.js'
 
 const fixedIdEnqueues = [
@@ -35,6 +36,11 @@ const fixedIdEnqueues = [
     name: 'backfill-editor-peaks',
     jobId: 'backfill-editor-peaks-s1',
     run: () => enqueueBackfillEditorPeaks('s1'),
+  },
+  {
+    name: 'hearthis-export',
+    jobId: 'hearthis-export-s1',
+    run: () => enqueueHearthisExport('s1'),
   },
 ]
 

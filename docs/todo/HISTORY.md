@@ -6,6 +6,15 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-13 — worker lane hand-off leftovers (code)
+
+Folded `worker-lane-handoff.md` code leftovers: `enqueueHearthisExport` now
+calls `clearFinishedJob` before re-adding the fixed job id (same pattern as
+embed-localize / streaming-copy / editor peaks). Ops scripts
+`redeploy-media-workers.sh` and `recover-stuck-sound-transcodes.sh` added.
+Player empty-lane Admin Workers warning ships in tahti-player. Leftover ops
+(deploy + drain PENDING) → `worker-stuck-pending-ops.md`.
+
 ## 2026-11-11 — release track stems
 
 Owners and board admins can attach vocals, drums, bass and other stems to a release track (`ReleaseTrackStem`, cascade on track/release delete). Prepare/complete upload serves the source file as playable audio. Stems are included on the owner release, the published smart link, the public profile and the linked track, and hidden when playback of the parent track is gated. Folded `release-track-stems`.
