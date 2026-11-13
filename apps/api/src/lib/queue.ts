@@ -262,11 +262,13 @@ export async function enqueueOpenThemePullRequest(payload: OpenThemePullRequestJ
 }
 
 export async function enqueueHearthisExport(soundId: string): Promise<void> {
+  const jobId = `hearthis-export-${soundId}`
+  await clearFinishedJob(mediaQueue, jobId)
   await mediaQueue.add(
     'hearthis-export',
     { soundId },
     {
-      jobId: `hearthis-export-${soundId}`,
+      jobId,
       attempts: 3,
       backoff: { type: 'exponential', delay: 15_000 },
     },
