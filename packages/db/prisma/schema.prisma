@@ -985,11 +985,16 @@ model User {
   publicAttribution              Boolean    @default(true)
   showJoinDate                   Boolean    @default(true)
   showFollowers                  Boolean    @default(true)
-  showFollowing                  Boolean    @default(true)
+  showFollowing                  Boolean    @default(false)
   showDailyListeners             Boolean    @default(true)
   /// Whether the share button shows on the artist's channel page.
   showShareButton                Boolean    @default(true)
   showLikes                      Boolean    @default(true)
+  /// Public channel metrics — omitted from the public profile when false.
+  showPlaysTotal                 Boolean    @default(true)
+  showPlaysToday                 Boolean    @default(false)
+  showPlaysYesterday             Boolean    @default(false)
+  showDownloads                  Boolean    @default(false)
   // Shows/hides the shared PageHero block (avatar/cover, title, quick-facts
   // stats row, actions) at the top of the artist profile and channel pages.
   // Default on; an artist who wants a bare page can hide it.

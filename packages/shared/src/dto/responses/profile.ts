@@ -39,6 +39,14 @@ export const PublicProfileArtistSchema = z.object({
   showPageHero: z.boolean().optional(),
 })
 
+/** Gated public channel metrics — only enabled keys are present. */
+export const PublicProfileMetricsSchema = z.object({
+  playsToday: z.number().int().nonnegative().optional(),
+  playsYesterday: z.number().int().nonnegative().optional(),
+  playsTotal: z.number().int().nonnegative().optional(),
+  downloads: z.number().int().nonnegative().optional(),
+})
+
 export const PublicProfileViewSchema = z.object({
   artist: PublicProfileArtistSchema,
   channel: z
@@ -80,11 +88,15 @@ export const PublicProfileViewSchema = z.object({
   /** Public totals across the listed tracks, for the profile header. */
   totals: z
     .object({
-      plays: z.number().int(),
+      /** Omitted when the artist hid total plays. */
+      plays: z.number().int().optional(),
       likes: z.number().int(),
-      downloads: z.number().int(),
+      /** Omitted when the artist hid downloads. */
+      downloads: z.number().int().optional(),
     })
     .optional(),
+  /** Day / lifetime play and download counts the artist chose to show publicly. */
+  metrics: PublicProfileMetricsSchema.optional(),
   fanTiers: z.array(
     z.object({
       id: z.string(),
@@ -170,6 +182,10 @@ export const ProfileFieldsSchema = z.object({
   showDailyListeners: z.boolean(),
   showShareButton: z.boolean(),
   showLikes: z.boolean(),
+  showPlaysTotal: z.boolean(),
+  showPlaysToday: z.boolean(),
+  showPlaysYesterday: z.boolean(),
+  showDownloads: z.boolean(),
   chatEnabled: z.boolean(),
   showPageHero: z.boolean(),
   createdAt: z.string().datetime(),
