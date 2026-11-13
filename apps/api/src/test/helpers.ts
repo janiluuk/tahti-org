@@ -3,6 +3,7 @@
 
 import type { PrismaClient, User, Channel, MembershipStatus, ArtistTier } from '@tahti/db'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
+import { ensureChannelOwnerModerator } from '../lib/channel-owner-moderator.js'
 import { hashPassword } from '../lib/password.js'
 import { createSession } from '../lib/session.js'
 import { generateVerificationToken, verificationExpiresAt } from '../lib/token.js'
@@ -32,7 +33,7 @@ export async function createTestArtist(prisma: PrismaClient, opts: TestArtistOpt
   const liveSourcePass = `pass-${opts.username}`
   const liveSourcePassHash = await hashPassword(liveSourcePass)
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email: opts.email,
       passwordHash,
@@ -65,6 +66,10 @@ export async function createTestArtist(prisma: PrismaClient, opts: TestArtistOpt
     },
     include: { channel: true, membership: true },
   })
+  if (user.channel) {
+    await ensureChannelOwnerModerator(prisma, user.channel.id, user.id)
+  }
+  return user
 }
 
 export async function sessionCookieFor(prisma: PrismaClient, userId: string): Promise<string> {

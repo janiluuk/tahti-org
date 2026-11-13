@@ -46,6 +46,11 @@ describe('self-service channel provisioning', () => {
     const channel = await prisma.channel.findUnique({ where: { userId: user.id } })
     expect(channel).not.toBeNull()
     expect(channel?.slug).toBe('cp-no-channel')
+    expect(
+      await prisma.channelModerator.count({
+        where: { channelId: channel!.id, userId: user.id },
+      }),
+    ).toBe(1)
   })
 
   it("starts the channel's comments off when the user's channel default is off", async () => {

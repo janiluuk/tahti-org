@@ -4,6 +4,7 @@
 import type { Prisma, MembershipStatus } from '@tahti/db'
 import { nanoid } from 'nanoid'
 import { safeDisplayName } from '@tahti/shared'
+import { ensureChannelOwnerModerator } from './channel-owner-moderator.js'
 import { hashPassword } from './password.js'
 
 export async function createArtistAccount(
@@ -24,7 +25,7 @@ export async function createArtistAccount(
   const liveSourcePassHash = await hashPassword(liveSourcePass)
   const rtmpStreamKeyHash = await hashPassword(rtmpStreamKey)
 
-  return tx.user.create({
+  const user = await tx.user.create({
     data: {
       email: opts.email,
       passwordHash: opts.passwordHash ?? null,
@@ -47,8 +48,25 @@ export async function createArtistAccount(
         },
       },
     },
-    select: { id: true, email: true, displayName: true, username: true, passwordHash: true },
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      username: true,
+      passwordHash: true,
+      channel: { select: { id: true } },
+    },
   })
+  if (user.channel) {
+    await ensureChannelOwnerModerator(tx, user.channel.id, user.id)
+  }
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    username: user.username,
+    passwordHash: user.passwordHash,
+  }
 }
 
 export function suggestUsernameFromName(name: string): string {

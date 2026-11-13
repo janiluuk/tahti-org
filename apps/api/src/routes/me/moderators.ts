@@ -22,9 +22,10 @@ import {
 } from '@tahti/shared'
 import { actorDisplayName, availableUserWhere } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
-import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import { resolveChannelForModeration } from '../../lib/channel-access.js'
+import { ensureChannelOwnerModerator } from '../../lib/channel-owner-moderator.js'
 import { userName } from '../../lib/safe-names.js'
+import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -50,6 +51,9 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      // Backfill owners created before auto-moderator rows existed.
+      await ensureChannelOwnerModerator(fastify.prisma, channel.id, user.id)
 
       const moderators = await fastify.prisma.channelModerator.findMany({
         where: { channelId: channel.id, user: availableUserWhere },
@@ -154,6 +158,9 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
         select: { id: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      if (userId === user.id) {
+        return reply.status(400).send({ error: 'Cannot remove yourself as a moderator' })
+      }
 
       await fastify.prisma.channelModerator.deleteMany({
         where: { channelId: channel.id, userId },
@@ -193,6 +200,9 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
       const result: Array<{ slug: string; displayName: string; isOwner: boolean }> = []
       if (owned) result.push({ slug: owned.slug, displayName: userName(owned.user), isOwner: true })
       for (const m of modRows) {
+        // Owner is also a ChannelModerator of their own channel — skip the
+        // duplicate row (owned already covers it with isOwner: true).
+        if (owned && m.channel.slug === owned.slug) continue
         result.push({
           slug: m.channel.slug,
           displayName: userName(m.channel.user),
