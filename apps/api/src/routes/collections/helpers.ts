@@ -51,6 +51,7 @@ export const collectionItemInclude = {
       mp3Key: true,
       flacKey: true,
       bannerUrl: true,
+      peaks: true,
       description: true,
       createdAt: true,
       source: true,
