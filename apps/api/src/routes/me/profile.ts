@@ -53,6 +53,10 @@ const profileSelect = {
   showDailyListeners: true,
   showShareButton: true,
   showLikes: true,
+  showPlaysTotal: true,
+  showPlaysToday: true,
+  showPlaysYesterday: true,
+  showDownloads: true,
   chatEnabled: true,
   showPageHero: true,
   createdAt: true,
@@ -86,6 +90,10 @@ function serializeProfile(
     showDailyListeners: boolean
     showShareButton: boolean
     showLikes: boolean
+    showPlaysTotal: boolean
+    showPlaysToday: boolean
+    showPlaysYesterday: boolean
+    showDownloads: boolean
     chatEnabled: boolean
     showPageHero: boolean
     createdAt: Date
@@ -119,6 +127,10 @@ function serializeProfile(
     showDailyListeners: profile.showDailyListeners,
     showShareButton: profile.showShareButton,
     showLikes: profile.showLikes,
+    showPlaysTotal: profile.showPlaysTotal,
+    showPlaysToday: profile.showPlaysToday,
+    showPlaysYesterday: profile.showPlaysYesterday,
+    showDownloads: profile.showDownloads,
     chatEnabled: profile.chatEnabled,
     showPageHero: profile.showPageHero,
     createdAt: profile.createdAt.toISOString(),
@@ -215,6 +227,10 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.showDailyListeners !== undefined) data.showDailyListeners = body.showDailyListeners
       if (body.showShareButton !== undefined) data.showShareButton = body.showShareButton
       if (body.showLikes !== undefined) data.showLikes = body.showLikes
+      if (body.showPlaysTotal !== undefined) data.showPlaysTotal = body.showPlaysTotal
+      if (body.showPlaysToday !== undefined) data.showPlaysToday = body.showPlaysToday
+      if (body.showPlaysYesterday !== undefined) data.showPlaysYesterday = body.showPlaysYesterday
+      if (body.showDownloads !== undefined) data.showDownloads = body.showDownloads
       if (body.chatEnabled !== undefined) data.chatEnabled = body.chatEnabled
       if (body.showPageHero !== undefined) data.showPageHero = body.showPageHero
 

@@ -182,6 +182,8 @@ describe('GET /api/v1/u/:username/profile', () => {
       where: { username: 'public-profile-artist' },
       select: { id: true, channel: { select: { id: true } } },
     })
+    // Downloads stay off the public totals unless the artist opts in.
+    await prisma.user.update({ where: { id: artist.id }, data: { showDownloads: true } })
     const item = await createReadySound(prisma, artist.channel!.id, 'Counted track')
     await prisma.sound.update({
       where: { id: item.id },

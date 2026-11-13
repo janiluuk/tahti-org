@@ -124,6 +124,14 @@ export type ArtistEventView = z.infer<typeof ArtistEventSchema>
 
 export const ArtistEventListSchema = z.array(ArtistEventSchema)
 
+/** Public channel events list — upcoming soonest first, past newest first. */
+export const ChannelEventsQuerySchema = z.object({
+  scope: z.enum(['upcoming', 'past']).default('upcoming'),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+})
+
+export type ChannelEventsQuery = z.infer<typeof ChannelEventsQuerySchema>
+
 export const EventCalendarQuerySchema = z
   .object({
     from: z.string().datetime(),

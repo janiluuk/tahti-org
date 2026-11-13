@@ -25,6 +25,7 @@ import { playbackGatePayload } from '../../lib/playback-url.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
 import { userName } from '../../lib/safe-names.js'
+import { buildPublicChannelMetrics } from '../../lib/artist-stats.js'
 
 interface GatedTrack {
   playUrl: string | null
@@ -167,6 +168,10 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       isMember: true,
       showFollowers: true,
       showFollowing: true,
+      showPlaysTotal: true,
+      showPlaysToday: true,
+      showPlaysYesterday: true,
+      showDownloads: true,
       showPageHero: true,
       stripeConnectChargesEnabled: true,
       createdAt: true,
@@ -450,6 +455,21 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       ? await presignedGetUrl(bgClip.audioKey, 3600)
       : null
 
+  const trackPlays = tracks.reduce((sum, t) => sum + t.playCount, 0)
+  const trackDownloads = tracks.reduce((sum, t) => sum + t.downloadCount, 0)
+  const trackLikes = tracks.reduce((sum, t) => sum + t.likeCount, 0)
+  const { metrics, totalsPlays, totalsDownloads } = await buildPublicChannelMetrics(
+    fastify.prisma,
+    user.id,
+    {
+      showPlaysTotal: user.showPlaysTotal,
+      showPlaysToday: user.showPlaysToday,
+      showPlaysYesterday: user.showPlaysYesterday,
+      showDownloads: user.showDownloads,
+    },
+    { plays: trackPlays, downloads: trackDownloads },
+  )
+
   return {
     // Internal-only — used by the route handler to resolve per-viewer playback
     // gates after this (viewer-agnostic, cached) payload is read back. Stripped
@@ -516,10 +536,11 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     releases,
     tracks,
     totals: {
-      plays: tracks.reduce((sum, t) => sum + t.playCount, 0),
-      likes: tracks.reduce((sum, t) => sum + t.likeCount, 0),
-      downloads: tracks.reduce((sum, t) => sum + t.downloadCount, 0),
+      ...(totalsPlays !== undefined ? { plays: totalsPlays } : {}),
+      likes: trackLikes,
+      ...(totalsDownloads !== undefined ? { downloads: totalsDownloads } : {}),
     },
+    metrics,
     fanTiers: user.fanTiers,
     purchaseTiers: user.channel?.storeEnabled ? user.purchaseTiers : [],
     storePaymentsReady: !stripeEnabled || user.stripeConnectChargesEnabled,

@@ -305,6 +305,95 @@ export async function buildDashboardPlayDownloadCounters(prisma: PrismaClient, u
   }
 }
 
+function utcDayStart(daysAgo: number): Date {
+  const now = new Date()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysAgo))
+}
+
+/** Counted plays for one UTC calendar day (downloads + smart-link clicks). */
+async function countedPlaysOnUtcDay(
+  prisma: PrismaClient,
+  channelId: string | null,
+  releaseIds: string[],
+  dayStart: Date,
+): Promise<number> {
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000)
+  const createdAt = { gte: dayStart, lt: dayEnd }
+  const [downloads, clicks] = await Promise.all([
+    channelId
+      ? prisma.download.count({
+          where: { channelId, countedAt: { not: null }, createdAt },
+        })
+      : 0,
+    releaseIds.length > 0
+      ? prisma.smartLinkClick.count({
+          where: { releaseId: { in: releaseIds }, createdAt },
+        })
+      : 0,
+  ])
+  return downloads + clicks
+}
+
+export type PublicChannelMetricFlags = {
+  showPlaysTotal: boolean
+  showPlaysToday: boolean
+  showPlaysYesterday: boolean
+  showDownloads: boolean
+}
+
+/** Gated public metrics for the channel/profile page — omitted keys stay off the wire. */
+export async function buildPublicChannelMetrics(
+  prisma: PrismaClient,
+  userId: string,
+  flags: PublicChannelMetricFlags,
+  trackTotals: { plays: number; downloads: number },
+): Promise<{
+  metrics: {
+    playsToday?: number
+    playsYesterday?: number
+    playsTotal?: number
+    downloads?: number
+  }
+  totalsPlays?: number
+  totalsDownloads?: number
+}> {
+  const needDay = flags.showPlaysToday || flags.showPlaysYesterday
+  let playsToday = 0
+  let playsYesterday = 0
+  if (needDay) {
+    const channel = await prisma.channel.findUnique({ where: { userId }, select: { id: true } })
+    const releaseIds = (
+      await prisma.release.findMany({ where: { userId }, select: { id: true } })
+    ).map((r) => r.id)
+    const channelId = channel?.id ?? null
+    ;[playsToday, playsYesterday] = await Promise.all([
+      flags.showPlaysToday
+        ? countedPlaysOnUtcDay(prisma, channelId, releaseIds, utcDayStart(0))
+        : Promise.resolve(0),
+      flags.showPlaysYesterday
+        ? countedPlaysOnUtcDay(prisma, channelId, releaseIds, utcDayStart(1))
+        : Promise.resolve(0),
+    ])
+  }
+
+  const metrics: {
+    playsToday?: number
+    playsYesterday?: number
+    playsTotal?: number
+    downloads?: number
+  } = {}
+  if (flags.showPlaysToday) metrics.playsToday = playsToday
+  if (flags.showPlaysYesterday) metrics.playsYesterday = playsYesterday
+  if (flags.showPlaysTotal) metrics.playsTotal = trackTotals.plays
+  if (flags.showDownloads) metrics.downloads = trackTotals.downloads
+
+  return {
+    metrics,
+    totalsPlays: flags.showPlaysTotal ? trackTotals.plays : undefined,
+    totalsDownloads: flags.showDownloads ? trackTotals.downloads : undefined,
+  }
+}
+
 export async function buildTopTracksStats(
   prisma: PrismaClient,
   userId: string,

@@ -46,6 +46,38 @@ describe('GET /api/channels/:slug/events', () => {
     expect(res.json()).toHaveLength(1)
   })
 
+  it('lists past events when scope=past', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}past@example.com`,
+      username: `${PREFIX}past`,
+    })
+    await prisma.artistEvent.create({
+      data: {
+        userId: artist.id,
+        title: 'Last week',
+        place: 'Club',
+        location: 'Helsinki',
+        startAt: new Date(Date.now() - 7 * 24 * 3600_000),
+      },
+    })
+    await prisma.artistEvent.create({
+      data: {
+        userId: artist.id,
+        title: 'Next week',
+        place: 'Club',
+        location: 'Helsinki',
+        startAt: new Date(Date.now() + 7 * 24 * 3600_000),
+      },
+    })
+    const past = await app.inject({
+      method: 'GET',
+      url: `/api/channels/${PREFIX}past/events?scope=past`,
+    })
+    expect(past.statusCode).toBe(200)
+    const body = past.json() as Array<{ title: string }>
+    expect(body.map((e) => e.title)).toEqual(['Last week'])
+  })
+
   it('lists no events for a suspended or deleted artist', async () => {
     const suspended = await artistWithEvent('suspended')
     const deleted = await artistWithEvent('deleted')

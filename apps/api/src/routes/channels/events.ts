@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   ArtistEventListSchema,
+  ChannelEventsQuerySchema,
   SlugParamSchema,
   openApiResponse,
   parseRouteParams,
@@ -16,20 +17,26 @@ import {
 } from '../../lib/artist-event.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 
-// GET /api/channels/:slug/events — public, upcoming events only
+// GET /api/channels/:slug/events?scope=upcoming|past — owner or accepted participant
 const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/channels/:slug/events',
     {
       schema: {
         tags: ['channel'],
-        description: 'Public upcoming events for an artist channel',
+        description:
+          'Public events for an artist channel (owner or accepted lineup). Upcoming soonest first; past newest first.',
         response: openApiResponse(ArtistEventListSchema, 'ArtistEventList'),
       },
     },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const query = ChannelEventsQuerySchema.safeParse(request.query)
+      if (!query.success) {
+        return reply.status(400).send({ error: query.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { scope, limit } = query.data
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: routeParams.slug },
@@ -37,6 +44,7 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
+      const now = new Date()
       const events = await fastify.prisma.artistEvent.findMany({
         where: {
           AND: [
@@ -48,12 +56,12 @@ const channelEventsRoute: FastifyPluginAsync = async (fastify) => {
             },
             eventVisibilityWhere(request.sessionUser?.id),
           ],
-          startAt: { gte: new Date() },
+          startAt: scope === 'upcoming' ? { gte: now } : { lt: now },
           status: { in: [...PUBLIC_EVENT_STATUSES] },
           user: availableUserWhere,
         },
-        orderBy: { startAt: 'asc' },
-        take: 20,
+        orderBy: { startAt: scope === 'upcoming' ? 'asc' : 'desc' },
+        take: limit,
         include: participantInclude,
       })
 
