@@ -29,19 +29,33 @@ describe('processChannelFallbackReconcilerJob', () => {
     vi.mocked(spawnOrchestratorChannel).mockResolvedValue(true)
   })
 
-  it('queries only OFFLINE, fallback-enabled channels, excluding Tahti Radio/Selects', async () => {
+  it('queries OFFLINE fallback channels plus Tahti Selects, excluding Tahti Radio', async () => {
     mockFindManyChannel.mockResolvedValue([])
 
     await processChannelFallbackReconcilerJob(fakePrisma(), {} as Job)
 
     expect(mockFindManyChannel).toHaveBeenCalledWith({
       where: {
-        fallbackEnabled: true,
         state: 'OFFLINE',
-        slug: { notIn: ['tahti-radio', 'tahti-selects'] },
+        OR: [{ fallbackEnabled: true }, { slug: 'tahti-selects' }],
+        slug: { not: 'tahti-radio' },
       },
       select: { id: true, slug: true },
     })
+  })
+
+  it('spawns Tahti Selects with the rotation template', async () => {
+    mockFindManyChannel.mockResolvedValue([{ id: 'ch-sel', slug: 'tahti-selects' }])
+    mockFindFirstBroadcast.mockResolvedValue({ id: 'sel-broadcast' })
+
+    await processChannelFallbackReconcilerJob(fakePrisma(), {} as Job)
+
+    expect(spawnOrchestratorChannel).toHaveBeenCalledWith(
+      'ch-sel',
+      'tahti-selects',
+      'sel-broadcast',
+      'rotation',
+    )
   })
 
   it('creates a placeholder broadcast, spawns, and flips to LIVE when none exists', async () => {

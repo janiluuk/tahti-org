@@ -24,6 +24,10 @@ vi.mock('redis', () => ({
     zRemRangeByScore: async () => undefined,
     expire: async () => undefined,
     zCard: async () => restartTimestamps.length,
+    zRangeWithScores: async () =>
+      restartTimestamps.length === 0
+        ? []
+        : [{ value: String(restartTimestamps.at(-1)), score: restartTimestamps.at(-1)! }],
   }),
 }))
 
@@ -104,13 +108,29 @@ describe('processChannelWatchdogJob', () => {
     )
   })
 
-  it('respects the restart cap for missing segments too', async () => {
+  it('respects the restart cap for artist channels', async () => {
     restartTimestamps.push(1, 2)
-    mockFindMany.mockResolvedValue([liveChannel('tahti-radio', { startedAgoMs: 3600_000 })])
+    mockFindMany.mockResolvedValue([liveChannel('artist-a', { startedAgoMs: 3600_000 })])
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
     expect(result).toEqual({ checked: 1, restarted: 0, skipped: 1 })
     expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
+  })
+
+  it('keeps restarting always-on Tahti Radio after the artist restart cap', async () => {
+    // Two prior restarts would hard-cap an artist channel; Radio must continue.
+    restartTimestamps.push(Date.now() - 180_000, Date.now() - 120_000)
+    mockFindMany.mockResolvedValue([liveChannel('tahti-radio', { startedAgoMs: 3600_000 })])
+
+    const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
+
+    expect(result).toEqual({ checked: 1, restarted: 1, skipped: 0 })
+    expect(restartChannelLiquidsoap).toHaveBeenCalledWith(
+      'ch-tahti-radio',
+      'tahti-radio',
+      'b-tahti-radio',
+      'channel',
+    )
   })
 })

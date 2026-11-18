@@ -19,7 +19,9 @@ export interface ChannelFallbackReconcilerResult {
  * existing watchdog/restart machinery (which requires a broadcastId) works
  * unmodified. This only handles the one-time bootstrap: once a channel is LIVE,
  * channel-watchdog.ts already keeps any state:'LIVE' channel healthy generically.
- * Tahti Radio/Selects are excluded — they have their own dedicated jobs.
+ * Tahti Radio is excluded — `radio-slot-switchover` owns its spawn/restart.
+ * Tahti Selects is included here so an OFFLINE curated channel is brought back
+ * with the rotation template (it has no dedicated minute job of its own).
  */
 export async function processChannelFallbackReconcilerJob(
   prisma: PrismaClient,
@@ -27,9 +29,9 @@ export async function processChannelFallbackReconcilerJob(
 ): Promise<ChannelFallbackReconcilerResult> {
   const channels = await prisma.channel.findMany({
     where: {
-      fallbackEnabled: true,
       state: 'OFFLINE',
-      slug: { notIn: [TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG] },
+      OR: [{ fallbackEnabled: true }, { slug: TAHTI_SELECTS_SLUG }],
+      slug: { not: TAHTI_RADIO_SLUG },
     },
     select: { id: true, slug: true },
   })
@@ -45,7 +47,8 @@ export async function processChannelFallbackReconcilerJob(
       })
     }
 
-    const running = await spawnOrchestratorChannel(ch.id, ch.slug, broadcast.id, 'channel')
+    const template = ch.slug === TAHTI_SELECTS_SLUG ? 'rotation' : 'channel'
+    const running = await spawnOrchestratorChannel(ch.id, ch.slug, broadcast.id, template)
     if (running) {
       await prisma.channel.update({ where: { id: ch.id }, data: { state: 'LIVE' } })
       started++
