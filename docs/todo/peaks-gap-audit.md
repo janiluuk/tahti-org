@@ -6,11 +6,14 @@
 
 ## Surfaces that already select `peaks`
 
-| Surface | Path | Notes |
-| ------- | ---- | ----- |
-| Channel items | `apps/api/src/routes/channels/items.ts` | `peaks: true` |
-| Search | `apps/api/src/routes/discover/search.ts` | returns peaks |
-| Tahti Selects gallery | `apps/api/src/routes/channels/tahti-selects-gallery.ts` | `peaks: true` |
+| Surface                        | Path                                                    | Notes                 |
+| ------------------------------ | ------------------------------------------------------- | --------------------- |
+| Channel items                  | `apps/api/src/routes/channels/items.ts`                 | `peaks: true`         |
+| Search                         | `apps/api/src/routes/discover/search.ts`                | returns peaks         |
+| Tahti Selects gallery          | `apps/api/src/routes/channels/tahti-selects-gallery.ts` | `peaks: true`         |
+| Collections (public + helpers) | `apps/api/src/routes/collections/`                      | `peaks: true`         |
+| Feed                           | `apps/api/src/routes/me/feed.ts`                        | `peaks: true`         |
+| Radio recently-played          | `apps/api/src/routes/radio/index.ts`                    | peaks when replayable |
 
 ## Pipeline
 
