@@ -6,6 +6,12 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-18 — Library management port folded
+
+Cloud Sounds library management Next 30 all shipped (org + player). Folded
+`library-management-port.md`. Audience URL follow-on:
+`listener-stats-origin-url.md`.
+
 ## 2026-11-13 — worker lane hand-off leftovers (code)
 
 Folded `worker-lane-handoff.md` code leftovers: `enqueueHearthisExport` now
