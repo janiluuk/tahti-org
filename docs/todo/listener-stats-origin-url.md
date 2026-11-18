@@ -14,5 +14,6 @@
 
 ## Left
 
-OpenAPI/api-client regen after merge; track insights URL mode; live verify.
-Historical rows stay host-only (no backfill).
+api-client regen after OpenAPI description update; live verify URL buckets.
+Historical rows stay host-only (no backfill). Player Sites/Pages UI ships in
+the sibling player PR.
