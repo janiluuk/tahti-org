@@ -72,6 +72,30 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('lists the owner as a moderator automatically', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/moderators',
+      headers: { cookie: ownerCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as Array<{ username: string }>
+    expect(body.some((m) => m.username === 'me-mods-owner')).toBe(true)
+  })
+
+  it('rejects removing yourself as a moderator', async () => {
+    const owner = await prisma.user.findUniqueOrThrow({
+      where: { username: 'me-mods-owner' },
+      select: { id: true },
+    })
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/me/channel/moderators/${owner.id}`,
+      headers: { cookie: ownerCookie },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('returns 404 adding an unknown username', async () => {
     const res = await app.inject({
       method: 'POST',
@@ -136,7 +160,9 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
       url: '/api/me/channel/moderators',
       headers: { cookie: ownerCookie },
     })
-    expect(list.json()).toEqual([])
+    const listed = list.json() as Array<{ userId: string; username: string }>
+    expect(listed.some((m) => m.userId === modUserId)).toBe(false)
+    expect(listed.some((m) => m.username === 'me-mods-owner')).toBe(true)
     await prisma.user.update({ where: { id: modUserId }, data: { suspendedAt: null } })
   })
 
@@ -147,12 +173,30 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
       headers: { cookie: ownerCookie },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual([
-      expect.objectContaining({
-        userId: modUserId,
-        username: 'me-mods-mod',
-        displayName: 'me-mods-mod',
-      }),
+    expect(res.json()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          username: 'me-mods-owner',
+        }),
+        expect.objectContaining({
+          userId: modUserId,
+          username: 'me-mods-mod',
+          displayName: 'me-mods-mod',
+        }),
+      ]),
+    )
+  })
+
+  it('owner sees their channel once under /api/me/moderate', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/moderate',
+      headers: { cookie: ownerCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const rows = res.json() as Array<{ slug: string; isOwner: boolean }>
+    expect(rows.filter((r) => r.slug === ownerSlug)).toEqual([
+      expect.objectContaining({ slug: ownerSlug, isOwner: true }),
     ])
   })
 
