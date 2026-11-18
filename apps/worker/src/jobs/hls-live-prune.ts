@@ -13,6 +13,15 @@ const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
 // grew hls-live to 3.7M objects / ~600GB and filled the host disk to 92%).
 const STALE_MS = 6 * 60 * 60 * 1000
 const DELETE_BATCH_SIZE = 1000
+/** Segment media only. Never prune `.m3u8` — master playlists are tiny,
+ * change rarely, and are the public entry URL (`…/master.m3u8`). Deleting
+ * them while the sync fingerprint still thinks they are uploaded takes
+ * every station offline for listeners. */
+const SEGMENT_OBJECT_RE = /\.(ts|m4s|aac|opus|mp4)$/i
+
+export function isHlsPrunableObjectKey(key: string): boolean {
+  return SEGMENT_OBJECT_RE.test(key)
+}
 
 export async function processHlsLivePruneJob(
   _job: Job,
@@ -30,7 +39,11 @@ export async function processHlsLivePruneJob(
       }),
     )
     const stale = (page.Contents ?? []).filter(
-      (obj) => obj.Key && obj.LastModified && obj.LastModified.getTime() < cutoff,
+      (obj) =>
+        obj.Key &&
+        isHlsPrunableObjectKey(obj.Key) &&
+        obj.LastModified &&
+        obj.LastModified.getTime() < cutoff,
     )
     scanned += page.Contents?.length ?? 0
 
