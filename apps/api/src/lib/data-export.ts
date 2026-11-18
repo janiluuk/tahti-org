@@ -185,6 +185,7 @@ export async function buildActivityExport(
         uaDeviceType: true,
         uaDeviceVendor: true,
         referrerHost: true,
+        referrerUrl: true,
         maxPositionSec: true,
         durationSec: true,
       },

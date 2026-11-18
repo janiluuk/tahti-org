@@ -82,6 +82,7 @@ const COLUMN = {
   deviceType: 'uaDeviceType',
   deviceVendor: 'uaDeviceVendor',
   source: 'referrerHost',
+  referrerUrl: 'referrerUrl',
   surface: 'source',
 } as const satisfies Record<StatsAudienceDimension, keyof Prisma.ListenSessionGroupByOutputType>
 
@@ -97,7 +98,7 @@ export async function buildAudienceShares(
     where: audienceWhere(channelId, window),
     _count: { _all: true },
   })
-  const fallback = dimension === 'source' ? 'Direct' : 'Unknown'
+  const fallback = dimension === 'source' || dimension === 'referrerUrl' ? 'Direct' : 'Unknown'
   const counts = rows.map((row) => ({
     name: (row[column] as string | null) ?? fallback,
     count: row._count._all,

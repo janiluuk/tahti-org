@@ -87,6 +87,24 @@ describe('POST /api/v1/listen/heartbeat', () => {
     expect(sessions.map((s) => s.referrerHost)).toEqual(['example.com'])
   })
 
+  it('stores a sanitized referrer URL and derives the host', async () => {
+    expect(
+      (
+        await beat(IPHONE_UA, `${PREFIX}ref-url`, {
+          referrerUrl: 'https://user:secret@campaign.example/land?utm=1#frag',
+        })
+      ).statusCode,
+    ).toBe(204)
+    const session = await prisma.listenSession.findFirstOrThrow({
+      where: { channelId, soundId, byFingerprint: `${PREFIX}ref-url` },
+      select: { referrerUrl: true, referrerHost: true },
+    })
+    expect(session).toEqual({
+      referrerUrl: 'https://campaign.example/land?utm=1',
+      referrerHost: 'campaign.example',
+    })
+  })
+
   it('stores the city and country of the listener', async () => {
     await beat(IPHONE_UA, `${PREFIX}city`, {}, '81.175.255.179')
     const session = await prisma.listenSession.findFirstOrThrow({

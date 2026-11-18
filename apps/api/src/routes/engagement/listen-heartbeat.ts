@@ -7,6 +7,7 @@ import {
   ListenHeartbeatBodySchema,
   clientIpFromHeaders,
   normalizeReferrerHost,
+  normalizeReferrerUrl,
   openApiNoContentResponse,
   parseListenDevice,
 } from '@tahti/shared'
@@ -110,6 +111,17 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
         })
       } else {
         const device = parseListenDevice(request.headers['user-agent'])
+        const referrerUrl =
+          normalizeReferrerUrl(body.referrerUrl) ??
+          normalizeReferrerUrl(body.referrerHost ? `https://${body.referrerHost}` : null)
+        let referrerHost = normalizeReferrerHost(body.referrerHost)
+        if (referrerUrl) {
+          try {
+            referrerHost = normalizeReferrerHost(new URL(referrerUrl).hostname) ?? referrerHost
+          } catch {
+            /* keep host from body */
+          }
+        }
         await fastify.prisma.listenSession.create({
           data: {
             channelId,
@@ -127,7 +139,8 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
             uaDeviceType: device.deviceType,
             uaDeviceVendor: device.deviceVendor,
             isBot: device.isBot,
-            referrerHost: normalizeReferrerHost(body.referrerHost),
+            referrerUrl,
+            referrerHost,
             startedAt: now,
             lastSeenAt: now,
           },

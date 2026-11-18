@@ -25,6 +25,7 @@ export const StatsAudienceDimensionSchema = z.enum([
   'deviceType',
   'deviceVendor',
   'source',
+  'referrerUrl',
   'surface',
 ])
 
