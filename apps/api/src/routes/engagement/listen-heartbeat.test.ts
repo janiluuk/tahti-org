@@ -96,7 +96,11 @@ describe('POST /api/v1/listen/heartbeat', () => {
       ).statusCode,
     ).toBe(204)
     const session = await prisma.listenSession.findFirstOrThrow({
-      where: { channelId, soundId, byFingerprint: `${PREFIX}ref-url` },
+      where: {
+        channelId,
+        soundId,
+        referrerUrl: 'https://campaign.example/land?utm=1',
+      },
       select: { referrerUrl: true, referrerHost: true },
     })
     expect(session).toEqual({

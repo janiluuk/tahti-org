@@ -111,10 +111,13 @@ const listenHeartbeatRoutes: FastifyPluginAsync = async (fastify) => {
         })
       } else {
         const device = parseListenDevice(request.headers['user-agent'])
+        // Host-only body values must stay plain hostnames; do not promote junk
+        // like "example.com/path" into a URL that would still store the host.
+        const hostOnly = normalizeReferrerHost(body.referrerHost)
         const referrerUrl =
           normalizeReferrerUrl(body.referrerUrl) ??
-          normalizeReferrerUrl(body.referrerHost ? `https://${body.referrerHost}` : null)
-        let referrerHost = normalizeReferrerHost(body.referrerHost)
+          (hostOnly ? normalizeReferrerUrl(`https://${hostOnly}`) : null)
+        let referrerHost = hostOnly
         if (referrerUrl) {
           try {
             referrerHost = normalizeReferrerHost(new URL(referrerUrl).hostname) ?? referrerHost
