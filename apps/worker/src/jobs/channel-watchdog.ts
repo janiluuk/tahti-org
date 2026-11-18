@@ -5,11 +5,7 @@ import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
 import { createClient } from 'redis'
 import { hlsSegmentAgeSecFromFs, hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
-import {
-  broadcastSessionLogFields,
-  TAHTI_RADIO_SLUG,
-  TAHTI_SELECTS_SLUG,
-} from '@tahti/shared'
+import { broadcastSessionLogFields, TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
 
 const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
@@ -138,9 +134,7 @@ export async function processChannelWatchdogJob(
     const { count: restartCount, lastMs } = await recordRestart(ch.id)
     const gate = shouldSkipRestart(ch.slug, restartCount, lastMs)
     if (gate.skip) {
-      console.error(
-        `[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but ${gate.reason}`,
-      )
+      console.error(`[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but ${gate.reason}`)
       skipped++
       continue
     }
