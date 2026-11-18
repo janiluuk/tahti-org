@@ -60,6 +60,7 @@ export const ChannelModeratorViewSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   grantedAt: z.coerce.date(),
+  isOwner: z.boolean(),
 })
 
 export const ChannelModeratorListSchema = z.array(ChannelModeratorViewSchema)

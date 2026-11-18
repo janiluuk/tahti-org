@@ -79,8 +79,8 @@ describe('M27 — /api/me/channel/moderators and /api/me/moderate', () => {
       headers: { cookie: ownerCookie },
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as Array<{ username: string }>
-    expect(body.some((m) => m.username === 'me-mods-owner')).toBe(true)
+    const body = res.json() as Array<{ username: string; isOwner: boolean }>
+    expect(body.some((m) => m.username === 'me-mods-owner' && m.isOwner)).toBe(true)
   })
 
   it('rejects removing yourself as a moderator', async () => {

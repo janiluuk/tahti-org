@@ -97,3 +97,24 @@ export async function enqueueEncodeStreamingCopy(itemId: string): Promise<void> 
     await queue.close()
   }
 }
+
+/** When transcode marks READY without peaks, enqueue the same backfill job
+ * the sweep uses so list waveforms do not stay empty forever. */
+export async function enqueueBackfillEditorPeaks(itemId: string): Promise<void> {
+  const queue = new Queue('media', { connection, defaultJobOptions })
+  const jobId = `backfill-editor-peaks-${itemId}`
+  try {
+    await clearFinishedJob(queue, jobId)
+    await queue.add(
+      'backfill-editor-peaks',
+      { itemId },
+      {
+        jobId,
+        removeOnComplete: true,
+        removeOnFail: 50,
+      },
+    )
+  } finally {
+    await queue.close()
+  }
+}

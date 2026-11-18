@@ -19,7 +19,11 @@ import {
 } from '@tahti/shared'
 import { downloadSourceCached } from '../lib/source-cache.js'
 import { uploadFile } from '../lib/minio.js'
-import { enqueueEncodeStreamingCopy, enqueueWarmSoundFallbackCache } from '../lib/queue.js'
+import {
+  enqueueBackfillEditorPeaks,
+  enqueueEncodeStreamingCopy,
+  enqueueWarmSoundFallbackCache,
+} from '../lib/queue.js'
 import { announceNewPublicTrack, isFirstTranscode } from '../lib/new-track-announcement.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
@@ -250,6 +254,9 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       }
       await enqueueWarmSoundFallbackCache(item.channelId)
       await enqueueEncodeStreamingCopy(itemId)
+      if (!peaks || !editorPeaks) {
+        await enqueueBackfillEditorPeaks(itemId)
+      }
       logLine(
         { itemId, targetFormat: 'flac', elapsedMs: Date.now() - startedAt },
         `sound item ${itemId} transcode to flac done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
@@ -292,6 +299,9 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       await notifyJobOutcome(prisma, uploadReadyNotice(item))
     }
     await enqueueWarmSoundFallbackCache(item.channelId)
+    if (!peaks || !editorPeaks) {
+      await enqueueBackfillEditorPeaks(itemId)
+    }
     logLine(
       { itemId, targetFormat: 'mp3', elapsedMs: Date.now() - startedAt },
       `sound item ${itemId} transcode to mp3 done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,

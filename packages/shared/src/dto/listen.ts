@@ -33,6 +33,7 @@ export const ListenHeartbeatBodySchema = z
     source: ListenSourceSchema,
     fp: z.string().max(128).optional(),
     referrerHost: z.string().max(253).optional(),
+    referrerUrl: z.string().max(2048).optional(),
     positionSec: z.number().nonnegative().max(86_400).optional(),
     durationSec: z.number().positive().max(86_400).optional(),
   })
@@ -53,4 +54,24 @@ export function normalizeReferrerHost(raw: string | null | undefined): string | 
   return /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(host)
     ? host
     : null
+}
+
+const REFERRER_URL_MAX = 2048
+
+/** http(s) origin URL without userinfo or fragment; truncated; null when junk. */
+export function normalizeReferrerUrl(raw: string | null | undefined): string | null {
+  const input = (raw ?? '').trim()
+  if (!input || input.length > REFERRER_URL_MAX * 2) return null
+  try {
+    const url = new URL(input)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    url.username = ''
+    url.password = ''
+    url.hash = ''
+    const out = url.toString()
+    if (!out || out.length > REFERRER_URL_MAX) return out.slice(0, REFERRER_URL_MAX) || null
+    return out
+  } catch {
+    return null
+  }
 }

@@ -67,6 +67,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
           username: m.user.username,
           displayName: userName(m.user),
           grantedAt: m.grantedAt,
+          isOwner: m.user.id === user.id,
         })),
       )
     },
@@ -139,6 +140,7 @@ const meModerators: FastifyPluginAsync = async (fastify) => {
         username: target.username,
         displayName: userName(target),
         grantedAt: moderator.grantedAt,
+        isOwner: false,
       })
     },
   )
