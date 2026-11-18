@@ -1,6 +1,6 @@
 # Channel owner auto-moderator
 
-**Status:** open
+**Status:** partial
 
 ## Goal
 
@@ -11,9 +11,11 @@ remove themselves.
 
 ## Plan
 
-1. `ensureChannelOwnerModerator(prisma, channelId, userId)` upsert helper.
-2. Call from `createArtistAccount`, `channel-provision`, and
+1. [x] `ensureChannelOwnerModerator(prisma, channelId, userId)` upsert helper.
+2. [x] Call from `createArtistAccount`, `channel-provision`, and
    `GET /api/me/channel/moderators`.
-3. `DELETE` rejects removing the channel owner; `/api/me/moderate` does not
+3. [x] `DELETE` rejects removing the channel owner; `/api/me/moderate` does not
    list the owned channel twice.
-4. Tests + player UI: no remove control on the owner row.
+4. [x] API tests (PR [#1109](https://github.com/janiluuk/tahti-org/pull/1109)).
+5. [ ] Player UI: no remove control on the owner row — slices 26–29 in
+   [`../tahti-player/docs/todo/listener-stats-origin-url.md`](../../tahti-player/docs/todo/listener-stats-origin-url.md).
