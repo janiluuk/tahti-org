@@ -137,7 +137,12 @@ export async function syncChannelHlsToMinio(
         skipped++
         continue
       }
-      if (hlsObjectUpToDate(key, st.size, st.mtimeMs)) {
+      // Playlists (especially master.m3u8) must re-PUT every tick. The
+      // in-process fingerprint otherwise skips them forever after the first
+      // upload; hls-live-prune then deletes anything LastModified > 6h ago
+      // and listeners keep 404ing on master.m3u8 while segments still sync
+      // (confirmed 2026-11-18: Tahti Radio LIVE locally, CDN master missing).
+      if (!isPlaylist && hlsObjectUpToDate(key, st.size, st.mtimeMs)) {
         skipped++
         continue
       }

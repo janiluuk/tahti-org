@@ -46,15 +46,31 @@ describe('syncChannelHlsToMinio', () => {
     expect(mockSend.mock.calls.some(([cmd]) => cmd instanceof PutObjectCommand)).toBe(true)
   })
 
-  it('skips objects already mirrored at the same size and mtime', async () => {
+  it('skips segments already mirrored at the same size and mtime', async () => {
     // First pass uploads and records fingerprints.
     await syncChannelHlsToMinio(root, channelId, slug)
     mockSend.mockClear()
 
     const result = await syncChannelHlsToMinio(root, channelId, slug)
-    expect(result.uploaded).toBe(0)
     expect(result.skipped).toBeGreaterThan(0)
-    expect(mockSend).not.toHaveBeenCalled()
+    const putKeys = mockSend.mock.calls
+      .filter(([cmd]) => cmd instanceof PutObjectCommand)
+      .map(([cmd]) => (cmd as PutObjectCommand).input.Key as string)
+    // Segments are fingerprint-skipped; playlists always re-PUT.
+    expect(putKeys.some((k) => k.endsWith('.ts'))).toBe(false)
+    expect(putKeys.some((k) => k.endsWith('.m3u8'))).toBe(true)
+    expect(result.uploaded).toBe(putKeys.length)
+  })
+
+  it('re-uploads master playlists every sync so prune cannot orphan them', async () => {
+    await syncChannelHlsToMinio(root, channelId, slug)
+    mockSend.mockClear()
+    await syncChannelHlsToMinio(root, channelId, slug)
+    const putKeys = mockSend.mock.calls
+      .filter(([cmd]) => cmd instanceof PutObjectCommand)
+      .map(([cmd]) => (cmd as PutObjectCommand).input.Key as string)
+    expect(putKeys).toContain(`${slug}/master.m3u8`)
+    expect(putKeys).toContain(`${slug}/master-free.m3u8`)
   })
 
   it('uploads playlists after segments', async () => {
