@@ -266,7 +266,12 @@ describe('/api/me/blocks', () => {
       headers: { cookie: cookieA },
       payload: { username: `${PREFIX}b` },
     })
-    expect(await prisma.channelModerator.count({ where: { userId: b.id } })).toBe(0)
+    // Owner auto-moderator rows on B's own channel stay; cross-channel rights end.
+    expect(
+      await prisma.channelModerator.count({
+        where: { userId: b.id, channelId: a.channel!.id },
+      }),
+    ).toBe(0)
 
     const again = await app.inject({
       method: 'POST',
