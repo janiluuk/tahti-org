@@ -205,7 +205,7 @@ describe('processRadioSlotSwitchoverJob', () => {
     })
   })
 
-  it('flips the channel back to OFFLINE when the spawn genuinely fails', async () => {
+  it('force-restarts when spawn reports down, then stays LIVE', async () => {
     mockFindUniqueChannel.mockResolvedValue({
       id: 'radio-ch',
       liveInputOverrideSlug: null,
@@ -213,6 +213,32 @@ describe('processRadioSlotSwitchoverJob', () => {
     })
     mockFindFirstBooking.mockResolvedValue(null)
     vi.mocked(spawnOrchestratorChannel).mockResolvedValue(false)
+
+    await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
+
+    expect(restartChannelLiquidsoap).toHaveBeenCalledWith(
+      'radio-ch',
+      'tahti-radio',
+      'broadcast-1',
+      'channel',
+    )
+    expect(mockUpdateChannel).not.toHaveBeenCalledWith({
+      where: { id: 'radio-ch' },
+      data: { state: 'OFFLINE' },
+    })
+  })
+
+  it('flips OFFLINE when spawn and the forced restart both fail', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
+    mockFindFirstBooking.mockResolvedValue(null)
+    vi.mocked(spawnOrchestratorChannel).mockResolvedValue(false)
+    vi.mocked(restartChannelLiquidsoap).mockRejectedValueOnce(new Error('orchestrator down'))
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
 
     await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
 

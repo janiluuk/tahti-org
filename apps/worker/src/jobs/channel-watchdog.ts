@@ -5,23 +5,38 @@ import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
 import { createClient } from 'redis'
 import { hlsSegmentAgeSecFromFs, hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
-import { broadcastSessionLogFields } from '@tahti/shared'
+import { broadcastSessionLogFields, TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
 
 const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
 const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
 const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
 const RESTART_WINDOW_MS = 10 * 60 * 1000
+/** Artist channels: stop thrashing after this many restarts in the window. */
 const MAX_RESTARTS = 2
+/**
+ * Always-on system channels (Tahti Radio / Selects) must never stay silent
+ * because a short restart burst hit the artist cap. Keep trying, but not more
+ * often than once per ALWAYS_ON_MIN_INTERVAL_MS after the soft burst.
+ */
+const ALWAYS_ON_MAX_BURST = parseInt(process.env.HLS_ALWAYS_ON_MAX_BURST ?? '6', 10)
+const ALWAYS_ON_MIN_INTERVAL_MS =
+  parseInt(process.env.HLS_ALWAYS_ON_RESTART_INTERVAL_SECONDS ?? '120', 10) * 1000
 /** A broadcast this young may simply not have written its first segment yet. */
 const MISSING_SEGMENTS_GRACE_MS =
   parseInt(process.env.HLS_MISSING_SEGMENTS_GRACE_SECONDS ?? '120', 10) * 1000
+
+const ALWAYS_ON_SLUGS = new Set([TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG])
 
 function redisUrl(): string {
   return process.env.REDIS_URL ?? 'redis://localhost:6379'
 }
 
-async function recordRestart(channelId: string): Promise<number> {
+function isAlwaysOn(slug: string): boolean {
+  return ALWAYS_ON_SLUGS.has(slug)
+}
+
+async function recordRestart(channelId: string): Promise<{ count: number; lastMs: number }> {
   const client = createClient({ url: redisUrl() })
   await client.connect()
   try {
@@ -30,7 +45,10 @@ async function recordRestart(channelId: string): Promise<number> {
     await client.zAdd(key, { score: now, value: String(now) })
     await client.zRemRangeByScore(key, 0, now - RESTART_WINDOW_MS)
     await client.expire(key, 900)
-    return await client.zCard(key)
+    const count = await client.zCard(key)
+    const newest = await client.zRangeWithScores(key, -1, -1)
+    const lastMs = newest[0]?.score ?? now
+    return { count, lastMs }
   } finally {
     await client.quit().catch(() => undefined)
   }
@@ -42,6 +60,28 @@ async function segmentAgeSec(channelId: string, slug: string): Promise<number | 
     if (age !== null) return age
   }
   return hlsSegmentAgeSecFromMinio(HLS_BUCKET, slug)
+}
+
+function shouldSkipRestart(
+  slug: string,
+  restartCount: number,
+  lastRestartMs: number,
+): { skip: boolean; reason?: string } {
+  if (isAlwaysOn(slug)) {
+    if (restartCount <= ALWAYS_ON_MAX_BURST) return { skip: false }
+    const sinceLast = Date.now() - lastRestartMs
+    if (sinceLast < ALWAYS_ON_MIN_INTERVAL_MS) {
+      return {
+        skip: true,
+        reason: `always-on backoff (${Math.ceil((ALWAYS_ON_MIN_INTERVAL_MS - sinceLast) / 1000)}s left)`,
+      }
+    }
+    return { skip: false }
+  }
+  if (restartCount > MAX_RESTARTS) {
+    return { skip: true, reason: `restart cap hit (${restartCount} in 10m)` }
+  }
+  return { skip: false }
 }
 
 export async function processChannelWatchdogJob(
@@ -91,17 +131,19 @@ export async function processChannelWatchdogJob(
     }
     const ageLabel = age === null ? 'missing' : `${age.toFixed(0)}s`
 
-    const restartCount = await recordRestart(ch.id)
-    if (restartCount > MAX_RESTARTS) {
-      console.error(
-        `[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but restart cap hit (${restartCount} in 10m)`,
-      )
+    const { count: restartCount, lastMs } = await recordRestart(ch.id)
+    const gate = shouldSkipRestart(ch.slug, restartCount, lastMs)
+    if (gate.skip) {
+      console.error(`[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but ${gate.reason}`)
       skipped++
       continue
     }
 
     try {
-      const template = ch.curatedRotationItems.length > 0 ? 'rotation' : 'channel'
+      const template =
+        ch.slug === TAHTI_SELECTS_SLUG || ch.curatedRotationItems.length > 0
+          ? 'rotation'
+          : 'channel'
       await restartChannelLiquidsoap(ch.id, ch.slug, broadcastId, template)
       restarted++
       console.warn(
@@ -114,6 +156,7 @@ export async function processChannelWatchdogJob(
           segmentAgeSec: age,
           msg: 'liquidsoap restarted after stale HLS',
           component: 'channel-watchdog',
+          alwaysOn: isAlwaysOn(ch.slug),
         }),
       )
     } catch (err) {

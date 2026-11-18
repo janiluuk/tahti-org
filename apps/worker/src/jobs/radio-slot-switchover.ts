@@ -43,12 +43,26 @@ export async function processRadioSlotSwitchoverJob(
   // Cheap and idempotent — orchestrator no-ops if this channel is already
   // tracked, so this only ever does real work after an orchestrator restart,
   // and never causes an audio glitch on its own.
-  const running = await spawnOrchestratorChannel(
+  let running = await spawnOrchestratorChannel(
     channel.id,
     TAHTI_RADIO_SLUG,
     broadcast.id,
     'channel',
   )
+
+  // If spawn reported down (exited container, crashed Liquidsoap, or a stale
+  // orchestrator map entry), force a full restart. Leaving the channel OFFLINE
+  // here used to disable the STREAM-005 watchdog (it only scans state:LIVE),
+  // so Tahti Radio could stay silent until a human intervened.
+  if (!running) {
+    try {
+      await restartChannelLiquidsoap(channel.id, TAHTI_RADIO_SLUG, broadcast.id, 'channel')
+      running = true
+      console.warn('[radio-slot-switchover] forced liquidsoap restart — spawn reported down')
+    } catch (err) {
+      console.error('[radio-slot-switchover] forced restart failed:', err)
+    }
+  }
 
   // Tahti Radio has no artist pushing to its own Icecast mount, so the usual
   // on_connect webhook that flips regular channels to LIVE never fires here —
