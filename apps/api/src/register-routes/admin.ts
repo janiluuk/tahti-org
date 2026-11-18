@@ -10,6 +10,7 @@ import adminStreamsRoutes from '../routes/admin/streams.js'
 import adminRadioRoutes from '../routes/admin/radio.js'
 import adminRadioSubmissionRoutes from '../routes/admin/radio-submissions.js'
 import adminTahtiSelectsRoutes from '../routes/admin/tahti-selects.js'
+import adminTahtiRadioRoutes from '../routes/admin/tahti-radio.js'
 import adminNewsRoutes from '../routes/admin/news.js'
 import adminChannelsRoutes from '../routes/admin/channels.js'
 import adminChannelKindRoutes from '../routes/admin/channel-kind.js'
@@ -61,6 +62,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminRadioRoutes)
   await fastify.register(adminRadioSubmissionRoutes)
   await fastify.register(adminTahtiSelectsRoutes)
+  await fastify.register(adminTahtiRadioRoutes)
   await fastify.register(adminNewsRoutes)
   await fastify.register(adminChannelsRoutes)
   await fastify.register(adminChannelKindRoutes)
