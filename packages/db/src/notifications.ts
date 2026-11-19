@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { availableUserWhere } from './available-user.js'
 import { actorDisplayName } from './display-name.js'
+import { resolveNotificationLocale, themeUnderReviewCopy } from './notification-copy.js'
 
 /** The artist's followers who can still receive a notification: deleted and
  * suspended accounts are left out, so a fan-out never writes rows nobody
@@ -647,12 +648,17 @@ export async function notifyUserThemeUnderReview(
   userId: string,
   theme: { id: string; name: string },
 ): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { uiLocale: true },
+  })
+  const copy = themeUnderReviewCopy(resolveNotificationLocale(user?.uiLocale), theme.name)
   await prisma.notification.create({
     data: {
       userId,
       type: 'THEME_UNDER_REVIEW',
-      title: `"${theme.name}" is in review`,
-      body: 'An admin will approve or reject it soon.',
+      title: copy.title,
+      body: copy.body,
       url: '/dashboard/settings/themes',
       sticky: true,
     },

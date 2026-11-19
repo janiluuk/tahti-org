@@ -61,6 +61,8 @@ export const ProfilePatchSchema = z
     showPageHero: z.boolean().optional(),
     /** Solo DJ/artist vs collective/band. */
     artistKind: z.enum(ARTIST_KINDS).optional(),
+    /** Preferred UI language for API notifications. Null clears to auto (English). */
+    uiLocale: z.enum(['en', 'fi']).nullable().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 

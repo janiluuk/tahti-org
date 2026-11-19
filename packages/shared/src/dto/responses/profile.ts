@@ -191,4 +191,6 @@ export const ProfileFieldsSchema = z.object({
   createdAt: z.string().datetime(),
   /** Solo DJ/artist vs collective/band. Defaults to SINGLE when no channel. */
   artistKind: z.enum(['SINGLE', 'COLLECTIVE']),
+  /** Preferred UI language for API notifications (`en` | `fi`). Null = auto. */
+  uiLocale: z.enum(['en', 'fi']).nullable(),
 })

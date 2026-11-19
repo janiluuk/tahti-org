@@ -59,6 +59,7 @@ const profileSelect = {
   showDownloads: true,
   chatEnabled: true,
   showPageHero: true,
+  uiLocale: true,
   createdAt: true,
 } as const
 
@@ -96,10 +97,12 @@ function serializeProfile(
     showDownloads: boolean
     chatEnabled: boolean
     showPageHero: boolean
+    uiLocale: string | null
     createdAt: Date
   },
   artistKind: 'SINGLE' | 'COLLECTIVE',
 ) {
+  const uiLocale = profile.uiLocale === 'en' || profile.uiLocale === 'fi' ? profile.uiLocale : null
   return {
     id: profile.id,
     username: profile.username,
@@ -133,6 +136,7 @@ function serializeProfile(
     showDownloads: profile.showDownloads,
     chatEnabled: profile.chatEnabled,
     showPageHero: profile.showPageHero,
+    uiLocale,
     createdAt: profile.createdAt.toISOString(),
     artistKind,
   }
@@ -233,6 +237,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.showDownloads !== undefined) data.showDownloads = body.showDownloads
       if (body.chatEnabled !== undefined) data.chatEnabled = body.chatEnabled
       if (body.showPageHero !== undefined) data.showPageHero = body.showPageHero
+      if (body.uiLocale !== undefined) data.uiLocale = body.uiLocale
 
       const updated =
         Object.keys(data).length > 0

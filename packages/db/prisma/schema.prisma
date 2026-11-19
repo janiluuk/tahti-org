@@ -1011,6 +1011,8 @@ model User {
   weeklyLiveResetAt              DateTime?
   mentionsEnabled                Boolean    @default(true)
   publicMentionsEnabled          Boolean    @default(false)
+  /// Preferred UI language for API-authored notifications (`en` | `fi`). Null = auto → English.
+  uiLocale                       String?
   // Defaults applied to new tracks/channel when created — each item can still be
 
   // overridden individually afterward (Sound.commentsEnabled / Channel.commentsEnabled).
