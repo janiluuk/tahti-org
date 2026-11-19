@@ -435,6 +435,10 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      # A failed migration must fail the deploy: an API whose Prisma client
+      # expects missing columns 500s every authenticated request.
+      db-push:
+        condition: service_completed_successfully
       mailhog:
         condition: service_started
     healthcheck:
@@ -513,6 +517,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      db-push:
+        condition: service_completed_successfully
 
   # stem-separator moved to vimage7 (GPU) — see
   # infra/docker-compose.worker-remote.yml. Nothing runs on this host for it
