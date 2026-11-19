@@ -21,4 +21,4 @@ reciprocal rings) as heuristic flags for board review — no silent docking.
 - [ ] Formal appeal workflow
 - [ ] Threshold tuning after real production data
 - [ ] Player board UI to surface `anomalies` (sibling tahti-player PR)
-- [ ] Marketing `website/index.html` still says “(building)” — update only when asked
+- [x] Marketing `website/index.html` — dropped “(building)”; four detectors + human-review copy
