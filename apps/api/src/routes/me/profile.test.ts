@@ -113,6 +113,26 @@ describe('M12 — artist profile API', () => {
     })
   })
 
+  it('PATCH /api/me/profile sets and clears uiLocale', async () => {
+    const setFi = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { uiLocale: 'fi' },
+    })
+    expect(setFi.statusCode).toBe(200)
+    expect(setFi.json().uiLocale).toBe('fi')
+
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/profile',
+      headers: { cookie },
+      payload: { uiLocale: null },
+    })
+    expect(cleared.statusCode).toBe(200)
+    expect(cleared.json().uiLocale).toBeNull()
+  })
+
   it('PATCH /api/me/profile clears fullBio when set to null', async () => {
     await app.inject({
       method: 'PATCH',

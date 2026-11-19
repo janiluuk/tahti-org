@@ -6,6 +6,13 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-19 — User.uiLocale + first FI notification template
+
+`User.uiLocale` (`en`|`fi`|null) + profile GET/PATCH; `THEME_UNDER_REVIEW`
+uses `notification-copy` EN/FI. Player Language panel persists and hydrates.
+Leftover: migrate remaining notification templates → keep
+`finnish-api-notifications.md` partial.
+
 ## 2026-11-19 — LAN ops: workers redeploy, Yaniho peaks, artist-site fold
 
 `./scripts/redeploy-media-workers.sh` on vimage (0d5ad0cd) + vimage7

@@ -86,6 +86,11 @@ export {
   notifyOwnerOfForcedOffline,
   processScheduledPostNotifications,
 } from './notifications.js'
+export {
+  resolveNotificationLocale,
+  themeUnderReviewCopy,
+  type NotificationLocale,
+} from './notification-copy.js'
 export { closeStaleListenSessions } from './listen-sessions.js'
 export {
   encryptIntegrationFields,
