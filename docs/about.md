@@ -12,9 +12,11 @@ The platform exists for one purpose: to be the best broadcasting platform for in
 
 ## How the money works
 
-Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units - a fair formula combining plays, downloads, and direct fan support. The remaining 10% builds a reserve (capped at 6 months of costs). Surplus above the cap goes back to artists.
+Artists pay a membership subscription (€40/year or free tier). 90% of operating surplus is distributed annually to artists as grants based on engagement units — downloads and fan-sub euros, not passive plays. The remaining 10% builds a reserve (capped at 6 months of costs). Surplus above the cap goes back to artists.
 
 Fan subscriptions (€1–€100/month, set by the artist) go directly to the artist, minus a 2% platform fee that rolls into the next grant pool. Tahti takes no cut of fan-sub revenue for itself.
+
+**Keeping grants honest:** downloads are rate-limited and deduped; Tor and known bot networks can download but do not count. Pattern detection flags batch accounts, even download intervals, network IP clusters, and reciprocal rings for board review on the grant preview (`PATTERN_FRAUD_ALERT`). Nothing is docked silently by an algorithm — humans decide before unit reversal. Artist notification and a formal appeal path are still open follow-ups. Details: [engagement-and-fansubs.md](engagement-and-fansubs.md).
 
 The full financial picture - every euro in and out - is published on the [transparency page](https://tahti.live/transparency).
 

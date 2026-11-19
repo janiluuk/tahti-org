@@ -13,6 +13,7 @@ reciprocal rings) as heuristic flags for board review — no silent docking.
 - [x] Daily `pattern-fraud-scan` on `light-daily` → `PATTERN_FRAUD_ALERT`
 - [x] Shared `GrantAnomalySchema` + cron subTasks / worker dispatch
 - [x] Docs: engagement anti-fraud + DECISIONS row
+- [x] Product docs: `about.md`, `features.md` (honest grants + pattern detection)
 
 ## Leftovers
 
@@ -20,3 +21,4 @@ reciprocal rings) as heuristic flags for board review — no silent docking.
 - [ ] Formal appeal workflow
 - [ ] Threshold tuning after real production data
 - [ ] Player board UI to surface `anomalies` (sibling tahti-player PR)
+- [ ] Marketing `website/index.html` still says “(building)” — update only when asked
