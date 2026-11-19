@@ -1,13 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   broadcastRecordingPath,
   buildRecorderDockerCommand,
   recorderInputUrl,
   recorderContainerName,
+  resetActiveRecordersForTests,
+  spawnBroadcastRecorder,
 } from './recorder.js'
+
+vi.mock('node:child_process', async () => {
+  const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
+  return {
+    ...actual,
+    exec: vi.fn(
+      (_cmd: string, cb?: (err: Error | null, stdout: string, stderr: string) => void) => {
+        cb?.(null, '', '')
+        return {} as never
+      },
+    ),
+    execFile: vi.fn(
+      (
+        _file: string,
+        args: string[],
+        cb?: (err: Error | null, stdout: string, stderr: string) => void,
+      ) => {
+        const running =
+          args.includes('inspect') && args.includes('tahti-recorder-artist-abc123')
+            ? 'false'
+            : 'false'
+        cb?.(null, running, '')
+        return {} as never
+      },
+    ),
+  }
+})
 
 describe('recorderInputUrl', () => {
   it('uses Icecast mount for ICECAST source', () => {
@@ -62,5 +91,24 @@ describe('recorderContainerName', () => {
     expect(recorderContainerName('my-artist', 'broadcast-uuid-123')).toMatch(
       /^tahti-recorder-my-artist-/,
     )
+  })
+})
+
+describe('spawnBroadcastRecorder reconnect', () => {
+  afterEach(() => {
+    resetActiveRecordersForTests()
+    vi.clearAllMocks()
+  })
+
+  it('respawns when the previous sidecar for the same broadcast has exited', async () => {
+    const { exec } = await import('node:child_process')
+    const execMock = vi.mocked(exec)
+
+    await spawnBroadcastRecorder('ch-1', 'artist', 'abc123broadcast', 'ICECAST')
+    expect(execMock).toHaveBeenCalled()
+    const firstSpawnCalls = execMock.mock.calls.length
+
+    await spawnBroadcastRecorder('ch-1', 'artist', 'abc123broadcast', 'ICECAST')
+    expect(execMock.mock.calls.length).toBeGreaterThan(firstSpawnCalls)
   })
 })
