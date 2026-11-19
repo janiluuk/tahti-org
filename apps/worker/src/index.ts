@@ -40,6 +40,7 @@ import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 import { processFanSubscriberPurgeJob } from './jobs/fan-subscriber-purge.js'
 import { processSocialPostDispatchJob } from './jobs/social-post-dispatch.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
+import { processPatternFraudScanJob } from './jobs/pattern-fraud-scan.js'
 import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
 import { processInternetRadioNowPlayingSyncJob } from './jobs/internet-radio-now-playing-sync.js'
 import {
@@ -268,6 +269,7 @@ const worker = new Worker(
         return await runCronTasks({
           'tor-exit-list-sync': () => processTorExitListSyncJob(job),
           'download-fraud-scan': () => processDownloadFraudScanJob(job),
+          'pattern-fraud-scan': () => processPatternFraudScanJob(job),
           'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
           'embed-cover-backfill': () => processEmbedCoverBackfillJob(),
         })

@@ -79,6 +79,7 @@ describe('WORKER_CRON_JOBS', () => {
     expect(light?.subTasks).toEqual([
       'tor-exit-list-sync',
       'download-fraud-scan',
+      'pattern-fraud-scan',
       'live-show-recurrence-generate',
       'embed-cover-backfill',
     ])

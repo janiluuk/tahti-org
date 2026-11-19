@@ -135,10 +135,11 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '30 5 * * *',
     jobId: 'light-daily-cron',
     description:
-      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon), then fill missing covers on embedded sounds (provider art, else an artwork preset; 100 oldest per run)',
+      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then engagement pattern detection (batch accounts / even intervals / network clusters / reciprocal rings), then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon), then fill missing covers on embedded sounds (provider art, else an artwork preset; 100 oldest per run)',
     subTasks: [
       'tor-exit-list-sync',
       'download-fraud-scan',
+      'pattern-fraud-scan',
       'live-show-recurrence-generate',
       'embed-cover-backfill',
     ],
