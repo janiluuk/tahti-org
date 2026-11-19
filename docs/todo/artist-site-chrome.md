@@ -15,3 +15,8 @@ Lets an artist choose which Tahti chrome shows around their channel when it is o
 
 - [ ] Deploy the migration and API before the player ships the artist-site shell.
 - [ ] Player: finish and ship the designer controls and subdomain shell (tahti-player).
+
+## Status check (2026-11-19)
+
+API/migration code is on main; still deploy-gated. No local player shell ready
+to ship in this leftovers batch — leave open until deploy + player PR.
