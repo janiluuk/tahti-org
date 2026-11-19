@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tahti — Your Radio Station</title>
-<meta name="description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Open beta launches 1 August 2026.">
+<title>Tahti — Broadcasting for independent artists</title>
+<meta name="description" content="Nonprofit broadcasting for independent artists. Always-on channels, Studio tools, fan support with a 2% ops fee, public grants, AGPL-3.0. Lossless on member channels. Beta is live.">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tahti.live/">
-<meta property="og:title" content="Tahti — Your Radio Station">
-<meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Open beta launches 1 August 2026.">
+<meta property="og:title" content="Tahti — Broadcasting for independent artists">
+<meta property="og:description" content="Always-on artist channels, live + archive, Studio, fan support, grants, and co-op governance. No ads, no VC, AGPL-3.0. Beta is live.">
 <meta property="og:image" content="https://tahti.live/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
@@ -19,8 +19,8 @@
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tahti — Your Radio Station">
-<meta name="twitter:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio.">
+<meta name="twitter:title" content="Tahti — Broadcasting for independent artists">
+<meta name="twitter:description" content="Always-on channels, Studio, fan support, grants, AGPL-3.0. Lossless on member channels. Beta is live.">
 <meta name="twitter:image" content="https://tahti.live/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,11 +98,11 @@
   .fcard span{display:block; color:var(--muted); font-size:.8rem; margin-top:.2rem; line-height:1.35}
 
   .two{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:center}
-  .thesis{display:grid; grid-template-columns:1fr auto 1fr; gap:1.6rem; align-items:center; margin-top:2.2rem}
+  .thesis{display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:1rem; align-items:center; margin-top:2.2rem}
   .thesis .plus{font-family:var(--disp); font-size:2.2rem; color:var(--faint)}
   .thesis .col{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:1.6rem; min-height:150px; display:flex; flex-direction:column; justify-content:center}
   .thesis .col .lab{font-family:var(--mono); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin-bottom:.6rem}
-  .thesis .col .big{font-family:var(--disp); font-weight:600; font-size:1.4rem; line-height:1.15}
+  .thesis .col .big{font-family:var(--disp); font-weight:600; font-size:clamp(1.05rem,1.6vw,1.35rem); line-height:1.15}
 
   /* flow chips */
   .flow{display:flex; align-items:center; gap:.9rem; flex-wrap:wrap; margin-top:2rem}
@@ -255,13 +255,15 @@
   <!-- 2 THESIS -->
   <section class="slide">
     <div class="rise eyebrow">What we are</div>
-    <h2 class="rise">Two things at once.</h2>
+    <h2 class="rise">Three things at once.</h2>
     <div class="rise thesis">
-      <div class="col"><div class="lab">Release system</div><div class="big t-teal">A real discography &amp; release engine</div></div>
+      <div class="col"><div class="lab">Broadcast</div><div class="big t-violet">Always-on live + archive channels</div></div>
       <div class="plus">+</div>
-      <div class="col"><div class="lab">Broadcast</div><div class="big t-violet">A proper live platform for performers</div></div>
+      <div class="col"><div class="lab">Studio</div><div class="big t-teal">Releases, editor, designer, fans</div></div>
+      <div class="plus">+</div>
+      <div class="col"><div class="lab">Co-op</div><div class="big t-amber">Member votes, public ledger, grants</div></div>
     </div>
-    <p class="rise lede">You make the music. <strong>We take care of the rest</strong> — the tedious, mechanical work automated, drawn from two decades in streaming.</p>
+    <p class="rise lede">You make the music. <strong>We take care of the rest</strong> — hosting, tools, money rails and governance — under AGPL, with no ads and no exit.</p>
   </section>
 
   <!-- 3 BROADCASTING -->
@@ -319,18 +321,18 @@
     <div class="rise eyebrow">The toolset</div>
     <h2 class="rise">Everything in one place.</h2>
     <div class="rise fgrid">
-      <div class="fcard"><b>Auto-record &amp; schedule</b><span>every show captured — publish now or later</span></div>
-      <div class="fcard"><b>Green room → live</b><span>check levels off-air, then go on</span></div>
-      <div class="fcard"><b>Audio editor</b><span>effects &amp; plugins, in the browser</span></div>
-      <div class="fcard"><b>DSP smart links</b><span>one page, every store button</span></div>
-      <div class="fcard"><b>Embed anything</b><span>channel, release or show, anywhere</span></div>
-      <div class="fcard"><b>Import &amp; export</b><span>SoundCloud, Bandcamp, hearthis.at…</span></div>
-      <div class="fcard"><b>Your channel, your rules</b><span>design &amp; control it top to bottom</span></div>
-      <div class="fcard"><b>Private stash</b><span>your storage — keep it private or sell access</span></div>
-      <div class="fcard"><b>Talk to fans</b><span>live chat + private messaging</span></div>
-      <div class="fcard"><b>Newsletter &amp; press kit</b><span>reach them, look the part</span></div>
-      <div class="fcard"><b>Discuss &amp; vote</b><span>member proposals shape the roadmap</span></div>
-      <div class="fcard"><b>Moderators</b><span>run a shared channel together</span></div>
+      <div class="fcard"><b>Always-on channel</b><span>live HLS → archive rotation on one URL</span></div>
+      <div class="fcard"><b>Go live</b><span>OBS / Mixxx / Traktor / browser · green room · multistream</span></div>
+      <div class="fcard"><b>Auto-record &amp; series</b><span>capture shows, schedule episodes, venues &amp; events</span></div>
+      <div class="fcard"><b>Channel Designer</b><span>looks, visualizers, blocks, banners, press kit</span></div>
+      <div class="fcard"><b>Audio editor</b><span>waveform trim, EQ, dynamics, plugin chain, revisions</span></div>
+      <div class="fcard"><b>Library &amp; releases</b><span>uploads, stems, credits, smart links, DSP delivery</span></div>
+      <div class="fcard"><b>Import plugins</b><span>SoundCloud, Bandcamp, Mixcloud, HearThis, Drive…</span></div>
+      <div class="fcard"><b>Fan money</b><span>subs via Stripe Connect, store tiers, PWYW tracks</span></div>
+      <div class="fcard"><b>Talk to fans</b><span>live chat, DMs, posts, newsletter</span></div>
+      <div class="fcard"><b>Listen together</b><span>Tahti Jam, favourites, history, Tahti Selects</span></div>
+      <div class="fcard"><b>Desktop + plugins</b><span>Tahti Player, themes &amp; Store plugins, CLI</span></div>
+      <div class="fcard"><b>Radio &amp; Discord</b><span>Tahti Radio slots + 24/7 Discord voice bot</span></div>
     </div>
   </section>
 
@@ -356,9 +358,10 @@
     </div>
     <div class="rise" style="margin-top:1.4rem; display:flex; gap:.6rem; flex-wrap:wrap; align-items:center">
       <span style="font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)">Ways fans pay you</span>
-      <span class="chip">Channel subscriptions</span>
-      <span class="chip">Buy your private stash</span>
-      <span class="chip">Fan-only pre-releases</span>
+      <span class="chip">Fan subscriptions</span>
+      <span class="chip">One-time store tiers</span>
+      <span class="chip">Pay-what-you-want tracks</span>
+      <span class="chip">Subscriber-only gates</span>
     </div>
   </section>
   <section class="slide">
@@ -412,14 +415,14 @@
   <section class="slide">
     <div class="rise eyebrow">Built to be extended</div>
     <h2 class="rise">A platform, not a fixed menu.</h2>
-    <p class="rise lede" style="margin-top:.8rem">Almost everything on the surface is a plugin — switch on only what fits how you work, and leave the rest.</p>
+    <p class="rise lede" style="margin-top:.8rem">Tahti Player and Studio grow through plugins and themes — switch on only what fits how you work, and leave the rest.</p>
     <div class="rise fgrid">
-      <div class="fcard"><b>Visualisations</b><span>reactive visuals for your stream</span></div>
-      <div class="fcard"><b>Discovery dashboard</b><span>build the front page you want</span></div>
-      <div class="fcard"><b>Listener widgets</b><span>pull in the other services you use</span></div>
-      <div class="fcard"><b>Audio editor plugins</b><span>effects &amp; tools in the editor</span></div>
-      <div class="fcard"><b>Import / export</b><span>connectors to more platforms</span></div>
-      <div class="fcard"><b>Themes</b><span>skin your space your own way</span></div>
+      <div class="fcard"><b>Channel visualizers</b><span>audio-reactive Three.js looks on your page</span></div>
+      <div class="fcard"><b>Listener widgets</b><span>shape discovery surfaces you actually use</span></div>
+      <div class="fcard"><b>Audio editor plugins</b><span>effects &amp; tools in the waveform editor</span></div>
+      <div class="fcard"><b>Import / export</b><span>bring catalogues in; deliver out to DSPs</span></div>
+      <div class="fcard"><b>Themes</b><span>skin the player your own way</span></div>
+      <div class="fcard"><b>Public Store</b><span>catalogued on tahti-registry — always free</span></div>
     </div>
     <div class="rise" style="display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; margin-top:1.2rem">
       <span class="chip">Anyone can build one</span>
@@ -464,8 +467,8 @@
         <div class="price">€0</div>
         <ul>
           <li>Full lossless on member channels</li>
-          <li>Follow, live chat, support artists</li>
-          <li>Start a channel — ~1 hr/week live @ 192 kbps</li>
+          <li>Follow, favourites, Jam, live chat, support artists</li>
+          <li>Start a channel — limited live hours @ 192 kbps MP3</li>
         </ul>
       </div>
       <div class="plan paid">
@@ -473,9 +476,9 @@
         <div class="price">€40<span style="font-size:1rem;color:var(--muted)"> / year</span></div>
         <ul>
           <li>Lossless FLAC broadcast — you <em>and</em> your listeners</li>
-          <li>No weekly airtime cap</li>
-          <li>Full release + distribution, own space &amp; design</li>
-          <li>Newsletter, DMs, storage</li>
+          <li>No weekly airtime cap · unlimited storage soft target</li>
+          <li>Full Studio: designer, editor, releases, DSP delivery</li>
+          <li>Newsletter, DMs, stats, channel add-ons</li>
           <li>A vote at the AGM</li>
         </ul>
         <div class="foot">The €40 funds the grant pool and keeps the lights on — it isn't a premium tier.</div>
@@ -546,15 +549,15 @@
 
   <!-- 16 TIMELINE -->
   <section class="slide">
-    <div class="rise eyebrow">Roadmap</div>
+    <div class="rise eyebrow">Where we are</div>
     <h2 class="rise">Already running — not a someday project.</h2>
     <div class="rise timeline">
       <div class="tstep now"><span class="pt"></span><div class="when">NOW</div><div class="what">Beta live</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">WEEKS</div><div class="what">New interface</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">NEXT</div><div class="what">Invite round</div></div>
-      <div class="tstep"><span class="pt"></span><div class="when">END SEPT</div><div class="what">Public launch</div></div>
+      <div class="tstep"><span class="pt"></span><div class="when">SHIPPED</div><div class="what">Studio + Player</div></div>
+      <div class="tstep"><span class="pt"></span><div class="when">SHIPPED</div><div class="what">Grants honesty</div></div>
+      <div class="tstep"><span class="pt"></span><div class="when">NEXT</div><div class="what">Grow membership</div></div>
     </div>
-    <p class="rise lede">Still coming, so you hear it from us: <strong>multitrack + stems</strong> on top of the editor, the next <strong>anti-gaming</strong> layer, and more distribution options.</p>
+    <p class="rise lede">Live today: Channel Designer, Jam, stems on releases, desktop Tahti Player, pattern detection for grants. Next: artist notice and a formal appeal path for flagged units, plus more DSP connectors.</p>
   </section>
 
   <!-- 17 RISKS -->
@@ -573,9 +576,9 @@
 
   <!-- 18 CLOSE -->
   <section class="slide center">
-    <div class="rise"><span class="onair"><span class="dot"></span>Invite round opens soon</span></div>
+    <div class="rise"><span class="onair"><span class="dot"></span>Beta is open</span></div>
     <h2 class="rise" style="font-size:clamp(2.2rem,6vw,4rem); margin-top:1.4rem">Don't imagine it.<br><span class="t-teal">Come through our door.</span></h2>
-    <p class="rise lede">The beta is running now. Join the first wave of artists — set up a channel, run a show, and help steer what we build next.</p>
+    <p class="rise lede">Join as a listener or artist — set up a channel, go live, publish a release, or just tune in. Members steer what we build next.</p>
     <div class="rise cta-row" style="justify-content:center">
       <a href="https://app.tahti.live/join" class="btn-primary">Join Tahti →</a>
       <a href="https://app.tahti.live/login" class="btn-secondary">Sign in</a>
