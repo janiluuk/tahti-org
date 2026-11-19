@@ -11,7 +11,8 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Conditional metadata:** Tracklists and venue/location details appear for shows, recordings, DJ sets, mixes, and other long-form material rather than ordinary tracks.
 - **Discovery:** `/listen` defaults to Live. Signed-in “For you” (feed, new-to-you, widgets) is collapsed on small screens and omitted when there is no session. Artist directory and Tahti Selects load when those tabs open. Radio keeps the player plus What’s next; track/channel history lives in History.
 - **Engagement:** Likes, follows, reposts, comments where enabled, add-to-queue feedback, and direct artist messaging for signed-in accounts.
-- **Downloads:** Artist-controlled downloads with MP3 or lossless files when available; anonymous download paths remain supported.
+- **Downloads:** Artist-controlled downloads with MP3 or lossless files when available; anonymous download paths remain supported. Counted downloads feed engagement units for grants after rate limits, dedup, and Tor/no-count filtering.
+- **Engagement pattern detection:** Daily scan plus grant-preview anomalies for batch accounts, even download intervals, network IP clusters, and reciprocal rings (`PATTERN_FRAUD_ALERT`). Board reviews flags; no silent unit docking.
 - **Embeds:** Channel, release, collection, SoundCloud, Mixcloud, HearThis, and Mikseri playback surfaces.
 - **Events:** Upcoming live shows and events appear on profiles in humanized form, such as “Next gig in 3 months at …”.
 - **Sharing and safety:** Share actions and content reporting are available from compact overflow menus.
@@ -119,7 +120,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Content tools:** Artist archive management, artist-specific top lists, announcements, news, venues, and moderation/report workflows.
 - **Tahti Selects:** Generate a ten-track rotation from top-played eligible tracks, add or replace the current list, reorder/remove entries, and auto-fill an empty rotation before stream start.
 - **Radio operations:** Radio stream status, submissions, scheduling, and operational controls.
-- **Financial transparency:** Ledger, fan-subscription operations, grants, payouts, public transparency summaries, and immutable correction entries.
+- **Financial transparency:** Ledger, fan-subscription operations, grants (preview shows pattern/anomaly flags), payouts, public transparency summaries, and immutable correction entries.
 - **Association governance:** Member register, AGM/board meetings with chair/secretary and minutes-signature fields, a presigned meeting-minutes upload with a downloadable minutes URL, motions, resolutions, voting, a board governance audit log (finance, subscriptions, membership, decisions, meetings, radio bookings) on the shared LogViewer, and public governance documents. API only, no web pages yet: motion seconding/circulation and result certificates, correction requests, numbered agenda items with outcomes, legal holds, board terms and elections, and yearly-report approval/publication/filing (see `docs/governance-worklog.md`).
 
 ## Platform and integrations

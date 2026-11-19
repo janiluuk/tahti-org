@@ -39,23 +39,25 @@ Where:
   and dedup (see below).
 - **`paid_downloads`** = number of times a fan-subscriber to artist A
   downloaded one of A's tracks/mixes. Weighted 5× because the strongest signal
-  of value is "this person is paying *and* downloading."
+  of value is "this person is paying _and_ downloading."
 - **`fan_sub_euros_received`** = total euros that fans paid artist A in direct
   subscriptions during the year. €1/month = 12 units/year. €10/month = 120 units/year.
 
 ### Worked example
 
 Artist Long Doe in fiscal year 2027:
+
 - 800 free-tier listeners downloaded the new mix → 800 × 1 = 800 units
 - 40 fan-subscribers downloaded 3 tracks each on average → 120 × 5 = 600 units
 - 40 fan-subscribers paying avg €5/month → 40 × €60 = €2,400 → 2,400 units
 - **Total units: 3,800**
 
 If the platform total is 1,000,000 units and the grant pool is €172,649 (Y3 modeled):
+
 - Long Doe's share = 3,800 / 1,000,000 = 0.38%
 - Long Doe's grant = €656
 
-This is *in addition to* the €2,400/year that flowed directly to Long Doe via
+This is _in addition to_ the €2,400/year that flowed directly to Long Doe via
 fan-subs (gross). After the current payment provider's processing fee and the
 2% ops fee, Long received **€2,136** directly (480 × €5 charges: 480 × €0.45
 Stripe EU-card processing + 480 × €0.10 ops), plus the €656 grant — **€2,792**
@@ -85,17 +87,19 @@ keeping the bar accessible — 5 free downloads or one €5/month fan-sub clears
 
 ### Permissions matrix
 
-|                       | Streaming | Free download | Paid download |
-|-----------------------|-----------|---------------|---------------|
-| Anonymous listener    | ✓         | ✓ (rate-limited) | — |
-| Free account listener | ✓         | ✓ (rate-limited) | — |
-| Fan-subscriber        | ✓         | ✓ (unlimited) | ✓ (unlimited, FLAC available) |
+|                       | Streaming | Free download    | Paid download                 |
+| --------------------- | --------- | ---------------- | ----------------------------- |
+| Anonymous listener    | ✓         | ✓ (rate-limited) | —                             |
+| Free account listener | ✓         | ✓ (rate-limited) | —                             |
+| Fan-subscriber        | ✓         | ✓ (unlimited)    | ✓ (unlimited, FLAC available) |
 
 What "free download" gets:
+
 - The Opus 256 streaming derivative (~6 MB per 3-minute track)
 - OR the MP3 320 derivative (~7 MB per 3-minute track) — artist's choice per release
 
 What "paid download" gets (fan-subscribers only):
+
 - The original-source file as uploaded (WAV / FLAC / 24-bit / whatever)
 - AND/OR the FLAC 16/44 derivative
 - AND/OR any lower-quality format
@@ -126,13 +130,19 @@ Without account requirement, we rely on layered defenses:
    of legitimate research / journalism IPs that override this.
 
 Daily cron runs fraud detection: flags any artist whose download volume grew
->20× day-over-day, queues for manual review. Fraud convictions result in unit
-reversal in the ledger (with audit trail) and possibly account suspension per
-bylaws §3 (member misconduct).
+
+> 20× day-over-day (`DOWNLOAD_FRAUD_ALERT`), and runs **pattern detection** on
+> the last 30 days of counted downloads (`PATTERN_FRAUD_ALERT`): batch-created
+> accounts, even download intervals, network IP clusters, and reciprocal
+> rings between channels. Flags are for human review only — nothing is docked
+> silently. Fraud convictions result in unit reversal in the ledger (with audit
+> trail) and possibly account suspension per bylaws §3 (member misconduct).
+> Artist notification and a formal appeal path are still open follow-ups.
 
 ### Bandwidth and storage implications
 
 At Y3 scale (4,000 member artists, ~400k downloads/year):
+
 - Average download ~6 MB (Opus 256 derivative)
 - Total ~2.4 TB/year of download bandwidth
 - Cost: ~€3,000/yr on Bunny CDN (modeled in financials)
@@ -140,6 +150,7 @@ At Y3 scale (4,000 member artists, ~400k downloads/year):
   generating new files per download
 
 For paid (FLAC) downloads at Y3 scale (~60k FLAC downloads/year, ~30 MB each):
+
 - ~1.8 TB/year
 - Cost: included in same line
 
@@ -207,23 +218,23 @@ artist_net = gross − provider_processing − (gross × 2%)
 
 Worked example with **Stripe as the current provider**, €5/month EU card:
 
-| Line | Amount | Share of €5 |
-|---|---|---|
-| Fan pays (gross) | €5.00 | 100% |
-| Payment processing (Stripe 2.9% + €0.30) | −€0.45 | 9% |
-| Tahti ops fee (2% of gross) | −€0.10 | 2% |
-| **Artist receives** | **€4.45** | **89%** |
+| Line                                     | Amount    | Share of €5 |
+| ---------------------------------------- | --------- | ----------- |
+| Fan pays (gross)                         | €5.00     | 100%        |
+| Payment processing (Stripe 2.9% + €0.30) | −€0.45    | 9%          |
+| Tahti ops fee (2% of gross)              | −€0.10    | 2%          |
+| **Artist receives**                      | **€4.45** | **89%**     |
 
 The same formula at other prices (Stripe EU card). The **fixed €0.30**
 dominates small tiers:
 
 | Gross | Processing | 2% ops | Artist | Artist share |
-|---|---|---|---|---|
-| €1 | €0.33 | €0.02 | €0.65 | 65% |
-| €3 | €0.39 | €0.06 | €2.55 | 85% |
-| €5 | €0.45 | €0.10 | €4.45 | 89% |
-| €10 | €0.59 | €0.20 | €9.21 | 92% |
-| €100 | €3.20 | €2.00 | €94.80 | 95% |
+| ----- | ---------- | ------ | ------ | ------------ |
+| €1    | €0.33      | €0.02  | €0.65  | 65%          |
+| €3    | €0.39      | €0.06  | €2.55  | 85%          |
+| €5    | €0.45      | €0.10  | €4.45  | 89%          |
+| €10   | €0.59      | €0.20  | €9.21  | 92%          |
+| €100  | €3.20      | €2.00  | €94.80 | 95%          |
 
 Do not quote "98% to the artist" or "2% covers processing." Those collapse
 two different fees. On a €5 Stripe EU-card charge the artist keeps **89%**.
@@ -234,11 +245,11 @@ provider's published fees.
 
 ### Not the same money as grants or royalties
 
-| Stream | What the artist sees | When |
-|---|---|---|
+| Stream         | What the artist sees                                       | When                                                                                                                                                |
+| -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fan-sub orders | `GET /api/me/fan-sub-payouts` — one row per billing period | Charge → daily `fan-sub-payout` cron (04:00 UTC) books `PAID` / retries `FAILED`. Last run is on `/admin/dashboard` and `/admin/financial/fansubs`. |
-| Annual grants | Org surplus pool, engagement units | Year-end; confirm within 30 days. Separate from fan-subs. |
-| DSP royalties | Revelator reports | Monthly sync. Production Revenue mixes these into the same dated list; they are not fan-sub orders. |
+| Annual grants  | Org surplus pool, engagement units                         | Year-end; confirm within 30 days. Separate from fan-subs.                                                                                           |
+| DSP royalties  | Revelator reports                                          | Monthly sync. Production Revenue mixes these into the same dated list; they are not fan-sub orders.                                                 |
 
 One fan can hold **one** active subscription per artist (unique
 artist+subscriber). Upgrading a tier overwrites that row.
@@ -264,15 +275,15 @@ tests lock the numbers below.
 **2 fans at €5/month for 10 months**, and receives a small **€1** engagement
 grant from the annual pool.
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | +€100.00 (2 × €5 × 10 mo) |
-| Payment processing (Stripe) | −€9.00 (20 charges × €0.45) |
-| Tahti operational fee (2%) | −€2.00 (20 × €0.10) |
-| **Net from fan-subs** | **+€89.00** |
-| Annual engagement grant (M9) | +€1.00 |
-| Tahti membership (Artist tier) | −€40.00 |
-| **Net profit (year)** | **+€50.00** |
+| Line (artist perspective)      | Amount                      |
+| ------------------------------ | --------------------------- |
+| Fan subscriptions (gross)      | +€100.00 (2 × €5 × 10 mo)   |
+| Payment processing (Stripe)    | −€9.00 (20 charges × €0.45) |
+| Tahti operational fee (2%)     | −€2.00 (20 × €0.10)         |
+| **Net from fan-subs**          | **+€89.00**                 |
+| Annual engagement grant (M9)   | +€1.00                      |
+| Tahti membership (Artist tier) | −€40.00                     |
+| **Net profit (year)**          | **+€50.00**                 |
 
 Long keeps **€89** via the current payment provider during the year; the
 **€1** grant and **€40** membership sit on top of that for a **€50** personal
@@ -284,13 +295,13 @@ surplus after membership.
 fan-subscribers. Only cost is membership — **€50** in this example (e.g. list
 price or first-year bundle above the default €40).
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | €0.00 |
-| Net from fan-subs | €0.00 |
-| Annual engagement grant | €0.00 |
-| Tahti membership | −€50.00 |
-| **Net profit (year)** | **−€50.00** |
+| Line (artist perspective) | Amount      |
+| ------------------------- | ----------- |
+| Fan subscriptions (gross) | €0.00       |
+| Net from fan-subs         | €0.00       |
+| Annual engagement grant   | €0.00       |
+| Tahti membership          | −€50.00     |
+| **Net profit (year)**     | **−€50.00** |
 
 No grant eligibility without engagement units; fan-sub tooling still works but
 generates no offsetting income.
@@ -301,15 +312,15 @@ generates no offsetting income.
 membership. Fan-sub net is **€40.05** (9 × €4.45); after membership the year
 is within a few cents of zero.
 
-| Line (artist perspective) | Amount |
-|---|---|
-| Fan subscriptions (gross) | +€45.00 (1 × €5 × 9 mo) |
-| Payment processing (Stripe) | −€4.05 (9 × €0.45) |
-| Tahti operational fee (2%) | −€0.90 (9 × €0.10) |
-| **Net from fan-subs** | **+€40.05** |
-| Annual engagement grant | €0.00 |
-| Tahti membership | −€40.00 |
-| **Net profit (year)** | **≈ €0.00** (+€0.05) |
+| Line (artist perspective)   | Amount                  |
+| --------------------------- | ----------------------- |
+| Fan subscriptions (gross)   | +€45.00 (1 × €5 × 9 mo) |
+| Payment processing (Stripe) | −€4.05 (9 × €0.45)      |
+| Tahti operational fee (2%)  | −€0.90 (9 × €0.10)      |
+| **Net from fan-subs**       | **+€40.05**             |
+| Annual engagement grant     | €0.00                   |
+| Tahti membership            | −€40.00                 |
+| **Net profit (year)**       | **≈ €0.00** (+€0.05)    |
 
 This is the minimum viable supporter story: **one dedicated fan for most of a
 year** roughly pays for the artist's Tahti seat. Extra fans, paid downloads
@@ -319,6 +330,7 @@ above).
 ### Subscriber accounts
 
 Fan-subscribers have full user accounts:
+
 - Email + password (or OAuth via Google/Apple)
 - Stripe customer ID
 - One or more active subscriptions (per artist)
@@ -326,6 +338,7 @@ Fan-subscribers have full user accounts:
 - GDPR-compliant data: full export, full deletion on request
 
 When a subscriber cancels:
+
 - Subscription marked as canceled in Stripe; access continues through end of
   current billing period
 - After grace period (7 days post-period-end), Supporter badge removed,
@@ -354,6 +367,7 @@ When a subscriber cancels:
 ### Subscribe page design
 
 On `tahti.live/u/<handle>/subscribe`:
+
 - Artist hero (same as profile)
 - Intro text: why subscribe (artist-written)
 - Tier cards: name, price, benefits
@@ -447,7 +461,8 @@ enum FanSubPayoutState { PENDING PAID FAILED REFUNDED }
 
 ## Worker jobs
 
-- `download-fraud-scan` — daily 06:00 UTC, flags channels with >20× day-over-day counted download growth (`DOWNLOAD_FRAUD_ALERT` audit)
+- `download-fraud-scan` — via `light-daily` (~05:30 UTC), flags channels with >20× day-over-day counted download growth (`DOWNLOAD_FRAUD_ALERT` audit)
+- `pattern-fraud-scan` — same light-daily tick; batch accounts / even intervals / network clusters / reciprocal rings on 30 days of counted downloads (`PATTERN_FRAUD_ALERT`); also attached to grant preview anomalies
 - `membership-renewal-reminder` — daily 07:00 UTC, email ~30 days before annual membership expiry (deduped via audit log)
 - `membership-lapse` — daily 08:00 UTC, suspends ARTIST memberships older than 365 days without renewal
 - `download-unit-rollup` — every 15 min, aggregates eligible downloads into `engagement_units_daily` table

@@ -15,7 +15,11 @@ export interface PlatformMetricSnapshot {
   registrationsToday: number
 }
 
-const AUDIT_ERROR_ACTIONS = ['STRIPE_WEBHOOK_ERROR', 'DOWNLOAD_FRAUD_ALERT'] as const
+const AUDIT_ERROR_ACTIONS = [
+  'STRIPE_WEBHOOK_ERROR',
+  'DOWNLOAD_FRAUD_ALERT',
+  'PATTERN_FRAUD_ALERT',
+] as const
 
 function startOfUtcDay(): Date {
   const now = new Date()

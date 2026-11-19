@@ -3,9 +3,11 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { allocateGrants } from './allocate.js'
+import { collectPatternFlags, type PatternAnomalyCode } from './pattern-detection.js'
 import { computeEngagementUnits } from './run.js'
 
-export type GrantAnomalyCode = 'DOMINANT_IP' | 'HIGH_UNIT_SHARE' | 'ANONYMOUS_GRANT'
+export type GrantAnomalyCode =
+  'DOMINANT_IP' | 'HIGH_UNIT_SHARE' | 'ANONYMOUS_GRANT' | PatternAnomalyCode
 
 export interface GrantAnomaly {
   code: GrantAnomalyCode
@@ -138,6 +140,21 @@ export async function buildGrantPreview(
       fanSubEuros: row.fanSubEuros,
       anomalies,
     })
+  }
+
+  const patternFlags = await collectPatternFlags(prisma, start, end)
+  if (patternFlags.length > 0) {
+    const channelToUser = new Map(
+      users.filter((u) => u.channel?.id).map((u) => [u.channel!.id, u.id] as const),
+    )
+    const artistByUser = new Map(artists.map((a) => [a.userId, a]))
+    for (const flag of patternFlags) {
+      const userId = channelToUser.get(flag.channelId)
+      const artist = userId ? artistByUser.get(userId) : undefined
+      if (!artist) continue
+      if (artist.anomalies.some((a) => a.code === flag.code)) continue
+      artist.anomalies.push({ code: flag.code, message: flag.message })
+    }
   }
 
   artists.sort((a, b) => b.units - a.units)

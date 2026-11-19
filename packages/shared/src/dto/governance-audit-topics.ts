@@ -40,13 +40,14 @@ export const GOVERNANCE_AUDIT_TOPICS: readonly GovernanceAuditTopic[] = [
     id: 'finance',
     label: 'Finance & grants',
     description:
-      'Ledger entries, grant rounds, engagement-unit adjustments, Stripe webhook failures, and download fraud alerts.',
+      'Ledger entries, grant rounds, engagement-unit adjustments, Stripe webhook failures, download fraud alerts, and engagement pattern flags.',
     actions: [
       'LEDGER_ENTRY_CREATE',
       'GRANT_RUN',
       'ENGAGEMENT_ADJUSTMENT',
       'STRIPE_WEBHOOK_ERROR',
       'DOWNLOAD_FRAUD_ALERT',
+      'PATTERN_FRAUD_ALERT',
     ],
   },
   {
@@ -205,6 +206,7 @@ export const GOVERNANCE_AUDIT_ACTION_LABELS: Record<string, string> = {
   ENGAGEMENT_ADJUSTMENT: 'Engagement units adjusted',
   STRIPE_WEBHOOK_ERROR: 'Stripe webhook error',
   DOWNLOAD_FRAUD_ALERT: 'Download fraud alert',
+  PATTERN_FRAUD_ALERT: 'Engagement pattern alert',
   FAN_SUBSCRIPTION_CREATE: 'Fan subscription started',
   MEMBER_SUSPEND: 'Member suspended',
   MEMBER_REINSTATE: 'Member reinstated',

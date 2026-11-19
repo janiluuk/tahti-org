@@ -14,6 +14,7 @@ describe('buildGrantPreview', () => {
         findMany: async () => [{ surplus: BigInt(100_000) }],
       },
       download: {
+        findMany: async () => [],
         groupBy: async (args: { by: string[] }) => {
           if (args.by.includes('byIpHash')) {
             // DOMINANT_IP check: ch-1 has 20 counted downloads, 18 from the same

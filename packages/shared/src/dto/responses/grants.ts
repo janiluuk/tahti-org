@@ -4,7 +4,15 @@
 import { z } from 'zod'
 
 export const GrantAnomalySchema = z.object({
-  code: z.enum(['DOMINANT_IP', 'HIGH_UNIT_SHARE', 'ANONYMOUS_GRANT']),
+  code: z.enum([
+    'DOMINANT_IP',
+    'HIGH_UNIT_SHARE',
+    'ANONYMOUS_GRANT',
+    'BATCH_ACCOUNTS',
+    'EVEN_INTERVALS',
+    'NETWORK_CLUSTERS',
+    'RECIPROCAL_RINGS',
+  ]),
   message: z.string(),
 })
 
