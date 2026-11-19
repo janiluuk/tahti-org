@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyRtmpStreamName } from '../../lib/ingest-credentials.js'
-import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
+import { restartChannelLiquidsoap, spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 import { endBroadcast, endOpenBroadcasts } from '@tahti/shared/broadcast-end'
 import {
@@ -205,9 +205,16 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       const broadcast = await fastify.prisma.broadcast.findFirst({
         where: { channelId: channel.id, endedAt: null },
         orderBy: { startedAt: 'desc' },
+        select: {
+          id: true,
+          wentLiveAt: true,
+          visibility: true,
+          source: true,
+        },
       })
 
       if (broadcast) {
+        const wasPrivate = broadcast.visibility === 'PRIVATE'
         await endBroadcast(fastify.prisma, broadcast.id)
         // A session that never went LIVE (preview-only) has no public sound to finalize.
         // M35: artist can opt out of auto-recording per channel.
@@ -224,6 +231,16 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
                 }),
               },
               'finalize-broadcast-recording enqueue failed',
+            ),
+          )
+        }
+        // PRIVATE sessions strip alwaysMirror targets from Liquidsoap; re-render
+        // once the session is ended so 24/7 mirrors come back.
+        if (wasPrivate) {
+          restartChannelLiquidsoap(channel.id, channel.slug, broadcast.id).catch((err: unknown) =>
+            fastify.log.error(
+              { err, broadcastId: broadcast.id, channelId: channel.id },
+              'liquidsoap mirror restore after PRIVATE end failed',
             ),
           )
         }

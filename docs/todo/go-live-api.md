@@ -2,12 +2,12 @@
 
 **Status:** partial
 
-**Why:** The Tahti Player "Go live" redesign (`../tahti-player/docs/todo/go-live-redesign.md`,
+**Why:** The Tahti Player "Go live" redesign (`../tahti-player` Go live stepper,
 Decisions 2026-11-10) needs show info saveable before the encoder connects, a
 `PRIVATE` visibility for test runs, a per-broadcast cover, and an explicit
 reconnecting state instead of the client guessing from "LIVE without signal".
 
-## Shipped in this PR
+## Shipped
 
 - **Pre-session draft:** `channel.BroadcastShowDraft` (one row per channel).
   `GET/PATCH /api/me/channel/preflight` read/write it while there is no
@@ -33,15 +33,17 @@ reconnecting state instead of the client guessing from "LIVE without signal".
   it at the drop time and queues the recording. Exposed as `ingest` +
   `reconnectDeadline` on `GET /api/me/stream-settings/status` and
   `GET /api/auth/me` `channel`.
+- **Player (tahti-player):** Go live uses `session`, `coverUrl`, `ingest`, and
+  `reconnectDeadline` (`useGoLiveState` / status chip / show info). Checkbox
+  closed 2026-11-19.
+- **Recorder on reconnect (2026-11-19):** `spawnBroadcastRecorder` (and
+  fingerprint ingest) respawn when the previous sidecar for the same broadcast
+  id has exited, so audio after a LIVE reconnect is recorded again.
+- **alwaysMirror after PRIVATE (2026-11-19):** RTMP/Icecast end paths restart
+  Liquidsoap after a PRIVATE session ends so 24/7 mirror targets return.
 
 ## Left
 
-- [ ] tahti-player: Go live page uses `session`, `coverUrl`, `ingest` (player PR).
-- [ ] Recorder sidecar: after a reconnect, the ffmpeg recorder for the resumed
-      broadcast id has usually exited and the orchestrator skips respawning it
-      (`activeRecorders` still holds the id), so audio after the reconnect is not
-      recorded. Needs an orchestrator fix.
 - [ ] HLS is served from MinIO without auth, so a PRIVATE (like a PREVIEW)
       stream is hidden by not handing out its URL, not by access control.
-- [ ] `alwaysMirror` 24/7 mirrors stay off after a PRIVATE session ends until
-      Liquidsoap is next re-rendered.
+      Recorded in `docs/DECISIONS.md` (2026-11-19).

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { exec } from 'node:child_process'
+import { exec, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { BroadcastSource } from '@tahti/db'
 import { edgeEncoderRelayUrl } from './edge-encoder.js'
@@ -13,6 +13,7 @@ import {
 } from './docker-streaming.js'
 
 const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 
 export {
   FFMPEG_IMAGE,
@@ -84,6 +85,21 @@ async function removeContainer(containerName: string): Promise<void> {
   }
 }
 
+/** True when the named container exists and is running. */
+export async function isDockerContainerRunning(containerName: string): Promise<boolean> {
+  try {
+    const { stdout } = await execFileAsync('docker', [
+      'inspect',
+      '-f',
+      '{{.State.Running}}',
+      containerName,
+    ])
+    return stdout.trim() === 'true'
+  } catch {
+    return false
+  }
+}
+
 export function recorderInputUrl(
   source: BroadcastSource,
   slug: string,
@@ -105,7 +121,15 @@ export async function spawnBroadcastRecorder(
   source: BroadcastSource,
   rtmpStreamKey?: string | null,
 ): Promise<void> {
-  if (activeRecorders.has(broadcastId)) return
+  const existing = activeRecorders.get(broadcastId)
+  if (existing) {
+    // Encoder reconnect reuses the same broadcast id. The previous ffmpeg
+    // sidecar usually exited when the ingest dropped; skip only if it is still up.
+    if (await isDockerContainerRunning(existing.containerName)) {
+      return
+    }
+    activeRecorders.delete(broadcastId)
+  }
 
   const containerName = recorderContainerName(slug, broadcastId)
   await removeContainer(containerName)
@@ -118,6 +142,11 @@ export async function spawnBroadcastRecorder(
   })
   await execAsync(cmd)
   activeRecorders.set(broadcastId, { containerName, channelId })
+}
+
+/** Test helper: clear in-memory recorder map between unit tests. */
+export function resetActiveRecordersForTests(): void {
+  activeRecorders.clear()
 }
 
 export async function stopBroadcastRecorder(broadcastId: string): Promise<void> {

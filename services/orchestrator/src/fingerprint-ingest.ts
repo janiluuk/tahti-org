@@ -5,7 +5,7 @@ import { exec, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { BroadcastSource } from '@tahti/db'
 import { DOCKER_NETWORK } from './docker-streaming.js'
-import { recorderInputUrl } from './recorder.js'
+import { isDockerContainerRunning, recorderInputUrl } from './recorder.js'
 
 const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
@@ -147,7 +147,13 @@ export async function spawnFingerprintIngest(opts: {
   apiUrl: string
   internalSecret: string
 }): Promise<void> {
-  if (activeFingerprintIngest.has(opts.broadcastId)) return
+  const existing = activeFingerprintIngest.get(opts.broadcastId)
+  if (existing) {
+    if (await isDockerContainerRunning(existing.containerName)) {
+      return
+    }
+    activeFingerprintIngest.delete(opts.broadcastId)
+  }
 
   const containerName = fingerprintContainerName(opts.slug, opts.broadcastId)
   await removeContainer(containerName)
