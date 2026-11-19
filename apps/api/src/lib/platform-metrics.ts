@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import { Prisma, type PrismaClient } from '@tahti/db'
 
 export interface PlatformMetricSnapshot {
   registeredUsers: number
@@ -10,6 +10,7 @@ export interface PlatformMetricSnapshot {
   storageUsedBytes: number
   storageQuotaBytes: number
   tracksTotal: number
+  soundsReadyMissingPeaks: number
   releasesPublishedTotal: number
   registrationsToday: number
 }
@@ -38,6 +39,7 @@ export async function collectPlatformMetrics(
     auditErrors24h,
     storageAgg,
     tracksTotal,
+    soundsReadyMissingPeaks,
     releasesPublishedTotal,
     registrationsToday,
   ] = await Promise.all([
@@ -57,6 +59,17 @@ export async function collectPlatformMetrics(
       _sum: { usedBytes: true, quotaBytes: true },
     }),
     prisma.sound.count(),
+    prisma.sound.count({
+      where: {
+        status: 'READY',
+        OR: [{ peaks: { equals: Prisma.DbNull } }, { editorPeaks: { equals: Prisma.DbNull } }],
+        AND: [
+          {
+            OR: [{ flacKey: { not: null } }, { rawKey: { not: null } }, { mp3Key: { not: null } }],
+          },
+        ],
+      },
+    }),
     prisma.release.count({ where: { state: 'PUBLISHED' } }),
     prisma.user.count({ where: { createdAt: { gte: dayStart } } }),
   ])
@@ -68,6 +81,7 @@ export async function collectPlatformMetrics(
     storageUsedBytes: bigintSum(storageAgg._sum.usedBytes),
     storageQuotaBytes: bigintSum(storageAgg._sum.quotaBytes),
     tracksTotal,
+    soundsReadyMissingPeaks,
     releasesPublishedTotal,
     registrationsToday,
   }
@@ -93,6 +107,9 @@ export function renderPlatformMetricLines(snapshot: PlatformMetricSnapshot): str
     '# HELP tahti_tracks_total Total sound items (tracks).',
     '# TYPE tahti_tracks_total gauge',
     `tahti_tracks_total ${snapshot.tracksTotal}`,
+    '# HELP tahti_sounds_ready_missing_peaks READY sounds with audio but null peaks or editorPeaks.',
+    '# TYPE tahti_sounds_ready_missing_peaks gauge',
+    `tahti_sounds_ready_missing_peaks ${snapshot.soundsReadyMissingPeaks}`,
     '# HELP tahti_releases_published_total Published releases.',
     '# TYPE tahti_releases_published_total gauge',
     `tahti_releases_published_total ${snapshot.releasesPublishedTotal}`,

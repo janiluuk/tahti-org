@@ -9,6 +9,9 @@ sounds.
 
 ## Do on LAN (vimage)
 
+Requires SSH/LAN to the production hosts. Skip this todo from a laptop
+without VPN/LAN — scripts are ready; do not invent credentials.
+
 1. `./scripts/redeploy-media-workers.sh` (stack worker + cron-runner +
    vimage7 transcode), or a full `./scripts/deploy_prod.sh` if preferred.
 2. Board: `GET /api/admin/workers` — every lane in `laneCoverage` has

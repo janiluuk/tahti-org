@@ -1,26 +1,34 @@
-# Peaks DTO / pipeline gap audit (slice 1–4)
+# Peaks DTO / pipeline gap audit
 
 **Status:** partial  
-**Updated:** 2026-11-18  
+**Updated:** 2026-11-19  
 **Parent:** `../tahti-player/docs/todo/server-peaks-everywhere.md`
 
-## Surfaces that already select `peaks`
+## Shipped
 
-| Surface                        | Path                                                    | Notes                 |
-| ------------------------------ | ------------------------------------------------------- | --------------------- |
-| Channel items                  | `apps/api/src/routes/channels/items.ts`                 | `peaks: true`         |
-| Search                         | `apps/api/src/routes/discover/search.ts`                | returns peaks         |
-| Tahti Selects gallery          | `apps/api/src/routes/channels/tahti-selects-gallery.ts` | `peaks: true`         |
-| Collections (public + helpers) | `apps/api/src/routes/collections/`                      | `peaks: true`         |
-| Feed                           | `apps/api/src/routes/me/feed.ts`                        | `peaks: true`         |
-| Radio recently-played          | `apps/api/src/routes/radio/index.ts`                    | peaks when replayable |
+- Surfaces that select `peaks` (channel items, search, Selects gallery,
+  collections, feed, radio recently-played).
+- Transcode extracts peaks inline; missing after READY enqueues
+  `backfill-editor-peaks`.
+- Sweep cron batches READY rows with null peaks/editorPeaks.
+- Prometheus gauge `tahti_sounds_ready_missing_peaks` on `GET /metrics`
+  (same READY ∩ audio ∩ null peaks/editorPeaks filter as the sweep).
 
-## Pipeline
+## Ops
 
-- Transcode extracts peaks inline; if missing after READY, enqueues `backfill-editor-peaks`.
-- Sweep cron still batches READY rows with null peaks/editorPeaks.
-- Dry-run / enqueue: `node scripts/peaks-gap-audit.mjs [--slug yaniho] [--enqueue]`
+Dry-run (no enqueue):
+
+```bash
+DATABASE_URL=… node scripts/peaks-gap-audit.mjs --slug yaniho
+```
+
+Enqueue only with explicit ops OK (batches 48):
+
+```bash
+DATABASE_URL=… REDIS_URL=… node scripts/peaks-gap-audit.mjs --slug yaniho --enqueue
+```
 
 ## Still open
 
-Prod Yaniho backfill run; remaining player list surfaces; weekly metrics.
+Prod Yaniho dry-run + enqueue when credentials/LAN available; live verify
+waveforms on channel pages after backfill.

@@ -76,6 +76,11 @@ Regenerate after touching any Fastify route schema in apps/api:
 pnpm --filter @tahti/api-client generate
 ```
 
+Verified 2026-11-19 after the audience `referrerUrl` dimension landed: the
+generated schema includes `dimension: … | "referrerUrl" | …` on
+`GET /api/me/stats/audience`. Re-run the command locally whenever you change
+route Zod/OpenAPI descriptions; do not commit `schema.d.ts`.
+
 This exports a fresh `openapi.json` from apps/api's live route graph (no server
 needs to be running — see `apps/api/scripts/export-openapi.ts`) and feeds it to
 `openapi-typescript`. turbo also runs this automatically before this package's

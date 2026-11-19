@@ -39,6 +39,7 @@ describe('platform-metrics', () => {
     expect(snap.storageUsedBytes).toBeGreaterThanOrEqual(0)
     expect(snap.storageQuotaBytes).toBeGreaterThanOrEqual(0)
     expect(snap.tracksTotal).toBeGreaterThanOrEqual(0)
+    expect(snap.soundsReadyMissingPeaks).toBeGreaterThanOrEqual(0)
     expect(snap.releasesPublishedTotal).toBeGreaterThanOrEqual(0)
     expect(snap.registrationsToday).toBeGreaterThanOrEqual(0)
 
@@ -48,6 +49,7 @@ describe('platform-metrics', () => {
     expect(text).toContain('tahti_storage_used_bytes')
     expect(text).toContain('tahti_storage_quota_bytes')
     expect(text).toContain('tahti_tracks_total')
+    expect(text).toContain('tahti_sounds_ready_missing_peaks')
     expect(text).toContain('tahti_releases_published_total')
     expect(text).toContain('tahti_registrations_today')
   })
