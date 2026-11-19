@@ -6,6 +6,15 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-19 — LAN ops: workers redeploy, Yaniho peaks, artist-site fold
+
+`./scripts/redeploy-media-workers.sh` on vimage (0d5ad0cd) + vimage7
+transcode. Prod had **0** stuck PENDING/PROCESSING (rawKey, >1h). Yaniho
+READY sounds: 100; missing peaks/editorPeaks with audio: **0** (no enqueue).
+Migration `20261105180000_channel_site_chrome` applied; Channel
+`showSiteSidebar` / `showSiteBottomBar` / `showSiteHeader` present. Folded
+`worker-stuck-pending-ops.md`, `peaks-gap-audit.md`, `artist-site-chrome.md`.
+
 ## 2026-11-19 — Listener stats URL + owner moderator + Radio watchdog folded
 
 Folded `listener-stats-origin-url.md` (referrerUrl + OpenAPI regen note in
@@ -13,9 +22,8 @@ api-client README; player Sites/Pages UI in sibling) and
 `channel-owner-auto-moderator.md` (API #1109 + player hide-remove). Folded
 `tahti-radio-always-on-watchdog.md` (always-on ignore hard cap, switchover
 force restart, Selects fallback, `scripts/recover-tahti-radio.sh` — shipped
-#1110). Peaks: `tahti_sounds_ready_missing_peaks` on `GET /metrics`; Yaniho
-enqueue still ops-gated in `peaks-gap-audit.md`. Finnish notification bodies
-blocked on missing `User.uiLocale` → `finnish-api-notifications.md`.
+#1110). Peaks gauge on `GET /metrics`. Finnish notification bodies blocked on
+missing `User.uiLocale` → `finnish-api-notifications.md`.
 
 ## 2026-11-18 — Library management port folded
 
