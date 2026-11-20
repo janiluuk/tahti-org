@@ -11,6 +11,44 @@ const httpUrl = (field: string) =>
     .optional()
     .refine((v) => !v || /^https?:\/\//i.test(v), { message: `${field} must be an http(s) URL` })
 
+export const ARTIST_EVENT_GALLERY_MAX_ITEMS = 30
+export const ARTIST_EVENT_GALLERY_CAPTION_MAX = 300
+
+export const ArtistEventGalleryItemSchema = z.object({
+  url: z
+    .string()
+    .trim()
+    .min(1, 'gallery url is required')
+    .max(500)
+    .refine((v) => /^https?:\/\//i.test(v), { message: 'gallery url must be an http(s) URL' }),
+  caption: z
+    .string()
+    .trim()
+    .max(ARTIST_EVENT_GALLERY_CAPTION_MAX, {
+      message: `gallery caption must be at most ${ARTIST_EVENT_GALLERY_CAPTION_MAX} characters`,
+    })
+    .default(''),
+})
+
+export type ArtistEventGalleryItem = z.infer<typeof ArtistEventGalleryItemSchema>
+
+export const ArtistEventGallerySchema = z
+  .array(ArtistEventGalleryItemSchema)
+  .max(ARTIST_EVENT_GALLERY_MAX_ITEMS, {
+    message: `gallery can have at most ${ARTIST_EVENT_GALLERY_MAX_ITEMS} images`,
+  })
+
+/** Stored gallery JSON → view; anything malformed (legacy or hand-edited rows) reads as empty. */
+export function parseArtistEventGallery(value: unknown): ArtistEventGalleryItem[] {
+  if (!Array.isArray(value)) return []
+  const items: ArtistEventGalleryItem[] = []
+  for (const raw of value) {
+    const item = ArtistEventGalleryItemSchema.safeParse(raw)
+    if (item.success) items.push(item.data)
+  }
+  return items.slice(0, ARTIST_EVENT_GALLERY_MAX_ITEMS)
+}
+
 export function isIanaTimeZone(value: string): boolean {
   try {
     new Intl.DateTimeFormat('en-US', { timeZone: value })
@@ -35,6 +73,7 @@ const ArtistEventFieldsSchema = z.object({
   eventUrl: httpUrl('eventUrl'),
   ticketUrl: httpUrl('ticketUrl'),
   imageUrl: httpUrl('imageUrl'),
+  gallery: ArtistEventGallerySchema.optional(),
   startAt: z.string().datetime(),
   endAt: z.string().datetime().nullable().optional(),
   timezone: z
@@ -108,6 +147,7 @@ export const ArtistEventSchema = z.object({
   eventUrl: z.string().nullable(),
   ticketUrl: z.string().nullable(),
   imageUrl: z.string().nullable(),
+  gallery: z.array(z.object({ url: z.string(), caption: z.string() })),
   startAt: z.string().datetime(),
   endAt: z.string().datetime().nullable(),
   timezone: z.string().nullable(),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { safeDisplayName } from '@tahti/shared'
+import { parseArtistEventGallery, safeDisplayName } from '@tahti/shared'
 
 export type ArtistEventRow = {
   id: string
@@ -12,6 +12,7 @@ export type ArtistEventRow = {
   eventUrl: string | null
   ticketUrl: string | null
   imageUrl: string | null
+  gallery?: unknown
   startAt: Date
   endAt: Date | null
   timezone: string | null
@@ -75,6 +76,7 @@ export function serializeArtistEvent(
     eventUrl: event.eventUrl,
     ticketUrl: event.ticketUrl,
     imageUrl: event.imageUrl,
+    gallery: parseArtistEventGallery(event.gallery),
     startAt: event.startAt.toISOString(),
     endAt: event.endAt ? event.endAt.toISOString() : null,
     timezone: event.timezone,
