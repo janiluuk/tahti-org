@@ -25,6 +25,10 @@ function fakePrisma(recent: { id: string } | null = null, blocked = false) {
     prisma: {
       notification: { create, findFirst },
       userBlock: { findFirst: findBlock },
+      user: {
+        findUnique: vi.fn().mockResolvedValue({ uiLocale: null }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
     } as unknown as PrismaClient,
     create,
     findFirst,
@@ -77,12 +81,26 @@ describe('notification titles never carry an email address', () => {
     const create = vi.fn().mockResolvedValue({})
     const prisma = {
       notification: { create, createMany, findFirst: vi.fn().mockResolvedValue(null) },
-      artistFollow: { findMany: vi.fn().mockResolvedValue([{ followerUserId: 'follower-1' }]) },
+      artistFollow: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ followerUserId: 'follower-1', follower: { uiLocale: null } }]),
+      },
       collectionItem: { findMany: vi.fn().mockResolvedValue([]) },
       collectionSubscription: { findMany: vi.fn().mockResolvedValue([]) },
       userBlock: {
         findFirst: vi.fn().mockResolvedValue(null),
         findMany: vi.fn().mockResolvedValue([]),
+      },
+      user: {
+        findUnique: vi.fn().mockResolvedValue({ uiLocale: null }),
+        findMany: vi
+          .fn()
+          .mockImplementation(({ where }: { where: { id: { in: string[] } } }) =>
+            Promise.resolve(
+              (where.id.in ?? []).map((id: string) => ({ id, uiLocale: null as string | null })),
+            ),
+          ),
       },
     } as unknown as PrismaClient
     const titles = () =>
