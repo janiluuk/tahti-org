@@ -44,7 +44,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Upcoming broadcasts:** Set the next broadcast time and public note.
 - **Live show series:** Create reusable series metadata, choose show type, increment episode numbers, and schedule episodes with fields prefilled.
 - **Recorded-show list:** `/dashboard/recordings` lists broadcasts separately from the broader discography.
-- **Venues and events:** Maintain venue details, event links, locations, and public upcoming-show data.
+- **Venues and events:** Maintain venue details, event links, locations, public upcoming-show data, and an event image gallery with captions.
 - **Tahti Radio slots:** View and manage radio slot bookings and submit eligible content.
 
 ### Music library and uploads
