@@ -6,6 +6,15 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-20 — Event image gallery with captions
+
+`ArtistEvent.gallery` (Json, default `[]`, migration
+`20261120120000_artist_event_gallery`): up to 30 `{ url, caption }` items,
+validated by `ArtistEventGallerySchema` (http(s) url, caption max 300). POST /
+PATCH `/api/me/events` accept it (PATCH replaces the list); every event
+serializer returns it. Folded `event-gallery.md`; the web client is tracked in
+tahti-player `docs/todo/discover-events-tab.md`. PR #1122.
+
 ## 2026-11-19 — User.uiLocale + first FI notification template
 
 `User.uiLocale` (`en`|`fi`|null) + profile GET/PATCH; `THEME_UNDER_REVIEW`

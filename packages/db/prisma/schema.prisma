@@ -1182,6 +1182,8 @@ model ArtistEvent {
   eventUrl    String?
   ticketUrl   String?
   imageUrl    String?
+  // Ordered [{ url, caption }]; read through parseArtistEventGallery (@tahti/shared).
+  gallery     Json                  @default("[]")
   startAt     DateTime
   endAt       DateTime?
   timezone    String?
