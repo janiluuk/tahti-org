@@ -4,7 +4,41 @@
 import type { PrismaClient } from '@prisma/client'
 import { availableUserWhere } from './available-user.js'
 import { actorDisplayName } from './display-name.js'
-import { resolveNotificationLocale, themeUnderReviewCopy } from './notification-copy.js'
+import {
+  accountRestrictionCopy,
+  boardTrackEditCopy,
+  channelLiveCopy,
+  chatMentionCopy,
+  contentReportedCopy,
+  featureRequestUpdatedCopy,
+  forcedOfflineCopy,
+  missedLiveShowCopy,
+  newCommentCopy,
+  newEventCopy,
+  newFollowerCopy,
+  newLikeCopy,
+  newMessageCopy,
+  newPostCopy,
+  newReleaseCopy,
+  newRepostCopy,
+  newTrackCopy,
+  playlistTrackAddedCopy,
+  radioInclusionCopy,
+  radioSubmissionAcceptedCopy,
+  radioSubmissionRejectedCopy,
+  resolveNotificationLocale,
+  selectsPickCopy,
+  stationReviewCopy,
+  streamingCopyReadyCopy,
+  supportTicketCopy,
+  themeApprovedCopy,
+  themeRejectedCopy,
+  themeUnderReviewCopy,
+  venueShowBookedCopy,
+  venueShowCanceledCopy,
+  venueVerifiedCopy,
+  type NotificationLocale,
+} from './notification-copy.js'
 
 /** The artist's followers who can still receive a notification: deleted and
  * suspended accounts are left out, so a fan-out never writes rows nobody
@@ -12,8 +46,25 @@ import { resolveNotificationLocale, themeUnderReviewCopy } from './notification-
 function followersToNotify(prisma: PrismaClient, artistUserId: string) {
   return prisma.artistFollow.findMany({
     where: { artistUserId, follower: availableUserWhere },
-    select: { followerUserId: true },
+    select: { followerUserId: true, follower: { select: { uiLocale: true } } },
   })
+}
+
+async function localeFor(prisma: PrismaClient, userId: string): Promise<NotificationLocale> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { uiLocale: true } })
+  return resolveNotificationLocale(u?.uiLocale)
+}
+
+async function localesFor(
+  prisma: PrismaClient,
+  userIds: string[],
+): Promise<Map<string, NotificationLocale>> {
+  if (userIds.length === 0) return new Map()
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, uiLocale: true },
+  })
+  return new Map(users.map((u) => [u.id, resolveNotificationLocale(u.uiLocale)]))
 }
 
 /** Fan out a NEW_POST notification to everyone following the artist. Called both
@@ -27,19 +78,21 @@ export async function notifyFollowersOfNewPost(
   const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
-  const title = `${actorDisplayName(artist)} posted an update`
-  const body = post.title || post.body.slice(0, 140)
+  const name = actorDisplayName(artist)
   const url = `/u/${artist.username}`
 
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'NEW_POST' as const,
-      actorUserId: artist.id,
-      title,
-      body,
-      url,
-    })),
+    data: followers.map((f) => {
+      const copy = newPostCopy(resolveNotificationLocale(f.follower.uiLocale), name, post)
+      return {
+        userId: f.followerUserId,
+        type: 'NEW_POST' as const,
+        actorUserId: artist.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -58,7 +111,7 @@ export async function notifyVenueOwnerOfShow(
   const [owner, artist] = await Promise.all([
     prisma.user.findFirst({
       where: { id: show.venue.createdBy, ...availableUserWhere },
-      select: { id: true },
+      select: { id: true, uiLocale: true },
     }),
     prisma.user.findUnique({
       where: { id: show.artistUserId },
@@ -66,13 +119,19 @@ export async function notifyVenueOwnerOfShow(
     }),
   ])
   if (!owner || !artist) return
+  const copy = venueShowBookedCopy(
+    resolveNotificationLocale(owner.uiLocale),
+    actorDisplayName(artist),
+    show.venue.name,
+    show.startAt,
+  )
   await prisma.notification.create({
     data: {
       userId: owner.id,
       type: 'VENUE_SHOW_BOOKED',
       actorUserId: show.artistUserId,
-      title: `${actorDisplayName(artist)} added a show at ${show.venue.name}`,
-      body: `On ${show.startAt.toISOString().slice(0, 10)}`,
+      title: copy.title,
+      body: copy.body,
       url: '/venues/mine',
     },
   })
@@ -97,15 +156,19 @@ export async function notifyFollowersOfNewTrack(
   const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
+  const name = actorDisplayName(artist)
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'NEW_TRACK' as const,
-      actorUserId: artist.id,
-      title: `${actorDisplayName(artist)} shared a new track`,
-      body: item.title,
-      url,
-    })),
+    data: followers.map((f) => {
+      const copy = newTrackCopy(resolveNotificationLocale(f.follower.uiLocale), name, item.title)
+      return {
+        userId: f.followerUserId,
+        type: 'NEW_TRACK' as const,
+        actorUserId: artist.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -134,16 +197,21 @@ export async function notifyFollowersOfLiveChannel(
   const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
+  const name = actorDisplayName(artist)
+  const url = `/c/${channel.slug}`
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'CHANNEL_LIVE' as const,
-      actorUserId: artist.id,
-      title: `${actorDisplayName(artist)} is live`,
-      body: null,
-      url: `/c/${channel.slug}`,
-      createdAt: now,
-    })),
+    data: followers.map((f) => {
+      const copy = channelLiveCopy(resolveNotificationLocale(f.follower.uiLocale), name)
+      return {
+        userId: f.followerUserId,
+        type: 'CHANNEL_LIVE' as const,
+        actorUserId: artist.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+        createdAt: now,
+      }
+    }),
   })
 }
 
@@ -164,7 +232,7 @@ export async function notifyOfCanceledVenueShow(
   const [recipient, actor] = await Promise.all([
     prisma.user.findFirst({
       where: { id: recipientId, ...availableUserWhere },
-      select: { id: true },
+      select: { id: true, uiLocale: true },
     }),
     prisma.user.findUnique({
       where: { id: show.canceledBy },
@@ -172,15 +240,20 @@ export async function notifyOfCanceledVenueShow(
     }),
   ])
   if (!recipient || !actor) return
+  const copy = venueShowCanceledCopy(
+    resolveNotificationLocale(recipient.uiLocale),
+    byVenue,
+    show.venue.name,
+    actorDisplayName(actor),
+    show.startAt,
+  )
   await prisma.notification.create({
     data: {
       userId: recipient.id,
       type: 'VENUE_SHOW_CANCELED',
       actorUserId: show.canceledBy,
-      title: byVenue
-        ? `${show.venue.name} cancelled your show`
-        : `${actorDisplayName(actor)} cancelled their show at ${show.venue.name}`,
-      body: `It was on ${show.startAt.toISOString().slice(0, 10)}`,
+      title: copy.title,
+      body: copy.body,
       url: byVenue ? '/venues' : '/venues/mine',
     },
   })
@@ -198,15 +271,20 @@ export async function notifyFollowersOfNewEvent(
   const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
+  const name = actorDisplayName(artist)
+  const url = `/u/${artist.username}`
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'NEW_EVENT' as const,
-      actorUserId: artist.id,
-      title: `${actorDisplayName(artist)} announced an event`,
-      body: `${event.title} · ${event.place}, ${event.location}`,
-      url: `/u/${artist.username}`,
-    })),
+    data: followers.map((f) => {
+      const copy = newEventCopy(resolveNotificationLocale(f.follower.uiLocale), name, event)
+      return {
+        userId: f.followerUserId,
+        type: 'NEW_EVENT' as const,
+        actorUserId: artist.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -220,15 +298,24 @@ export async function notifyFollowersOfNewRelease(
   const followers = await followersToNotify(prisma, artist.id)
   if (followers.length === 0) return
 
+  const name = actorDisplayName(artist)
+  const url = `/r/${release.smartLinkSlug}`
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'NEW_RELEASE' as const,
-      actorUserId: artist.id,
-      title: `${actorDisplayName(artist)} released "${release.title}"`,
-      body: null,
-      url: `/r/${release.smartLinkSlug}`,
-    })),
+    data: followers.map((f) => {
+      const copy = newReleaseCopy(
+        resolveNotificationLocale(f.follower.uiLocale),
+        name,
+        release.title,
+      )
+      return {
+        userId: f.followerUserId,
+        type: 'NEW_RELEASE' as const,
+        actorUserId: artist.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -291,13 +378,18 @@ export async function notifyArtistOfNewFollower(
   ) {
     return
   }
+  const copy = newFollowerCopy(
+    await localeFor(prisma, artistUserId),
+    actorDisplayName(follower),
+    follower.username,
+  )
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'NEW_FOLLOWER',
       actorUserId: follower.id,
-      title: `${actorDisplayName(follower)} followed you`,
-      body: `@${follower.username}`,
+      title: copy.title,
+      body: copy.body,
       url: `/u/${follower.username}`,
     },
   })
@@ -322,13 +414,18 @@ export async function notifyArtistOfNewLike(
   ) {
     return
   }
+  const copy = newLikeCopy(
+    await localeFor(prisma, artistUserId),
+    actorDisplayName(liker),
+    item.title,
+  )
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'NEW_LIKE',
       actorUserId: liker.id,
-      title: `${actorDisplayName(liker)} loved "${item.title}"`,
-      body: null,
+      title: copy.title,
+      body: copy.body,
       url: `/t/${item.id}`,
     },
   })
@@ -344,15 +441,19 @@ export async function notifyArtistOfNewComment(
   target: { channelSlug: string; item?: { id: string; title: string } },
 ): Promise<void> {
   if (artistUserId === commenter.id) return
+  const copy = newCommentCopy(
+    await localeFor(prisma, artistUserId),
+    actorDisplayName(commenter),
+    comment.body,
+    target.item?.title ?? null,
+  )
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'NEW_COMMENT',
       actorUserId: commenter.id,
-      title: target.item
-        ? `${actorDisplayName(commenter)} commented on "${target.item.title}"`
-        : `${actorDisplayName(commenter)} commented on your channel`,
-      body: comment.body.slice(0, 140),
+      title: copy.title,
+      body: copy.body,
       url: target.item ? `/t/${target.item.id}` : `/c/${target.channelSlug}`,
     },
   })
@@ -375,13 +476,18 @@ export async function notifyArtistOfBoardTrackEdit(
     select: { userId: true },
   })
   if (!channel || channel.userId === edit.actorId) return
+  const copy = boardTrackEditCopy(
+    await localeFor(prisma, channel.userId),
+    edit.title,
+    edit.fields.map(fieldLabel).join(', '),
+  )
   await prisma.notification.create({
     data: {
       userId: channel.userId,
       type: 'TRACK_EDITED_BY_BOARD',
       actorUserId: edit.actorId,
-      title: `The board edited "${edit.title}"`,
-      body: `Changed: ${edit.fields.map(fieldLabel).join(', ')}`.slice(0, 500),
+      title: copy.title,
+      body: copy.body,
       url: `/studio/sounds/${edit.soundId}`,
     },
   })
@@ -406,13 +512,18 @@ export async function notifyArtistOfNewRepost(
   ) {
     return
   }
+  const copy = newRepostCopy(
+    await localeFor(prisma, artistUserId),
+    actorDisplayName(reposter),
+    item.title,
+  )
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'NEW_REPOST',
       actorUserId: reposter.id,
-      title: `${actorDisplayName(reposter)} reposted "${item.title}"`,
-      body: null,
+      title: copy.title,
+      body: copy.body,
       url: `/t/${item.id}`,
     },
   })
@@ -431,15 +542,16 @@ export async function notifyArtistOfSelectsPick(
   if (!sound) return
   const artist = await prisma.user.findFirst({
     where: { id: sound.channel.userId, ...availableUserWhere },
-    select: { id: true },
+    select: { id: true, uiLocale: true },
   })
   if (!artist) return
+  const copy = selectsPickCopy(resolveNotificationLocale(artist.uiLocale), sound.title)
   await prisma.notification.create({
     data: {
       userId: artist.id,
       type: 'TAHTI_SELECTS_PICK',
-      title: `"${sound.title}" was picked for Tahti Selects`,
-      body: 'It plays in the Tahti Selects rotation from now on.',
+      title: copy.title,
+      body: copy.body,
       url: `/c/${pick.channelSlug}`,
     },
   })
@@ -503,18 +615,28 @@ export async function notifyPlaylistOfNewTrack(
   }
   if (recipients.size === 0) return
 
-  const title = `${actorDisplayName(adder)} added "${item.title}" to ${collection.name}`
   const url = `/u/${collection.ownerUsername}/c/${collection.slug}`
+  const recipientIds = [...recipients]
+  const locales = await localesFor(prisma, recipientIds)
+  const name = actorDisplayName(adder)
 
   await prisma.notification.createMany({
-    data: [...recipients].map((userId) => ({
-      userId,
-      type: 'PLAYLIST_TRACK_ADDED' as const,
-      actorUserId: adder.id,
-      title,
-      body: null,
-      url,
-    })),
+    data: recipientIds.map((userId) => {
+      const copy = playlistTrackAddedCopy(
+        locales.get(userId) ?? 'en',
+        name,
+        item.title,
+        collection.name,
+      )
+      return {
+        userId,
+        type: 'PLAYLIST_TRACK_ADDED' as const,
+        actorUserId: adder.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -527,16 +649,16 @@ export async function notifyVenueOwnerOfVerification(
 ): Promise<void> {
   const owner = await prisma.user.findFirst({
     where: { id: venue.createdBy, ...availableUserWhere },
-    select: { id: true },
+    select: { id: true, uiLocale: true },
   })
   if (!owner) return
+  const copy = venueVerifiedCopy(resolveNotificationLocale(owner.uiLocale), venue.name, verified)
   await prisma.notification.create({
     data: {
       userId: owner.id,
       type: 'VENUE_VERIFIED',
-      title: verified
-        ? `${venue.name} is now a verified venue`
-        : `${venue.name} is no longer verified`,
+      title: copy.title,
+      body: copy.body,
       url: '/venues/mine',
     },
   })
@@ -551,8 +673,11 @@ export async function notifyUserOfNewMessage(
   messageBody: string,
 ): Promise<void> {
   const url = `/dashboard/messages/${conversationId}`
-  const title = `${actorDisplayName(sender)} sent you a message`
-  const body = messageBody.slice(0, 140)
+  const copy = newMessageCopy(
+    await localeFor(prisma, recipientUserId),
+    actorDisplayName(sender),
+    messageBody,
+  )
 
   // One unread notification per conversation: a second message while the
   // first is still unread refreshes it, instead of stacking a new bell entry
@@ -564,7 +689,12 @@ export async function notifyUserOfNewMessage(
   if (unread) {
     await prisma.notification.update({
       where: { id: unread.id },
-      data: { actorUserId: sender.id, title, body, createdAt: new Date() },
+      data: {
+        actorUserId: sender.id,
+        title: copy.title,
+        body: copy.body,
+        createdAt: new Date(),
+      },
     })
     return
   }
@@ -574,8 +704,8 @@ export async function notifyUserOfNewMessage(
       userId: recipientUserId,
       type: 'NEW_MESSAGE',
       actorUserId: sender.id,
-      title,
-      body,
+      title: copy.title,
+      body: copy.body,
       url,
     },
   })
@@ -590,15 +720,21 @@ export async function notifyUsersOfChatMention(
   messageBody: string,
 ): Promise<void> {
   if (recipientUserIds.length === 0) return
+  const locales = await localesFor(prisma, recipientUserIds)
+  const name = actorDisplayName(mentioner)
+  const url = `/c/${channelSlug}`
   await prisma.notification.createMany({
-    data: recipientUserIds.map((userId) => ({
-      userId,
-      type: 'CHAT_MENTION' as const,
-      actorUserId: mentioner.id,
-      title: `${actorDisplayName(mentioner)} mentioned you in chat`,
-      body: messageBody.slice(0, 140),
-      url: `/c/${channelSlug}`,
-    })),
+    data: recipientUserIds.map((userId) => {
+      const copy = chatMentionCopy(locales.get(userId) ?? 'en', name, messageBody)
+      return {
+        userId,
+        type: 'CHAT_MENTION' as const,
+        actorUserId: mentioner.id,
+        title: copy.title,
+        body: copy.body,
+        url,
+      }
+    }),
   })
 }
 
@@ -611,12 +747,13 @@ export async function notifyArtistOfRadioSubmissionRejected(
 ): Promise<void> {
   const note = rejectionNote.trim()
   if (!note) return
+  const copy = radioSubmissionRejectedCopy(await localeFor(prisma, artistUserId), trackTitle, note)
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'RADIO_SUBMISSION_REJECTED',
-      title: `"${trackTitle}" was not added to Tahti Radio`,
-      body: note.slice(0, 500),
+      title: copy.title,
+      body: copy.body,
       url: '/studio/channel?tab=tahti-radio',
     },
   })
@@ -630,12 +767,17 @@ export async function notifyArtistOfRadioSubmissionAccepted(
   trackTitle: string,
   madePublic: boolean,
 ): Promise<void> {
+  const copy = radioSubmissionAcceptedCopy(
+    await localeFor(prisma, artistUserId),
+    trackTitle,
+    madePublic,
+  )
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'RADIO_SUBMISSION_ACCEPTED',
-      title: `"${trackTitle}" is now on Tahti Radio`,
-      body: madePublic ? 'The track was private, so it is now public.' : null,
+      title: copy.title,
+      body: copy.body,
       url: '/studio/channel?tab=tahti-radio',
     },
   })
@@ -673,12 +815,13 @@ export async function notifyArtistStreamingCopyReady(
   artistUserId: string,
   item: { id: string; title: string },
 ): Promise<void> {
+  const copy = streamingCopyReadyCopy(await localeFor(prisma, artistUserId), item.title)
   await prisma.notification.create({
     data: {
       userId: artistUserId,
       type: 'STREAMING_COPY_READY',
-      title: `"${item.title}" is ready for low-bandwidth streaming`,
-      body: "A compressed copy was encoded for listeners on slower connections or clients that can't play FLAC.",
+      title: copy.title,
+      body: copy.body,
       url: `/dashboard/sound/${item.id}`,
     },
   })
@@ -691,14 +834,13 @@ export async function notifyOwnerOfRadioInclusion(
   ownerUserId: string,
   included: boolean,
 ): Promise<void> {
+  const copy = radioInclusionCopy(await localeFor(prisma, ownerUserId), included)
   await prisma.notification.create({
     data: {
       userId: ownerUserId,
       type: 'TAHTI_RADIO_INCLUSION_CHANGED',
-      title: included
-        ? 'Your channel is back in the Tahti Radio rotation'
-        : 'The board took your channel out of Tahti Radio',
-      body: included ? null : 'Ask the board through Help → Support if you want to know why.',
+      title: copy.title,
+      body: copy.body,
       url: '/studio/channel?tab=tahti-radio',
     },
   })
@@ -709,12 +851,13 @@ export async function notifyUserThemeApproved(
   userId: string,
   theme: { id: string; name: string },
 ): Promise<void> {
+  const copy = themeApprovedCopy(await localeFor(prisma, userId), theme.name)
   await prisma.notification.create({
     data: {
       userId,
       type: 'THEME_APPROVED',
-      title: `"${theme.name}" was approved`,
-      body: 'Opening a pull request to publish it now.',
+      title: copy.title,
+      body: copy.body,
       url: '/dashboard/settings/themes',
       sticky: true,
     },
@@ -727,12 +870,13 @@ export async function notifyUserThemeRejected(
   theme: { id: string; name: string },
   moderationNote: string,
 ): Promise<void> {
+  const copy = themeRejectedCopy(await localeFor(prisma, userId), theme.name, moderationNote)
   await prisma.notification.create({
     data: {
       userId,
       type: 'THEME_REJECTED',
-      title: `"${theme.name}" was rejected`,
-      body: moderationNote.slice(0, 500),
+      title: copy.title,
+      body: copy.body,
       url: '/dashboard/settings/themes',
       sticky: true,
     },
@@ -762,14 +906,19 @@ export async function notifyBoardOfMissedLiveShow(
     )
   if (ids.length === 0) return
 
+  const locales = await localesFor(prisma, ids)
+  const name = actorDisplayName(artist)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
-      title: `${actorDisplayName(artist)} missed a scheduled show`,
-      body: `"${show.title}" was scheduled for ${show.startAt.toLocaleString()} but never went live.`,
-      url: '/admin/missed-shows',
-    })),
+    data: ids.map((userId) => {
+      const copy = missedLiveShowCopy(locales.get(userId) ?? 'en', name, show.title, show.startAt)
+      return {
+        userId,
+        type: 'MISSED_LIVE_SHOW_FLAGGED' as const,
+        title: copy.title,
+        body: copy.body,
+        url: '/admin/missed-shows',
+      }
+    }),
   })
 }
 
@@ -784,19 +933,21 @@ export async function notifySubmitterOfStationReview(
   if (!suggestion.submitterId) return
   const submitter = await prisma.user.findFirst({
     where: { id: suggestion.submitterId, ...availableUserWhere },
-    select: { id: true },
+    select: { id: true, uiLocale: true },
   })
   if (!submitter) return
+  const copy = stationReviewCopy(
+    resolveNotificationLocale(submitter.uiLocale),
+    suggestion.name,
+    review.approved,
+    review.note,
+  )
   await prisma.notification.create({
     data: {
       userId: submitter.id,
       type: 'RADIO_STATION_REVIEWED',
-      title: review.approved
-        ? `${suggestion.name} was accepted`
-        : `${suggestion.name} was not added`,
-      body: review.approved
-        ? 'It shows on the Radio page once the board switches it on.'
-        : review.note?.slice(0, 500) || null,
+      title: copy.title,
+      body: copy.body,
       url: '/radio',
     },
   })
@@ -813,31 +964,27 @@ export async function notifyBoardOfSupportTicket(
 ): Promise<void> {
   const board = await prisma.user.findMany({
     where: { isBoard: true, ...availableUserWhere },
-    select: { id: true },
+    select: { id: true, uiLocale: true },
   })
-  const ids = board.map((m) => m.id).filter((id) => id !== authorUserId)
-  if (ids.length === 0) return
+  const members = board.filter((m) => m.id !== authorUserId)
+  if (members.length === 0) return
 
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'SUPPORT_TICKET' as const,
-      title:
-        kind === 'new'
-          ? `New support request: ${ticket.subject}`
-          : `Support request answered: ${ticket.subject}`,
-      body: kind === 'new' ? 'Waiting for a reply.' : 'The requester replied.',
-      url: '/admin/moderation/support',
-    })),
+    data: members.map((member) => {
+      const copy = supportTicketCopy(
+        resolveNotificationLocale(member.uiLocale),
+        kind,
+        ticket.subject,
+      )
+      return {
+        userId: member.id,
+        type: 'SUPPORT_TICKET' as const,
+        title: copy.title,
+        body: copy.body,
+        url: '/admin/moderation/support',
+      }
+    }),
   })
-}
-
-const REPORT_REASON_LABELS: Record<string, string> = {
-  COPYRIGHT: 'Copyright',
-  HARASSMENT: 'Harassment',
-  SPAM: 'Spam',
-  ILLEGAL_CONTENT: 'Illegal content',
-  OTHER: 'Other',
 }
 
 /** Tells the board a new content report is waiting, so a copyright or
@@ -849,28 +996,26 @@ export async function notifyBoardOfContentReport(
 ): Promise<void> {
   const board = await prisma.user.findMany({
     where: { isBoard: true, ...availableUserWhere },
-    select: { id: true },
+    select: { id: true, uiLocale: true },
   })
   if (board.length === 0) return
 
   await prisma.notification.createMany({
-    data: board.map((member) => ({
-      userId: member.id,
-      type: 'CONTENT_REPORTED' as const,
-      title: `New report: ${report.label}`,
-      body: `Reason: ${REPORT_REASON_LABELS[report.reason] ?? report.reason}`,
-      url: '/admin/moderation/content-reports',
-    })),
+    data: board.map((member) => {
+      const copy = contentReportedCopy(
+        resolveNotificationLocale(member.uiLocale),
+        report.label,
+        report.reason,
+      )
+      return {
+        userId: member.id,
+        type: 'CONTENT_REPORTED' as const,
+        title: copy.title,
+        body: copy.body,
+        url: '/admin/moderation/content-reports',
+      }
+    }),
   })
-}
-
-const FEATURE_REQUEST_STATUS_LABELS: Record<string, string> = {
-  OPEN: 'reopened',
-  PLANNED: 'planned',
-  IN_PROGRESS: 'in progress',
-  DONE: 'done',
-  DECLINED: 'declined',
-  DUPLICATE: 'closed as a duplicate',
 }
 
 /** Tells whoever proposed or voted for a feature request that the board
@@ -893,25 +1038,30 @@ export async function notifyFeatureRequestFollowers(
   ids.delete(request.actorId)
   if (ids.size === 0) return
 
-  const label = FEATURE_REQUEST_STATUS_LABELS[request.status] ?? request.status.toLowerCase()
+  const recipientIds = [...ids]
+  const locales = await localesFor(prisma, recipientIds)
   await prisma.notification.createMany({
-    data: [...ids].map((userId) => ({
-      userId,
-      type: 'FEATURE_REQUEST_UPDATED' as const,
-      title: `Feature request ${label}: ${request.title}`,
-      body: userId === request.proposedById ? 'You proposed this.' : 'You voted for this.',
-      url: '/governance/feature-requests',
-    })),
+    data: recipientIds.map((userId) => {
+      const copy = featureRequestUpdatedCopy(
+        locales.get(userId) ?? 'en',
+        request.status,
+        request.title,
+        userId === request.proposedById,
+      )
+      return {
+        userId,
+        type: 'FEATURE_REQUEST_UPDATED' as const,
+        title: copy.title,
+        body: copy.body,
+        url: '/governance/feature-requests',
+      }
+    }),
   })
 }
 
-const RESTRICTION_NOTICE = {
-  UPLOAD: { blocked: 'Uploads are blocked', lifted: 'You can upload again', url: '/studio' },
-  LIVE_SHOW_BOOKING: {
-    blocked: 'Booking shows is blocked',
-    lifted: 'You can book shows again',
-    url: '/studio/schedule',
-  },
+const RESTRICTION_URL = {
+  UPLOAD: '/studio',
+  LIVE_SHOW_BOOKING: '/studio/schedule',
 } as const
 
 /** Tells an account the board restricted (or lifted a restriction on) its
@@ -928,17 +1078,20 @@ export async function notifyUserOfAccountRestriction(
   },
 ): Promise<void> {
   if (restriction.type === 'LOGIN') return
-  const notice = RESTRICTION_NOTICE[restriction.type]
-  const until = restriction.expiresAt
-    ? ` until ${restriction.expiresAt.toISOString().slice(0, 10)}`
-    : ''
+  const copy = accountRestrictionCopy(
+    await localeFor(prisma, userId),
+    restriction.type,
+    restriction.reason,
+    restriction.expiresAt,
+    restriction.lifted,
+  )
   await prisma.notification.create({
     data: {
       userId,
       type: 'ACCOUNT_RESTRICTED',
-      title: restriction.lifted ? notice.lifted : `${notice.blocked}${until}`,
-      body: restriction.lifted ? null : `Reason: ${restriction.reason}`.slice(0, 500),
-      url: notice.url,
+      title: copy.title,
+      body: copy.body,
+      url: RESTRICTION_URL[restriction.type],
     },
   })
 }
@@ -990,12 +1143,13 @@ export async function notifyOwnerOfForcedOffline(
   prisma: PrismaClient,
   ownerUserId: string,
 ): Promise<void> {
+  const copy = forcedOfflineCopy(await localeFor(prisma, ownerUserId))
   await prisma.notification.create({
     data: {
       userId: ownerUserId,
       type: 'CHANNEL_FORCED_OFFLINE',
-      title: 'The board took your broadcast off the air',
-      body: 'Ask the board through Help → Support if you think this was a mistake.',
+      title: copy.title,
+      body: copy.body,
       url: '/help',
     },
   })

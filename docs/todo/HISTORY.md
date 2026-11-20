@@ -6,6 +6,14 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-20 — Finnish in-app notification templates
+
+Expanded `notification-copy` EN/FI for remaining `packages/db` writers
+(`notifications.ts` + listening-party notices); fan-outs resolve per
+recipient `User.uiLocale`. Caller-supplied titles stay as-is
+(`notifyJobOutcome`, board account change, admin test). Folded
+`finnish-api-notifications.md`.
+
 ## 2026-11-20 — Event image gallery with captions
 
 `ArtistEvent.gallery` (Json, default `[]`, migration

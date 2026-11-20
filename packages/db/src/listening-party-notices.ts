@@ -4,6 +4,13 @@
 import type { PrismaClient } from '@prisma/client'
 import { availableUserWhere } from './available-user.js'
 import { actorDisplayName } from './display-name.js'
+import {
+  listeningPartyChangedCopy,
+  listeningPartyScheduledCopy,
+  listeningPartyStartingCopy,
+  resolveNotificationLocale,
+  type NotificationLocale,
+} from './notification-copy.js'
 
 export type ListeningPartyRef = {
   id: string
@@ -17,6 +24,18 @@ type Host = { id: string; username: string; displayName: string }
  * the time is spelled out in UTC rather than one reader's zone. */
 export function partyStartLabel(startAt: Date): string {
   return `${startAt.toISOString().slice(0, 16).replace('T', ' ')} UTC`
+}
+
+async function localesFor(
+  prisma: PrismaClient,
+  userIds: string[],
+): Promise<Map<string, NotificationLocale>> {
+  if (userIds.length === 0) return new Map()
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, uiLocale: true },
+  })
+  return new Map(users.map((u) => [u.id, resolveNotificationLocale(u.uiLocale)]))
 }
 
 /** Tells the host's followers that a listening party was scheduled, unless
@@ -35,18 +54,28 @@ export async function notifyFollowersOfListeningParty(
         blocksReceived: { none: { blockerUserId: host.id } },
       },
     },
-    select: { followerUserId: true },
+    select: { followerUserId: true, follower: { select: { uiLocale: true } } },
   })
   if (followers.length === 0) return 0
+  const name = actorDisplayName(host)
+  const startLabel = partyStartLabel(party.startAt)
   await prisma.notification.createMany({
-    data: followers.map((f) => ({
-      userId: f.followerUserId,
-      type: 'LISTENING_PARTY_SCHEDULED' as const,
-      actorUserId: host.id,
-      title: `${actorDisplayName(host)} scheduled a listening party`,
-      body: `"${party.release.title}" · ${partyStartLabel(party.startAt)}`,
-      url: `/party/${party.id}`,
-    })),
+    data: followers.map((f) => {
+      const copy = listeningPartyScheduledCopy(
+        resolveNotificationLocale(f.follower.uiLocale),
+        name,
+        party.release.title,
+        startLabel,
+      )
+      return {
+        userId: f.followerUserId,
+        type: 'LISTENING_PARTY_SCHEDULED' as const,
+        actorUserId: host.id,
+        title: copy.title,
+        body: copy.body,
+        url: `/party/${party.id}`,
+      }
+    }),
   })
   return followers.length
 }
@@ -82,15 +111,24 @@ export async function notifyListeningPartyStarting(
 ): Promise<number> {
   const ids = await remindedUserIds(prisma, party.id, host.id)
   if (ids.length === 0) return 0
+  const locales = await localesFor(prisma, ids)
+  const name = actorDisplayName(host)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'LISTENING_PARTY_STARTING' as const,
-      actorUserId: host.id,
-      title: `${actorDisplayName(host)}'s listening party is starting`,
-      body: `"${party.release.title}" is playing now. Join in.`,
-      url: `/party/${party.id}`,
-    })),
+    data: ids.map((userId) => {
+      const copy = listeningPartyStartingCopy(
+        locales.get(userId) ?? 'en',
+        name,
+        party.release.title,
+      )
+      return {
+        userId,
+        type: 'LISTENING_PARTY_STARTING' as const,
+        actorUserId: host.id,
+        title: copy.title,
+        body: copy.body,
+        url: `/party/${party.id}`,
+      }
+    }),
   })
   return ids.length
 }
@@ -105,22 +143,27 @@ export async function notifyListeningPartyChanged(
 ): Promise<number> {
   const ids = await remindedUserIds(prisma, party.id, host.id)
   if (ids.length === 0) return 0
+  const locales = await localesFor(prisma, ids)
   const name = actorDisplayName(host)
+  const startLabel = partyStartLabel(party.startAt)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'LISTENING_PARTY_CHANGED' as const,
-      actorUserId: host.id,
-      title:
-        change === 'MOVED'
-          ? `${name}'s listening party moved`
-          : `${name} cancelled their listening party`,
-      body:
-        change === 'MOVED'
-          ? `"${party.release.title}" now starts ${partyStartLabel(party.startAt)}. Your reminder still stands.`
-          : `"${party.release.title}" won't happen as planned.`,
-      url: `/party/${party.id}`,
-    })),
+    data: ids.map((userId) => {
+      const copy = listeningPartyChangedCopy(
+        locales.get(userId) ?? 'en',
+        name,
+        party.release.title,
+        change,
+        startLabel,
+      )
+      return {
+        userId,
+        type: 'LISTENING_PARTY_CHANGED' as const,
+        actorUserId: host.id,
+        title: copy.title,
+        body: copy.body,
+        url: `/party/${party.id}`,
+      }
+    }),
   })
   return ids.length
 }
