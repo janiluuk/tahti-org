@@ -5,6 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   AuthMessageResponseSchema,
   ChangePasswordSchema,
+  SetPasswordSchema,
+  openApiNoContentResponse,
   openApiResponse,
   safeDisplayName,
 } from '@tahti/shared'
@@ -63,6 +65,55 @@ const mePasswordRoutes: FastifyPluginAsync = async (fastify) => {
       )
 
       return reply.send({ message: 'Password changed. Other devices were signed out.' })
+    },
+  )
+
+  fastify.post(
+    '/api/me/password/set',
+    {
+      preHandler: requireSession,
+      schema: {
+        tags: ['auth'],
+        summary: 'Set a first password',
+        description:
+          'For an account created with Google/Facebook. 204 on success; sessions stay signed in. 409 when the account already has a password (use POST /api/me/password).',
+        response: openApiNoContentResponse(204),
+      },
+    },
+    async (request, reply) => {
+      const parsed = SetPasswordSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+      const userId = request.sessionUser!.id
+      const passwordHash = await hashPassword(parsed.data.password)
+      // Conditional on passwordHash still being null so two concurrent requests
+      // cannot both succeed, and this route can never replace an existing password.
+      const { count } = await fastify.prisma.user.updateMany({
+        where: { id: userId, passwordHash: null },
+        data: { passwordHash },
+      })
+      if (count === 0) {
+        return reply
+          .status(409)
+          .send({ error: 'This account already has a password. Change it instead.' })
+      }
+      // A reset link mailed before this would replace the password just set.
+      await fastify.prisma.passwordSetup.deleteMany({ where: { userId, usedAt: null } })
+
+      const user = request.sessionUser!
+      await sendSecurityNotice(
+        {
+          to: user.email,
+          displayName: safeDisplayName(user.displayName, user.username),
+          subject: 'A password was added to your Tahti account',
+          what: 'A password was just added to your Tahti account. You can now also sign in with your email address and this password.',
+        },
+        request.log,
+      )
+      return reply.status(204).send()
     },
   )
 }

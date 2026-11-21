@@ -38,12 +38,17 @@ const forgotPasswordRoute: FastifyPluginAsync = async (fastify) => {
           email: true,
           displayName: true,
           passwordHash: true,
+          emailVerifiedAt: true,
           deletedAt: true,
           suspendedAt: true,
         },
       })
 
-      if (user && user.passwordHash && !user.deletedAt && !user.suspendedAt) {
+      // An account created with Google/Facebook has no password; a verified
+      // address still proves ownership, so the link lets it set its first one
+      // (recovery when the provider login is lost).
+      const canReset = Boolean(user?.passwordHash || user?.emailVerifiedAt)
+      if (user && canReset && !user.deletedAt && !user.suspendedAt) {
         const token = generateVerificationToken()
         await fastify.prisma.passwordSetup.create({
           data: { userId: user.id, token, expiresAt: passwordResetExpiresAt() },

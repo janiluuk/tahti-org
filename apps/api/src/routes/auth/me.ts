@@ -63,6 +63,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
         avatarUrl: user.avatarUrl,
         tier: user.tier,
         emailVerifiedAt: user.emailVerifiedAt,
+        hasPassword: user.passwordHash !== null,
         isMember: user.isMember,
         isBoard: user.isBoard,
         membership,

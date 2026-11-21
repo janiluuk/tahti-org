@@ -69,6 +69,7 @@ export async function buildActivityExport(
     discussionPosts,
     discussionFollows,
     discussionTopicsOpened,
+    oauthAccounts,
   ] = await Promise.all([
     prisma.sound.findMany({
       where: { channel: { userId: user.id } },
@@ -551,6 +552,11 @@ export async function buildActivityExport(
       orderBy: { createdAt: 'asc' },
       select: { id: true, title: true, body: true, status: true, createdAt: true },
     }),
+    prisma.oAuthAccount.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { provider: true, email: true, createdAt: true },
+    }),
   ])
 
   return {
@@ -605,5 +611,10 @@ export async function buildActivityExport(
     discussionPosts,
     discussionFollows,
     discussionTopicsOpened,
+    linkedAccounts: oauthAccounts.map((account) => ({
+      provider: account.provider,
+      email: account.email,
+      linkedAt: account.createdAt.toISOString(),
+    })),
   }
 }

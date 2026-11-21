@@ -22,6 +22,11 @@ describe('usesAuthRateLimit', () => {
     expect(usesAuthRateLimit('/api/auth/oauth/providers', 'GET')).toBe(false)
   })
 
+  it('treats setting a first password like changing one', () => {
+    expect(usesAuthRateLimit('/api/me/password', 'POST')).toBe(true)
+    expect(usesAuthRateLimit('/api/me/password/set', 'POST')).toBe(true)
+  })
+
   it('treats chat POST as auth routes', () => {
     expect(usesAuthRateLimit('/api/chat/tahti-radio/token', 'POST')).toBe(true)
     expect(usesAuthRateLimit('/api/chat/message', 'POST')).toBe(true)

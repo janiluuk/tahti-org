@@ -101,6 +101,11 @@ export const ChangePasswordSchema = z
 
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>
 
+/** POST /api/me/password/set — first password for an account created with Google/Facebook. */
+export const SetPasswordSchema = z.object({ password: PasswordSchema })
+
+export type SetPasswordInput = z.infer<typeof SetPasswordSchema>
+
 /** POST /api/me/email — ask to move the account to another address. */
 export const ChangeEmailSchema = z.object({
   newEmail: z.string().trim().toLowerCase().email('Invalid email address').max(254),
