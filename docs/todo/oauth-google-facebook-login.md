@@ -1,10 +1,9 @@
-# Google and Facebook sign-in: leftovers
+# Google and Facebook sign-in: ops
 
 **Status:** partial
 
-API shipped (see HISTORY 2026-11-21). The Tahti Player web client
-(Continue with Google / Facebook, Settings → Security → Linked logins) is in
-tahti-player.
+API and leftovers shipped (see HISTORY 2026-11-21). The Tahti Player web
+client is in tahti-player.
 
 ## Left
 
@@ -13,9 +12,5 @@ tahti-player.
       `{API_URL}/api/auth/oauth/google/callback` and
       `{API_URL}/api/auth/oauth/facebook/callback`; set
       `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` and `FACEBOOK_OAUTH_CLIENT_ID` /
-      `_SECRET` (or `*_FILE`) on the api service.
-- [ ] Set a password from Settings for accounts created with Google/Facebook
-      (forgot-password skips accounts without one).
-- [ ] Dedicated error code for a Facebook signup without an email (today
-      `failed`).
-- [ ] Include linked accounts in the data export.
+      `_SECRET` (or `*_FILE`) in the stack env for the api service
+      (`infra/stack.env.vimage.example`).
