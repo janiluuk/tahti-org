@@ -6,6 +6,17 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-21 — Google and Facebook sign-in (API)
+
+`OAuthAccount` + migration `20261121120000_oauth_accounts`; `GET
+/api/auth/oauth/providers`, `/:provider/start` (code + PKCE + state in a
+signed cookie), `/:provider/callback` (sign in, link, or create; verified
+Google email auto-links only to a verified account; Facebook never
+auto-links; 2FA returns `oauth=totp&challengeId`), `GET/DELETE
+/api/me/oauth-accounts` (409 on last login). Shared `lib/login-session.ts`
+for password, TOTP and OAuth sign-in. Leftovers stay in
+`oauth-google-facebook-login.md` (ops secrets, set-password flow).
+
 ## 2026-11-20 — Finnish in-app notification templates
 
 Expanded `notification-copy` EN/FI for remaining `packages/db` writers
