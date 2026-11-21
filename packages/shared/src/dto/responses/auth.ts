@@ -12,6 +12,8 @@ export const AuthMeResponseSchema = z.object({
   avatarUrl: z.string().nullable(),
   tier: z.string(),
   emailVerifiedAt: z.coerce.date().nullable(),
+  /** False for accounts created with Google/Facebook until a password is set. */
+  hasPassword: z.boolean(),
   isMember: z.boolean(),
   isBoard: z.boolean(),
   membership: z

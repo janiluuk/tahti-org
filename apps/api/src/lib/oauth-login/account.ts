@@ -14,7 +14,7 @@ const USERNAME_MAX = 32
 const DISPLAY_NAME_MAX = 64
 
 export type OAuthErrorCode =
-  'cancelled' | 'email_in_use' | 'already_linked' | 'not_configured' | 'failed'
+  'cancelled' | 'email_in_use' | 'email_required' | 'already_linked' | 'not_configured' | 'failed'
 
 async function usernameTaken(prisma: PrismaClient, candidate: string): Promise<boolean> {
   if (RESERVED.has(candidate)) return true
@@ -157,7 +157,7 @@ export async function resolveOAuthLogin(
   if (existing) return { kind: 'sign_in', userId: existing.userId }
 
   if (!profile.email) {
-    return { kind: 'error', code: 'failed', reason: 'provider returned no email' }
+    return { kind: 'error', code: 'email_required', reason: 'provider returned no email' }
   }
 
   const byEmail = await prisma.user.findFirst({

@@ -122,6 +122,17 @@ x-app-env: &app-env
   # PLAT-057: Mixcloud archive upload OAuth — obtain prod credentials at https://www.mixcloud.com/developers/
   MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
   MIXCLOUD_CLIENT_SECRET: ${MIXCLOUD_CLIENT_SECRET:-}
+  # Google / Facebook sign-in: buttons appear only when id and secret are both set.
+  GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+  GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+  GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-}
+  FACEBOOK_OAUTH_CLIENT_ID: ${FACEBOOK_OAUTH_CLIENT_ID:-}
+  FACEBOOK_OAUTH_CLIENT_SECRET: ${FACEBOOK_OAUTH_CLIENT_SECRET:-}
+  FACEBOOK_OAUTH_REDIRECT_URI: ${FACEBOOK_OAUTH_REDIRECT_URI:-}
+  # PLAT-080: Google Drive cloud import (Picker needs the developer key too)
+  GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
+  GOOGLE_DRIVE_CLIENT_SECRET: ${GOOGLE_DRIVE_CLIENT_SECRET:-}
+  GOOGLE_DRIVE_DEVELOPER_KEY: ${GOOGLE_DRIVE_DEVELOPER_KEY:-}
   # PLAT-061: MaxMind GeoLite2 license key — for future geoip DB update automation (optional in dev)
   MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY:-}
   # Lab stack: higher rate limits so Playwright screenshot + journey suites do not trip 429 mid-run

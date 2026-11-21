@@ -111,7 +111,7 @@ const oauthLoginRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['auth'],
         summary: 'Social sign-in callback',
         description:
-          'The provider redirects here. Always redirects to the web app: `returnTo` with `oauth=ok` (signed in or linked), `returnTo` with `oauth=totp&challengeId=…` when the account has 2FA (finish with POST /api/auth/login/totp), or `/` with `oauth_error=cancelled|email_in_use|already_linked|not_configured|failed`.',
+          'The provider redirects here. Always redirects to the web app: `returnTo` with `oauth=ok` (signed in or linked), `returnTo` with `oauth=totp&challengeId=…` when the account has 2FA (finish with POST /api/auth/login/totp), or `/` with `oauth_error=cancelled|email_in_use|email_required|already_linked|not_configured|failed`.',
         response: openApiRedirectResponse(302),
       },
     },

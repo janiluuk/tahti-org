@@ -319,10 +319,10 @@ describe('social sign-in (Google / Facebook)', () => {
       expect(sendVerificationEmail).toHaveBeenCalledTimes(1)
     })
 
-    it('fails when the provider returns no email for a new account', async () => {
+    it('asks for an email when the provider returns none for a new account', async () => {
       const profile = facebookProfile({ email: undefined })
       const { location } = await signInFlow('facebook', profile)
-      expect(location).toBe(`${APP_ORIGIN}/?oauth_error=failed`)
+      expect(location).toBe(`${APP_ORIGIN}/?oauth_error=email_required`)
       expect(
         await prisma.oAuthAccount.count({ where: { providerUserId: profile.id as string } }),
       ).toBe(0)

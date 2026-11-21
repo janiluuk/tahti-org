@@ -6,6 +6,19 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-21 — Google and Facebook sign-in: API leftovers
+
+From `oauth-google-facebook-login.md` (branch `feat/oauth-signin-production`).
+`GET /api/auth/me` returns `hasPassword`. `POST /api/me/password/set
+{ password }` → 204 (409 when a password exists; signup rules, argon2id,
+security notice, auth rate-limit bucket; sessions stay, pending reset links
+dropped). Forgot-password also mails password-less accounts with a verified
+email (same generic response). OAuth signup without a provider email →
+`oauth_error=email_required`. Data export `linkedAccounts` (provider, email,
+linkedAt). Provider tokens are never stored, so unlink has nothing to revoke.
+Production compose passes `GOOGLE_OAUTH_*`, `FACEBOOK_OAUTH_*`,
+`GOOGLE_DRIVE_*` to the api. Ops item left in the todo.
+
 ## 2026-11-21 — Google and Facebook sign-in (API)
 
 `OAuthAccount` + migration `20261121120000_oauth_accounts`; `GET
