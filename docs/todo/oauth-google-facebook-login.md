@@ -27,8 +27,11 @@ client is in tahti-player.
    `email` and `public_profile`, privacy policy and data deletion URLs, switch
    the app to Live.
 3. Put the four values in `/srv/tahti/infra/stack.env` on vimage.
-4. `scripts/deploy_prod.sh` (applies `20261120120000_artist_event_gallery`
-   and `20261121120000_oauth_accounts`; the api container now receives the
-   vars via `x-app-env`).
+4. Deploy: nothing manual. Merging to `main` redeploys vimage through the
+   self-hosted GitHub Actions runner (`/srv/tahti` is owned by `gha-runner`;
+   `scripts/deploy_prod.sh` as a normal user fails with rsync permission
+   errors). The OAuth routes are live since 2026-11-21. After adding the
+   secrets, restart the api:
+   `cd /srv/tahti && docker compose -f infra/docker-compose.stack.yml --env-file infra/stack.env up -d api`.
 5. Check `GET https://api.tahti.live/api/auth/oauth/providers` lists both,
    then sign in from tahti.live with a new and an existing account.
