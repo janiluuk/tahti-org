@@ -88,6 +88,7 @@ export async function executeAccountDeletion(
   await prisma.socialPost.deleteMany({ where: { userId } })
 
   await prisma.session.deleteMany({ where: { userId } })
+  await prisma.oAuthAccount.deleteMany({ where: { userId } })
   await prisma.emailVerification.deleteMany({ where: { userId } })
   await prisma.emailChange.deleteMany({ where: { userId } })
   await prisma.passwordSetup.deleteMany({ where: { userId } })

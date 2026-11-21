@@ -327,6 +327,26 @@ export const config = {
       process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/social/instagram/oauth/callback`,
   },
+  /** Google sign-in (OpenID Connect). Offered only when both id and secret are set. */
+  googleOAuth: {
+    clientId: process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ?? '',
+    clientSecret: readSecret('GOOGLE_OAUTH_CLIENT_SECRET', 'GOOGLE_OAUTH_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/auth/oauth/google/callback`,
+  },
+  /** Facebook Login. Offered only when both id and secret are set. */
+  facebookOAuth: {
+    clientId: process.env.FACEBOOK_OAUTH_CLIENT_ID?.trim() ?? '',
+    clientSecret: readSecret(
+      'FACEBOOK_OAUTH_CLIENT_SECRET',
+      'FACEBOOK_OAUTH_CLIENT_SECRET_FILE',
+      '',
+    ),
+    redirectUri:
+      process.env.FACEBOOK_OAUTH_REDIRECT_URI ||
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/auth/oauth/facebook/callback`,
+  },
   /** STREAM-008: optional AcoustID key for live + sound tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
   /** Last.fm scrobble — optional platform fallback; users usually bring their own API key. */

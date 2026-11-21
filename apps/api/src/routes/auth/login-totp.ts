@@ -3,14 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginTotpSchema, openApiResponse } from '@tahti/shared'
-import { createSession } from '../../lib/session.js'
-import { issueAuthTokens } from '../../auth/tokens/index.js'
-import { config } from '../../config.js'
+import { loginDeviceLabel, startLoginSession } from '../../lib/login-session.js'
 import { verifyTotpCode } from '../../lib/totp.js'
 import { decryptTotpSecret } from '../../lib/totp-secret-enc.js'
 import { verifyPassword } from '../../lib/password.js'
 import { normalizeBackupCode } from '../../lib/totp-backup-codes.js'
-import { recordSignIn } from '../../lib/sign-in-notice.js'
 import { restrictionErrorMessage } from '@tahti/db'
 import { suspendedLoginMessage } from '../../lib/suspended-login.js'
 
@@ -98,28 +95,8 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
 
       await fastify.prisma.totpChallenge.delete({ where: { id: challenge.id } })
 
-      const deviceLabel =
-        parsed.data.deviceLabel?.trim() ||
-        (typeof request.headers['user-agent'] === 'string'
-          ? request.headers['user-agent'].slice(0, 120)
-          : null)
-      const session = await createSession(fastify.prisma, user.id, { deviceLabel })
-
-      void recordSignIn(fastify.prisma, user, deviceLabel, request.log)
-
-      reply.setCookie(config.sessionCookieName, session.id, {
-        httpOnly: true,
-        secure: config.isProd,
-        sameSite: 'lax',
-        maxAge: config.sessionMaxAgeSec,
-        path: '/',
-        domain: config.sessionCookieDomain,
-      })
-
-      const tokens = await issueAuthTokens(fastify.prisma, reply, {
-        user,
-        session,
-        deviceLabel,
+      const tokens = await startLoginSession(fastify.prisma, request, reply, user, {
+        deviceLabel: loginDeviceLabel(request, parsed.data.deviceLabel),
         includeRefreshInBody: parsed.data.refreshTokenDelivery === 'body',
       })
 

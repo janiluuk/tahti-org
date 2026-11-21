@@ -96,3 +96,19 @@ export const AuthRegisterResponseSchema = z.object({
 export const AuthMessageResponseSchema = z.object({
   message: z.string(),
 })
+
+export const OAuthLoginProviderSchema = z.enum(['google', 'facebook'])
+
+export const OAuthProvidersResponseSchema = z.object({
+  providers: z.array(OAuthLoginProviderSchema),
+})
+
+export const OAuthAccountSchema = z.object({
+  provider: OAuthLoginProviderSchema,
+  email: z.string().nullable(),
+  linkedAt: z.string(),
+})
+
+export const OAuthAccountsResponseSchema = z.object({
+  accounts: z.array(OAuthAccountSchema),
+})
