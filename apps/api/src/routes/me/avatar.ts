@@ -20,10 +20,10 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
+import { presignedPutUrl } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
-import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
-import { extractPalette } from '../../lib/palette-extract.js'
+import { fetchImageFromUrl } from '../../lib/fetch-image-url.js'
+import { refreshAvatarPalette, setAvatarFromUrl } from '../../lib/avatar-from-url.js'
 
 const PRESIGN_TTL_SEC = 900
 
@@ -35,25 +35,6 @@ function avatarProxyErrorStatus(error: string): number {
     return 422
   }
   return 502
-}
-
-/** Fire-and-forget: extract a palette from the new avatar and persist it. */
-function refreshAvatarPalette(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: { user: { update: (args: any) => Promise<unknown> } },
-  userId: string,
-  imageUrl: string,
-  log: { warn: (err: unknown, msg: string) => void },
-) {
-  extractPalette(imageUrl)
-    .then((palette) => {
-      if (!palette) return
-      return prisma.user.update({
-        where: { id: userId },
-        data: { avatarPaletteJson: JSON.stringify(palette) },
-      })
-    })
-    .catch((err) => log.warn(err, 'avatar palette extract failed'))
 }
 
 const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
@@ -170,24 +151,15 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const user = request.sessionUser!
 
-      const fetched = await fetchImageFromUrl(parsed.data.sourceUrl)
-      if (!fetched.ok) return reply.status(422).send({ error: fetched.error })
+      const result = await setAvatarFromUrl(
+        fastify.prisma,
+        user,
+        parsed.data.sourceUrl,
+        fastify.log,
+      )
+      if (!result.ok) return reply.status(result.status).send({ error: result.error })
 
-      const uploadKey = `avatars/${user.username}/avatar-${nanoid(8)}.${extFromMime(fetched.contentType)}`
-      await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
-
-      const avatarUrl = publicMediaUrl(uploadKey)
-      if (!avatarUrl) {
-        return reply.status(500).send({ error: 'Failed to resolve avatar URL' })
-      }
-      await fastify.prisma.user.update({
-        where: { id: user.id },
-        data: { avatarUrl, avatarPosterUrl: null },
-      })
-
-      refreshAvatarPalette(fastify.prisma, user.id, avatarUrl, fastify.log)
-
-      return reply.send({ avatarUrl, avatarPosterUrl: null })
+      return reply.send({ avatarUrl: result.avatarUrl, avatarPosterUrl: null })
     },
   )
 

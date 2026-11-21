@@ -1058,6 +1058,7 @@ model User {
   emailChanges                   EmailChange[]
   totpBackupCodes                TotpBackupCode[]
   totpChallenges                 TotpChallenge[]
+  oauthAccounts                  OAuthAccount[]
   membership                     Membership?
   channel                        Channel?
   storageQuota                   UserStorageQuota?
@@ -1484,6 +1485,24 @@ model TotpChallenge {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@schema("core")
+}
+
+/// A Google or Facebook identity that can sign in to the account
+/// (`/api/auth/oauth/:provider/*`). One identity per provider per account.
+model OAuthAccount {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `google` | `facebook`
+  provider       String
+  providerUserId String
+  /// Email the provider reported at link time; informational only.
+  email          String?
+  createdAt      DateTime @default(now())
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
   @@schema("core")
 }
 

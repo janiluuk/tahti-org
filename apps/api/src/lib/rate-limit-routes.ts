@@ -17,6 +17,7 @@ const AUTH_ROUTES = [
 /** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */
 export function usesAuthRateLimit(url: string, method: string): boolean {
   if (AUTH_ROUTES.some((r) => url.startsWith(r))) return true
+  if (/^\/api\/auth\/oauth\/[^/?]+\/(start|callback)(\?|$)/.test(url)) return true
   return method === 'POST' && url.startsWith('/api/chat/')
 }
 

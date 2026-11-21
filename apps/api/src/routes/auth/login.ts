@@ -3,14 +3,13 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
-import { restrictionErrorMessage } from '@tahti/db'
 import { verifyPassword } from '../../lib/password.js'
-import { createSession } from '../../lib/session.js'
-import { issueAuthTokens } from '../../auth/tokens/index.js'
-import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
-import { config } from '../../config.js'
-import { recordSignIn } from '../../lib/sign-in-notice.js'
-import { suspendedLoginMessage } from '../../lib/suspended-login.js'
+import {
+  createTotpChallenge,
+  loginBlockedReason,
+  loginDeviceLabel,
+  startLoginSession,
+} from '../../lib/login-session.js'
 
 const loginRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -64,50 +63,16 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       // The password was right, so the account's owner may see why.
-      if (user.suspendedAt) {
-        return reply.status(403).send({ error: suspendedLoginMessage(user.suspendReason) })
-      }
-
-      if (user.deletedAt) {
-        return reply.status(403).send({ error: 'This account has been deleted' })
-      }
-
-      const loginBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'LOGIN')
-      if (loginBanError) return reply.status(403).send({ error: loginBanError })
+      const blocked = await loginBlockedReason(fastify.prisma, user)
+      if (blocked) return reply.status(403).send({ error: blocked })
 
       if (user.totpEnabledAt) {
-        const challenge = await fastify.prisma.totpChallenge.create({
-          data: {
-            id: generateTotpChallengeId(),
-            userId: user.id,
-            expiresAt: totpChallengeExpiresAt(),
-          },
-        })
-        return reply.send({ requiresTotp: true, challengeId: challenge.id })
+        const challengeId = await createTotpChallenge(fastify.prisma, user.id)
+        return reply.send({ requiresTotp: true, challengeId })
       }
 
-      const deviceLabel =
-        parsed.data.deviceLabel?.trim() ||
-        (typeof request.headers['user-agent'] === 'string'
-          ? request.headers['user-agent'].slice(0, 120)
-          : null)
-      const session = await createSession(fastify.prisma, user.id, { deviceLabel })
-
-      void recordSignIn(fastify.prisma, user, deviceLabel, request.log)
-
-      reply.setCookie(config.sessionCookieName, session.id, {
-        httpOnly: true,
-        secure: config.isProd,
-        sameSite: 'lax',
-        maxAge: config.sessionMaxAgeSec,
-        path: '/',
-        domain: config.sessionCookieDomain,
-      })
-
-      const tokens = await issueAuthTokens(fastify.prisma, reply, {
-        user,
-        session,
-        deviceLabel,
+      const tokens = await startLoginSession(fastify.prisma, request, reply, user, {
+        deviceLabel: loginDeviceLabel(request, parsed.data.deviceLabel),
         includeRefreshInBody: parsed.data.refreshTokenDelivery === 'body',
       })
 

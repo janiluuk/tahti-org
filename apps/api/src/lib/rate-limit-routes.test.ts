@@ -16,6 +16,12 @@ describe('usesAuthRateLimit', () => {
     expect(usesAuthRateLimit('/api/auth/setup-password', 'POST')).toBe(true)
   })
 
+  it('treats social sign-in start and callback as auth routes, not the provider list', () => {
+    expect(usesAuthRateLimit('/api/auth/oauth/google/start?returnTo=%2F', 'GET')).toBe(true)
+    expect(usesAuthRateLimit('/api/auth/oauth/facebook/callback?code=x&state=y', 'GET')).toBe(true)
+    expect(usesAuthRateLimit('/api/auth/oauth/providers', 'GET')).toBe(false)
+  })
+
   it('treats chat POST as auth routes', () => {
     expect(usesAuthRateLimit('/api/chat/tahti-radio/token', 'POST')).toBe(true)
     expect(usesAuthRateLimit('/api/chat/message', 'POST')).toBe(true)
