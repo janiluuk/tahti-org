@@ -988,3 +988,14 @@ No todo file; one batch PR (https://github.com/janiluuk/tahti-org/pull/1128):
   own-artist prefix, site tags, `(1)` suffix dropped). The hearthis importer is in `tahti-cli`.
 - Stack smoke workflow reads pnpm from `packageManager`; `stack-up.sh` no longer starts the
   removed `web` service.
+
+### 2026-11-22 — CronRun retention sweep (#1134)
+
+No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1134):
+
+- `light-daily` gains a `cron-run-retention` sub-task (logged as its own CronRun row): deletes
+  `admin.CronRun` rows older than `CRON_RUN_RETENTION_DAYS` (default 30) while always keeping
+  the newest 20 runs of every job name, including names no longer in the manifest. 5,000 rows
+  per `DELETE` (by primary key), looped per job. Uses the existing `(jobName, startedAt DESC)`
+  index; no migration. Local bench: 300k rows → 196k deleted in 60 batches, ~0.6 s.
+- Closes the "CronRun retention" row in `docs/remaining-work.md` (left open by #1128).
