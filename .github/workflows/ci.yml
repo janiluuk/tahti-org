@@ -627,7 +627,14 @@ jobs:
 
   release:
     name: Release images & changelog
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Path-filtered jobs (e2e) are skipped on pushes that do not touch the API,
+    # and a skipped ancestor would otherwise skip this job too: no dated tag,
+    # so the deploy workflow fails. Gate on the aggregate checks instead.
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.all-checks.result == 'success' &&
+      needs.generate-openapi.result == 'success'
     # generate-openapi uploads the spec this job attaches to the release; without
     # waiting for it the download below raced the upload and released no spec.
     needs: [all-checks, generate-openapi]
@@ -807,7 +814,11 @@ jobs:
 
   publish-api-client:
     name: Publish @tahti/api-client to npm
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.release.result == 'success' &&
+      needs.generate-openapi.result == 'success'
     needs: [release, generate-openapi]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
