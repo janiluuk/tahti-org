@@ -80,6 +80,8 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
       user: {
         select: {
           id: true,
+          username: true,
+          displayName: true,
           googleDriveAccessTokenEnc: true,
           googleDriveRefreshTokenEnc: true,
           channel: { select: { id: true, slug: true } },
@@ -128,7 +130,10 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
       contentLength,
     )
 
-    const title = titleFromDriveFileName(fileName)
+    const title = titleFromDriveFileName(fileName, [
+      importJob.user.displayName,
+      importJob.user.username,
+    ])
     const sound = await prisma.sound.create({
       data: {
         channelId: channel.id,
