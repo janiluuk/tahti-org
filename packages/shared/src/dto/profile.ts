@@ -4,7 +4,7 @@
 import { z } from 'zod'
 import { containsEmailAddress, DISPLAY_NAME_EMAIL_MESSAGE } from '../display-name.js'
 import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
-import { LinkPageConfigPatchSchema, LinkPageConfigSchema } from './link-page.js'
+import { LinkPageConfigPatchSchema } from './link-page.js'
 
 export const ARTIST_KINDS = ['SINGLE', 'COLLECTIVE'] as const
 export type ArtistKind = (typeof ARTIST_KINDS)[number]

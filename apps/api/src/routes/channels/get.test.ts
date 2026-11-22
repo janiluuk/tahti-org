@@ -113,7 +113,7 @@ describe('GET /api/channels/:slug', () => {
   })
 
   it('returns ISO nextBroadcastAt when schedule is set', async () => {
-    const at = new Date('2026-07-01T20:00:00.000Z')
+    const at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     await prisma.channel.update({
       where: { slug: 'channel-get-testuser' },
       data: { nextBroadcastAt: at, nextBroadcastNote: 'Thursday 20:00 UTC' },
@@ -126,6 +126,28 @@ describe('GET /api/channels/:slug', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().nextBroadcastAt).toBe(at.toISOString())
     expect(res.json().nextBroadcastNote).toBe('Thursday 20:00 UTC')
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { nextBroadcastAt: null, nextBroadcastNote: null },
+    })
+  })
+
+  it('hides a long-overdue nextBroadcastAt on the public channel', async () => {
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: {
+        nextBroadcastAt: new Date('2020-01-01T20:00:00.000Z'),
+        nextBroadcastNote: 'Ancient show',
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().nextBroadcastAt).toBeNull()
 
     await prisma.channel.update({
       where: { slug: 'channel-get-testuser' },

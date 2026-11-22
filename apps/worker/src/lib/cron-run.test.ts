@@ -62,6 +62,13 @@ describe('runWithCronLog', () => {
     )
   })
 
+  it('records the CronRun retention sweep as its own run', async () => {
+    await runWithCronLog('cron-run-retention', async () => ({ deleted: 0 }))
+    expect(cronRunCreate).toHaveBeenCalledWith({
+      data: { jobName: 'cron-run-retention', startedAt: expect.any(Date) },
+    })
+  })
+
   it('does not create run records for ordinary queue jobs', async () => {
     await expect(runWithCronLog('transcode-sound', async () => 'done')).resolves.toBe('done')
     expect(cronRunCreate).not.toHaveBeenCalled()

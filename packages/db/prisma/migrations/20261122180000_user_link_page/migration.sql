@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "User" ADD COLUMN "linkPageJson" JSONB;
+ALTER TABLE "core"."User" ADD COLUMN "linkPageJson" JSONB;
