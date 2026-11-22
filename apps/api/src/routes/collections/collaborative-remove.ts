@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { ChannelSoundParamsSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { compactCollectionPositions } from './helpers.js'
 
 const collaborativeRemoveRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/v1/collections/:slug/items/:itemId — a guest on a
@@ -21,14 +22,17 @@ const collaborativeRemoveRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.collectionItem.findFirst({
         where: { id: itemId, collection: { slug, collaborative: true } },
-        select: { id: true, addedByUserId: true },
+        select: { id: true, collectionId: true, addedByUserId: true },
       })
       if (!item) return reply.status(404).send({ error: 'Item not found' })
       if (item.addedByUserId !== user.id) {
         return reply.status(403).send({ error: 'You can only remove tracks you added' })
       }
 
-      await fastify.prisma.collectionItem.delete({ where: { id: item.id } })
+      await fastify.prisma.$transaction(async (tx) => {
+        await tx.collectionItem.delete({ where: { id: item.id } })
+        await compactCollectionPositions(tx, item.collectionId)
+      })
       return reply.status(204).send()
     },
   )

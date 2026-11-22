@@ -99,6 +99,12 @@ export const config = {
   redisSlowBypassMs: parseInt(process.env.REDIS_SLOW_BYPASS_MS ?? '5000', 10),
   /** How long /health, /metrics and /api/v1/status reuse one dependency probe. */
   healthCheckCacheMs: parseInt(process.env.HEALTH_CHECK_CACHE_MS ?? '5000', 10),
+  /** How long the admin dashboard's costly panels (queues, cron runs, system
+   * health) reuse one result. 0 turns the cache off, the default under test. */
+  adminStatsCacheSec: parseInt(
+    process.env.ADMIN_STATS_CACHE_SEC ?? (process.env.NODE_ENV === 'test' ? '0' : '20'),
+    10,
+  ),
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days

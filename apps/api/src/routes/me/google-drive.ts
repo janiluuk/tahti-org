@@ -281,7 +281,7 @@ const googleDriveRoutes: FastifyPluginAsync = async (fastify) => {
         await enqueueCloudImportGoogleDrive(job.id)
         imports.push({
           cloudImportJobId: job.id,
-          title: titleFromDriveFileName(file.name),
+          title: titleFromDriveFileName(file.name, [user.displayName, user.username]),
           status: 'queued' as const,
         })
       }

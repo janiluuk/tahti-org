@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-/** Title for an upload whose client sent none: the file name without its
- * extension, underscores read as spaces. */
-export function titleFromFilename(filename: string): string {
-  const base = filename.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '')
-  const title = base.replace(/_+/g, ' ').trim()
-  return (title || 'Untitled upload').slice(0, 200)
+import { trackTitleFromFilename } from '@tahti/shared'
+
+/** Title for an upload whose client sent none: the track title cleaned out
+ * of the file name, with the uploader's own name dropped from an
+ * "Artist - Title" name. */
+export function titleFromFilename(
+  filename: string,
+  artistNames: Array<string | null | undefined> = [],
+): string {
+  return (trackTitleFromFilename(filename, { artistNames }) || 'Untitled upload').slice(0, 200)
 }

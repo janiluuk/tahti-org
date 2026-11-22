@@ -23,10 +23,13 @@ import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import {
   addManagementPlayback,
+  applyCollectionOrder,
   collectionItemInclude,
+  compactCollectionPositions,
   makeRoomAtPosition,
   nextCollectionPosition,
   withSafeNames,
+  withTrackNumbers,
   zodError,
 } from './helpers.js'
 
@@ -78,7 +81,10 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
                 _count: { select: { items: true } },
               },
             })
-          ).map((col) => ({ ...col, items: col.items.map((item) => withSafeNames(item)) }))
+          ).map((col) => ({
+            ...col,
+            items: withTrackNumbers(col.items.map((item) => withSafeNames(item))),
+          }))
         : await fastify.prisma.collection.findMany({
             where,
             orderBy,
@@ -126,13 +132,12 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       },
     })
     if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send(
-      await addManagementPlayback(
-        fastify,
-        { ...withDateOnly(col), coverUrl: await resolveCollectionCoverUrl(col) },
-        user.id,
-      ),
+    const managed = await addManagementPlayback(
+      fastify,
+      { ...withDateOnly(col), coverUrl: await resolveCollectionCoverUrl(col) },
+      user.id,
     )
+    return reply.send({ ...managed, items: withTrackNumbers(managed.items) })
   })
 
   // PUT /api/me/collections/reorder — reorder profile grid by slug order
@@ -391,7 +396,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         const item = await fastify.prisma.$transaction(async (tx) => {
           const position = body.position ?? (await nextCollectionPosition(tx, col.id))
           if (body.position !== undefined) await makeRoomAtPosition(tx, col.id, position)
-          return tx.collectionItem.create({
+          const created = await tx.collectionItem.create({
             data: {
               collectionId: col.id,
               soundId: body.soundId ?? null,
@@ -399,6 +404,10 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
               position,
             },
           })
+          if (body.position === undefined) return created
+          // An insert position past the end would leave a gap.
+          await compactCollectionPositions(tx, col.id)
+          return tx.collectionItem.findUniqueOrThrow({ where: { id: created.id } })
         })
         if (announceTitle) {
           await notifyPlaylistOfNewTrack(
@@ -441,37 +450,20 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
-        include: { items: { select: { id: true } } },
+        select: { id: true },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
-      const existing = new Set(col.items.map((i) => i.id))
-      if (itemIds.length !== existing.size || itemIds.some((id) => !existing.has(id))) {
+      if (!(await applyCollectionOrder(fastify.prisma, col.id, itemIds))) {
         return reply.status(400).send({ error: 'itemIds must match collection items exactly' })
       }
-
-      // Two-phase update avoids @@unique([collectionId, position]) collisions while swapping.
-      await fastify.prisma.$transaction(async (tx) => {
-        for (let i = 0; i < itemIds.length; i++) {
-          await tx.collectionItem.update({
-            where: { id: itemIds[i] },
-            data: { position: -(i + 1) },
-          })
-        }
-        for (let i = 0; i < itemIds.length; i++) {
-          await tx.collectionItem.update({
-            where: { id: itemIds[i] },
-            data: { position: i + 1 },
-          })
-        }
-      })
 
       const items = await fastify.prisma.collectionItem.findMany({
         where: { collectionId: col.id },
         orderBy: { position: 'asc' },
         include: collectionItemInclude,
       })
-      return reply.send({ items: items.map((item) => withSafeNames(item)) })
+      return reply.send({ items: withTrackNumbers(items.map((item) => withSafeNames(item))) })
     },
   )
 
@@ -490,8 +482,11 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
-      await fastify.prisma.collectionItem.deleteMany({
-        where: { id: itemId, collectionId: col.id },
+      await fastify.prisma.$transaction(async (tx) => {
+        const removed = await tx.collectionItem.deleteMany({
+          where: { id: itemId, collectionId: col.id },
+        })
+        if (removed.count > 0) await compactCollectionPositions(tx, col.id)
       })
       return reply.status(204).send()
     },

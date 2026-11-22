@@ -34,8 +34,9 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       const { filename, contentType, fileSizeBytes } = parsed.data
-      const title = parsed.data.title ?? titleFromFilename(filename)
       const user = request.sessionUser!
+      const title =
+        parsed.data.title ?? titleFromFilename(filename, [user.displayName, user.username])
 
       const uploadBanError = await restrictionErrorMessage(fastify.prisma, user.id, 'UPLOAD')
       if (uploadBanError) return reply.status(403).send({ error: uploadBanError })

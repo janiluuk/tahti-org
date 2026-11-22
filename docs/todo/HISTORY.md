@@ -962,3 +962,21 @@ New API shapes the web client asked for (tahti-player `embed-covers-hardening.md
   suspended hosts.
 - Admin sound list: contract test that `embedProvider` / `embedUri` / `embedSourceUrl` come
   back (they already did since #1096).
+
+### 2026-11-22 — Album track order, board reorder, cached admin panels, stack smoke (#1128)
+
+No todo file; one batch PR (https://github.com/janiluuk/tahti-org/pull/1128):
+
+- Collections: every item has a 1-based `trackNumber` (owner, reorder and public views; the
+  public one numbers visible items and keeps the album number under a NAME/TIME sort).
+  Removes and past-the-end inserts renumber 1..n; migration
+  `20261122120000_collection_track_order` renumbers existing gaps. Board routes
+  `GET /api/admin/collections/:slug` and `PUT /api/admin/collections/:slug/reorder`
+  (`{ itemIds }`, audited `COLLECTION_ADMIN_REORDER`). Web wiring lives in tahti-player.
+- Admin dashboard: `/api/admin/stats/{queues,cron-runs,system-health}` reuse one result for
+  `ADMIN_STATS_CACHE_SEC` (default 20 s) per process; cron-runs reads the newest run per job
+  by index instead of loading the whole unpruned CronRun table. Left: CronRun has no retention.
+- Upload-prepare and Google Drive titles go through `trackTitleFromFilename` (track number,
+  own-artist prefix, site tags, `(1)` suffix dropped). The hearthis importer is in `tahti-cli`.
+- Stack smoke workflow reads pnpm from `packageManager`; `stack-up.sh` no longer starts the
+  removed `web` service.

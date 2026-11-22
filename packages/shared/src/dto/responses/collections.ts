@@ -3,6 +3,15 @@
 
 import { z } from 'zod'
 
+/** Where an item sits in its collection: `position` is the stored order,
+ * `trackNumber` the 1-based track number shown for it (the n-th item a
+ * viewer can see, in position order). */
+export const CollectionTrackOrderItemSchema = z.object({
+  id: z.string(),
+  position: z.number().int(),
+  trackNumber: z.number().int().min(1),
+})
+
 export const CollectionPublicViewSchema = z
   .object({
     slug: z.string(),
@@ -17,6 +26,7 @@ export const CollectionPublicViewSchema = z
       page: z.string(),
       rss: z.string(),
     }),
+    items: z.array(CollectionTrackOrderItemSchema.passthrough()),
   })
   .passthrough()
 

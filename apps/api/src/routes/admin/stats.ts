@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { CronOutcome, PrismaClient } from '@tahti/db'
 import {
   AdminAuditRecentListSchema,
   AdminChatStatsSchema,
@@ -20,9 +21,40 @@ import { getQueueStatsByJobName } from '../../lib/queue-stats.js'
 import { WORKER_CRON_JOBS, cronTaskNames } from '@tahti/shared'
 import { runDependencyChecks } from '../../lib/health-checks.js'
 import { collectBackupMetrics } from '../../lib/backup-metrics.js'
+import { cachedAdminStat } from '../../lib/admin-stats-cache.js'
 
 function durationMs(startedAt: Date, finishedAt: Date | null): number | null {
   return finishedAt ? Math.max(0, finishedAt.getTime() - startedAt.getTime()) : null
+}
+
+type CronRunRow = {
+  id: bigint
+  jobName: string
+  startedAt: Date
+  finishedAt: Date | null
+  outcome: CronOutcome | null
+  errorMessage: string | null
+  resultJson: string | null
+}
+
+/** The newest run of each job: one (jobName, startedAt DESC) index lookup per
+ * job. Prisma's `distinct` would load every run ever recorded and drop the
+ * duplicates in Node, and CronRun is never pruned. */
+async function latestCronRunByJobName(
+  prisma: PrismaClient,
+  jobNames: string[],
+): Promise<Map<string, CronRunRow>> {
+  const rows = await prisma.$queryRaw<CronRunRow[]>`
+    SELECT r."id", r."jobName", r."startedAt", r."finishedAt", r."outcome"::text AS "outcome",
+           r."errorMessage", r."resultJson"
+    FROM unnest(${jobNames}::text[]) AS job(name)
+    CROSS JOIN LATERAL (
+      SELECT * FROM "admin"."CronRun"
+      WHERE "jobName" = job.name
+      ORDER BY "startedAt" DESC
+      LIMIT 1
+    ) AS r`
+  return new Map(rows.map((row) => [row.jobName, row]))
 }
 
 const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -66,8 +98,7 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const queues = await getQueueStatsByJobName()
-      return reply.send(queues)
+      return reply.send(await cachedAdminStat('queues', getQueueStatsByJobName))
     },
   )
 
@@ -82,33 +113,32 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const latestRuns = await fastify.prisma.cronRun.findMany({
-        where: { jobName: { in: WORKER_CRON_JOBS.flatMap(cronTaskNames) } },
-        orderBy: [{ jobName: 'asc' }, { startedAt: 'desc' }],
-        distinct: ['jobName'],
-      })
-      const latestByJobName = new Map(latestRuns.map((run) => [run.jobName, run]))
-
-      const latest = WORKER_CRON_JOBS.flatMap((spec) =>
-        cronTaskNames(spec).map((taskName) => ({ spec, taskName })),
-      ).map(({ spec, taskName }) => {
-        const run = latestByJobName.get(taskName)
-        return {
-          jobName: taskName,
-          description: spec.description,
-          pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
-          lastRun: run
-            ? {
-                id: run.id.toString(),
-                startedAt: run.startedAt,
-                finishedAt: run.finishedAt,
-                outcome: run.outcome,
-                errorMessage: run.errorMessage,
-                resultJson: run.resultJson,
-                durationMs: durationMs(run.startedAt, run.finishedAt),
-              }
-            : null,
-        }
+      const latest = await cachedAdminStat('cron-runs', async () => {
+        const latestByJobName = await latestCronRunByJobName(
+          fastify.prisma,
+          WORKER_CRON_JOBS.flatMap(cronTaskNames),
+        )
+        return WORKER_CRON_JOBS.flatMap((spec) =>
+          cronTaskNames(spec).map((taskName) => ({ spec, taskName })),
+        ).map(({ spec, taskName }) => {
+          const run = latestByJobName.get(taskName)
+          return {
+            jobName: taskName,
+            description: spec.description,
+            pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
+            lastRun: run
+              ? {
+                  id: run.id.toString(),
+                  startedAt: run.startedAt,
+                  finishedAt: run.finishedAt,
+                  outcome: run.outcome,
+                  errorMessage: run.errorMessage,
+                  resultJson: run.resultJson,
+                  durationMs: durationMs(run.startedAt, run.finishedAt),
+                }
+              : null,
+          }
+        })
       })
       return reply.send(latest)
     },
@@ -169,20 +199,22 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const [checks, backup, failedPayouts] = await Promise.all([
-        runDependencyChecks(fastify.prisma),
-        collectBackupMetrics(),
-        fastify.prisma.fanSubPayout.count({ where: { state: 'FAILED' } }),
-      ])
-      const byId = new Map(checks.map((c) => [c.id, c.state]))
-
-      return reply.send({
-        icecast: byId.get('icecast') === 'up' ? 'up' : 'down',
-        minio: byId.get('minio') === 'up' ? 'up' : 'down',
-        discordBot: byId.get('discord-bot') === 'up' ? 'up' : 'down',
-        postgresBackupAgeHours: backup.postgresBackupAgeHours,
-        failedFanSubPayouts: failedPayouts,
+      const health = await cachedAdminStat('system-health', async () => {
+        const [checks, backup, failedPayouts] = await Promise.all([
+          runDependencyChecks(fastify.prisma),
+          collectBackupMetrics(),
+          fastify.prisma.fanSubPayout.count({ where: { state: 'FAILED' } }),
+        ])
+        const byId = new Map(checks.map((c) => [c.id, c.state]))
+        return {
+          icecast: byId.get('icecast') === 'up' ? 'up' : 'down',
+          minio: byId.get('minio') === 'up' ? 'up' : 'down',
+          discordBot: byId.get('discord-bot') === 'up' ? 'up' : 'down',
+          postgresBackupAgeHours: backup.postgresBackupAgeHours,
+          failedFanSubPayouts: failedPayouts,
+        }
       })
+      return reply.send(health)
     },
   )
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { trackTitleFromFilename } from './track-title.js'
 import type {
   CloudImportFilePage,
   CloudImportListOptions,
@@ -58,9 +59,11 @@ export function isAllowedDriveAudioMime(mimeType: string | undefined, fileName: 
   return Boolean(ext && AUDIO_EXTENSIONS.has(ext))
 }
 
-export function titleFromDriveFileName(fileName: string): string {
-  const base = fileName.includes('.') ? fileName.slice(0, fileName.lastIndexOf('.')) : fileName
-  return base.trim() || fileName
+export function titleFromDriveFileName(
+  fileName: string,
+  artistNames: Array<string | null | undefined> = [],
+): string {
+  return trackTitleFromFilename(fileName, { artistNames }) || fileName
 }
 
 export function extensionFromDriveFile(fileName: string, mimeType?: string): string {

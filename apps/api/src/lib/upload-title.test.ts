@@ -20,4 +20,10 @@ describe('titleFromFilename', () => {
   it('falls back when nothing is left', () => {
     expect(titleFromFilename('.wav')).toBe('Untitled upload')
   })
+
+  it('drops a track number and the uploader’s own name', () => {
+    expect(
+      titleFromFilename('03 - DJ Example - Night Drive.mp3', ['DJ Example', 'djexample']),
+    ).toBe('Night Drive')
+  })
 })

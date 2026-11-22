@@ -246,3 +246,67 @@ export async function makeRoomAtPosition(
     })
   }
 }
+
+/** Renumber a collection's items 1..n in their current order, after a
+ * remove or an insert past the end left a gap. Items whose number changes go
+ * through negative numbers first so @@unique([collectionId, position]) never
+ * sees two items on one number. */
+export async function compactCollectionPositions(
+  tx: Prisma.TransactionClient,
+  collectionId: string,
+): Promise<void> {
+  const items = await tx.collectionItem.findMany({
+    where: { collectionId },
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    select: { id: true, position: true },
+  })
+  const moved = items
+    .map((item, index) => ({ id: item.id, from: item.position, to: index + 1 }))
+    .filter((item) => item.from !== item.to)
+  for (const item of moved) {
+    await tx.collectionItem.update({ where: { id: item.id }, data: { position: -item.to } })
+  }
+  for (const item of moved) {
+    await tx.collectionItem.update({ where: { id: item.id }, data: { position: item.to } })
+  }
+}
+
+/** Puts a collection's items in exactly the order of `itemIds`, numbered
+ * 1..n. Returns false, changing nothing, unless `itemIds` names every item
+ * in the collection exactly once. */
+export async function applyCollectionOrder(
+  prisma: PrismaClient,
+  collectionId: string,
+  itemIds: string[],
+): Promise<boolean> {
+  const existing = await prisma.collectionItem.findMany({
+    where: { collectionId },
+    select: { id: true },
+  })
+  const ids = new Set(existing.map((item) => item.id))
+  if (
+    itemIds.length !== ids.size ||
+    new Set(itemIds).size !== itemIds.length ||
+    itemIds.some((id) => !ids.has(id))
+  ) {
+    return false
+  }
+  // Two passes: every item first moves to a negative number, so swapping two
+  // items never puts both on one number under @@unique([collectionId, position]).
+  await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < itemIds.length; i++) {
+      await tx.collectionItem.update({ where: { id: itemIds[i] }, data: { position: -(i + 1) } })
+    }
+    for (let i = 0; i < itemIds.length; i++) {
+      await tx.collectionItem.update({ where: { id: itemIds[i] }, data: { position: i + 1 } })
+    }
+  })
+  return true
+}
+
+/** Adds the 1-based album track number to items listed in position order. */
+export function withTrackNumbers<T extends { position: number }>(
+  items: T[],
+): Array<T & { trackNumber: number }> {
+  return items.map((item, index) => ({ ...item, trackNumber: index + 1 }))
+}
