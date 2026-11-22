@@ -54,7 +54,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 - **Track/set mode:** Upload UI distinguishes ordinary tracks from DJ sets, mixes, shows, and recordings so only relevant metadata is requested.
 - **Cloud and URL import:** Import paths exist for URLs, SoundCloud, Bandcamp, Google Drive, Mixcloud rescue, Spotify metadata, HearThis, and artist-owned Mikseri track references.
 - **HearThis localization:** Download-enabled HearThis tracks can be fetched in the background, preserving the offered original/lossless source before normal processing; other tracks remain embeds.
-- **Collections:** Create playlists, add archive items or releases, reorder them, import catalog material, and customize collection presentation.
+- **Collections:** Create playlists, add archive items or releases, reorder them (board members can reorder any collection), show album track numbers, import catalog material, and customize collection presentation.
 - **Releases and smart links:** Draft and publish releases, upload tracks/artwork, manage versions and credits, attach vocals/drums/bass/other stems that play on the release and the track, set external DSP URLs, and share release landing pages.
 - **Distribution:** Delivery workflows, DSP status, MusicBrainz defaults, identifiers, credits, and release-operation tools.
 - **Stash:** Hold private working files before they become public catalog items.
