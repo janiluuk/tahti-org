@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import { containsEmailAddress, DISPLAY_NAME_EMAIL_MESSAGE } from '../display-name.js'
 import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
+import { LinkPageConfigPatchSchema, LinkPageConfigSchema } from './link-page.js'
 
 export const ARTIST_KINDS = ['SINGLE', 'COLLECTIVE'] as const
 export type ArtistKind = (typeof ARTIST_KINDS)[number]
@@ -45,6 +46,7 @@ export const ProfilePatchSchema = z
     pronouns: z.string().trim().max(40).nullable().optional(),
     defaultLocation: z.string().trim().max(120).nullable().optional(),
     socialLinks: z.record(z.string()).optional(),
+    linkPage: LinkPageConfigPatchSchema.optional(),
     publicAttribution: z.boolean().optional(),
     showJoinDate: z.boolean().optional(),
     showFollowers: z.boolean().optional(),

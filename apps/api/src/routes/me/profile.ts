@@ -9,12 +9,14 @@ import {
   ProfilePatchSchema,
   openApiResponse,
   parseAvatarTheme,
+  parseLinkPageConfig,
   parseLogoPlacement,
   parseMixcloudUsername,
 } from '@tahti/shared'
 import { parseHearthisUsername } from '@tahti/hearthis'
 import { requireAuth } from '../../plugins/auth.js'
 import { generateAvatarSvg } from '../../lib/generate-cover-art.js'
+import { mergeLinkPagePatch, sanitizeLinkPageConfig } from '../../lib/link-page.js'
 import { recordMentions } from '../../lib/mentions.js'
 import { putObjectText } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
@@ -46,6 +48,7 @@ const profileSelect = {
   pronouns: true,
   defaultLocation: true,
   socialLinks: true,
+  linkPageJson: true,
   publicAttribution: true,
   showJoinDate: true,
   showFollowers: true,
@@ -84,6 +87,7 @@ function serializeProfile(
     pronouns: string | null
     defaultLocation: string | null
     socialLinks: unknown
+    linkPageJson: unknown
     publicAttribution: boolean
     showJoinDate: boolean
     showFollowers: boolean
@@ -123,6 +127,7 @@ function serializeProfile(
     pronouns: profile.pronouns,
     defaultLocation: profile.defaultLocation,
     socialLinks: profile.socialLinks,
+    linkPage: parseLinkPageConfig(profile.linkPageJson),
     publicAttribution: profile.publicAttribution,
     showJoinDate: profile.showJoinDate,
     showFollowers: profile.showFollowers,
@@ -223,6 +228,23 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         if (mixcloud !== undefined) {
           data.mixcloudUsername = parseMixcloudUsername(mixcloud)
         }
+      }
+      if (body.linkPage !== undefined) {
+        const channel = await fastify.prisma.channel.findUnique({
+          where: { userId: user.id },
+          select: { id: true },
+        })
+        const current = await fastify.prisma.user.findUnique({
+          where: { id: user.id },
+          select: { linkPageJson: true },
+        })
+        const merged = mergeLinkPagePatch(current?.linkPageJson, body.linkPage)
+        data.linkPageJson = await sanitizeLinkPageConfig(
+          fastify.prisma,
+          user.id,
+          channel?.id ?? null,
+          merged,
+        )
       }
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
       if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate

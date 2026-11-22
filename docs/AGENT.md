@@ -499,13 +499,17 @@ diff can be displayed in the member portal.
 ### M12 — Modern artist profile + releases (NEW for v5)
 
 The artist profile is the artist's **home page on the internet** — what shows
-up when someone googles them, what they put on every flyer and Instagram bio.
-This is _not_ a SoundCloud profile (no algorithmic feed, no follower graph, no
-track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
+up when someone googles them. Instagram bios and flyers use the short Link page;
+the full site is the rich profile. This is _not_ a SoundCloud profile (no
+algorithmic feed, no follower graph, no track-level comments). It's closer to a
+label site or a Linktree-meets-Bandcamp.
 
 **Profile structure:**
 
-- `tahti.live/u/<handle>` — the artist's permanent URL
+- `tahti.live/u/<handle>` — short **Link page** (avatar, bio, links, curated
+  sounds/sets; Instagram bio URL)
+- `https://<handle>.tahti.live/` — full **artist site** (rich profile, releases,
+  archive); channel stays at `/channel/<slug>` on the same host
 - Hero section: name, location, "currently broadcasting" indicator with link to
   channel, primary CTA (custom — could be "tune in," "buy the album," "subscribe")
 - Bio: rich-text (Markdown), supports paragraphs, headings, images, embedded

@@ -17,6 +17,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { resolvePublicLinkPage } from '../../lib/link-page.js'
 import { serializePublicReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
@@ -160,10 +161,12 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       nameplateText: true,
       nameplateColor: true,
       socialLinks: true,
+      linkPageJson: true,
       tipJarUrl: true,
       tier: true,
       countryCode: true,
       pronouns: true,
+      defaultLocation: true,
       showJoinDate: true,
       isMember: true,
       showFollowers: true,
@@ -272,6 +275,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         orderBy: [{ isFeatured: 'desc' }, { publicProfileOrder: 'asc' }, { createdAt: 'desc' }],
         take: 12,
         select: {
+          id: true,
           slug: true,
           name: true,
           type: true,
@@ -493,6 +497,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       tier: user.tier,
       countryCode: user.countryCode,
       pronouns: user.pronouns,
+      defaultLocation: user.defaultLocation,
       joinDate: user.showJoinDate ? user.createdAt.toISOString() : null,
       isMember: user.isMember,
       followerCount: user.showFollowers ? user._count.artistFollowers : null,
@@ -571,6 +576,28 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       presskit: `${config.apiUrl}/api/v1/u/${user.username}/press-kit.zip`,
     },
     backgroundMusicUrl,
+    linkPage: await resolvePublicLinkPage({
+      username: user.username,
+      socialLinks: user.socialLinks,
+      linkPageJson: user.linkPageJson,
+      sounds: allSounds.map((s) => ({
+        id: s.id,
+        title: s.title,
+        durationSec: s.durationSec,
+        bannerUrl: s.bannerUrl,
+        mp3Key: s.mp3Key,
+        flacKey: s.flacKey,
+      })),
+      collections: user.collections.map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        coverUrl: c.coverUrl,
+        coverKey: c.coverKey,
+        _count: c._count,
+      })),
+      playUrlBySoundId,
+    }),
   }
 }
 

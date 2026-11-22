@@ -115,7 +115,8 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 | Step                | Web route                | API                               | E2e                             |
 | ------------------- | ------------------------ | --------------------------------- | ------------------------------- |
 | Land on home        | `/`                      | —                                 | Playwright `user-journeys.mjs`  |
-| Open artist profile | `/u/:username`           | `GET /api/v1/u/:username/profile` | `listener.sh`, Vitest           |
+| Open Link page      | `/u/:username` (apex)    | `GET /api/v1/u/:username/profile` (`linkPage`) | Vitest |
+| Open full artist site | `https://:username.tahti.live/` → `/u/:username` | same profile payload | Vitest (`channelSubdomain`) |
 | Browse fan tiers    | `/u/:username/subscribe` | `GET /api/v1/u/:username/tiers`   | `listener.sh`, Vitest           |
 | Open smart link     | `/r/:slug`               | `GET /api/v1/r/:slug`             | `listener.sh`, Vitest           |
 | Tune in (channel)   | `/c/:slug`               | `GET /api/channels/:slug`         | `listener.sh`, Vitest           |

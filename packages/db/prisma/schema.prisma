@@ -971,6 +971,9 @@ model User {
   // Hex accent for the nameplate pill. Null falls back to the theme accent.
   nameplateColor                 String?
   socialLinks                    Json?
+  // Artist Link page config (own links, curated sounds/sets, playMode).
+  // JSON matching LinkPageConfigSchema in @tahti/shared.
+  linkPageJson                   Json?
   tipJarUrl                      String?
   // Artist-configured RSS/Atom feed URL — server-fetched (SSRF-guarded) and
   // rendered as a "Latest news" section on the public channel page.

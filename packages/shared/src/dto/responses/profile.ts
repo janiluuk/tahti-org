@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { AvatarThemeSchema, LogoPlacementSchema } from '../avatar-theme.js'
+import { LinkPageConfigSchema, PublicLinkPageSchema } from '../link-page.js'
 import { ColorSchemeSchema } from '../visual-preset.js'
 
 export const PublicProfileArtistSchema = z.object({
@@ -29,6 +30,7 @@ export const PublicProfileArtistSchema = z.object({
   tier: z.string(),
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
+  defaultLocation: z.string().nullable().optional(),
   joinDate: z.string().datetime().nullable().optional(),
   /** True when the artist currently supports Tahti ry (association member). */
   isMember: z.boolean().optional(),
@@ -152,6 +154,8 @@ export const PublicProfileViewSchema = z.object({
     })
     .nullable()
     .optional(),
+  /** Resolved short Link page payload (links, curated sounds/sets, playMode). */
+  linkPage: PublicLinkPageSchema.optional(),
 })
 
 export const ProfileFieldsSchema = z.object({
@@ -175,6 +179,7 @@ export const ProfileFieldsSchema = z.object({
   pronouns: z.string().nullable(),
   defaultLocation: z.string().nullable(),
   socialLinks: z.unknown(),
+  linkPage: LinkPageConfigSchema,
   publicAttribution: z.boolean(),
   showJoinDate: z.boolean(),
   showFollowers: z.boolean(),
