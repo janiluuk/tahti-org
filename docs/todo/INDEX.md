@@ -25,6 +25,7 @@ One file per in-progress task. When a task ships, fold it into
 | open    | [admin-cli-consolidation.md](admin-cli-consolidation.md)                               | Fold the operator scripts in `scripts/` into one `tahti-admin` CLI; `scripts/stack-env.sh` is the first piece                                                           |
 | partial | [pattern-detection.md](pattern-detection.md)                                           | Engagement pattern detectors + grant preview + daily audit; left: artist notify, appeal, player UI, threshold tuning                                                    |
 | partial | [oauth-google-facebook-login.md](oauth-google-facebook-login.md)                       | Google / Facebook sign-in API and leftovers shipped; left: ops creates OAuth apps and sets secrets per host                                                             |
+| open    | [album-track-title-cleanup.md](album-track-title-cleanup.md)                           | One-off rename of "Artist - Album - NN - Title" tracks to "Title" + album order; left: run it on production after deploy                                                |
 
 ## Roadmap & planning (broader than a single task)
 
