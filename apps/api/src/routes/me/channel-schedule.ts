@@ -149,15 +149,17 @@ function scheduleView(channel: {
   } | null
 }) {
   const show = channel.nextBroadcastShow
+  const nextAt = channel.nextBroadcastAt
+  const nextStillUpcoming = nextAt != null && nextAt.getTime() > Date.now()
   return {
-    nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
-    nextBroadcastNote: channel.nextBroadcastNote,
-    nextBroadcastShowId: channel.nextBroadcastShowId,
-    nextBroadcastDurationHours: channel.nextBroadcastDurationHours,
-    nextBroadcastShowType: show?.showType ?? null,
-    nextBroadcastMode: show?.mode ?? null,
-    nextBroadcastDescription: show?.description ?? null,
-    nextBroadcastCoverUrl: show?.artworkUrl ?? null,
+    nextBroadcastAt: nextStillUpcoming ? nextAt.toISOString() : null,
+    nextBroadcastNote: nextStillUpcoming ? channel.nextBroadcastNote : null,
+    nextBroadcastShowId: nextStillUpcoming ? channel.nextBroadcastShowId : null,
+    nextBroadcastDurationHours: nextStillUpcoming ? channel.nextBroadcastDurationHours : null,
+    nextBroadcastShowType: nextStillUpcoming ? (show?.showType ?? null) : null,
+    nextBroadcastMode: nextStillUpcoming ? (show?.mode ?? null) : null,
+    nextBroadcastDescription: nextStillUpcoming ? (show?.description ?? null) : null,
+    nextBroadcastCoverUrl: nextStillUpcoming ? (show?.artworkUrl ?? null) : null,
   }
 }
 
