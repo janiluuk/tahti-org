@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { IdParamSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { compactCollectionPositions } from '../collections/helpers.js'
 
 const releaseDeleteRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/me/releases/:id — remove a release the artist owns. Its
@@ -37,12 +38,19 @@ const releaseDeleteRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      await fastify.prisma.$transaction([
-        fastify.prisma.collectionItem.deleteMany({
-          where: { releaseId: release.id, soundId: null },
-        }),
-        fastify.prisma.release.delete({ where: { id: release.id } }),
-      ])
+      await fastify.prisma.$transaction(async (tx) => {
+        const where = { releaseId: release.id, soundId: null }
+        const affected = await tx.collectionItem.findMany({
+          where,
+          distinct: ['collectionId'],
+          select: { collectionId: true },
+        })
+        await tx.collectionItem.deleteMany({ where })
+        await tx.release.delete({ where: { id: release.id } })
+        for (const { collectionId } of affected) {
+          await compactCollectionPositions(tx, collectionId)
+        }
+      })
       return reply.status(204).send()
     },
   )

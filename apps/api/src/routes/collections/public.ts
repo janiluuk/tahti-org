@@ -33,6 +33,7 @@ import {
   publicCollectionSoundWhere,
   sortCollectionItems,
   soundArtist,
+  withTrackNumbers,
   zodError,
 } from './helpers.js'
 import {
@@ -101,7 +102,9 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
         downloadCounts.map((row) => [row.soundId, row._count._all] as const),
       )
 
-      const ordered = sortCollectionItems(col.items, col.trackSortMode)
+      // Track numbers follow the album order (position) of what a listener can
+      // see, even when the display sort is by name or date.
+      const ordered = sortCollectionItems(withTrackNumbers(col.items), col.trackSortMode)
       const viewerUserId = request.sessionUser?.id ?? null
 
       // Presign playback URLs for items with real Tahti audio — embed-only items have

@@ -15,6 +15,7 @@ import adminNewsRoutes from '../routes/admin/news.js'
 import adminChannelsRoutes from '../routes/admin/channels.js'
 import adminChannelKindRoutes from '../routes/admin/channel-kind.js'
 import adminSoundRoutes from '../routes/admin/sound.js'
+import adminCollectionRoutes from '../routes/admin/collections.js'
 import adminFilesRoutes from '../routes/admin/files.js'
 import adminFanSubsRoutes from '../routes/admin/fansubs.js'
 import adminUsersRoutes from '../routes/admin/users.js'
@@ -67,6 +68,7 @@ export async function registerAdminRoutes(fastify: FastifyInstance): Promise<voi
   await fastify.register(adminChannelsRoutes)
   await fastify.register(adminChannelKindRoutes)
   await fastify.register(adminSoundRoutes)
+  await fastify.register(adminCollectionRoutes)
   await fastify.register(adminFilesRoutes)
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
