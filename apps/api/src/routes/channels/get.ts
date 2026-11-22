@@ -237,7 +237,10 @@ async function computeChannelView(fastify: FastifyInstance, slug: string) {
       ...userRest,
       joinDate: showJoinDate ? createdAt.toISOString() : null,
     },
-    nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+    nextBroadcastAt:
+      channel.nextBroadcastAt && channel.nextBroadcastAt.getTime() > Date.now()
+        ? channel.nextBroadcastAt.toISOString()
+        : null,
     hlsUrl,
     signalConnected,
     colorScheme: resolveColorScheme(channel.colorSchemeJson, null),

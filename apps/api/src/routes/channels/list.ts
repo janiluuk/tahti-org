@@ -116,8 +116,14 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
             slug: ch.slug,
             state: ch.state,
             goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
-            nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
-            nextBroadcastNote: ch.nextBroadcastNote,
+            nextBroadcastAt:
+              ch.nextBroadcastAt && ch.nextBroadcastAt.getTime() > Date.now()
+                ? ch.nextBroadcastAt.toISOString()
+                : null,
+            nextBroadcastNote:
+              ch.nextBroadcastAt && ch.nextBroadcastAt.getTime() > Date.now()
+                ? ch.nextBroadcastNote
+                : null,
             fallbackEnabled: ch.fallbackEnabled,
             genres: parseSocialLinksGenres(ch.user.socialLinks),
             hlsUrl: ch.state === 'LIVE' ? liveHlsUrl(config.hlsBaseUrl, ch.slug, tier) : null,
