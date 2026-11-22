@@ -67,14 +67,14 @@ BUILD_ARGS=()
 # macOS ships bash 3.2 as /bin/bash, which treats expanding an *empty* array
 # under `set -u` as an unbound-variable error (fixed in bash 4.4+); this
 # guards the expansion instead of requiring a newer bash on PATH.
-STACK_IMAGES=(api web worker orchestrator db-push)
+STACK_IMAGES=(api worker orchestrator db-push)
 [[ -n "$BOT_SRC" ]] && STACK_IMAGES+=(radio-discord-bot)
 "${COMPOSE[@]}" build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} "${STACK_IMAGES[@]}"
 
 echo "── Starting stack ──"
 "${COMPOSE[@]}" up -d postgres pgbouncer redis minio mailhog dozzle chat icecast rtmp-ingest
 "${COMPOSE[@]}" up -d minio-init db-push
-STACK_APPS=(api worker orchestrator web)
+STACK_APPS=(api worker orchestrator)
 [[ -n "$BOT_SRC" ]] && STACK_APPS+=(radio-discord-bot)
 "${COMPOSE[@]}" up -d "${STACK_APPS[@]}"
 
