@@ -6,7 +6,7 @@ This is the current product-surface catalog for the monorepo. It describes imple
 
 - **Always-on artist channels:** `/c/[slug]` switches between a live broadcast and the artist's 24/7 fallback playlist.
 - **Channel playback:** HLS live playback, archive playback, now-playing information, queue controls, track detail routing, and external HearThis embeds.
-- **Artist profiles:** `/u/[username]` presents biography, latest music, archive, collections, upcoming events, and the artist channel.
+- **Artist profiles:** Apex `/u/[username]` is the short Link page (bio, ordered links, curated sounds/sets). The full artist site is `https://[username].tahti.live/` (biography, latest music, archive, collections, upcoming events). Channel stream: `[username].tahti.live/channel/[slug]`. Studio → Profile → Link page configures the short page.
 - **Discography and recordings:** Tracks, DJ sets, mixes, and recorded shows are presented separately where their metadata differs.
 - **Conditional metadata:** Tracklists and venue/location details appear for shows, recordings, DJ sets, mixes, and other long-form material rather than ordinary tracks.
 - **Discovery:** `/listen` defaults to Live. Signed-in “For you” (feed, new-to-you, widgets) is collapsed on small screens and omitted when there is no session. Artist directory and Tahti Selects load when those tabs open. Radio keeps the player plus What’s next; track/channel history lives in History.

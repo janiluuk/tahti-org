@@ -6,6 +6,14 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-22 — Artist Link page API
+
+From `artist-link-page.md`. `User.linkPageJson` + `LinkPageConfigSchema`;
+`PATCH /api/me/profile` `linkPage`; public profile `linkPage` (merged links,
+curated/default sounds & sets, `playMode`). `resolveArtistUrl` →
+`username.tahti.live` full site; `resolveLinkPageUrl` → apex `/u/:username`.
+Migration `20261122180000_user_link_page`. Ships with tahti-player Link page UI.
+
 ## 2026-11-21 — Google and Facebook sign-in: API leftovers
 
 From `oauth-google-facebook-login.md` (branch `feat/oauth-signin-production`).
