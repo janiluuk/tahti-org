@@ -989,9 +989,9 @@ No todo file; one batch PR (https://github.com/janiluuk/tahti-org/pull/1128):
 - Stack smoke workflow reads pnpm from `packageManager`; `stack-up.sh` no longer starts the
   removed `web` service.
 
-### 2026-11-22 — CronRun retention sweep
+### 2026-11-22 — CronRun retention sweep (#1134)
 
-No todo file; one PR (branch `feat/cron-run-retention`):
+No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1134):
 
 - `light-daily` gains a `cron-run-retention` sub-task (logged as its own CronRun row): deletes
   `admin.CronRun` rows older than `CRON_RUN_RETENTION_DAYS` (default 30) while always keeping
