@@ -82,6 +82,7 @@ describe('WORKER_CRON_JOBS', () => {
       'pattern-fraud-scan',
       'live-show-recurrence-generate',
       'embed-cover-backfill',
+      'cron-run-retention',
     ])
   })
 })

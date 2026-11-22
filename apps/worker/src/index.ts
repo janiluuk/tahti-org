@@ -14,6 +14,7 @@ import { processSeparateStemsJob } from './jobs/separate-stems.js'
 import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processLiveShowRecurrenceJob } from './jobs/live-show-recurrence.js'
 import { processEmbedCoverBackfillJob } from './jobs/embed-cover-backfill.js'
+import { processCronRunRetentionJob } from './jobs/cron-run-retention.js'
 import { processMissedLiveShowScanJob } from './jobs/missed-live-show-scan.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
@@ -272,6 +273,7 @@ const worker = new Worker(
           'pattern-fraud-scan': () => processPatternFraudScanJob(job),
           'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
           'embed-cover-backfill': () => processEmbedCoverBackfillJob(),
+          'cron-run-retention': () => processCronRunRetentionJob(prisma),
         })
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)

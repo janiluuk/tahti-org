@@ -38,8 +38,8 @@ type CronRunRow = {
 }
 
 /** The newest run of each job: one (jobName, startedAt DESC) index lookup per
- * job. Prisma's `distinct` would load every run ever recorded and drop the
- * duplicates in Node, and CronRun is never pruned. */
+ * job. Prisma's `distinct` would load every retained run and drop the
+ * duplicates in Node. */
 async function latestCronRunByJobName(
   prisma: PrismaClient,
   jobNames: string[],
