@@ -13,7 +13,8 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['admin'],
-        description: 'M11: dependency health for Upptime and ops monitors (200 or 503)',
+        description:
+          'M11: dependency health for Upptime and ops monitors. 503 only when a critical dependency is down; a non-critical outage is 200 with status degraded.',
         response: openApiResponse(ApiStatusResponseSchema, 'ApiStatus'),
       },
     },
