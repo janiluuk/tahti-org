@@ -1053,3 +1053,16 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1138). Referenc
   that and schema-qualified `CREATE INDEX ... ON` / `DROP INDEX`.
 - Left in `docs/remaining-work.md`: the three `idx_scan`-gated drops and the lower-ranked
   index rows. Closes the "`Session` / `RefreshToken` `expiresAt` indexes" row from #1136.
+
+### 2026-11-23 - Album title cleanup v2 (#1140)
+
+Todo `album-track-title-cleanup.md` stays open for the production run. Follow-up to #1130 after
+the first production dry run (https://github.com/janiluuk/tahti-org/pull/1140).
+
+- Credits naming the artist among others (`,`, ` x `, ` & `, ` feat. `, ` ft. `, ` vs `) match;
+  the others become `Title (with A & B)` unless the title names them.
+- A trailing LP/EP is optional when matching album names (`albumKey`).
+- Album order is a stable merge: unnumbered items stay right after the item they follow.
+- `--create-missing` makes a private (DRAFT) collection per album with no collection, newest of
+  a duplicate only, through `apps/api/src/lib/create-collection.ts` (now shared with
+  `POST /api/me/collections`). Backup v2 records them; `--restore` deletes them while untouched.
