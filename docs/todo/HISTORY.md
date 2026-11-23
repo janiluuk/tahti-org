@@ -999,3 +999,16 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1134):
   per `DELETE` (by primary key), looped per job. Uses the existing `(jobName, startedAt DESC)`
   index; no migration. Local bench: 300k rows → 196k deleted in 60 batches, ~0.6 s.
 - Closes the "CronRun retention" row in `docs/remaining-work.md` (left open by #1128).
+
+### 2026-11-23 — Session / RefreshToken retention sweep (#1136)
+
+No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1136), item 9 (auth rows only) of the DB audit:
+
+- `light-daily` gains an `auth-row-retention` sub-task (logged as its own CronRun row) with a
+  grace period of `AUTH_ROW_GRACE_DAYS` (default 7). `RefreshToken` rows go only when every
+  token in their family stopped working (revoked/rotated or expired) before the cutoff, so
+  reuse detection keeps its retired tokens while the family can still mint. `Session` rows go
+  when expired before the cutoff and no unrevoked refresh token on them expires at or after
+  it (a refresh extends the session). 5,000 rows per `DELETE` by primary key. No migration.
+- Rules: `docs/technical/worker-crons.md`. Raw event tables, `AuditLog` and the `expiresAt`
+  indexes stay open in `docs/remaining-work.md`.
