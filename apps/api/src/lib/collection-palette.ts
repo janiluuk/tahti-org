@@ -4,16 +4,15 @@
 import type { PrismaClient } from '@tahti/db'
 import { extractPalette } from './palette-extract.js'
 
-/** Fire-and-forget — don't block the caller's response on palette
- * extraction. Mirrors the release-artwork palette refresh: store the raw
- * extraction in paletteJson, and only seed colorSchemeJson (the artist's
- * editable override) when nothing has been set there yet. */
-export function refreshCollectionCoverPalette(
+/** Mirrors the release-artwork palette refresh: store the raw extraction in
+ * paletteJson, and only seed colorSchemeJson (the artist's editable
+ * override) when nothing has been set there yet. Never rejects. */
+export async function updateCollectionCoverPalette(
   prisma: PrismaClient,
   collectionId: string,
   coverUrl: string,
-): void {
-  extractPalette(coverUrl)
+): Promise<void> {
+  await extractPalette(coverUrl)
     .then(async (palette) => {
       if (!palette) return
       const current = await prisma.collection.findUnique({
@@ -21,7 +20,7 @@ export function refreshCollectionCoverPalette(
         select: { colorSchemeJson: true },
       })
       const paletteStr = JSON.stringify(palette)
-      return prisma.collection.update({
+      await prisma.collection.update({
         where: { id: collectionId },
         data: {
           paletteJson: paletteStr,
@@ -30,4 +29,13 @@ export function refreshCollectionCoverPalette(
       })
     })
     .catch(() => undefined)
+}
+
+/** Fire-and-forget: don't block the caller's response on palette extraction. */
+export function refreshCollectionCoverPalette(
+  prisma: PrismaClient,
+  collectionId: string,
+  coverUrl: string,
+): void {
+  void updateCollectionCoverPalette(prisma, collectionId, coverUrl)
 }

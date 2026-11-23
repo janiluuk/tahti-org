@@ -63,62 +63,134 @@ const SEPARATOR = '\\s*[-–—]\\s*'
 /** After the number a dash needs a space behind it, so "Album - 2-Step"
  * is not read as track 2 called "Step". */
 const NUMBER_END = '(?:\\.?\\s*[-–—]\\s+|\\.\\s+)'
+/** Between names in a credit like "Yaniho x Chisu & Orkidea". "&" and "x"
+ * need spaces around them so "G&D" or "Mix" stay one name. */
+const CREDIT_SEPARATOR = '(?:\\s*,\\s*|\\s+(?:x|&|feat\\.?|ft\\.?|vs\\.?)\\s+)'
+/** A co-credited name: any text except a " - " style separator, so a
+ * credit never runs on into the album part. "Jay-Z" still fits. */
+const OTHER_NAME = '(?:(?![-–—]\\s|\\s[-–—]).)+?'
+const RECORD_FORMAT = /\s+(?:LP|EP)$/i
 
-function artistPattern(artistNames: Array<string | null | undefined>): string | null {
-  const artists = artistNames
+function sortedNames(artistNames: Array<string | null | undefined>): string[] {
+  return artistNames
     .map((name) => name?.trim())
     .filter((name): name is string => !!name)
     .sort((a, b) => b.length - a.length)
-    .map(loosePattern)
-  return artists.length > 0 ? `(?:${artists.join('|')})${SEPARATOR}` : null
 }
 
-function matchTrack(title: string, pattern: string): RegExpMatchArray | null {
-  return title.trim().match(new RegExp(`^${pattern}(\\d{1,3})${NUMBER_END}(\\S.*)$`, 'i'))
+/** A credit naming one of the artists, alone or among others. */
+function creditPattern(artistNames: Array<string | null | undefined>): string | null {
+  const names = sortedNames(artistNames).map(loosePattern)
+  if (names.length === 0) return null
+  return `(?:${OTHER_NAME}${CREDIT_SEPARATOR})?(?:${names.join('|')})(?:${CREDIT_SEPARATOR}${OTHER_NAME})?`
+}
+
+/** The album name with or without a trailing "LP" or "EP". */
+function albumPattern(albumName: string): string {
+  const base = albumName.trim().replace(RECORD_FORMAT, '')
+  return base ? `${loosePattern(base)}(?:\\s+(?:LP|EP))?` : loosePattern(albumName)
+}
+
+/**
+ * The album name as compared between titles and collections: case, spacing,
+ * dash style and a trailing "LP" or "EP" do not matter, so "Sisufuzz EP" and
+ * "sisufuzz  LP" are the same album.
+ */
+export function albumKey(albumName: string): string {
+  const name = albumName.trim().replace(/[-–—]/g, '-').replace(/\s+/g, ' ').toLowerCase()
+  return name.replace(/ (?:lp|ep)$/, '') || name
+}
+
+/** The names in a credit other than the artist's own, or null when the
+ * credit does not name the artist. */
+function otherArtists(
+  credit: string,
+  artistNames: Array<string | null | undefined>,
+): string[] | null {
+  for (const name of sortedNames(artistNames)) {
+    const match = credit.match(
+      new RegExp(
+        `^(?:(.+?)${CREDIT_SEPARATOR})?${loosePattern(name)}(?:${CREDIT_SEPARATOR}(.+))?$`,
+        'i',
+      ),
+    )
+    if (!match) continue
+    return [match[1], match[2]]
+      .flatMap((part) => (part ? part.split(new RegExp(CREDIT_SEPARATOR, 'i')) : []))
+      .map((other) => other.replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+  }
+  return null
+}
+
+function listNames(names: string[]): string {
+  return names.length > 1
+    ? `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]!}`
+    : (names[0] ?? '')
 }
 
 function trackParts(
-  numberText: string,
-  rest: string,
+  groups: Record<string, string | undefined>,
+  artistNames: Array<string | null | undefined>,
 ): { title: string; trackNumber: number } | null {
-  const trackNumber = Number(numberText)
-  const title = rest.replace(/\s+/g, ' ').trim()
-  return trackNumber >= 1 && title ? { title, trackNumber } : null
+  const trackNumber = Number(groups.number)
+  let title = (groups.rest ?? '').replace(/\s+/g, ' ').trim()
+  if (trackNumber < 1 || !title) return null
+  if (groups.credit) {
+    const others = otherArtists(groups.credit, artistNames)
+    if (!others) return null
+    const lower = title.toLowerCase()
+    const unnamed = others.filter((other) => !lower.includes(other.toLowerCase()))
+    if (unnamed.length > 0) title = `${title} (with ${listNames(unnamed)})`
+  }
+  return { title, trackNumber }
 }
+
+const TRACK = `${SEPARATOR}(?<number>\\d{1,3})${NUMBER_END}(?<rest>\\S.*)$`
 
 /**
  * Splits an imported title of the form "Artist - Album - 02 - Title" (artist
  * part optional) into the track title and its number on the album. Returns
- * null unless the title starts with the album name (optionally after one of
- * `artistNames`) followed by a 1-3 digit track number, so a title that only
- * mentions the album is never cut.
+ * null unless the title starts with the album name (optionally after a
+ * credit naming one of `artistNames`) followed by a 1-3 digit track number,
+ * so a title that only mentions the album is never cut. A trailing "LP" or
+ * "EP" on either album name is optional. Other names in the credit ("Yaniho
+ * x Chisu & Orkidea") end up as "Title (with Chisu & Orkidea)" unless the
+ * title already names them.
  */
 export function parseAlbumTrackTitle(
   title: string,
   options: { artistNames: Array<string | null | undefined>; albumName: string },
 ): { title: string; trackNumber: number } | null {
   if (!options.albumName.trim()) return null
-  const artist = artistPattern(options.artistNames)
-  const match = matchTrack(
-    title,
-    `${artist ? `(?:${artist})?` : ''}${loosePattern(options.albumName)}${SEPARATOR}`,
-  )
-  return match ? trackParts(match[1]!, match[2]!) : null
+  const credit = creditPattern(options.artistNames)
+  const match = title
+    .trim()
+    .match(
+      new RegExp(
+        `^${credit ? `(?:(?<credit>${credit})${SEPARATOR})?` : ''}${albumPattern(options.albumName)}${TRACK}`,
+        'i',
+      ),
+    )
+  return match?.groups ? trackParts(match.groups, options.artistNames) : null
 }
 
 /**
- * Reads "Artist - Album - 02 - Title" without knowing the album: the artist
- * part is required here, and the album is everything up to the first track
- * number. For finding titles in that shape, not for renaming them.
+ * Reads "Artist - Album - 02 - Title" without knowing the album: the credit
+ * naming one of `artistNames` is required here, and the album is everything
+ * up to the first track number. For finding titles in that shape; the title
+ * is cleaned the same way as by `parseAlbumTrackTitle`.
  */
 export function splitAlbumTrackTitle(
   title: string,
   options: { artistNames: Array<string | null | undefined> },
 ): { albumName: string; title: string; trackNumber: number } | null {
-  const artist = artistPattern(options.artistNames)
-  if (!artist) return null
-  const match = matchTrack(title, `${artist}(\\S.*?)${SEPARATOR}`)
-  if (!match) return null
-  const parts = trackParts(match[2]!, match[3]!)
-  return parts ? { albumName: match[1]!.replace(/\s+/g, ' ').trim(), ...parts } : null
+  const credit = creditPattern(options.artistNames)
+  if (!credit) return null
+  const match = title
+    .trim()
+    .match(new RegExp(`^(?<credit>${credit})${SEPARATOR}(?<album>\\S.*?)${TRACK}`, 'i'))
+  if (!match?.groups) return null
+  const parts = trackParts(match.groups, options.artistNames)
+  return parts ? { albumName: match.groups.album!.replace(/\s+/g, ' ').trim(), ...parts } : null
 }
