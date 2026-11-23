@@ -22,6 +22,7 @@ import {
   recordSoundShareAccess,
   soundShareGrantsAccess,
 } from '../../lib/sound-share-access.js'
+import { eventVisibilityWhere } from '../../lib/artist-event.js'
 import { userName } from '../../lib/safe-names.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 
@@ -41,7 +42,7 @@ const COMMENTS_LIMIT = 200
 /** The newest comments, oldest first, without those of deleted or suspended accounts. */
 async function listComments(
   prisma: PrismaClient,
-  where: { soundId: string } | { channelId: string },
+  where: { soundId: string } | { channelId: string } | { eventId: string },
   ownerUserId: string,
 ) {
   const newest = await prisma.comment.findMany({
@@ -297,7 +298,104 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // DELETE /api/comments/:id — the comment's own author, the channel/track owner, or the board
+  // GET /api/comments/event/:id
+  fastify.get(
+    '/api/comments/event/:id',
+    {
+      schema: {
+        tags: ['comments'],
+        summary: 'List comments on an event',
+        description:
+          'Newest comments on a published public (or fans-visible) artist event. Always `commentsEnabled: true`.',
+        response: openApiResponse(CommentsListSchema, 'CommentsList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const event = await fastify.prisma.artistEvent.findFirst({
+        where: {
+          id: routeParams.id,
+          status: 'PUBLISHED',
+          ...eventVisibilityWhere(request.sessionUser?.id),
+        },
+        select: { userId: true },
+      })
+      if (!event) return reply.status(404).send({ error: 'Event not found' })
+
+      const comments = await listComments(fastify.prisma, { eventId: routeParams.id }, event.userId)
+      return reply.send({ comments, commentsEnabled: true })
+    },
+  )
+
+  // POST /api/comments/event/:id { body }
+  fastify.post(
+    '/api/comments/event/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['comments'],
+        summary: 'Post a comment on an event',
+        description: 'Answers 201. JSON body is validated in the handler, not by Fastify AJV.',
+        response: openApiResponses([
+          { status: 201, schema: CommentItemSchema, name: 'CommentItem' },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsed = CommentBodySchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const event = await fastify.prisma.artistEvent.findFirst({
+        where: {
+          id: routeParams.id,
+          status: 'PUBLISHED',
+          ...eventVisibilityWhere(request.sessionUser!.id),
+        },
+        select: { userId: true, title: true },
+      })
+      if (!event) return reply.status(404).send({ error: 'Event not found' })
+      if (await isBlockedEitherWay(fastify.prisma, event.userId, request.sessionUser!.id)) {
+        return reply.status(403).send(BLOCKED_COMMENT_BODY)
+      }
+
+      const comment = await fastify.prisma.comment.create({
+        data: {
+          body: parsed.data.body,
+          authorId: request.sessionUser!.id,
+          eventId: routeParams.id,
+        },
+        select: {
+          id: true,
+          body: true,
+          createdAt: true,
+          author: { select: { username: true, displayName: true, avatarUrl: true } },
+        },
+      })
+
+      await notifyArtistOfNewComment(
+        fastify.prisma,
+        event.userId,
+        commenterOf(request.sessionUser!),
+        comment,
+        { event: { id: routeParams.id, title: event.title } },
+      ).catch((err: unknown) => fastify.log.warn({ err }, 'comment notification failed'))
+
+      return reply.status(201).send({
+        id: comment.id,
+        body: comment.body,
+        createdAt: comment.createdAt,
+        authorUsername: comment.author.username,
+        authorDisplayName: userName(comment.author),
+        authorAvatarUrl: comment.author.avatarUrl,
+      })
+    },
+  )
+
+  // DELETE /api/comments/:id — the comment's own author, the channel/track/event owner, or the board
   fastify.delete(
     '/api/comments/:id',
     {
@@ -305,7 +403,7 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['comments'],
         summary: 'Delete a comment',
-        description: 'Author, channel/track owner, or board. Answers 204.',
+        description: 'Author, channel/track/event owner, or board. Answers 204.',
         response: openApiNoContentResponse(),
       },
     },
@@ -319,11 +417,13 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
           authorId: true,
           sound: { select: { id: true, title: true, channel: { select: { userId: true } } } },
           channel: { select: { userId: true } },
+          event: { select: { id: true, title: true, userId: true } },
         },
       })
       if (!comment) return reply.status(404).send({ error: 'Comment not found' })
 
-      const ownerId = comment.sound?.channel.userId ?? comment.channel?.userId
+      const ownerId =
+        comment.sound?.channel.userId ?? comment.channel?.userId ?? comment.event?.userId
       const user = request.sessionUser!
       if (comment.authorId !== user.id && ownerId !== user.id && !user.isBoard) {
         return reply.status(403).send({ error: 'Not allowed to delete this comment' })
@@ -340,8 +440,14 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
             actorId: user.id,
             title: comment.sound
               ? `The board removed your comment on "${comment.sound.title}"`
-              : 'The board removed your comment',
-            url: comment.sound ? `/t/${comment.sound.id}` : '/help',
+              : comment.event
+                ? `The board removed your comment on "${comment.event.title}"`
+                : 'The board removed your comment',
+            url: comment.sound
+              ? `/t/${comment.sound.id}`
+              : comment.event
+                ? `/events/${comment.event.id}`
+                : '/help',
           },
           request.log,
         )
