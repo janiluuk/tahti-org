@@ -83,6 +83,7 @@ describe('WORKER_CRON_JOBS', () => {
       'live-show-recurrence-generate',
       'embed-cover-backfill',
       'cron-run-retention',
+      'auth-row-retention',
     ])
   })
 })

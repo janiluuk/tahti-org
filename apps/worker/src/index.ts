@@ -15,6 +15,7 @@ import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processLiveShowRecurrenceJob } from './jobs/live-show-recurrence.js'
 import { processEmbedCoverBackfillJob } from './jobs/embed-cover-backfill.js'
 import { processCronRunRetentionJob } from './jobs/cron-run-retention.js'
+import { processAuthRowRetentionJob } from './jobs/auth-row-retention.js'
 import { processMissedLiveShowScanJob } from './jobs/missed-live-show-scan.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
@@ -274,6 +275,7 @@ const worker = new Worker(
           'live-show-recurrence-generate': () => processLiveShowRecurrenceJob(job),
           'embed-cover-backfill': () => processEmbedCoverBackfillJob(),
           'cron-run-retention': () => processCronRunRetentionJob(prisma),
+          'auth-row-retention': () => processAuthRowRetentionJob(prisma),
         })
       } else if (job.name === 'missed-live-show-scan') {
         const summary = await processMissedLiveShowScanJob(job)

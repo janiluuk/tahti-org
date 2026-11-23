@@ -135,7 +135,7 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     pattern: '30 5 * * *',
     jobId: 'light-daily-cron',
     description:
-      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then engagement pattern detection (batch accounts / even intervals / network clusters / reciprocal rings), then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon), then fill missing covers on embedded sounds (provider art, else an artwork preset; 100 oldest per run), then prune CronRun history past CRON_RUN_RETENTION_DAYS (default 30), keeping the newest 20 runs per job',
+      'Daily 05:30 UTC (light lane): M18 sync Tor exit CIDRs to Redis, then M18 download velocity fraud scan, then engagement pattern detection (batch accounts / even intervals / network clusters / reciprocal rings), then roll recurring LiveShowSeries forward (generate missing ScheduledLiveShow occurrences up to each series’ horizon), then fill missing covers on embedded sounds (provider art, else an artwork preset; 100 oldest per run), then prune CronRun history past CRON_RUN_RETENTION_DAYS (default 30), keeping the newest 20 runs per job, then delete Session and RefreshToken rows dead for more than AUTH_ROW_GRACE_DAYS (default 7)',
     subTasks: [
       'tor-exit-list-sync',
       'download-fraud-scan',
@@ -143,6 +143,7 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
       'live-show-recurrence-generate',
       'embed-cover-backfill',
       'cron-run-retention',
+      'auth-row-retention',
     ],
   },
   {

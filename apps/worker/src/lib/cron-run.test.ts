@@ -69,6 +69,13 @@ describe('runWithCronLog', () => {
     })
   })
 
+  it('records the auth row retention sweep as its own run', async () => {
+    await runWithCronLog('auth-row-retention', async () => ({ sessions: 0 }))
+    expect(cronRunCreate).toHaveBeenCalledWith({
+      data: { jobName: 'auth-row-retention', startedAt: expect.any(Date) },
+    })
+  })
+
   it('does not create run records for ordinary queue jobs', async () => {
     await expect(runWithCronLog('transcode-sound', async () => 'done')).resolves.toBe('done')
     expect(cronRunCreate).not.toHaveBeenCalled()
