@@ -3,13 +3,14 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  previewFeatures = ["multiSchema", "postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue", "media", "admin"]
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pg_trgm(schema: "public")]
+  schemas    = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue", "media", "admin"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -1162,6 +1163,8 @@ model User {
   themes                         Theme[]
   integrationCredentials         IntegrationCredential[]
 
+  @@index([username(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin)
   @@schema("core")
 }
 
@@ -1361,7 +1364,6 @@ model PasswordSetup {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([token])
   @@index([userId])
   @@schema("core")
 }
@@ -1417,6 +1419,7 @@ model Session {
   refreshTokens RefreshToken[]
 
   @@index([userId])
+  @@index([expiresAt])
   @@schema("core")
 }
 
@@ -1440,6 +1443,7 @@ model RefreshToken {
   @@index([userId])
   @@index([familyId])
   @@index([sessionId])
+  @@index([expiresAt])
   @@schema("core")
 }
 
@@ -1526,7 +1530,6 @@ model IntegrationCredential {
   updatedAt    DateTime @updatedAt
 
   @@unique([userId, providerSlug])
-  @@index([userId])
   @@schema("core")
 }
 
@@ -1578,7 +1581,6 @@ model StashShare {
   expiresAt       DateTime?
   createdAt       DateTime  @default(now())
 
-  @@index([token])
   @@schema("core")
 }
 
@@ -1607,7 +1609,6 @@ model EmailVerification {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([token])
   @@schema("core")
 }
 
@@ -1864,7 +1865,6 @@ model ChannelVisualPreset {
   updatedAt    DateTime @updatedAt
 
   @@unique([channelId, name])
-  @@index([channelId])
   @@schema("channel")
 }
 
@@ -2271,7 +2271,6 @@ model BroadcastGreenRoomInvite {
   joinedAt    DateTime?
 
   @@unique([broadcastId, userId])
-  @@index([broadcastId])
   @@index([userId])
   @@schema("channel")
 }
@@ -2438,6 +2437,8 @@ model Sound {
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
   @@index([purchaseTierId])
+  @@index([isPublic, status, releasedAt(sort: Desc)])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
   @@schema("channel")
 }
 
@@ -2680,6 +2681,8 @@ model ChatMessage {
   removedByUserId String?
 
   @@index([channelId, fanOnly, createdAt])
+  @@index([createdAt])
+  @@index([userId, createdAt])
   @@schema("chat")
 }
 
@@ -2884,7 +2887,6 @@ model GovernanceNoticeDelivery {
   bouncedAt DateTime?
 
   @@unique([meetingId, memberId])
-  @@index([meetingId])
   @@schema("governance")
 }
 
@@ -3132,7 +3134,6 @@ model Vote {
   castAt   DateTime   @default(now())
 
   @@id([motionId, userId])
-  @@index([motionId])
   @@schema("governance")
 }
 
@@ -3221,7 +3222,6 @@ model MotionSecond {
   createdAt DateTime @default(now())
 
   @@id([motionId, userId])
-  @@index([motionId])
   @@schema("governance")
 }
 
@@ -3360,7 +3360,6 @@ model FeatureRequestVote {
   createdAt        DateTime       @default(now())
 
   @@id([featureRequestId, userId])
-  @@index([featureRequestId])
   @@schema("governance")
 }
 
@@ -3472,6 +3471,7 @@ model ListenSession {
   @@index([countryCode, startedAt])
   @@index([byFingerprint, channelId, soundId, endedAt])
   @@index([endedAt])
+  @@index([startedAt])
   @@schema("engagement")
 }
 
@@ -3593,6 +3593,7 @@ model ListenEvent {
   @@unique([soundId, dedupeKey, dayBucket])
   @@index([soundId, playedAt])
   @@index([playedAt])
+  @@index([dedupeKey, playedAt(sort: Desc)])
   @@schema("engagement")
 }
 
@@ -3667,7 +3668,6 @@ model SoundRepostAck {
   createdAt     DateTime @default(now())
 
   @@unique([soundId, byFingerprint])
-  @@index([soundId])
   @@schema("engagement")
 }
 
@@ -3935,6 +3935,7 @@ model ReleaseTrack {
   stems    ReleaseTrackStem[]
 
   @@unique([releaseId, position])
+  @@index([soundId])
   @@schema("release")
 }
 
@@ -3960,7 +3961,6 @@ model ReleaseTrackStem {
   updatedAt      DateTime        @updatedAt
 
   @@unique([releaseTrackId, role])
-  @@index([releaseTrackId])
   @@schema("release")
 }
 
@@ -4230,6 +4230,7 @@ model Collection {
 
   @@index([userId, isPublic])
   @@index([userId, publicProfileOrder])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
   @@schema("media")
 }
 
@@ -4253,7 +4254,7 @@ model CollectionItem {
   addNote       String?
 
   @@unique([collectionId, position])
-  @@index([collectionId, position])
+  @@index([soundId])
   @@schema("media")
 }
 
@@ -4311,7 +4312,6 @@ model JamParticipant {
   removedAt  DateTime?
 
   @@unique([sessionId, userId])
-  @@index([sessionId])
   @@schema("engagement")
 }
 

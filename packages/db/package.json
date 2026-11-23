@@ -11,7 +11,7 @@
   "scripts": {
     "db:generate": "prisma generate",
     "db:migrate": "sh prisma/migrate-deploy.sh",
-    "db:migrate:test": "prisma db push --accept-data-loss",
+    "db:migrate:test": "prisma db push --accept-data-loss && prisma db execute --schema prisma/schema.prisma --file prisma/raw-sql/lower-tags.sql",
     "db:studio": "prisma studio",
     "lint": "eslint src --ext .ts --max-warnings 0",
     "typecheck": "tsc --noEmit"
