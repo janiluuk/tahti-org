@@ -15,6 +15,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 import { serializePublicReleaseTrackStem } from '../../lib/release-track-stems.js'
 import { userName } from '../../lib/safe-names.js'
 
@@ -165,21 +166,11 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 genreCustom: true,
                 peaks: true,
                 downloadsEnabled: true,
-                _count: { select: { likes: true, listenEvents: true, comments: true } },
                 channel: { select: { userId: true } },
               },
             })
           : []
-      const linkedDownloads = linkedSoundIds.length
-        ? await fastify.prisma.download.groupBy({
-            by: ['soundId'],
-            where: { soundId: { in: linkedSoundIds }, countedAt: { not: null } },
-            _count: { _all: true },
-          })
-        : []
-      const downloadsBySoundId = new Map(
-        linkedDownloads.map((row) => [row.soundId, row._count._all] as const),
-      )
+      const countsFor = await loadSoundEngagementCounts(fastify.prisma, linkedSoundIds)
       const linkedById = new Map(linkedSounds.map((s) => [s.id, s]))
       const viewerUserId = request.sessionUser?.id ?? null
       // Release genre is optional, while linked sounds usually carry one.
@@ -234,10 +225,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                 genre: displayGenre(linked),
                 peaks: Array.isArray(linked.peaks) ? (linked.peaks as number[]) : null,
                 downloadsEnabled: linked.downloadsEnabled,
-                likeCount: linked._count.likes,
-                commentCount: linked._count.comments,
-                playCount: linked._count.listenEvents,
-                downloadCount: downloadsBySoundId.get(linked.id) ?? 0,
+                ...countsFor(linked.id),
                 stems: await Promise.all(
                   stems.map((stem) => serializePublicReleaseTrackStem(stem, canPlay)),
                 ),

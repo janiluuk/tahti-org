@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient, Prisma } from '@tahti/db'
+import { Prisma, type PrismaClient } from '@tahti/db'
 import type { LovedListEntry } from '@tahti/shared'
 import { getCachedJson } from './json-cache.js'
 import { trackArtistName } from './safe-names.js'
 
-const CACHE_TTL_SEC = 30
+const CACHE_TTL_SEC = 600
 
 /** Public tracks ranked by how many people loved them: a like or a LOVE
  * reaction, counted once per listener however many times or ways they did it. */
@@ -16,43 +16,33 @@ export async function buildLovedList(
 ): Promise<LovedListEntry[]> {
   const key = `loved-list:${(opts.contentTypes ?? []).slice().sort().join(',')}:${opts.genre ?? ''}:${opts.limit}`
   return getCachedJson(key, CACHE_TTL_SEC, async () => {
-    const soundWhere: Prisma.SoundWhereInput = {
-      isPublic: true,
-      status: 'READY',
-      topListsEligible: true,
-      channel: { user: { deletedAt: null, suspendedAt: null } },
-    }
-    if (opts.contentTypes && opts.contentTypes.length > 0) {
-      soundWhere.contentType = {
-        in: opts.contentTypes as Prisma.EnumSoundContentTypeFilter['in'],
-      }
-    }
-    if (opts.genre) soundWhere.genre = opts.genre
-
-    const [reactions, likes] = await Promise.all([
-      prisma.trackReaction.groupBy({
-        by: ['soundId', 'userId'],
-        where: { type: 'LOVE', sound: soundWhere },
-      }),
-      prisma.soundLike.findMany({
-        where: { sound: soundWhere },
-        select: { soundId: true, userId: true },
-      }),
-    ])
-    const lovers = new Map<string, Set<string>>()
-    for (const row of [...reactions, ...likes]) {
-      const users = lovers.get(row.soundId) ?? new Set<string>()
-      users.add(row.userId)
-      lovers.set(row.soundId, users)
-    }
-    const top = [...lovers.entries()]
-      .map(([id, users]): [string, number] => [id, users.size])
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, opts.limit)
+    const contentTypeFilter =
+      opts.contentTypes && opts.contentTypes.length > 0
+        ? Prisma.sql`AND s."contentType"::text IN (${Prisma.join(opts.contentTypes)})`
+        : Prisma.empty
+    const genreFilter = opts.genre ? Prisma.sql`AND s."genre" = ${opts.genre}` : Prisma.empty
+    const top = await prisma.$queryRaw<Array<{ soundId: string; loves: number }>>`
+      SELECT l."soundId", COUNT(DISTINCT l."userId")::int AS loves
+      FROM (
+        SELECT "soundId", "userId" FROM "engagement"."SoundLike"
+        UNION ALL
+        SELECT "soundId", "userId" FROM "engagement"."TrackReaction" WHERE "type" = 'LOVE'
+      ) l
+      JOIN "channel"."Sound" s ON s."id" = l."soundId"
+      JOIN "channel"."Channel" c ON c."id" = s."channelId"
+      JOIN "core"."User" u ON u."id" = c."userId"
+      WHERE s."isPublic" AND s."status" = 'READY' AND s."topListsEligible"
+        AND u."deletedAt" IS NULL AND u."suspendedAt" IS NULL
+        ${contentTypeFilter}
+        ${genreFilter}
+      GROUP BY l."soundId"
+      ORDER BY loves DESC, l."soundId" ASC
+      LIMIT ${opts.limit}
+    `
     if (top.length === 0) return []
 
     const items = await prisma.sound.findMany({
-      where: { id: { in: top.map(([id]) => id) } },
+      where: { id: { in: top.map((row) => row.soundId) } },
       select: {
         id: true,
         title: true,
@@ -69,8 +59,8 @@ export async function buildLovedList(
       },
     })
     const byId = new Map(items.map((item) => [item.id, item]))
-    return top.flatMap(([id, count]) => {
-      const item = byId.get(id)
+    return top.flatMap(({ soundId, loves: count }) => {
+      const item = byId.get(soundId)
       if (!item) return []
       return [
         {

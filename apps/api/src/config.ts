@@ -105,6 +105,12 @@ export const config = {
     process.env.ADMIN_STATS_CACHE_SEC ?? (process.env.NODE_ENV === 'test' ? '0' : '20'),
     10,
   ),
+  /** How long /metrics reuses the platform and listen aggregates. The gauges
+   * are daily or 24 h windows, while Prometheus scrapes every 15 s. */
+  metricsCacheSec: parseInt(
+    process.env.METRICS_CACHE_SEC ?? (process.env.NODE_ENV === 'test' ? '0' : '60'),
+    10,
+  ),
   sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days

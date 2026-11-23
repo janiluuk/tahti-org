@@ -13,6 +13,7 @@ import {
 import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
 import { serializeSound } from '../../lib/sound-metadata.js'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 
 const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
@@ -92,35 +93,25 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             embedUri: true,
             accessMode: true,
             purchaseTierId: true,
-            _count: { select: { comments: true, likes: true, listenEvents: true } },
           },
         })
 
-        const itemIds = items.map((item) => item.id)
-        const downloadCounts =
-          itemIds.length > 0
-            ? await fastify.prisma.download.groupBy({
-                by: ['soundId'],
-                where: { soundId: { in: itemIds }, countedAt: { not: null } },
-                _count: { _all: true },
-              })
-            : []
-        const downloadCountById = new Map(
-          downloadCounts
-            .filter((row) => row.soundId != null)
-            .map((row) => [row.soundId!, row._count._all]),
+        const countsFor = await loadSoundEngagementCounts(
+          fastify.prisma,
+          items.map((item) => item.id),
         )
 
         return items.map((item) => {
-          const { _count, colorSchemeJson, ...rest } = item
+          const { colorSchemeJson, ...rest } = item
           const accentColor = parseColorScheme(colorSchemeJson)?.accent ?? null
+          const counts = countsFor(item.id)
           return {
             ...serializeSound(rest),
             fileSizeBytes: Number(item.fileSizeBytes),
-            commentCount: _count.comments,
-            likeCount: _count.likes,
-            playCount: _count.listenEvents,
-            downloadCount: downloadCountById.get(item.id) ?? 0,
+            commentCount: counts.commentCount,
+            likeCount: counts.likeCount,
+            playCount: counts.playCount,
+            downloadCount: counts.downloadCount,
             accentColor,
           }
         })

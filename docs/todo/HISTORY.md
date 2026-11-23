@@ -1013,6 +1013,27 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1136), item 9 (
 - Rules: `docs/technical/worker-crons.md`. Raw event tables, `AuditLog` and the `expiresAt`
   indexes stay open in `docs/remaining-work.md`.
 
+### 2026-11-23 — DB audit query and caching fixes (#1137)
+
+`docs/todo/db-audit-query-fixes.md`; one PR (https://github.com/janiluuk/tahti-org/pull/1137), items 1, 2, 3, 4 and 8 of the DB audit. No response shape or schema changes:
+
+- List endpoints (latest tracks, channel items, profile, public collection, smart link, liked
+  tracks, artist library) count likes, comments, plays and downloads with
+  `loadSoundEngagementCounts` (one `groupBy` per relation over the listed ids) instead of
+  Prisma `_count`, which aggregated whole child tables. Local bench (200k ListenEvent):
+  40 ms → 3 ms median. The track page keeps `_count`.
+- `/metrics` reuses its platform and listen aggregates for `METRICS_CACHE_SEC` (60 s) per
+  process via `cachedInProcess`, which `cachedAdminStat` now wraps.
+- New to you: heard tracks via SQL `groupBy` (newest first, cap 5,000); per-user picks cached
+  in Redis 5 min, gates and presigned URLs still per request.
+- Top list ranks with `ORDER BY count LIMIT n` in SQL (ties by sound id); loved list is one
+  `COUNT(DISTINCT userId)` query with `LIMIT`. Month, half-year, all-time and loved cache
+  10 min; week 30 s.
+- Admin chat KPI and timeseries, content stats and listening stats use `cachedAdminStat`;
+  chat timeseries groups by UTC day in SQL; signed-in listeners is `COUNT(DISTINCT)`.
+- Leftovers (listening-stats SQL rollup, per-dimension top lists, audit items 5, 7, 10) moved
+  to `docs/remaining-work.md`.
+
 ### 2026-11-23 - DB audit indexes, pg_trgm search, redundant-index drops (#1138)
 
 No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1138). Reference: `docs/technical/db-audit-2026-11-22.md`.

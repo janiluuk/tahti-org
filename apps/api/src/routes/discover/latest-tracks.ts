@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { LatestTracksResponseSchema, openApiResponse } from '@tahti/shared'
 import { toGatedGalleryItem } from '../../lib/playback-url.js'
 import { listedArtistSoundWhere } from '../../lib/listed-artist.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
@@ -77,7 +78,6 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           peaks: true,
           createdAt: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true, comments: true } },
           channel: {
             select: {
               slug: true,
@@ -89,15 +89,9 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const viewerUserId = request.sessionUser?.id ?? null
-      const downloadCounts = rows.length
-        ? await fastify.prisma.download.groupBy({
-            by: ['soundId'],
-            where: { soundId: { in: rows.map((row) => row.id) }, countedAt: { not: null } },
-            _count: { _all: true },
-          })
-        : []
-      const downloadsBySoundId = new Map(
-        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+      const countsFor = await loadSoundEngagementCounts(
+        fastify.prisma,
+        rows.map((row) => row.id),
       )
       const items = await Promise.all(
         rows.map(async (item) => ({
@@ -106,10 +100,7 @@ const latestTracksRoute: FastifyPluginAsync = async (fastify) => {
           genre: item.genreCustom ?? item.genre,
           createdAt: item.createdAt.toISOString(),
           downloadsEnabled: item.downloadsEnabled,
-          likeCount: item._count.likes,
-          commentCount: item._count.comments,
-          playCount: item._count.listenEvents,
-          downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+          ...countsFor(item.id),
         })),
       )
 
