@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'vitest'
 import {
+  ARTIST_PAGE_BLOCK_IDS,
   ChannelVisualPatchSchema,
   DEFAULT_COLOR_SCHEME,
   parseColorScheme,
@@ -190,5 +191,39 @@ describe('channel page layout', () => {
       visible: true,
     }))
     expect(ChannelVisualPatchSchema.safeParse({ pageLayout: tooMany }).success).toBe(false)
+  })
+})
+
+describe('ChannelVisualPatchSchema artistBlockVisibility', () => {
+  it('accepts a partial block map and null', () => {
+    expect(
+      ChannelVisualPatchSchema.parse({ artistBlockVisibility: { bio: false, gallery: false } }),
+    ).toEqual({ artistBlockVisibility: { bio: false, gallery: false } })
+    expect(ChannelVisualPatchSchema.parse({ artistBlockVisibility: null })).toEqual({
+      artistBlockVisibility: null,
+    })
+  })
+
+  it('rejects unknown block ids and non-boolean values', () => {
+    expect(
+      ChannelVisualPatchSchema.safeParse({ artistBlockVisibility: { backdrop: false } }).success,
+    ).toBe(false)
+    expect(
+      ChannelVisualPatchSchema.safeParse({ artistBlockVisibility: { bio: 'false' } }).success,
+    ).toBe(false)
+  })
+
+  it('lists every block the player can switch', () => {
+    expect(ARTIST_PAGE_BLOCK_IDS).toEqual([
+      'releases',
+      'tracks',
+      'latest',
+      'feed',
+      'news',
+      'player',
+      'bio',
+      'shows',
+      'gallery',
+    ])
   })
 })

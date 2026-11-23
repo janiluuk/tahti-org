@@ -320,6 +320,28 @@ export const ChannelPageLayoutItemSchema = z.object({
 
 export type ChannelPageLayoutItem = z.infer<typeof ChannelPageLayoutItemSchema>
 
+/** Artist page (`/u/<username>`) blocks the artist can switch on or off in the
+ * Channel Designer look editor. Shared so the player and the API agree. */
+export const ARTIST_PAGE_BLOCK_IDS = [
+  'releases',
+  'tracks',
+  'latest',
+  'feed',
+  'news',
+  'player',
+  'bio',
+  'shows',
+  'gallery',
+] as const
+
+export type ArtistPageBlockId = (typeof ARTIST_PAGE_BLOCK_IDS)[number]
+
+/** Block id → shown. Missing ids fall back to the player's default (shown);
+ * unknown ids are rejected. */
+export const ArtistBlockVisibilitySchema = z.record(z.enum(ARTIST_PAGE_BLOCK_IDS), z.boolean())
+
+export type ArtistBlockVisibility = z.infer<typeof ArtistBlockVisibilitySchema>
+
 /** Validates a stored color-scheme JSON string (null/empty clears). */
 function colorSchemeJsonField() {
   return z
@@ -391,6 +413,9 @@ export const ChannelVisualPatchSchema = z
     /** Public channel page layout; null clears back to the player's
      * default. Stored as `pageLayoutJson`. */
     pageLayout: z.array(ChannelPageLayoutItemSchema).max(60).nullable().optional(),
+    /** Artist page block visibility; null clears back to every block shown.
+     * Stored as `artistBlockVisibilityJson`. */
+    artistBlockVisibility: ArtistBlockVisibilitySchema.nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const url = data.videoBackgroundUrl
@@ -439,6 +464,7 @@ export const CHANNEL_VISUAL_SELECT = {
   playerOverlayAlign: true,
   channelLinksJson: true,
   pageLayoutJson: true,
+  artistBlockVisibilityJson: true,
 } as const
 
 export const ReleaseVisualPatchSchema = z.object({
