@@ -3,13 +3,15 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { parseSocialLinksGenres, type TahtiSelectsGalleryItem } from '@tahti/shared'
-import { toGatedGalleryItem } from './playback-url.js'
+import { toGatedGalleryItem, type GallerySoundRow } from './playback-url.js'
 import { listedArtistSoundWhere } from './listed-artist.js'
+import { getCachedJson } from './json-cache.js'
 
 const CANDIDATE_POOL = 200
 const DEFAULT_LIMIT = 24
 const MAX_HEARD = 5_000
 const TOP_PREF_GENRES = 8
+const CACHE_TTL_SEC = 300
 
 function normalizeGenre(g: string): string {
   return g.trim().toLowerCase()
@@ -93,19 +95,40 @@ export async function resolvePreferenceGenres(
     .map((g) => g.label)
 }
 
+type NewToYouPicks = { preferenceGenres: string[]; picked: GallerySoundRow[] }
+
+/** Picks unheard tracks for the listener. Listens and likes don't need to show
+ * up instantly here, so the picks are cached per user; playback links and
+ * gates are resolved on every request because they change on purchase or
+ * subscription and the presigned URLs expire. */
 export async function buildNewToYou(
   prisma: PrismaClient,
   userId: string,
   limit = DEFAULT_LIMIT,
 ): Promise<{ preferenceGenres: string[]; items: TahtiSelectsGalleryItem[] }> {
+  const { preferenceGenres, picked } = await getCachedJson(
+    `discover:new-to-you:v1:${userId}:${limit}`,
+    CACHE_TTL_SEC,
+    () => pickNewToYou(prisma, userId, limit),
+  )
+  const items = await Promise.all(picked.map((item) => toGatedGalleryItem(prisma, item, userId)))
+  return { preferenceGenres, items }
+}
+
+async function pickNewToYou(
+  prisma: PrismaClient,
+  userId: string,
+  limit: number,
+): Promise<NewToYouPicks> {
   const preferenceGenres = await resolvePreferenceGenres(prisma, userId)
   const preferredKeys = new Set(preferenceGenres.map(normalizeGenre))
 
   const [heardRows, followedRows] = await Promise.all([
-    prisma.listenEvent.findMany({
+    // Most recently heard first, so the cap drops the oldest listens.
+    prisma.listenEvent.groupBy({
+      by: ['soundId'],
       where: { dedupeKey: `user:${userId}` },
-      select: { soundId: true },
-      distinct: ['soundId'],
+      orderBy: { _max: { playedAt: 'desc' } },
       take: MAX_HEARD,
     }),
     prisma.artistFollow.findMany({
@@ -165,19 +188,31 @@ export async function buildNewToYou(
   })
 
   scored.sort((a, b) => b.score - a.score)
-  const picked = scored.slice(0, limit).map((s) => s.item)
+  const top = scored.slice(0, limit).map((s) => s.item)
 
   // Peaks are fetched for the picked rows only, not the whole candidate pool.
   const peakRows = await prisma.sound.findMany({
-    where: { id: { in: picked.map((item) => item.id) } },
+    where: { id: { in: top.map((item) => item.id) } },
     select: { id: true, peaks: true },
   })
   const peaksById = new Map(peakRows.map((row) => [row.id, row.peaks]))
-  const items = await Promise.all(
-    picked.map((item) =>
-      toGatedGalleryItem(prisma, { ...item, peaks: peaksById.get(item.id) ?? null }, userId),
-    ),
-  )
+  const picked: GallerySoundRow[] = top.map((item) => ({
+    id: item.id,
+    title: item.title,
+    artistName: item.artistName,
+    bannerUrl: item.bannerUrl,
+    durationSec: item.durationSec,
+    mp3Key: item.mp3Key,
+    flacKey: item.flacKey,
+    accessMode: item.accessMode,
+    purchaseTierId: item.purchaseTierId,
+    peaks: peaksById.get(item.id) ?? null,
+    channel: {
+      slug: item.channel.slug,
+      userId: item.channel.userId,
+      user: { username: item.channel.user.username, displayName: item.channel.user.displayName },
+    },
+  }))
 
-  return { preferenceGenres, items }
+  return { preferenceGenres, picked }
 }

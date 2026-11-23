@@ -62,6 +62,7 @@ import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import { resolveEmbedProviderCovers } from '@tahti/shared'
 import type { TracklistEntry } from '@tahti/shared'
 import { SOUND_LIST_ORDER_BY } from './sound-helpers.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 
 const ImportEmbedBodySchema = z.object({
   trackUrl: z
@@ -72,32 +73,16 @@ const ImportEmbedBodySchema = z.object({
 
 const hearthis = createHearthisClient()
 
-type SoundListRow = {
-  id: string
-  _count: { likes: number; listenEvents: number; comments: number }
-} & Record<string, unknown>
+type SoundListRow = { id: string } & Record<string, unknown>
 
-async function serializeSoundRows(
-  prisma: { download: { groupBy: (...args: never[]) => Promise<unknown> } } & object,
-  items: SoundListRow[],
-) {
-  const client = prisma as import('@tahti/db').PrismaClient
-  const downloadCounts = items.length
-    ? await client.download.groupBy({
-        by: ['soundId'],
-        where: { soundId: { in: items.map((i) => i.id) }, countedAt: { not: null } },
-        _count: { _all: true },
-      })
-    : []
-  const downloadsBySoundId = new Map(
-    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+async function serializeSoundRows(prisma: import('@tahti/db').PrismaClient, items: SoundListRow[]) {
+  const countsFor = await loadSoundEngagementCounts(
+    prisma,
+    items.map((i) => i.id),
   )
-  return items.map(({ _count, ...item }) => ({
+  return items.map((item) => ({
     ...serializeSound(item),
-    likeCount: _count.likes,
-    commentCount: _count.comments,
-    playCount: _count.listenEvents,
-    downloadCount: downloadsBySoundId.get(item.id) ?? 0,
+    ...countsFor(item.id),
   }))
 }
 
@@ -229,10 +214,7 @@ const meSoundCrudRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy,
           take,
           skip: offset,
-          select: {
-            ...soundMetadataSelect,
-            _count: { select: { likes: true, listenEvents: true, comments: true } },
-          },
+          select: soundMetadataSelect,
         }),
         paged ? fastify.prisma.sound.count({ where }) : Promise.resolve(-1),
       ])

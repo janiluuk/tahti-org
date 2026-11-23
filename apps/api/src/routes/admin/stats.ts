@@ -230,10 +230,11 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      const last24h = await fastify.prisma.chatMessage.count({
-        where: { createdAt: { gte: since } },
-      })
+      const last24h = await cachedAdminStat('chat-24h', () =>
+        fastify.prisma.chatMessage.count({
+          where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+        }),
+      )
       return reply.send({ last24h })
     },
   )
@@ -259,26 +260,28 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
             : 30
       const days = Number.isFinite(parsedDays) ? Math.min(Math.max(parsedDays, 1), 90) : 30
 
-      const since = new Date()
-      since.setUTCHours(0, 0, 0, 0)
-      since.setUTCDate(since.getUTCDate() - (days - 1))
+      const series = await cachedAdminStat(`chat-timeseries:${days}`, async () => {
+        const since = new Date()
+        since.setUTCHours(0, 0, 0, 0)
+        since.setUTCDate(since.getUTCDate() - (days - 1))
 
-      const messages = await fastify.prisma.chatMessage.findMany({
-        where: { createdAt: { gte: since } },
-        select: { createdAt: true },
-      })
+        // "createdAt" is a timestamp without time zone holding UTC, so
+        // date_trunc gives the UTC day the series is keyed by.
+        const rows = await fastify.prisma.$queryRaw<Array<{ day: string; count: number }>>`
+          SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS day,
+                 COUNT(*)::int AS count
+          FROM "chat"."ChatMessage"
+          WHERE "createdAt" >= ${since}
+          GROUP BY 1
+        `
+        const countByDate = new Map(rows.map((row) => [row.day, row.count]))
 
-      const countByDate = new Map<string, number>()
-      for (const { createdAt } of messages) {
-        const key = createdAt.toISOString().slice(0, 10)
-        countByDate.set(key, (countByDate.get(key) ?? 0) + 1)
-      }
-
-      const series = Array.from({ length: days }, (_, i) => {
-        const d = new Date(since)
-        d.setUTCDate(d.getUTCDate() + i)
-        const key = d.toISOString().slice(0, 10)
-        return { date: key, count: countByDate.get(key) ?? 0 }
+        return Array.from({ length: days }, (_, i) => {
+          const d = new Date(since)
+          d.setUTCDate(d.getUTCDate() + i)
+          const key = d.toISOString().slice(0, 10)
+          return { date: key, count: countByDate.get(key) ?? 0 }
+        })
       })
 
       return reply.send({ days, series })

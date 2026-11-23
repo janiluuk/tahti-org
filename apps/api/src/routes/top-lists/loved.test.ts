@@ -83,6 +83,19 @@ describe('GET /api/top-lists/loved', () => {
     expect(entries[0]!.artistName).toBe('Loved List Artist')
   })
 
+  it('filters by content type', async () => {
+    const ids = async (contentTypes: string) => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/top-lists/loved?genre=Loved%20Test%20Genre&contentTypes=${contentTypes}`,
+      })
+      expect(res.statusCode).toBe(200)
+      return (res.json().entries as Array<{ soundId: string }>).map((e) => e.soundId)
+    }
+    expect(await ids('DJ_SET')).toEqual([])
+    expect(await ids('DJ_SET,TRACK')).toEqual([favouriteId, likedId])
+  })
+
   it('counts likes and LOVE reactions once per listener', async () => {
     const artist = await prisma.user.findUniqueOrThrow({
       where: { username: `${PREFIX}artist` },

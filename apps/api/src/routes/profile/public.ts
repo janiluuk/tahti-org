@@ -23,6 +23,7 @@ import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 import { resolvePlaybackGateStatus } from '../../lib/purchase-tiers.js'
 import { playbackGatePayload } from '../../lib/playback-url.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 import { fetchGuardedFeed, parseFeedItems } from '../../lib/rss-feed.js'
 import { userName } from '../../lib/safe-names.js'
@@ -325,19 +326,12 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           genre: true,
           genreCustom: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true, comments: true } },
         },
       })
     : []
-  const downloadCounts = allSounds.length
-    ? await fastify.prisma.download.groupBy({
-        by: ['soundId'],
-        where: { soundId: { in: allSounds.map((s) => s.id) }, countedAt: { not: null } },
-        _count: { _all: true },
-      })
-    : []
-  const downloadsBySoundId = new Map(
-    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+  const countsFor = await loadSoundEngagementCounts(
+    fastify.prisma,
+    allSounds.map((s) => s.id),
   )
 
   const soundIds = new Set<string>([
@@ -382,39 +376,42 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     )
   }
 
-  const tracks = allSounds.map((item) => ({
-    id: item.id,
-    title: item.title,
-    artistName: item.artistName,
-    credits: item.credits,
-    durationSec: item.durationSec,
-    bannerUrl: item.bannerUrl,
+  const tracks = allSounds.map((item) => {
+    const counts = countsFor(item.id)
+    return {
+      id: item.id,
+      title: item.title,
+      artistName: item.artistName,
+      credits: item.credits,
+      durationSec: item.durationSec,
+      bannerUrl: item.bannerUrl,
 
-    playUrl: playUrlBySoundId.get(item.id) ?? null,
-    accessMode: item.accessMode,
-    purchaseTierId: item.purchaseTierId,
-    pinned: item.pinnedAt != null,
-    pinnedAt: item.pinnedAt?.toISOString() ?? null,
-    trackOrder: item.trackOrder,
-    createdAt: item.createdAt.toISOString(),
-    channelItemUrl: channelSlug
-      ? resolveChannelUrl(channelSlug, { hash: `sound-item-${item.id}` })
-      : null,
-    releaseSlug: releaseSlugBySoundId.get(item.id) ?? null,
-    // *_EMBED-sourced items have no audio file (rawKey/mp3Key/flacKey are all
-    // null) — the Tracks tab needs these to render the same working embed
-    // player collections already use, instead of a dead "no play button" row.
-    source: item.source,
-    embedProvider: item.embedProvider,
-    embedUri: item.embedUri,
-    peaks: item.peaks,
-    genre: item.genreCustom ?? item.genre,
-    playCount: item._count.listenEvents,
-    likeCount: item._count.likes,
-    commentCount: item._count.comments,
-    downloadCount: downloadsBySoundId.get(item.id) ?? 0,
-    downloadsEnabled: item.downloadsEnabled,
-  }))
+      playUrl: playUrlBySoundId.get(item.id) ?? null,
+      accessMode: item.accessMode,
+      purchaseTierId: item.purchaseTierId,
+      pinned: item.pinnedAt != null,
+      pinnedAt: item.pinnedAt?.toISOString() ?? null,
+      trackOrder: item.trackOrder,
+      createdAt: item.createdAt.toISOString(),
+      channelItemUrl: channelSlug
+        ? resolveChannelUrl(channelSlug, { hash: `sound-item-${item.id}` })
+        : null,
+      releaseSlug: releaseSlugBySoundId.get(item.id) ?? null,
+      // *_EMBED-sourced items have no audio file (rawKey/mp3Key/flacKey are all
+      // null) — the Tracks tab needs these to render the same working embed
+      // player collections already use, instead of a dead "no play button" row.
+      source: item.source,
+      embedProvider: item.embedProvider,
+      embedUri: item.embedUri,
+      peaks: item.peaks,
+      genre: item.genreCustom ?? item.genre,
+      playCount: counts.playCount,
+      likeCount: counts.likeCount,
+      commentCount: counts.commentCount,
+      downloadCount: counts.downloadCount,
+      downloadsEnabled: item.downloadsEnabled,
+    }
+  })
 
   const releases = await Promise.all(
     user.releases.map(async (release) => ({

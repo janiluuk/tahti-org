@@ -21,6 +21,7 @@ import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { availableUserWhere } from '../../lib/listed-artist.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
+import { loadSoundEngagementCounts } from '../../lib/sound-engagement-counts.js'
 import { trackArtistName } from '../../lib/safe-names.js'
 import { isBlockedEitherWay } from '../../lib/user-blocks.js'
 import {
@@ -54,7 +55,6 @@ const publicCollectionItemInclude = {
       genreCustom: true,
       peaks: true,
       downloadsEnabled: true,
-      _count: { select: { likes: true, listenEvents: true, comments: true } },
     },
   },
 } as const
@@ -91,16 +91,7 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       const soundIds = col.items
         .map((item) => item.sound?.id)
         .filter((id): id is string => Boolean(id))
-      const downloadCounts = soundIds.length
-        ? await fastify.prisma.download.groupBy({
-            by: ['soundId'],
-            where: { soundId: { in: soundIds }, countedAt: { not: null } },
-            _count: { _all: true },
-          })
-        : []
-      const downloadsBySoundId = new Map(
-        downloadCounts.map((row) => [row.soundId, row._count._all] as const),
-      )
+      const countsFor = await loadSoundEngagementCounts(fastify.prisma, soundIds)
 
       // Track numbers follow the album order (position) of what a listener can
       // see, even when the display sort is by name or date.
@@ -122,16 +113,13 @@ export const publicCollectionRoutes: FastifyPluginAsync = async (fastify) => {
             purchaseTierId: colItem.sound.purchaseTierId,
             viewerUserId,
           })
-          const { channel, _count, genre, genreCustom, ...soundRest } = colItem.sound
+          const { channel, genre, genreCustom, ...soundRest } = colItem.sound
           return {
             ...colItem,
             sound: {
               ...soundRest,
               genre: genreCustom ?? genre,
-              likeCount: _count.likes,
-              commentCount: _count.comments,
-              playCount: _count.listenEvents,
-              downloadCount: downloadsBySoundId.get(colItem.sound.id) ?? 0,
+              ...countsFor(colItem.sound.id),
               audioUrl: url,
               gate,
               channel: { slug: channel.slug },
