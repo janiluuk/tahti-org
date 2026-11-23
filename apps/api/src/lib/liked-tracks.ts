@@ -5,6 +5,7 @@ import type { Prisma, PrismaClient } from '@tahti/db'
 import { safeDisplayName, soundPlaybackKey, type LikedTrack } from '@tahti/shared'
 import { resolveGatedPlaybackUrl } from './playback-url.js'
 import { resolveChannelUrl } from './channel-url.js'
+import { loadSoundEngagementCounts } from './sound-engagement-counts.js'
 
 /** A user's liked tracks, newest first, each with a playback link gated for
  * the viewer (who may be someone other than the liker, or nobody). */
@@ -39,7 +40,6 @@ export async function listLikedTracks(
           peaks: true,
           createdAt: true,
           downloadsEnabled: true,
-          _count: { select: { likes: true, listenEvents: true, comments: true } },
           channel: {
             select: {
               slug: true,
@@ -52,16 +52,9 @@ export async function listLikedTracks(
     },
   })
 
-  const soundIds = likes.map(({ sound }) => sound.id)
-  const downloadCounts = soundIds.length
-    ? await prisma.download.groupBy({
-        by: ['soundId'],
-        where: { soundId: { in: soundIds }, countedAt: { not: null } },
-        _count: { _all: true },
-      })
-    : []
-  const downloadsBySoundId = new Map(
-    downloadCounts.map((row) => [row.soundId, row._count._all] as const),
+  const countsFor = await loadSoundEngagementCounts(
+    prisma,
+    likes.map(({ sound }) => sound.id),
   )
 
   return Promise.all(
@@ -89,10 +82,7 @@ export async function listLikedTracks(
         peaks: Array.isArray(sound.peaks) ? (sound.peaks as number[]) : null,
         createdAt: sound.createdAt.toISOString(),
         downloadsEnabled: sound.downloadsEnabled,
-        likeCount: sound._count.likes,
-        commentCount: sound._count.comments,
-        playCount: sound._count.listenEvents,
-        downloadCount: downloadsBySoundId.get(sound.id) ?? 0,
+        ...countsFor(sound.id),
       }
     }),
   )
