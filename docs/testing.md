@@ -13,7 +13,7 @@ pnpm --filter @tahti/db db:generate
 Then apply the schema and run the gates:
 
 ```bash
-pnpm --filter @tahti/db db:migrate:test   # prisma db push
+pnpm --filter @tahti/db db:migrate:test   # prisma db push + prisma/raw-sql/lower-tags.sql
 pnpm format && pnpm ci:check && pnpm test
 ```
 

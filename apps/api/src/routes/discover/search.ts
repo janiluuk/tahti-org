@@ -15,13 +15,15 @@ import { resolveGatedPlaybackUrl } from '../../lib/playback-url.js'
 import { soundPlaybackKey } from '@tahti/shared'
 
 /** Tags are stored as written (trimmed, case kept), and Prisma's array `has`
- * is case-sensitive, so the case-insensitive match needs raw SQL. */
+ * is case-sensitive, so the case-insensitive match needs raw SQL. The
+ * `"channel"."lower_tags"("tags")` expression must stay exactly as written:
+ * it is what the `Sound_lower_tags_idx` GIN index is built on. */
 async function publicSoundIdsWithTag(prisma: PrismaClient, tag: string): Promise<string[]> {
   const rows = await prisma.$queryRaw<{ id: string }[]>`
     SELECT "id" FROM "channel"."Sound"
     WHERE "isPublic" = true
       AND "status" = 'READY'
-      AND EXISTS (SELECT 1 FROM unnest("tags") AS t WHERE lower(t) = lower(${tag}))
+      AND "channel"."lower_tags"("tags") @> ARRAY[lower(${tag})]
   `
   return rows.map((r) => r.id)
 }
