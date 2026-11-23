@@ -17,7 +17,7 @@ reciprocal rings) as heuristic flags for board review — no silent docking.
 
 ## Leftovers
 
-- [ ] Artist notification when a channel is flagged
+- [x] Artist notification when a channel is flagged (`PATTERN_FRAUD_FLAGGED`, FI + EN, links to Help)
 - [ ] Formal appeal workflow
 - [ ] Threshold tuning after real production data
 - [ ] Player board UI to surface `anomalies` (sibling tahti-player PR)

@@ -78,6 +78,7 @@ export const NotificationTypeSchema = z.enum([
   'LISTENING_PARTY_STARTING',
   'LISTENING_PARTY_CHANGED',
   'EVENT_TAGGED',
+  'PATTERN_FRAUD_FLAGGED',
 ])
 
 export const NotificationSchema = z.object({

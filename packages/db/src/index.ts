@@ -96,6 +96,7 @@ export {
   groupMemberRemovedCopy,
   groupRoleChangedCopy,
   groupDeletedCopy,
+  patternFraudFlaggedCopy,
   type NotificationLocale,
 } from './notification-copy.js'
 export { closeStaleListenSessions } from './listen-sessions.js'

@@ -770,3 +770,20 @@ export function groupDeletedCopy(locale: NotificationLocale, groupName: string):
     body: 'The owner deleted the group and its shared playlist. Your own tracks are not affected.',
   }
 }
+
+export function patternFraudFlaggedCopy(
+  locale: NotificationLocale,
+  channelSlug: string,
+  code: string,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return {
+      title: 'Kanavasi latauksia tarkastellaan',
+      body: `Hallitus näki epätavallista latausaktiivisuutta kanavalla @${channelSlug} (${code}). Yksiköitä ei ole vielä peruutettu. Kysy Ohje → Tuki, jos tämä vaikuttaa virheeltä.`,
+    }
+  }
+  return {
+    title: 'Unusual downloads on your channel',
+    body: `The board saw unusual download activity on @${channelSlug} (${code}). No units have been reversed yet. Ask through Help → Support if this looks wrong.`,
+  }
+}

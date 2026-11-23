@@ -796,6 +796,8 @@ enum NotificationType {
   LISTENING_PARTY_CHANGED
   /// Another artist tagged you on one of their events; accept to show it on your channel.
   EVENT_TAGGED
+  /// Daily pattern-fraud scan flagged unusual download activity on your channel.
+  PATTERN_FRAUD_FLAGGED
 
   @@schema("core")
 }
