@@ -1070,3 +1070,14 @@ the first production dry run (https://github.com/janiluuk/tahti-org/pull/1140).
 ### 2026-11-23 - Yaniho album titles cleaned on production
 
 Ran `clean-album-track-titles.ts yaniho --create-missing` (#1130 + v2 #1140) on production after a dry run: titles in Don't Turn Away From Love LP, Sisufuzz LP and Revitalize LP now read as the track title (collaborators as `(with ...)`), no positions moved; new private albums "Euphorizer LP" (24 tracks, #2-#29 in order) and "Descension LP" (1 track) for the artist to review and publish. A second run finds nothing to change. Left on purpose: two older "Euphorizer LP - 17 - Hysterizer" uploads (in Sets / Tracks) and a second "Sisufuzz LP - 05" upload in Tracks. Backup: `/srv/tahti/backups/yaniho-album-titles-before-apply.json` (`--restore <file> --apply` undoes it).
+
+### 2026-11-23 - Artist page block visibility saved on the channel (#1143)
+
+No todo file (single PR). https://github.com/janiluuk/tahti-org/pull/1143
+
+- `Channel.artistBlockVisibilityJson` (schema-qualified migration), `ARTIST_PAGE_BLOCK_IDS` +
+  `ArtistBlockVisibilitySchema` in `@tahti/shared`.
+- `PATCH /api/me/channel/visual` takes `artistBlockVisibility` (strict block ids, booleans,
+  null clears); the owner visual and `GET /api/channels/:slug` return
+  `artistBlockVisibilityJson`, so visitors of `/u/<username>` see the artist's hidden blocks.
+- Player side: tahti-player reads the channel value first and uploads an owner's local copy once.

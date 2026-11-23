@@ -177,6 +177,51 @@ describe('PATCH /api/me/channel/visual — backdrop fields', () => {
     expect(cleared.json().pageLayoutJson).toBeNull()
   })
 
+  it('saves artist block visibility and serves it to visitors', async () => {
+    const artistBlockVisibility = { bio: false, gallery: false, tracks: true }
+    const saved = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { artistBlockVisibility },
+    })
+    expect(saved.statusCode).toBe(200)
+    expect(JSON.parse(saved.json().artistBlockVisibilityJson)).toEqual(artistBlockVisibility)
+    const channel = await prisma.channel.findFirstOrThrow({
+      where: { user: { email: `${PREFIX}artist@example.com` } },
+      select: { slug: true },
+    })
+    const publicPage = await app.inject({ method: 'GET', url: `/api/channels/${channel.slug}` })
+    expect(JSON.parse(publicPage.json().artistBlockVisibilityJson)).toEqual(artistBlockVisibility)
+    const cleared = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { artistBlockVisibility: null },
+    })
+    expect(cleared.statusCode).toBe(200)
+    expect(cleared.json().artistBlockVisibilityJson).toBeNull()
+    const afterClear = await app.inject({ method: 'GET', url: `/api/channels/${channel.slug}` })
+    expect(afterClear.json().artistBlockVisibilityJson).toBeNull()
+  })
+
+  it('rejects unknown artist blocks and non-boolean values', async () => {
+    const unknown = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { artistBlockVisibility: { backdrop: false } },
+    })
+    expect(unknown.statusCode).toBe(400)
+    const notBoolean = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/visual',
+      headers: { cookie },
+      payload: { artistBlockVisibility: { bio: 'no' } },
+    })
+    expect(notBoolean.statusCode).toBe(400)
+  })
+
   it('rejects a malformed page layout', async () => {
     const res = await app.inject({
       method: 'PATCH',

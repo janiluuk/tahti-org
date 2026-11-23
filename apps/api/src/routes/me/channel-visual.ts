@@ -51,6 +51,7 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
       playerOverlayAlign,
       channelLinks,
       pageLayout,
+      artistBlockVisibility,
     } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -149,6 +150,14 @@ const meChannelVisualRoutes: FastifyPluginAsync = async (fastify) => {
           ? {
               pageLayoutJson:
                 pageLayout && pageLayout.length > 0 ? JSON.stringify(pageLayout) : null,
+            }
+          : {}),
+        ...(artistBlockVisibility !== undefined
+          ? {
+              artistBlockVisibilityJson:
+                artistBlockVisibility && Object.keys(artistBlockVisibility).length > 0
+                  ? JSON.stringify(artistBlockVisibility)
+                  : null,
             }
           : {}),
       },
