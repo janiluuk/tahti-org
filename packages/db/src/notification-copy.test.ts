@@ -7,6 +7,7 @@ import {
   groupJoinRequestedCopy,
   groupRoleChangedCopy,
   newFollowerCopy,
+  patternFraudFlaggedCopy,
   resolveNotificationLocale,
   themeApprovedCopy,
   themeUnderReviewCopy,
@@ -58,5 +59,15 @@ describe('notification-copy', () => {
     })
     expect(groupRoleChangedCopy('en', 'Vinyl', 'ADMIN').title).toBe('You are now an admin of Vinyl')
     expect(groupRoleChangedCopy('fi', 'Vinyl', 'OWNER').title).toBe('Omistat nyt ryhmän Vinyl')
+  })
+
+  it('localizes the pattern-fraud notice with channel and code', () => {
+    expect(patternFraudFlaggedCopy('en', 'ada', 'BATCH_ACCOUNTS')).toEqual({
+      title: 'Unusual downloads on your channel',
+      body: 'The board saw unusual download activity on @ada (BATCH_ACCOUNTS). No units have been reversed yet. Ask through Help → Support if this looks wrong.',
+    })
+    expect(patternFraudFlaggedCopy('fi', 'ada', 'EVEN_INTERVALS').title).toBe(
+      'Kanavasi latauksia tarkastellaan',
+    )
   })
 })

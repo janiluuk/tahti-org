@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { PrismaClient } from '@tahti/db'
+import { patternFraudFlaggedCopy, resolveNotificationLocale, type PrismaClient } from '@tahti/db'
 
 export type PatternAnomalyCode =
   'BATCH_ACCOUNTS' | 'EVEN_INTERVALS' | 'NETWORK_CLUSTERS' | 'RECIPROCAL_RINGS'
@@ -296,7 +296,8 @@ export async function collectPatternFlags(
   return flagsFromCountedDownloads({ downloads, accountsByChannel })
 }
 
-/** Daily scan: write PATTERN_FRAUD_ALERT audits (7-day dedupe per channel+code). */
+/** Daily scan: write PATTERN_FRAUD_ALERT audits and tell the channel owner
+ * (7-day dedupe per channel+code). */
 export async function processPatternFraudScan(
   prisma: PrismaClient,
   now = new Date(),
@@ -311,7 +312,7 @@ export async function processPatternFraudScan(
 
   const channels = await prisma.channel.findMany({
     where: { id: { in: channelIds } },
-    select: { id: true, slug: true, userId: true },
+    select: { id: true, slug: true, userId: true, user: { select: { uiLocale: true } } },
   })
   const channelById = new Map(channels.map((c) => [c.id, c]))
 
@@ -345,6 +346,20 @@ export async function processPatternFraudScan(
           channelSlug: channel.slug,
           artistUserId: channel.userId,
         },
+      },
+    })
+    const copy = patternFraudFlaggedCopy(
+      resolveNotificationLocale(channel.user.uiLocale),
+      channel.slug,
+      flag.code,
+    )
+    await prisma.notification.create({
+      data: {
+        userId: channel.userId,
+        type: 'PATTERN_FRAUD_FLAGGED',
+        title: copy.title,
+        body: copy.body,
+        url: '/help',
       },
     })
     flagged += 1
