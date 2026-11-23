@@ -1059,7 +1059,7 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1138). Referenc
 Todo `album-track-title-cleanup.md` stays open for the production run. Follow-up to #1130 after
 the first production dry run (https://github.com/janiluuk/tahti-org/pull/1140).
 
-- Credits naming the artist among others (`,`, ` x `, ` & `, ` feat. `, ` ft. `, ` vs `) match;
+- Credits naming the artist among others (`,`, `x`, `&`, `feat.`, `ft.`, `vs`) match;
   the others become `Title (with A & B)` unless the title names them.
 - A trailing LP/EP is optional when matching album names (`albumKey`).
 - Album order is a stable merge: unnumbered items stay right after the item they follow.
