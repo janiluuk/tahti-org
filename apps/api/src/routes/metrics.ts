@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { PrometheusMetricsBodySchema, openApiResponse } from '@tahti/shared'
 import { config } from '../config.js'
 import { isTrustedInternalRequest } from '../lib/internal-request.js'
+import { cachedInProcess } from '../lib/admin-stats-cache.js'
 import { collectBackupMetrics, renderBackupMetricLines } from '../lib/backup-metrics.js'
 import { renderAcrcloudMetricLines } from '../lib/acrcloud-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
@@ -32,9 +33,15 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
     },
     async (_request, reply) => {
       const checks = await runDependencyChecks(fastify.prisma)
-      const platform = await collectPlatformMetrics(fastify.prisma)
+      const { platform, listen } = await cachedInProcess(
+        'metrics:db',
+        config.metricsCacheSec,
+        async () => ({
+          platform: await collectPlatformMetrics(fastify.prisma),
+          listen: await collectListenMetrics(fastify.prisma),
+        }),
+      )
       const backup = await collectBackupMetrics()
-      const listen = await collectListenMetrics(fastify.prisma)
       const queue = await collectQueueMetrics()
       const lines = [
         renderPrometheusMetrics(checks, Math.floor(process.uptime())).trimEnd(),
