@@ -1012,3 +1012,23 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1136), item 9 (
   it (a refresh extends the session). 5,000 rows per `DELETE` by primary key. No migration.
 - Rules: `docs/technical/worker-crons.md`. Raw event tables, `AuditLog` and the `expiresAt`
   indexes stay open in `docs/remaining-work.md`.
+
+### 2026-11-23 - DB audit indexes, pg_trgm search, redundant-index drops (#1138)
+
+No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1138). Reference: `docs/technical/db-audit-2026-11-22.md`.
+
+- New indexes: `ListenSession(startedAt)`, `ListenEvent(dedupeKey, playedAt DESC)`,
+  `ReleaseTrack(soundId)`, `CollectionItem(soundId)`, `ChatMessage(createdAt)`,
+  `ChatMessage(userId, createdAt)`, `Sound(isPublic, status, releasedAt DESC)`,
+  `Session(expiresAt)`, `RefreshToken(expiresAt)`, raw partial
+  `Download(soundId) WHERE countedAt IS NOT NULL`.
+- Search: `pg_trgm` (`postgresqlExtensions`) with GIN trigram indexes on `Sound.title`,
+  `User.username`, `User.displayName`, `Collection.name`. Tag search now matches
+  `channel.lower_tags(tags) @> ARRAY[lower($1)]` on a raw GIN expression index;
+  `db:migrate:test` also runs `prisma/raw-sql/lower-tags.sql`.
+- Dropped 14 indexes duplicating a unique index or primary-key prefix.
+- Every index build or drop on a large table is `CONCURRENTLY`, one statement per migration
+  (Prisma wraps multi-statement files in a transaction); `migrations-schema.test.ts` enforces
+  that and schema-qualified `CREATE INDEX ... ON` / `DROP INDEX`.
+- Left in `docs/remaining-work.md`: the three `idx_scan`-gated drops and the lower-ranked
+  index rows. Closes the "`Session` / `RefreshToken` `expiresAt` indexes" row from #1136.
