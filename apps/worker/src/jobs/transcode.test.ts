@@ -47,7 +47,7 @@ vi.mock('../lib/editor-peaks.js', () => ({
   finePeaksKey: vi.fn(),
 }))
 
-import { processTranscodeJob } from './transcode.js'
+import { isKilledFfmpeg, processTranscodeJob } from './transcode.js'
 
 function jobFor(attemptsMade: number, attempts = 3): Job {
   return { data: { itemId: 'snd-1' }, attemptsMade, opts: { attempts } } as unknown as Job
@@ -140,5 +140,61 @@ describe('uploadReadyNotice', () => {
     expect(uploadReadyNotice({ ...base, isPublic: false }).body).toBe(
       'It is saved as private; publish it from Studio when you are ready.',
     )
+  })
+})
+
+describe('processTranscodeJob hangs', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    prismaMock.sound.findUnique.mockResolvedValue({
+      id: 'snd-1',
+      title: 'Track',
+      rawKey: 'raw/snd-1',
+      status: 'PENDING',
+      isPublic: true,
+      channelId: 'ch-1',
+      channel: { slug: 'artist', userId: 'user-1' },
+    })
+    prismaMock.sound.update.mockResolvedValue({})
+    mkdtemp.mockResolvedValue('/tmp/tahti-transcode-x')
+    rm.mockResolvedValue(undefined)
+    downloadSourceCached.mockResolvedValue(undefined)
+  })
+
+  it('fails at once without a retry when the watchdog killed ffprobe', async () => {
+    ffprobe.mockImplementation((_path: string, cb: (err: Error) => void) =>
+      cb(new Error('ffprobe exited with code null')),
+    )
+
+    await expect(processTranscodeJob(jobFor(0))).rejects.toMatchObject({
+      name: 'UnrecoverableError',
+    })
+    expect(lastUpdateData()).toMatchObject({ status: 'ERROR' })
+    expect(notifyJobOutcome).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ outcome: 'failed' }),
+    )
+  })
+
+  it('times out a hung download and keeps the attempts BullMQ has left', async () => {
+    vi.useFakeTimers()
+    try {
+      downloadSourceCached.mockReturnValue(new Promise(() => {}))
+      const result = processTranscodeJob(jobFor(0))
+      const assertion = expect(result).rejects.toThrow('download timed out')
+      await vi.advanceTimersByTimeAsync(15 * 60 * 1000)
+      await assertion
+      expect(lastUpdateData()).toEqual({ status: 'PENDING' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('isKilledFfmpeg', () => {
+  it('recognises a signal-killed ffmpeg or ffprobe', () => {
+    expect(isKilledFfmpeg(new Error('ffmpeg was killed with signal SIGKILL'))).toBe(true)
+    expect(isKilledFfmpeg(new Error('ffprobe exited with code null'))).toBe(true)
+    expect(isKilledFfmpeg(new Error('ffmpeg exited with code 1: Invalid data'))).toBe(false)
   })
 })
