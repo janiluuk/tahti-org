@@ -18,8 +18,8 @@ import {
 import { notifyPlaylistOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
-import { assignPresetCovers } from '../../lib/artwork-presets.js'
 import { refreshCollectionCoverPalette } from '../../lib/collection-palette.js'
+import { createCollection, defaultCollectionSlug } from '../../lib/create-collection.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import {
   addManagementPlayback,
@@ -185,11 +185,7 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
       body.slug
         ?.trim()
         .toLowerCase()
-        .replace(/[^a-z0-9-]/g, '-') ??
-      `${user.username}-${body.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .slice(0, 30)}`
+        .replace(/[^a-z0-9-]/g, '-') ?? defaultCollectionSlug(user.username, body.name)
 
     const type = body.type ?? 'CUSTOM'
 
@@ -197,31 +193,21 @@ const meCollectionRoutes: FastifyPluginAsync = async (fastify) => {
     if (existing) return reply.status(409).send({ error: 'Slug already taken' })
 
     try {
-      const col = await fastify.prisma.collection.create({
-        data: {
-          userId: user.id,
-          slug,
-          name: body.name,
-          description: body.description?.trim() || null,
-          type,
-          style: body.style as never,
-          isPublic: body.isPublic ?? (body.visibility ? body.visibility === 'PUBLIC' : true),
-          coverUrl: body.coverUrl?.trim() || null,
-          ...(body.visibility ? { visibility: body.visibility } : {}),
-          ...(body.collaborative !== undefined ? { collaborative: body.collaborative } : {}),
-          ...(body.genres ? { genres: body.genres } : {}),
-          ...(body.releaseDate ? { releaseDate: new Date(`${body.releaseDate}T00:00:00Z`) } : {}),
-        },
+      const { collection } = await createCollection(fastify.prisma, {
+        userId: user.id,
+        slug,
+        name: body.name,
+        description: body.description?.trim() || null,
+        type,
+        style: body.style as never,
+        isPublic: body.isPublic ?? (body.visibility ? body.visibility === 'PUBLIC' : true),
+        coverUrl: body.coverUrl?.trim() || null,
+        ...(body.visibility ? { visibility: body.visibility } : {}),
+        ...(body.collaborative !== undefined ? { collaborative: body.collaborative } : {}),
+        ...(body.genres ? { genres: body.genres } : {}),
+        ...(body.releaseDate ? { releaseDate: new Date(`${body.releaseDate}T00:00:00Z`) } : {}),
       })
-      if (!col.coverUrl && (await assignPresetCovers(fastify.prisma, 'collection', [col.id]))) {
-        const withCover = await fastify.prisma.collection.findUniqueOrThrow({
-          where: { id: col.id },
-        })
-        refreshCollectionCoverPalette(fastify.prisma, col.id, withCover.coverUrl!)
-        return reply.status(201).send(withDateOnly(withCover))
-      }
-      if (col.coverUrl) refreshCollectionCoverPalette(fastify.prisma, col.id, col.coverUrl)
-      return reply.status(201).send(withDateOnly(col))
+      return reply.status(201).send(withDateOnly(collection))
     } catch (err) {
       if (isUniqueConstraintError(err)) {
         return reply.status(409).send({ error: 'Slug already taken' })
