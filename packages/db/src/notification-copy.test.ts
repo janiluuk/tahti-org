@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   channelLiveCopy,
+  groupJoinRequestedCopy,
+  groupRoleChangedCopy,
   newFollowerCopy,
   resolveNotificationLocale,
   themeApprovedCopy,
@@ -43,5 +45,18 @@ describe('notification-copy', () => {
       title: '"Neon" hyväksyttiin',
       body: 'Avataan pull request julkaisua varten.',
     })
+  })
+
+  it('localizes group join and role notices', () => {
+    expect(groupJoinRequestedCopy('en', 'Vinyl')).toEqual({
+      title: 'New request to join your group',
+      body: 'Someone asked to join Vinyl.',
+    })
+    expect(groupJoinRequestedCopy('fi', 'Vinyl')).toEqual({
+      title: 'Uusi liittymispyyntö ryhmääsi',
+      body: 'Joku pyysi liittyä ryhmään Vinyl.',
+    })
+    expect(groupRoleChangedCopy('en', 'Vinyl', 'ADMIN').title).toBe('You are now an admin of Vinyl')
+    expect(groupRoleChangedCopy('fi', 'Vinyl', 'OWNER').title).toBe('Omistat nyt ryhmän Vinyl')
   })
 })

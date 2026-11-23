@@ -2,9 +2,32 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
-import { availableUserWhere } from '@tahti/db'
+import {
+  availableUserWhere,
+  groupDeletedCopy,
+  groupJoinRequestedCopy,
+  groupJoinResolvedCopy,
+  groupMemberRemovedCopy,
+  groupRoleChangedCopy,
+  groupSubmissionReceivedCopy,
+  groupSubmissionResolvedCopy,
+  resolveNotificationLocale,
+  type NotificationLocale,
+} from '@tahti/db'
 
 type GroupRef = { id: string; slug: string; name: string }
+
+async function localesFor(
+  prisma: PrismaClient,
+  userIds: string[],
+): Promise<Map<string, NotificationLocale>> {
+  if (userIds.length === 0) return new Map()
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, uiLocale: true },
+  })
+  return new Map(users.map((u) => [u.id, resolveNotificationLocale(u.uiLocale)]))
+}
 
 /** The group's owner and admins who can act on a request, without the actor. */
 async function groupManagerIds(
@@ -33,15 +56,19 @@ export async function notifyGroupJoinRequested(
 ): Promise<number> {
   const ids = await groupManagerIds(prisma, group.id, requesterUserId)
   if (ids.length === 0) return 0
+  const locales = await localesFor(prisma, ids)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'GROUP_JOIN_REQUESTED' as const,
-      actorUserId: requesterUserId,
-      title: 'New request to join your group',
-      body: `Someone asked to join ${group.name}.`,
-      url: `/studio/groups/${group.slug}`,
-    })),
+    data: ids.map((userId) => {
+      const copy = groupJoinRequestedCopy(locales.get(userId) ?? 'en', group.name)
+      return {
+        userId,
+        type: 'GROUP_JOIN_REQUESTED' as const,
+        actorUserId: requesterUserId,
+        title: copy.title,
+        body: copy.body,
+        url: `/studio/groups/${group.slug}`,
+      }
+    }),
   })
   return ids.length
 }
@@ -55,15 +82,15 @@ export async function notifyGroupJoinResolved(
   approved: boolean,
   actorUserId: string,
 ): Promise<void> {
+  const locales = await localesFor(prisma, [requesterUserId])
+  const copy = groupJoinResolvedCopy(locales.get(requesterUserId) ?? 'en', group.name, approved)
   await prisma.notification.create({
     data: {
       userId: requesterUserId,
       type: 'GROUP_JOIN_RESOLVED',
       actorUserId,
-      title: approved ? `You joined ${group.name}` : 'Your request to join was declined',
-      body: approved
-        ? `Your request to join ${group.name} was approved.`
-        : `${group.name} declined your request to join.`,
+      title: copy.title,
+      body: copy.body,
       url: `/groups/${group.slug}`,
     },
   })
@@ -79,15 +106,19 @@ export async function notifyGroupSubmissionReceived(
 ): Promise<number> {
   const ids = await groupManagerIds(prisma, group.id, submitterUserId)
   if (ids.length === 0) return 0
+  const locales = await localesFor(prisma, ids)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'GROUP_SUBMISSION_RECEIVED' as const,
-      actorUserId: submitterUserId,
-      title: 'A track is waiting for your group',
-      body: `"${soundTitle}" was submitted to ${group.name}.`,
-      url: `/studio/groups/${group.slug}`,
-    })),
+    data: ids.map((userId) => {
+      const copy = groupSubmissionReceivedCopy(locales.get(userId) ?? 'en', group.name, soundTitle)
+      return {
+        userId,
+        type: 'GROUP_SUBMISSION_RECEIVED' as const,
+        actorUserId: submitterUserId,
+        title: copy.title,
+        body: copy.body,
+        url: `/studio/groups/${group.slug}`,
+      }
+    }),
   })
   return ids.length
 }
@@ -103,15 +134,20 @@ export async function notifyGroupSubmissionResolved(
   actorUserId: string,
 ): Promise<void> {
   if (submitterUserId === actorUserId) return
+  const locales = await localesFor(prisma, [submitterUserId])
+  const copy = groupSubmissionResolvedCopy(
+    locales.get(submitterUserId) ?? 'en',
+    group.name,
+    soundTitle,
+    approved,
+  )
   await prisma.notification.create({
     data: {
       userId: submitterUserId,
       type: 'GROUP_SUBMISSION_RESOLVED',
       actorUserId,
-      title: approved ? 'Your track is in the group playlist' : 'Your track was not added',
-      body: approved
-        ? `"${soundTitle}" was added to ${group.name}.`
-        : `${group.name} declined "${soundTitle}".`,
+      title: copy.title,
+      body: copy.body,
       url: `/groups/${group.slug}`,
     },
   })
@@ -124,32 +160,19 @@ export async function notifyGroupMemberRemoved(
   removedUserId: string,
   actorUserId: string,
 ): Promise<void> {
+  const locales = await localesFor(prisma, [removedUserId])
+  const copy = groupMemberRemovedCopy(locales.get(removedUserId) ?? 'en', group.name)
   await prisma.notification.create({
     data: {
       userId: removedUserId,
       type: 'GROUP_MEMBER_REMOVED',
       actorUserId,
-      title: `You were removed from ${group.name}`,
-      body: 'A group admin took you out of the group. Tracks you added stay in its playlist.',
+      title: copy.title,
+      body: copy.body,
       url: `/groups/${group.slug}`,
     },
   })
 }
-
-const ROLE_CHANGE_COPY = {
-  OWNER: {
-    title: (name: string) => `You now own ${name}`,
-    body: 'The owner handed the group to you.',
-  },
-  ADMIN: {
-    title: (name: string) => `You are now an admin of ${name}`,
-    body: 'You can answer join requests and track submissions, and remove members.',
-  },
-  MEMBER: {
-    title: (name: string) => `You are no longer an admin of ${name}`,
-    body: 'You stay in the group as a member.',
-  },
-} as const
 
 /** Tells a member their role in a group changed: made admin, back to member,
  * or handed the group. */
@@ -157,16 +180,17 @@ export async function notifyGroupRoleChanged(
   prisma: PrismaClient,
   group: GroupRef,
   memberUserId: string,
-  role: keyof typeof ROLE_CHANGE_COPY,
+  role: 'OWNER' | 'ADMIN' | 'MEMBER',
   actorUserId: string,
 ): Promise<void> {
-  const copy = ROLE_CHANGE_COPY[role]
+  const locales = await localesFor(prisma, [memberUserId])
+  const copy = groupRoleChangedCopy(locales.get(memberUserId) ?? 'en', group.name, role)
   await prisma.notification.create({
     data: {
       userId: memberUserId,
       type: 'GROUP_ROLE_CHANGED',
       actorUserId,
-      title: copy.title(group.name),
+      title: copy.title,
       body: copy.body,
       url: `/studio/groups/${group.slug}`,
     },
@@ -183,15 +207,19 @@ export async function notifyGroupDeleted(
 ): Promise<number> {
   const ids = memberUserIds.filter((id) => id !== actorUserId)
   if (ids.length === 0) return 0
+  const locales = await localesFor(prisma, ids)
   await prisma.notification.createMany({
-    data: ids.map((userId) => ({
-      userId,
-      type: 'GROUP_DELETED' as const,
-      actorUserId,
-      title: `${groupName} was deleted`,
-      body: 'The owner deleted the group and its shared playlist. Your own tracks are not affected.',
-      url: '/groups',
-    })),
+    data: ids.map((userId) => {
+      const copy = groupDeletedCopy(locales.get(userId) ?? 'en', groupName)
+      return {
+        userId,
+        type: 'GROUP_DELETED' as const,
+        actorUserId,
+        title: copy.title,
+        body: copy.body,
+        url: '/groups',
+      }
+    }),
   })
   return ids.length
 }

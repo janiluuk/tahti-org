@@ -612,3 +612,161 @@ export function listeningPartyChangedCopy(
         : `"${releaseTitle}" won't happen as planned.`,
   }
 }
+
+export function groupJoinRequestedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return {
+      title: 'Uusi liittymispyyntö ryhmääsi',
+      body: `Joku pyysi liittyä ryhmään ${groupName}.`,
+    }
+  }
+  return {
+    title: 'New request to join your group',
+    body: `Someone asked to join ${groupName}.`,
+  }
+}
+
+export function groupJoinResolvedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+  approved: boolean,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return approved
+      ? {
+          title: `Liityit ryhmään ${groupName}`,
+          body: `Liittymispyyntösi ryhmään ${groupName} hyväksyttiin.`,
+        }
+      : {
+          title: 'Liittymispyyntösi hylättiin',
+          body: `${groupName} hylkäsi liittymispyyntösi.`,
+        }
+  }
+  return approved
+    ? {
+        title: `You joined ${groupName}`,
+        body: `Your request to join ${groupName} was approved.`,
+      }
+    : {
+        title: 'Your request to join was declined',
+        body: `${groupName} declined your request to join.`,
+      }
+}
+
+export function groupSubmissionReceivedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+  soundTitle: string,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return {
+      title: 'Kappale odottaa ryhmääsi',
+      body: `”${soundTitle}” lähetettiin ryhmään ${groupName}.`,
+    }
+  }
+  return {
+    title: 'A track is waiting for your group',
+    body: `"${soundTitle}" was submitted to ${groupName}.`,
+  }
+}
+
+export function groupSubmissionResolvedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+  soundTitle: string,
+  approved: boolean,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return approved
+      ? {
+          title: 'Kappaleesi on ryhmän soittolistalla',
+          body: `”${soundTitle}” lisättiin ryhmään ${groupName}.`,
+        }
+      : {
+          title: 'Kappalettasi ei lisätty',
+          body: `${groupName} hylkäsi kappaleen ”${soundTitle}”.`,
+        }
+  }
+  return approved
+    ? {
+        title: 'Your track is in the group playlist',
+        body: `"${soundTitle}" was added to ${groupName}.`,
+      }
+    : {
+        title: 'Your track was not added',
+        body: `${groupName} declined "${soundTitle}".`,
+      }
+}
+
+export function groupMemberRemovedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+): NotificationCopy {
+  if (locale === 'fi') {
+    return {
+      title: `Sinut poistettiin ryhmästä ${groupName}`,
+      body: 'Ryhmän ylläpitäjä poisti sinut. Lisäämäsi kappaleet jäävät soittolistalle.',
+    }
+  }
+  return {
+    title: `You were removed from ${groupName}`,
+    body: 'A group admin took you out of the group. Tracks you added stay in its playlist.',
+  }
+}
+
+export function groupRoleChangedCopy(
+  locale: NotificationLocale,
+  groupName: string,
+  role: 'OWNER' | 'ADMIN' | 'MEMBER',
+): NotificationCopy {
+  if (locale === 'fi') {
+    if (role === 'OWNER') {
+      return {
+        title: `Omistat nyt ryhmän ${groupName}`,
+        body: 'Omistaja luovutti ryhmän sinulle.',
+      }
+    }
+    if (role === 'ADMIN') {
+      return {
+        title: `Olet nyt ylläpitäjä ryhmässä ${groupName}`,
+        body: 'Voit käsitellä liittymispyyntöjä ja kappalelähetyksiä sekä poistaa jäseniä.',
+      }
+    }
+    return {
+      title: `Et ole enää ylläpitäjä ryhmässä ${groupName}`,
+      body: 'Jäät ryhmään jäsenenä.',
+    }
+  }
+  if (role === 'OWNER') {
+    return {
+      title: `You now own ${groupName}`,
+      body: 'The owner handed the group to you.',
+    }
+  }
+  if (role === 'ADMIN') {
+    return {
+      title: `You are now an admin of ${groupName}`,
+      body: 'You can answer join requests and track submissions, and remove members.',
+    }
+  }
+  return {
+    title: `You are no longer an admin of ${groupName}`,
+    body: 'You stay in the group as a member.',
+  }
+}
+
+export function groupDeletedCopy(locale: NotificationLocale, groupName: string): NotificationCopy {
+  if (locale === 'fi') {
+    return {
+      title: `${groupName} poistettiin`,
+      body: 'Omistaja poisti ryhmän ja sen jaetun soittolistan. Omat kappaleesi eivät muutu.',
+    }
+  }
+  return {
+    title: `${groupName} was deleted`,
+    body: 'The owner deleted the group and its shared playlist. Your own tracks are not affected.',
+  }
+}
