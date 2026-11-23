@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { Job } from 'bullmq'
+import { UnrecoverableError, type Job } from 'bullmq'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,6 +18,7 @@ import {
   sourceFormatLabel,
 } from '@tahti/shared'
 import { downloadSourceCached } from '../lib/source-cache.js'
+import { DeadlineExceededError, withDeadline } from '../lib/deadline.js'
 import { uploadFile } from '../lib/minio.js'
 import {
   enqueueBackfillEditorPeaks,
@@ -38,6 +39,17 @@ import {
   soundProcessingErrorMessage,
   type SoundProcessingStage,
 } from '../lib/sound-processing-error.js'
+
+const DOWNLOAD_TIMEOUT_MS = 15 * 60 * 1000
+const STORE_TIMEOUT_MS = 15 * 60 * 1000
+
+/** fluent-ffmpeg's errors for a process ended by a signal, e.g. the ffmpeg watchdog. */
+export function isKilledFfmpeg(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    /ffmpeg was killed with signal|ffprobe exited with code null/i.test(err.message)
+  )
+}
 
 function logLine(fields: Record<string, unknown>, msg: string): void {
   console.log(JSON.stringify({ ...fields, msg, component: 'transcode' }))
@@ -195,7 +207,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
   try {
     const rawPath = join(tmpDir, 'raw_input')
-    await downloadSourceCached(item.rawKey, rawPath)
+    await withDeadline(downloadSourceCached(item.rawKey, rawPath), DOWNLOAD_TIMEOUT_MS, 'download')
 
     stage = 'probe'
     const sourceMeta = await ffprobeFormat(rawPath)
@@ -220,7 +232,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       await ffmpegToFlac(rawPath, flacPath)
       const flacKey = `flac/${item.channel.slug}/${itemId}.flac`
       stage = 'store'
-      await uploadFile(flacKey, flacPath, 'audio/flac')
+      await withDeadline(uploadFile(flacKey, flacPath, 'audio/flac'), STORE_TIMEOUT_MS, 'store')
       stage = null
 
       await prisma.sound.update({
@@ -271,7 +283,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     await ffmpegToMp3(rawPath, mp3Path, outputBitrateKbps)
     const mp3Key = `mp3/${item.channel.slug}/${itemId}.mp3`
     stage = 'store'
-    await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
+    await withDeadline(uploadFile(mp3Key, mp3Path, 'audio/mpeg'), STORE_TIMEOUT_MS, 'store')
     stage = null
 
     await prisma.sound.update({
@@ -308,8 +320,10 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     )
   } catch (err) {
     // Until BullMQ runs out of attempts the sound stays in the processing
-    // list, so the owner is not told it failed and then see it succeed.
-    const final = isFinalAttempt(job)
+    // list, so the owner is not told it failed and then see it succeed. A
+    // killed (hung) ffmpeg is final at once: retrying would jam the lane again.
+    const killed = isKilledFfmpeg(err)
+    const final = killed || isFinalAttempt(job)
     await prisma.sound.update({
       where: { id: itemId },
       data: final
@@ -330,11 +344,14 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         itemId,
         stage,
         finalAttempt: final,
+        timedOut: err instanceof DeadlineExceededError,
+        killedFfmpeg: killed,
         elapsedMs: Date.now() - startedAt,
         error: err instanceof Error ? err.message : String(err),
       },
       `sound item ${itemId} transcode failed after ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
     )
+    if (killed) throw new UnrecoverableError(err instanceof Error ? err.message : String(err))
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

@@ -84,6 +84,7 @@ import { JOB_RETENTION } from './lib/job-retention.js'
 import { handOffToOtherLane, isJobInLanes } from './lib/lane-handoff.js'
 import { markSoundTranscodeFailed } from './lib/sound-transcode-failed.js'
 import { processSweepStuckSoundTranscodesJob } from './jobs/sweep-stuck-sound-transcodes.js'
+import { startFfmpegWatchdog } from './lib/ffmpeg-watchdog.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -307,6 +308,8 @@ const worker = new Worker(
     ...JOB_RETENTION,
   },
 )
+
+startFfmpegWatchdog()
 
 worker.on('active', (job) => {
   if (!isJobInLanes(allowedJobNames, job.name)) return

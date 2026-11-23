@@ -3,24 +3,42 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { prismaMock, queueAdd, queueClose, queueGetJobs } = vi.hoisted(() => ({
-  prismaMock: {
-    sound: {
-      findMany: vi.fn(),
-      updateMany: vi.fn(),
+const { prismaMock, queueAdd, queueClose, queueGetJobs, redisIncr, redisExpire } = vi.hoisted(
+  () => ({
+    prismaMock: {
+      sound: {
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
+      },
     },
-  },
-  queueAdd: vi.fn(),
-  queueClose: vi.fn(),
-  queueGetJobs: vi.fn(),
-}))
+    queueAdd: vi.fn(),
+    queueClose: vi.fn(),
+    queueGetJobs: vi.fn(),
+    redisIncr: vi.fn(),
+    redisExpire: vi.fn(),
+  }),
+)
 
 vi.mock('@tahti/db', () => ({ prisma: prismaMock }))
+vi.mock('redis', () => ({
+  createClient: vi.fn(() => ({
+    connect: vi.fn().mockResolvedValue(undefined),
+    quit: vi.fn().mockResolvedValue(undefined),
+    isOpen: true,
+    incr: redisIncr,
+    expire: redisExpire,
+  })),
+}))
 vi.mock('bullmq', () => ({
-  Queue: vi.fn(() => ({ add: queueAdd, close: queueClose, getJobs: queueGetJobs })),
+  Queue: vi.fn(() => ({
+    add: queueAdd,
+    close: queueClose,
+    getJobs: queueGetJobs,
+  })),
 }))
 
 import {
+  MAX_STUCK_TRANSCODE_SWEEPS,
   STUCK_TRANSCODE_AFTER_MS,
   STUCK_TRANSCODE_BATCH,
   processSweepStuckSoundTranscodesJob,
@@ -37,6 +55,8 @@ describe('processSweepStuckSoundTranscodesJob', () => {
     queueClose.mockResolvedValue(undefined)
     queueGetJobs.mockResolvedValue([])
     prismaMock.sound.updateMany.mockResolvedValue({ count: 1 })
+    redisIncr.mockResolvedValue(1)
+    redisExpire.mockResolvedValue(1)
   })
 
   afterEach(() => {
@@ -48,7 +68,7 @@ describe('processSweepStuckSoundTranscodesJob', () => {
 
     const summary = await processSweepStuckSoundTranscodesJob()
 
-    expect(summary).toEqual({ stuck: 0, enqueued: 0 })
+    expect(summary).toEqual({ stuck: 0, enqueued: 0, gaveUp: 0 })
     const args = prismaMock.sound.findMany.mock.calls[0]![0]
     expect(args.where).toEqual({
       status: { in: ['PENDING', 'PROCESSING'] },
@@ -65,7 +85,7 @@ describe('processSweepStuckSoundTranscodesJob', () => {
 
     const summary = await processSweepStuckSoundTranscodesJob()
 
-    expect(summary).toEqual({ stuck: 2, enqueued: 2 })
+    expect(summary).toEqual({ stuck: 2, enqueued: 2, gaveUp: 0 })
     expect(queueAdd).toHaveBeenCalledWith('transcode-sound', { itemId: 's1' })
     expect(queueAdd).toHaveBeenCalledWith('transcode-sound', { itemId: 's2' })
     expect(prismaMock.sound.updateMany).toHaveBeenCalledWith({
@@ -97,5 +117,23 @@ describe('processSweepStuckSoundTranscodesJob', () => {
 
     expect(summary.enqueued).toBe(0)
     expect(queueAdd).not.toHaveBeenCalled()
+  })
+
+  it('marks a sound ERROR instead of re-queuing it after the last allowed sweep', async () => {
+    prismaMock.sound.findMany.mockResolvedValue([{ id: 's1' }, { id: 's2' }])
+    redisIncr.mockImplementation(async (key: string) =>
+      key === 'transcode-sweep:s1' ? MAX_STUCK_TRANSCODE_SWEEPS + 1 : 1,
+    )
+
+    const summary = await processSweepStuckSoundTranscodesJob()
+
+    expect(summary).toEqual({ stuck: 2, enqueued: 1, gaveUp: 1 })
+    expect(prismaMock.sound.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({ id: 's1', status: { in: ['PENDING', 'PROCESSING'] } }),
+      data: { status: 'ERROR', processingError: expect.any(String) },
+    })
+    expect(queueAdd).toHaveBeenCalledTimes(1)
+    expect(queueAdd).toHaveBeenCalledWith('transcode-sound', { itemId: 's2' })
+    expect(redisExpire).toHaveBeenCalledWith('transcode-sweep:s1', expect.any(Number))
   })
 })

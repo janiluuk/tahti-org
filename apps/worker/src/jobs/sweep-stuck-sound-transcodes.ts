@@ -2,8 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
+import { createClient } from 'redis'
 import { prisma } from '@tahti/db'
 import { JOB_RETENTION } from '../lib/job-retention.js'
+import { soundProcessingErrorMessage } from '../lib/sound-processing-error.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -14,6 +16,13 @@ const connection = {
 
 export const STUCK_TRANSCODE_AFTER_MS = 60 * 60 * 1000
 export const STUCK_TRANSCODE_BATCH = 20
+/** Re-queues per sound before the sweep gives up and marks it ERROR. */
+export const MAX_STUCK_TRANSCODE_SWEEPS = 3
+const SWEEP_COUNT_TTL_SEC = 7 * 24 * 60 * 60
+
+function sweepCountKey(soundId: string): string {
+  return `transcode-sweep:${soundId}`
+}
 
 const LIVE_JOB_STATES = ['waiting', 'active', 'delayed', 'prioritized', 'paused'] as const
 
@@ -22,10 +31,13 @@ const LIVE_JOB_STATES = ['waiting', 'active', 'delayed', 'prioritized', 'paused'
  * hour with no transcode job left in the queue, so a lost or exhausted job does
  * not leave the sound stuck until its owner notices. A sound whose job is still
  * waiting (e.g. while no transcode-lane worker is up) is left to that job.
+ * After MAX_STUCK_TRANSCODE_SWEEPS re-queues the sound is marked ERROR, so a
+ * file that keeps hanging the encoder stops cycling and its owner can retry.
  */
 export async function processSweepStuckSoundTranscodesJob(): Promise<{
   stuck: number
   enqueued: number
+  gaveUp: number
 }> {
   const cutoff = new Date(Date.now() - STUCK_TRANSCODE_AFTER_MS)
   const stuckWhere = {
@@ -39,7 +51,7 @@ export async function processSweepStuckSoundTranscodesJob(): Promise<{
     orderBy: { updatedAt: 'asc' },
     take: STUCK_TRANSCODE_BATCH,
   })
-  if (candidates.length === 0) return { stuck: 0, enqueued: 0 }
+  if (candidates.length === 0) return { stuck: 0, enqueued: 0, gaveUp: 0 }
 
   const queue = new Queue('media', {
     connection,
@@ -49,8 +61,11 @@ export async function processSweepStuckSoundTranscodesJob(): Promise<{
       ...JOB_RETENTION,
     },
   })
-  let enqueued = 0
+  const requeued: string[] = []
+  const gaveUp: string[] = []
+  const redis = createClient({ url: REDIS_URL })
   try {
+    await redis.connect()
     const live = await queue.getJobs([...LIVE_JOB_STATES])
     const queuedIds = new Set(
       live
@@ -59,6 +74,16 @@ export async function processSweepStuckSoundTranscodesJob(): Promise<{
     )
     for (const { id } of candidates) {
       if (queuedIds.has(id)) continue
+      const sweeps = await redis.incr(sweepCountKey(id))
+      await redis.expire(sweepCountKey(id), SWEEP_COUNT_TTL_SEC)
+      if (sweeps > MAX_STUCK_TRANSCODE_SWEEPS) {
+        const { count } = await prisma.sound.updateMany({
+          where: { id, ...stuckWhere },
+          data: { status: 'ERROR', processingError: soundProcessingErrorMessage(null) },
+        })
+        if (count > 0) gaveUp.push(id)
+        continue
+      }
       // Conditional on the same staleness so an owner's retry click that
       // landed since the read above is not queued a second time.
       const { count } = await prisma.sound.updateMany({
@@ -67,14 +92,23 @@ export async function processSweepStuckSoundTranscodesJob(): Promise<{
       })
       if (count === 0) continue
       await queue.add('transcode-sound', { itemId: id })
-      enqueued += 1
+      requeued.push(id)
     }
   } finally {
     await queue.close()
+    if (redis.isOpen) await redis.quit()
   }
 
-  if (enqueued > 0) {
-    console.log(`[worker] sweep-stuck-sound-transcodes: re-queued ${enqueued} sound(s)`)
+  if (requeued.length > 0 || gaveUp.length > 0) {
+    console.log(
+      JSON.stringify({
+        component: 'sweep-stuck-sound-transcodes',
+        msg: `re-queued ${requeued.length}, gave up on ${gaveUp.length} stuck sound(s)`,
+        requeued,
+        gaveUp,
+        maxSweeps: MAX_STUCK_TRANSCODE_SWEEPS,
+      }),
+    )
   }
-  return { stuck: candidates.length, enqueued }
+  return { stuck: candidates.length, enqueued: requeued.length, gaveUp: gaveUp.length }
 }
