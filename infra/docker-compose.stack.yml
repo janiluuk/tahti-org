@@ -268,6 +268,9 @@ services:
     # aren't gated by the collection's isPublic flag, so a blanket grant would leak
     # private ("Private Vault") collection cover images. Covers are served via
     # presigned URLs instead (resolveCollectionCoverUrl in apps/api).
+    # tahti/sound holds only sound banner images (audio is under raw/ / stream keys);
+    # bannerUrl is a stable publicMediaUrl, so this prefix must be anonymous-read
+    # like avatars — otherwise queue/list artwork 403s.
     entrypoint: >
       /bin/sh -c "
         mc alias set local http://minio:9000 tahti \"$$MINIO_SECRET_KEY\" &&
@@ -282,6 +285,7 @@ services:
         mc anonymous set download local/tahti/press-kit &&
         mc anonymous set download local/tahti/posts &&
         mc anonymous set download local/tahti/archive &&
+        mc anonymous set download local/tahti/sound &&
         echo 'MinIO buckets ready'
       "
     restart: 'no'
