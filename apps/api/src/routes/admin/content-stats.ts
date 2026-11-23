@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { AdminContentStatsSchema, openApiResponse } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { cachedAdminStat } from '../../lib/admin-stats-cache.js'
 
 const LATEST_LIMIT = 10
 
@@ -24,63 +25,67 @@ const adminContentStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const channelUser = { select: { user: { select: { displayName: true, username: true } } } }
-      const [tracks, shows, uploads, listens, latestSounds, latestBroadcasts] = await Promise.all([
-        fastify.prisma.sound.count({ where: { contentType: 'TRACK' } }),
-        fastify.prisma.liveShowSeries.count(),
-        fastify.prisma.sound.count(),
-        fastify.prisma.listenEvent.count(),
-        fastify.prisma.sound.findMany({
-          orderBy: { createdAt: 'desc' },
-          take: LATEST_LIMIT,
-          select: {
-            id: true,
-            title: true,
-            contentType: true,
-            createdAt: true,
-            channel: channelUser,
-          },
-        }),
-        fastify.prisma.broadcast.findMany({
-          where: { endedAt: { not: null }, wentLiveAt: { not: null } },
-          orderBy: { startedAt: 'desc' },
-          take: LATEST_LIMIT,
-          select: {
-            id: true,
-            title: true,
-            startedAt: true,
-            endedAt: true,
-            soundId: true,
-            channel: { select: { slug: true, ...channelUser.select } },
-          },
-        }),
-      ])
-
-      return reply.send({
-        counts: { tracks, shows, uploads, listens },
-        latestContent: latestSounds.map((sound) => ({
-          id: sound.id,
-          title: sound.title,
-          type: sound.contentType,
-          artistName: sound.channel ? artistNameOf(sound.channel.user) : null,
-          createdAt: sound.createdAt.toISOString(),
-        })),
-        latestBroadcasts: latestBroadcasts.map((broadcast) => ({
-          id: broadcast.id,
-          title: broadcast.title?.trim() || broadcast.channel.slug,
-          artistName: artistNameOf(broadcast.channel.user),
-          recordedAt: broadcast.startedAt.toISOString(),
-          durationSec: broadcast.endedAt
-            ? Math.max(
-                0,
-                Math.round((broadcast.endedAt.getTime() - broadcast.startedAt.getTime()) / 1000),
-              )
-            : null,
-          soundId: broadcast.soundId,
-        })),
-      })
+      return reply.send(await cachedAdminStat('content', loadContentStats))
     },
   )
+
+  async function loadContentStats() {
+    const channelUser = { select: { user: { select: { displayName: true, username: true } } } }
+    const [tracks, shows, uploads, listens, latestSounds, latestBroadcasts] = await Promise.all([
+      fastify.prisma.sound.count({ where: { contentType: 'TRACK' } }),
+      fastify.prisma.liveShowSeries.count(),
+      fastify.prisma.sound.count(),
+      fastify.prisma.listenEvent.count(),
+      fastify.prisma.sound.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: LATEST_LIMIT,
+        select: {
+          id: true,
+          title: true,
+          contentType: true,
+          createdAt: true,
+          channel: channelUser,
+        },
+      }),
+      fastify.prisma.broadcast.findMany({
+        where: { endedAt: { not: null }, wentLiveAt: { not: null } },
+        orderBy: { startedAt: 'desc' },
+        take: LATEST_LIMIT,
+        select: {
+          id: true,
+          title: true,
+          startedAt: true,
+          endedAt: true,
+          soundId: true,
+          channel: { select: { slug: true, ...channelUser.select } },
+        },
+      }),
+    ])
+
+    return {
+      counts: { tracks, shows, uploads, listens },
+      latestContent: latestSounds.map((sound) => ({
+        id: sound.id,
+        title: sound.title,
+        type: sound.contentType,
+        artistName: sound.channel ? artistNameOf(sound.channel.user) : null,
+        createdAt: sound.createdAt.toISOString(),
+      })),
+      latestBroadcasts: latestBroadcasts.map((broadcast) => ({
+        id: broadcast.id,
+        title: broadcast.title?.trim() || broadcast.channel.slug,
+        artistName: artistNameOf(broadcast.channel.user),
+        recordedAt: broadcast.startedAt.toISOString(),
+        durationSec: broadcast.endedAt
+          ? Math.max(
+              0,
+              Math.round((broadcast.endedAt.getTime() - broadcast.startedAt.getTime()) / 1000),
+            )
+          : null,
+        soundId: broadcast.soundId,
+      })),
+    }
+  }
 }
 
 export default adminContentStatsRoutes
