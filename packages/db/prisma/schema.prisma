@@ -1204,6 +1204,7 @@ model ArtistEvent {
 
   participants ArtistEventParticipant[]
   socialPosts  SocialPost[]
+  comments     Comment[]
 
   @@index([userId, startAt])
   @@index([status, startAt])
@@ -3646,18 +3647,21 @@ model Message {
 // when the target's commentsEnabled is false; existing comments are left in place
 // (toggling off just stops new ones, it isn't a moderation wipe).
 model Comment {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   body      String
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   soundId   String?
-  sound     Sound?   @relation(fields: [soundId], references: [id], onDelete: Cascade)
+  sound     Sound?       @relation(fields: [soundId], references: [id], onDelete: Cascade)
   channelId String?
-  channel   Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  channel   Channel?     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  eventId   String?
+  event     ArtistEvent? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
 
   @@index([soundId, createdAt])
   @@index([channelId, createdAt])
+  @@index([eventId, createdAt])
   @@schema("engagement")
 }
 

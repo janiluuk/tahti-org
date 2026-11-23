@@ -462,3 +462,90 @@ describe('/api/comments — long threads and unavailable authors', () => {
     expect(await prisma.comment.findUnique({ where: { id: comment.id } })).toBeNull()
   })
 })
+
+describe('/api/comments — events', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let ownerCookie: string
+  let otherCookie: string
+  let ownerId: string
+  let eventId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, `${PREFIX}evt-`)
+
+    const owner = await createTestArtist(prisma, {
+      email: `${PREFIX}evt-owner@example.com`,
+      username: `${PREFIX}evtowner`,
+      displayName: 'Event Comment Owner',
+    })
+    ownerId = owner.id
+    ownerCookie = await sessionCookieFor(prisma, owner.id)
+
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}evt-other@example.com`,
+      username: `${PREFIX}evtother`,
+      displayName: 'Event Comment Other',
+    })
+    otherCookie = await sessionCookieFor(prisma, other.id)
+
+    const event = await prisma.artistEvent.create({
+      data: {
+        userId: ownerId,
+        title: 'Event Comment Night',
+        place: 'Test Hall',
+        location: 'Helsinki, Finland',
+        startAt: new Date(Date.now() + 7 * 86_400_000),
+        status: 'PUBLISHED',
+        visibility: 'PUBLIC',
+        publishedAt: new Date(),
+      },
+    })
+    eventId = event.id
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await cleanupUsersByEmailPrefix(prisma, `${PREFIX}evt-`)
+  })
+
+  it('lists an empty comment section for a published event', async () => {
+    const res = await app.inject({ method: 'GET', url: `/api/comments/event/${eventId}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ comments: [], commentsEnabled: true })
+  })
+
+  it('posts and lists an event comment when signed in', async () => {
+    const post = await app.inject({
+      method: 'POST',
+      url: `/api/comments/event/${eventId}`,
+      headers: { cookie: otherCookie, 'content-type': 'application/json' },
+      payload: { body: 'see you there' },
+    })
+    expect(post.statusCode).toBe(201)
+    expect(post.json().body).toBe('see you there')
+
+    const list = await app.inject({ method: 'GET', url: `/api/comments/event/${eventId}` })
+    expect(list.statusCode).toBe(200)
+    expect(list.json().comments.map((c: { body: string }) => c.body)).toContain('see you there')
+  })
+
+  it('lets the event host delete a comment', async () => {
+    const created = await prisma.comment.create({
+      data: {
+        body: 'host will delete',
+        authorId: (
+          await prisma.user.findUniqueOrThrow({ where: { username: `${PREFIX}evtother` } })
+        ).id,
+        eventId,
+      },
+    })
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/comments/${created.id}`,
+      headers: { cookie: ownerCookie },
+    })
+    expect(res.statusCode).toBe(204)
+  })
+})
