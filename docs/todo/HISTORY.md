@@ -6,6 +6,14 @@ Completed work lands here — **append, never overwrite**. Active work stays in 
 Each entry is a compact dated section (original filename + what shipped). Do not paste full
 session transcripts. Leftover open items go to `docs/remaining-work.md` or a new todo file.
 
+## 2026-11-23 — Artwork preset covers: production backfill
+
+From `artwork-preset-covers.md`. Ran `apps/api/scripts/backfill-preset-covers.ts`
+on production (dry run, then apply): 2 sounds, 1 collection and 4 channel
+avatars got a preset cover. Worker-created sounds already get a preset at
+create (#1041). Accounts with a generated SVG avatar keep it; only empty
+avatars get a preset.
+
 ## 2026-11-22 — Artist Link page API
 
 From `artist-link-page.md`. `User.linkPageJson` + `LinkPageConfigSchema`;
