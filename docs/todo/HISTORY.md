@@ -1000,9 +1000,9 @@ No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1134):
   index; no migration. Local bench: 300k rows → 196k deleted in 60 batches, ~0.6 s.
 - Closes the "CronRun retention" row in `docs/remaining-work.md` (left open by #1128).
 
-### 2026-11-23 — Session / RefreshToken retention sweep (#PR)
+### 2026-11-23 — Session / RefreshToken retention sweep (#1136)
 
-No todo file; one PR (PRURL), item 9 (auth rows only) of the DB audit:
+No todo file; one PR (https://github.com/janiluuk/tahti-org/pull/1136), item 9 (auth rows only) of the DB audit:
 
 - `light-daily` gains an `auth-row-retention` sub-task (logged as its own CronRun row) with a
   grace period of `AUTH_ROW_GRACE_DAYS` (default 7). `RefreshToken` rows go only when every
