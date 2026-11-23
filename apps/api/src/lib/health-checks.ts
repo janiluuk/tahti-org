@@ -231,6 +231,9 @@ async function probeDependencies(prisma: PrismaClient): Promise<DependencyCheck[
   ])
 }
 
+/** `healthy` means every critical dependency is up, so a non-critical
+ * outage (the Discord bot, an artist's silent stream) reports `degraded`
+ * without failing `/api/v1/status` or `tahti_api_healthy`. */
 export function summarizeChecks(checks: DependencyCheck[]): {
   status: 'operational' | 'degraded' | 'outage'
   healthy: boolean
@@ -238,7 +241,7 @@ export function summarizeChecks(checks: DependencyCheck[]): {
   const criticalDown = checks.some((c) => c.critical && c.state === 'down')
   const anyDown = checks.some((c) => c.state === 'down')
   if (criticalDown) return { status: 'outage', healthy: false }
-  if (anyDown) return { status: 'degraded', healthy: false }
+  if (anyDown) return { status: 'degraded', healthy: true }
   return { status: 'operational', healthy: true }
 }
 

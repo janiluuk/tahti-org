@@ -19,12 +19,20 @@ describe('health-checks helpers', () => {
     expect(summarizeChecks(checks)).toEqual({ status: 'outage', healthy: false })
   })
 
-  it('summarizeChecks marks degraded when only non-critical is down', () => {
+  it('summarizeChecks marks degraded but healthy when only non-critical is down', () => {
     const checks: DependencyCheck[] = [
       { id: 'postgres', state: 'up', critical: true, latencyMs: 1 },
       { id: 'centrifugo', state: 'down', critical: false, latencyMs: 1 },
     ]
-    expect(summarizeChecks(checks)).toEqual({ status: 'degraded', healthy: false })
+    expect(summarizeChecks(checks)).toEqual({ status: 'degraded', healthy: true })
+  })
+
+  it('reports the API healthy to Prometheus when only the Discord bot is down', () => {
+    const checks: DependencyCheck[] = [
+      { id: 'postgres', state: 'up', critical: true, latencyMs: 4 },
+      { id: 'discord-bot', state: 'down', critical: false, latencyMs: 2, detail: 'stale' },
+    ]
+    expect(renderPrometheusMetrics(checks, 120)).toContain('tahti_api_healthy 1')
   })
 
   it('renderPrometheusMetrics exports gauges', () => {
@@ -83,7 +91,7 @@ describe('liveStreamsCheckFrom', () => {
       5,
     )
     expect(check).toMatchObject({ state: 'down', critical: false })
-    expect(summarizeChecks([check])).toEqual({ status: 'degraded', healthy: false })
+    expect(summarizeChecks([check])).toEqual({ status: 'degraded', healthy: true })
   })
 
   it('exports the silent count as a Prometheus gauge', () => {
