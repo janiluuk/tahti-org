@@ -292,20 +292,6 @@ jobs:
       - name: Push DB schema (test database)
         run: pnpm --filter @tahti/db db:migrate:test
 
-      # Only checks the migration folder, which is the same for every shard.
-      - name: Baseline Prisma migrations on test DB (OPS-002)
-        if: matrix.shard == 1
-        run: |
-          if find packages/db/prisma/migrations -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
-            for m in packages/db/prisma/migrations/*/; do
-              name=$(basename "$m")
-              pnpm --filter @tahti/db exec prisma migrate resolve --applied "$name" || true
-            done
-            pnpm --filter @tahti/db exec prisma migrate status
-          else
-            echo "No prisma/migrations yet — test DB uses db push only"
-          fi
-
       - name: Run tests
         run: pnpm exec vitest run --reporter=verbose --shard=${{ matrix.shard }}/4
 
@@ -316,6 +302,64 @@ jobs:
           name: coverage-${{ github.sha }}-${{ matrix.shard }}
           path: '**/coverage/'
           retention-days: 7
+
+  # Its own job because resolving ~180 migrations one by one takes 2-3 min,
+  # which on a test shard made that shard the critical path of the run.
+  migrations-baseline:
+    name: Baseline Prisma migrations (OPS-002)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema (test database)
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      # One pnpm exec for the whole loop: a pnpm start-up per migration
+      # added about a minute.
+      - name: Baseline Prisma migrations on test DB (OPS-002)
+        working-directory: packages/db
+        run: |
+          if find prisma/migrations -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
+            pnpm exec sh -c 'for m in prisma/migrations/*/; do prisma migrate resolve --applied "$(basename "$m")" || true; done'
+            pnpm exec prisma migrate status
+          else
+            echo "No prisma/migrations yet — test DB uses db push only"
+          fi
 
   vital-flows-e2e:
     name: API vital flows (curl e2e)
@@ -532,8 +576,9 @@ jobs:
   generate-openapi:
     name: Generate OpenAPI spec
     # Only run on pushes to main (not on PRs) — produces the versioned spec artifact
+    # No `needs`: it only uploads an artifact, and `release` waits for both
+    # this job and all-checks, so it runs alongside the tests.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, typecheck]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
@@ -608,6 +653,7 @@ jobs:
       - lint
       - typecheck
       - test
+      - migrations-baseline
       - vital-flows-e2e
       - user-journeys-e2e
       - agpl-check
@@ -620,6 +666,7 @@ jobs:
           ok "${{ needs.lint.result }}" || { echo "lint failed"; exit 1; }
           ok "${{ needs.typecheck.result }}" || { echo "typecheck failed"; exit 1; }
           ok "${{ needs.test.result }}" || { echo "test failed"; exit 1; }
+          ok "${{ needs.migrations-baseline.result }}" || { echo "migrations-baseline failed"; exit 1; }
           ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
           ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
