@@ -45,6 +45,8 @@ import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
 import { processPatternFraudScanJob } from './jobs/pattern-fraud-scan.js'
 import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
 import { processInternetRadioNowPlayingSyncJob } from './jobs/internet-radio-now-playing-sync.js'
+import { processImportMusicNewsJob } from './jobs/import-music-news.js'
+import { processImportHelsinkiMusicEventsJob } from './jobs/import-helsinki-music-events.js'
 import {
   processMembershipLapseJob,
   processMembershipRenewalJob,
@@ -243,6 +245,10 @@ const worker = new Worker(
         await processSocialPostDispatchJob(prisma, postId)
       } else if (job.name === 'internet-radio-now-playing-sync') {
         return await processInternetRadioNowPlayingSyncJob(job)
+      } else if (job.name === 'import-music-news') {
+        return await processImportMusicNewsJob(prisma)
+      } else if (job.name === 'import-helsinki-music-events') {
+        return await processImportHelsinkiMusicEventsJob(prisma)
       } else if (job.name === 'membership-daily') {
         return await runCronTasks({
           'membership-renewal-reminder': () => processMembershipRenewalJob(job),

@@ -1089,3 +1089,13 @@ No todo file (single PR). https://github.com/janiluuk/tahti-org/pull/1143
   null clears); the owner visual and `GET /api/channels/:slug` return
   `artistBlockVisibilityJson`, so visitors of `/u/<username>` see the artist's hidden blocks.
 - Player side: tahti-player reads the channel value first and uploads an owner's local copy once.
+
+## 2026-11-24 - Finnish music news and Helsinki events importers
+
+Worker jobs (dist lane): `import-music-news` hourly pulls Konekellari, Soundi,
+Rumba, Inferno and Kaaoszine RSS into `NewsPost` drafts (headline, ≤280-char
+plain excerpt, link back; review in Admin → News). `import-helsinki-music-events`
+every 6 h imports upcoming Helsinki Linked Events music events (yso:p1808,
+single events only, CC BY 4.0 attribution) as DRAFT `ArtistEvent`s hosted by
+the `tahti` account. `(sourceKey|externalSource, externalId)` uniques prevent
+duplicates (migration 20261124020000).

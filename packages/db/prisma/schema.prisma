@@ -1208,6 +1208,12 @@ model ArtistEvent {
   socialPosts  SocialPost[]
   comments     Comment[]
 
+  /// Set on events imported from an outside directory (e.g.
+  /// "linkedevents-helsinki"); with externalId it prevents duplicates.
+  externalSource String?
+  externalId     String?
+
+  @@unique([externalSource, externalId])
   @@index([userId, startAt])
   @@index([status, startAt])
   @@index([venueId])
@@ -4722,7 +4728,12 @@ model NewsPost {
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  /// Set on items imported from an outside news feed (e.g. "konekellari");
+  /// with externalId it keeps a re-run from importing the same story twice.
+  sourceKey   String?
+  externalId  String?
 
+  @@unique([sourceKey, externalId])
   @@index([publishedAt])
   @@schema("admin")
 }
