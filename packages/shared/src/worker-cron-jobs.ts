@@ -192,4 +192,18 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description:
       "Refresh cached now-playing title for users' added internet radio stations whose host has a scraper (every 10 min)",
   },
+  {
+    name: 'import-music-news',
+    pattern: '17 * * * *',
+    jobId: 'import-music-news-cron',
+    description:
+      'Hourly: import new stories from approved Finnish music news feeds (Konekellari, Soundi, Rumba, Inferno, Kaaoszine) as unpublished drafts in Admin → News',
+  },
+  {
+    name: 'import-helsinki-music-events',
+    pattern: '35 */6 * * *',
+    jobId: 'import-helsinki-music-events-cron',
+    description:
+      "Every 6 h: import upcoming Helsinki music events (city's open Linked Events API, CC BY 4.0) as DRAFT events hosted by the Tahti account",
+  },
 ]

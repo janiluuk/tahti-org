@@ -47,6 +47,8 @@ export const WORKER_JOB_LANES = {
     'open-theme-pull-request',
     'hearthis-export',
     'internet-radio-now-playing-sync',
+    'import-music-news',
+    'import-helsinki-music-events',
   ],
   light: [
     'newsletter-dispatch',
