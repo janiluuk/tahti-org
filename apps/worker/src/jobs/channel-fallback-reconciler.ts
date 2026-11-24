@@ -5,10 +5,13 @@ import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
 import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { spawnOrchestratorChannel } from '../lib/orchestrator.js'
+import { channelsInDeadAirCooldown } from '../lib/dead-air.js'
 
 export interface ChannelFallbackReconcilerResult {
   checked: number
   started: number
+  /** Skipped because the watchdog shut them down for dead air recently. */
+  coolingDown: number
 }
 
 /**
@@ -36,8 +39,11 @@ export async function processChannelFallbackReconcilerJob(
     select: { id: true, slug: true },
   })
 
+  const cooling = await channelsInDeadAirCooldown(channels.map((ch) => ch.id))
+
   let started = 0
   for (const ch of channels) {
+    if (cooling.has(ch.id)) continue
     let broadcast = await prisma.broadcast.findFirst({
       where: { channelId: ch.id, endedAt: null },
     })
@@ -55,5 +61,5 @@ export async function processChannelFallbackReconcilerJob(
     }
   }
 
-  return { checked: channels.length, started }
+  return { checked: channels.length, started, coolingDown: cooling.size }
 }
