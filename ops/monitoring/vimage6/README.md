@@ -26,15 +26,15 @@ The deploy script **replaces** the managed Prometheus snippet on each run (marke
 
 ## Lab stack ports (vimage)
 
-| Service      | Port    | Probe                                   |
-| ------------ | ------- | --------------------------------------- |
-| API          | `15011` | `/health`, `/metrics`, `/api/v1/status` |
-| Web          | `17777` | `/`                                     |
-| Website      | `8090`  | `/health`                               |
-| Centrifugo   | `18000` | `/health`                               |
-| MinIO        | `19000` | `/minio/health/live`                    |
-| Orchestrator | `15003` | `/health`                               |
-| Icecast      | `18100` | `/status-json.xsl`                      |
+| Service              | Port    | Probe                                   |
+| -------------------- | ------- | --------------------------------------- |
+| API                  | `15011` | `/health`, `/metrics`, `/api/v1/status` |
+| Web (tahti-beta-web) | `15180` | `/`                                     |
+| Website              | `8090`  | `/health`                               |
+| Centrifugo           | `18000` | `/health`                               |
+| MinIO                | `19000` | `/minio/health/live`                    |
+| Orchestrator         | `15003` | `/health`                               |
+| Icecast              | `18100` | `/status-json.xsl`                      |
 
 ## Public probes (blackbox from vimage6)
 
