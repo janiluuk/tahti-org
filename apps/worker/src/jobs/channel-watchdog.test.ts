@@ -8,6 +8,10 @@ vi.mock('../lib/orchestrator.js', () => ({
   restartChannelLiquidsoap: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('../lib/dead-air.js', () => ({
+  shutDownDeadAirChannel: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('../lib/hls-segment-age.js', () => ({
   hlsSegmentAgeSecFromFs: vi.fn().mockResolvedValue(null),
   hlsSegmentAgeSecFromMinio: vi.fn().mockResolvedValue(null),
@@ -33,6 +37,7 @@ vi.mock('redis', () => ({
 
 import { processChannelWatchdogJob } from './channel-watchdog.js'
 import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
+import { shutDownDeadAirChannel } from '../lib/dead-air.js'
 import { hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
 
 const mockFindMany = vi.fn()
@@ -41,10 +46,14 @@ function fakePrisma() {
   return { channel: { findMany: mockFindMany } } as never
 }
 
-function liveChannel(slug: string, opts: { startedAgoMs: number; rotation?: boolean }) {
+function liveChannel(
+  slug: string,
+  opts: { startedAgoMs: number; rotation?: boolean; humanLive?: boolean },
+) {
   return {
     id: `ch-${slug}`,
     slug,
+    goneLiveAt: opts.humanLive ? new Date(Date.now() - opts.startedAgoMs) : null,
     broadcasts: [{ id: `b-${slug}`, startedAt: new Date(Date.now() - opts.startedAgoMs) }],
     curatedRotationItems: opts.rotation ? [{ id: 'item-1' }] : [],
   }
@@ -66,7 +75,7 @@ describe('processChannelWatchdogJob', () => {
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
-    expect(result).toEqual({ checked: 1, restarted: 1, skipped: 0 })
+    expect(result).toEqual({ checked: 1, restarted: 1, skipped: 0, shutDown: 0 })
     expect(restartChannelLiquidsoap).toHaveBeenCalledWith(
       'ch-tahti-selects',
       'tahti-selects',
@@ -80,7 +89,7 @@ describe('processChannelWatchdogJob', () => {
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
-    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 1 })
+    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 1, shutDown: 0 })
     expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
   })
 
@@ -90,7 +99,7 @@ describe('processChannelWatchdogJob', () => {
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
-    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 0 })
+    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 0, shutDown: 0 })
     expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
   })
 
@@ -108,14 +117,35 @@ describe('processChannelWatchdogJob', () => {
     )
   })
 
-  it('respects the restart cap for artist channels', async () => {
+  it('respects the restart cap for a human live broadcast and never shuts it down', async () => {
     restartTimestamps.push(1, 2)
+    mockFindMany.mockResolvedValue([
+      liveChannel('artist-a', { startedAgoMs: 3600_000, humanLive: true }),
+    ])
+
+    const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
+
+    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 1, shutDown: 0 })
+    expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
+    expect(shutDownDeadAirChannel).not.toHaveBeenCalled()
+  })
+
+  it('shuts down a replay stream that stays silent past the restart cap', async () => {
+    restartTimestamps.push(1, 2)
+    vi.mocked(hlsSegmentAgeSecFromMinio).mockResolvedValue(900)
     mockFindMany.mockResolvedValue([liveChannel('artist-a', { startedAgoMs: 3600_000 })])
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
-    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 1 })
+    expect(result).toEqual({ checked: 1, restarted: 0, skipped: 0, shutDown: 1 })
     expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
+    expect(shutDownDeadAirChannel).toHaveBeenCalledWith(expect.anything(), {
+      id: 'ch-artist-a',
+      slug: 'artist-a',
+      broadcastId: 'b-artist-a',
+      segmentAgeSec: 900,
+      restartCount: 3,
+    })
   })
 
   it('keeps restarting always-on Tahti Radio after the artist restart cap', async () => {
@@ -125,7 +155,7 @@ describe('processChannelWatchdogJob', () => {
 
     const result = await processChannelWatchdogJob(fakePrisma(), {} as Job)
 
-    expect(result).toEqual({ checked: 1, restarted: 1, skipped: 0 })
+    expect(result).toEqual({ checked: 1, restarted: 1, skipped: 0, shutDown: 0 })
     expect(restartChannelLiquidsoap).toHaveBeenCalledWith(
       'ch-tahti-radio',
       'tahti-radio',

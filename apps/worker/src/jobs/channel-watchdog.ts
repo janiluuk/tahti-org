@@ -7,6 +7,7 @@ import { createClient } from 'redis'
 import { hlsSegmentAgeSecFromFs, hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
 import { broadcastSessionLogFields, TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
+import { shutDownDeadAirChannel } from '../lib/dead-air.js'
 
 const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
 const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
@@ -87,12 +88,13 @@ function shouldSkipRestart(
 export async function processChannelWatchdogJob(
   prisma: PrismaClient,
   _job: Job,
-): Promise<{ checked: number; restarted: number; skipped: number }> {
+): Promise<{ checked: number; restarted: number; skipped: number; shutDown: number }> {
   const live = await prisma.channel.findMany({
     where: { state: 'LIVE' },
     select: {
       id: true,
       slug: true,
+      goneLiveAt: true,
       broadcasts: {
         where: { endedAt: null },
         orderBy: { startedAt: 'desc' },
@@ -107,6 +109,7 @@ export async function processChannelWatchdogJob(
 
   let restarted = 0
   let skipped = 0
+  let shutDown = 0
 
   for (const ch of live) {
     const broadcast = ch.broadcasts[0]
@@ -134,6 +137,25 @@ export async function processChannelWatchdogJob(
     const { count: restartCount, lastMs } = await recordRestart(ch.id)
     const gate = shouldSkipRestart(ch.slug, restartCount, lastMs)
     if (gate.skip) {
+      // A rotation / replay stream (nobody broadcasting: goneLiveAt unset) that
+      // stays silent past the restart cap is dead air, so it comes off the
+      // air. A human's live broadcast is never cut here.
+      if (!isAlwaysOn(ch.slug) && ch.goneLiveAt === null) {
+        try {
+          await shutDownDeadAirChannel(prisma, {
+            id: ch.id,
+            slug: ch.slug,
+            broadcastId,
+            segmentAgeSec: age,
+            restartCount,
+          })
+          shutDown++
+        } catch (err) {
+          console.error(`[channel-watchdog] dead-air shutdown failed for ${ch.slug}:`, err)
+          skipped++
+        }
+        continue
+      }
       console.error(`[channel-watchdog] ${ch.slug}: segment stale (${ageLabel}) but ${gate.reason}`)
       skipped++
       continue
@@ -165,5 +187,5 @@ export async function processChannelWatchdogJob(
     }
   }
 
-  return { checked: live.length, restarted, skipped }
+  return { checked: live.length, restarted, skipped, shutDown }
 }
