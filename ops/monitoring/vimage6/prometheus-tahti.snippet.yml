@@ -24,7 +24,7 @@
     static_configs:
       - targets:
           - http://192.168.2.100:15011/health
-          - http://192.168.2.100:17777/
+          - http://192.168.2.100:15180/
           - http://192.168.2.100:18080/health
           - http://192.168.2.100:18000/health
           - http://192.168.2.100:19000/minio/health/live
@@ -54,7 +54,7 @@
         target_label: service
         replacement: api-health
       - source_labels: [__param_target]
-        regex: '.*:17777/.*'
+        regex: '.*:15180/.*'
         target_label: service
         replacement: web
       - source_labels: [__param_target]
