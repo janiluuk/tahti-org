@@ -218,8 +218,27 @@ jobs:
           set -euo pipefail
           touch ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-          ssh-keyscan -p "${DEPLOY_JUMP_PORT}" -H "${DEPLOY_JUMP_HOST}" >> ~/.ssh/known_hosts
-          ssh deploy-jump "ssh-keyscan -H '${DEPLOY_HOST}'" >> ~/.ssh/known_hosts
+          # The jump host can refuse or drop a fresh runner's first
+          # connections; retry with backoff before failing the deploy.
+          retry() {
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              if "$@"; then return 0; fi
+              echo "attempt ${attempt} failed: $*" >&2
+              sleep $((attempt * 10))
+            done
+            return 1
+          }
+          keyscan_jump() {
+            local keys
+            keys="$(ssh-keyscan -T 15 -p "${DEPLOY_JUMP_PORT}" -H "${DEPLOY_JUMP_HOST}")" && [ -n "$keys" ] && printf '%s\n' "$keys" >> ~/.ssh/known_hosts
+          }
+          keyscan_prod() {
+            local keys
+            keys="$(ssh -o ConnectTimeout=20 deploy-jump "ssh-keyscan -T 15 -H '${DEPLOY_HOST}'")" && [ -n "$keys" ] && printf '%s\n' "$keys" >> ~/.ssh/known_hosts
+          }
+          retry keyscan_jump
+          retry keyscan_prod
 
       - name: Verify jumphost and production SSH
         run: |
