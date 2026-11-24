@@ -23,6 +23,7 @@ scp "${V6}/tahti-vital-services.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-vital-s
 scp "${V6}/tahti-overview.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-overview.json"
 scp "${V6}/tahti-infrastructure.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-infrastructure.json"
 scp "${V6}/vimage-docker-os-metrics.json" "${HOST}:${GRAFANA_DASH_DIR}/vimage-docker-os-metrics.json"
+scp "${V6}/tahti-logs.json" "${HOST}:${GRAFANA_DASH_DIR}/tahti-logs.json"
 scp "${V6}/prometheus-tahti-alerts.yml" "${HOST}:${PROM_DIR}/rules/prometheus-tahti-alerts.yml"
 scp "${V6}/prometheus-tahti.snippet.yml" "${HOST}:/tmp/prometheus-tahti.snippet.yml"
 scp "${V6}/patch-prometheus-tahti.py" "${HOST}:/tmp/patch-prometheus-tahti.py"
